@@ -32,18 +32,20 @@ void main() async {
   // Initialize database
   await DatabaseHelper.instance.database;
 
-  // Initialize notifications
-  const initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  const initializationSettingsIOS = DarwinInitializationSettings();
-  const initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-    iOS: initializationSettingsIOS,
-  );
+  // Initialize notifications (only for mobile platforms)
+  if (!kIsWeb) {
+    const initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initializationSettingsIOS = DarwinInitializationSettings();
+    const initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-  );
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+    );
+  }
 
   runApp(const GrimorioDeBolsoApp());
 }
