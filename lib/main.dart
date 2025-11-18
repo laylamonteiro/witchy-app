@@ -8,6 +8,7 @@ import 'package:sqflite_common/sqflite.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/database/database_helper.dart';
+import 'core/widgets/splash_screen.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
@@ -66,7 +67,7 @@ class GrimorioDeBolsoApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Grimório de Bolso',
         theme: AppTheme.darkTheme,
-        home: const HomePage(),
+        home: const SplashScreen(child: HomePage()),
         debugShowCheckedModeBanner: false,
       ),
     );

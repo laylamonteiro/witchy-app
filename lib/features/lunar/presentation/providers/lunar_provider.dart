@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:lunar/lunar.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 
 class LunarProvider with ChangeNotifier {
@@ -12,29 +11,33 @@ class LunarProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Calcula a fase da lua baseado no ciclo lunar (29.53 dias)
   MoonPhase getCurrentMoonPhase() {
-    final lunar = Lunar.fromDate(_selectedDate);
-    final yueXiang = lunar.getYueXiang();
+    // Lua nova conhecida: 6 de janeiro de 2000
+    final knownNewMoon = DateTime(2000, 1, 6, 18, 14);
+    final daysSinceKnownNewMoon = _selectedDate.difference(knownNewMoon).inDays;
 
-    // Mapeamento das fases lunares chinesas para as ocidentais
-    switch (yueXiang) {
-      case '朔月': // Lua nova
-        return MoonPhase.newMoon;
-      case '蛾眉新月': // Crescente inicial
-      case '蛾眉残月':
-        return MoonPhase.waxingCrescent;
-      case '上弦月': // Quarto crescente
-        return MoonPhase.firstQuarter;
-      case '盈凸月': // Gibosa crescente
-        return MoonPhase.waxingGibbous;
-      case '满月': // Lua cheia
-        return MoonPhase.fullMoon;
-      case '亏凸月': // Gibosa minguante
-        return MoonPhase.waningGibbous;
-      case '下弦月': // Quarto minguante
-        return MoonPhase.lastQuarter;
-      default: // Minguante
-        return MoonPhase.waningCrescent;
+    // Ciclo lunar médio é de 29.53059 dias
+    const lunarCycle = 29.53059;
+    final phase = (daysSinceKnownNewMoon % lunarCycle) / lunarCycle;
+
+    // Determinar a fase baseado na posição no ciclo
+    if (phase < 0.0625 || phase >= 0.9375) {
+      return MoonPhase.newMoon;
+    } else if (phase < 0.1875) {
+      return MoonPhase.waxingCrescent;
+    } else if (phase < 0.3125) {
+      return MoonPhase.firstQuarter;
+    } else if (phase < 0.4375) {
+      return MoonPhase.waxingGibbous;
+    } else if (phase < 0.5625) {
+      return MoonPhase.fullMoon;
+    } else if (phase < 0.6875) {
+      return MoonPhase.waningGibbous;
+    } else if (phase < 0.8125) {
+      return MoonPhase.lastQuarter;
+    } else {
+      return MoonPhase.waningCrescent;
     }
   }
 
@@ -51,14 +54,12 @@ class LunarProvider with ChangeNotifier {
   }
 
   DateTime? getNextFullMoon() {
-    final lunar = Lunar.fromDate(_selectedDate);
-    final solar = lunar.getSolar();
-
-    // Buscar próxima lua cheia (aproximação)
+    // Buscar próxima lua cheia
     for (int i = 1; i <= 30; i++) {
       final nextDate = _selectedDate.add(Duration(days: i));
-      final nextLunar = Lunar.fromDate(nextDate);
-      if (nextLunar.getYueXiang() == '满月') {
+      final tempProvider = LunarProvider();
+      tempProvider._selectedDate = nextDate;
+      if (tempProvider.getCurrentMoonPhase() == MoonPhase.fullMoon) {
         return nextDate;
       }
     }
@@ -66,17 +67,28 @@ class LunarProvider with ChangeNotifier {
   }
 
   DateTime? getNextNewMoon() {
-    final lunar = Lunar.fromDate(_selectedDate);
-
-    // Buscar próxima lua nova (aproximação)
+    // Buscar próxima lua nova
     for (int i = 1; i <= 30; i++) {
       final nextDate = _selectedDate.add(Duration(days: i));
-      final nextLunar = Lunar.fromDate(nextDate);
-      if (nextLunar.getYueXiang() == '朔月') {
+      final tempProvider = LunarProvider();
+      tempProvider._selectedDate = nextDate;
+      if (tempProvider.getCurrentMoonPhase() == MoonPhase.newMoon) {
         return nextDate;
       }
     }
     return null;
+  }
+
+  int? getDaysUntilFullMoon() {
+    final nextFull = getNextFullMoon();
+    if (nextFull == null) return null;
+    return nextFull.difference(_selectedDate).inDays;
+  }
+
+  int? getDaysUntilNewMoon() {
+    final nextNew = getNextNewMoon();
+    if (nextNew == null) return null;
+    return nextNew.difference(_selectedDate).inDays;
   }
 
   bool isGoodTimeForSpell(SpellType spellType) {

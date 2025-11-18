@@ -65,6 +65,7 @@ class LunarCalendarPage extends StatelessWidget {
                         context,
                         'Lua Cheia',
                         lunarProvider.getNextFullMoon(),
+                        lunarProvider.getDaysUntilFullMoon(),
                         MoonPhase.fullMoon.emoji,
                       ),
                       const Divider(height: 24),
@@ -72,6 +73,7 @@ class LunarCalendarPage extends StatelessWidget {
                         context,
                         'Lua Nova',
                         lunarProvider.getNextNewMoon(),
+                        lunarProvider.getDaysUntilNewMoon(),
                         MoonPhase.newMoon.emoji,
                       ),
                     ],
@@ -170,9 +172,21 @@ class LunarCalendarPage extends StatelessWidget {
     BuildContext context,
     String phaseName,
     DateTime? date,
+    int? daysUntil,
     String emoji,
   ) {
-    final dateFormat = DateFormat('dd/MM/yyyy', 'pt_BR');
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
+    String daysText = '';
+    if (daysUntil != null) {
+      if (daysUntil == 0) {
+        daysText = 'Hoje!';
+      } else if (daysUntil == 1) {
+        daysText = 'Amanhã';
+      } else {
+        daysText = 'Em $daysUntil dias';
+      }
+    }
 
     return Row(
       children: [
@@ -189,12 +203,28 @@ class LunarCalendarPage extends StatelessWidget {
                 phaseName,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              Text(
-                date != null ? dateFormat.format(date) : 'Calculando...',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-              ),
+              if (date != null) ...[
+                Text(
+                  dateFormat.format(date),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+                if (daysText.isNotEmpty)
+                  Text(
+                    daysText,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.lilac,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+              ] else
+                Text(
+                  'Calculando...',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
             ],
           ),
         ),

@@ -15,7 +15,7 @@ class SpellDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy', 'pt_BR');
+    final dateFormat = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
       appBar: AppBar(
