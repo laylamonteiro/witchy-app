@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../providers/spell_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_assets.dart';
 import 'spell_form_page.dart';
 import 'spell_detail_page.dart';
 import '../../data/models/spell_model.dart';
@@ -64,9 +66,20 @@ class _GrimoireListPageState extends State<GrimoireListPage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Buscar feitiços...',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: SvgPicture.asset(
+                    AppAssets.searchDark,
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.textSecondary,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
               ),
               onChanged: (value) {
                 setState(() {
@@ -176,7 +189,16 @@ class _GrimoireListPageState extends State<GrimoireListPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToForm(context),
         backgroundColor: AppColors.lilac,
-        child: const Icon(Icons.add, color: Color(0xFF2B2143)),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: SvgPicture.asset(
+            AppAssets.addDark,
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF2B2143),
+              BlendMode.srcIn,
+            ),
+          ),
+        ),
       ),
     );
   }
