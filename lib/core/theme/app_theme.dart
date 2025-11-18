@@ -35,12 +35,10 @@ class AppTheme {
         secondary: AppColors.pink,
         tertiary: AppColors.mint,
         surface: AppColors.surface,
-        background: AppColors.background,
         error: AppColors.alert,
         onPrimary: Color(0xFF2B2143),
         onSecondary: Color(0xFF2B2143),
         onSurface: AppColors.textPrimary,
-        onBackground: AppColors.textPrimary,
       ),
 
       // Text Theme

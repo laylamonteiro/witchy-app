@@ -89,7 +89,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<DesireStatus>(
-              value: _selectedStatus,
+              initialValue: _selectedStatus,
               decoration: const InputDecoration(
                 labelText: 'Status',
               ),

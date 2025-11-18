@@ -5,8 +5,8 @@ import '../../data/data_sources/crystals_data.dart';
 import '../../data/data_sources/colors_data.dart';
 
 class EncyclopediaProvider with ChangeNotifier {
-  List<CrystalModel> _crystals = crystalsData;
-  List<ColorModel> _colors = colorsData;
+  final List<CrystalModel> _crystals = crystalsData;
+  final List<ColorModel> _colors = colorsData;
 
   List<CrystalModel> get crystals => _crystals;
   List<ColorModel> get colors => _colors;

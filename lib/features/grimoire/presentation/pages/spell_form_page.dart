@@ -99,7 +99,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<SpellType>(
-              value: _selectedType,
+              initialValue: _selectedType,
               decoration: const InputDecoration(
                 labelText: 'Tipo de Feitiço *',
               ),
@@ -117,7 +117,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<MoonPhase?>(
-              value: _selectedMoonPhase,
+              initialValue: _selectedMoonPhase,
               decoration: const InputDecoration(
                 labelText: 'Fase da Lua (Opcional)',
               ),
