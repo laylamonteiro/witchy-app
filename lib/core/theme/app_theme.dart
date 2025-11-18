@@ -29,6 +29,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.background,
+      fontFamily: GoogleFonts.nunito().fontFamily,
 
       colorScheme: const ColorScheme.dark(
         primary: AppColors.lilac,
@@ -216,8 +217,8 @@ class AppTheme {
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.nunito(
-          fontSize: 20,
+        titleTextStyle: GoogleFonts.cinzelDecorative(
+          fontSize: 22,
           fontWeight: FontWeight.w600,
           color: AppColors.lilac,
         ),
@@ -227,12 +228,20 @@ class AppTheme {
       ),
 
       // Bottom Navigation Bar Theme
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.lilac,
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
+        selectedLabelStyle: GoogleFonts.nunito(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: GoogleFonts.nunito(
+          fontSize: 12,
+          fontWeight: FontWeight.normal,
+        ),
       ),
 
       // Icon Theme
