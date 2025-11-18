@@ -46,17 +46,17 @@ class AppTheme {
       // Text Theme
       textTheme: TextTheme(
         // Títulos grandes (logo, nome do app)
-        displayLarge: GoogleFonts.nunito(
+        displayLarge: GoogleFonts.cinzelDecorative(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: AppColors.lilac,
         ),
-        displayMedium: GoogleFonts.nunito(
+        displayMedium: GoogleFonts.cinzelDecorative(
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: AppColors.lilac,
         ),
-        displaySmall: GoogleFonts.nunito(
+        displaySmall: GoogleFonts.cinzelDecorative(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: AppColors.lilac,
@@ -129,7 +129,7 @@ class AppTheme {
       ),
 
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(

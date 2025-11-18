@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:sqflite_common/sqflite.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/database/database_helper.dart';
@@ -17,6 +19,9 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize sqflite for web
+  databaseFactory = databaseFactoryFfiWeb;
 
   // Initialize timezone
   tz.initializeTimeZones();

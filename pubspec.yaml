@@ -27,14 +27,17 @@ dependencies:
   uuid: ^4.2.2
 
   # Lunar calculations
-  lunar: ^3.0.1
+  lunar: ^1.7.8
 
   # Local notifications
   flutter_local_notifications: ^16.3.0
   timezone: ^0.9.2
 
   # Drawing (for sigils)
-  flutter_drawing_board: ^1.1.1
+  flutter_drawing_board: ^0.9.8
+
+  # For web support of sqflite
+  sqflite_common_ffi_web: ^0.4.1+1
 
 dev_dependencies:
   flutter_test:
@@ -43,21 +46,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/images/
-    - assets/icons/
-
-  fonts:
-    - family: CinzelDecorative
-      fonts:
-        - asset: assets/fonts/CinzelDecorative-Regular.ttf
-        - asset: assets/fonts/CinzelDecorative-Bold.ttf
-          weight: 700
-    - family: Nunito
-      fonts:
-        - asset: assets/fonts/Nunito-Regular.ttf
-        - asset: assets/fonts/Nunito-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Nunito-SemiBold.ttf
-          weight: 600
