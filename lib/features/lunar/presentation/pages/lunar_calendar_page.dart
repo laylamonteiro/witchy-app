@@ -7,9 +7,14 @@ import '../../../../core/widgets/moon_phase_widget.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 
-class LunarCalendarPage extends StatelessWidget {
+class LunarCalendarPage extends StatefulWidget {
   const LunarCalendarPage({super.key});
 
+  @override
+  State<LunarCalendarPage> createState() => _LunarCalendarPageState();
+}
+
+class _LunarCalendarPageState extends State<LunarCalendarPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,151 +23,182 @@ class LunarCalendarPage extends StatelessWidget {
       ),
       body: Consumer<LunarProvider>(
         builder: (context, lunarProvider, _) {
-          final currentPhase = lunarProvider.getCurrentMoonPhase();
-          final dateFormat = DateFormat('dd/MM/yyyy', 'pt_BR');
+          try {
+            final currentPhase = lunarProvider.getCurrentMoonPhase();
+            final dateFormat = DateFormat('dd/MM/yyyy');
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Fase atual da lua
-                MagicalCard(
-                  child: Column(
-                    children: [
-                      Text(
-                        'Hoje',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        dateFormat.format(lunarProvider.selectedDate),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                      ),
-                      const SizedBox(height: 24),
-                      MoonPhaseWidget(
-                        phase: currentPhase,
-                        showName: true,
-                        showDescription: true,
-                        size: 80,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Próximas fases importantes
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Próximas Fases',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildNextPhaseItem(
-                        context,
-                        'Lua Cheia',
-                        lunarProvider.getNextFullMoon(),
-                        lunarProvider.getDaysUntilFullMoon(),
-                        MoonPhase.fullMoon.emoji,
-                      ),
-                      const Divider(height: 24),
-                      _buildNextPhaseItem(
-                        context,
-                        'Lua Nova',
-                        lunarProvider.getNextNewMoon(),
-                        lunarProvider.getDaysUntilNewMoon(),
-                        MoonPhase.newMoon.emoji,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Recomendações para feitiços
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.lightbulb_outline,
-                            color: AppColors.starYellow,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Recomendações',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSpellRecommendation(
-                        context,
-                        lunarProvider,
-                        SpellType.attraction,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSpellRecommendation(
-                        context,
-                        lunarProvider,
-                        SpellType.banishment,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Significado das fases
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Fases da Lua',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      ...MoonPhase.values.map((phase) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  phase.emoji,
-                                  style: const TextStyle(fontSize: 24),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        phase.displayName,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall,
-                                      ),
-                                      Text(
-                                        phase.description,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
-                                      ),
-                                    ],
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Fase atual da lua
+                  MagicalCard(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Hoje',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          dateFormat.format(lunarProvider.selectedDate),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textSecondary,
                                   ),
-                                ),
-                              ],
-                            ),
-                          )),
-                    ],
+                        ),
+                        const SizedBox(height: 24),
+                        MoonPhaseWidget(
+                          phase: currentPhase,
+                          showName: true,
+                          showDescription: true,
+                          size: 80,
+                        ),
+                      ],
+                    ),
                   ),
+
+                  // Próximas fases importantes
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Próximas Fases',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildNextPhaseItem(
+                          context,
+                          lunarProvider,
+                          'Lua Cheia',
+                          MoonPhase.fullMoon.emoji,
+                          isFullMoon: true,
+                        ),
+                        const Divider(height: 24),
+                        _buildNextPhaseItem(
+                          context,
+                          lunarProvider,
+                          'Lua Nova',
+                          MoonPhase.newMoon.emoji,
+                          isFullMoon: false,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Recomendações para feitiços
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_outline,
+                              color: AppColors.starYellow,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Recomendações',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildSpellRecommendation(
+                          context,
+                          lunarProvider,
+                          SpellType.attraction,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildSpellRecommendation(
+                          context,
+                          lunarProvider,
+                          SpellType.banishment,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Significado das fases
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Fases da Lua',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 16),
+                        ...MoonPhase.values.map((phase) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    phase.emoji,
+                                    style: const TextStyle(fontSize: 24),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          phase.displayName,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall,
+                                        ),
+                                        Text(
+                                          phase.description,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } catch (e) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: AppColors.alert,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Erro ao carregar calendário lunar',
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      e.toString(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
+              ),
+            );
+          }
         },
       ),
     );
@@ -170,12 +206,18 @@ class LunarCalendarPage extends StatelessWidget {
 
   Widget _buildNextPhaseItem(
     BuildContext context,
+    LunarProvider provider,
     String phaseName,
-    DateTime? date,
-    int? daysUntil,
-    String emoji,
-  ) {
+    String emoji, {
+    required bool isFullMoon,
+  }) {
     final dateFormat = DateFormat('dd/MM/yyyy');
+    final date = isFullMoon
+        ? provider.getNextFullMoon()
+        : provider.getNextNewMoon();
+    final daysUntil = isFullMoon
+        ? provider.getDaysUntilFullMoon()
+        : provider.getDaysUntilNewMoon();
 
     String daysText = '';
     if (daysUntil != null) {
