@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:sqflite_common/sqflite.dart';
 
@@ -21,7 +22,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize sqflite for web
-  databaseFactory = databaseFactoryFfiWeb;
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+  }
 
   // Initialize timezone
   tz.initializeTimeZones();
