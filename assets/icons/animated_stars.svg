@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Estrelas Animadas Pixel Art -->
+  <g id="animated-stars">
+    <!-- Estrela grande central -->
+    <g id="star-main">
+      <animateTransform
+        attributeName="transform"
+        attributeType="XML"
+        type="rotate"
+        from="0 24 24"
+        to="360 24 24"
+        dur="20s"
+        repeatCount="indefinite"/>
+      
+      <!-- Forma da estrela -->
+      <rect x="23" y="18" width="2" height="2" fill="#FFE8A3"/>
+      <rect x="23" y="16" width="2" height="2" fill="#FFE8A3" opacity="0.8"/>
+      <rect x="23" y="28" width="2" height="2" fill="#FFE8A3" opacity="0.8"/>
+      <rect x="18" y="23" width="2" height="2" fill="#FFE8A3" opacity="0.8"/>
+      <rect x="28" y="23" width="2" height="2" fill="#FFE8A3" opacity="0.8"/>
+      <rect x="20" y="20" width="2" height="2" fill="#FFE8A3" opacity="0.6"/>
+      <rect x="26" y="20" width="2" height="2" fill="#FFE8A3" opacity="0.6"/>
+      <rect x="20" y="26" width="2" height="2" fill="#FFE8A3" opacity="0.6"/>
+      <rect x="26" y="26" width="2" height="2" fill="#FFE8A3" opacity="0.6"/>
+      
+      <!-- Centro -->
+      <rect x="22" y="22" width="4" height="4" fill="#FFE8A3"/>
+      <rect x="23" y="21" width="2" height="6" fill="#FFE8A3"/>
+      <rect x="21" y="23" width="6" height="2" fill="#FFE8A3"/>
+    </g>
+    
+    <!-- Estrela pequena superior esquerda -->
+    <g id="star-small-1">
+      <animate
+        attributeName="opacity"
+        values="0;1;0"
+        dur="2s"
+        repeatCount="indefinite"/>
+      
+      <rect x="10" y="10" width="1" height="1" fill="#C9A7FF"/>
+      <rect x="9" y="11" width="3" height="1" fill="#C9A7FF"/>
+      <rect x="10" y="12" width="1" height="1" fill="#C9A7FF"/>
+      <rect x="10" y="9" width="1" height="1" fill="#C9A7FF" opacity="0.6"/>
+    </g>
+    
+    <!-- Estrela pequena superior direita -->
+    <g id="star-small-2">
+      <animate
+        attributeName="opacity"
+        values="0;1;0"
+        dur="2.5s"
+        begin="0.5s"
+        repeatCount="indefinite"/>
+      
+      <rect x="36" y="12" width="1" height="1" fill="#F1A7C5"/>
+      <rect x="35" y="13" width="3" height="1" fill="#F1A7C5"/>
+      <rect x="36" y="14" width="1" height="1" fill="#F1A7C5"/>
+      <rect x="36" y="11" width="1" height="1" fill="#F1A7C5" opacity="0.6"/>
+    </g>
+    
+    <!-- Estrela pequena inferior esquerda -->
+    <g id="star-small-3">
+      <animate
+        attributeName="opacity"
+        values="0;1;0"
+        dur="3s"
+        begin="1s"
+        repeatCount="indefinite"/>
+      
+      <rect x="12" y="34" width="1" height="1" fill="#A7F0D8"/>
+      <rect x="11" y="35" width="3" height="1" fill="#A7F0D8"/>
+      <rect x="12" y="36" width="1" height="1" fill="#A7F0D8"/>
+      <rect x="12" y="33" width="1" height="1" fill="#A7F0D8" opacity="0.6"/>
+    </g>
+    
+    <!-- Estrela pequena inferior direita -->
+    <g id="star-small-4">
+      <animate
+        attributeName="opacity"
+        values="0;1;0"
+        dur="2.2s"
+        begin="0.8s"
+        repeatCount="indefinite"/>
+      
+      <rect x="34" y="32" width="1" height="1" fill="#C9A7FF"/>
+      <rect x="33" y="33" width="3" height="1" fill="#C9A7FF"/>
+      <rect x="34" y="34" width="1" height="1" fill="#C9A7FF"/>
+      <rect x="34" y="31" width="1" height="1" fill="#C9A7FF" opacity="0.6"/>
+    </g>
+    
+    <!-- Partículas brilhantes -->
+    <rect x="8" y="24" width="1" height="1" fill="#FFE8A3" opacity="0.4">
+      <animate
+        attributeName="opacity"
+        values="0.4;0.8;0.4"
+        dur="1.5s"
+        repeatCount="indefinite"/>
+    </rect>
+    <rect x="40" y="20" width="1" height="1" fill="#FFE8A3" opacity="0.4">
+      <animate
+        attributeName="opacity"
+        values="0.4;0.8;0.4"
+        dur="1.8s"
+        begin="0.3s"
+        repeatCount="indefinite"/>
+    </rect>
+    <rect x="24" y="8" width="1" height="1" fill="#FFE8A3" opacity="0.4">
+      <animate
+        attributeName="opacity"
+        values="0.4;0.8;0.4"
+        dur="2s"
+        begin="0.6s"
+        repeatCount="indefinite"/>
+    </rect>
+    <rect x="22" y="38" width="1" height="1" fill="#FFE8A3" opacity="0.4">
+      <animate
+        attributeName="opacity"
+        values="0.4;0.8;0.4"
+        dur="1.7s"
+        begin="0.9s"
+        repeatCount="indefinite"/>
+    </rect>
+  </g>
+</svg>
