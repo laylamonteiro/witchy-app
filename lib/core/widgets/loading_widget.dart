@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
-import '../theme/app_assets.dart';
 
 class LoadingWidget extends StatelessWidget {
   final String? message;
@@ -14,10 +12,8 @@ class LoadingWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(
-            AppAssets.animatedStars,
-            width: 64,
-            height: 64,
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.lilac),
           ),
           if (message != null) ...[
             const SizedBox(height: 16),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../providers/desire_provider.dart';
 import '../../data/models/desire_model.dart';
@@ -7,7 +6,6 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/theme/app_assets.dart';
 import 'desire_form_page.dart';
 
 class DesiresListPage extends StatefulWidget {
@@ -118,16 +116,7 @@ class _DesiresListPageState extends State<DesiresListPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToForm(context),
         backgroundColor: AppColors.lilac,
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(
-            AppAssets.addDark,
-            colorFilter: const ColorFilter.mode(
-              Color(0xFF2B2143),
-              BlendMode.srcIn,
-            ),
-          ),
-        ),
+        child: const Icon(Icons.add, color: Color(0xFF2B2143)),
       ),
     );
   }
