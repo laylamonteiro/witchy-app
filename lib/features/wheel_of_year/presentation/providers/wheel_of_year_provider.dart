@@ -69,7 +69,7 @@ class WheelOfYearProvider with ChangeNotifier {
   }
 
   // Verificar se hoje é um sabbat
-  bool isToday Sabbat() {
+  bool isTodaySabbat() {
     final now = DateTime.now();
     final sabbats = getAllSabbats();
 
