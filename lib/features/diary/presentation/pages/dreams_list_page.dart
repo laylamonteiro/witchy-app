@@ -5,6 +5,7 @@ import '../providers/dream_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'dream_form_page.dart';
 
@@ -113,10 +114,9 @@ class _DreamsListPageState extends State<DreamsListPage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: MagicalFAB(
         onPressed: () => _navigateToForm(context),
-        backgroundColor: AppColors.lilac,
-        child: const Icon(Icons.add, color: Color(0xFF2B2143)),
+        icon: Icons.nightlight,
       ),
     );
   }

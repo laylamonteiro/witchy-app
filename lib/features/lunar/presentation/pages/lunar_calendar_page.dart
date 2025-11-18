@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/lunar_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/moon_phase_widget.dart';
+import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 
@@ -48,12 +49,19 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                                   ),
                         ),
                         const SizedBox(height: 24),
-                        MoonPhaseWidget(
-                          phase: currentPhase,
-                          showName: true,
-                          showDescription: true,
-                          size: 80,
-                        ),
+                        // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases
+                        currentPhase == MoonPhase.fullMoon
+                            ? BreathingMoon(
+                                moonEmoji: currentPhase.emoji,
+                                size: 100,
+                                showStars: true,
+                              )
+                            : MoonPhaseWidget(
+                                phase: currentPhase,
+                                showName: true,
+                                showDescription: true,
+                                size: 80,
+                              ),
                       ],
                     ),
                   ),

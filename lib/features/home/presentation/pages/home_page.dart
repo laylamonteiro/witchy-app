@@ -4,6 +4,7 @@ import '../../../grimoire/presentation/pages/grimoire_list_page.dart';
 import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/mascot_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,12 +23,32 @@ class _HomePageState extends State<HomePage> {
     const EncyclopediaPage(),
   ];
 
+  final List<String> _pageNames = [
+    'Lua',
+    'Grimório',
+    'Diários',
+    'Enciclopédia',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
+      body: Stack(
+        children: [
+          // Páginas
+          IndexedStack(
+            index: _selectedIndex,
+            children: _pages,
+          ),
+          // Mascote no canto superior direito
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: MascotWidget(
+              currentPage: _pageNames[_selectedIndex],
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(

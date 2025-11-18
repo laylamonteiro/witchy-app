@@ -4,6 +4,7 @@ import '../providers/spell_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'spell_form_page.dart';
 import 'spell_detail_page.dart';
@@ -173,10 +174,9 @@ class _GrimoireListPageState extends State<GrimoireListPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: MagicalFAB(
         onPressed: () => _navigateToForm(context),
-        backgroundColor: AppColors.lilac,
-        child: const Icon(Icons.add, color: Color(0xFF2B2143)),
+        icon: Icons.auto_fix_high,
       ),
     );
   }

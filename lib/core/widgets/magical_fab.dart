@@ -2,25 +2,26 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-class MagicalButton extends StatefulWidget {
-  final String text;
+/// FloatingActionButton mágico com animação de escala e explosão de partículas
+class MagicalFAB extends StatefulWidget {
   final VoidCallback onPressed;
-  final bool isOutlined;
-  final IconData? icon;
+  final IconData icon;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
 
-  const MagicalButton({
+  const MagicalFAB({
     super.key,
-    required this.text,
     required this.onPressed,
-    this.isOutlined = false,
-    this.icon,
+    required this.icon,
+    this.backgroundColor,
+    this.foregroundColor,
   });
 
   @override
-  State<MagicalButton> createState() => _MagicalButtonState();
+  State<MagicalFAB> createState() => _MagicalFABState();
 }
 
-class _MagicalButtonState extends State<MagicalButton>
+class _MagicalFABState extends State<MagicalFAB>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -31,10 +32,10 @@ class _MagicalButtonState extends State<MagicalButton>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.03).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -54,17 +55,16 @@ class _MagicalButtonState extends State<MagicalButton>
   void _createParticles() {
     setState(() {
       _particles.clear();
-      // Criar 3-5 partículas
-      final count = 3 + _random.nextInt(3);
+      final count = 4 + _random.nextInt(3);
       for (int i = 0; i < count; i++) {
         _particles.add(_Particle(
-          angle: (i / count) * 2 * math.pi,
-          distance: 40.0 + _random.nextDouble() * 20,
+          angle: (i / count) * 2 * math.pi + _random.nextDouble() * 0.5,
+          distance: 35.0 + _random.nextDouble() * 20,
           color: i % 2 == 0 ? AppColors.starYellow : AppColors.lilac,
         ));
       }
     });
-    Future.delayed(const Duration(milliseconds: 400), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         setState(() {
           _particles.clear();
@@ -83,34 +83,34 @@ class _MagicalButtonState extends State<MagicalButton>
         children: [
           // Partículas
           ..._particles.map((particle) {
-            final offsetX = math.cos(particle.angle) * particle.distance;
-            final offsetY = math.sin(particle.angle) * particle.distance;
+            final offsetX = math.cos(particle.angle) * 10;
+            final offsetY = math.sin(particle.angle) * 10;
 
             return Positioned(
               left: offsetX,
               top: offsetY,
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 400),
+                duration: const Duration(milliseconds: 500),
                 curve: Curves.easeOut,
                 builder: (context, value, child) {
-                  return Opacity(
-                    opacity: 1.0 - value,
-                    child: Transform.translate(
-                      offset: Offset(
-                        offsetX * value * 0.5,
-                        offsetY * value * 0.5 - 15 * value,
-                      ),
+                  final dx = math.cos(particle.angle) * particle.distance * value;
+                  final dy = math.sin(particle.angle) * particle.distance * value - 20 * value;
+
+                  return Transform.translate(
+                    offset: Offset(dx, dy),
+                    child: Opacity(
+                      opacity: 1.0 - value,
                       child: Container(
-                        width: 6,
-                        height: 6,
+                        width: 8,
+                        height: 8,
                         decoration: BoxDecoration(
                           color: particle.color,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: particle.color.withOpacity(0.6),
-                              blurRadius: 4,
+                              color: particle.color.withOpacity(0.7),
+                              blurRadius: 6,
                               spreadRadius: 1,
                             ),
                           ],
@@ -122,22 +122,13 @@ class _MagicalButtonState extends State<MagicalButton>
               ),
             );
           }),
-          // Botão
-          widget.isOutlined
-              ? OutlinedButton.icon(
-                  onPressed: _handleTap,
-                  icon: widget.icon != null
-                      ? Icon(widget.icon)
-                      : const SizedBox.shrink(),
-                  label: Text(widget.text),
-                )
-              : ElevatedButton.icon(
-                  onPressed: _handleTap,
-                  icon: widget.icon != null
-                      ? Icon(widget.icon)
-                      : const SizedBox.shrink(),
-                  label: Text(widget.text),
-                ),
+          // FloatingActionButton
+          FloatingActionButton(
+            onPressed: _handleTap,
+            backgroundColor: widget.backgroundColor ?? AppColors.lilac,
+            foregroundColor: widget.foregroundColor ?? const Color(0xFF2B2143),
+            child: Icon(widget.icon),
+          ),
         ],
       ),
     );
