@@ -27,6 +27,8 @@ class _MascotWidgetState extends State<MascotWidget>
     switch (widget.currentPage) {
       case 'Lua':
         return '🌙✨'; // Lua com estrelas
+      case 'Sabbats':
+        return '🎃🔥'; // Abóbora com fogo (Sabbats)
       case 'Grimório':
         return '📚🔮'; // Livro com bola de cristal
       case 'Diários':

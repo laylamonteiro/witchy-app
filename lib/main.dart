@@ -15,6 +15,7 @@ import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
 import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart';
 import 'features/lunar/presentation/providers/lunar_provider.dart';
+import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -63,6 +64,7 @@ class GrimorioDeBolsoApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DesireProvider()),
         ChangeNotifierProvider(create: (_) => EncyclopediaProvider()),
         ChangeNotifierProvider(create: (_) => LunarProvider()),
+        ChangeNotifierProvider(create: (_) => WheelOfYearProvider()),
       ],
       child: MaterialApp(
         title: 'Grimório de Bolso',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
+import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../grimoire/presentation/pages/grimoire_list_page.dart';
 import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
@@ -18,6 +19,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const LunarCalendarPage(),
+    const WheelOfYearPage(),
     const GrimoireListPage(),
     const DiaryPage(),
     const EncyclopediaPage(),
@@ -25,6 +27,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<String> _pageNames = [
     'Lua',
+    'Sabbats',
     'Grimório',
     'Diários',
     'Enciclopédia',
@@ -70,6 +73,10 @@ class _HomePageState extends State<HomePage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.nightlight_round),
               label: 'Lua',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.celebration),
+              label: 'Sabbats',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.auto_stories),
