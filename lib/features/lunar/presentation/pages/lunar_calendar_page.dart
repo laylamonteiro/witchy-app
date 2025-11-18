@@ -16,6 +16,15 @@ class LunarCalendarPage extends StatefulWidget {
 }
 
 class _LunarCalendarPageState extends State<LunarCalendarPage> {
+  final PageController _pageController = PageController(initialPage: 1);
+  int _currentPage = 1; // 0 = Ontem, 1 = Hoje, 2 = Amanhã
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,36 +41,66 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Fase atual da lua
-                  MagicalCard(
+                  // Carrossel: Ontem - Hoje - Amanhã
+                  SizedBox(
+                    height: 300,
                     child: Column(
                       children: [
-                        Text(
-                          'Hoje',
-                          style: Theme.of(context).textTheme.headlineSmall,
+                        Expanded(
+                          child: PageView(
+                            controller: _pageController,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentPage = index;
+                              });
+                            },
+                            children: [
+                              // Ontem
+                              _buildDayCard(
+                                context,
+                                lunarProvider,
+                                'Ontem',
+                                -1,
+                                dateFormat,
+                              ),
+                              // Hoje
+                              _buildDayCard(
+                                context,
+                                lunarProvider,
+                                'Hoje',
+                                0,
+                                dateFormat,
+                              ),
+                              // Amanhã
+                              _buildDayCard(
+                                context,
+                                lunarProvider,
+                                'Amanhã',
+                                1,
+                                dateFormat,
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          dateFormat.format(lunarProvider.selectedDate),
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases
-                        currentPhase == MoonPhase.fullMoon
-                            ? BreathingMoon(
-                                moonEmoji: currentPhase.emoji,
-                                size: 100,
-                                showStars: true,
-                              )
-                            : MoonPhaseWidget(
-                                phase: currentPhase,
-                                showName: true,
-                                showDescription: true,
-                                size: 80,
+                        // Indicador de página
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(3, (index) {
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _currentPage == index
+                                    ? AppColors.lilac
+                                    : AppColors.surfaceBorder,
                               ),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 8),
                       ],
                     ),
                   ),
@@ -73,7 +112,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                       children: [
                         Text(
                           'Próximas Fases',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 16),
                         _buildNextPhaseItem(
@@ -82,14 +121,6 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                           'Lua Cheia',
                           MoonPhase.fullMoon.emoji,
                           isFullMoon: true,
-                        ),
-                        const Divider(height: 24),
-                        _buildNextPhaseItem(
-                          context,
-                          lunarProvider,
-                          'Lua Nova',
-                          MoonPhase.newMoon.emoji,
-                          isFullMoon: false,
                         ),
                       ],
                     ),
@@ -109,7 +140,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                             const SizedBox(width: 8),
                             Text(
                               'Recomendações',
-                              style: Theme.of(context).textTheme.titleLarge,
+                              style: Theme.of(context).textTheme.headlineMedium,
                             ),
                           ],
                         ),
@@ -136,7 +167,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                       children: [
                         Text(
                           'Fases da Lua',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 16),
                         ...MoonPhase.values.map((phase) => Padding(
@@ -208,6 +239,54 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
             );
           }
         },
+      ),
+    );
+  }
+
+  Widget _buildDayCard(
+    BuildContext context,
+    LunarProvider provider,
+    String dayLabel,
+    int dayOffset,
+    DateFormat dateFormat,
+  ) {
+    // Calcular a data baseada no offset (-1 = ontem, 0 = hoje, 1 = amanhã)
+    final date = DateTime.now().add(Duration(days: dayOffset));
+
+    // Criar um provider temporário para a data específica
+    final tempProvider = LunarProvider()..setDate(date);
+    final phase = tempProvider.getCurrentMoonPhase();
+
+    return MagicalCard(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            dayLabel,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            dateFormat.format(date),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases
+          phase == MoonPhase.fullMoon
+              ? BreathingMoon(
+                  moonEmoji: phase.emoji,
+                  size: 100,
+                  showStars: true,
+                )
+              : MoonPhaseWidget(
+                  phase: phase,
+                  showName: true,
+                  showDescription: true,
+                  size: 80,
+                ),
+        ],
       ),
     );
   }

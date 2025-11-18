@@ -67,12 +67,12 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
         ),
-        headlineMedium: GoogleFonts.nunito(
+        headlineMedium: GoogleFonts.cinzelDecorative(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
         ),
-        headlineSmall: GoogleFonts.nunito(
+        headlineSmall: GoogleFonts.cinzelDecorative(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
