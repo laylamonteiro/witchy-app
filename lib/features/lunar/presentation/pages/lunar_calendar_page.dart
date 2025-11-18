@@ -254,7 +254,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
     final date = DateTime.now().add(Duration(days: dayOffset));
 
     // Criar um provider temporário para a data específica
-    final tempProvider = LunarProvider()..setDate(date);
+    final tempProvider = LunarProvider()..setSelectedDate(date);
     final phase = tempProvider.getCurrentMoonPhase();
 
     return MagicalCard(
