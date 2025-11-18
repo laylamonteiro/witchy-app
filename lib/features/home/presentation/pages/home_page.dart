@@ -5,7 +5,7 @@ import '../../../grimoire/presentation/pages/grimoire_list_page.dart';
 import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/mascot_widget.dart';
+import '../../../../core/widgets/draggable_cat_mascot.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -43,14 +43,8 @@ class _HomePageState extends State<HomePage> {
             index: _selectedIndex,
             children: _pages,
           ),
-          // Mascote no canto superior direito
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            right: 16,
-            child: MascotWidget(
-              currentPage: _pageNames[_selectedIndex],
-            ),
-          ),
+          // Mascote arrastável
+          const DraggableCatMascot(),
         ],
       ),
       bottomNavigationBar: Container(

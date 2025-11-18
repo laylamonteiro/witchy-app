@@ -258,35 +258,39 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
     final phase = tempProvider.getCurrentMoonPhase();
 
     return MagicalCard(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            dayLabel,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            dateFormat.format(date),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              dayLabel,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-          ),
-          const SizedBox(height: 24),
-          // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases
-          phase == MoonPhase.fullMoon
-              ? BreathingMoon(
-                  moonEmoji: phase.emoji,
-                  size: 100,
-                  showStars: true,
-                )
-              : MoonPhaseWidget(
-                  phase: phase,
-                  showName: true,
-                  showDescription: true,
-                  size: 80,
-                ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              dateFormat.format(date),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases
+            phase == MoonPhase.fullMoon
+                ? BreathingMoon(
+                    moonEmoji: phase.emoji,
+                    size: 100,
+                    showStars: true,
+                  )
+                : MoonPhaseWidget(
+                    phase: phase,
+                    showName: true,
+                    showDescription: false,
+                    size: 80,
+                  ),
+          ],
+        ),
       ),
     );
   }
