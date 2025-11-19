@@ -77,7 +77,7 @@ class RunesListPage extends StatelessWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.2,
+                childAspectRatio: 1.0, // Aumentado de 1.2 para 1.0 para dar mais altura
               ),
               itemCount: runes.length,
               itemBuilder: (context, index) {
@@ -103,41 +103,51 @@ class RunesListPage extends StatelessWidget {
         );
       },
       child: MagicalCard(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Símbolo da runa
-            Text(
-              rune.symbol,
-              style: const TextStyle(
-                fontSize: 48,
-                color: AppColors.starYellow,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Nome da runa
-            Text(
-              rune.name,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.lilac,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-
-            // Primeira palavra-chave
-            if (rune.keywords.isNotEmpty)
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Símbolo da runa
               Text(
-                rune.keywords.first,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                rune.symbol,
+                style: const TextStyle(
+                  fontSize: 42, // Reduzido de 48 para 42
+                  color: AppColors.starYellow,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Nome da runa
+              Text(
+                rune.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.lilac,
+                      fontSize: 16, // Tamanho fixo para consistência
                     ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-          ],
+              const SizedBox(height: 4),
+
+              // Primeira palavra-chave
+              if (rune.keywords.isNotEmpty)
+                Flexible(
+                  child: Text(
+                    rune.keywords.first,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12, // Tamanho fixo
+                        ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2, // Permitir até 2 linhas
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
