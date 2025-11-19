@@ -69,11 +69,11 @@ class SigilWheelPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = math.min(size.width, size.height) * 0.4;
     
-    // Paint para as linhas da grade (mais visível)
+    // Paint para as linhas da grade (MUITO mais visível)
     final gridPaint = Paint()
-      ..color = const Color(0xFFC9A7FF).withOpacity(0.6)  // Lilás mais visível
+      ..color = const Color(0xFFC9A7FF)  // Lilás sem opacidade - totalmente visível
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 3;
 
     // Paint para as divisões (mais visível)
     final dividerPaint = Paint()
