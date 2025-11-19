@@ -5,10 +5,12 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:sqflite_common/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/database/database_helper.dart';
 import 'core/widgets/splash_screen.dart';
+import 'core/providers/notification_provider.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
@@ -34,6 +36,9 @@ void main() async {
   // Initialize database
   await DatabaseHelper.instance.database;
 
+  // Initialize SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+
   // Initialize notifications (only for mobile platforms)
   if (!kIsWeb) {
     const initializationSettingsAndroid =
@@ -49,11 +54,13 @@ void main() async {
     );
   }
 
-  runApp(const GrimorioDeBolsoApp());
+  runApp(GrimorioDeBolsoApp(prefs: prefs));
 }
 
 class GrimorioDeBolsoApp extends StatelessWidget {
-  const GrimorioDeBolsoApp({super.key});
+  final SharedPreferences prefs;
+
+  const GrimorioDeBolsoApp({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +72,12 @@ class GrimorioDeBolsoApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EncyclopediaProvider()),
         ChangeNotifierProvider(create: (_) => LunarProvider()),
         ChangeNotifierProvider(create: (_) => WheelOfYearProvider()),
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider(
+            flutterLocalNotificationsPlugin,
+            prefs,
+          ),
+        ),
       ],
       child: MaterialApp(
         title: 'Grimório de Bolso',
