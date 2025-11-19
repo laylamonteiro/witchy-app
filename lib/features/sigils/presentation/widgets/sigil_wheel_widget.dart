@@ -139,9 +139,9 @@ class SigilWheelPainter extends CustomPainter {
       canvas.drawLine(start, end, paint);
     }
     
-    // Anel interno - 5 divisões (72° cada)
-    for (int i = 0; i < 5; i++) {
-      final angle = (i * 72) * (math.pi / 180);
+    // Anel interno - 6 divisões (60° cada)
+    for (int i = 0; i < 6; i++) {
+      final angle = (i * 60) * (math.pi / 180);
       final start = center;
       final end = Offset(
         center.dx + (maxRadius * 0.33) * math.cos(angle - math.pi / 2),
@@ -161,39 +161,16 @@ class SigilWheelPainter extends CustomPainter {
     );
     
     SigilWheel.letterPositions.forEach((letter, position) {
-      // Pula o centro se for A
-      if (position.ring == 0) {
-        // Desenha A no centro
-        final textSpan = TextSpan(
-          text: letter,
-          style: textStyle.copyWith(
-            color: highlightedLetters?.contains(letter) ?? false
-              ? const Color(0xFFFFE8A3)
-              : const Color(0xFFB7B2D6),
-          ),
-        );
-        final textPainter = TextPainter(
-          text: textSpan,
-          textDirection: TextDirection.ltr,
-        );
-        textPainter.layout();
-        textPainter.paint(
-          canvas,
-          center - Offset(textPainter.width / 2, textPainter.height / 2),
-        );
-        return;
-      }
-      
       // Calcula o raio baseado no anel
       double radius;
       switch (position.ring) {
-        case 1:
+        case 1: // Anel interno (A-F)
           radius = maxRadius * 0.33;
           break;
-        case 2:
+        case 2: // Anel médio (G-N)
           radius = maxRadius * 0.66;
           break;
-        case 3:
+        case 3: // Anel externo (O-Z)
           radius = maxRadius;
           break;
         default:
