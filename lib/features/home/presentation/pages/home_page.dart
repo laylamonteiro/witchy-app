@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
               label: 'Diários',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.diamond),
+              icon: Icon(Icons.stars_outlined),
               label: 'Enciclopédia',
             ),
           ],
