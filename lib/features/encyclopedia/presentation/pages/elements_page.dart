@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/expansion_magical_card.dart';
 
 /// Página informativa sobre os 4 elementos
 class ElementsPage extends StatelessWidget {
@@ -55,26 +56,13 @@ class ElementsPage extends StatelessWidget {
             ),
 
             // TERRA
-            MagicalCard(
+            ExpansionMagicalCard(
+              title: 'Terra',
+              emoji: '🌍',
+              initiallyExpanded: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text('🌍', style: TextStyle(fontSize: 32)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Terra',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Colors.brown.shade700,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                   _buildSubsection(
                     context,
                     'Essência',
@@ -141,26 +129,12 @@ class ElementsPage extends StatelessWidget {
             ),
 
             // ÁGUA
-            MagicalCard(
+            ExpansionMagicalCard(
+              title: 'Água',
+              emoji: '💧',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text('💧', style: TextStyle(fontSize: 32)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Água',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Colors.blue.shade700,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                   _buildSubsection(
                     context,
                     'Essência',
@@ -227,26 +201,12 @@ class ElementsPage extends StatelessWidget {
             ),
 
             // FOGO
-            MagicalCard(
+            ExpansionMagicalCard(
+              title: 'Fogo',
+              emoji: '🔥',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text('🔥', style: TextStyle(fontSize: 32)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Fogo',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Colors.red.shade700,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                   _buildSubsection(
                     context,
                     'Essência',
@@ -313,26 +273,12 @@ class ElementsPage extends StatelessWidget {
             ),
 
             // AR
-            MagicalCard(
+            ExpansionMagicalCard(
+              title: 'Ar',
+              emoji: '💨',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text('💨', style: TextStyle(fontSize: 32)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Ar',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Colors.cyan.shade700,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                   _buildSubsection(
                     context,
                     'Essência',
@@ -399,14 +345,12 @@ class ElementsPage extends StatelessWidget {
             ),
 
             // Equilíbrio dos Elementos
-            MagicalCard(
+            ExpansionMagicalCard(
+              title: 'O Equilíbrio Elemental',
+              emoji: '⚖️',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '⚖️ O Equilíbrio Elemental',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Na prática da bruxaria, buscar o equilíbrio dos quatro elementos é essencial. '
@@ -455,14 +399,12 @@ class ElementsPage extends StatelessWidget {
             ),
 
             // Como Trabalhar com os Elementos
-            MagicalCard(
+            ExpansionMagicalCard(
+              title: 'Como Trabalhar com os Elementos',
+              emoji: '✨',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '✨ Como Trabalhar com os Elementos',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
                   const SizedBox(height: 16),
                   _buildPracticeItem(
                     context,
@@ -498,14 +440,12 @@ class ElementsPage extends StatelessWidget {
             ),
 
             // Considerações Finais
-            MagicalCard(
+            ExpansionMagicalCard(
+              title: 'Honrando os Elementos',
+              emoji: '🌟',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '🌟 Honrando os Elementos',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Os quatro elementos não são apenas ferramentas mágicas - eles são forças vivas que sustentam toda a existência. '
