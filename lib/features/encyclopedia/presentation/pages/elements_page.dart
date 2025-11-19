@@ -11,6 +11,10 @@ class ElementsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Os Quatro Elementos'),
+        backgroundColor: AppColors.surface,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -22,38 +26,38 @@ class ElementsPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('🌍', style: TextStyle(fontSize: 28)),
-                      SizedBox(width: 8),
-                      Text('💧', style: TextStyle(fontSize: 28)),
-                      SizedBox(width: 8),
-                      Text('🔥', style: TextStyle(fontSize: 28)),
-                      SizedBox(width: 8),
-                      Text('💨', style: TextStyle(fontSize: 28)),
+                      Text('🌍💧🔥💨', style: TextStyle(fontSize: 28)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Os Quatro Elementos',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Os Quatro Elementos',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Text(
                     'Na Wicca e na bruxaria tradicional, os quatro elementos - Terra, Água, Fogo e Ar - '
                     'são forças fundamentais da natureza e da existência. Eles não são apenas substâncias físicas, '
-                    'mas energias primordiais que compõem toda a criação. '
-                    '\n\nCada elemento possui qualidades, correspondências e energias únicas que podem ser trabalhadas '
-                    'em rituais, feitiços e na prática diária. Compreender e equilibrar os elementos em sua vida '
-                    'e prática mágica traz harmonia, poder e conexão com as forças naturais do universo.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    'mas energias primordiais que compõem toda a criação.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Explore cada elemento abaixo para compreender suas qualidades, correspondências e como trabalhar com eles.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
                         ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 24),
 
             // TERRA
             ExpansionMagicalCard(
@@ -500,22 +504,20 @@ class ElementsPage extends StatelessWidget {
 
   Widget _buildBalanceItem(String element, String description) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             element,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              description,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
             ),
           ),
         ],

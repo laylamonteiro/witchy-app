@@ -11,6 +11,10 @@ class AltarPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('O Altar Mágico'),
+        backgroundColor: AppColors.surface,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -23,28 +27,37 @@ class AltarPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Text('🕯️', style: TextStyle(fontSize: 32)),
+                      const Text('🔮', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'O Altar Mágico',
-                          style: Theme.of(context).textTheme.headlineMedium,
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Text(
                     'Um altar é seu espaço sagrado pessoal - um ponto focal para sua prática mágica. '
                     'Não precisa ser elaborado ou caro; o que importa é a intenção e o respeito com que você o trata. '
                     'Seu altar é uma extensão da sua energia e um portal entre o mundo físico e o espiritual.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Explore as seções abaixo para aprender a montar, purificar, manter e utilizar seu altar.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
                         ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 24),
 
             // Como montar
             ExpansionMagicalCard(
