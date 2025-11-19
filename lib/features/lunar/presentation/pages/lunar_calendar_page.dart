@@ -259,7 +259,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
 
     return MagicalCard(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
@@ -268,27 +268,29 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               dayLabel,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               dateFormat.format(date),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases
-            phase == MoonPhase.fullMoon
-                ? BreathingMoon(
-                    moonEmoji: phase.emoji,
-                    size: 100,
-                    showStars: true,
-                  )
-                : MoonPhaseWidget(
-                    phase: phase,
-                    showName: true,
-                    showDescription: false,
-                    size: 80,
-                  ),
+            Flexible(
+              child: phase == MoonPhase.fullMoon
+                  ? BreathingMoon(
+                      moonEmoji: phase.emoji,
+                      size: 90,
+                      showStars: true,
+                    )
+                  : MoonPhaseWidget(
+                      phase: phase,
+                      showName: true,
+                      showDescription: true,
+                      size: 70,
+                    ),
+            ),
           ],
         ),
       ),

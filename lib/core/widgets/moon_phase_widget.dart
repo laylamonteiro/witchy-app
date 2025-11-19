@@ -46,13 +46,15 @@ class MoonPhaseWidget extends StatelessWidget {
           ),
         ],
         if (showDescription) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             phase.description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary,
                 ),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ],
