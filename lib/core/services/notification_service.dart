@@ -1,6 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import '../../features/lunar/data/models/moon_phase.dart';
 import '../../features/wheel_of_year/data/models/sabbat_model.dart';
 
 class NotificationService {

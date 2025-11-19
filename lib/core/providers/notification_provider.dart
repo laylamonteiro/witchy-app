@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../services/notification_service.dart';
 import '../../features/lunar/presentation/providers/lunar_provider.dart';
 import '../../features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
+import '../../features/wheel_of_year/data/models/sabbat_model.dart';
 
 class NotificationProvider with ChangeNotifier {
   final NotificationService _notificationService;
@@ -60,18 +61,15 @@ class NotificationProvider with ChangeNotifier {
     final List<DateTime> newMoons = [];
 
     // Coletar próximas 3 luas cheias e novas
+    // Simplificação: usar datas aproximadas (dia 15 para cheia, dia 1 para nova)
+    // Em produção, usar cálculo preciso baseado em lunar
     if (_fullMoonNotifications || _newMoonNotifications) {
       for (int month = 0; month < 3; month++) {
-        final date = DateTime(now.year, now.month + month, 15);
-        final phase = lunarProvider.getMoonPhaseForDate(date);
-
-        // Simplificação: usar datas aproximadas
-        // Em produção, usar cálculo preciso
         if (_fullMoonNotifications) {
-          fullMoons.add(DateTime(date.year, date.month, 15));
+          fullMoons.add(DateTime(now.year, now.month + month, 15));
         }
         if (_newMoonNotifications) {
-          newMoons.add(DateTime(date.year, date.month, 1));
+          newMoons.add(DateTime(now.year, now.month + month, 1));
         }
       }
     }

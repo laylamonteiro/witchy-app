@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/providers/notification_provider.dart';
-import '../../../core/widgets/magical_card.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../features/lunar/presentation/providers/lunar_provider.dart';
-import '../../../features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
+import '../../../../core/providers/notification_provider.dart';
+import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../lunar/presentation/providers/lunar_provider.dart';
+import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
