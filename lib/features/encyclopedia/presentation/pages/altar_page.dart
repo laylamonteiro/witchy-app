@@ -74,13 +74,52 @@ class AltarPage extends StatelessWidget {
                     'Opcional, mas recomendado. Use cores que ressoem com você: '
                     'preto (proteção), branco (pureza), roxo (espiritualidade), verde (cura).',
                   ),
-                  _buildStep(
-                    context,
-                    '4. Represente os 4 elementos',
-                    'Terra (cristais, sal, plantas), Água (taça com água), '
-                    'Fogo (vela), Ar (incenso, pena). Posicione conforme os pontos cardeais se possível: '
-                    'Norte (Terra), Sul (Fogo), Leste (Ar), Oeste (Água).',
+                  // Seção especial para os 4 elementos
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '4. Represente os 4 elementos',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Cada elemento traz uma energia essencial para o altar:',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.mint.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.mint.withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildElementItem('🌍 Terra (Norte)', 'Cristais, sal, pedras, plantas, pentáculo'),
+                            _buildElementItem('💧 Água (Oeste)', 'Taça com água, conchas, água lunar'),
+                            _buildElementItem('🔥 Fogo (Sul)', 'Vela, caldeirão, athame'),
+                            _buildElementItem('💨 Ar (Leste)', 'Incenso, penas, sinos, varinha'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '💡 Dica: Posicione cada elemento na direção cardeal correspondente quando possível.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontStyle: FontStyle.italic,
+                            ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 16),
                   _buildStep(
                     context,
                     '5. Adicione itens pessoais',
@@ -499,6 +538,32 @@ class AltarPage extends StatelessWidget {
                       ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildElementItem(String element, String examples) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            element,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            examples,
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
