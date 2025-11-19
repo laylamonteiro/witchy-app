@@ -67,13 +67,13 @@ class SigilWheelPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = math.min(size.width, size.height) * 0.4;
+    final maxRadius = math.min(size.width, size.height) * 0.45;  // Aumentado de 0.4 para 0.45 - usa mais espaço
     
     // Paint para as linhas da grade (MUITO mais visível)
     final gridPaint = Paint()
       ..color = const Color(0xFFC9A7FF)  // Lilás sem opacidade - totalmente visível
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeWidth = 4;  // Aumentado para 4 para melhor visibilidade
 
     // Paint para as divisões (mais visível)
     final dividerPaint = Paint()
