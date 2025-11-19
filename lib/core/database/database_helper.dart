@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -42,11 +42,13 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         purpose TEXT NOT NULL,
         type TEXT NOT NULL,
+        category TEXT NOT NULL,
         moon_phase TEXT,
         ingredients TEXT,
         steps TEXT NOT NULL,
         duration INTEGER,
         observations TEXT,
+        is_preloaded INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -202,6 +204,26 @@ class DatabaseHelper {
             created_at INTEGER NOT NULL
           )
         ''');
+      }
+    }
+
+    // Migração da versão 2 para 3
+    if (oldVersion < 3) {
+      // Adicionar campos category e is_preloaded na tabela spells
+      try {
+        // Verifica se a coluna já existe
+        final columns = await db.rawQuery('PRAGMA table_info(spells)');
+        final categoryExists = columns.any((col) => col['name'] == 'category');
+        final isPreloadedExists = columns.any((col) => col['name'] == 'is_preloaded');
+
+        if (!categoryExists) {
+          await db.execute('ALTER TABLE spells ADD COLUMN category TEXT NOT NULL DEFAULT "other"');
+        }
+        if (!isPreloadedExists) {
+          await db.execute('ALTER TABLE spells ADD COLUMN is_preloaded INTEGER NOT NULL DEFAULT 0');
+        }
+      } catch (e) {
+        print('Erro ao adicionar colunas: $e');
       }
     }
   }
