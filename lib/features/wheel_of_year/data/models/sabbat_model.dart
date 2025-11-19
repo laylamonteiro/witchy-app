@@ -73,6 +73,90 @@ extension SabbatTypeExtension on SabbatType {
     }
   }
 
+  List<String> get crystals {
+    switch (this) {
+      case SabbatType.samhain:
+        return ['Obsidiana', 'Ônix', 'Turmalina negra', 'Ametista'];
+      case SabbatType.yule:
+        return ['Quartzo transparente', 'Citrino', 'Granada', 'Rubi'];
+      case SabbatType.imbolc:
+        return ['Ametista', 'Quartzo rosa', 'Selenita', 'Pedra da lua'];
+      case SabbatType.ostara:
+        return ['Quartzo rosa', 'Aventurina', 'Água-marinha', 'Jaspe'];
+      case SabbatType.beltane:
+        return ['Quartzo rosa', 'Esmeralda', 'Malaquita', 'Carnélia'];
+      case SabbatType.litha:
+        return ['Citrino', 'Olho de tigre', 'Quartzo transparente', 'Âmbar'];
+      case SabbatType.lammas:
+        return ['Citrino', 'Cornalina', 'Ágata', 'Peridoto'];
+      case SabbatType.mabon:
+        return ['Âmbar', 'Topázio', 'Citrino', 'Ágata'];
+    }
+  }
+
+  List<String> get herbs {
+    switch (this) {
+      case SabbatType.samhain:
+        return ['Artemísia', 'Alecrim', 'Sálvia', 'Rosa (pétalas)', 'Hortelã'];
+      case SabbatType.yule:
+        return ['Alecrim', 'Canela', 'Gengibre', 'Pinheiro', 'Louro'];
+      case SabbatType.imbolc:
+        return ['Lavanda', 'Camomila', 'Angélica', 'Manjericão'];
+      case SabbatType.ostara:
+        return ['Rosa', 'Lavanda', 'Hortelã', 'Manjericão'];
+      case SabbatType.beltane:
+        return ['Rosa', 'Lavanda', 'Hortelã', 'Manjericão'];
+      case SabbatType.litha:
+        return ['Camomila', 'Hortelã', 'Rosa', 'Lavanda'];
+      case SabbatType.lammas:
+        return ['Manjericão', 'Camomila', 'Alecrim'];
+      case SabbatType.mabon:
+        return ['Sálvia', 'Alecrim', 'Camomila'];
+    }
+  }
+
+  List<String> get colors {
+    switch (this) {
+      case SabbatType.samhain:
+        return ['Preto', 'Laranja', 'Roxo escuro', 'Dourado escuro'];
+      case SabbatType.yule:
+        return ['Vermelho', 'Verde', 'Dourado', 'Branco'];
+      case SabbatType.imbolc:
+        return ['Branco', 'Rosa claro', 'Amarelo claro', 'Verde claro'];
+      case SabbatType.ostara:
+        return ['Verde', 'Amarelo', 'Rosa', 'Lilás'];
+      case SabbatType.beltane:
+        return ['Vermelho', 'Verde vibrante', 'Dourado', 'Rosa'];
+      case SabbatType.litha:
+        return ['Amarelo', 'Laranja', 'Dourado', 'Vermelho'];
+      case SabbatType.lammas:
+        return ['Dourado', 'Marrom', 'Laranja', 'Verde escuro'];
+      case SabbatType.mabon:
+        return ['Laranja', 'Vermelho', 'Marrom', 'Dourado escuro'];
+    }
+  }
+
+  List<String> get foods {
+    switch (this) {
+      case SabbatType.samhain:
+        return ['Abóbora', 'Maçãs', 'Pães caseiros', 'Sopas', 'Castanhas', 'Romã'];
+      case SabbatType.yule:
+        return ['Quentão', 'Pães de gengibre', 'Frutas secas', 'Milho', 'Laranja'];
+      case SabbatType.imbolc:
+        return ['Leite e derivados', 'Pães com sementes', 'Mel', 'Chás'];
+      case SabbatType.ostara:
+        return ['Ovos', 'Saladas verdes', 'Pães com ervas', 'Mel', 'Sementes'];
+      case SabbatType.beltane:
+        return ['Morangos', 'Frutas vermelhas', 'Vinho', 'Bolos de mel'];
+      case SabbatType.litha:
+        return ['Frutas frescas', 'Saladas', 'Sucos', 'Girassol (sementes)'];
+      case SabbatType.lammas:
+        return ['Pães', 'Milho', 'Cerveja', 'Frutas da estação', 'Grãos'];
+      case SabbatType.mabon:
+        return ['Maçãs', 'Uvas', 'Vinho', 'Abóboras', 'Nozes', 'Cogumelos'];
+    }
+  }
+
   List<String> get rituals {
     switch (this) {
       case SabbatType.samhain:

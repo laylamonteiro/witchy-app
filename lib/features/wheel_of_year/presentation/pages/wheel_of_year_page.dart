@@ -300,6 +300,79 @@ class WheelOfYearPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
+                'Cristais',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: sabbat.type.crystals
+                    .map((crystal) => Chip(
+                          label: Text(crystal),
+                          backgroundColor: AppColors.lilac.withOpacity(0.2),
+                          side: const BorderSide(color: AppColors.lilac),
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Ervas',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: sabbat.type.herbs
+                    .map((herb) => Chip(
+                          label: Text(herb),
+                          backgroundColor: AppColors.mint.withOpacity(0.2),
+                          side: const BorderSide(color: AppColors.mint),
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Cores',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: sabbat.type.colors
+                    .map((color) => Chip(
+                          label: Text(color),
+                          backgroundColor: AppColors.starYellow.withOpacity(0.2),
+                          side: const BorderSide(color: AppColors.starYellow),
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Comidas Tradicionais',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              ...sabbat.type.foods.map((food) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('🍽️', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            food,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              const SizedBox(height: 24),
+              Text(
                 'Rituais Sugeridos',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
