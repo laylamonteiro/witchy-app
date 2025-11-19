@@ -22,37 +22,33 @@ class ElementsPage extends StatelessWidget {
           children: [
             // Introdução
             MagicalCard(
-              child: Column(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text('🌍💧🔥💨', style: TextStyle(fontSize: 28)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Os Quatro Elementos',
-                          style: Theme.of(context).textTheme.headlineSmall,
+                  Text('🌍💧🔥💨', style: TextStyle(fontSize: 32)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Na Wicca e na bruxaria tradicional, os quatro elementos - Terra, Água, Fogo e Ar - '
+                          'são forças fundamentais da natureza e da existência. Eles não são apenas substâncias físicas, '
+                          'mas energias primordiais que compõem toda a criação.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Na Wicca e na bruxaria tradicional, os quatro elementos - Terra, Água, Fogo e Ar - '
-                    'são forças fundamentais da natureza e da existência. Eles não são apenas substâncias físicas, '
-                    'mas energias primordiais que compõem toda a criação.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                        const SizedBox(height: 12),
+                        Text(
+                          'Explore cada elemento abaixo para compreender suas qualidades, correspondências e como trabalhar com eles.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
                         ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Explore cada elemento abaixo para compreender suas qualidades, correspondências e como trabalhar com eles.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontStyle: FontStyle.italic,
-                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -63,7 +59,6 @@ class ElementsPage extends StatelessWidget {
             ExpansionMagicalCard(
               title: 'Terra',
               emoji: '🌍',
-              initiallyExpanded: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

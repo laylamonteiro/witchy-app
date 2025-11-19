@@ -22,37 +22,33 @@ class AltarPage extends StatelessWidget {
           children: [
             // Introdução
             MagicalCard(
-              child: Column(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Text('🔮', style: TextStyle(fontSize: 32)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'O Altar Mágico',
-                          style: Theme.of(context).textTheme.headlineSmall,
+                  const Text('🔮', style: TextStyle(fontSize: 32)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Um altar é seu espaço sagrado pessoal - um ponto focal para sua prática mágica. '
+                          'Não precisa ser elaborado ou caro; o que importa é a intenção e o respeito com que você o trata. '
+                          'Seu altar é uma extensão da sua energia e um portal entre o mundo físico e o espiritual.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Um altar é seu espaço sagrado pessoal - um ponto focal para sua prática mágica. '
-                    'Não precisa ser elaborado ou caro; o que importa é a intenção e o respeito com que você o trata. '
-                    'Seu altar é uma extensão da sua energia e um portal entre o mundo físico e o espiritual.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                        const SizedBox(height: 12),
+                        Text(
+                          'Explore as seções abaixo para aprender a montar, purificar, manter e utilizar seu altar.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
                         ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Explore as seções abaixo para aprender a montar, purificar, manter e utilizar seu altar.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontStyle: FontStyle.italic,
-                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -63,7 +59,6 @@ class AltarPage extends StatelessWidget {
             ExpansionMagicalCard(
               title: 'Como Montar seu Altar',
               emoji: '🏡',
-              initiallyExpanded: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
