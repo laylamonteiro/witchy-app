@@ -132,6 +132,14 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                         _buildNextPhaseItem(
                           context,
                           lunarProvider,
+                          'Lua Nova',
+                          MoonPhase.newMoon.emoji,
+                          isFullMoon: false,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildNextPhaseItem(
+                          context,
+                          lunarProvider,
                           'Lua Cheia',
                           MoonPhase.fullMoon.emoji,
                           isFullMoon: true,
