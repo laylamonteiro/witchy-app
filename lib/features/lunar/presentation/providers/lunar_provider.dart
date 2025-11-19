@@ -26,23 +26,24 @@ class LunarProvider with ChangeNotifier {
     final phase = (daysSinceKnownNewMoon % lunarCycle) / lunarCycle;
 
     // Determinar a fase baseado na posição no ciclo
-    // Ajustado para melhor precisão nas transições entre fases
-    if (phase < 0.0625 || phase >= 0.9375) {
-      return MoonPhase.newMoon;
+    // Thresholds ajustados para maior precisão (~12h de janela para cada fase principal)
+    // 0.017 = ~0.5 dia = 12 horas
+    if (phase < 0.017 || phase >= 0.983) {
+      return MoonPhase.newMoon; // Lua Nova: primeiras/últimas 12h do ciclo
     } else if (phase < 0.1875) {
-      return MoonPhase.waxingCrescent;
+      return MoonPhase.waxingCrescent; // Crescente
     } else if (phase < 0.3125) {
-      return MoonPhase.firstQuarter;
+      return MoonPhase.firstQuarter; // Quarto Crescente
     } else if (phase < 0.4375) {
-      return MoonPhase.waxingGibbous;
+      return MoonPhase.waxingGibbous; // Gibosa Crescente
     } else if (phase < 0.5625) {
-      return MoonPhase.fullMoon;
+      return MoonPhase.fullMoon; // Lua Cheia
     } else if (phase < 0.6875) {
-      return MoonPhase.waningGibbous;
+      return MoonPhase.waningGibbous; // Gibosa Minguante
     } else if (phase < 0.8125) {
-      return MoonPhase.lastQuarter;
+      return MoonPhase.lastQuarter; // Quarto Minguante
     } else {
-      return MoonPhase.waningCrescent;
+      return MoonPhase.waningCrescent; // Minguante: de 81.25% até 98.3%
     }
   }
 
