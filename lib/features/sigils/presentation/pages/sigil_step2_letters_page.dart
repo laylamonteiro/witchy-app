@@ -168,6 +168,7 @@ class SigilStep2LettersPage extends StatelessWidget {
 
             // Botão continuar
             MagicalButton(
+              text: 'Ver Desenho do Sigilo',
               onPressed: () {
                 Navigator.push(
                   context,
@@ -176,15 +177,6 @@ class SigilStep2LettersPage extends StatelessWidget {
                   ),
                 );
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'Ver Desenho do Sigilo',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                ),
-              ),
             ),
             const SizedBox(height: 16),
           ],

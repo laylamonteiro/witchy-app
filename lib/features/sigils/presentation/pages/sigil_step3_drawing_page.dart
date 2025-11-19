@@ -194,19 +194,11 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
 
             // Botão finalizar
             MagicalButton(
+              text: 'Finalizar',
               onPressed: () {
                 // Voltar para o início
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'Finalizar',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                ),
-              ),
             ),
             const SizedBox(height: 16),
           ],

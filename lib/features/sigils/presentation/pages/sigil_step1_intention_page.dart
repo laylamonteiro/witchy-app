@@ -204,20 +204,24 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
             const SizedBox(height: 32),
 
             // Botão continuar
-            MagicalButton(
-              onPressed: _canContinue ? _continue : null,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            if (_canContinue)
+              MagicalButton(
+                text: 'Continuar',
+                onPressed: _continue,
+              )
+            else
+              ElevatedButton(
+                onPressed: null,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 child: Text(
                   'Continuar',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: _canContinue
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
+                        color: AppColors.textSecondary,
                       ),
                 ),
               ),
-            ),
             const SizedBox(height: 16),
           ],
         ),
