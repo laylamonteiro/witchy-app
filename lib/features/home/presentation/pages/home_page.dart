@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
               label: 'Sabbats',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.auto_stories),
+              icon: Icon(Icons.stars_outlined),
               label: 'Grimório',
             ),
             BottomNavigationBarItem(
@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
               label: 'Diários',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.stars_outlined),
+              icon: Icon(Icons.search),
               label: 'Enciclopédia',
             ),
           ],
