@@ -50,30 +50,41 @@ class _AppSpellsListPageState extends State<AppSpellsListPage> {
                 ),
               ),
               const SizedBox(width: 8),
-              PopupMenuButton<SpellCategory?>(
-                icon: const Icon(Icons.filter_list),
-                tooltip: 'Filtrar por categoria',
-                onSelected: (category) {
-                  setState(() {
-                    _filterCategory = category;
-                  });
+              Consumer<SpellProvider>(
+                builder: (context, provider, _) {
+                  // Obter categorias únicas dos feitiços do app
+                  final availableCategories = provider.appSpells
+                      .map((s) => s.category)
+                      .toSet()
+                      .toList()
+                    ..sort((a, b) => a.displayName.compareTo(b.displayName));
+
+                  return PopupMenuButton<SpellCategory?>(
+                    icon: const Icon(Icons.filter_list),
+                    tooltip: 'Filtrar por categoria',
+                    onSelected: (category) {
+                      setState(() {
+                        _filterCategory = category;
+                      });
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: null,
+                        child: Text('Todas Categorias'),
+                      ),
+                      ...availableCategories.map((category) => PopupMenuItem(
+                            value: category,
+                            child: Row(
+                              children: [
+                                Text(category.icon),
+                                const SizedBox(width: 8),
+                                Text(category.displayName),
+                              ],
+                            ),
+                          )),
+                    ],
+                  );
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: null,
-                    child: Text('Todas Categorias'),
-                  ),
-                  ...SpellCategory.values.map((category) => PopupMenuItem(
-                        value: category,
-                        child: Row(
-                          children: [
-                            Text(category.icon),
-                            const SizedBox(width: 8),
-                            Text(category.displayName),
-                          ],
-                        ),
-                      )),
-                ],
               ),
             ],
           ),
