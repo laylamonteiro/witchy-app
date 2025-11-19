@@ -349,20 +349,36 @@ class AltarPage extends StatelessWidget {
     );
   }
 
-  Widget _buildItem(BuildContext context, String icon, String description) {
+  Widget _buildItem(BuildContext context, String iconTitle, String description) {
+    // Separar emoji do título (emoji é o primeiro caractere)
+    final emoji = iconTitle.substring(0, iconTitle.indexOf(' ') + 1);
+    final title = iconTitle.substring(iconTitle.indexOf(' ') + 1);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
+          Text(emoji, style: const TextStyle(fontSize: 20)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+              ],
             ),
           ),
         ],
