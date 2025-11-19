@@ -43,12 +43,14 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   late AnimationController _particleController;
   late AnimationController _floatController;
   late AnimationController _blinkController;
+  late AnimationController _jumpController;
 
   // Animações
   late Animation<double> _scaleAnimation;
   late Animation<double> _shadowOpacityAnimation;
   late Animation<double> _shadowBlurAnimation;
   late Animation<double> _floatAnimation;
+  late Animation<double> _jumpAnimation;
 
   // Lista de partículas
   final List<MagicParticle> _particles = [];
@@ -139,6 +141,23 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
       vsync: this,
     );
 
+    // Controlador de pulo (quando clica)
+    _jumpController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _jumpAnimation = Tween<double>(
+      begin: 0,
+      end: -30,
+    ).animate(CurvedAnimation(
+      parent: _jumpController,
+      curve: Curves.easeOut,
+    ));
+
+    // Iniciar animação de partículas em loop contínuo
+    _particleController.repeat();
+
     _startBlinking();
   }
 
@@ -166,6 +185,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     _particleController.dispose();
     _floatController.dispose();
     _blinkController.dispose();
+    _jumpController.dispose();
     super.dispose();
   }
 
@@ -173,9 +193,14 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     // Criar explosão de partículas
     _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
 
-    // Animação de "pulo"
+    // Animação de "pulo" - escala e movimento vertical
     _scaleController.forward().then((_) {
       _scaleController.reverse();
+    });
+
+    // Animação de pulo para cima
+    _jumpController.forward().then((_) {
+      _jumpController.reverse();
     });
 
     // Callback opcional
@@ -184,41 +209,42 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
   void _createParticleBurst(double x, double y) {
     final random = math.Random();
-    for (int i = 0; i < 8; i++) {
+    // Aumentar número de partículas para efeito mais vistoso
+    for (int i = 0; i < 15; i++) {
       _particles.add(MagicParticle(
         x: x,
         y: y,
-        vx: (random.nextDouble() - 0.5) * 4,
-        vy: (random.nextDouble() - 0.5) * 4 - 2,
-        size: random.nextDouble() * 3 + 2,
+        vx: (random.nextDouble() - 0.5) * 5,
+        vy: (random.nextDouble() - 0.5) * 5 - 3,
+        size: random.nextDouble() * 4 + 2,
         color: random.nextBool()
           ? AppColors.lilac
           : AppColors.starYellow,
         opacity: 1.0,
       ));
     }
-
-    if (!_particleController.isAnimating) {
-      _particleController.repeat();
-    }
   }
 
   void _createTrailParticle(double x, double y) {
     final now = DateTime.now();
+    // Reduzir intervalo para rastro mais denso (de 50ms para 30ms)
     if (_lastParticleTime == null ||
-        now.difference(_lastParticleTime!).inMilliseconds > 50) {
+        now.difference(_lastParticleTime!).inMilliseconds > 30) {
       _lastParticleTime = now;
 
       final random = math.Random();
-      _trailParticles.add(TrailParticle(
-        x: x + widget.size / 2,
-        y: y + widget.size / 2,
-        size: random.nextDouble() * 2 + 1,
-        color: random.nextBool()
-          ? AppColors.lilac.withOpacity(0.6)
-          : AppColors.starYellow.withOpacity(0.6),
-        opacity: 0.8,
-      ));
+      // Criar 2 partículas por vez para rastro mais denso
+      for (int i = 0; i < 2; i++) {
+        _trailParticles.add(TrailParticle(
+          x: x + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
+          y: y + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
+          size: random.nextDouble() * 3 + 1.5,
+          color: random.nextBool()
+            ? AppColors.lilac.withOpacity(0.7)
+            : AppColors.starYellow.withOpacity(0.7),
+          opacity: 1.0,
+        ));
+      }
     }
   }
 
@@ -232,12 +258,15 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
         ..._buildParticles(),
 
         // Gato arrastável
-        AnimatedPositioned(
-          duration: _isDragging
-            ? Duration.zero
-            : const Duration(milliseconds: 100),
-          left: _x,
-          top: _y + (_isDragging ? 0 : _floatAnimation.value),
+        AnimatedBuilder(
+          animation: Listenable.merge([_floatAnimation, _jumpAnimation]),
+          builder: (context, child) => Positioned(
+            left: _x,
+            top: _y +
+                (_isDragging ? 0 : _floatAnimation.value) +
+                _jumpAnimation.value,
+            child: child!,
+          ),
           child: GestureDetector(
             onTap: _onTap,
             onPanStart: (details) {
@@ -398,7 +427,7 @@ class MagicParticle {
     x += vx;
     y += vy;
     vy += 0.2; // Gravidade
-    opacity -= 0.02;
+    opacity -= 0.015; // Reduzido para durar mais
     size *= 0.98;
   }
 }
@@ -420,8 +449,8 @@ class TrailParticle {
   });
 
   void update() {
-    opacity -= 0.05;
-    size *= 1.05; // Cresce enquanto desaparece
+    opacity -= 0.02; // Reduzido de 0.05 para 0.02 - rastro mais longo
+    size *= 1.03; // Cresce mais lentamente
   }
 }
 
