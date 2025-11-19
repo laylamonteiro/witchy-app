@@ -2,61 +2,50 @@ import '../models/crystal_model.dart';
 
 final List<CrystalModel> crystalsData = [
   const CrystalModel(
-    name: 'Quartzo Rosa',
+    name: 'Ágata',
     description:
-        'Pedra do amor próprio e do amor incondicional. Promove paz interior e cura emocional.',
-    element: Element.water,
-    imageUrl: 'assets/images/crystals/quartzo_rosa.jpg',
+        'Pedra de equilíbrio, harmonia e proteção suave. Estabiliza energias e acalma.',
+    element: Element.earth,
+    imageUrl: 'assets/images/crystals/agata.jpg',
     intentions: [
-      'Amor próprio',
-      'Auto-aceitação',
-      'Cura emocional',
-      'Relacionamentos',
-      'Compaixão',
+      'Equilíbrio emocional',
+      'Harmonia',
+      'Proteção suave',
+      'Estabilidade',
+      'Concentração',
+      'Aceitação',
     ],
     usageTips: [
-      'Coloque sob o travesseiro para sonhos amorosos',
-      'Use no altar de amor próprio',
-      'Carregue no bolso para atrair amor',
-      'Medite segurando-o no coração',
+      'Use para equilíbrio emocional',
+      'Carregue para estabilidade',
+      'Medite para paz interior',
+      'Coloque em ambientes para harmonia',
     ],
     cleaningMethods: [
       CrystalMethod(
         method: 'Água corrente',
-        isSafe: false,
-        warning: 'Pode desbotar com exposição prolongada à água',
-      ),
-      CrystalMethod(
-        method: 'Fumaça de ervas (incenso, palo santo)',
         isSafe: true,
       ),
       CrystalMethod(
-        method: 'Luz da lua',
+        method: 'Fumaça',
         isSafe: true,
       ),
       CrystalMethod(
-        method: 'Som (sino, taça tibetana)',
+        method: 'Terra',
         isSafe: true,
       ),
     ],
     chargingMethods: [
       CrystalMethod(
-        method: 'Lua cheia (preferencialmente)',
+        method: 'Sol ou lua',
         isSafe: true,
       ),
       CrystalMethod(
-        method: 'Terra (enterrar por 24h)',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Outros cristais (ametista, quartzo)',
+        method: 'Terra',
         isSafe: true,
       ),
     ],
-    safetyWarnings: [
-      'Pode desbotar com exposição prolongada ao sol',
-      'Evite água por longos períodos',
-    ],
+    safetyWarnings: [],
   ),
   const CrystalModel(
     name: 'Ametista',
@@ -165,24 +154,308 @@ final List<CrystalModel> crystalsData = [
     ],
   ),
   const CrystalModel(
-    name: 'Turmalina Negra',
+    name: 'Cornalina',
     description:
-        'Poderosa pedra de proteção e aterramento. Bloqueia energias negativas.',
-    element: Element.earth,
-    imageUrl: 'assets/images/crystals/turmalina_negra.jpg',
+        'Pedra da criatividade, coragem e vitalidade. Estimula motivação e confiança.',
+    element: Element.fire,
+    imageUrl: 'assets/images/crystals/cornalina.jpg',
     intentions: [
-      'Proteção',
-      'Aterramento',
-      'Limpeza energética',
-      'Bloqueio de negatividade',
-      'Equilíbrio',
-      'Purificação',
+      'Criatividade',
+      'Coragem e confiança',
+      'Vitalidade e energia',
+      'Motivação',
+      'Fertilidade',
+      'Manifestação',
     ],
     usageTips: [
-      'Coloque nos cantos da casa para proteção',
-      'Carregue para se proteger de energias pesadas',
-      'Use durante meditação de aterramento',
-      'Coloque perto de eletrônicos',
+      'Use para projetos criativos',
+      'Carregue para energia e motivação',
+      'Medite no chakra sacral',
+      'Coloque no espaço de trabalho',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água corrente',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Sol',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [],
+  ),
+  const CrystalModel(
+    name: 'Fluorita',
+    description:
+        'Pedra do foco, aprendizado e organização mental. Excelente para estudos.',
+    element: Element.air,
+    imageUrl: 'assets/images/crystals/fluorita.jpg',
+    intentions: [
+      'Foco e concentração',
+      'Aprendizado',
+      'Organização mental',
+      'Limpeza áurica',
+      'Decisões claras',
+      'Memória',
+    ],
+    usageTips: [
+      'Use durante estudos',
+      'Coloque na mesa de trabalho',
+      'Medite para clareza mental',
+      'Carregue para foco',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água',
+        isSafe: false,
+        warning: 'Evite água - pode danificar',
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Quartzo',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      'Frágil - manuseie com cuidado',
+      'Evite sol intenso',
+    ],
+  ),
+  const CrystalModel(
+    name: 'Howlita',
+    description:
+        'Pedra calmante da paciência e consciência. Excelente para insônia e ansiedade.',
+    element: Element.air,
+    imageUrl: 'assets/images/crystals/howlita.jpg',
+    intentions: [
+      'Calma e paciência',
+      'Sono tranquilo',
+      'Redução de ansiedade',
+      'Consciência',
+      'Memória',
+      'Comunicação calma',
+    ],
+    usageTips: [
+      'Coloque sob o travesseiro para insônia',
+      'Medite para reduzir ansiedade',
+      'Carregue durante situações estressantes',
+      'Use para acalmar raiva',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água corrente (breve)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Lua',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Quartzo',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [],
+  ),
+  const CrystalModel(
+    name: 'Jaspe Vermelho',
+    description:
+        'Pedra de aterramento, força e estabilidade. Conecta com a energia da Terra.',
+    element: Element.earth,
+    imageUrl: 'assets/images/crystals/jaspe_vermelho.jpg',
+    intentions: [
+      'Aterramento',
+      'Força física',
+      'Estabilidade',
+      'Resistência',
+      'Coragem',
+      'Vitalidade',
+    ],
+    usageTips: [
+      'Use para aterramento',
+      'Carregue para força física',
+      'Medite no chakra raiz',
+      'Coloque no ambiente para estabilidade',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água corrente',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Terra (enterrar)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Sol',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [],
+  ),
+  const CrystalModel(
+    name: 'Labradorita',
+    description:
+        'Pedra mística da transformação e magia. Protege contra energias negativas e aguça intuição.',
+    element: Element.air,
+    imageUrl: 'assets/images/crystals/labradorita.jpg',
+    intentions: [
+      'Proteção psíquica',
+      'Intuição e clarividência',
+      'Transformação',
+      'Magia',
+      'Força interior',
+      'Sincronicidade',
+    ],
+    usageTips: [
+      'Use durante trabalhos mágicos',
+      'Medite para desenvolver intuição',
+      'Carregue para proteção áurica',
+      'Coloque no altar',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água corrente (rápido)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Lua cheia',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Lua cheia',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [],
+  ),
+  const CrystalModel(
+    name: 'Lápis Lazúli',
+    description:
+        'Pedra da sabedoria, verdade e visão espiritual. Abre o terceiro olho.',
+    element: Element.air,
+    imageUrl: 'assets/images/crystals/lapis_lazuli.jpg',
+    intentions: [
+      'Sabedoria',
+      'Verdade',
+      'Visão espiritual',
+      'Comunicação superior',
+      'Intuição',
+      'Paz interior',
+    ],
+    usageTips: [
+      'Medite para abrir terceiro olho',
+      'Use para comunicação verdadeira',
+      'Carregue para sabedoria',
+      'Coloque no altar',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água',
+        isSafe: false,
+        warning: 'Evite água - pode danificar',
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Quartzo ou ametista',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      'Não molhe - pode manchar ou danificar',
+      'Mantenha longe de produtos químicos',
+    ],
+  ),
+  const CrystalModel(
+    name: 'Obsidiana Negra',
+    description:
+        'Poderosa pedra de proteção e aterramento. Absorve e transforma energias negativas.',
+    element: Element.earth,
+    imageUrl: 'assets/images/crystals/obsidiana_negra.jpg',
+    intentions: [
+      'Proteção forte',
+      'Aterramento',
+      'Transformação',
+      'Verdade',
+      'Limpeza profunda',
+      'Liberação de traumas',
+    ],
+    usageTips: [
+      'Use para proteção intensa',
+      'Medite para trabalho sombra',
+      'Coloque na entrada da casa',
+      'Carregue para proteção pessoal',
     ],
     cleaningMethods: [
       CrystalMethod(
@@ -190,7 +463,7 @@ final List<CrystalModel> crystalsData = [
         isSafe: true,
       ),
       CrystalMethod(
-        method: 'Fumaça de alecrim ou sálvia',
+        method: 'Fumaça',
         isSafe: true,
       ),
       CrystalMethod(
@@ -207,12 +480,212 @@ final List<CrystalModel> crystalsData = [
         method: 'Lua nova',
         isSafe: true,
       ),
+    ],
+    safetyWarnings: [
+      'Muito poderosa - use com consciência',
+      'Pode trazer emoções à superfície',
+    ],
+  ),
+  const CrystalModel(
+    name: 'Olho de Tigre',
+    description:
+        'Pedra de coragem, proteção e prosperidade. Fortalece a confiança e traz boa sorte.',
+    element: Element.fire,
+    imageUrl: 'assets/images/crystals/olho_de_tigre.jpg',
+    intentions: [
+      'Coragem e força',
+      'Proteção',
+      'Prosperidade',
+      'Confiança',
+      'Aterramento',
+      'Boa sorte',
+    ],
+    usageTips: [
+      'Carregue para coragem e confiança',
+      'Coloque no trabalho para sucesso',
+      'Use durante negociações',
+      'Medite para equilíbrio',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água corrente',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
       CrystalMethod(
         method: 'Sol',
         isSafe: true,
       ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
     ],
     safetyWarnings: [],
+  ),
+  const CrystalModel(
+    name: 'Pedra da Lua',
+    description:
+        'Pedra sagrada da lua e do feminino. Conecta com ciclos lunares e intuição.',
+    element: Element.water,
+    imageUrl: 'assets/images/crystals/pedra_da_lua.jpg',
+    intentions: [
+      'Intuição',
+      'Ciclos femininos',
+      'Novos começos',
+      'Equilíbrio emocional',
+      'Sonhos',
+      'Fertilidade',
+    ],
+    usageTips: [
+      'Use durante a lua cheia',
+      'Coloque sob o travesseiro para sonhos',
+      'Carregue para equilíbrio hormonal',
+      'Medite para conexão lunar',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água corrente (breve)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz da lua',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Lua cheia (especialmente)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Água da lua',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      'Evite sol intenso - pode desbotar',
+    ],
+  ),
+  const CrystalModel(
+    name: 'Pirita',
+    description:
+        'Pedra da prosperidade e manifestação. Atrai abundância e protege contra negatividade.',
+    element: Element.earth,
+    imageUrl: 'assets/images/crystals/pirita.jpg',
+    intentions: [
+      'Prosperidade',
+      'Manifestação',
+      'Proteção',
+      'Confiança',
+      'Memória',
+      'Vitalidade',
+    ],
+    usageTips: [
+      'Coloque no escritório ou negócio',
+      'Carregue na carteira',
+      'Use em rituais de prosperidade',
+      'Coloque em cofres ou gavetas de dinheiro',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água',
+        isSafe: false,
+        warning: 'Pode enferrujar - evite água!',
+      ),
+      CrystalMethod(
+        method: 'Fumaça',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Sol',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      'Não molhe - pode enferrujar e liberar enxofre',
+      'Mantenha seca',
+    ],
+  ),
+  const CrystalModel(
+    name: 'Quartzo Rosa',
+    description:
+        'Pedra do amor próprio e do amor incondicional. Promove paz interior e cura emocional.',
+    element: Element.water,
+    imageUrl: 'assets/images/crystals/quartzo_rosa.jpg',
+    intentions: [
+      'Amor próprio',
+      'Auto-aceitação',
+      'Cura emocional',
+      'Relacionamentos',
+      'Compaixão',
+    ],
+    usageTips: [
+      'Coloque sob o travesseiro para sonhos amorosos',
+      'Use no altar de amor próprio',
+      'Carregue no bolso para atrair amor',
+      'Medite segurando-o no coração',
+    ],
+    cleaningMethods: [
+      CrystalMethod(
+        method: 'Água corrente',
+        isSafe: false,
+        warning: 'Pode desbotar com exposição prolongada à água',
+      ),
+      CrystalMethod(
+        method: 'Fumaça de ervas (incenso, palo santo)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz da lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som (sino, taça tibetana)',
+        isSafe: true,
+      ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Lua cheia (preferencialmente)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra (enterrar por 24h)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Outros cristais (ametista, quartzo)',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      'Pode desbotar com exposição prolongada ao sol',
+      'Evite água por longos períodos',
+    ],
   ),
   const CrystalModel(
     name: 'Quartzo Transparente',
@@ -324,291 +797,6 @@ final List<CrystalModel> crystalsData = [
     ],
   ),
   const CrystalModel(
-    name: 'Labradorita',
-    description:
-        'Pedra mística da transformação e magia. Protege contra energias negativas e aguça intuição.',
-    element: Element.air,
-    imageUrl: 'assets/images/crystals/labradorita.jpg',
-    intentions: [
-      'Proteção psíquica',
-      'Intuição e clarividência',
-      'Transformação',
-      'Magia',
-      'Força interior',
-      'Sincronicidade',
-    ],
-    usageTips: [
-      'Use durante trabalhos mágicos',
-      'Medite para desenvolver intuição',
-      'Carregue para proteção áurica',
-      'Coloque no altar',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água corrente (rápido)',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Lua cheia',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Lua cheia',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [],
-  ),
-  const CrystalModel(
-    name: 'Olho de Tigre',
-    description:
-        'Pedra de coragem, proteção e prosperidade. Fortalece a confiança e traz boa sorte.',
-    element: Element.fire,
-    imageUrl: 'assets/images/crystals/olho_de_tigre.jpg',
-    intentions: [
-      'Coragem e força',
-      'Proteção',
-      'Prosperidade',
-      'Confiança',
-      'Aterramento',
-      'Boa sorte',
-    ],
-    usageTips: [
-      'Carregue para coragem e confiança',
-      'Coloque no trabalho para sucesso',
-      'Use durante negociações',
-      'Medite para equilíbrio',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água corrente',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Sol',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [],
-  ),
-  const CrystalModel(
-    name: 'Howlita',
-    description:
-        'Pedra calmante da paciência e consciência. Excelente para insônia e ansiedade.',
-    element: Element.air,
-    imageUrl: 'assets/images/crystals/howlita.jpg',
-    intentions: [
-      'Calma e paciência',
-      'Sono tranquilo',
-      'Redução de ansiedade',
-      'Consciência',
-      'Memória',
-      'Comunicação calma',
-    ],
-    usageTips: [
-      'Coloque sob o travesseiro para insônia',
-      'Medite para reduzir ansiedade',
-      'Carregue durante situações estressantes',
-      'Use para acalmar raiva',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água corrente (breve)',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Lua',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Lua',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Quartzo',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [],
-  ),
-  const CrystalModel(
-    name: 'Pirita',
-    description:
-        'Pedra da prosperidade e manifestação. Atrai abundância e protege contra negatividade.',
-    element: Element.earth,
-    imageUrl: 'assets/images/crystals/pirita.jpg',
-    intentions: [
-      'Prosperidade',
-      'Manifestação',
-      'Proteção',
-      'Confiança',
-      'Memória',
-      'Vitalidade',
-    ],
-    usageTips: [
-      'Coloque no escritório ou negócio',
-      'Carregue na carteira',
-      'Use em rituais de prosperidade',
-      'Coloque em cofres ou gavetas de dinheiro',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água',
-        isSafe: false,
-        warning: 'Pode enferrujar - evite água!',
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Som',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Sol',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [
-      'Não molhe - pode enferrujar e liberar enxofre',
-      'Mantenha seca',
-    ],
-  ),
-  const CrystalModel(
-    name: 'Pedra da Lua',
-    description:
-        'Pedra sagrada da lua e do feminino. Conecta com ciclos lunares e intuição.',
-    element: Element.water,
-    imageUrl: 'assets/images/crystals/pedra_da_lua.jpg',
-    intentions: [
-      'Intuição',
-      'Ciclos femininos',
-      'Novos começos',
-      'Equilíbrio emocional',
-      'Sonhos',
-      'Fertilidade',
-    ],
-    usageTips: [
-      'Use durante a lua cheia',
-      'Coloque sob o travesseiro para sonhos',
-      'Carregue para equilíbrio hormonal',
-      'Medite para conexão lunar',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água corrente (breve)',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Luz da lua',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Lua cheia (especialmente)',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Água da lua',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [
-      'Evite sol intenso - pode desbotar',
-    ],
-  ),
-  const CrystalModel(
-    name: 'Obsidiana Negra',
-    description:
-        'Poderosa pedra de proteção e aterramento. Absorve e transforma energias negativas.',
-    element: Element.earth,
-    imageUrl: 'assets/images/crystals/obsidiana_negra.jpg',
-    intentions: [
-      'Proteção forte',
-      'Aterramento',
-      'Transformação',
-      'Verdade',
-      'Limpeza profunda',
-      'Liberação de traumas',
-    ],
-    usageTips: [
-      'Use para proteção intensa',
-      'Medite para trabalho sombra',
-      'Coloque na entrada da casa',
-      'Carregue para proteção pessoal',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água corrente com sal',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra (enterrar)',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Lua nova',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [
-      'Muito poderosa - use com consciência',
-      'Pode trazer emoções à superfície',
-    ],
-  ),
-  const CrystalModel(
     name: 'Sodalita',
     description:
         'Pedra da lógica, verdade e comunicação. Estimula pensamento racional e intuição.',
@@ -655,241 +843,52 @@ final List<CrystalModel> crystalsData = [
     safetyWarnings: [],
   ),
   const CrystalModel(
-    name: 'Cornalina',
+    name: 'Turmalina Negra',
     description:
-        'Pedra da criatividade, coragem e vitalidade. Estimula motivação e confiança.',
-    element: Element.fire,
-    imageUrl: 'assets/images/crystals/cornalina.jpg',
-    intentions: [
-      'Criatividade',
-      'Coragem e confiança',
-      'Vitalidade e energia',
-      'Motivação',
-      'Fertilidade',
-      'Manifestação',
-    ],
-    usageTips: [
-      'Use para projetos criativos',
-      'Carregue para energia e motivação',
-      'Medite no chakra sacral',
-      'Coloque no espaço de trabalho',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água corrente',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Sol',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [],
-  ),
-  const CrystalModel(
-    name: 'Jaspe Vermelho',
-    description:
-        'Pedra de aterramento, força e estabilidade. Conecta com a energia da Terra.',
+        'Poderosa pedra de proteção e aterramento. Bloqueia energias negativas.',
     element: Element.earth,
-    imageUrl: 'assets/images/crystals/jaspe_vermelho.jpg',
+    imageUrl: 'assets/images/crystals/turmalina_negra.jpg',
     intentions: [
+      'Proteção',
       'Aterramento',
-      'Força física',
-      'Estabilidade',
-      'Resistência',
-      'Coragem',
-      'Vitalidade',
+      'Limpeza energética',
+      'Bloqueio de negatividade',
+      'Equilíbrio',
+      'Purificação',
     ],
     usageTips: [
-      'Use para aterramento',
-      'Carregue para força física',
-      'Medite no chakra raiz',
-      'Coloque no ambiente para estabilidade',
+      'Coloque nos cantos da casa para proteção',
+      'Carregue para se proteger de energias pesadas',
+      'Use durante meditação de aterramento',
+      'Coloque perto de eletrônicos',
     ],
     cleaningMethods: [
       CrystalMethod(
-        method: 'Água corrente',
+        method: 'Água corrente com sal',
         isSafe: true,
       ),
       CrystalMethod(
-        method: 'Terra',
+        method: 'Fumaça de alecrim ou sálvia',
         isSafe: true,
       ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
       CrystalMethod(
         method: 'Terra (enterrar)',
         isSafe: true,
       ),
+    ],
+    chargingMethods: [
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Lua nova',
+        isSafe: true,
+      ),
       CrystalMethod(
         method: 'Sol',
         isSafe: true,
       ),
     ],
     safetyWarnings: [],
-  ),
-  const CrystalModel(
-    name: 'Ágata',
-    description:
-        'Pedra de equilíbrio, harmonia e proteção suave. Estabiliza energias e acalma.',
-    element: Element.earth,
-    imageUrl: 'assets/images/crystals/agata.jpg',
-    intentions: [
-      'Equilíbrio emocional',
-      'Harmonia',
-      'Proteção suave',
-      'Estabilidade',
-      'Concentração',
-      'Aceitação',
-    ],
-    usageTips: [
-      'Use para equilíbrio emocional',
-      'Carregue para estabilidade',
-      'Medite para paz interior',
-      'Coloque em ambientes para harmonia',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água corrente',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Sol ou lua',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Terra',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [],
-  ),
-  const CrystalModel(
-    name: 'Fluorita',
-    description:
-        'Pedra do foco, aprendizado e organização mental. Excelente para estudos.',
-    element: Element.air,
-    imageUrl: 'assets/images/crystals/fluorita.jpg',
-    intentions: [
-      'Foco e concentração',
-      'Aprendizado',
-      'Organização mental',
-      'Limpeza áurica',
-      'Decisões claras',
-      'Memória',
-    ],
-    usageTips: [
-      'Use durante estudos',
-      'Coloque na mesa de trabalho',
-      'Medite para clareza mental',
-      'Carregue para foco',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água',
-        isSafe: false,
-        warning: 'Evite água - pode danificar',
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Som',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Lua',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Quartzo',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [
-      'Frágil - manuseie com cuidado',
-      'Evite sol intenso',
-    ],
-  ),
-  const CrystalModel(
-    name: 'Lápis Lazúli',
-    description:
-        'Pedra da sabedoria, verdade e visão espiritual. Abre o terceiro olho.',
-    element: Element.air,
-    imageUrl: 'assets/images/crystals/lapis_lazuli.jpg',
-    intentions: [
-      'Sabedoria',
-      'Verdade',
-      'Visão espiritual',
-      'Comunicação superior',
-      'Intuição',
-      'Paz interior',
-    ],
-    usageTips: [
-      'Medite para abrir terceiro olho',
-      'Use para comunicação verdadeira',
-      'Carregue para sabedoria',
-      'Coloque no altar',
-    ],
-    cleaningMethods: [
-      CrystalMethod(
-        method: 'Água',
-        isSafe: false,
-        warning: 'Evite água - pode danificar',
-      ),
-      CrystalMethod(
-        method: 'Fumaça',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Som',
-        isSafe: true,
-      ),
-    ],
-    chargingMethods: [
-      CrystalMethod(
-        method: 'Lua',
-        isSafe: true,
-      ),
-      CrystalMethod(
-        method: 'Quartzo ou ametista',
-        isSafe: true,
-      ),
-    ],
-    safetyWarnings: [
-      'Não molhe - pode manchar ou danificar',
-      'Mantenha longe de produtos químicos',
-    ],
-  ),
-];
+  ),];
