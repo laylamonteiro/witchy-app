@@ -16,7 +16,7 @@ class GrimoirePage extends StatelessWidget {
           bottom: const TabBar(
             indicatorColor: AppColors.lilac,
             tabs: [
-              Tab(text: 'Biblioteca Mágica'),
+              Tab(text: 'Grimório Ancestral'),
               Tab(text: 'Meu Grimório'),
             ],
           ),
