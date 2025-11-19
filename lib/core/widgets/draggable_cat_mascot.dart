@@ -89,100 +89,92 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Widget invisível que não bloqueia eventos
-          IgnorePointer(
-            child: Container(color: Colors.transparent),
-          ),
+    return Stack(
+      children: [
+        // Renderizar partículas de brilho
+        ..._sparkles.map((sparkle) {
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final age = now - sparkle.createdAt;
+          final opacity = sparkle.opacity * (1 - age / 800); // Fade out
 
-          // Renderizar partículas de brilho
-          ..._sparkles.map((sparkle) {
-                final now = DateTime.now().millisecondsSinceEpoch;
-                final age = now - sparkle.createdAt;
-                final opacity = sparkle.opacity * (1 - age / 800); // Fade out
-
-                return Positioned(
-                  left: sparkle.position.dx,
-                  top: sparkle.position.dy,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: sparkle.size,
-                      height: sparkle.size,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: sparkle.color.withOpacity(opacity),
-                        boxShadow: [
-                          BoxShadow(
-                            color: sparkle.color.withOpacity(opacity * 0.5),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
+          return Positioned(
+            left: sparkle.position.dx,
+            top: sparkle.position.dy,
+            child: IgnorePointer(
+              child: Container(
+                width: sparkle.size,
+                height: sparkle.size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: sparkle.color.withOpacity(opacity),
+                  boxShadow: [
+                    BoxShadow(
+                      color: sparkle.color.withOpacity(opacity * 0.5),
+                      blurRadius: 4,
+                      spreadRadius: 1,
                     ),
-                  ),
-                );
-              }),
-
-              // Mascote arrastável
-              Positioned(
-                left: _position.dx,
-                top: _position.dy,
-                child: GestureDetector(
-                  onPanStart: (details) {
-                    setState(() {
-                      _isDragging = true;
-                    });
-                  },
-                  onPanUpdate: (details) {
-                    setState(() {
-                      _position = Offset(
-                        _position.dx + details.delta.dx,
-                        _position.dy + details.delta.dy,
-                      );
-                    });
-
-                    // Adicionar brilhos enquanto arrasta
-                    _addSparkle(_position);
-                  },
-                  onPanEnd: (details) {
-                    setState(() {
-                      _isDragging = false;
-                    });
-                  },
-                  child: AnimatedScale(
-                    scale: _isDragging ? 1.1 : 1.0,
-                    duration: const Duration(milliseconds: 150),
-                    curve: Curves.easeOut,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: _isDragging
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.lilac.withOpacity(0.4),
-                                  blurRadius: 12,
-                                  spreadRadius: 2,
-                                ),
-                              ]
-                            : [],
-                      ),
-                      child: SvgPicture.asset(
-                        'assets/icons/black_cat_mascot.svg',
-                        width: 64,
-                        height: 64,
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
               ),
-            ],
+            ),
+          );
+        }),
+
+        // Mascote arrastável
+        Positioned(
+          left: _position.dx,
+          top: _position.dy,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onPanStart: (details) {
+              setState(() {
+                _isDragging = true;
+              });
+            },
+            onPanUpdate: (details) {
+              setState(() {
+                _position = Offset(
+                  _position.dx + details.delta.dx,
+                  _position.dy + details.delta.dy,
+                );
+              });
+
+              // Adicionar brilhos enquanto arrasta
+              _addSparkle(_position);
+            },
+            onPanEnd: (details) {
+              setState(() {
+                _isDragging = false;
+              });
+            },
+            child: AnimatedScale(
+              scale: _isDragging ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    // Sombra sempre visível (mais suave quando não arrastando)
+                    BoxShadow(
+                      color: AppColors.lilac.withOpacity(_isDragging ? 0.4 : 0.2),
+                      blurRadius: _isDragging ? 12 : 8,
+                      spreadRadius: _isDragging ? 2 : 1,
+                    ),
+                  ],
+                ),
+                child: SvgPicture.asset(
+                  'assets/icons/black_cat_mascot.svg',
+                  width: 64,
+                  height: 64,
+                ),
+              ),
+            ),
           ),
+        ),
+      ],
     );
   }
 }
