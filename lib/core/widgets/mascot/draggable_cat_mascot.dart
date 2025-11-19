@@ -243,6 +243,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
             ? AppColors.lilac.withOpacity(0.7)
             : AppColors.starYellow.withOpacity(0.7),
           opacity: 1.0,
+          rotation: random.nextDouble() * math.pi * 2, // Ângulo aleatório fixo
         ));
       }
     }
@@ -378,7 +379,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
         top: particle.y - particle.size / 2,
         child: IgnorePointer(
           child: Transform.rotate(
-            angle: math.Random().nextDouble() * math.pi,
+            angle: particle.rotation, // Usar rotação fixa da partícula
             child: Container(
               width: particle.size * 2,
               height: particle.size,
@@ -439,6 +440,7 @@ class TrailParticle {
   double size;
   Color color;
   double opacity;
+  final double rotation; // Ângulo de rotação fixo
 
   TrailParticle({
     required this.x,
@@ -446,6 +448,7 @@ class TrailParticle {
     required this.size,
     required this.color,
     required this.opacity,
+    required this.rotation,
   });
 
   void update() {
