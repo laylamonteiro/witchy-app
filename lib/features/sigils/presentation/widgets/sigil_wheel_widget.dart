@@ -67,48 +67,41 @@ class SigilWheelPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = math.min(size.width, size.height) * 0.45;  // Aumentado de 0.4 para 0.45 - usa mais espaço
-    
-    // Paint para as linhas da grade (MUITO mais visível)
-    final gridPaint = Paint()
-      ..color = const Color(0xFFC9A7FF)  // Lilás sem opacidade - totalmente visível
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;  // Aumentado para 4 para melhor visibilidade
+    final maxRadius = math.min(size.width, size.height) * 0.45;
+
+    print('DEBUG SIGIL WHEEL: size=$size, center=$center, maxRadius=$maxRadius');
+    print('DEBUG: Desenhando 3 círculos - raios: ${maxRadius * 0.25}, ${maxRadius * 0.60}, ${maxRadius * 0.95}');
 
     // Paint para as divisões (mais visível)
     final dividerPaint = Paint()
-      ..color = const Color(0xFFC9A7FF).withOpacity(0.3)  // Lilás mais suave
+      ..color = const Color(0xFFC9A7FF).withOpacity(0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
-    
-    // Desenha os 3 círculos concêntricos
+
+    // Desenha os 3 círculos concêntricos - ESPAÇAMENTO MAIOR
     if (showGrid) {
       // Centro (ponto maior e mais visível)
-      canvas.drawCircle(center, 6, Paint()
-        ..color = const Color(0xFFC9A7FF)
-        ..style = PaintingStyle.fill);
       canvas.drawCircle(center, 8, Paint()
-        ..color = const Color(0xFFC9A7FF)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2);
+        ..color = Colors.white
+        ..style = PaintingStyle.fill);
 
-      // Anel interno (raio 33%) - VERMELHO para debug
-      canvas.drawCircle(center, maxRadius * 0.33, Paint()
-        ..color = const Color(0xFFFF0000)  // VERMELHO
+      // Anel interno (raio 25%) - VERMELHO BRILHANTE
+      canvas.drawCircle(center, maxRadius * 0.25, Paint()
+        ..color = Colors.red  // VERMELHO PURO
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 4);
+        ..strokeWidth = 6);  // MUITO GROSSO
 
-      // Anel médio (raio 66%) - VERDE para debug
-      canvas.drawCircle(center, maxRadius * 0.66, Paint()
-        ..color = const Color(0xFF00FF00)  // VERDE
+      // Anel médio (raio 60%) - VERDE BRILHANTE
+      canvas.drawCircle(center, maxRadius * 0.60, Paint()
+        ..color = Colors.green  // VERDE PURO
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 4);
+        ..strokeWidth = 6);  // MUITO GROSSO
 
-      // Anel externo (raio 100%) - AZUL para debug
-      canvas.drawCircle(center, maxRadius, Paint()
-        ..color = const Color(0xFF0000FF)  // AZUL
+      // Anel externo (raio 95%) - AZUL BRILHANTE
+      canvas.drawCircle(center, maxRadius * 0.95, Paint()
+        ..color = Colors.blue  // AZUL PURO
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 4);
+        ..strokeWidth = 6);  // MUITO GROSSO
 
       // Desenha as divisões radiais (como fatias)
       _drawRadialDivisions(canvas, center, maxRadius, dividerPaint);
