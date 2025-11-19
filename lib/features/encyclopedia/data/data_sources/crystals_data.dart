@@ -6,7 +6,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra do amor próprio e do amor incondicional. Promove paz interior e cura emocional.',
     element: Element.water,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Rosenquarz_1.jpg/300px-Rosenquarz_1.jpg',
+    // imageUrl: null,
     intentions: [
       'Amor próprio',
       'Auto-aceitação',
@@ -63,7 +63,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da espiritualidade e proteção. Acalma a mente e promove clareza mental.',
     element: Element.air,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Amethyst._Magaliesburg_South_Africa.jpg/300px-Amethyst._Magaliesburg_South_Africa.jpg',
+    // imageUrl: null,
     intentions: [
       'Proteção espiritual',
       'Intuição',
@@ -115,7 +115,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da prosperidade e abundância. Atrai sucesso, alegria e energia positiva.',
     element: Element.fire,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Citrine_Brumado.jpg/300px-Citrine_Brumado.jpg',
+    // imageUrl: null,
     intentions: [
       'Prosperidade',
       'Abundância',
@@ -169,7 +169,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Poderosa pedra de proteção e aterramento. Bloqueia energias negativas.',
     element: Element.earth,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Tourmaline-121487.jpg/300px-Tourmaline-121487.jpg',
+    // imageUrl: null,
     intentions: [
       'Proteção',
       'Aterramento',
@@ -219,7 +219,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Mestre curador e amplificador. Pode ser programado para qualquer intenção.',
     element: Element.spirit,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Quartz_Br%C3%A9sil.jpg/300px-Quartz_Br%C3%A9sil.jpg',
+    // imageUrl: null,
     intentions: [
       'Amplificação de energia',
       'Clareza',
@@ -273,7 +273,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da paz e purificação. Auto-limpante, não precisa de limpeza frequente.',
     element: Element.air,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Selenite_from_the_Red_River_Floodway_Manitoba_Canada_2689.jpg/300px-Selenite_from_the_Red_River_Floodway_Manitoba_Canada_2689.jpg',
+    // imageUrl: null,
     intentions: [
       'Purificação',
       'Paz',
@@ -328,7 +328,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra mística da transformação e magia. Protege contra energias negativas e aguça intuição.',
     element: Element.air,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Labradorite_detail.jpg/300px-Labradorite_detail.jpg',
+    // imageUrl: null,
     intentions: [
       'Proteção psíquica',
       'Intuição e clarividência',
@@ -374,7 +374,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra de coragem, proteção e prosperidade. Fortalece a confiança e traz boa sorte.',
     element: Element.fire,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Tiger_eye_gem.jpg/300px-Tiger_eye_gem.jpg',
+    // imageUrl: null,
     intentions: [
       'Coragem e força',
       'Proteção',
@@ -420,7 +420,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra calmante da paciência e consciência. Excelente para insônia e ansiedade.',
     element: Element.air,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Howlite.jpg/300px-Howlite.jpg',
+    // imageUrl: null,
     intentions: [
       'Calma e paciência',
       'Sono tranquilo',
@@ -466,7 +466,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da prosperidade e manifestação. Atrai abundância e protege contra negatividade.',
     element: Element.earth,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/2780M-pyrite1.jpg/300px-2780M-pyrite1.jpg',
+    // imageUrl: null,
     intentions: [
       'Prosperidade',
       'Manifestação',
@@ -516,7 +516,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra sagrada da lua e do feminino. Conecta com ciclos lunares e intuição.',
     element: Element.water,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Moonstone_gem.jpg/300px-Moonstone_gem.jpg',
+    // imageUrl: null,
     intentions: [
       'Intuição',
       'Ciclos femininos',
@@ -564,7 +564,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Poderosa pedra de proteção e aterramento. Absorve e transforma energias negativas.',
     element: Element.earth,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/ObsidianOregon.jpg/300px-ObsidianOregon.jpg',
+    // imageUrl: null,
     intentions: [
       'Proteção forte',
       'Aterramento',
@@ -613,7 +613,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da lógica, verdade e comunicação. Estimula pensamento racional e intuição.',
     element: Element.air,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Sodalite_Canada.jpg/300px-Sodalite_Canada.jpg',
+    // imageUrl: null,
     intentions: [
       'Comunicação clara',
       'Verdade e honestidade',
@@ -659,7 +659,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da criatividade, coragem e vitalidade. Estimula motivação e confiança.',
     element: Element.fire,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Carnelian.jpg/300px-Carnelian.jpg',
+    // imageUrl: null,
     intentions: [
       'Criatividade',
       'Coragem e confiança',
@@ -705,7 +705,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra de aterramento, força e estabilidade. Conecta com a energia da Terra.',
     element: Element.earth,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/JasperRedCabochon.jpg/300px-JasperRedCabochon.jpg',
+    // imageUrl: null,
     intentions: [
       'Aterramento',
       'Força física',
@@ -751,7 +751,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra de equilíbrio, harmonia e proteção suave. Estabiliza energias e acalma.',
     element: Element.earth,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Agate_banded_750pix.jpg/300px-Agate_banded_750pix.jpg',
+    // imageUrl: null,
     intentions: [
       'Equilíbrio emocional',
       'Harmonia',
@@ -797,7 +797,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra do foco, aprendizado e organização mental. Excelente para estudos.',
     element: Element.air,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Fluorite_Green_Blue_cubic_crystals.jpg/300px-Fluorite_Green_Blue_cubic_crystals.jpg',
+    // imageUrl: null,
     intentions: [
       'Foco e concentração',
       'Aprendizado',
@@ -847,7 +847,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da sabedoria, verdade e visão espiritual. Abre o terceiro olho.',
     element: Element.air,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Lapis-lazuli_hg.jpg/300px-Lapis-lazuli_hg.jpg',
+    // imageUrl: null,
     intentions: [
       'Sabedoria',
       'Verdade',

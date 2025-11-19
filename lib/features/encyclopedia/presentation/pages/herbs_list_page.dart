@@ -28,30 +28,19 @@ class _HerbsListPageState extends State<HerbsListPage> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: TextField(
+            decoration: const InputDecoration(
+              hintText: 'Buscar ervas...',
+              prefixIcon: Icon(Icons.search),
+            ),
             onChanged: (value) {
               setState(() {
                 _searchQuery = value;
               });
             },
-            decoration: InputDecoration(
-              hintText: 'Buscar ervas...',
-              prefixIcon: const Icon(Icons.search, color: AppColors.mint),
-              filled: true,
-              fillColor: AppColors.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.mint),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.mint),
-              ),
-            ),
           ),
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
             itemCount: herbs.length,
             itemBuilder: (context, index) {
               final herb = herbs[index];
