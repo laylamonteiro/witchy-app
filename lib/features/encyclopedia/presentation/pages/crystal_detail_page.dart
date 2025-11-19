@@ -21,19 +21,40 @@ class CrystalDetailPage extends StatelessWidget {
             MagicalCard(
               child: Column(
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: AppColors.lilac.withOpacity(0.2),
+                  if (crystal.imageUrl != null)
+                    ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.diamond,
-                      color: AppColors.lilac,
-                      size: 60,
-                    ),
-                  ),
+                      child: Image.network(
+                        crystal.imageUrl!,
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildPlaceholderImage();
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              color: AppColors.lilac.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    _buildPlaceholderImage(),
                   const SizedBox(height: 16),
                   Text(
                     crystal.name,
@@ -291,6 +312,22 @@ class CrystalDetailPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      width: 200,
+      height: 200,
+      decoration: BoxDecoration(
+        color: AppColors.lilac.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Icon(
+        Icons.diamond,
+        color: AppColors.lilac,
+        size: 80,
       ),
     );
   }
