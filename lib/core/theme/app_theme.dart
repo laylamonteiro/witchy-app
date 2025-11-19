@@ -10,6 +10,7 @@ class AppColors {
   // Pastéis principais
   static const lilac = Color(0xFFC9A7FF); // Magia, espiritualidade, lua
   static const pink = Color(0xFFF1A7C5); // Amor próprio, afeto, fofura
+  static const pinkWitch = Color(0xFFF1A7C5); // Alias para pink (usado em sigilos)
   static const mint = Color(0xFFA7F0D8); // Cura, natureza, bruxaria verde
   static const starYellow = Color(0xFFFFE8A3); // Brilho, glitter, feedback positivo
 
@@ -20,6 +21,7 @@ class AppColors {
   // Status
   static const success = Color(0xFF7EE08A); // Sucesso/proteção
   static const alert = Color(0xFFFF6B81); // Alerta/cuidado
+  static const warning = Color(0xFFFF6B81); // Alias para alert (avisos)
   static const info = Color(0xFFA7C7FF); // Info/neutro
 }
 
