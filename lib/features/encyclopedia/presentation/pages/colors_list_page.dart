@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/encyclopedia_provider.dart';
+import '../../data/models/color_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'color_detail_page.dart';
@@ -14,6 +15,27 @@ class ColorsListPage extends StatefulWidget {
 
 class _ColorsListPageState extends State<ColorsListPage> {
   String _searchQuery = '';
+
+  // Remove acentos para ordenação alfabética correta
+  String _removeAccents(String str) {
+    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
+    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
+
+    String result = str;
+    for (int i = 0; i < withAccents.length; i++) {
+      result = result.replaceAll(withAccents[i], withoutAccents[i]);
+    }
+    return result;
+  }
+
+  // Ordena lista de cores alfabeticamente
+  List<ColorModel> _sortColors(List<ColorModel> colors) {
+    final sorted = List<ColorModel>.from(colors);
+    sorted.sort((a, b) =>
+      _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+    );
+    return sorted;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +58,12 @@ class _ColorsListPageState extends State<ColorsListPage> {
         Expanded(
           child: Consumer<EncyclopediaProvider>(
             builder: (context, provider, _) {
-              final colors = _searchQuery.isEmpty
+              final unsortedColors = _searchQuery.isEmpty
                   ? provider.colors
                   : provider.searchColors(_searchQuery);
+
+              // Ordena alfabeticamente
+              final colors = _sortColors(unsortedColors);
 
               return ListView.builder(
                 itemCount: colors.length,

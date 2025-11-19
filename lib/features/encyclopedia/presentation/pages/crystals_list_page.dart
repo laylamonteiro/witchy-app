@@ -16,6 +16,27 @@ class CrystalsListPage extends StatefulWidget {
 class _CrystalsListPageState extends State<CrystalsListPage> {
   String _searchQuery = '';
 
+  // Remove acentos para ordenação alfabética correta
+  String _removeAccents(String str) {
+    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
+    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
+
+    String result = str;
+    for (int i = 0; i < withAccents.length; i++) {
+      result = result.replaceAll(withAccents[i], withoutAccents[i]);
+    }
+    return result;
+  }
+
+  // Ordena lista de cristais alfabeticamente
+  List<CrystalModel> _sortCrystals(List<CrystalModel> crystals) {
+    final sorted = List<CrystalModel>.from(crystals);
+    sorted.sort((a, b) =>
+      _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+    );
+    return sorted;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -37,9 +58,12 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
         Expanded(
           child: Consumer<EncyclopediaProvider>(
             builder: (context, provider, _) {
-              final crystals = _searchQuery.isEmpty
+              final unsortedCrystals = _searchQuery.isEmpty
                   ? provider.crystals
                   : provider.searchCrystals(_searchQuery);
+
+              // Ordena alfabeticamente
+              final crystals = _sortCrystals(unsortedCrystals);
 
               return ListView.builder(
                 itemCount: crystals.length,

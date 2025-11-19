@@ -16,12 +16,36 @@ class HerbsListPage extends StatefulWidget {
 class _HerbsListPageState extends State<HerbsListPage> {
   String _searchQuery = '';
 
+  // Remove acentos para ordenação alfabética correta
+  String _removeAccents(String str) {
+    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
+    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
+
+    String result = str;
+    for (int i = 0; i < withAccents.length; i++) {
+      result = result.replaceAll(withAccents[i], withoutAccents[i]);
+    }
+    return result;
+  }
+
+  // Ordena lista de ervas alfabeticamente
+  List<HerbModel> _sortHerbs(List<HerbModel> herbs) {
+    final sorted = List<HerbModel>.from(herbs);
+    sorted.sort((a, b) =>
+      _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+    );
+    return sorted;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<EncyclopediaProvider>(context);
-    final herbs = _searchQuery.isEmpty
+    final unsortedHerbs = _searchQuery.isEmpty
         ? provider.herbs
         : provider.searchHerbs(_searchQuery);
+
+    // Ordena alfabeticamente
+    final herbs = _sortHerbs(unsortedHerbs);
 
     return Column(
       children: [
