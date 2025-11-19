@@ -30,15 +30,15 @@ String _getSittingCat(bool isBlinking) {
   final eyes = isBlinking
     ? '''
       <!-- Olhos fechados -->
-      <path d="M 18 20 Q 20 19 22 20" stroke="#C9A7FF" stroke-width="1.5" fill="none"/>
-      <path d="M 42 20 Q 44 19 46 20" stroke="#C9A7FF" stroke-width="1.5" fill="none"/>
+      <path d="M 24 20 Q 26 19 28 20" stroke="#C9A7FF" stroke-width="1.5" fill="none"/>
+      <path d="M 36 20 Q 38 19 40 20" stroke="#C9A7FF" stroke-width="1.5" fill="none"/>
     '''
     : '''
       <!-- Olhos abertos -->
-      <circle cx="20" cy="20" r="3" fill="#C9A7FF"/>
-      <circle cx="44" cy="20" r="3" fill="#C9A7FF"/>
-      <circle cx="21" cy="20" r="1.5" fill="#FFE8A3"/>
-      <circle cx="45" cy="20" r="1.5" fill="#FFE8A3"/>
+      <circle cx="26" cy="20" r="3" fill="#FFFFFF"/>
+      <circle cx="38" cy="20" r="3" fill="#FFFFFF"/>
+      <circle cx="27" cy="20" r="1.5" fill="#000000"/>
+      <circle cx="39" cy="20" r="1.5" fill="#000000"/>
     ''';
 
   return '''

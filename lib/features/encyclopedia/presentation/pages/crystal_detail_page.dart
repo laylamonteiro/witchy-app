@@ -24,32 +24,13 @@ class CrystalDetailPage extends StatelessWidget {
                   if (crystal.imageUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Image.network(
+                      child: Image.asset(
                         crystal.imageUrl!,
                         width: 200,
                         height: 200,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return _buildPlaceholderImage();
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: AppColors.lilac.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            ),
-                          );
                         },
                       ),
                     )

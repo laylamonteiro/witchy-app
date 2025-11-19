@@ -1,0 +1,42 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo circular roxo escuro -->
+  <circle cx="512" cy="512" r="512" fill="#0B0A16"/>
+
+  <!-- Borda externa lilás -->
+  <circle cx="512" cy="512" r="502" fill="none" stroke="#C9A7FF" stroke-width="20"/>
+
+  <!-- Lua crescente central -->
+  <g transform="translate(512, 512)">
+    <!-- Círculo da lua -->
+    <circle cx="-60" cy="-40" r="280" fill="#C9A7FF"/>
+    <!-- Círculo para criar crescente -->
+    <circle cx="40" cy="-40" r="280" fill="#0B0A16"/>
+  </g>
+
+  <!-- Estrelas ao redor -->
+  <!-- Estrela superior direita -->
+  <g transform="translate(812, 312)">
+    <polygon points="0,-40 12,-12 40,0 12,12 0,40 -12,12 -40,0 -12,-12" fill="#FFE8A3"/>
+  </g>
+
+  <!-- Estrela inferior direita -->
+  <g transform="translate(762, 762)">
+    <polygon points="0,-30 9,-9 30,0 9,9 0,30 -9,9 -30,0 -9,-9" fill="#FFE8A3"/>
+  </g>
+
+  <!-- Estrela inferior esquerda -->
+  <g transform="translate(232, 712)">
+    <polygon points="0,-35 10.5,-10.5 35,0 10.5,10.5 0,35 -10.5,10.5 -35,0 -10.5,-10.5" fill="#FFE8A3"/>
+  </g>
+
+  <!-- Estrela superior esquerda -->
+  <g transform="translate(192, 412)">
+    <polygon points="0,-25 7.5,-7.5 25,0 7.5,7.5 0,25 -7.5,7.5 -25,0 -7.5,-7.5" fill="#FFE8A3"/>
+  </g>
+
+  <!-- Pequenas estrelas decorativas -->
+  <circle cx="650" cy="200" r="8" fill="#A7F0D8"/>
+  <circle cx="300" cy="600" r="6" fill="#F1A7C5"/>
+  <circle cx="850" cy="550" r="7" fill="#A7F0D8"/>
+  <circle cx="150" cy="250" r="5" fill="#F1A7C5"/>
+</svg>

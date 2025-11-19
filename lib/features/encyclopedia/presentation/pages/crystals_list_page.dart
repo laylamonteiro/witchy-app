@@ -16,6 +16,27 @@ class CrystalsListPage extends StatefulWidget {
 class _CrystalsListPageState extends State<CrystalsListPage> {
   String _searchQuery = '';
 
+  // Remove acentos para ordenação alfabética correta
+  String _removeAccents(String str) {
+    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
+    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
+
+    String result = str;
+    for (int i = 0; i < withAccents.length; i++) {
+      result = result.replaceAll(withAccents[i], withoutAccents[i]);
+    }
+    return result;
+  }
+
+  // Ordena lista de cristais alfabeticamente
+  List<CrystalModel> _sortCrystals(List<CrystalModel> crystals) {
+    final sorted = List<CrystalModel>.from(crystals);
+    sorted.sort((a, b) =>
+      _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+    );
+    return sorted;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -37,9 +58,12 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
         Expanded(
           child: Consumer<EncyclopediaProvider>(
             builder: (context, provider, _) {
-              final crystals = _searchQuery.isEmpty
+              final unsortedCrystals = _searchQuery.isEmpty
                   ? provider.crystals
                   : provider.searchCrystals(_searchQuery);
+
+              // Ordena alfabeticamente
+              final crystals = _sortCrystals(unsortedCrystals);
 
               return ListView.builder(
                 itemCount: crystals.length,
@@ -59,7 +83,7 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: crystal.imageUrl != null
-                              ? Image.network(
+                              ? Image.asset(
                                   crystal.imageUrl!,
                                   width: 60,
                                   height: 60,
@@ -76,26 +100,6 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                         Icons.diamond,
                                         color: AppColors.lilac,
                                         size: 32,
-                                      ),
-                                    );
-                                  },
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Container(
-                                      width: 60,
-                                      height: 60,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.lilac.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          value: loadingProgress.expectedTotalBytes != null
-                                              ? loadingProgress.cumulativeBytesLoaded /
-                                                  loadingProgress.expectedTotalBytes!
-                                              : null,
-                                        ),
                                       ),
                                     );
                                   },

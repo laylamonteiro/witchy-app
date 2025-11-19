@@ -26,8 +26,8 @@
     <rect x="18" y="30" width="28" height="2" fill="#171425"/>
     
     <!-- Olhos -->
-    <rect x="22" y="18" width="4" height="4" fill="#A7F0D8"/>
-    <rect x="38" y="18" width="4" height="4" fill="#A7F0D8"/>
+    <rect x="22" y="18" width="4" height="4" fill="#000000"/>
+    <rect x="38" y="18" width="4" height="4" fill="#000000"/>
     <!-- Pupilas -->
     <rect x="24" y="19" width="2" height="3" fill="#0B0A16"/>
     <rect x="38" y="19" width="2" height="3" fill="#0B0A16"/>

@@ -67,161 +67,57 @@ class SigilWheelPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = math.min(size.width, size.height) * 0.4;
-    
-    // Paint para as linhas da grade
-    final gridPaint = Paint()
-      ..color = const Color(0xFF26213A)
+    final maxRadius = math.min(size.width, size.height) * 0.42;
+
+    // Paint para o círculo principal
+    final circlePaint = Paint()
+      ..color = const Color(0xFFC9A7FF)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    
-    // Paint para as divisões
-    final dividerPaint = Paint()
-      ..color = const Color(0xFF26213A).withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5;
-    
-    // Desenha os 3 círculos concêntricos
+      ..strokeWidth = 2;
+
+    // Desenha círculo único simples
     if (showGrid) {
-      // Centro (ponto)
-      canvas.drawCircle(center, 3, Paint()..color = const Color(0xFFC9A7FF));
-      
-      // Anel interno (raio 33%)
-      canvas.drawCircle(center, maxRadius * 0.33, gridPaint);
-      
-      // Anel médio (raio 66%)
-      canvas.drawCircle(center, maxRadius * 0.66, gridPaint);
-      
-      // Anel externo (raio 100%)
-      canvas.drawCircle(center, maxRadius, gridPaint);
-      
-      // Desenha as divisões radiais (como fatias)
-      _drawRadialDivisions(canvas, center, maxRadius, dividerPaint);
+      // Centro
+      canvas.drawCircle(center, 4, Paint()
+        ..color = const Color(0xFFC9A7FF)
+        ..style = PaintingStyle.fill);
+
+      // Círculo principal
+      canvas.drawCircle(center, maxRadius, circlePaint);
     }
-    
+
     // Desenha as letras
     if (showLetters) {
-      _drawLetters(canvas, size, center, maxRadius);
+      _drawLettersSimple(canvas, size, center, maxRadius);
     }
-    
+
     // Desenha o sigilo se houver pontos
     if (sigilPoints != null && sigilPoints!.isNotEmpty) {
       _drawSigil(canvas, sigilPoints!);
     }
   }
-  
-  void _drawRadialDivisions(Canvas canvas, Offset center, double maxRadius, Paint paint) {
-    // Anel externo - 12 divisões (30° cada)
-    for (int i = 0; i < 12; i++) {
-      final angle = (i * 30) * (math.pi / 180);
-      final start = Offset(
-        center.dx + (maxRadius * 0.66) * math.cos(angle - math.pi / 2),
-        center.dy + (maxRadius * 0.66) * math.sin(angle - math.pi / 2),
-      );
-      final end = Offset(
-        center.dx + maxRadius * math.cos(angle - math.pi / 2),
-        center.dy + maxRadius * math.sin(angle - math.pi / 2),
-      );
-      canvas.drawLine(start, end, paint);
-    }
-    
-    // Anel médio - 8 divisões (45° cada)
-    for (int i = 0; i < 8; i++) {
-      final angle = (i * 45 + 15) * (math.pi / 180);
-      final start = Offset(
-        center.dx + (maxRadius * 0.33) * math.cos(angle - math.pi / 2),
-        center.dy + (maxRadius * 0.33) * math.sin(angle - math.pi / 2),
-      );
-      final end = Offset(
-        center.dx + (maxRadius * 0.66) * math.cos(angle - math.pi / 2),
-        center.dy + (maxRadius * 0.66) * math.sin(angle - math.pi / 2),
-      );
-      canvas.drawLine(start, end, paint);
-    }
-    
-    // Anel interno - 5 divisões (72° cada)
-    for (int i = 0; i < 5; i++) {
-      final angle = (i * 72) * (math.pi / 180);
-      final start = center;
-      final end = Offset(
-        center.dx + (maxRadius * 0.33) * math.cos(angle - math.pi / 2),
-        center.dy + (maxRadius * 0.33) * math.sin(angle - math.pi / 2),
-      );
-      canvas.drawLine(start, end, paint);
-    }
-  }
-  
-  void _drawLetters(Canvas canvas, Size size, Offset center, double maxRadius) {
-    final textStyle = TextStyle(
-      color: highlightedLetters?.isEmpty ?? true 
-        ? const Color(0xFFB7B2D6)
-        : const Color(0xFFB7B2D6).withOpacity(0.3),
+
+  void _drawLettersSimple(Canvas canvas, Size size, Offset center, double maxRadius) {
+    final textStyle = const TextStyle(
+      color: Color(0xFFE8D6FF),
       fontSize: 14,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.bold,
     );
-    
-    SigilWheel.letterPositions.forEach((letter, position) {
-      // Pula o centro se for A
-      if (position.ring == 0) {
-        // Desenha A no centro
-        final textSpan = TextSpan(
-          text: letter,
-          style: textStyle.copyWith(
-            color: highlightedLetters?.contains(letter) ?? false
-              ? const Color(0xFFFFE8A3)
-              : const Color(0xFFB7B2D6),
-          ),
-        );
-        final textPainter = TextPainter(
-          text: textSpan,
-          textDirection: TextDirection.ltr,
-        );
-        textPainter.layout();
-        textPainter.paint(
-          canvas,
-          center - Offset(textPainter.width / 2, textPainter.height / 2),
-        );
-        return;
-      }
-      
-      // Calcula o raio baseado no anel
-      double radius;
-      switch (position.ring) {
-        case 1:
-          radius = maxRadius * 0.33;
-          break;
-        case 2:
-          radius = maxRadius * 0.66;
-          break;
-        case 3:
-          radius = maxRadius;
-          break;
-        default:
-          radius = maxRadius;
-      }
-      
-      // Ajusta o raio para posicionar o texto no meio da fatia
-      radius = radius - 10;
-      
-      // Calcula a posição
-      final angle = position.angle * (math.pi / 180);
+
+    // Desenha todas as letras ao redor do círculo
+    final letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    final totalLetters = letters.length;
+
+    for (int i = 0; i < totalLetters; i++) {
+      final angle = (i * 360 / totalLetters) * (math.pi / 180);
+      final radius = maxRadius + 20; // Fora do círculo
+
       final x = center.dx + radius * math.cos(angle - math.pi / 2);
       final y = center.dy + radius * math.sin(angle - math.pi / 2);
-      
-      // Determina a cor baseado se está destacado
-      Color letterColor = const Color(0xFFB7B2D6);
-      if (highlightedLetters != null) {
-        if (highlightedLetters!.contains(letter)) {
-          letterColor = const Color(0xFFFFE8A3); // Amarelo para destacado
-        } else {
-          letterColor = letterColor.withOpacity(0.3); // Apagado se não destacado
-        }
-      }
-      
-      // Desenha a letra
+
       final textSpan = TextSpan(
-        text: letter,
-        style: textStyle.copyWith(color: letterColor),
+        text: letters[i],
+        style: textStyle,
       );
       final textPainter = TextPainter(
         text: textSpan,
@@ -232,7 +128,7 @@ class SigilWheelPainter extends CustomPainter {
         canvas,
         Offset(x - textPainter.width / 2, y - textPainter.height / 2),
       );
-    });
+    }
   }
   
   void _drawSigil(Canvas canvas, List<Offset> points) {
