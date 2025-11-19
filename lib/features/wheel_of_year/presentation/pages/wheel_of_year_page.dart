@@ -348,7 +348,7 @@ class WheelOfYearPage extends StatelessWidget {
                                     .textTheme
                                     .titleMedium
                                     ?.copyWith(
-                                      color: AppColors.textSecondary,
+                                      color: AppColors.lilac,
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
