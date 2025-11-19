@@ -9,7 +9,7 @@ final List<HerbModel> herbsData = [
         'Erva poderosa de purificação e proteção. Amplamente usada na culinária e rituais.',
     element: HerbElement.fire,
     planet: Planet.sun,
-    imageUrl: 'https://cdn.pixabay.com/photo/2015/05/30/21/20/rosemary-791816_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Rosmarinus_officinalis_001.JPG',
     magicalProperties: [
       'Purificação',
       'Proteção',
@@ -41,7 +41,7 @@ final List<HerbModel> herbsData = [
         'Erva calmante e purificadora. Associada à paz, amor e sono tranquilo.',
     element: HerbElement.air,
     planet: Planet.mercury,
-    imageUrl: 'https://cdn.pixabay.com/photo/2016/07/05/22/10/lavender-1498481_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Lavandula_angustifolia_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-074.jpg',
     magicalProperties: [
       'Paz e tranquilidade',
       'Sono e sonhos',
@@ -72,7 +72,7 @@ final List<HerbModel> herbsData = [
         'Erva lunar poderosa para sonhos, divinação e proteção. Sagrada para bruxas.',
     element: HerbElement.earth,
     planet: Planet.moon,
-    imageUrl: 'https://cdn.pixabay.com/photo/2017/08/01/09/04/artemisia-2563152_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Artemisia_vulgaris_001.JPG',
     magicalProperties: [
       'Sonhos lúcidos e proféticos',
       'Divinação',
@@ -105,7 +105,7 @@ final List<HerbModel> herbsData = [
         'Erva sagrada de purificação. Muito usada em defumação para limpar energias.',
     element: HerbElement.air,
     planet: Planet.jupiter,
-    imageUrl: 'https://cdn.pixabay.com/photo/2019/08/13/12/58/sage-4402852_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Salvia_apiana_kz1.jpg',
     magicalProperties: [
       'Purificação profunda',
       'Limpeza energética',
@@ -138,7 +138,7 @@ final List<HerbModel> herbsData = [
         'Erva suave de paz e cura. Amplamente usada em chás e rituais de tranquilidade.',
     element: HerbElement.water,
     planet: Planet.sun,
-    imageUrl: 'https://cdn.pixabay.com/photo/2016/08/28/23/24/chamomile-1627193_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/29/Matricaria_February_2008-1.jpg',
     magicalProperties: [
       'Paz e calma',
       'Purificação suave',
@@ -170,7 +170,7 @@ final List<HerbModel> herbsData = [
         'Erva de amor, prosperidade e proteção. Sagrada em várias tradições.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    imageUrl: 'https://cdn.pixabay.com/photo/2016/03/05/22/12/basil-1239653_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Basil-Basilico-Ocimum_basilicum-albahaca.jpg',
     magicalProperties: [
       'Amor e romance',
       'Prosperidade',
@@ -201,7 +201,7 @@ final List<HerbModel> herbsData = [
         'Poderosa erva de proteção contra mau-olhado e inveja. Muito usada no Brasil.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    imageUrl: 'https://cdn.pixabay.com/photo/2018/05/08/22/56/ruta-graveolens-3384013_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/92/Ruta_graveolens_002.JPG',
     magicalProperties: [
       'Proteção contra olho gordo',
       'Quebra de feitiços',
@@ -235,7 +235,7 @@ final List<HerbModel> herbsData = [
         'Erva refrescante de cura, prosperidade e purificação.',
     element: HerbElement.air,
     planet: Planet.mercury,
-    imageUrl: 'https://cdn.pixabay.com/photo/2015/05/30/01/18/mint-789595_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/da/Mentha_spicata_003.JPG',
     magicalProperties: [
       'Prosperidade financeira',
       'Cura',
@@ -267,7 +267,7 @@ final List<HerbModel> herbsData = [
         'Erva poderosa de proteção e limpeza, muito usada em religiões afro-brasileiras.',
     element: HerbElement.earth,
     planet: Planet.saturn,
-    imageUrl: 'https://cdn.pixabay.com/photo/2017/09/05/10/19/plant-2717228_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/46/Petiveria_alliacea_15.JPG',
     magicalProperties: [
       'Proteção forte',
       'Limpeza profunda',
@@ -300,7 +300,7 @@ final List<HerbModel> herbsData = [
         'Flor do amor, beleza e magia do coração. Usada em rituais de amor e auto-cuidado.',
     element: HerbElement.water,
     planet: Planet.venus,
-    imageUrl: 'https://cdn.pixabay.com/photo/2014/05/21/22/24/rose-rose-bloom-349469_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Rosa_Princess_de_Monaco.jpg',
     magicalProperties: [
       'Amor romântico',
       'Auto-amor',
@@ -331,7 +331,7 @@ final List<HerbModel> herbsData = [
         'Especiaria poderosa de prosperidade, proteção e amor. Acelera feitiços e atrai sucesso.',
     element: HerbElement.fire,
     planet: Planet.sun,
-    imageUrl: 'https://cdn.pixabay.com/photo/2016/01/04/23/34/cinnamon-1122363_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d8/Cinnamomum_verum_spices.jpg',
     magicalProperties: [
       'Prosperidade rápida',
       'Sucesso e poder',
@@ -363,7 +363,7 @@ final List<HerbModel> herbsData = [
         'Erva de proteção forte, banimento e atração de dinheiro. Afasta energias negativas.',
     element: HerbElement.fire,
     planet: Planet.jupiter,
-    imageUrl: 'https://cdn.pixabay.com/photo/2017/05/11/08/48/cloves-2303316_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fd/Clous_de_girofle.JPG',
     magicalProperties: [
       'Proteção forte',
       'Banimento',
@@ -394,7 +394,7 @@ final List<HerbModel> herbsData = [
         'Folha sagrada de vitória, sucesso e proteção. Usada para purificação e manifestação.',
     element: HerbElement.fire,
     planet: Planet.sun,
-    imageUrl: 'https://cdn.pixabay.com/photo/2018/09/24/08/52/bay-leaves-3699540_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Laurus_nobilis_leaves.jpg',
     magicalProperties: [
       'Vitória e sucesso',
       'Proteção',
@@ -425,7 +425,7 @@ final List<HerbModel> herbsData = [
         'Especiaria de proteção, banimento e quebra de feitiços. Afasta energias negativas.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    imageUrl: 'https://cdn.pixabay.com/photo/2018/12/04/17/21/black-pepper-3856683_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Piper_nigrum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-107.jpg',
     magicalProperties: [
       'Proteção forte',
       'Banimento',
@@ -456,7 +456,7 @@ final List<HerbModel> herbsData = [
         'Erva purificadora e curativa. Limpa energias e protege contra doenças.',
     element: HerbElement.air,
     planet: Planet.moon,
-    imageUrl: 'https://cdn.pixabay.com/photo/2017/08/14/09/29/eucalyptus-2640890_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Eucalyptus_globulus_001.jpg',
     magicalProperties: [
       'Purificação',
       'Cura',
@@ -488,7 +488,7 @@ final List<HerbModel> herbsData = [
         'Raiz de poder, sucesso e amor. Acelera manifestações e traz energia.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    imageUrl: 'https://cdn.pixabay.com/photo/2017/03/28/22/55/ginger-2184108_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/34/Zingiber_officinale_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-030.jpg',
     magicalProperties: [
       'Poder pessoal',
       'Sucesso rápido',
@@ -519,7 +519,7 @@ final List<HerbModel> herbsData = [
         'Erva protetora e purificadora, tradicionalmente usada no Brasil para proteção.',
     element: HerbElement.earth,
     planet: Planet.saturn,
-    imageUrl: 'https://cdn.pixabay.com/photo/2016/11/29/12/47/leaves-1869236_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Peumus_boldus_001.jpg',
     magicalProperties: [
       'Proteção',
       'Purificação',
@@ -552,7 +552,7 @@ final List<HerbModel> herbsData = [
         'Erva brasileira de proteção forte e limpeza. Popular no Nordeste para afastar energias ruins.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    imageUrl: 'https://cdn.pixabay.com/photo/2018/04/15/21/46/herb-3322933_1280.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Lippia_graveolens_HRM2.JPG',
     magicalProperties: [
       'Proteção forte',
       'Purificação profunda',
