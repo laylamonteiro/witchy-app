@@ -308,6 +308,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                   width: widget.size,
                   height: widget.size,
                   decoration: BoxDecoration(
+                    shape: BoxShape.circle, // Forma circular para brilho redondo
                     // Sombra lilás sempre visível
                     boxShadow: [
                       BoxShadow(

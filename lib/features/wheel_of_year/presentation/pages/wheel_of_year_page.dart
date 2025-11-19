@@ -46,7 +46,7 @@ class WheelOfYearPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          dateFormat.format(nextSabbat.date),
+                          nextSabbat.type.southernHemisphereDate,
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     color: AppColors.textSecondary,
@@ -199,7 +199,7 @@ class WheelOfYearPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      dateFormat.format(sabbat.date),
+                      sabbat.type.southernHemisphereDate,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.textSecondary,
                           ),
