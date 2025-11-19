@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lua Crescente Pixel Art - Light Mode -->
+  <g id="moon-crescent-light">
+    <!-- Contorno principal -->
+    <rect x="10" y="3" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="8" y="4" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="12" y="4" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="6" y="5" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="14" y="5" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="5" y="6" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="16" y="6" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="4" y="8" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="17" y="8" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="4" y="10" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="17" y="10" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="4" y="12" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="17" y="12" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="5" y="14" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="16" y="14" width="1" height="2" fill="#8B5FD6"/>
+    <rect x="6" y="16" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="14" y="16" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="8" y="17" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="12" y="17" width="2" height="1" fill="#8B5FD6"/>
+    <rect x="10" y="18" width="2" height="1" fill="#8B5FD6"/>
+    
+    <!-- Preenchimento interno -->
+    <rect x="10" y="5" width="2" height="12" fill="#8B5FD6" opacity="0.2"/>
+    <rect x="8" y="6" width="2" height="10" fill="#8B5FD6" opacity="0.2"/>
+    <rect x="12" y="6" width="2" height="10" fill="#8B5FD6" opacity="0.2"/>
+    <rect x="6" y="8" width="2" height="6" fill="#8B5FD6" opacity="0.2"/>
+    <rect x="14" y="8" width="2" height="6" fill="#8B5FD6" opacity="0.2"/>
+    
+    <!-- Efeito crescente -->
+    <rect x="11" y="7" width="3" height="1" fill="#F6F4FF"/>
+    <rect x="12" y="8" width="3" height="1" fill="#F6F4FF"/>
+    <rect x="13" y="9" width="3" height="2" fill="#F6F4FF"/>
+    <rect x="13" y="11" width="3" height="2" fill="#F6F4FF"/>
+    <rect x="12" y="13" width="3" height="1" fill="#F6F4FF"/>
+    <rect x="11" y="14" width="3" height="1" fill="#F6F4FF"/>
+  </g>
+  
+  <!-- Estrelas decorativas -->
+  <rect x="3" y="3" width="1" height="1" fill="#D4B14F" opacity="0.8"/>
+  <rect x="20" y="5" width="1" height="1" fill="#D4B14F" opacity="0.8"/>
+  <rect x="19" y="16" width="1" height="1" fill="#D4B14F" opacity="0.8"/>
+</svg>

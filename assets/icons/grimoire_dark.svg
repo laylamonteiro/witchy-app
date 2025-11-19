@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Grimório Pixel Art -->
+  <g id="grimoire">
+    <!-- Capa do livro -->
+    <rect x="5" y="4" width="14" height="16" fill="#8B5FD6" opacity="0.9"/>
+    <rect x="5" y="4" width="14" height="1" fill="#C9A7FF"/>
+    <rect x="5" y="19" width="14" height="1" fill="#C9A7FF"/>
+    <rect x="5" y="4" width="1" height="16" fill="#C9A7FF"/>
+    <rect x="18" y="4" width="1" height="16" fill="#C9A7FF"/>
+    
+    <!-- Lombada -->
+    <rect x="6" y="4" width="2" height="16" fill="#6B4BA6" opacity="0.8"/>
+    
+    <!-- Pentagramas no centro -->
+    <g transform="translate(11, 10)">
+      <!-- Pentagrama simplificado -->
+      <rect x="0" y="-3" width="1" height="1" fill="#FFE8A3"/>
+      <rect x="-2" y="-1" width="1" height="1" fill="#FFE8A3"/>
+      <rect x="2" y="-1" width="1" height="1" fill="#FFE8A3"/>
+      <rect x="-1" y="1" width="1" height="1" fill="#FFE8A3"/>
+      <rect x="1" y="1" width="1" height="1" fill="#FFE8A3"/>
+      <!-- Linhas conectoras -->
+      <rect x="-1" y="-2" width="3" height="1" fill="#FFE8A3" opacity="0.6"/>
+      <rect x="-2" y="0" width="5" height="1" fill="#FFE8A3" opacity="0.6"/>
+    </g>
+    
+    <!-- Detalhes de páginas -->
+    <rect x="17" y="5" width="1" height="14" fill="#F6F4FF" opacity="0.3"/>
+    <rect x="16" y="5" width="1" height="14" fill="#F6F4FF" opacity="0.2"/>
+    
+    <!-- Fecho/marca página -->
+    <rect x="14" y="18" width="2" height="3" fill="#F1A7C5" opacity="0.8"/>
+  </g>
+</svg>
