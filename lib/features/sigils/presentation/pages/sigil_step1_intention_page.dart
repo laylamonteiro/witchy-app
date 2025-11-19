@@ -1,0 +1,245 @@
+import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/magical_button.dart';
+import '../../data/models/sigil_model.dart';
+import 'sigil_step2_letters_page.dart';
+
+/// Etapa 1: Definir intenção para o sigilo
+class SigilStep1IntentionPage extends StatefulWidget {
+  const SigilStep1IntentionPage({super.key});
+
+  @override
+  State<SigilStep1IntentionPage> createState() =>
+      _SigilStep1IntentionPageState();
+}
+
+class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
+  final TextEditingController _intentionController = TextEditingController();
+  bool _canContinue = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _intentionController.addListener(_validateInput);
+  }
+
+  @override
+  void dispose() {
+    _intentionController.dispose();
+    super.dispose();
+  }
+
+  void _validateInput() {
+    setState(() {
+      // Validar se é uma única palavra (sem espaços) e tem pelo menos 3 letras
+      final text = _intentionController.text.trim();
+      _canContinue = text.isNotEmpty &&
+                     !text.contains(' ') &&
+                     text.length >= 3;
+    });
+  }
+
+  void _continue() {
+    if (!_canContinue) return;
+
+    final sigil = Sigil.fromIntention(_intentionController.text.trim());
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SigilStep2LettersPage(sigil: sigil),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Criar Sigilo'),
+        backgroundColor: AppColors.surface,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Título da etapa
+            Text(
+              'Defina sua Intenção',
+              style: Theme.of(context).textTheme.headlineMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Escolha uma palavra que represente sua intenção',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+
+            // Card de explicação
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text('✨', style: TextStyle(fontSize: 24)),
+                      const SizedBox(width: 12),
+                      Text(
+                        'O que é um Sigilo?',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Um sigilo é um símbolo mágico criado a partir de uma intenção. '
+                    'Ele transforma seu desejo em uma forma visual única, que pode ser '
+                    'usada em rituais, meditações ou para focar sua energia.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Este app ajuda na parte técnica (letras e desenho base). '
+                    'A magia acontece quando você desenha e ativa o sigilo na sua prática pessoal.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Campo de entrada
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sua palavra de intenção',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _intentionController,
+                    decoration: InputDecoration(
+                      hintText: 'Digite uma palavra...',
+                      hintStyle: TextStyle(
+                        color: AppColors.textSecondary.withOpacity(0.5),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: AppColors.surfaceBorder,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: AppColors.surfaceBorder,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: AppColors.lilac,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    textCapitalization: TextCapitalization.none,
+                    maxLength: 30,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '⚠️ Use apenas UMA palavra, sem espaços',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: _intentionController.text.contains(' ')
+                              ? Colors.red.shade300
+                              : AppColors.textSecondary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Exemplos
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '💡 Exemplos de palavras',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildExample('Prosperidade'),
+                  _buildExample('Proteção'),
+                  _buildExample('Cura'),
+                  _buildExample('Confiança'),
+                  _buildExample('Intuição'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Dica: Escolha palavras positivas e específicas que ressoem com você.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Botão continuar
+            MagicalButton(
+              onPressed: _canContinue ? _continue : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Continuar',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: _canContinue
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                      ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExample(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          const Text('•', style: TextStyle(color: AppColors.lilac)),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
