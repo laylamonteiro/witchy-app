@@ -24,7 +24,7 @@ class HerbDetailPage extends StatelessWidget {
                   if (herb.imageUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Image.network(
+                      child: Image.asset(
                         herb.imageUrl!,
                         width: 200,
                         height: 200,
@@ -41,25 +41,6 @@ class HerbDetailPage extends StatelessWidget {
                               child: Text(
                                 '🌿',
                                 style: TextStyle(fontSize: 60),
-                              ),
-                            ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: AppColors.mint.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
                               ),
                             ),
                           );

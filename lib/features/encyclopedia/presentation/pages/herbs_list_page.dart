@@ -58,7 +58,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: herb.imageUrl != null
-                          ? Image.network(
+                          ? Image.asset(
                               herb.imageUrl!,
                               width: 60,
                               height: 60,
@@ -75,26 +75,6 @@ class _HerbsListPageState extends State<HerbsListPage> {
                                     child: Text(
                                       herb.element.emoji,
                                       style: const TextStyle(fontSize: 24),
-                                    ),
-                                  ),
-                                );
-                              },
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.mint.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      value: loadingProgress.expectedTotalBytes != null
-                                          ? loadingProgress.cumulativeBytesLoaded /
-                                              loadingProgress.expectedTotalBytes!
-                                          : null,
                                     ),
                                   ),
                                 );

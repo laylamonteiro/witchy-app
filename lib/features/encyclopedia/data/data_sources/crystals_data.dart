@@ -6,7 +6,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra do amor próprio e do amor incondicional. Promove paz interior e cura emocional.',
     element: Element.water,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/quartzo_rosa.jpg',
     intentions: [
       'Amor próprio',
       'Auto-aceitação',
@@ -63,7 +63,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da espiritualidade e proteção. Acalma a mente e promove clareza mental.',
     element: Element.air,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/ametista.jpg',
     intentions: [
       'Proteção espiritual',
       'Intuição',
@@ -115,7 +115,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da prosperidade e abundância. Atrai sucesso, alegria e energia positiva.',
     element: Element.fire,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/citrino.jpg',
     intentions: [
       'Prosperidade',
       'Abundância',
@@ -169,7 +169,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Poderosa pedra de proteção e aterramento. Bloqueia energias negativas.',
     element: Element.earth,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/turmalina_negra.jpg',
     intentions: [
       'Proteção',
       'Aterramento',
@@ -219,7 +219,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Mestre curador e amplificador. Pode ser programado para qualquer intenção.',
     element: Element.spirit,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/quartzo_transparente.jpg',
     intentions: [
       'Amplificação de energia',
       'Clareza',
@@ -273,7 +273,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da paz e purificação. Auto-limpante, não precisa de limpeza frequente.',
     element: Element.air,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/selenita.jpg',
     intentions: [
       'Purificação',
       'Paz',
@@ -328,7 +328,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra mística da transformação e magia. Protege contra energias negativas e aguça intuição.',
     element: Element.air,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/labradorita.jpg',
     intentions: [
       'Proteção psíquica',
       'Intuição e clarividência',
@@ -374,7 +374,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra de coragem, proteção e prosperidade. Fortalece a confiança e traz boa sorte.',
     element: Element.fire,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/olho_de_tigre.jpg',
     intentions: [
       'Coragem e força',
       'Proteção',
@@ -420,7 +420,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra calmante da paciência e consciência. Excelente para insônia e ansiedade.',
     element: Element.air,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/howlita.jpg',
     intentions: [
       'Calma e paciência',
       'Sono tranquilo',
@@ -466,7 +466,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da prosperidade e manifestação. Atrai abundância e protege contra negatividade.',
     element: Element.earth,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/pirita.jpg',
     intentions: [
       'Prosperidade',
       'Manifestação',
@@ -516,7 +516,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra sagrada da lua e do feminino. Conecta com ciclos lunares e intuição.',
     element: Element.water,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/pedra_da_lua.jpg',
     intentions: [
       'Intuição',
       'Ciclos femininos',
@@ -564,7 +564,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Poderosa pedra de proteção e aterramento. Absorve e transforma energias negativas.',
     element: Element.earth,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/obsidiana_negra.jpg',
     intentions: [
       'Proteção forte',
       'Aterramento',
@@ -613,7 +613,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da lógica, verdade e comunicação. Estimula pensamento racional e intuição.',
     element: Element.air,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/sodalita.jpg',
     intentions: [
       'Comunicação clara',
       'Verdade e honestidade',
@@ -659,7 +659,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da criatividade, coragem e vitalidade. Estimula motivação e confiança.',
     element: Element.fire,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/cornalina.jpg',
     intentions: [
       'Criatividade',
       'Coragem e confiança',
@@ -705,7 +705,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra de aterramento, força e estabilidade. Conecta com a energia da Terra.',
     element: Element.earth,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/jaspe_vermelho.jpg',
     intentions: [
       'Aterramento',
       'Força física',
@@ -751,7 +751,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra de equilíbrio, harmonia e proteção suave. Estabiliza energias e acalma.',
     element: Element.earth,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/agata.jpg',
     intentions: [
       'Equilíbrio emocional',
       'Harmonia',
@@ -797,7 +797,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra do foco, aprendizado e organização mental. Excelente para estudos.',
     element: Element.air,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/fluorita.jpg',
     intentions: [
       'Foco e concentração',
       'Aprendizado',
@@ -847,7 +847,7 @@ final List<CrystalModel> crystalsData = [
     description:
         'Pedra da sabedoria, verdade e visão espiritual. Abre o terceiro olho.',
     element: Element.air,
-    // imageUrl: null,
+    imageUrl: 'assets/images/crystals/lapis_lazuli.jpg',
     intentions: [
       'Sabedoria',
       'Verdade',

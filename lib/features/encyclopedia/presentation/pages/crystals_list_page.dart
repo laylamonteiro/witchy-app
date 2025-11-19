@@ -59,7 +59,7 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: crystal.imageUrl != null
-                              ? Image.network(
+                              ? Image.asset(
                                   crystal.imageUrl!,
                                   width: 60,
                                   height: 60,
@@ -76,26 +76,6 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                         Icons.diamond,
                                         color: AppColors.lilac,
                                         size: 32,
-                                      ),
-                                    );
-                                  },
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Container(
-                                      width: 60,
-                                      height: 60,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.lilac.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          value: loadingProgress.expectedTotalBytes != null
-                                              ? loadingProgress.cumulativeBytesLoaded /
-                                                  loadingProgress.expectedTotalBytes!
-                                              : null,
-                                        ),
                                       ),
                                     );
                                   },

@@ -9,7 +9,7 @@ final List<HerbModel> herbsData = [
         'Erva poderosa de purificação e proteção. Amplamente usada na culinária e rituais.',
     element: HerbElement.fire,
     planet: Planet.sun,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/alecrim.jpg',
     magicalProperties: [
       'Purificação',
       'Proteção',
@@ -41,7 +41,7 @@ final List<HerbModel> herbsData = [
         'Erva calmante e purificadora. Associada à paz, amor e sono tranquilo.',
     element: HerbElement.air,
     planet: Planet.mercury,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/lavanda.jpg',
     magicalProperties: [
       'Paz e tranquilidade',
       'Sono e sonhos',
@@ -72,7 +72,7 @@ final List<HerbModel> herbsData = [
         'Erva lunar poderosa para sonhos, divinação e proteção. Sagrada para bruxas.',
     element: HerbElement.earth,
     planet: Planet.moon,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/artemisia.jpg',
     magicalProperties: [
       'Sonhos lúcidos e proféticos',
       'Divinação',
@@ -105,7 +105,7 @@ final List<HerbModel> herbsData = [
         'Erva sagrada de purificação. Muito usada em defumação para limpar energias.',
     element: HerbElement.air,
     planet: Planet.jupiter,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/salvia_branca.jpg',
     magicalProperties: [
       'Purificação profunda',
       'Limpeza energética',
@@ -138,7 +138,7 @@ final List<HerbModel> herbsData = [
         'Erva suave de paz e cura. Amplamente usada em chás e rituais de tranquilidade.',
     element: HerbElement.water,
     planet: Planet.sun,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/camomila.jpg',
     magicalProperties: [
       'Paz e calma',
       'Purificação suave',
@@ -170,7 +170,7 @@ final List<HerbModel> herbsData = [
         'Erva de amor, prosperidade e proteção. Sagrada em várias tradições.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/manjericao.jpg',
     magicalProperties: [
       'Amor e romance',
       'Prosperidade',
@@ -201,7 +201,7 @@ final List<HerbModel> herbsData = [
         'Poderosa erva de proteção contra mau-olhado e inveja. Muito usada no Brasil.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/arruda.jpg',
     magicalProperties: [
       'Proteção contra olho gordo',
       'Quebra de feitiços',
@@ -235,7 +235,7 @@ final List<HerbModel> herbsData = [
         'Erva refrescante de cura, prosperidade e purificação.',
     element: HerbElement.air,
     planet: Planet.mercury,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/hortela.jpg',
     magicalProperties: [
       'Prosperidade financeira',
       'Cura',
@@ -267,7 +267,7 @@ final List<HerbModel> herbsData = [
         'Erva poderosa de proteção e limpeza, muito usada em religiões afro-brasileiras.',
     element: HerbElement.earth,
     planet: Planet.saturn,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/guine.jpg',
     magicalProperties: [
       'Proteção forte',
       'Limpeza profunda',
@@ -300,7 +300,7 @@ final List<HerbModel> herbsData = [
         'Flor do amor, beleza e magia do coração. Usada em rituais de amor e auto-cuidado.',
     element: HerbElement.water,
     planet: Planet.venus,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/rosa.jpg',
     magicalProperties: [
       'Amor romântico',
       'Auto-amor',
@@ -331,7 +331,7 @@ final List<HerbModel> herbsData = [
         'Especiaria poderosa de prosperidade, proteção e amor. Acelera feitiços e atrai sucesso.',
     element: HerbElement.fire,
     planet: Planet.sun,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/canela.jpg',
     magicalProperties: [
       'Prosperidade rápida',
       'Sucesso e poder',
@@ -363,7 +363,7 @@ final List<HerbModel> herbsData = [
         'Erva de proteção forte, banimento e atração de dinheiro. Afasta energias negativas.',
     element: HerbElement.fire,
     planet: Planet.jupiter,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/cravo.jpg',
     magicalProperties: [
       'Proteção forte',
       'Banimento',
@@ -394,7 +394,7 @@ final List<HerbModel> herbsData = [
         'Folha sagrada de vitória, sucesso e proteção. Usada para purificação e manifestação.',
     element: HerbElement.fire,
     planet: Planet.sun,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/louro.jpg',
     magicalProperties: [
       'Vitória e sucesso',
       'Proteção',
@@ -425,7 +425,7 @@ final List<HerbModel> herbsData = [
         'Especiaria de proteção, banimento e quebra de feitiços. Afasta energias negativas.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/pimenta_do_reino.jpg',
     magicalProperties: [
       'Proteção forte',
       'Banimento',
@@ -456,7 +456,7 @@ final List<HerbModel> herbsData = [
         'Erva purificadora e curativa. Limpa energias e protege contra doenças.',
     element: HerbElement.air,
     planet: Planet.moon,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/eucalipto.jpg',
     magicalProperties: [
       'Purificação',
       'Cura',
@@ -488,7 +488,7 @@ final List<HerbModel> herbsData = [
         'Raiz de poder, sucesso e amor. Acelera manifestações e traz energia.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/gengibre.jpg',
     magicalProperties: [
       'Poder pessoal',
       'Sucesso rápido',
@@ -519,7 +519,7 @@ final List<HerbModel> herbsData = [
         'Erva protetora e purificadora, tradicionalmente usada no Brasil para proteção.',
     element: HerbElement.earth,
     planet: Planet.saturn,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/boldo.jpg',
     magicalProperties: [
       'Proteção',
       'Purificação',
@@ -552,7 +552,7 @@ final List<HerbModel> herbsData = [
         'Erva brasileira de proteção forte e limpeza. Popular no Nordeste para afastar energias ruins.',
     element: HerbElement.fire,
     planet: Planet.mars,
-    // imageUrl: null,
+    imageUrl: 'assets/images/herbs/alecrim_pimenta.jpg',
     magicalProperties: [
       'Proteção forte',
       'Purificação profunda',
