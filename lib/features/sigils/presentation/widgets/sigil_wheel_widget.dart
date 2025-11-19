@@ -92,14 +92,23 @@ class SigilWheelPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2);
 
-      // Anel interno (raio 33%) - DESTAQUE
-      canvas.drawCircle(center, maxRadius * 0.33, gridPaint);
+      // Anel interno (raio 33%) - VERMELHO para debug
+      canvas.drawCircle(center, maxRadius * 0.33, Paint()
+        ..color = const Color(0xFFFF0000)  // VERMELHO
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4);
 
-      // Anel médio (raio 66%) - DESTAQUE
-      canvas.drawCircle(center, maxRadius * 0.66, gridPaint);
+      // Anel médio (raio 66%) - VERDE para debug
+      canvas.drawCircle(center, maxRadius * 0.66, Paint()
+        ..color = const Color(0xFF00FF00)  // VERDE
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4);
 
-      // Anel externo (raio 100%) - DESTAQUE
-      canvas.drawCircle(center, maxRadius, gridPaint);
+      // Anel externo (raio 100%) - AZUL para debug
+      canvas.drawCircle(center, maxRadius, Paint()
+        ..color = const Color(0xFF0000FF)  // AZUL
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4);
 
       // Desenha as divisões radiais (como fatias)
       _drawRadialDivisions(canvas, center, maxRadius, dividerPaint);
