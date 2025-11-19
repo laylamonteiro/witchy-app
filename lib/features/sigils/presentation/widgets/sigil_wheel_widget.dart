@@ -67,49 +67,43 @@ class SigilWheelPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = math.min(size.width, size.height) * 0.45;
 
-    print('DEBUG SIGIL WHEEL: size=$size, center=$center, maxRadius=$maxRadius');
-    print('DEBUG: Desenhando 3 círculos - raios: ${maxRadius * 0.25}, ${maxRadius * 0.60}, ${maxRadius * 0.95}');
+    // Usar valores FIXOS para garantir visibilidade
+    final radius1 = 40.0;  // Círculo interno PEQUENO
+    final radius2 = 80.0;  // Círculo médio MÉDIO
+    final radius3 = 120.0; // Círculo externo GRANDE
 
-    // Paint para as divisões (mais visível)
-    final dividerPaint = Paint()
-      ..color = const Color(0xFFC9A7FF).withOpacity(0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+    print('DEBUG: Desenhando círculos em: $radius1, $radius2, $radius3');
 
-    // Desenha os 3 círculos concêntricos - ESPAÇAMENTO MAIOR
+    // Desenha os 3 círculos concêntricos COM VALORES FIXOS
     if (showGrid) {
-      // Centro (ponto maior e mais visível)
-      canvas.drawCircle(center, 8, Paint()
+      // Centro branco
+      canvas.drawCircle(center, 5, Paint()
         ..color = Colors.white
         ..style = PaintingStyle.fill);
 
-      // Anel interno (raio 25%) - VERMELHO BRILHANTE
-      canvas.drawCircle(center, maxRadius * 0.25, Paint()
-        ..color = Colors.red  // VERMELHO PURO
+      // Círculo 1 - VERMELHO - 40px de raio
+      canvas.drawCircle(center, radius1, Paint()
+        ..color = Colors.red
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 6);  // MUITO GROSSO
+        ..strokeWidth = 8);
 
-      // Anel médio (raio 60%) - VERDE BRILHANTE
-      canvas.drawCircle(center, maxRadius * 0.60, Paint()
-        ..color = Colors.green  // VERDE PURO
+      // Círculo 2 - VERDE - 80px de raio
+      canvas.drawCircle(center, radius2, Paint()
+        ..color = Colors.green
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 6);  // MUITO GROSSO
+        ..strokeWidth = 8);
 
-      // Anel externo (raio 95%) - AZUL BRILHANTE
-      canvas.drawCircle(center, maxRadius * 0.95, Paint()
-        ..color = Colors.blue  // AZUL PURO
+      // Círculo 3 - AZUL - 120px de raio
+      canvas.drawCircle(center, radius3, Paint()
+        ..color = Colors.blue
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 6);  // MUITO GROSSO
-
-      // Desenha as divisões radiais (como fatias)
-      _drawRadialDivisions(canvas, center, maxRadius, dividerPaint);
+        ..strokeWidth = 8);
     }
-    
+
     // Desenha as letras
     if (showLetters) {
-      _drawLetters(canvas, size, center, maxRadius);
+      _drawLetters(canvas, size, center, radius3);
     }
     
     // Desenha o sigilo se houver pontos
@@ -160,29 +154,27 @@ class SigilWheelPainter extends CustomPainter {
   }
   
   void _drawLetters(Canvas canvas, Size size, Offset center, double maxRadius) {
-    final textStyle = TextStyle(
-      color: highlightedLetters?.isEmpty ?? true
-        ? const Color(0xFFE8D6FF)  // Cor mais clara e visível
-        : const Color(0xFFE8D6FF).withOpacity(0.4),
-      fontSize: 14,  // Fonte legível
-      fontWeight: FontWeight.bold,  // Negrito para mais destaque
+    final textStyle = const TextStyle(
+      color: Color(0xFFE8D6FF),
+      fontSize: 14,
+      fontWeight: FontWeight.bold,
     );
 
     SigilWheel.letterPositions.forEach((letter, position) {
-      // Calcula o raio baseado no anel - posiciona ENTRE os círculos
+      // RAIOS FIXOS para cada anel
       double radius;
       switch (position.ring) {
-        case 1: // Anel interno (A-F) - entre centro e primeiro círculo
-          radius = maxRadius * 0.20;  // Dentro do primeiro círculo
+        case 1: // Anel interno (A-F) - dentro do círculo vermelho
+          radius = 25.0;
           break;
-        case 2: // Anel médio (G-N) - entre primeiro e segundo círculo
-          radius = maxRadius * 0.50;  // Entre círculos de 33% e 66%
+        case 2: // Anel médio (G-N) - entre vermelho e verde
+          radius = 60.0;
           break;
-        case 3: // Anel externo (O-Z) - entre segundo e terceiro círculo
-          radius = maxRadius * 0.83;  // Entre círculos de 66% e 100%
+        case 3: // Anel externo (O-Z) - entre verde e azul
+          radius = 100.0;
           break;
         default:
-          radius = maxRadius;
+          radius = 100.0;
       }
       
       // Calcula a posição
