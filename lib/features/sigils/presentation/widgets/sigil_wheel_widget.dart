@@ -162,30 +162,26 @@ class SigilWheelPainter extends CustomPainter {
       color: highlightedLetters?.isEmpty ?? true
         ? const Color(0xFFE8D6FF)  // Cor mais clara e visível
         : const Color(0xFFE8D6FF).withOpacity(0.4),
-      fontSize: 16,  // Fonte maior
+      fontSize: 14,  // Fonte legível
       fontWeight: FontWeight.bold,  // Negrito para mais destaque
     );
-    
+
     SigilWheel.letterPositions.forEach((letter, position) {
-      // Calcula o raio baseado no anel
+      // Calcula o raio baseado no anel - posiciona ENTRE os círculos
       double radius;
       switch (position.ring) {
-        case 1: // Anel interno (A-F)
-          radius = maxRadius * 0.33;
+        case 1: // Anel interno (A-F) - entre centro e primeiro círculo
+          radius = maxRadius * 0.20;  // Dentro do primeiro círculo
           break;
-        case 2: // Anel médio (G-N)
-          radius = maxRadius * 0.66;
+        case 2: // Anel médio (G-N) - entre primeiro e segundo círculo
+          radius = maxRadius * 0.50;  // Entre círculos de 33% e 66%
           break;
-        case 3: // Anel externo (O-Z)
-          radius = maxRadius;
+        case 3: // Anel externo (O-Z) - entre segundo e terceiro círculo
+          radius = maxRadius * 0.83;  // Entre círculos de 66% e 100%
           break;
         default:
           radius = maxRadius;
       }
-      
-      // Ajusta o raio para posicionar o texto no meio da fatia
-      // Aumenta o offset para melhor posicionamento com fonte maior
-      radius = radius - 15;
       
       // Calcula a posição
       final angle = position.angle * (math.pi / 180);

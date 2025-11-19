@@ -35,10 +35,10 @@ String _getSittingCat(bool isBlinking) {
     '''
     : '''
       <!-- Olhos abertos -->
-      <circle cx="20" cy="20" r="3" fill="#000000"/>
-      <circle cx="44" cy="20" r="3" fill="#000000"/>
-      <circle cx="21" cy="20" r="1.5" fill="#FFE8A3"/>
-      <circle cx="45" cy="20" r="1.5" fill="#FFE8A3"/>
+      <circle cx="20" cy="20" r="3" fill="#C9A7FF"/>
+      <circle cx="44" cy="20" r="3" fill="#C9A7FF"/>
+      <circle cx="21" cy="20" r="1.5" fill="#000000"/>
+      <circle cx="45" cy="20" r="1.5" fill="#000000"/>
     ''';
 
   return '''
