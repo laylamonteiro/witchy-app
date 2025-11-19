@@ -55,21 +55,21 @@ extension SabbatTypeExtension on SabbatType {
   String get description {
     switch (this) {
       case SabbatType.samhain:
-        return 'Ano Novo Bruxo (1º maio no Brasil). Véu entre mundos está fino. Honre ancestrais e entes queridos. Início do outono/inverno, período de recolhimento.';
+        return 'Ano Novo Bruxo (1º maio no Brasil, 31 out. no hemisfério norte). Véu entre mundos está fino. Honre ancestrais e entes queridos. Início do outono/inverno, período de recolhimento.';
       case SabbatType.yule:
-        return 'Solstício de Inverno (21 junho no Brasil). A noite mais longa do ano. Renascimento da luz. Coincide com festas juninas que mantêm a tradição do fogo sagrado.';
+        return 'Solstício de Inverno (21 junho no Brasil, 21 dez. no hemisfério norte). A noite mais longa do ano. Renascimento da luz. Coincide com festas juninas que mantêm a tradição do fogo sagrado.';
       case SabbatType.imbolc:
-        return 'Festival da luz crescente (1º agosto no Brasil). Despertar da Terra, primeiros sinais da primavera. Tempo de limpeza, purificação e preparação para o novo crescimento.';
+        return 'Festival da luz crescente (1º agosto no Brasil, 1º fev. no hemisfério norte). Despertar da Terra, primeiros sinais da primavera. Tempo de limpeza, purificação e preparação para o novo crescimento.';
       case SabbatType.ostara:
-        return 'Equinócio de Primavera (21 setembro no Brasil). Equilíbrio perfeito entre luz e escuridão. A natureza desperta plenamente. Tempo de novos começos.';
+        return 'Equinócio de Primavera (21 setembro no Brasil, 21 mar. no hemisfério norte). Equilíbrio perfeito entre luz e escuridão. A natureza desperta plenamente. Tempo de novos começos.';
       case SabbatType.beltane:
-        return 'Festival do fogo e fertilidade (31 outubro no Brasil). Celebração da vida em plenitude. Coincide com Finados, mas energeticamente é sobre celebrar a vida e o amor.';
+        return 'Festival do fogo e fertilidade (31 outubro no Brasil, 1º mai. no hemisfério norte). Celebração da vida em plenitude. Coincide com Finados, mas energeticamente é sobre celebrar a vida e o amor.';
       case SabbatType.litha:
-        return 'Solstício de Verão (21 dezembro no Brasil). O dia mais longo, pico do poder solar. Coincide com festas de fim de ano. Momento de celebração e gratidão.';
+        return 'Solstício de Verão (21 dezembro no Brasil, 21 jun. no hemisfério norte). O dia mais longo, pico do poder solar. Coincide com festas de fim de ano. Momento de celebração e gratidão.';
       case SabbatType.lammas:
-        return 'Primeira colheita (2 fevereiro no Brasil). Após o verão abundante, é tempo de agradecer e compartilhar. Reconhecemos o sacrifício necessário para a abundância.';
+        return 'Primeira colheita (2 fevereiro no Brasil, 1º ago. no hemisfério norte). Após o verão abundante, é tempo de agradecer e compartilhar. Reconhecemos o sacrifício necessário para a abundância.';
       case SabbatType.mabon:
-        return 'Equinócio de Outono (21 março no Brasil). Segunda colheita e segundo equilíbrio do ano. Preparação para o outono. Tempo de gratidão e equilíbrio.';
+        return 'Equinócio de Outono (20 março no Brasil, 21 set. no hemisfério norte). Segunda colheita e segundo equilíbrio do ano. Preparação para o outono. Tempo de gratidão e equilíbrio.';
     }
   }
 
@@ -218,7 +218,7 @@ extension SabbatTypeExtension on SabbatType {
     }
   }
 
-  // Datas para hemisfério sul
+  // Datas para hemisfério sul (Brasil)
   DateTime getDateForYear(int year) {
     switch (this) {
       case SabbatType.samhain:
@@ -234,7 +234,7 @@ extension SabbatTypeExtension on SabbatType {
       case SabbatType.litha:
         return _getSolsticeEquinox(year, 12, 20, 23); // ~21 de dezembro
       case SabbatType.lammas:
-        return DateTime(year, 2, 1); // 1º de fevereiro
+        return DateTime(year, 2, 2); // 2 de fevereiro
       case SabbatType.mabon:
         return _getSolsticeEquinox(year, 3, 19, 21); // ~20 de março
     }
