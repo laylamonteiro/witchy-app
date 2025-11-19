@@ -20,15 +20,41 @@ final List<CrystalModel> crystalsData = [
       'Medite segurando-o no coração',
     ],
     cleaningMethods: [
-      'Água corrente (cuidado: pode desbotar)',
-      'Fumaça de ervas (incenso, palo santo)',
-      'Luz da lua',
-      'Som (sino, taça tibetana)',
+      CrystalMethod(
+        method: 'Água corrente',
+        isSafe: false,
+        warning: 'Pode desbotar com exposição prolongada à água',
+      ),
+      CrystalMethod(
+        method: 'Fumaça de ervas (incenso, palo santo)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz da lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som (sino, taça tibetana)',
+        isSafe: true,
+      ),
     ],
     chargingMethods: [
-      'Lua cheia (preferencialmente)',
-      'Terra (enterrar por 24h)',
-      'Outros cristais (ametista, quartzo)',
+      CrystalMethod(
+        method: 'Lua cheia (preferencialmente)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra (enterrar por 24h)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Outros cristais (ametista, quartzo)',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      'Pode desbotar com exposição prolongada ao sol',
+      'Evite água por longos períodos',
     ],
   ),
   const CrystalModel(
@@ -50,15 +76,40 @@ final List<CrystalModel> crystalsData = [
       'No ambiente de trabalho para foco',
     ],
     cleaningMethods: [
-      'Fumaça de ervas',
-      'Luz da lua',
-      'Som (sino, taça tibetana)',
-      'Terra (enterrar brevemente)',
+      CrystalMethod(
+        method: 'Fumaça de ervas',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz da lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som (sino, taça tibetana)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra (enterrar brevemente)',
+        isSafe: true,
+      ),
     ],
     chargingMethods: [
-      'Lua cheia ou crescente',
-      'Evitar sol direto (pode desbotar)',
-      'Cluster de quartzo',
+      CrystalMethod(
+        method: 'Lua cheia ou crescente',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Sol direto',
+        isSafe: false,
+        warning: 'Pode desbotar com exposição ao sol',
+      ),
+      CrystalMethod(
+        method: 'Cluster de quartzo',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      'NUNCA exponha ao sol direto - a ametista desbota rapidamente',
     ],
   ),
   const CrystalModel(
@@ -80,15 +131,41 @@ final List<CrystalModel> crystalsData = [
       'Carregue durante entrevistas',
     ],
     cleaningMethods: [
-      'Fumaça de ervas',
-      'Luz da lua',
-      'Som',
-      'Evitar água prolongada',
+      CrystalMethod(
+        method: 'Fumaça de ervas',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz da lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Água corrente',
+        isSafe: false,
+        warning: 'Evite água prolongada - pode danificar',
+      ),
     ],
     chargingMethods: [
-      'Sol (breves períodos - manhã)',
-      'Lua cheia',
-      'Terra',
+      CrystalMethod(
+        method: 'Sol (breves períodos - manhã)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Lua cheia',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      'Evite exposição prolongada à água',
+      'Sol intenso pode desbotar - prefira sol da manhã',
     ],
   ),
   const CrystalModel(
@@ -110,15 +187,37 @@ final List<CrystalModel> crystalsData = [
       'Próxima a eletrônicos',
     ],
     cleaningMethods: [
-      'Fumaça de ervas',
-      'Terra (enterrar)',
-      'Som',
-      'Luz da lua',
+      CrystalMethod(
+        method: 'Fumaça de ervas',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra (enterrar)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz da lua',
+        isSafe: true,
+      ),
     ],
     chargingMethods: [
-      'Terra (enterrar por 24h)',
-      'Lua nova ou minguante',
-      'Sal grosso (com cuidado)',
+      CrystalMethod(
+        method: 'Terra (enterrar por 24h)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Lua nova ou minguante',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Sal grosso',
+        isSafe: false,
+        warning: 'Use com cuidado - sal pode danificar alguns cristais',
+      ),
     ],
   ),
   const CrystalModel(
@@ -140,17 +239,44 @@ final List<CrystalModel> crystalsData = [
       'Meditação e cura',
     ],
     cleaningMethods: [
-      'Água corrente',
-      'Fumaça de ervas',
-      'Luz da lua',
-      'Luz do sol',
-      'Som',
+      CrystalMethod(
+        method: 'Água corrente',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Fumaça de ervas',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz da lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz do sol',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som',
+        isSafe: true,
+      ),
     ],
     chargingMethods: [
-      'Lua cheia',
-      'Sol (manhã)',
-      'Terra',
-      'Intenção/programação',
+      CrystalMethod(
+        method: 'Lua cheia',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Sol (manhã)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Terra',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Intenção/programação',
+        isSafe: true,
+      ),
     ],
   ),
   const CrystalModel(
@@ -172,15 +298,41 @@ final List<CrystalModel> crystalsData = [
       'Nunca use com água (dissolve)',
     ],
     cleaningMethods: [
-      'Fumaça de ervas',
-      'Som',
-      'Luz da lua',
-      'NUNCA água',
+      CrystalMethod(
+        method: 'Fumaça de ervas',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Som',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Luz da lua',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Água',
+        isSafe: false,
+        warning: 'NUNCA use água - selenita dissolve completamente!',
+      ),
     ],
     chargingMethods: [
-      'Lua cheia',
-      'Auto-limpante (raramente precisa)',
-      'Intenção',
+      CrystalMethod(
+        method: 'Lua cheia',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Auto-limpante (raramente precisa)',
+        isSafe: true,
+      ),
+      CrystalMethod(
+        method: 'Intenção',
+        isSafe: true,
+      ),
+    ],
+    safetyWarnings: [
+      '⚠️ CRÍTICO: NUNCA exponha selenita à água - ela dissolve completamente!',
+      'É um cristal auto-limpante, raramente precisa de limpeza',
     ],
   ),
 ];

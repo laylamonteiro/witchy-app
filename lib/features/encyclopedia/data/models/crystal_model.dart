@@ -6,14 +6,28 @@ enum Element {
   spirit,
 }
 
+/// Método de limpeza ou carregamento com flag de segurança
+class CrystalMethod {
+  final String method;
+  final bool isSafe;
+  final String? warning;
+
+  const CrystalMethod({
+    required this.method,
+    required this.isSafe,
+    this.warning,
+  });
+}
+
 class CrystalModel {
   final String name;
   final String description;
   final Element element;
   final List<String> intentions;
   final List<String> usageTips;
-  final List<String> cleaningMethods;
-  final List<String> chargingMethods;
+  final List<CrystalMethod> cleaningMethods;
+  final List<CrystalMethod> chargingMethods;
+  final List<String> safetyWarnings; // ⚠️ NOVO: Avisos de segurança
 
   const CrystalModel({
     required this.name,
@@ -23,7 +37,16 @@ class CrystalModel {
     required this.usageTips,
     required this.cleaningMethods,
     required this.chargingMethods,
+    this.safetyWarnings = const [], // ⚠️ NOVO
   });
+
+  /// Métodos de limpeza seguros (apenas os que isSafe == true)
+  List<String> get safeCleaningMethods =>
+      cleaningMethods.where((m) => m.isSafe).map((m) => m.method).toList();
+
+  /// Métodos de carregamento seguros (apenas os que isSafe == true)
+  List<String> get safeChargingMethods =>
+      chargingMethods.where((m) => m.isSafe).map((m) => m.method).toList();
 }
 
 extension ElementExtension on Element {

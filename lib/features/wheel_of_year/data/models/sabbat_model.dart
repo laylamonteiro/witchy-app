@@ -55,21 +55,21 @@ extension SabbatTypeExtension on SabbatType {
   String get description {
     switch (this) {
       case SabbatType.samhain:
-        return 'Ano Novo Bruxo. Véu entre mundos está fino. Honre ancestrais e entes queridos.';
+        return 'Ano Novo Bruxo (1º maio no Brasil). Véu entre mundos está fino. Honre ancestrais e entes queridos. Início do outono/inverno, período de recolhimento.';
       case SabbatType.yule:
-        return 'Solstício de Inverno. A noite mais longa do ano. Renascimento da luz.';
+        return 'Solstício de Inverno (21 junho no Brasil). A noite mais longa do ano. Renascimento da luz. Coincide com festas juninas que mantêm a tradição do fogo sagrado.';
       case SabbatType.imbolc:
-        return 'Festival da luz e purificação. Primeiras sementes de novos projetos.';
+        return 'Festival da luz crescente (1º agosto no Brasil). Despertar da Terra, primeiros sinais da primavera. Tempo de limpeza, purificação e preparação para o novo crescimento.';
       case SabbatType.ostara:
-        return 'Equinócio de Primavera. Equilíbrio entre luz e escuridão. Renovação e fertilidade.';
+        return 'Equinócio de Primavera (21 setembro no Brasil). Equilíbrio perfeito entre luz e escuridão. A natureza desperta plenamente. Tempo de novos começos.';
       case SabbatType.beltane:
-        return 'Festival do fogo e fertilidade. Celebração da vida e paixão.';
+        return 'Festival do fogo e fertilidade (31 outubro no Brasil). Celebração da vida em plenitude. Coincide com Finados, mas energeticamente é sobre celebrar a vida e o amor.';
       case SabbatType.litha:
-        return 'Solstício de Verão. O dia mais longo. Pico do poder solar.';
+        return 'Solstício de Verão (21 dezembro no Brasil). O dia mais longo, pico do poder solar. Coincide com festas de fim de ano. Momento de celebração e gratidão.';
       case SabbatType.lammas:
-        return 'Primeira colheita. Gratidão pelos frutos do trabalho.';
+        return 'Primeira colheita (2 fevereiro no Brasil). Após o verão abundante, é tempo de agradecer e compartilhar. Reconhecemos o sacrifício necessário para a abundância.';
       case SabbatType.mabon:
-        return 'Equinócio de Outono. Segunda colheita. Gratidão e equilíbrio.';
+        return 'Equinócio de Outono (21 março no Brasil). Segunda colheita e segundo equilíbrio do ano. Preparação para o outono. Tempo de gratidão e equilíbrio.';
     }
   }
 

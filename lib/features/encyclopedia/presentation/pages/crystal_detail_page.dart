@@ -60,6 +60,64 @@ class CrystalDetailPage extends StatelessWidget {
                 ],
               ),
             ),
+            // Safety Warnings Section (only if there are warnings)
+            if (crystal.safetyWarnings.isNotEmpty)
+              MagicalCard(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.alert.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.alert, width: 2),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            color: AppColors.alert,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Avisos de Segurança',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  color: AppColors.alert,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ...crystal.safetyWarnings.map(
+                        (warning) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '⚠️',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  warning,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,23 +185,46 @@ class CrystalDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   ...crystal.cleaningMethods.map(
-                    (method) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
+                    (methodObj) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.water_drop,
-                            size: 16,
-                            color: AppColors.info,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                methodObj.isSafe ? Icons.water_drop : Icons.dangerous,
+                                size: 16,
+                                color: methodObj.isSafe ? AppColors.info : AppColors.alert,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  methodObj.method,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        decoration: methodObj.isSafe
+                                            ? null
+                                            : TextDecoration.lineThrough,
+                                        color: methodObj.isSafe
+                                            ? null
+                                            : AppColors.textSecondary,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              method,
-                              style: Theme.of(context).textTheme.bodyMedium,
+                          if (!methodObj.isSafe && methodObj.warning != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 24, top: 4),
+                              child: Text(
+                                '⚠️ ${methodObj.warning}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppColors.alert,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -161,23 +242,46 @@ class CrystalDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   ...crystal.chargingMethods.map(
-                    (method) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
+                    (methodObj) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.bolt,
-                            size: 16,
-                            color: AppColors.starYellow,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                methodObj.isSafe ? Icons.bolt : Icons.dangerous,
+                                size: 16,
+                                color: methodObj.isSafe ? AppColors.starYellow : AppColors.alert,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  methodObj.method,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        decoration: methodObj.isSafe
+                                            ? null
+                                            : TextDecoration.lineThrough,
+                                        color: methodObj.isSafe
+                                            ? null
+                                            : AppColors.textSecondary,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              method,
-                              style: Theme.of(context).textTheme.bodyMedium,
+                          if (!methodObj.isSafe && methodObj.warning != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 24, top: 4),
+                              child: Text(
+                                '⚠️ ${methodObj.warning}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppColors.alert,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
