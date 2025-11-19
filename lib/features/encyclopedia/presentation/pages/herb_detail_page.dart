@@ -21,20 +21,66 @@ class HerbDetailPage extends StatelessWidget {
             MagicalCard(
               child: Column(
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: AppColors.mint.withOpacity(0.2),
+                  if (herb.imageUrl != null)
+                    ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '🌿',
-                        style: const TextStyle(fontSize: 60),
+                      child: Image.network(
+                        herb.imageUrl!,
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              color: AppColors.mint.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                '🌿',
+                                style: TextStyle(fontSize: 60),
+                              ),
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              color: AppColors.mint.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: AppColors.mint.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '🌿',
+                          style: TextStyle(fontSize: 60),
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 16),
                   Text(
                     herb.name,

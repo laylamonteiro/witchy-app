@@ -9,6 +9,7 @@ final List<HerbModel> herbsData = [
         'Erva poderosa de purificação e proteção. Amplamente usada na culinária e rituais.',
     element: HerbElement.fire,
     planet: Planet.sun,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Rosmarinus_officinalis266.jpg/800px-Rosmarinus_officinalis266.jpg',
     magicalProperties: [
       'Purificação',
       'Proteção',
@@ -40,6 +41,7 @@ final List<HerbModel> herbsData = [
         'Erva calmante e purificadora. Associada à paz, amor e sono tranquilo.',
     element: HerbElement.air,
     planet: Planet.mercury,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Single_lavendar_flower02.jpg/800px-Single_lavendar_flower02.jpg',
     magicalProperties: [
       'Paz e tranquilidade',
       'Sono e sonhos',
@@ -70,6 +72,7 @@ final List<HerbModel> herbsData = [
         'Erva lunar poderosa para sonhos, divinação e proteção. Sagrada para bruxas.',
     element: HerbElement.earth,
     planet: Planet.moon,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Artemisia_vulgaris_002.JPG/800px-Artemisia_vulgaris_002.JPG',
     magicalProperties: [
       'Sonhos lúcidos e proféticos',
       'Divinação',
@@ -102,6 +105,7 @@ final List<HerbModel> herbsData = [
         'Erva sagrada de purificação. Muito usada em defumação para limpar energias.',
     element: HerbElement.air,
     planet: Planet.jupiter,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Salvia_apiana_kz2.jpg/800px-Salvia_apiana_kz2.jpg',
     magicalProperties: [
       'Purificação profunda',
       'Limpeza energética',
@@ -134,6 +138,7 @@ final List<HerbModel> herbsData = [
         'Erva suave de paz e cura. Amplamente usada em chás e rituais de tranquilidade.',
     element: HerbElement.water,
     planet: Planet.sun,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Matricaria_February_2008-1.jpg/800px-Matricaria_February_2008-1.jpg',
     magicalProperties: [
       'Paz e calma',
       'Purificação suave',
@@ -165,6 +170,7 @@ final List<HerbModel> herbsData = [
         'Erva de amor, prosperidade e proteção. Sagrada em várias tradições.',
     element: HerbElement.fire,
     planet: Planet.mars,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Basil-Basilico-Ocimum_basilicum-albahaca.jpg/800px-Basil-Basilico-Ocimum_basilicum-albahaca.jpg',
     magicalProperties: [
       'Amor e romance',
       'Prosperidade',
@@ -195,6 +201,7 @@ final List<HerbModel> herbsData = [
         'Poderosa erva de proteção contra mau-olhado e inveja. Muito usada no Brasil.',
     element: HerbElement.fire,
     planet: Planet.mars,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Ruta_graveolens4.jpg/800px-Ruta_graveolens4.jpg',
     magicalProperties: [
       'Proteção contra olho gordo',
       'Quebra de feitiços',
@@ -228,6 +235,7 @@ final List<HerbModel> herbsData = [
         'Erva refrescante de cura, prosperidade e purificação.',
     element: HerbElement.air,
     planet: Planet.mercury,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Mentha_spicata_Habitus_BotGardBln271207A.jpg/800px-Mentha_spicata_Habitus_BotGardBln271207A.jpg',
     magicalProperties: [
       'Prosperidade financeira',
       'Cura',
@@ -259,6 +267,7 @@ final List<HerbModel> herbsData = [
         'Erva poderosa de proteção e limpeza, muito usada em religiões afro-brasileiras.',
     element: HerbElement.earth,
     planet: Planet.saturn,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Petiveria_alliacea_Blanco2.355.png/600px-Petiveria_alliacea_Blanco2.355.png',
     magicalProperties: [
       'Proteção forte',
       'Limpeza profunda',
@@ -291,6 +300,7 @@ final List<HerbModel> herbsData = [
         'Flor do amor, beleza e magia do coração. Usada em rituais de amor e auto-cuidado.',
     element: HerbElement.water,
     planet: Planet.venus,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Rose_Amber_Flush_20070601.jpg/800px-Rose_Amber_Flush_20070601.jpg',
     magicalProperties: [
       'Amor romântico',
       'Auto-amor',
@@ -321,6 +331,7 @@ final List<HerbModel> herbsData = [
         'Especiaria poderosa de prosperidade, proteção e amor. Acelera feitiços e atrai sucesso.',
     element: HerbElement.fire,
     planet: Planet.sun,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Cinnamomum_verum_spices.jpg/800px-Cinnamomum_verum_spices.jpg',
     magicalProperties: [
       'Prosperidade rápida',
       'Sucesso e poder',
@@ -352,6 +363,7 @@ final List<HerbModel> herbsData = [
         'Erva de proteção forte, banimento e atração de dinheiro. Afasta energias negativas.',
     element: HerbElement.fire,
     planet: Planet.jupiter,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Cloves.JPG/800px-Cloves.JPG',
     magicalProperties: [
       'Proteção forte',
       'Banimento',
@@ -382,6 +394,7 @@ final List<HerbModel> herbsData = [
         'Folha sagrada de vitória, sucesso e proteção. Usada para purificação e manifestação.',
     element: HerbElement.fire,
     planet: Planet.sun,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Laurus_nobilis_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-017.jpg/600px-Laurus_nobilis_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-017.jpg',
     magicalProperties: [
       'Vitória e sucesso',
       'Proteção',
@@ -412,6 +425,7 @@ final List<HerbModel> herbsData = [
         'Especiaria de proteção, banimento e quebra de feitiços. Afasta energias negativas.',
     element: HerbElement.fire,
     planet: Planet.mars,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Piper_nigrum_drawing_1832.jpg/600px-Piper_nigrum_drawing_1832.jpg',
     magicalProperties: [
       'Proteção forte',
       'Banimento',
@@ -442,6 +456,7 @@ final List<HerbModel> herbsData = [
         'Erva purificadora e curativa. Limpa energias e protege contra doenças.',
     element: HerbElement.air,
     planet: Planet.moon,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Eucalyptus_globulus01.jpg/800px-Eucalyptus_globulus01.jpg',
     magicalProperties: [
       'Purificação',
       'Cura',
@@ -473,6 +488,7 @@ final List<HerbModel> herbsData = [
         'Raiz de poder, sucesso e amor. Acelera manifestações e traz energia.',
     element: HerbElement.fire,
     planet: Planet.mars,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Zingiber_officinale_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-030.jpg/600px-Zingiber_officinale_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-030.jpg',
     magicalProperties: [
       'Poder pessoal',
       'Sucesso rápido',
@@ -503,6 +519,7 @@ final List<HerbModel> herbsData = [
         'Erva protetora e purificadora, tradicionalmente usada no Brasil para proteção.',
     element: HerbElement.earth,
     planet: Planet.saturn,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Peumus_boldus_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-015.jpg/600px-Peumus_boldus_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-015.jpg',
     magicalProperties: [
       'Proteção',
       'Purificação',
@@ -535,6 +552,7 @@ final List<HerbModel> herbsData = [
         'Erva brasileira de proteção forte e limpeza. Popular no Nordeste para afastar energias ruins.',
     element: HerbElement.fire,
     planet: Planet.mars,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Lippia_sidoides.jpg/800px-Lippia_sidoides.jpg',
     magicalProperties: [
       'Proteção forte',
       'Purificação profunda',

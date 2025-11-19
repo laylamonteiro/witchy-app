@@ -95,6 +95,7 @@ class HerbModel {
   final bool edible;
   final bool toxic;
   final String? folkNames; // Nomes populares
+  final String? imageUrl; // URL da imagem da erva
 
   const HerbModel({
     required this.name,
@@ -108,5 +109,6 @@ class HerbModel {
     this.edible = false,
     this.toxic = false,
     this.folkNames,
+    this.imageUrl,
   });
 }

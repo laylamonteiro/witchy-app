@@ -55,69 +55,124 @@ class _HerbsListPageState extends State<HerbsListPage> {
             itemCount: herbs.length,
             itemBuilder: (context, index) {
               final herb = herbs[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: MagicalCard(
-                  child: ListTile(
-                    leading: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: AppColors.mint.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          herb.element.emoji,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                      ),
+              return MagicalCard(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HerbDetailPage(herb: herb),
                     ),
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            herb.name,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ),
-                        if (herb.toxic)
-                          const Icon(
-                            Icons.warning_amber_rounded,
-                            color: AppColors.alert,
-                            size: 20,
-                          ),
-                      ],
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          herb.scientificName,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontStyle: FontStyle.italic,
-                                color: AppColors.textSecondary,
+                  );
+                },
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: herb.imageUrl != null
+                          ? Image.network(
+                              herb.imageUrl!,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mint.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      herb.element.emoji,
+                                      style: const TextStyle(fontSize: 24),
+                                    ),
+                                  ),
+                                );
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mint.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: AppColors.mint.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          herb.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
+                              child: Center(
+                                child: Text(
+                                  herb.element.emoji,
+                                  style: const TextStyle(fontSize: 24),
+                                ),
+                              ),
+                            ),
                     ),
-                    trailing: const Icon(Icons.chevron_right, color: AppColors.mint),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HerbDetailPage(herb: herb),
-                        ),
-                      );
-                    },
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  herb.name,
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                              ),
+                              if (herb.toxic)
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: AppColors.alert,
+                                  size: 20,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(herb.element.emoji),
+                              const SizedBox(width: 4),
+                              Text(
+                                herb.element.displayName,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            herb.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
                 ),
               );
             },
