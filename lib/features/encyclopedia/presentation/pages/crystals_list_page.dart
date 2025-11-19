@@ -119,9 +119,15 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                crystal.name,
-                                style: Theme.of(context).textTheme.titleLarge,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      crystal.name,
+                                      style: Theme.of(context).textTheme.titleLarge,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 4),
                               Row(
@@ -130,8 +136,7 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                   const SizedBox(width: 4),
                                   Text(
                                     crystal.element.displayName,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(context).textTheme.bodySmall,
                                   ),
                                 ],
                               ),
