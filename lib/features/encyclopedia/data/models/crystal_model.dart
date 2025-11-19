@@ -27,7 +27,8 @@ class CrystalModel {
   final List<String> usageTips;
   final List<CrystalMethod> cleaningMethods;
   final List<CrystalMethod> chargingMethods;
-  final List<String> safetyWarnings; // ⚠️ NOVO: Avisos de segurança
+  final List<String> safetyWarnings; // ⚠️ Avisos de segurança
+  final String? imageUrl; // 🖼️ URL da imagem do cristal
 
   const CrystalModel({
     required this.name,
@@ -37,7 +38,8 @@ class CrystalModel {
     required this.usageTips,
     required this.cleaningMethods,
     required this.chargingMethods,
-    this.safetyWarnings = const [], // ⚠️ NOVO
+    this.safetyWarnings = const [],
+    this.imageUrl, // 🖼️ Opcional
   });
 
   /// Métodos de limpeza seguros (apenas os que isSafe == true)

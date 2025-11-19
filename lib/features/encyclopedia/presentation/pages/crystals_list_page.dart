@@ -56,27 +56,78 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                     },
                     child: Row(
                       children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: AppColors.lilac.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.diamond,
-                            color: AppColors.lilac,
-                            size: 32,
-                          ),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: crystal.imageUrl != null
+                              ? Image.network(
+                                  crystal.imageUrl!,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.lilac.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.diamond,
+                                        color: AppColors.lilac,
+                                        size: 32,
+                                      ),
+                                    );
+                                  },
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.lilac.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          value: loadingProgress.expectedTotalBytes != null
+                                              ? loadingProgress.cumulativeBytesLoaded /
+                                                  loadingProgress.expectedTotalBytes!
+                                              : null,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.lilac.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.diamond,
+                                    color: AppColors.lilac,
+                                    size: 32,
+                                  ),
+                                ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                crystal.name,
-                                style: Theme.of(context).textTheme.titleLarge,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      crystal.name,
+                                      style: Theme.of(context).textTheme.titleLarge,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 4),
                               Row(
@@ -85,8 +136,7 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                   const SizedBox(width: 4),
                                   Text(
                                     crystal.element.displayName,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(context).textTheme.bodySmall,
                                   ),
                                 ],
                               ),

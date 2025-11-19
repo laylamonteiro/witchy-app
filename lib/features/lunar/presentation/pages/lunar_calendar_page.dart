@@ -7,6 +7,7 @@ import '../../../../core/widgets/moon_phase_widget.dart';
 import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../grimoire/data/models/spell_model.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
 
 class LunarCalendarPage extends StatefulWidget {
   const LunarCalendarPage({super.key});
@@ -30,6 +31,19 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calendário Lunar'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Consumer<LunarProvider>(
         builder: (context, lunarProvider, _) {
@@ -113,6 +127,14 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                         Text(
                           'Próximas Fases',
                           style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildNextPhaseItem(
+                          context,
+                          lunarProvider,
+                          'Lua Nova',
+                          MoonPhase.newMoon.emoji,
+                          isFullMoon: false,
                         ),
                         const SizedBox(height: 16),
                         _buildNextPhaseItem(

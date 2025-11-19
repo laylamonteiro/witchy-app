@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import '../../data/models/crystal_model.dart';
+import '../../data/models/herb_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 
-class CrystalDetailPage extends StatelessWidget {
-  final CrystalModel crystal;
+class HerbDetailPage extends StatelessWidget {
+  final HerbModel herb;
 
-  const CrystalDetailPage({super.key, required this.crystal});
+  const HerbDetailPage({super.key, required this.herb});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(crystal.name),
+        title: Text(herb.name),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -21,16 +21,29 @@ class CrystalDetailPage extends StatelessWidget {
             MagicalCard(
               child: Column(
                 children: [
-                  if (crystal.imageUrl != null)
+                  if (herb.imageUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: Image.network(
-                        crystal.imageUrl!,
+                        herb.imageUrl!,
                         width: 200,
                         height: 200,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return _buildPlaceholderImage();
+                          return Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              color: AppColors.mint.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                '🌿',
+                                style: TextStyle(fontSize: 60),
+                              ),
+                            ),
+                          );
                         },
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
@@ -38,7 +51,7 @@ class CrystalDetailPage extends StatelessWidget {
                             width: 200,
                             height: 200,
                             decoration: BoxDecoration(
-                              color: AppColors.lilac.withOpacity(0.2),
+                              color: AppColors.mint.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Center(
@@ -54,27 +67,67 @@ class CrystalDetailPage extends StatelessWidget {
                       ),
                     )
                   else
-                    _buildPlaceholderImage(),
+                    Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: AppColors.mint.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '🌿',
+                          style: TextStyle(fontSize: 60),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   Text(
-                    crystal.name,
+                    herb.name,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
+                  Text(
+                    herb.scientificName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.textSecondary,
+                        ),
+                  ),
+                  if (herb.folkNames != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      herb.folkNames!,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(crystal.element.emoji, style: const TextStyle(fontSize: 24)),
+                      Text(herb.element.emoji,
+                          style: const TextStyle(fontSize: 24)),
                       const SizedBox(width: 8),
                       Text(
-                        crystal.element.displayName,
+                        herb.element.displayName,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(width: 24),
+                      Text(herb.planet.emoji,
+                          style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 8),
+                      Text(
+                        herb.planet.displayName,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    crystal.description,
+                    herb.description,
                     style: Theme.of(context).textTheme.bodyLarge,
                     textAlign: TextAlign.center,
                   ),
@@ -82,7 +135,7 @@ class CrystalDetailPage extends StatelessWidget {
               ),
             ),
             // Safety Warnings Section (only if there are warnings)
-            if (crystal.safetyWarnings.isNotEmpty)
+            if (herb.safetyWarnings.isNotEmpty)
               MagicalCard(
                 child: Container(
                   decoration: BoxDecoration(
@@ -104,7 +157,10 @@ class CrystalDetailPage extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             'Avisos de Segurança',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
                                   color: AppColors.alert,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -112,7 +168,37 @@ class CrystalDetailPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      ...crystal.safetyWarnings.map(
+                      if (herb.toxic)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.alert.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.dangerous,
+                                    color: AppColors.alert, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'PLANTA TÓXICA - Não ingerir!',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.alert,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ...herb.safetyWarnings.map(
                         (warning) => Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Row(
@@ -126,7 +212,10 @@ class CrystalDetailPage extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   warning,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
                                         fontWeight: FontWeight.w600,
                                       ),
                                 ),
@@ -144,16 +233,16 @@ class CrystalDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Intenções',
+                    'Propriedades Mágicas',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: crystal.intentions
-                        .map((intention) => Chip(
-                              label: Text(intention),
+                    children: herb.magicalProperties
+                        .map((property) => Chip(
+                              label: Text(property),
                               backgroundColor: AppColors.mint.withOpacity(0.2),
                               side: const BorderSide(color: AppColors.mint),
                             ))
@@ -167,12 +256,12 @@ class CrystalDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Como Usar',
+                    'Usos Rituais',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
-                  ...crystal.usageTips.map(
-                    (tip) => Padding(
+                  ...herb.ritualUses.map(
+                    (use) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +274,7 @@ class CrystalDetailPage extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              tip,
+                              use,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
@@ -197,137 +286,42 @@ class CrystalDetailPage extends StatelessWidget {
               ),
             ),
             MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Text(
-                    'Limpeza',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...crystal.cleaningMethods.map(
-                    (methodObj) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                methodObj.isSafe ? Icons.water_drop : Icons.dangerous,
-                                size: 16,
-                                color: methodObj.isSafe ? AppColors.info : AppColors.alert,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  methodObj.method,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        decoration: methodObj.isSafe
-                                            ? null
-                                            : TextDecoration.lineThrough,
-                                        color: methodObj.isSafe
-                                            ? null
-                                            : AppColors.textSecondary,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (!methodObj.isSafe && methodObj.warning != null)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 24, top: 4),
-                              child: Text(
-                                '⚠️ ${methodObj.warning}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.alert,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                              ),
-                            ),
-                        ],
+                  Column(
+                    children: [
+                      Icon(
+                        herb.edible ? Icons.restaurant : Icons.no_meals,
+                        color: herb.edible ? AppColors.mint : AppColors.alert,
+                        size: 32,
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Recarga',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...crystal.chargingMethods.map(
-                    (methodObj) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                methodObj.isSafe ? Icons.bolt : Icons.dangerous,
-                                size: 16,
-                                color: methodObj.isSafe ? AppColors.starYellow : AppColors.alert,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  methodObj.method,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        decoration: methodObj.isSafe
-                                            ? null
-                                            : TextDecoration.lineThrough,
-                                        color: methodObj.isSafe
-                                            ? null
-                                            : AppColors.textSecondary,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (!methodObj.isSafe && methodObj.warning != null)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 24, top: 4),
-                              child: Text(
-                                '⚠️ ${methodObj.warning}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.alert,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                              ),
-                            ),
-                        ],
+                      const SizedBox(height: 4),
+                      Text(
+                        herb.edible ? 'Comestível' : 'Não Comestível',
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                    ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Icon(
+                        herb.toxic ? Icons.dangerous : Icons.verified_user,
+                        color: herb.toxic ? AppColors.alert : AppColors.mint,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        herb.toxic ? 'Tóxica' : 'Não Tóxica',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholderImage() {
-    return Container(
-      width: 200,
-      height: 200,
-      decoration: BoxDecoration(
-        color: AppColors.lilac.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Icon(
-        Icons.diamond,
-        color: AppColors.lilac,
-        size: 80,
       ),
     );
   }
