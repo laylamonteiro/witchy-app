@@ -69,32 +69,38 @@ class SigilWheelPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = math.min(size.width, size.height) * 0.4;
     
-    // Paint para as linhas da grade
+    // Paint para as linhas da grade (mais visível)
     final gridPaint = Paint()
-      ..color = const Color(0xFF26213A)
+      ..color = const Color(0xFFC9A7FF).withOpacity(0.6)  // Lilás mais visível
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    // Paint para as divisões (mais visível)
+    final dividerPaint = Paint()
+      ..color = const Color(0xFFC9A7FF).withOpacity(0.3)  // Lilás mais suave
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     
-    // Paint para as divisões
-    final dividerPaint = Paint()
-      ..color = const Color(0xFF26213A).withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5;
-    
     // Desenha os 3 círculos concêntricos
     if (showGrid) {
-      // Centro (ponto)
-      canvas.drawCircle(center, 3, Paint()..color = const Color(0xFFC9A7FF));
-      
-      // Anel interno (raio 33%)
+      // Centro (ponto maior e mais visível)
+      canvas.drawCircle(center, 6, Paint()
+        ..color = const Color(0xFFC9A7FF)
+        ..style = PaintingStyle.fill);
+      canvas.drawCircle(center, 8, Paint()
+        ..color = const Color(0xFFC9A7FF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2);
+
+      // Anel interno (raio 33%) - DESTAQUE
       canvas.drawCircle(center, maxRadius * 0.33, gridPaint);
-      
-      // Anel médio (raio 66%)
+
+      // Anel médio (raio 66%) - DESTAQUE
       canvas.drawCircle(center, maxRadius * 0.66, gridPaint);
-      
-      // Anel externo (raio 100%)
+
+      // Anel externo (raio 100%) - DESTAQUE
       canvas.drawCircle(center, maxRadius, gridPaint);
-      
+
       // Desenha as divisões radiais (como fatias)
       _drawRadialDivisions(canvas, center, maxRadius, dividerPaint);
     }
@@ -153,11 +159,11 @@ class SigilWheelPainter extends CustomPainter {
   
   void _drawLetters(Canvas canvas, Size size, Offset center, double maxRadius) {
     final textStyle = TextStyle(
-      color: highlightedLetters?.isEmpty ?? true 
-        ? const Color(0xFFB7B2D6)
-        : const Color(0xFFB7B2D6).withOpacity(0.3),
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
+      color: highlightedLetters?.isEmpty ?? true
+        ? const Color(0xFFE8D6FF)  // Cor mais clara e visível
+        : const Color(0xFFE8D6FF).withOpacity(0.4),
+      fontSize: 16,  // Fonte maior
+      fontWeight: FontWeight.bold,  // Negrito para mais destaque
     );
     
     SigilWheel.letterPositions.forEach((letter, position) {
@@ -178,7 +184,8 @@ class SigilWheelPainter extends CustomPainter {
       }
       
       // Ajusta o raio para posicionar o texto no meio da fatia
-      radius = radius - 10;
+      // Aumenta o offset para melhor posicionamento com fonte maior
+      radius = radius - 15;
       
       // Calcula a posição
       final angle = position.angle * (math.pi / 180);
