@@ -8,8 +8,19 @@ O app agora usa a **Prokerala Astrology API** para cálculos precisos de mapas a
 - 🆓 **100% Gratuito**: Plano gratuito permanente, sem cartão de crédito
 - 🚀 **Sem limites de tempo**: A conta gratuita nunca expira
 - 📊 **Dados completos**: Posições planetárias, casas, aspectos, retrógrados
+- 🔐 **OAuth 2.0**: Autenticação segura com renovação automática de tokens
 
-## Como Obter API Key Gratuita
+## ✅ Credenciais Já Configuradas!
+
+O app já está configurado com as credenciais do **Grimório de Bolso**:
+- Client ID: `1575f4ab-2cde-4be0-9fc9-51d820fbd6e6`
+- Client Secret: `CbgSDMjlGuFyEOwLdlMEJXR2MJ6SlFKH2ETbfvpz`
+
+**Você não precisa fazer nada!** Basta compilar o app e testar.
+
+## Como Obter Suas Próprias Credenciais (Opcional)
+
+Se quiser criar suas próprias credenciais no futuro:
 
 ### Passo 1: Criar Conta
 
@@ -21,28 +32,33 @@ O app agora usa a **Prokerala Astrology API** para cálculos precisos de mapas a
    - Senha
 4. Confirme seu email
 
-### Passo 2: Obter Credenciais
+### Passo 2: Criar Client OAuth 2.0
 
 1. Faça login no painel: https://api.prokerala.com/
-2. No dashboard, você verá:
-   - **User ID**: (ex: `12345`)
-   - **API Key**: (ex: `pk_abc123def456...`)
-3. Copie ambos os valores
+2. Vá em **"Clients"** → **"Create New Client"**
+3. Preencha:
+   - **Client Name**: Grimório de Bolso (ou qualquer nome)
+   - **HTTP Origins**: `https://localhost` (necessário para mobile apps)
+   - **Environment**: Production
+4. Clique em **"Create"**
+5. Copie:
+   - **Client ID** (UUID)
+   - **Client Secret** (string longa)
 
-### Passo 3: Configurar no App
+### Passo 3: Configurar no App (Se Usar Suas Próprias Credenciais)
 
 Abra o arquivo: `lib/features/astrology/data/services/external_chart_api.dart`
 
-Substitua as linhas 13-14:
+Substitua as linhas 25-26:
 
 ```dart
 // ANTES:
-static const _apiKey = 'SUBSTITUA_PELA_SUA_CHAVE_API_PROKERALA_AQUI';
-static const _userId = 'SUBSTITUA_PELO_SEU_USER_ID_AQUI';
+static const _clientId = '1575f4ab-2cde-4be0-9fc9-51d820fbd6e6';
+static const _clientSecret = 'CbgSDMjlGuFyEOwLdlMEJXR2MJ6SlFKH2ETbfvpz';
 
 // DEPOIS (com suas credenciais):
-static const _apiKey = 'pk_abc123def456...';  // Sua API Key
-static const _userId = '12345';  // Seu User ID
+static const _clientId = 'seu-client-id-aqui';
+static const _clientSecret = 'seu-client-secret-aqui';
 ```
 
 ### Passo 4: Testar

@@ -5,24 +5,81 @@ import '../models/enums.dart';
 
 /// Serviço para calcular mapas astrais usando API externa (Prokerala)
 ///
-/// Para obter uma API key gratuita (sem cartão de crédito):
-/// 1. Acesse https://api.prokerala.com/
-/// 2. Clique em "Sign Up" e crie uma conta gratuita
-/// 3. Acesse o painel e copie sua API Key
-/// 4. Substitua abaixo em _apiKey
+/// Credenciais configuradas:
+/// - Client Name: Grimório de Bolso
+/// - Autenticação: OAuth 2.0 Client Credentials
 ///
-/// Plano gratuito: Forever free, sem limite de tempo
+/// IMPORTANTE: Não compartilhe essas credenciais publicamente!
+/// Para obter suas próprias credenciais gratuitas:
+/// 1. Acesse https://api.prokerala.com/
+/// 2. Crie uma conta gratuita
+/// 3. No dashboard, crie um novo Client
+/// 4. Use https://localhost como HTTP Origin
+/// 5. Copie Client ID e Client Secret
 class ExternalChartAPI {
   static final ExternalChartAPI instance = ExternalChartAPI._();
 
   ExternalChartAPI._();
 
-  // TODO: Obtenha sua API key gratuita em: https://api.prokerala.com/
-  static const _apiKey = 'SUBSTITUA_PELA_SUA_CHAVE_API_PROKERALA_AQUI';
-  static const _userId = 'SUBSTITUA_PELO_SEU_USER_ID_AQUI';
+  // Credenciais OAuth 2.0
+  static const _clientId = '1575f4ab-2cde-4be0-9fc9-51d820fbd6e6';
+  static const _clientSecret = 'CbgSDMjlGuFyEOwLdlMEJXR2MJ6SlFKH2ETbfvpz';
+  static const _tokenUrl = 'https://api.prokerala.com/token';
   static const _baseUrl = 'https://api.prokerala.com/v2';
 
   final Dio _dio = Dio();
+
+  // Cache do token de acesso
+  String? _accessToken;
+  DateTime? _tokenExpiry;
+
+  /// Obtém token de acesso OAuth 2.0
+  Future<String> _getAccessToken() async {
+    // Se já temos um token válido, retorná-lo
+    if (_accessToken != null &&
+        _tokenExpiry != null &&
+        DateTime.now().isBefore(_tokenExpiry!)) {
+      return _accessToken!;
+    }
+
+    try {
+      // Requisitar novo token usando Client Credentials
+      final response = await _dio.post(
+        _tokenUrl,
+        data: {
+          'grant_type': 'client_credentials',
+          'client_id': _clientId,
+          'client_secret': _clientSecret,
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          receiveTimeout: const Duration(seconds: 10),
+          sendTimeout: const Duration(seconds: 10),
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        _accessToken = response.data['access_token'];
+
+        // Calcular expiração (geralmente 3600 segundos = 1 hora)
+        final expiresIn = response.data['expires_in'] ?? 3600;
+        _tokenExpiry = DateTime.now().add(
+          Duration(seconds: expiresIn - 60), // Renovar 1 min antes
+        );
+
+        return _accessToken!;
+      } else {
+        throw Exception('Erro ao obter token: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception(
+          'Credenciais inválidas. Verifique Client ID e Secret.',
+        );
+      }
+      throw Exception('Erro na autenticação: ${e.message}');
+    }
+  }
 
   /// Calcula mapa natal usando API externa
   Future<Map<String, dynamic>> calculateBirthChart({
@@ -32,6 +89,9 @@ class ExternalChartAPI {
     String houseSystem = 'placidus',
   }) async {
     try {
+      // Obter token de acesso
+      final accessToken = await _getAccessToken();
+
       // Formatar datetime no formato ISO 8601
       final datetime = birthDate.toIso8601String();
 
@@ -43,7 +103,7 @@ class ExternalChartAPI {
         url,
         options: Options(
           headers: {
-            'Authorization': 'Bearer $_apiKey',
+            'Authorization': 'Bearer $accessToken',
             'Content-Type': 'application/json',
           },
           receiveTimeout: const Duration(seconds: 30),
@@ -64,8 +124,11 @@ class ExternalChartAPI {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
+        // Token expirado, limpar cache e tentar novamente
+        _accessToken = null;
+        _tokenExpiry = null;
         throw Exception(
-          'API key inválida. Obtenha uma chave gratuita em https://api.prokerala.com/',
+          'Token expirado. Tente novamente.',
         );
       } else if (e.response?.statusCode == 429) {
         throw Exception(
