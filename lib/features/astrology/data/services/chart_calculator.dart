@@ -139,9 +139,9 @@ class ChartCalculator {
         (y / 400).floor() -
         32045;
 
-    jd = jd.toDouble() + (hour - 12) / 24.0;
+    final jdDouble = jd.toDouble() + (hour - 12) / 24.0;
 
-    return jd;
+    return jdDouble;
   }
 
   /// Calcula posições planetárias (implementação simplificada)

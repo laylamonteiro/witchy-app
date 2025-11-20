@@ -1,4 +1,5 @@
 // Enums para Astrologia
+import 'package:flutter/material.dart';
 
 enum Planet {
   sun,
@@ -219,6 +220,35 @@ enum ZodiacSign {
     final signIndex = (longitude / 30).floor();
     return ZodiacSign.values[signIndex % 12];
   }
+
+  String get magicalDescription {
+    switch (this) {
+      case ZodiacSign.aries:
+        return 'corajosas e iniciativas';
+      case ZodiacSign.taurus:
+        return 'estáveis e sensuais';
+      case ZodiacSign.gemini:
+        return 'curiosas e comunicativas';
+      case ZodiacSign.cancer:
+        return 'intuitivas e nutritivas';
+      case ZodiacSign.leo:
+        return 'expressivas e dramáticas';
+      case ZodiacSign.virgo:
+        return 'analíticas e práticas';
+      case ZodiacSign.libra:
+        return 'harmoniosas e diplomáticas';
+      case ZodiacSign.scorpio:
+        return 'profundas e transformadoras';
+      case ZodiacSign.sagittarius:
+        return 'expansivas e filosóficas';
+      case ZodiacSign.capricorn:
+        return 'disciplinadas e estruturadas';
+      case ZodiacSign.aquarius:
+        return 'inovadoras e humanitárias';
+      case ZodiacSign.pisces:
+        return 'místicas e compassivas';
+    }
+  }
 }
 
 enum Element {
@@ -263,6 +293,19 @@ enum Element {
         return 'Comunicação, intelecto, adivinhação. Magia de palavras e incensos.';
       case Element.water:
         return 'Intuição, emoção, magia lunar. Banhos rituais e trabalho com sonhos.';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case Element.fire:
+        return Colors.red;
+      case Element.earth:
+        return Colors.green;
+      case Element.air:
+        return Colors.yellow;
+      case Element.water:
+        return Colors.blue;
     }
   }
 }
@@ -360,6 +403,23 @@ enum AspectType {
     }
   }
 
+  double get maxOrb => orb; // Alias para compatibilidade
+
+  String get description {
+    switch (this) {
+      case AspectType.conjunction:
+        return 'intensificadora';
+      case AspectType.sextile:
+        return 'harmoniosa';
+      case AspectType.square:
+        return 'desafiadora';
+      case AspectType.trine:
+        return 'fluida';
+      case AspectType.opposition:
+        return 'polarizadora';
+    }
+  }
+
   bool get isHarmonious {
     return this == AspectType.trine || this == AspectType.sextile;
   }
@@ -372,7 +432,11 @@ enum AspectType {
 enum EnergyLevel {
   high,
   medium,
-  low;
+  low,
+  intense,
+  challenging,
+  moderate,
+  harmonious;
 
   String get displayName {
     switch (this) {
@@ -382,16 +446,28 @@ enum EnergyLevel {
         return 'Média';
       case EnergyLevel.low:
         return 'Baixa';
+      case EnergyLevel.intense:
+        return 'Intensa';
+      case EnergyLevel.challenging:
+        return 'Desafiadora';
+      case EnergyLevel.moderate:
+        return 'Moderada';
+      case EnergyLevel.harmonious:
+        return 'Harmoniosa';
     }
   }
 
   String get symbol {
     switch (this) {
       case EnergyLevel.high:
+      case EnergyLevel.intense:
         return '⚡⚡⚡';
       case EnergyLevel.medium:
+      case EnergyLevel.moderate:
+      case EnergyLevel.challenging:
         return '⚡⚡';
       case EnergyLevel.low:
+      case EnergyLevel.harmonious:
         return '⚡';
     }
   }

@@ -60,7 +60,7 @@ class TransitInterpreter {
   /// Gera sugestões personalizadas baseadas em trânsitos e mapa natal
   Future<List<PersonalizedSuggestion>> generatePersonalizedSuggestions(
     DateTime date,
-    BirthChart natalChart,
+    BirthChartModel natalChart,
   ) async {
     final suggestions = <PersonalizedSuggestion>[];
     final transits = await _calculator.calculateTransits(date);

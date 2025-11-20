@@ -188,7 +188,6 @@ class AIService {
       duration: data['duration'] ?? 1,
       observations: data['observations'],
       isPreloaded: false,
-      userId: 'current_user',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );

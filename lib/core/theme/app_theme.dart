@@ -23,6 +23,11 @@ class AppColors {
   static const alert = Color(0xFFFF6B81); // Alerta/cuidado
   static const warning = Color(0xFFFF6B81); // Alias para alert (avisos)
   static const info = Color(0xFFA7C7FF); // Info/neutro
+
+  // Aliases para compatibilidade
+  static const softWhite = textPrimary; // Alias para textPrimary
+  static const darkBackground = background; // Alias para background
+  static const cardBackground = surface; // Alias para surface
 }
 
 class AppTheme {

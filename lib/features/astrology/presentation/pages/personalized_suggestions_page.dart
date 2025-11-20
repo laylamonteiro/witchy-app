@@ -21,7 +21,7 @@ class _PersonalizedSuggestionsPageState
   final TransitInterpreter _interpreter = TransitInterpreter();
   DateTime _selectedDate = DateTime.now();
   List<PersonalizedSuggestion>? _suggestions;
-  BirthChart? _natalChart;
+  BirthChartModel? _natalChart;
   bool _isLoading = false;
   bool _hasNatalChart = false;
 
@@ -44,7 +44,7 @@ class _PersonalizedSuggestionsPageState
 
       if (charts.isNotEmpty) {
         final chartData = charts.first['chart_data'] as String;
-        final chart = BirthChart.fromJsonString(chartData);
+        final chart = BirthChartModel.fromJsonString(chartData);
 
         setState(() {
           _natalChart = chart;

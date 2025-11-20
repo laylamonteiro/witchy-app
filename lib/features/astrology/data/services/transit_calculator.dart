@@ -31,7 +31,7 @@ class TransitCalculator {
   /// Calcula aspectos entre trânsitos e mapa natal
   Future<List<TransitAspect>> calculateTransitAspects(
     List<Transit> transits,
-    BirthChart natalChart,
+    BirthChartModel natalChart,
   ) async {
     final aspects = <TransitAspect>[];
 
@@ -85,10 +85,12 @@ class TransitCalculator {
     return PlanetPosition(
       planet: planet,
       sign: ZodiacSign.values[signIndex],
-      degree: degree,
+      degree: degree.floor(),
       minute: ((degree - degree.floor()) * 60).floor(),
-      house: 1, // House não é relevante para trânsitos
+      houseNumber: 1, // House não é relevante para trânsitos
       isRetrograde: _isRetrograde(planet, daysSinceEpoch.toDouble()),
+      longitude: longitude,
+      speed: 0.0, // Speed não é calculado aqui
     );
   }
 

@@ -1,6 +1,7 @@
 import '../models/birth_chart_model.dart';
 import '../models/magical_profile_model.dart';
 import '../models/planet_position_model.dart';
+import '../models/house_model.dart';
 import '../models/enums.dart';
 
 /// Interpretador Mágico
