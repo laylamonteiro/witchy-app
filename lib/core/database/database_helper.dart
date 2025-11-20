@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -134,6 +134,70 @@ class DatabaseHelper {
         is_preloaded INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         is_favorite INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    // Tabela de Mapas Astrais
+    await db.execute('''
+      CREATE TABLE birth_charts (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        birth_date INTEGER NOT NULL,
+        birth_time_hour INTEGER NOT NULL,
+        birth_time_minute INTEGER NOT NULL,
+        birth_place TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        timezone TEXT NOT NULL,
+        unknown_birth_time INTEGER NOT NULL DEFAULT 0,
+        chart_data TEXT NOT NULL,
+        calculated_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Tabela de Perfis Mágicos
+    await db.execute('''
+      CREATE TABLE magical_profiles (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        birth_chart_id TEXT NOT NULL,
+        profile_data TEXT NOT NULL,
+        generated_at INTEGER NOT NULL,
+        FOREIGN KEY (birth_chart_id) REFERENCES birth_charts (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Tabela de Leituras de Runas
+    await db.execute('''
+      CREATE TABLE rune_readings (
+        id TEXT PRIMARY KEY,
+        question TEXT NOT NULL,
+        spread_type TEXT NOT NULL,
+        reading_data TEXT NOT NULL,
+        date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Tabela de Consultas ao Pêndulo
+    await db.execute('''
+      CREATE TABLE pendulum_consultations (
+        id TEXT PRIMARY KEY,
+        question TEXT NOT NULL,
+        answer TEXT NOT NULL,
+        date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Tabela de Tiragens de Oracle Cards
+    await db.execute('''
+      CREATE TABLE oracle_readings (
+        id TEXT PRIMARY KEY,
+        spread_type TEXT NOT NULL,
+        reading_data TEXT NOT NULL,
+        date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
       )
     ''');
   }
@@ -285,6 +349,103 @@ class DatabaseHelper {
             is_preloaded INTEGER NOT NULL DEFAULT 0,
             created_at INTEGER NOT NULL,
             is_favorite INTEGER NOT NULL DEFAULT 0
+          )
+        ''');
+      }
+    }
+
+    // Migração da versão 4 para 5
+    if (oldVersion < 5) {
+      // Verificar e criar tabela birth_charts
+      final birthChartsTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='birth_charts'"
+      );
+
+      if (birthChartsTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE birth_charts (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            birth_date INTEGER NOT NULL,
+            birth_time_hour INTEGER NOT NULL,
+            birth_time_minute INTEGER NOT NULL,
+            birth_place TEXT NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            timezone TEXT NOT NULL,
+            unknown_birth_time INTEGER NOT NULL DEFAULT 0,
+            chart_data TEXT NOT NULL,
+            calculated_at INTEGER NOT NULL
+          )
+        ''');
+      }
+
+      // Verificar e criar tabela magical_profiles
+      final magicalProfilesTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='magical_profiles'"
+      );
+
+      if (magicalProfilesTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE magical_profiles (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            birth_chart_id TEXT NOT NULL,
+            profile_data TEXT NOT NULL,
+            generated_at INTEGER NOT NULL,
+            FOREIGN KEY (birth_chart_id) REFERENCES birth_charts (id) ON DELETE CASCADE
+          )
+        ''');
+      }
+
+      // Verificar e criar tabela rune_readings
+      final runeReadingsTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='rune_readings'"
+      );
+
+      if (runeReadingsTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE rune_readings (
+            id TEXT PRIMARY KEY,
+            question TEXT NOT NULL,
+            spread_type TEXT NOT NULL,
+            reading_data TEXT NOT NULL,
+            date INTEGER NOT NULL,
+            created_at INTEGER NOT NULL
+          )
+        ''');
+      }
+
+      // Verificar e criar tabela pendulum_consultations
+      final pendulumTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='pendulum_consultations'"
+      );
+
+      if (pendulumTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE pendulum_consultations (
+            id TEXT PRIMARY KEY,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL,
+            date INTEGER NOT NULL,
+            created_at INTEGER NOT NULL
+          )
+        ''');
+      }
+
+      // Verificar e criar tabela oracle_readings
+      final oracleTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='oracle_readings'"
+      );
+
+      if (oracleTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE oracle_readings (
+            id TEXT PRIMARY KEY,
+            spread_type TEXT NOT NULL,
+            reading_data TEXT NOT NULL,
+            date INTEGER NOT NULL,
+            created_at INTEGER NOT NULL
           )
         ''');
       }
