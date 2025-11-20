@@ -338,46 +338,63 @@ class ChartCalculator {
   ) {
     final houses = <House>[];
 
-    // Cálculo simplificado usando Placidus
-    // Em produção, usar biblioteca completa
-
-    // Calcular RAMC (Right Ascension of Medium Coeli)
+    // Calcular RAMC (Right Ascension of Medium Coeli) em graus
     final T = (julianDay - 2451545.0) / 36525.0;
     final gmst = _calculateGMST(julianDay);
-    final lst = gmst + longitude / 15.0;
+    final lst = gmst + longitude / 15.0; // LST em horas
 
-    // MC (Medium Coeli) - Casa 10
-    final mc = (lst * 15.0) % 360;
+    // RAMC em graus (0-360)
+    final ramc = (lst * 15.0) % 360;
 
-    // IC (Imum Coeli) - Casa 4
+    // Calcular MC (longitude eclíptica do Meio do Céu)
+    // Simplificação: MC ≈ RAMC (mais preciso seria converter de equatorial para eclíptica)
+    final mc = ramc;
+
+    // IC (Imum Coeli) - oposto ao MC
     final ic = (mc + 180) % 360;
 
-    // Para simplificação, usar divisão de 30° a partir do MC
-    // Casa 10 (MC)
-    houses.add(_createHouse(10, mc));
+    // Casa 1 (Ascendente) - calcular com fórmula trigonométrica correta
+    final asc = _calculateAscendantFromRAMC(ramc, latitude);
 
-    // Casas 11, 12, 1, 2, 3 (sentido anti-horário)
-    for (int i = 11; i <= 12; i++) {
-      final cuspLongitude = (mc + (i - 10) * 30) % 360;
-      houses.add(_createHouse(i, cuspLongitude));
-    }
+    // Casa 7 (Descendente) - oposto ao Ascendente
+    final dsc = (asc + 180) % 360;
 
-    // Casa 1 (Ascendente) - calcular com fórmula mais precisa
-    final asc = _calculateAscendant(mc, latitude);
-    houses.insert(0, _createHouse(1, asc));
+    // Para simplificação, usar sistema de casas igual
+    // (em produção, usar Placidus completo com cálculos trigonométricos para cada cúspide)
 
-    // Casas 2 e 3
+    // Casa 1 (ASC)
+    houses.add(_createHouse(1, asc));
+
+    // Casas 2-3 (divisão igual entre ASC e IC)
     for (int i = 2; i <= 3; i++) {
-      final cuspLongitude = (asc + (i - 1) * 30) % 360;
+      final cuspLongitude = (asc + ((ic - asc + 360) % 360) * (i - 1) / 3) % 360;
       houses.add(_createHouse(i, cuspLongitude));
     }
 
     // Casa 4 (IC)
     houses.add(_createHouse(4, ic));
 
-    // Casas 5, 6, 7, 8, 9
-    for (int i = 5; i <= 9; i++) {
-      final cuspLongitude = (ic + (i - 4) * 30) % 360;
+    // Casas 5-6 (divisão igual entre IC e DSC)
+    for (int i = 5; i <= 6; i++) {
+      final cuspLongitude = (ic + ((dsc - ic + 360) % 360) * (i - 4) / 3) % 360;
+      houses.add(_createHouse(i, cuspLongitude));
+    }
+
+    // Casa 7 (DSC)
+    houses.add(_createHouse(7, dsc));
+
+    // Casas 8-9 (divisão igual entre DSC e MC)
+    for (int i = 8; i <= 9; i++) {
+      final cuspLongitude = (dsc + ((mc - dsc + 360) % 360) * (i - 7) / 3) % 360;
+      houses.add(_createHouse(i, cuspLongitude));
+    }
+
+    // Casa 10 (MC)
+    houses.add(_createHouse(10, mc));
+
+    // Casas 11-12 (divisão igual entre MC e ASC)
+    for (int i = 11; i <= 12; i++) {
+      final cuspLongitude = (mc + ((asc - mc + 360) % 360) * (i - 10) / 3) % 360;
       houses.add(_createHouse(i, cuspLongitude));
     }
 
@@ -387,15 +404,23 @@ class ChartCalculator {
     return houses;
   }
 
-  /// Calcula Ascendente
-  double _calculateAscendant(double mc, double latitude) {
-    // Fórmula simplificada
-    // Em produção, usar cálculo trigonométrico completo
+  /// Calcula Ascendente com fórmula trigonométrica correta a partir do RAMC
+  double _calculateAscendantFromRAMC(double ramc, double latitude) {
+    // Obliquidade da eclíptica (ε = 23.43929°)
+    final obliquity = 23.43929;
+    final oblRad = obliquity * math.pi / 180;
     final latRad = latitude * math.pi / 180;
-    final mcRad = mc * math.pi / 180;
+    final ramcRad = ramc * math.pi / 180;
 
-    // Aproximação: ASC depende de MC e latitude
-    var asc = mc - 90 + (latitude / 2);
+    // Fórmula do ascendente (longitude eclíptica):
+    // tan(ASC) = -cos(RAMC) / (sin(RAMC) * cos(ε) + tan(lat) * sin(ε))
+
+    final numerator = -math.cos(ramcRad);
+    final denominator = math.sin(ramcRad) * math.cos(oblRad) + math.tan(latRad) * math.sin(oblRad);
+
+    var asc = math.atan2(numerator, denominator) * 180 / math.pi;
+
+    // Normalizar para 0-360
     asc = asc % 360;
     if (asc < 0) asc += 360;
 
