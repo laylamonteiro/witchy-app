@@ -11,50 +11,66 @@ class TransitInterpreter {
 
   /// Gera o clima mágico diário
   Future<DailyMagicalWeather> getDailyMagicalWeather(DateTime date) async {
-    final transits = await _calculator.calculateTransits(date);
-    final moonTransit = transits.firstWhere((t) => t.planet == Planet.moon);
-    final moonPhase = _calculateMoonPhase(date);
+    try {
+      final transits = await _calculator.calculateTransits(date);
 
-    // Analisar aspectos entre planetas em trânsito
-    final significantAspects = _getSignificantTransitAspects(transits);
+      // Verificar se temos trânsitos
+      if (transits.isEmpty) {
+        throw Exception('Nenhum trânsito calculado para a data');
+      }
 
-    // Determinar energia geral do dia
-    final overallEnergy = _determineOverallEnergy(transits, significantAspects);
+      // Buscar Lua com verificação
+      final moonTransit = transits.firstWhere(
+        (t) => t.planet == Planet.moon,
+        orElse: () => throw Exception('Posição da Lua não encontrada'),
+      );
 
-    // Gerar interpretação geral
-    final interpretation = _generateGeneralInterpretation(
-      moonTransit.sign,
-      moonPhase,
-      significantAspects,
-      overallEnergy,
-    );
+      final moonPhase = _calculateMoonPhase(date);
 
-    // Gerar recomendações de práticas
-    final practices = _generateRecommendedPractices(
-      moonTransit.sign,
-      moonPhase,
-      significantAspects,
-      overallEnergy,
-    );
+      // Analisar aspectos entre planetas em trânsito
+      final significantAspects = _getSignificantTransitAspects(transits);
 
-    // Extrair palavras-chave de energia
-    final keywords = _extractEnergyKeywords(
-      moonTransit.sign,
-      moonPhase,
-      significantAspects,
-    );
+      // Determinar energia geral do dia
+      final overallEnergy = _determineOverallEnergy(transits, significantAspects);
 
-    return DailyMagicalWeather(
-      date: date,
-      transits: transits,
-      aspects: significantAspects,
-      generalInterpretation: interpretation,
-      recommendedPractices: practices,
-      energyKeywords: keywords,
-      overallEnergy: overallEnergy,
-      moonSign: moonTransit.sign,
-      moonPhase: moonPhase,
-    );
+      // Gerar interpretação geral
+      final interpretation = _generateGeneralInterpretation(
+        moonTransit.sign,
+        moonPhase,
+        significantAspects,
+        overallEnergy,
+      );
+
+      // Gerar recomendações de práticas
+      final practices = _generateRecommendedPractices(
+        moonTransit.sign,
+        moonPhase,
+        significantAspects,
+        overallEnergy,
+      );
+
+      // Extrair palavras-chave de energia
+      final keywords = _extractEnergyKeywords(
+        moonTransit.sign,
+        moonPhase,
+        significantAspects,
+      );
+
+      return DailyMagicalWeather(
+        date: date,
+        transits: transits,
+        aspects: significantAspects,
+        generalInterpretation: interpretation,
+        recommendedPractices: practices,
+        energyKeywords: keywords,
+        overallEnergy: overallEnergy,
+        moonSign: moonTransit.sign,
+        moonPhase: moonPhase,
+      );
+    } catch (e) {
+      print('Erro em getDailyMagicalWeather: $e');
+      rethrow;
+    }
   }
 
   /// Gera sugestões personalizadas baseadas em trânsitos e mapa natal
@@ -122,45 +138,53 @@ class TransitInterpreter {
   List<TransitAspect> _getSignificantTransitAspects(List<Transit> transits) {
     final aspects = <TransitAspect>[];
 
-    // Verificar aspectos entre planetas em trânsito
-    for (var i = 0; i < transits.length; i++) {
-      for (var j = i + 1; j < transits.length; j++) {
-        final t1 = transits[i];
-        final t2 = transits[j];
+    try {
+      // Verificar aspectos entre planetas em trânsito
+      for (var i = 0; i < transits.length; i++) {
+        for (var j = i + 1; j < transits.length; j++) {
+          final t1 = transits[i];
+          final t2 = transits[j];
 
-        final long1 = (t1.sign.index * 30.0) + t1.degree;
-        final long2 = (t2.sign.index * 30.0) + t2.degree;
+          final long1 = (t1.sign.index * 30.0) + t1.degree;
+          final long2 = (t2.sign.index * 30.0) + t2.degree;
 
-        var diff = (long1 - long2).abs();
-        if (diff > 180) diff = 360 - diff;
+          var diff = (long1 - long2).abs();
+          if (diff > 180) diff = 360 - diff;
 
-        // Verificar aspectos principais
-        for (final aspectType in [
-          AspectType.conjunction,
-          AspectType.opposition,
-          AspectType.trine,
-          AspectType.square,
-          AspectType.sextile,
-        ]) {
-          final orb = (diff - aspectType.angle).abs();
+          // Verificar se diff é válido
+          if (diff.isNaN || diff.isInfinite) continue;
 
-          // Orb mais apertado para trânsitos (5°)
-          if (orb <= 5.0) {
-            aspects.add(TransitAspect(
-              transitPlanet: t1.planet,
-              natalPlanet: t2.planet,
-              aspectType: aspectType,
-              orb: orb,
-              interpretation: _interpretTransitAspect(t1.planet, t2.planet, aspectType),
-              energyLevel: _getAspectEnergyLevel(aspectType),
-            ));
+          // Verificar aspectos principais
+          for (final aspectType in [
+            AspectType.conjunction,
+            AspectType.opposition,
+            AspectType.trine,
+            AspectType.square,
+            AspectType.sextile,
+          ]) {
+            final orb = (diff - aspectType.angle).abs();
+
+            // Orb mais apertado para trânsitos (5°)
+            if (orb <= 5.0 && !orb.isNaN && !orb.isInfinite) {
+              aspects.add(TransitAspect(
+                transitPlanet: t1.planet,
+                natalPlanet: t2.planet,
+                aspectType: aspectType,
+                orb: orb,
+                interpretation: _interpretTransitAspect(t1.planet, t2.planet, aspectType),
+                energyLevel: _getAspectEnergyLevel(aspectType),
+              ));
+            }
           }
         }
       }
-    }
 
-    aspects.sort((a, b) => a.orb.compareTo(b.orb));
-    return aspects.take(5).toList();
+      aspects.sort((a, b) => a.orb.compareTo(b.orb));
+      return aspects.take(5).toList();
+    } catch (e) {
+      print('Erro em _getSignificantTransitAspects: $e');
+      return []; // Retorna lista vazia em caso de erro
+    }
   }
 
   /// Determina a energia geral do dia

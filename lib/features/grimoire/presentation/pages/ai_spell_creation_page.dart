@@ -6,7 +6,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/spell_provider.dart';
 import '../../data/models/spell_model.dart';
 import 'spell_detail_page.dart';
-import 'ai_config_page.dart';
 
 class AISpellCreationPage extends StatefulWidget {
   const AISpellCreationPage({super.key});
@@ -19,25 +18,11 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   final _intentionController = TextEditingController();
   SpellModel? _generatedSpell;
   bool _isGenerating = false;
-  bool _hasApiKey = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkApiKey();
-  }
 
   @override
   void dispose() {
     _intentionController.dispose();
     super.dispose();
-  }
-
-  Future<void> _checkApiKey() async {
-    final hasKey = await AIService.instance.hasApiKey();
-    setState(() {
-      _hasApiKey = hasKey;
-    });
   }
 
   Future<void> _generateSpell() async {
@@ -49,21 +34,6 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
         ),
       );
       return;
-    }
-
-    if (!_hasApiKey) {
-      final result = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(builder: (_) => const AIConfigPage()),
-      );
-
-      if (result == true) {
-        setState(() {
-          _hasApiKey = true;
-        });
-      } else {
-        return;
-      }
     }
 
     setState(() {
@@ -85,12 +55,14 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
 
       String errorMessage = 'O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.';
 
-      if (e.toString().contains('limit') || e.toString().contains('quota') || e.toString().contains('usage')) {
-        errorMessage = 'O conselheiro precisa de descanso. Por favor, aguarde um momento antes de tentar novamente.';
-      } else if (e.toString().contains('key') || e.toString().contains('authentication')) {
-        errorMessage = 'A conexão mística foi perdida. Verifique suas configurações.';
-      } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+      if (e.toString().contains('limit') || e.toString().contains('quota') || e.toString().contains('usage') || e.toString().contains('429')) {
+        errorMessage = 'O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos.';
+      } else if (e.toString().contains('autenticação') || e.toString().contains('authentication') || e.toString().contains('401')) {
+        errorMessage = 'Erro temporário no serviço místico. Tente novamente em instantes.';
+      } else if (e.toString().contains('network') || e.toString().contains('connection') || e.toString().contains('timeout')) {
         errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+      } else if (e.toString().contains('503')) {
+        errorMessage = 'O portal místico está temporariamente fechado. Tente novamente em alguns minutos.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -133,21 +105,6 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       appBar: AppBar(
         title: const Text('Conselheiro Místico'),
         backgroundColor: AppColors.darkBackground,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () async {
-              final result = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (_) => const AIConfigPage()),
-              );
-              if (result == true) {
-                _checkApiKey();
-              }
-            },
-            tooltip: 'Configurar Conselheiro',
-          ),
-        ],
       ),
       backgroundColor: AppColors.darkBackground,
       body: SingleChildScrollView(
@@ -206,67 +163,94 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                     borderSide: const BorderSide(color: AppColors.lilac),
                   ),
                 ),
-                maxLines: 5,
+                maxLines: 6,
+                textCapitalization: TextCapitalization.sentences,
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            if (_generatedSpell == null)
-              ElevatedButton.icon(
-                onPressed: _isGenerating ? null : _generateSpell,
-                icon: _isGenerating
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.darkBackground,
-                          ),
+            ElevatedButton.icon(
+              onPressed: _isGenerating || _intentionController.text.trim().isEmpty
+                  ? null
+                  : _generateSpell,
+              icon: _isGenerating
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.darkBackground,
                         ),
-                      )
-                    : const Icon(Icons.auto_awesome),
-                label: Text(_isGenerating ? 'Manifestando...' : 'Manifestar Feitiço ✨'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: AppColors.darkBackground,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                  disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
+                      ),
+                    )
+                  : const Icon(Icons.auto_awesome),
+              label: Text(_isGenerating ? 'Manifestando...' : 'Manifestar Feitiço ✨'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.lilac,
+                foregroundColor: AppColors.darkBackground,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
                 ),
+                disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
               ),
+            ),
 
             if (_generatedSpell != null) ...[
+              const SizedBox(height: 24),
               MagicalCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
+                        const Text('🌟', style: TextStyle(fontSize: 32)),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             _generatedSpell!.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  color: AppColors.lilac,
-                                ),
+                            style: const TextStyle(
+                              color: AppColors.lilac,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.lilac.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            _generatedSpell!.category.displayName,
+                            style: const TextStyle(
+                              color: AppColors.lilac,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
                           decoration: BoxDecoration(
                             color: _generatedSpell!.type == SpellType.attraction
                                 ? AppColors.success.withOpacity(0.2)
                                 : AppColors.alert.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
                             _generatedSpell!.type.displayName,
@@ -280,115 +264,53 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(
                       _generatedSpell!.purpose,
-                      style: const TextStyle(
-                        color: AppColors.softWhite,
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.9),
                         fontSize: 14,
                       ),
                     ),
-                    const Divider(color: AppColors.lilac),
-                    Text(
-                      'Categoria: ${_generatedSpell!.category.displayName}',
-                      style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.7),
-                      ),
-                    ),
-                    if (_generatedSpell!.moonPhase != null)
-                      Text(
-                        'Lua: ${_generatedSpell!.moonPhase}',
-                        style: TextStyle(
-                          color: AppColors.softWhite.withOpacity(0.7),
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Ingredientes:',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: AppColors.lilac,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    ..._generatedSpell!.ingredients.map((ingredient) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Text(
-                          '• $ingredient',
-                          style: const TextStyle(color: AppColors.softWhite),
-                        ),
-                      );
-                    }).toList(),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Passos:',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: AppColors.lilac,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _generatedSpell!.steps,
-                      style: const TextStyle(
-                        color: AppColors.softWhite,
-                        height: 1.5,
-                      ),
-                    ),
-                    if (_generatedSpell!.observations != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        'Observações:',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: AppColors.lilac,
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => SpellDetailPage(
+                                    spell: _generatedSpell!,
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.visibility),
+                            label: const Text('Ver Detalhes'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.lilac,
+                              side: const BorderSide(color: AppColors.lilac),
                             ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _generatedSpell!.observations!,
-                        style: TextStyle(
-                          color: AppColors.softWhite.withOpacity(0.8),
-                          fontStyle: FontStyle.italic,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _saveSpell,
+                            icon: const Icon(Icons.save),
+                            label: const Text('Salvar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.lilac,
+                              foregroundColor: AppColors.darkBackground,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ),
-
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _generatedSpell = null;
-                        });
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Gerar Outro'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.lilac,
-                        side: const BorderSide(color: AppColors.lilac),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _saveSpell,
-                      icon: const Icon(Icons.save),
-                      label: const Text('Salvar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.success,
-                        foregroundColor: AppColors.darkBackground,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ],

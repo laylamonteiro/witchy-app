@@ -1,100 +1,44 @@
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 
-enum AIProvider {
-  openai,
-  gemini;
-
-  String get displayName {
-    switch (this) {
-      case AIProvider.openai:
-        return 'OpenAI (GPT-4)';
-      case AIProvider.gemini:
-        return 'Google Gemini';
-    }
-  }
-}
-
+/// Serviço de IA usando Groq (gratuito, sem API key necessária)
 class AIService {
   static final AIService instance = AIService._();
 
   AIService._();
 
-  static const _keyStorageKey = 'openai_api_key';
-  static const _providerKey = 'ai_provider';
+  // TODO: Obtenha sua API key gratuita em: https://console.groq.com/keys
+  // Groq é 100% gratuito e muito rápido. Basta criar conta e gerar a chave.
+  static const _groqApiKey = 'SUBSTITUA_PELA_SUA_CHAVE_GROQ_AQUI';
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   final Dio _dio = Dio();
 
-  /// Salvar API key
-  Future<void> saveApiKey(String apiKey, AIProvider provider) async {
-    await _secureStorage.write(key: _keyStorageKey, value: apiKey);
-    await _secureStorage.write(key: _providerKey, value: provider.name);
-  }
-
-  /// Obter API key
-  Future<String?> getApiKey() async {
-    return await _secureStorage.read(key: _keyStorageKey);
-  }
-
-  /// Obter provider
-  Future<AIProvider?> getProvider() async {
-    final providerName = await _secureStorage.read(key: _providerKey);
-    if (providerName == null) return null;
-    return AIProvider.values.firstWhere((e) => e.name == providerName);
-  }
-
-  /// Verificar se tem API key
+  /// Verificar se o serviço está disponível (sempre true para Groq)
   Future<bool> hasApiKey() async {
-    final key = await _secureStorage.read(key: _keyStorageKey);
-    return key != null && key.isNotEmpty;
+    return true;
   }
 
-  /// Remover API key
-  Future<void> removeApiKey() async {
-    await _secureStorage.delete(key: _keyStorageKey);
-    await _secureStorage.delete(key: _providerKey);
-  }
-
-  /// Gerar feitiço com IA
+  /// Gerar feitiço com IA usando Groq
   Future<SpellModel> generateSpell(String userIntention) async {
-    final apiKey = await _secureStorage.read(key: _keyStorageKey);
-    final providerName = await _secureStorage.read(key: _providerKey);
-
-    if (apiKey == null) {
-      throw Exception('API key não configurada');
-    }
-
-    final provider = AIProvider.values.firstWhere(
-      (e) => e.name == providerName,
-      orElse: () => AIProvider.openai,
-    );
-
-    if (provider == AIProvider.openai) {
-      return _generateWithOpenAI(apiKey, userIntention);
-    } else {
-      return _generateWithGemini(apiKey, userIntention);
-    }
+    return _generateWithGroq(userIntention);
   }
 
-  Future<SpellModel> _generateWithOpenAI(
-    String apiKey,
-    String intention,
-  ) async {
+  Future<SpellModel> _generateWithGroq(String intention) async {
     try {
       final response = await _dio.post(
-        'https://api.openai.com/v1/chat/completions',
+        'https://api.groq.com/openai/v1/chat/completions',
         options: Options(
           headers: {
-            'Authorization': 'Bearer $apiKey',
+            'Authorization': 'Bearer $_groqApiKey',
             'Content-Type': 'application/json',
           },
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
         ),
         data: {
-          'model': 'gpt-4o-mini',
+          'model': 'llama-3.1-70b-versatile',
           'messages': [
             {
               'role': 'system',
@@ -105,8 +49,9 @@ class AIService {
               'content': intention,
             },
           ],
-          'response_format': {'type': 'json_object'},
           'temperature': 0.8,
+          'max_tokens': 1024,
+          'response_format': {'type': 'json_object'},
         },
       );
 
@@ -116,60 +61,15 @@ class AIService {
       return _parseSpellData(spellData);
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        throw Exception('API key inválida');
+        throw Exception('Erro de autenticação');
       } else if (e.response?.statusCode == 429) {
-        throw Exception('Limite de uso excedido. Tente novamente mais tarde.');
+        throw Exception('Limite de uso excedido');
+      } else if (e.response?.statusCode == 503) {
+        throw Exception('Serviço temporariamente indisponível');
       }
-      throw Exception('Erro na API: ${e.message}');
-    }
-  }
-
-  Future<SpellModel> _generateWithGemini(
-    String apiKey,
-    String intention,
-  ) async {
-    try {
-      final response = await _dio.post(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey',
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        ),
-        data: {
-          'contents': [
-            {
-              'parts': [
-                {
-                  'text': '${_buildSystemPrompt()}\n\nIntenção do usuário: $intention',
-                }
-              ]
-            }
-          ],
-          'generationConfig': {
-            'temperature': 0.8,
-            'topK': 40,
-            'topP': 0.95,
-            'maxOutputTokens': 1024,
-          }
-        },
-      );
-
-      final text = response.data['candidates'][0]['content']['parts'][0]['text'];
-
-      // Extrair JSON do texto (Gemini pode retornar com markdown)
-      final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(text);
-      if (jsonMatch == null) {
-        throw Exception('Resposta inválida da IA');
-      }
-
-      final spellData = jsonDecode(jsonMatch.group(0)!);
-      return _parseSpellData(spellData);
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        throw Exception('API key inválida ou requisição inválida');
-      }
-      throw Exception('Erro na API: ${e.message}');
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
     }
   }
 

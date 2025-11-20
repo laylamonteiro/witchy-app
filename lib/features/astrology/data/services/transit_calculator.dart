@@ -10,22 +10,36 @@ class TransitCalculator {
   Future<List<Transit>> calculateTransits(DateTime date) async {
     final transits = <Transit>[];
 
-    // Calcular posição de cada planeta para a data
-    for (final planet in Planet.values) {
-      if (planet == Planet.northNode || planet == Planet.southNode) {
-        continue; // Skip nodes for simplicity
+    try {
+      // Calcular posição de cada planeta para a data
+      for (final planet in Planet.values) {
+        if (planet == Planet.northNode || planet == Planet.southNode) {
+          continue; // Skip nodes for simplicity
+        }
+
+        try {
+          final position = _calculatePlanetPosition(planet, date);
+
+          // Verificar se a posição é válida
+          if (!position.longitude.isNaN && !position.longitude.isInfinite) {
+            transits.add(Transit(
+              planet: planet,
+              sign: position.sign,
+              degree: position.degree.toDouble(),
+              isRetrograde: position.isRetrograde,
+            ));
+          }
+        } catch (e) {
+          print('Erro ao calcular posição de ${planet.name}: $e');
+          // Continua com os outros planetas
+        }
       }
 
-      final position = _calculatePlanetPosition(planet, date);
-      transits.add(Transit(
-        planet: planet,
-        sign: position.sign,
-        degree: position.degree.toDouble(),
-        isRetrograde: position.isRetrograde,
-      ));
+      return transits;
+    } catch (e) {
+      print('Erro em calculateTransits: $e');
+      rethrow;
     }
-
-    return transits;
   }
 
   /// Calcula aspectos entre trânsitos e mapa natal
