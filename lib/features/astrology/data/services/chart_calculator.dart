@@ -6,18 +6,24 @@ import '../models/planet_position_model.dart';
 import '../models/house_model.dart';
 import '../models/aspect_model.dart';
 import '../models/enums.dart';
+import 'external_chart_api.dart';
 
 /// Calculadora de Mapa Astral
 ///
-/// NOTA: Esta é uma implementação simplificada para demonstração.
-/// Para cálculos precisos em produção, integre com Swiss Ephemeris completo.
+/// ATUALIZAÇÃO: Agora usa API externa (Prokerala) para cálculos precisos
+/// baseados em Swiss Ephemeris. A implementação local simplificada (±2°)
+/// é mantida como fallback.
 ///
-/// A implementação atual usa aproximações astronômicas que fornecem
-/// resultados razoavelmente precisos (±2°) para fins educacionais.
+/// Para usar a API externa:
+/// 1. Obtenha uma API key gratuita em https://api.prokerala.com/
+/// 2. Configure em external_chart_api.dart
 class ChartCalculator {
   static final ChartCalculator instance = ChartCalculator._();
 
   ChartCalculator._();
+
+  // Usar API externa por padrão (mude para false para usar cálculos locais)
+  static const bool _useExternalAPI = true;
 
   /// Calcula o mapa natal completo
   Future<BirthChartModel> calculateBirthChart({
@@ -29,90 +35,181 @@ class ChartCalculator {
     bool unknownBirthTime = false,
   }) async {
     try {
-      // 1. Converter para Julian Day
-      final julianDay = _dateTimeToJulianDay(
-        birthDate,
-        birthTime,
-        longitude,
-      );
-
-      // 2. Calcular posições planetárias
-      final planetPositions = _calculatePlanets(julianDay);
-
-      // 3. Calcular casas (se hora conhecida)
-      List<House> houses;
-      PlanetPosition? ascendant;
-      PlanetPosition? midheaven;
-
-      if (!unknownBirthTime) {
-        houses = _calculateHouses(julianDay, latitude, longitude);
-
-        // Calcular Ascendente (cúspide da Casa 1)
-        final ascLongitude = houses[0].cuspLongitude;
-        final ascSign = ZodiacSign.fromLongitude(ascLongitude);
-        final ascDegree = (ascLongitude % 30).floor();
-        final ascMinute = ((ascLongitude % 1) * 60).floor();
-
-        ascendant = PlanetPosition(
-          planet: Planet.sun, // Placeholder
-          sign: ascSign,
-          degree: ascDegree,
-          minute: ascMinute,
-          houseNumber: 1,
-          isRetrograde: false,
-          longitude: ascLongitude,
-          speed: 0,
-        );
-
-        // Calcular Meio do Céu (cúspide da Casa 10)
-        final mcLongitude = houses[9].cuspLongitude;
-        final mcSign = ZodiacSign.fromLongitude(mcLongitude);
-        final mcDegree = (mcLongitude % 30).floor();
-        final mcMinute = ((mcLongitude % 1) * 60).floor();
-
-        midheaven = PlanetPosition(
-          planet: Planet.sun, // Placeholder
-          sign: mcSign,
-          degree: mcDegree,
-          minute: mcMinute,
-          houseNumber: 10,
-          isRetrograde: false,
-          longitude: mcLongitude,
-          speed: 0,
-        );
-      } else {
-        // Se hora desconhecida, usar sistema de signos iguais com Sol no ASC
-        houses = _calculateHousesEqualSign(planetPositions[0].longitude);
-        ascendant = null;
-        midheaven = null;
+      // Tentar usar API externa primeiro se habilitado
+      if (_useExternalAPI && !unknownBirthTime) {
+        try {
+          return await _calculateWithExternalAPI(
+            birthDate: birthDate,
+            birthTime: birthTime,
+            birthPlace: birthPlace,
+            latitude: latitude,
+            longitude: longitude,
+          );
+        } catch (e) {
+          print('Erro na API externa, usando cálculos locais: $e');
+          // Continua para usar cálculos locais como fallback
+        }
       }
 
-      // 4. Atribuir casas aos planetas
-      final planetsWithHouses = _assignHousesToPlanets(planetPositions, houses);
-
-      // 5. Calcular aspectos
-      final aspects = _calculateAspects(planetsWithHouses);
-
-      return BirthChartModel(
-        id: const Uuid().v4(),
-        userId: 'current_user', // TODO: pegar do auth
+      // Usar cálculos locais (implementação original)
+      return await _calculateWithLocalMethod(
         birthDate: birthDate,
         birthTime: birthTime,
         birthPlace: birthPlace,
         latitude: latitude,
         longitude: longitude,
-        timezone: 'UTC', // TODO: calcular timezone correto
         unknownBirthTime: unknownBirthTime,
-        planets: planetsWithHouses,
-        houses: houses,
-        ascendant: ascendant,
-        midheaven: midheaven,
-        aspects: aspects,
-        calculatedAt: DateTime.now(),
       );
     } catch (e) {
       throw Exception('Erro ao calcular mapa natal: $e');
     }
+  }
+
+  /// Calcula usando API externa (Prokerala)
+  Future<BirthChartModel> _calculateWithExternalAPI({
+    required DateTime birthDate,
+    required TimeOfDay birthTime,
+    required String birthPlace,
+    required double latitude,
+    required double longitude,
+  }) async {
+    // Combinar data e hora
+    final fullBirthDateTime = DateTime(
+      birthDate.year,
+      birthDate.month,
+      birthDate.day,
+      birthTime.hour,
+      birthTime.minute,
+    );
+
+    // Chamar API externa
+    final apiData = await ExternalChartAPI.instance.calculateBirthChart(
+      birthDate: fullBirthDateTime,
+      latitude: latitude,
+      longitude: longitude,
+      houseSystem: 'placidus',
+    );
+
+    // Processar resposta da API
+    final parsedData = ExternalChartAPI.instance.parseAPIResponse(apiData);
+
+    final planets = parsedData['planets'] as List<PlanetPosition>;
+    final houses = parsedData['houses'] as List<House>;
+    final ascendant = parsedData['ascendant'] as PlanetPosition?;
+    final midheaven = parsedData['midheaven'] as PlanetPosition?;
+
+    // Calcular aspectos
+    final aspects = _calculateAspects(planets);
+
+    return BirthChartModel(
+      id: const Uuid().v4(),
+      userId: 'current_user',
+      birthDate: birthDate,
+      birthTime: birthTime,
+      birthPlace: birthPlace,
+      latitude: latitude,
+      longitude: longitude,
+      timezone: 'UTC',
+      unknownBirthTime: false,
+      planets: planets,
+      houses: houses,
+      ascendant: ascendant,
+      midheaven: midheaven,
+      aspects: aspects,
+      calculatedAt: DateTime.now(),
+    );
+  }
+
+  /// Calcula usando método local simplificado (fallback)
+  Future<BirthChartModel> _calculateWithLocalMethod({
+    required DateTime birthDate,
+    required TimeOfDay birthTime,
+    required String birthPlace,
+    required double latitude,
+    required double longitude,
+    required bool unknownBirthTime,
+  }) async {
+    // 1. Converter para Julian Day
+    final julianDay = _dateTimeToJulianDay(
+      birthDate,
+      birthTime,
+      longitude,
+    );
+
+    // 2. Calcular posições planetárias
+    final planetPositions = _calculatePlanets(julianDay);
+
+    // 3. Calcular casas (se hora conhecida)
+    List<House> houses;
+    PlanetPosition? ascendant;
+    PlanetPosition? midheaven;
+
+    if (!unknownBirthTime) {
+      houses = _calculateHouses(julianDay, latitude, longitude);
+
+      // Calcular Ascendente (cúspide da Casa 1)
+      final ascLongitude = houses[0].cuspLongitude;
+      final ascSign = ZodiacSign.fromLongitude(ascLongitude);
+      final ascDegree = (ascLongitude % 30).floor();
+      final ascMinute = ((ascLongitude % 1) * 60).floor();
+
+      ascendant = PlanetPosition(
+        planet: Planet.sun, // Placeholder
+        sign: ascSign,
+        degree: ascDegree,
+        minute: ascMinute,
+        houseNumber: 1,
+        isRetrograde: false,
+        longitude: ascLongitude,
+        speed: 0,
+      );
+
+      // Calcular Meio do Céu (cúspide da Casa 10)
+      final mcLongitude = houses[9].cuspLongitude;
+      final mcSign = ZodiacSign.fromLongitude(mcLongitude);
+      final mcDegree = (mcLongitude % 30).floor();
+      final mcMinute = ((mcLongitude % 1) * 60).floor();
+
+      midheaven = PlanetPosition(
+        planet: Planet.sun, // Placeholder
+        sign: mcSign,
+        degree: mcDegree,
+        minute: mcMinute,
+        houseNumber: 10,
+        isRetrograde: false,
+        longitude: mcLongitude,
+        speed: 0,
+      );
+    } else {
+      // Se hora desconhecida, usar sistema de signos iguais com Sol no ASC
+      houses = _calculateHousesEqualSign(planetPositions[0].longitude);
+      ascendant = null;
+      midheaven = null;
+    }
+
+    // 4. Atribuir casas aos planetas
+    final planetsWithHouses = _assignHousesToPlanets(planetPositions, houses);
+
+    // 5. Calcular aspectos
+    final aspects = _calculateAspects(planetsWithHouses);
+
+    return BirthChartModel(
+      id: const Uuid().v4(),
+      userId: 'current_user',
+      birthDate: birthDate,
+      birthTime: birthTime,
+      birthPlace: birthPlace,
+      latitude: latitude,
+      longitude: longitude,
+      timezone: 'UTC',
+      unknownBirthTime: unknownBirthTime,
+      planets: planetsWithHouses,
+      houses: houses,
+      ascendant: ascendant,
+      midheaven: midheaven,
+      aspects: aspects,
+      calculatedAt: DateTime.now(),
+    );
   }
 
   /// Converte DateTime para Julian Day
