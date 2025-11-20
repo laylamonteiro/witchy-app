@@ -5,6 +5,7 @@ import 'app_spells_list_page.dart';
 import 'user_spells_list_page.dart';
 import 'ai_spell_creation_page.dart';
 import '../../../astrology/presentation/pages/astrology_page.dart';
+import '../../../divination/presentation/pages/divination_hub_page.dart';
 
 class GrimoirePage extends StatelessWidget {
   const GrimoirePage({super.key});
@@ -88,6 +89,20 @@ class GrimoirePage extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const AISpellCreationPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '🔮',
+            title: 'Divinação',
+            description: 'Runas, pêndulo e oracle cards para orientação',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DivinationHubPage(),
                 ),
               );
             },
