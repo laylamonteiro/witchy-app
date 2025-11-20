@@ -83,10 +83,21 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     } catch (e) {
       if (!mounted) return;
 
+      String errorMessage = 'Erro ao gerar feitiço. Tente novamente mais tarde.';
+
+      if (e.toString().contains('limit') || e.toString().contains('quota') || e.toString().contains('usage')) {
+        errorMessage = 'Limite de uso da API atingido. Por favor, verifique seu plano ou aguarde um momento.';
+      } else if (e.toString().contains('key') || e.toString().contains('authentication')) {
+        errorMessage = 'Erro de autenticação. Verifique sua chave de API nas configurações.';
+      } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao gerar: $e'),
+          content: Text(errorMessage),
           backgroundColor: AppColors.alert,
+          duration: const Duration(seconds: 5),
         ),
       );
     } finally {

@@ -66,6 +66,7 @@ class _PendulumPageState extends State<PendulumPage>
     await Future.delayed(const Duration(seconds: 3));
 
     _swingController.stop();
+    _showAnswer(); // Chamar diretamente após parar
   }
 
   void _showAnswer() {

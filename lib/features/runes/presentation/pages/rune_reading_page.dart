@@ -114,16 +114,50 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     const Text('ᚱᚢᚾᚨ', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      'Escolha um Layout',
+                      'Leitura de Runas',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             color: AppColors.lilac,
                           ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'As runas são símbolos do alfabeto rúnico nórdico usado para adivinhação. '
+                      'Cada runa pode aparecer em posição normal ou invertida (quando aplicável), '
+                      'mudando seu significado.',
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.8),
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Runas Invertidas: Quando uma runa aparece de cabeça para baixo, '
+                      'geralmente indica bloqueios ou aspectos desafiadores do significado original.',
+                      style: TextStyle(
+                        color: AppColors.lilac.withOpacity(0.7),
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
 
               const SizedBox(height: 16),
+
+              Text(
+                'Escolha um Layout',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.lilac,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 12),
 
               // Opções de spread
               _buildSpreadOption(

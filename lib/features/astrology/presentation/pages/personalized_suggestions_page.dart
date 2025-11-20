@@ -38,7 +38,7 @@ class _PersonalizedSuggestionsPageState
       final db = await DatabaseHelper.instance.database;
       final charts = await db.query(
         'birth_charts',
-        orderBy: 'created_at DESC',
+        orderBy: 'calculated_at DESC',
         limit: 1,
       );
 
@@ -62,7 +62,10 @@ class _PersonalizedSuggestionsPageState
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar mapa natal: $e')),
+          const SnackBar(
+            content: Text('Erro ao carregar mapa natal. Por favor, crie seu mapa astral primeiro.'),
+            backgroundColor: AppColors.alert,
+          ),
         );
       }
     }
@@ -87,7 +90,10 @@ class _PersonalizedSuggestionsPageState
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao gerar sugestões: $e')),
+          const SnackBar(
+            content: Text('Erro ao gerar sugestões. Tente novamente mais tarde.'),
+            backgroundColor: AppColors.alert,
+          ),
         );
       }
     }

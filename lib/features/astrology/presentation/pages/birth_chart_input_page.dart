@@ -60,6 +60,11 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: const TimeOfDay(hour: 12, minute: 0),
+      helpText: 'Selecione a hora',
+      cancelText: 'Cancelar',
+      confirmText: 'Confirmar',
+      hourLabelText: 'Hora',
+      minuteLabelText: 'Minuto',
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
