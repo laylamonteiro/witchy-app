@@ -124,70 +124,110 @@ class ExternalChartAPI {
       print('📅 DateTime LOCAL (sem TZ): $datetime');
       print('📍 Coordenadas: $latitude,$longitude (API usa para calcular timezone)');
 
-      // Construir URL do endpoint
-      // Nota: Testando diferentes variações do endpoint
-      // Documentação em: https://api.prokerala.com/docs
-      final url = '$_baseUrl/horoscope/natal-chart'; // Tentativa 1: /horoscope/natal-chart
-      print('🌐 Endpoint (tentativa): $url');
+      // Tentar múltiplos endpoints e métodos HTTP possíveis
+      final possibleEndpoints = [
+        {'path': '/astrology/western-horoscope', 'method': 'POST'},
+        {'path': '/horoscope/chart', 'method': 'POST'},
+        {'path': '/astrology/chart', 'method': 'POST'},
+        {'path': '/astrology/birth-details', 'method': 'POST'},
+        {'path': '/astrology/western-horoscope', 'method': 'GET'},
+        {'path': '/horoscope/chart', 'method': 'GET'},
+        {'path': '/astrology/chart', 'method': 'GET'},
+      ];
 
-      // Fazer requisição à API
-      print('📡 Fazendo requisição...');
-      print('📋 Query parameters:');
-      print('   datetime: $datetime');
-      print('   coordinates: $latitude,$longitude');
-      print('   house_system: $houseSystem');
-      print('   la: en');
-      print('🔗 URL completa: $url?datetime=$datetime&coordinates=$latitude,$longitude&house_system=$houseSystem&la=en');
+      Response? response;
+      String? workingUrl;
+      String? workingMethod;
 
-      final response = await _dio.get(
-        url,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $accessToken',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 30),
-          sendTimeout: const Duration(seconds: 30),
-          validateStatus: (status) => true, // Não lançar exceção imediatamente
-        ),
-        queryParameters: {
-          'datetime': datetime,
-          'coordinates': '$latitude,$longitude',
-          'house_system': houseSystem,
-          'la': 'en', // linguagem
-        },
-      );
+      for (final endpointConfig in possibleEndpoints) {
+        final url = '$_baseUrl${endpointConfig['path']}';
+        final method = endpointConfig['method']!;
+        print('🌐 Tentando: $method $url');
 
-      print('📊 Resposta da API: status=${response.statusCode}');
+        try {
+          if (method == 'POST') {
+            response = await _dio.post(
+              url,
+              options: Options(
+                headers: {
+                  'Authorization': 'Bearer $accessToken',
+                  'Content-Type': 'application/json',
+                },
+                receiveTimeout: const Duration(seconds: 30),
+                sendTimeout: const Duration(seconds: 30),
+                validateStatus: (status) => true,
+            ),
+              data: {
+                'datetime': datetime,
+                'coordinates': '$latitude,$longitude',
+                'house_system': houseSystem,
+                'la': 'en',
+              },
+            );
+          } else {
+            response = await _dio.get(
+              url,
+              options: Options(
+                headers: {
+                  'Authorization': 'Bearer $accessToken',
+                  'Content-Type': 'application/json',
+                },
+                receiveTimeout: const Duration(seconds: 30),
+                sendTimeout: const Duration(seconds: 30),
+                validateStatus: (status) => true,
+              ),
+              queryParameters: {
+                'datetime': datetime,
+                'coordinates': '$latitude,$longitude',
+                'house_system': houseSystem,
+                'la': 'en',
+              },
+            );
+          }
 
-      if (response.statusCode == 200) {
-        print('✅ Resposta recebida com sucesso!');
-        return response.data;
-      } else {
-        print('❌ Erro HTTP ${response.statusCode}');
-        print('📄 Body da resposta: ${response.data}');
-        print('📋 Headers da resposta: ${response.headers}');
+          print('📊 Resposta: status=${response.statusCode}');
 
-        // Mensagem específica para cada tipo de erro
-        if (response.statusCode == 404) {
-          throw Exception(
-            'Endpoint não encontrado (404).\n'
-            'URL: $url\n'
-            'Resposta: ${response.data}\n\n'
-            'Possíveis causas:\n'
-            '- Endpoint incorreto na versão da API\n'
-            '- Parâmetros no formato errado\n'
-            '- Funcionalidade não disponível no plano',
-          );
-        } else if (response.statusCode == 400) {
-          throw Exception(
-            'Requisição inválida (400).\n'
-            'Resposta: ${response.data}',
-          );
-        } else {
-          throw Exception('Erro na API: ${response.statusCode}\nResposta: ${response.data}');
+          if (response.statusCode == 200) {
+            workingUrl = url;
+            workingMethod = method;
+            print('✅ Endpoint funcional encontrado: $method $workingUrl');
+            break;
+          } else if (response.statusCode != 404) {
+            // Se não for 404, pode ser outro erro (400, 401, etc)
+            // que nos dá mais informação
+            print('⚠️ Resposta não-404: ${response.statusCode}');
+            print('📄 Body: ${response.data}');
+          }
+        } catch (e) {
+          print('⚠️ Erro ao tentar $method $url: $e');
+          continue;
         }
       }
+
+      if (response == null || workingUrl == null || response.statusCode != 200) {
+        print('❌ Nenhum endpoint funcional encontrado!');
+        print('📋 Endpoints testados:');
+        for (final ep in possibleEndpoints) {
+          print('   - ${ep['method']} $_baseUrl${ep['path']}');
+        }
+
+        if (response != null) {
+          print('📊 Última resposta: ${response.statusCode}');
+          print('📄 Body: ${response.data}');
+        }
+
+        throw Exception(
+          'Nenhum endpoint funcional encontrado.\n'
+          'Endpoints testados:\n${possibleEndpoints.map((e) => '${e['method']} $_baseUrl${e['path']}').join('\n')}\n\n'
+          'Última resposta: ${response?.statusCode} - ${response?.data}\n\n'
+          'DICA: Verifique em https://api.prokerala.com/ se seu plano inclui Astrologia Ocidental (Western)'
+        );
+      }
+
+      print('✅ Resposta recebida com sucesso!');
+      print('   Método: $workingMethod');
+      print('   Endpoint: $workingUrl');
+      return response.data;
     } on DioException catch (e) {
       print('❌ DioException: ${e.response?.statusCode} - ${e.message}');
       print('📄 Resposta completa: ${e.response?.data}');
