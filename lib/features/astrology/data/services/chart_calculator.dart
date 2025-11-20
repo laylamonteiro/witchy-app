@@ -367,6 +367,9 @@ class ChartCalculator {
     final gmst = _calculateGMST(julianDay);
     final lst = gmst + longitude / 15.0; // LST em horas
 
+    print('   ⏰ GMST: ${gmst.toStringAsFixed(6)} horas');
+    print('   🌍 LST: ${lst.toStringAsFixed(6)} horas (${(lst * 15).toStringAsFixed(2)}°)');
+
     // RAMC em graus (0-360)
     final ramc = (lst * 15.0) % 360;
 
@@ -426,10 +429,15 @@ class ChartCalculator {
     houses.sort((a, b) => a.number.compareTo(b.number));
 
     // Log detalhado de todas as casas
-    print('   🏠 CASAS ASTROLÓGICAS:');
+    print('   🏠 CASAS ASTROLÓGICAS (${houses.length} casas):');
     for (final house in houses) {
-      print('      Casa ${house.number}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°)');
+      print('      Casa ${house.number.toString().padLeft(2)}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°${house.minute}\')');
     }
+    print('   ');
+    print('   📊 COMPARAÇÃO COM ASTRO.COM:');
+    print('      Asc esperado: 11°27\' Escorpião (221.463°)');
+    print('      MC esperado: 0°0\' Leão (120.014°)');
+    print('      LST esperado: 8:08:47 (122.196°)');
 
     return houses;
   }

@@ -18,35 +18,14 @@ class GrimoirePage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Grimório Digital'),
-          bottom: TabBar(
+          bottom: const TabBar(
             indicatorColor: AppColors.lilac,
-            isScrollable: false,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+            isScrollable: true,
+            labelPadding: EdgeInsets.symmetric(horizontal: 12),
             tabs: [
-              const Tab(
-                child: Text(
-                  'Meu Grimório',
-                  style: TextStyle(fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Tab(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: const Text(
-                    'Grimório Ancestral',
-                    style: TextStyle(fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              const Tab(
-                child: Text(
-                  'Ferramentas',
-                  style: TextStyle(fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+              Tab(text: 'Meu Grimório'),
+              Tab(text: 'Grimório Ancestral'),
+              Tab(text: 'Ferramentas'),
             ],
           ),
         ),
