@@ -122,5 +122,6 @@ visual-inspo/
 
 # API Credentials (NEVER commit these!)
 **/prokerala_credentials.dart
+**/groq_credentials.dart
 .env
 *.env

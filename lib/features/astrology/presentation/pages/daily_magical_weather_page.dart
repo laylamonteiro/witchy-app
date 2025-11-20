@@ -27,19 +27,28 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
   }
 
   Future<void> _loadWeather() async {
+    print('🌙 DailyMagicalWeatherPage: Iniciando carregamento...');
     setState(() => _isLoading = true);
 
     try {
+      print('📡 DailyMagicalWeatherPage: Chamando getDailyMagicalWeather...');
       final weather = await _interpreter.getDailyMagicalWeather(_selectedDate);
-      if (!mounted) return;
+      print('✅ DailyMagicalWeatherPage: Recebeu weather com ${weather.transits.length} trânsitos');
 
+      if (!mounted) {
+        print('⚠️ DailyMagicalWeatherPage: Widget não está montado, abortando');
+        return;
+      }
+
+      print('📊 DailyMagicalWeatherPage: Atualizando estado...');
       setState(() {
         _weather = weather;
         _isLoading = false;
       });
+      print('✅ DailyMagicalWeatherPage: Estado atualizado! _weather != null: ${_weather != null}');
     } catch (e, stackTrace) {
-      print('Erro ao calcular clima mágico: $e');
-      print('Stack trace: $stackTrace');
+      print('❌ DailyMagicalWeatherPage: ERRO ao calcular clima mágico: $e');
+      print('📋 Stack trace: $stackTrace');
 
       if (!mounted) return;
 
@@ -64,6 +73,8 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('🎨 DailyMagicalWeatherPage.build: _isLoading=$_isLoading, _weather!=null=${_weather != null}');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Clima Mágico Diário'),

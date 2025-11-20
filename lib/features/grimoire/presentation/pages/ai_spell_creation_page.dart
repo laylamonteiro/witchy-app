@@ -35,7 +35,10 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   }
 
   Future<void> _generateSpell() async {
+    print('✨ AISpellCreationPage: Iniciando geração de feitiço...');
+
     if (_intentionController.text.trim().isEmpty) {
+      print('⚠️ AISpellCreationPage: Texto vazio, abortando');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Descreva sua intenção primeiro'),
@@ -45,33 +48,53 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       return;
     }
 
+    print('📝 AISpellCreationPage: Intenção: "${_intentionController.text.trim()}"');
+
     setState(() {
       _isGenerating = true;
       _generatedSpell = null;
     });
 
     try {
+      print('🤖 AISpellCreationPage: Chamando AIService.generateSpell...');
       final aiService = AIService.instance;
       final spell = await aiService.generateSpell(
         _intentionController.text.trim(),
       );
 
+      print('✅ AISpellCreationPage: Feitiço gerado com sucesso!');
+      print('   Título: ${spell.title}');
+      print('   Categoria: ${spell.category}');
+
+      if (!mounted) {
+        print('⚠️ AISpellCreationPage: Widget não está montado, abortando');
+        return;
+      }
+
       setState(() {
         _generatedSpell = spell;
       });
-    } catch (e) {
+      print('✅ AISpellCreationPage: Estado atualizado com feitiço');
+    } catch (e, stackTrace) {
+      print('❌ AISpellCreationPage: ERRO ao gerar feitiço: $e');
+      print('📋 Stack trace: ${stackTrace.toString().split('\n').take(5).join('\n')}');
+
       if (!mounted) return;
 
       String errorMessage = 'O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.';
 
       if (e.toString().contains('limit') || e.toString().contains('quota') || e.toString().contains('usage') || e.toString().contains('429')) {
         errorMessage = 'O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos.';
+        print('⚠️ AISpellCreationPage: Limite de requisições atingido (429)');
       } else if (e.toString().contains('autenticação') || e.toString().contains('authentication') || e.toString().contains('401')) {
         errorMessage = 'Erro temporário no serviço místico. Tente novamente em instantes.';
+        print('⚠️ AISpellCreationPage: Erro de autenticação (401)');
       } else if (e.toString().contains('network') || e.toString().contains('connection') || e.toString().contains('timeout')) {
         errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+        print('⚠️ AISpellCreationPage: Erro de rede/timeout');
       } else if (e.toString().contains('503')) {
         errorMessage = 'O portal místico está temporariamente fechado. Tente novamente em alguns minutos.';
+        print('⚠️ AISpellCreationPage: Serviço indisponível (503)');
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -86,6 +109,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
         setState(() {
           _isGenerating = false;
         });
+        print('✅ AISpellCreationPage: Finalizou (isGenerating=false)');
       }
     }
   }
@@ -110,6 +134,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('🎨 AISpellCreationPage.build: _isGenerating=$_isGenerating, _generatedSpell!=null=${_generatedSpell != null}, text.length=${_intentionController.text.length}');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Conselheiro Místico'),

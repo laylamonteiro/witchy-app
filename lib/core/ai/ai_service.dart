@@ -2,16 +2,13 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
+import 'groq_credentials.dart';
 
 /// Serviço de IA usando Groq (gratuito, sem API key necessária)
 class AIService {
   static final AIService instance = AIService._();
 
   AIService._();
-
-  // TODO: Obtenha sua API key gratuita em: https://console.groq.com/keys
-  // Groq é 100% gratuito e muito rápido. Basta criar conta e gerar a chave.
-  static const _groqApiKey = 'SUBSTITUA_PELA_SUA_CHAVE_GROQ_AQUI';
 
   final Dio _dio = Dio();
 
@@ -31,7 +28,7 @@ class AIService {
         'https://api.groq.com/openai/v1/chat/completions',
         options: Options(
           headers: {
-            'Authorization': 'Bearer $_groqApiKey',
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
             'Content-Type': 'application/json',
           },
           receiveTimeout: const Duration(seconds: 30),

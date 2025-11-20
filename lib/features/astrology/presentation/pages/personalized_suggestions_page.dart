@@ -42,9 +42,11 @@ class _PersonalizedSuggestionsPageState
   }
 
   Future<void> _loadNatalChart() async {
+    print('🔮 PersonalizedSuggestionsPage: Iniciando carregamento mapa natal...');
     setState(() => _isLoading = true);
 
     try {
+      print('📂 PersonalizedSuggestionsPage: Buscando no banco...');
       final db = await DatabaseHelper.instance.database;
       final charts = await db.query(
         'birth_charts',
@@ -53,6 +55,7 @@ class _PersonalizedSuggestionsPageState
       );
 
       if (charts.isNotEmpty) {
+        print('✅ PersonalizedSuggestionsPage: Mapa natal encontrado!');
         final chartData = charts.first['chart_data'] as String;
         final chart = BirthChartModel.fromJsonString(chartData);
 
@@ -60,15 +63,19 @@ class _PersonalizedSuggestionsPageState
           _natalChart = chart;
           _hasNatalChart = true;
         });
+        print('📊 PersonalizedSuggestionsPage: Estado atualizado, carregando sugestões...');
 
         await _loadSuggestions();
       } else {
+        print('⚠️ PersonalizedSuggestionsPage: Nenhum mapa natal encontrado');
         setState(() {
           _hasNatalChart = false;
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ PersonalizedSuggestionsPage: ERRO ao carregar mapa natal: $e');
+      print('📋 Stack trace: $stackTrace');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -83,41 +90,49 @@ class _PersonalizedSuggestionsPageState
 
   Future<void> _loadSuggestions() async {
     if (_natalChart == null) {
-      print('⚠️ Não pode gerar sugestões: mapa natal não encontrado');
+      print('⚠️ PersonalizedSuggestionsPage: Não pode gerar sugestões: mapa natal não encontrado');
       return;
     }
 
+    print('📡 PersonalizedSuggestionsPage: Gerando sugestões...');
     setState(() => _isLoading = true);
 
     try {
-      print('📊 Gerando sugestões personalizadas...');
+      print('📊 PersonalizedSuggestionsPage: Chamando generatePersonalizedSuggestions...');
       final suggestions = await _interpreter.generatePersonalizedSuggestions(
         _selectedDate,
         _natalChart!,
       );
 
-      print('✅ ${suggestions.length} sugestões geradas');
+      print('✅ PersonalizedSuggestionsPage: ${suggestions.length} sugestões geradas');
+
+      if (!mounted) {
+        print('⚠️ PersonalizedSuggestionsPage: Widget não está montado, abortando');
+        return;
+      }
+
       setState(() {
         _suggestions = suggestions;
         _isLoading = false;
       });
+      print('✅ PersonalizedSuggestionsPage: Estado atualizado! _suggestions.length=${_suggestions?.length}');
     } catch (e, stackTrace) {
-      print('❌ Erro ao gerar sugestões: $e');
-      print('Stack trace: $stackTrace');
+      print('❌ PersonalizedSuggestionsPage: ERRO ao gerar sugestões: $e');
+      print('📋 Stack trace: $stackTrace');
+
+      if (!mounted) return;
 
       setState(() {
         _suggestions = [];
         _isLoading = false;
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erro ao gerar sugestões. Tente novamente mais tarde.'),
-            backgroundColor: AppColors.alert,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao gerar sugestões. Tente novamente mais tarde.'),
+          backgroundColor: AppColors.alert,
+        ),
+      );
     }
   }
 
@@ -131,6 +146,8 @@ class _PersonalizedSuggestionsPageState
 
   @override
   Widget build(BuildContext context) {
+    print('🎨 PersonalizedSuggestionsPage.build: _isLoading=$_isLoading, _hasNatalChart=$_hasNatalChart, _suggestions?.length=${_suggestions?.length}');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sugestões Personalizadas'),

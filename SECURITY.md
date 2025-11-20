@@ -130,3 +130,66 @@ Se você descobrir qualquer uso não autorizado das credenciais antigas, por fav
 
 **Última atualização:** 20/11/2025
 **Status:** Correções implementadas, aguardando revogação manual
+
+---
+
+## 🔐 Sistema de Credenciais Seguras
+
+### APIs Configuradas
+
+O app utiliza duas APIs externas que requerem credenciais:
+
+#### 1. Prokerala API (Mapas Astrais)
+**Arquivo:** `lib/features/astrology/data/services/prokerala_credentials.dart`
+- **Client ID**: OAuth 2.0 Client ID
+- **Client Secret**: OAuth 2.0 Client Secret
+- **Como obter**: https://api.prokerala.com/
+- **Custo**: Plano gratuito disponível
+
+#### 2. Groq API (IA para Feitiços)
+**Arquivo:** `lib/core/ai/groq_credentials.dart`
+- **API Key**: Chave de autenticação Bearer
+- **Como obter**: https://console.groq.com/keys
+- **Custo**: 100% gratuito
+
+### Estrutura de Arquivos
+
+```
+Prokerala:
+lib/features/astrology/data/services/
+├── prokerala_credentials.example.dart  ✅ (Git) - Template
+├── prokerala_credentials.dart          🔒 (Local) - Credenciais reais
+└── external_chart_api.dart             ✅ (Git) - Código
+
+Groq:
+lib/core/ai/
+├── groq_credentials.example.dart       ✅ (Git) - Template
+├── groq_credentials.dart               🔒 (Local) - Credenciais reais
+└── ai_service.dart                     ✅ (Git) - Código
+```
+
+### Proteções no .gitignore
+
+```gitignore
+# API Credentials (NEVER commit these!)
+**/prokerala_credentials.dart
+**/groq_credentials.dart
+.env
+*.env
+```
+
+### Configuração Inicial
+
+Para desenvolvedores que clonarem o repositório:
+
+```bash
+# 1. Copiar templates
+cd lib/features/astrology/data/services/
+cp prokerala_credentials.example.dart prokerala_credentials.dart
+
+cd lib/core/ai/
+cp groq_credentials.example.dart groq_credentials.dart
+
+# 2. Editar arquivos com suas credenciais reais
+# 3. NUNCA commitar os arquivos *_credentials.dart
+```
