@@ -493,12 +493,6 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                             if (placemark != null) {
                               final parts = <String>[];
 
-                              // Adicionar sublocality (bairro/distrito) se disponível
-                              if (placemark.subLocality != null &&
-                                  placemark.subLocality!.isNotEmpty) {
-                                parts.add(placemark.subLocality!);
-                              }
-
                               if (placemark.locality != null &&
                                   placemark.locality!.isNotEmpty) {
                                 parts.add(placemark.locality!);
