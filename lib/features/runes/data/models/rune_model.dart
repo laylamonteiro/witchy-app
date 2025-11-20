@@ -12,6 +12,29 @@ class Rune {
     required this.description,
   });
 
+  // Aliases para compatibilidade
+  String get meaning => description;
+  String get divination => description;
+  String? get reversedMeaning => null; // Runas podem ser interpretadas ao contrário
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'symbol': symbol,
+      'keywords': keywords,
+      'description': description,
+    };
+  }
+
+  factory Rune.fromJson(Map<String, dynamic> json) {
+    return Rune(
+      name: json['name'],
+      symbol: json['symbol'],
+      keywords: List<String>.from(json['keywords']),
+      description: json['description'],
+    );
+  }
+
   /// Lista completa das 24 runas do Futhark Antigo
   static List<Rune> getAllRunes() {
     return [

@@ -96,7 +96,7 @@ class RunePosition {
   factory RunePosition.fromJson(Map<String, dynamic> json) {
     return RunePosition(
       position: json['position'],
-      rune: RuneModel.fromJson(json['rune']),
+      rune: Rune.fromJson(json['rune']),
       isReversed: json['isReversed'],
       positionMeaning: json['positionMeaning'],
     );
