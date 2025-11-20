@@ -84,6 +84,14 @@ class SigilWheelPainter extends CustomPainter {
 
       // Círculo principal
       canvas.drawCircle(center, maxRadius, circlePaint);
+
+      // Círculo dourado ao redor das letras externas
+      final outerCirclePaint = Paint()
+        ..color = const Color(0xFFFFD700) // Dourado
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
+
+      canvas.drawCircle(center, maxRadius + 35, outerCirclePaint);
     }
 
     // Desenha as letras
