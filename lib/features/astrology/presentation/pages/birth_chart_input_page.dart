@@ -407,8 +407,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Digite o nome da cidade. Serão buscadas cidades no Brasil automaticamente. '
-                      'Confira as coordenadas para garantir precisão.',
+                      'Digite o nome da cidade e escolha da lista. '
+                      'As coordenadas serão obtidas automaticamente.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.softWhite.withOpacity(0.7),
                           ),
@@ -567,11 +567,12 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Local selecionado: $_birthPlace\n'
-                                'Coordenadas: ${_selectedLatitude!.toStringAsFixed(4)}, ${_selectedLongitude!.toStringAsFixed(4)}',
+                                '✓ $_birthPlace\n'
+                                'Lat: ${_selectedLatitude!.toStringAsFixed(4)}, Lon: ${_selectedLongitude!.toStringAsFixed(4)}',
                                 style: TextStyle(
                                   color: AppColors.success,
                                   fontSize: 12,
+                                  height: 1.4,
                                 ),
                               ),
                             ),
