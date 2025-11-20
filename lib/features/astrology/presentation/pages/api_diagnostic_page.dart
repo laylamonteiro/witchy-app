@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/database/database_helper.dart';
 import '../../data/services/external_chart_api.dart';
+import '../../data/services/transit_interpreter.dart';
+import '../../data/models/birth_chart_model.dart';
 
 /// Página de diagnóstico da API Prokerala
 /// Testa credenciais e exibe logs detalhados
@@ -17,8 +20,12 @@ class _APIDiagnosticPageState extends State<APIDiagnosticPage> {
   final List<String> _logs = [];
   bool _isTestingToken = false;
   bool _isTestingChart = false;
+  bool _isTestingWeather = false;
+  bool _isTestingSuggestions = false;
   String? _tokenResult;
   String? _chartResult;
+  String? _weatherResult;
+  String? _suggestionsResult;
 
   void _addLog(String message) {
     setState(() {
@@ -128,6 +135,125 @@ class _APIDiagnosticPageState extends State<APIDiagnosticPage> {
     } finally {
       setState(() {
         _isTestingChart = false;
+      });
+    }
+  }
+
+  Future<void> _testWeather() async {
+    setState(() {
+      _isTestingWeather = true;
+      _weatherResult = null;
+      _logs.clear();
+    });
+
+    _addLog('🌙 Iniciando teste do Clima Mágico Diário...');
+
+    try {
+      final interpreter = TransitInterpreter();
+      final date = DateTime.now();
+
+      _addLog('📅 Data: ${date.day}/${date.month}/${date.year}');
+      _addLog('📡 Calculando trânsitos planetários...');
+
+      final weather = await interpreter.getDailyMagicalWeather(date);
+
+      _addLog('✅ CLIMA MÁGICO CALCULADO!');
+      _addLog('   - ${weather.transits.length} trânsitos');
+      _addLog('   - Lua: ${weather.moonSign.name} (${weather.moonPhase})');
+      _addLog('   - Energia: ${weather.overallEnergy.name}');
+
+      String resultText = '✅ Clima Mágico funcionando!\n\n';
+      resultText += 'Trânsitos: ${weather.transits.length}\n';
+      resultText += 'Fase Lunar: ${weather.moonPhase}\n';
+      resultText += 'Lua em: ${weather.moonSign.displayName}\n';
+      resultText += 'Energia: ${weather.overallEnergy.displayName}\n';
+      resultText += 'Práticas: ${weather.recommendedPractices.length}';
+
+      setState(() {
+        _weatherResult = resultText;
+      });
+    } catch (e, stackTrace) {
+      _addLog('❌ ERRO NO CLIMA MÁGICO: $e');
+      _addLog('📋 Stack: ${stackTrace.toString().split('\n').take(5).join('\n')}');
+
+      setState(() {
+        _weatherResult = '❌ Erro ao calcular clima mágico:\n\n$e\n\n${stackTrace.toString().split('\n').take(3).join('\n')}';
+      });
+    } finally {
+      setState(() {
+        _isTestingWeather = false;
+      });
+    }
+  }
+
+  Future<void> _testSuggestions() async {
+    setState(() {
+      _isTestingSuggestions = true;
+      _suggestionsResult = null;
+      _logs.clear();
+    });
+
+    _addLog('🔮 Iniciando teste de Sugestões Personalizadas...');
+
+    try {
+      _addLog('📂 Buscando mapa natal no banco de dados...');
+
+      final db = await DatabaseHelper.instance.database;
+      final charts = await db.query(
+        'birth_charts',
+        orderBy: 'calculated_at DESC',
+        limit: 1,
+      );
+
+      if (charts.isEmpty) {
+        _addLog('⚠️ Nenhum mapa natal encontrado!');
+        setState(() {
+          _suggestionsResult = '⚠️ Você precisa criar um mapa natal primeiro!\n\nVá em: Astrologia → Mapa Astral';
+        });
+        setState(() => _isTestingSuggestions = false);
+        return;
+      }
+
+      _addLog('✅ Mapa natal encontrado');
+
+      final chartData = charts.first['chart_data'] as String;
+      final chart = BirthChartModel.fromJsonString(chartData);
+
+      _addLog('📊 Mapa natal:');
+      _addLog('   - ${chart.planets.length} planetas');
+      _addLog('   - ${chart.houses.length} casas');
+
+      final interpreter = TransitInterpreter();
+      final date = DateTime.now();
+
+      _addLog('📡 Gerando sugestões personalizadas...');
+      final suggestions = await interpreter.generatePersonalizedSuggestions(date, chart);
+
+      _addLog('✅ SUGESTÕES GERADAS!');
+      _addLog('   - ${suggestions.length} sugestões');
+
+      String resultText = '✅ Sugestões Personalizadas funcionando!\n\n';
+      resultText += 'Mapa natal: Encontrado\n';
+      resultText += 'Sugestões geradas: ${suggestions.length}\n';
+      if (suggestions.isNotEmpty) {
+        resultText += '\nExemplo:\n';
+        resultText += '"${suggestions.first.title}"\n';
+        resultText += 'Prioridade: ${suggestions.first.priority.displayName}';
+      }
+
+      setState(() {
+        _suggestionsResult = resultText;
+      });
+    } catch (e, stackTrace) {
+      _addLog('❌ ERRO NAS SUGESTÕES: $e');
+      _addLog('📋 Stack: ${stackTrace.toString().split('\n').take(5).join('\n')}');
+
+      setState(() {
+        _suggestionsResult = '❌ Erro ao gerar sugestões:\n\n$e\n\n${stackTrace.toString().split('\n').take(3).join('\n')}';
+      });
+    } finally {
+      setState(() {
+        _isTestingSuggestions = false;
       });
     }
   }
@@ -329,6 +455,166 @@ class _APIDiagnosticPageState extends State<APIDiagnosticPage> {
                       ),
                       child: Text(
                         _chartResult!,
+                        style: TextStyle(
+                          color: AppColors.softWhite.withOpacity(0.9),
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Teste de Clima Mágico
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Row(
+                    children: [
+                      Text('🌙', style: TextStyle(fontSize: 24)),
+                      SizedBox(width: 12),
+                      Text(
+                        'Teste 3: Clima Mágico Diário',
+                        style: TextStyle(
+                          color: AppColors.lilac,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Testa se a página Clima Mágico carrega corretamente.',
+                    style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _isTestingWeather ? null : _testWeather,
+                    icon: _isTestingWeather
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.darkBackground,
+                            ),
+                          )
+                        : const Icon(Icons.nights_stay),
+                    label: Text(_isTestingWeather ? 'Testando...' : 'Testar Clima Mágico'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.lilac,
+                      foregroundColor: AppColors.darkBackground,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  if (_weatherResult != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _weatherResult!.startsWith('✅')
+                            ? AppColors.success.withOpacity(0.2)
+                            : AppColors.alert.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _weatherResult!.startsWith('✅')
+                              ? AppColors.success
+                              : AppColors.alert,
+                        ),
+                      ),
+                      child: Text(
+                        _weatherResult!,
+                        style: TextStyle(
+                          color: AppColors.softWhite.withOpacity(0.9),
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Teste de Sugestões Personalizadas
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Row(
+                    children: [
+                      Text('🔮', style: TextStyle(fontSize: 24)),
+                      SizedBox(width: 12),
+                      Text(
+                        'Teste 4: Sugestões Personalizadas',
+                        style: TextStyle(
+                          color: AppColors.lilac,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Testa se as Sugestões Personalizadas carregam corretamente.',
+                    style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _isTestingSuggestions ? null : _testSuggestions,
+                    icon: _isTestingSuggestions
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.darkBackground,
+                            ),
+                          )
+                        : const Icon(Icons.auto_awesome),
+                    label: Text(_isTestingSuggestions ? 'Testando...' : 'Testar Sugestões'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.lilac,
+                      foregroundColor: AppColors.darkBackground,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  if (_suggestionsResult != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _suggestionsResult!.startsWith('✅')
+                            ? AppColors.success.withOpacity(0.2)
+                            : _suggestionsResult!.startsWith('⚠️')
+                                ? Colors.orange.withOpacity(0.2)
+                                : AppColors.alert.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _suggestionsResult!.startsWith('✅')
+                              ? AppColors.success
+                              : _suggestionsResult!.startsWith('⚠️')
+                                  ? Colors.orange
+                                  : AppColors.alert,
+                        ),
+                      ),
+                      child: Text(
+                        _suggestionsResult!,
                         style: TextStyle(
                           color: AppColors.softWhite.withOpacity(0.9),
                           fontSize: 12,
