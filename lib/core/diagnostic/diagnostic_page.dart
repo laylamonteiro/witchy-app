@@ -43,14 +43,32 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   }
 
   void _copyLogs() {
+    print('📋 Copiando logs: ${_logs.length} linhas');
+    print('📋 Primeiras 3 linhas: ${_logs.take(3).join(" | ")}');
+    print('📋 Últimas 3 linhas: ${_logs.skip(_logs.length - 3).join(" | ")}');
+
     final logsText = _logs.join('\n');
-    Clipboard.setData(ClipboardData(text: logsText));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${_logs.length} linhas copiadas para a área de transferência'),
-        backgroundColor: AppColors.success,
-      ),
-    );
+
+    print('📋 Texto total: ${logsText.length} caracteres');
+    print('📋 Número de quebras de linha: ${'\n'.allMatches(logsText).length}');
+
+    Clipboard.setData(ClipboardData(text: logsText)).then((_) {
+      print('✅ Logs copiados com sucesso!');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '✅ ${_logs.length} linhas copiadas!\n'
+            '${logsText.length} caracteres no total',
+            style: const TextStyle(fontSize: 13),
+          ),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    });
   }
 
   Future<void> _testGroqAPI() async {
@@ -275,10 +293,12 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         ),
         actions: [
           if (_logs.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.copy),
-              onPressed: _copyLogs,
-              tooltip: 'Copiar logs',
+            Tooltip(
+              message: 'Copiar TODOS os logs (${_logs.length} linhas)',
+              child: IconButton(
+                icon: const Icon(Icons.copy),
+                onPressed: _copyLogs,
+              ),
             ),
         ],
       ),
@@ -411,11 +431,38 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
           if (_logs.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Text(
-              'Logs de Diagnóstico',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.lilac,
+            Row(
+              children: [
+                Text(
+                  'Logs de Diagnóstico',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.lilac,
+                      ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.lilac.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: AppColors.lilac),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Use o botão 📋 acima para copiar',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.lilac,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             MagicalCard(
