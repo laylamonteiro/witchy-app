@@ -55,7 +55,15 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     });
 
     try {
-      final locations = await locationFromAddress(query);
+      // Adicionar ", Brasil" se não especificar país para resultados mais precisos
+      String searchQuery = query;
+      if (!query.toLowerCase().contains('brasil') &&
+          !query.toLowerCase().contains('brazil') &&
+          !query.toLowerCase().contains(',')) {
+        searchQuery = '$query, Brasil';
+      }
+
+      final locations = await locationFromAddress(searchQuery);
 
       // Get placemarks for each location to show readable addresses
       final placemarks = <Placemark>[];
@@ -399,7 +407,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Digite pelo menos 3 caracteres para buscar',
+                      'Digite o nome da cidade. Serão buscadas cidades no Brasil automaticamente. '
+                      'Confira as coordenadas para garantir precisão.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.softWhite.withOpacity(0.7),
                           ),
@@ -410,7 +419,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       focusNode: _birthPlaceFocusNode,
                       style: const TextStyle(color: AppColors.softWhite),
                       decoration: InputDecoration(
-                        hintText: 'Ex: São Paulo, Brasil',
+                        hintText: 'Ex: Campinas, Bueno Brandão, São Paulo...',
                         hintStyle: TextStyle(
                           color: AppColors.softWhite.withOpacity(0.5),
                         ),
@@ -432,7 +441,12 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                   ),
                                 ),
                               )
-                            : null,
+                            : (_selectedLatitude != null && _selectedLongitude != null)
+                                ? const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.success,
+                                  )
+                                : null,
                         filled: true,
                         fillColor: AppColors.cardBackground,
                         border: OutlineInputBorder(
@@ -472,26 +486,37 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                 ? _placemarkSuggestions[index]
                                 : null;
 
+                            final loc = _locationSuggestions[index];
                             String displayText;
+                            String coordsText = 'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
+
                             if (placemark != null) {
                               final parts = <String>[];
+
+                              // Adicionar sublocality (bairro/distrito) se disponível
+                              if (placemark.subLocality != null &&
+                                  placemark.subLocality!.isNotEmpty) {
+                                parts.add(placemark.subLocality!);
+                              }
+
                               if (placemark.locality != null &&
                                   placemark.locality!.isNotEmpty) {
                                 parts.add(placemark.locality!);
                               }
+
                               if (placemark.administrativeArea != null &&
                                   placemark.administrativeArea!.isNotEmpty) {
                                 parts.add(placemark.administrativeArea!);
                               }
+
                               if (placemark.country != null &&
                                   placemark.country!.isNotEmpty) {
                                 parts.add(placemark.country!);
                               }
+
                               displayText = parts.join(', ');
                             } else {
-                              final loc = _locationSuggestions[index];
-                              displayText =
-                                  'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
+                              displayText = coordsText;
                             }
 
                             return ListTile(
@@ -508,9 +533,49 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                   fontSize: 14,
                                 ),
                               ),
+                              subtitle: Text(
+                                coordsText,
+                                style: TextStyle(
+                                  color: AppColors.softWhite.withOpacity(0.6),
+                                  fontSize: 11,
+                                ),
+                              ),
                               onTap: () => _selectLocation(index),
                             );
                           },
+                        ),
+                      ),
+                    ],
+                    if (_selectedLatitude != null && _selectedLongitude != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.success.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: AppColors.success,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Local selecionado: $_birthPlace\n'
+                                'Coordenadas: ${_selectedLatitude!.toStringAsFixed(4)}, ${_selectedLongitude!.toStringAsFixed(4)}',
+                                style: TextStyle(
+                                  color: AppColors.success,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
