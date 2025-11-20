@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/metal_model.dart';
+import '../../data/models/crystal_model.dart'; // Para ElementExtension
+import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 
