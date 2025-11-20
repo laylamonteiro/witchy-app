@@ -20,7 +20,7 @@ class TransitCalculator {
       transits.add(Transit(
         planet: planet,
         sign: position.sign,
-        degree: position.degree,
+        degree: position.degree.toDouble(),
         isRetrograde: position.isRetrograde,
       ));
     }
@@ -43,7 +43,7 @@ class TransitCalculator {
       // Verificar aspectos com planetas natais
       for (final natalPlanet in natalChart.planets) {
         final natalLongitude =
-            _getAbsoluteLongitude(natalPlanet.sign, natalPlanet.degree);
+            _getAbsoluteLongitude(natalPlanet.sign, natalPlanet.degree.toDouble());
 
         // Calcular diferença angular
         var diff = (transitLongitude - natalLongitude).abs();

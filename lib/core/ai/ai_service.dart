@@ -217,20 +217,16 @@ class AIService {
     }
   }
 
-  String? _parseMoonPhase(String? phase) {
+  MoonPhase? _parseMoonPhase(String? phase) {
     if (phase == null) return null;
-    // Mapear para os valores usados no app
-    final phaseMap = {
-      'newMoon': 'Nova',
-      'waxingCrescent': 'Crescente',
-      'firstQuarter': 'Quarto Crescente',
-      'waxingGibbous': 'Crescente Gibosa',
-      'fullMoon': 'Cheia',
-      'waningGibbous': 'Minguante Gibosa',
-      'lastQuarter': 'Quarto Minguante',
-      'waningCrescent': 'Minguante',
-    };
-    return phaseMap[phase] ?? 'Qualquer';
+    try {
+      return MoonPhase.values.firstWhere(
+        (e) => e.name == phase,
+        orElse: () => MoonPhase.newMoon,
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
   String _buildSystemPrompt() {
