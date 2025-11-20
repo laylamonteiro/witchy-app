@@ -43,21 +43,24 @@ class SigilWheel {
   };
   
   // Converte texto em sequência para sigilo
+  // Remove TODAS as letras duplicadas (método tradicional da Roda das Bruxas)
   static List<String> textToSigilSequence(String text) {
     // Normaliza: maiúsculas e remove acentos
     String normalized = _normalizeText(text.toUpperCase());
-    
+
     // Remove espaços e caracteres não-alfabéticos
     normalized = normalized.replaceAll(RegExp(r'[^A-Z]'), '');
-    
-    // Remove vogais repetidas consecutivas (mantém a primeira ocorrência)
-    String withoutRepeatedVowels = _removeRepeatedVowels(normalized);
-    
-    // Remove consoantes duplicadas consecutivas
-    String withoutDuplicates = _removeDuplicates(withoutRepeatedVowels);
-    
+
+    // Remove TODAS as letras duplicadas, mantendo apenas primeira ocorrência
+    String uniqueLetters = '';
+    for (int i = 0; i < normalized.length; i++) {
+      if (!uniqueLetters.contains(normalized[i])) {
+        uniqueLetters += normalized[i];
+      }
+    }
+
     // Converte em lista de caracteres
-    return withoutDuplicates.split('');
+    return uniqueLetters.split('');
   }
   
   // Remove acentos e normaliza texto

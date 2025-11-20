@@ -165,7 +165,7 @@ class SigilStep2LettersPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildStep('1. Acentos foram normalizados'),
                   _buildStep('2. Espaços e símbolos foram removidos'),
-                  _buildStep('3. Vogais e consoantes repetidas consecutivas foram simplificadas'),
+                  _buildStep('3. Letras duplicadas foram eliminadas (mantém apenas a primeira ocorrência)'),
                   const SizedBox(height: 12),
                   Text(
                     'Esta sequência simplificada será conectada na Roda das Bruxas '
