@@ -63,7 +63,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       );
 
       print('✅ AISpellCreationPage: Feitiço gerado com sucesso!');
-      print('   Título: ${spell.title}');
+      print('   Nome: ${spell.name}');
       print('   Categoria: ${spell.category}');
 
       if (!mounted) {
