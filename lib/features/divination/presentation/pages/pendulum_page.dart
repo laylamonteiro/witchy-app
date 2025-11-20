@@ -171,7 +171,12 @@ class _PendulumPageState extends State<PendulumPage>
             MagicalCard(
               child: TextField(
                 controller: _questionController,
-                style: const TextStyle(color: AppColors.softWhite),
+                enabled: _answer == null && !_isSwinging,
+                style: TextStyle(
+                  color: (_answer == null && !_isSwinging)
+                      ? AppColors.softWhite
+                      : AppColors.softWhite.withOpacity(0.5),
+                ),
                 decoration: InputDecoration(
                   labelText: 'Sua Pergunta',
                   labelStyle: const TextStyle(color: AppColors.lilac),
@@ -188,6 +193,12 @@ class _PendulumPageState extends State<PendulumPage>
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
                       color: AppColors.lilac.withOpacity(0.3),
+                    ),
+                  ),
+                  disabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.lilac.withOpacity(0.1),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
