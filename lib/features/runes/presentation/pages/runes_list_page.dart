@@ -66,6 +66,7 @@ class RunesListPage extends StatelessWidget {
             Text(
               'Futhark Antigo',
               style: Theme.of(context).textTheme.headlineMedium,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
 
