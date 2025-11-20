@@ -19,7 +19,7 @@ class SpellDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalhes do Feitiço'),
+        title: const Text('Detalhes'),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
