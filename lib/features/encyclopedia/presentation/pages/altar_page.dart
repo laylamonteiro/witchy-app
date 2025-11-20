@@ -89,7 +89,7 @@ class AltarPage extends StatelessWidget {
                     '4. Represente os 4 elementos',
                     'Cada elemento traz uma energia essencial para o altar:\n\n'
                     '🌍 Terra (Norte): Cristais, sal, pedras, plantas, pentáculo\n'
-                    '💧 Água (Oeste): Taça com água, conchas, água lunar\n'
+                    '🌊 Água (Oeste): Taça com água, conchas, água lunar\n'
                     '🔥 Fogo (Sul): Vela, caldeirão, athame\n'
                     '💨 Ar (Leste): Incenso, penas, sinos, varinha\n\n'
                     '💡 Dica: Posicione cada elemento na direção cardeal correspondente quando possível.',
@@ -116,7 +116,7 @@ class AltarPage extends StatelessWidget {
                   _buildItem(context, '💎 Cristais', 'Amplificam energia e trazem propriedades específicas (quartzo rosa para amor, ametista para espiritualidade).'),
                   _buildItem(context, '🌿 Ervas', 'Secas ou frescas, cada erva tem correspondências mágicas únicas.'),
                   _buildItem(context, '🔮 Objetos simbólicos', 'Pentáculo, símbolos lunares, runas, tarot, estatuetas de divindades.'),
-                  _buildItem(context, '💧 Taça com água', 'Elemento Água, pode ser trocada regularmente ou usada em rituais.'),
+                  _buildItem(context, '🌊 Taça com água', 'Elemento Água, pode ser trocada regularmente ou usada em rituais.'),
                   _buildItem(context, '🧂 Sal', 'Purificação e proteção, representa a Terra.'),
                   _buildItem(context, '📿 Incenso', 'Elemento Ar, limpa energia e eleva vibrações.'),
                   _buildItem(context, '📖 Grimório', 'Seu livro de sombras ou diário de práticas.'),
@@ -200,7 +200,7 @@ class AltarPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildMethod(context, '🔥 Defumação', 'Use alecrim, arruda, sálvia, ou pau santo. Passe a fumaça por todo o altar e objetos com intenção de limpeza.'),
-                  _buildMethod(context, '💧 Água e sal', 'Borrife água com sal grosso (ou água lunar) pelo espaço. Cuidado com objetos que não podem molhar.'),
+                  _buildMethod(context, '🌊 Água e sal', 'Borrife água com sal grosso (ou água lunar) pelo espaço. Cuidado com objetos que não podem molhar.'),
                   _buildMethod(context, '🔔 Som', 'Use sinos, tigelas tibetanas ou palmas para quebrar energia estagnada.'),
                   _buildMethod(context, '🌙 Luz da lua', 'Deixe objetos sob a luz da lua cheia para limpeza energética profunda.'),
                   _buildMethod(context, '🧘 Visualização', 'Visualize luz branca ou dourada preenchendo o altar e dissolvendo energias densas.'),

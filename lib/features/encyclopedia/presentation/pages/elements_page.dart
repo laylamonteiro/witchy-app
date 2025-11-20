@@ -27,7 +27,7 @@ class ElementsPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Text('✨', style: TextStyle(fontSize: 32)),
+                      const Text('∞', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
                       Text(
                         'Sobre os 4 Elementos',
@@ -132,7 +132,7 @@ class ElementsPage extends StatelessWidget {
             // ÁGUA
             ExpansionMagicalCard(
               title: 'Água',
-              emoji: '💧',
+              emoji: '🌊',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -362,7 +362,7 @@ class ElementsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildBalanceItem('🌍 Terra', 'Nosso corpo físico e recursos materiais'),
-                  _buildBalanceItem('💧 Água', 'Nossas emoções e relacionamentos'),
+                  _buildBalanceItem('🌊 Água', 'Nossas emoções e relacionamentos'),
                   _buildBalanceItem('🔥 Fogo', 'Nossa energia e poder pessoal'),
                   _buildBalanceItem('💨 Ar', 'Nossa mente e comunicação'),
                   const SizedBox(height: 16),
@@ -461,7 +461,7 @@ class ElementsPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Center(
                     child: Text(
-                      '🌍💧🔥💨',
+                      '🌍🌊🔥💨',
                       style: TextStyle(fontSize: 32),
                     ),
                   ),
