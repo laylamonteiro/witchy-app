@@ -172,9 +172,9 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
       _addLog('✅ CLIMA CALCULADO!');
       _addLog('   Trânsitos: ${weather.transits.length}');
-      _addLog('   Lua: ${weather.moonPhase?.name ?? "N/A"}');
-      _addLog('   Energia: ${weather.energy.name}');
-      _addLog('   Elementos: ${weather.dominantElements.join(", ")}');
+      _addLog('   Lua: ${weather.moonPhase ?? "N/A"}');
+      _addLog('   Energia: ${weather.overallEnergy.name}');
+      _addLog('   Palavras-chave: ${weather.energyKeywords.join(", ")}');
 
       setState(() {
         _result = 'SUCESSO: Clima calculado!';
@@ -220,7 +220,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       _addLog('✅ Mapa encontrado');
 
       final mapData = maps.first;
-      final chart = BirthChartModel.fromMap(mapData);
+      final chart = BirthChartModel.fromJson(mapData);
 
       _addLog('📡 Gerando sugestões...');
       final interpreter = TransitInterpreter();
