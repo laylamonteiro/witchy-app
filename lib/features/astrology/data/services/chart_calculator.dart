@@ -78,14 +78,21 @@ class ChartCalculator {
     required double latitude,
     required double longitude,
   }) async {
-    // Combinar data e hora
+    // IMPORTANTE: Criar DateTime representando o HORÁRIO LOCAL do local de nascimento
+    // Este DateTime não tem timezone, é apenas a representação da hora informada
+    // A API Prokerala vai usar as coordenadas para determinar o timezone correto
     final fullBirthDateTime = DateTime(
       birthDate.year,
       birthDate.month,
       birthDate.day,
       birthTime.hour,
       birthTime.minute,
+      0, // segundos
     );
+
+    print('🕐 Hora informada (LOCAL do nascimento): '
+        '${birthTime.hour}:${birthTime.minute}');
+    print('📍 Local: $birthPlace ($latitude, $longitude)');
 
     // Chamar API externa
     final apiData = await ExternalChartAPI.instance.calculateBirthChart(

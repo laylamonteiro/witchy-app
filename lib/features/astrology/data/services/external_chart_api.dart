@@ -101,9 +101,17 @@ class ExternalChartAPI {
       // Obter token de acesso
       final accessToken = await _getAccessToken();
 
-      // Formatar datetime no formato ISO 8601
-      final datetime = birthDate.toIso8601String();
-      print('📅 DateTime formatado: $datetime');
+      // IMPORTANTE: A API Prokerala espera o datetime no HORÁRIO LOCAL do local de nascimento
+      // Format: YYYY-MM-DDTHH:mm:ss (sem timezone, pois ela usa as coordenadas para calcular)
+      final datetime = '${birthDate.year.toString().padLeft(4, '0')}-'
+          '${birthDate.month.toString().padLeft(2, '0')}-'
+          '${birthDate.day.toString().padLeft(2, '0')}T'
+          '${birthDate.hour.toString().padLeft(2, '0')}:'
+          '${birthDate.minute.toString().padLeft(2, '0')}:'
+          '${birthDate.second.toString().padLeft(2, '0')}';
+
+      print('📅 DateTime LOCAL (sem TZ): $datetime');
+      print('📍 Coordenadas: $latitude,$longitude (API usa para calcular timezone)');
 
       // Construir URL do endpoint
       final url = '$_baseUrl/astrology/western/natal-chart';
