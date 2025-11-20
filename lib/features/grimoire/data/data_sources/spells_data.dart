@@ -1340,4 +1340,293 @@ final List<SpellModel> preloadedSpells = [
     observations: 'Semanalmente ou após energia pesada em casa.',
     isPreloaded: true,
   ),
+
+  // ============================================
+  // SABEDORIA E ESTUDOS (3 feitiços)
+  // ============================================
+
+  SpellModel(
+    name: 'Vela Roxa da Sabedoria',
+    purpose: 'Aumentar compreensão e sabedoria',
+    type: SpellType.attraction,
+    category: SpellCategory.wisdom,
+    moonPhase: MoonPhase.waxingCrescent,
+    ingredients: [
+      'Vela roxa',
+      'Óleo de alecrim',
+      'Sálvia',
+      'Ametista ou fluorita',
+      'Livro ou material de estudo',
+    ],
+    steps: '''1. Unja a vela com óleo de alecrim
+2. Coloque a ametista ao lado da vela
+3. Coloque o livro/material perto
+4. Acenda a vela
+5. Diga: "Que a sabedoria flua através de mim, que eu compreenda e retenha conhecimento"
+6. Estude com a vela acesa
+7. Deixe queimar por pelo menos 30 minutos''',
+    observations: 'Roxa é a cor da sabedoria e terceiro olho. Use antes de provas ou ao estudar.',
+    isPreloaded: true,
+  ),
+
+  SpellModel(
+    name: 'Chá da Concentração',
+    purpose: 'Melhorar foco nos estudos',
+    type: SpellType.attraction,
+    category: SpellCategory.study,
+    moonPhase: MoonPhase.waxingCrescent,
+    ingredients: [
+      'Chá verde',
+      'Hortelã',
+      'Alecrim',
+      'Mel',
+      'Limão',
+    ],
+    steps: '''1. Prepare o chá com intenção de concentração
+2. Adicione hortelã e alecrim
+3. Mexa em sentido horário 3 vezes
+4. Diga: "Este chá clareia minha mente e aguça meu foco"
+5. Adicione mel e limão
+6. Beba devagar antes de estudar
+7. Sinta a clareza mental chegando''',
+    duration: 1,
+    observations: 'Hortelã e alecrim são ervas de clareza mental. Prepare fresco para melhores resultados.',
+    isPreloaded: true,
+  ),
+
+  SpellModel(
+    name: 'Sachê do Estudante',
+    purpose: 'Ajudar na retenção de conhecimento',
+    type: SpellType.attraction,
+    category: SpellCategory.study,
+    moonPhase: MoonPhase.waxingCrescent,
+    ingredients: [
+      'Saquinho amarelo ou roxo',
+      'Alecrim (memória)',
+      'Sálvia (sabedoria)',
+      'Hortelã (clareza)',
+      'Fluorita ou sodalita',
+      'Papel com objetivo de estudo',
+    ],
+    steps: '''1. Escreva no papel o que deseja aprender
+2. Coloque no saquinho com as ervas e cristal
+3. Segure e visualize absorvendo conhecimento
+4. Diga: "Minha mente está aberta, eu absorvo e retenho conhecimento facilmente"
+5. Mantenha na mochila ou mesa de estudos
+6. Cheire o sachê antes de estudar ou fazer provas
+7. Recarregue a cada lua nova''',
+    observations: 'Alecrim é tradicionalmente usado para memória desde a Grécia antiga.',
+    isPreloaded: true,
+  ),
+
+  // ============================================
+  // CORAGEM (2 feitiços)
+  // ============================================
+
+  SpellModel(
+    name: 'Vela Vermelha da Coragem',
+    purpose: 'Invocar coragem e força interior',
+    type: SpellType.attraction,
+    category: SpellCategory.courage,
+    moonPhase: MoonPhase.waxingCrescent,
+    ingredients: [
+      'Vela vermelha',
+      'Óleo de canela',
+      'Pimenta preta',
+      'Jaspe vermelho ou cornalina',
+    ],
+    steps: '''1. Unja a vela com óleo de canela
+2. Polvilhe pimenta na base
+3. Coloque o cristal ao lado
+4. Acenda a vela
+5. Olhe para a chama e diga: "Sou corajoso(a), sou forte, eu encaro meus medos"
+6. Visualize-se enfrentando o que teme com sucesso
+7. Deixe queimar completamente
+8. Carregue o cristal quando precisar de coragem''',
+    duration: 1,
+    observations: 'Vermelho é a cor de Marte, planeta da coragem e ação. Use antes de situações desafiadoras.',
+    isPreloaded: true,
+  ),
+
+  SpellModel(
+    name: 'Amuleto do Guerreiro',
+    purpose: 'Carregar coragem consigo',
+    type: SpellType.attraction,
+    category: SpellCategory.courage,
+    ingredients: [
+      'Pequeno saquinho vermelho ou laranja',
+      'Pimenta preta',
+      'Alho em pó',
+      'Gengibre',
+      'Jaspe vermelho ou hematita',
+      'Papel vermelho',
+    ],
+    steps: '''1. Escreva no papel: "Eu sou forte e corajoso(a)"
+2. Coloque todos ingredientes no saquinho
+3. Segure com as duas mãos no peito
+4. Respire fundo 3 vezes
+5. Diga: "Carrego a força de um guerreiro, nada me intimida"
+6. Visualize-se como um guerreiro invencível
+7. Carregue no bolso em momentos difíceis''',
+    observations: 'Toque o amuleto quando sentir medo ou insegurança para lembrar sua força.',
+    isPreloaded: true,
+  ),
+
+  // ============================================
+  // AMIZADE (2 feitiços)
+  // ============================================
+
+  SpellModel(
+    name: 'Vela Laranja da Amizade',
+    purpose: 'Atrair novas amizades',
+    type: SpellType.attraction,
+    category: SpellCategory.friendship,
+    moonPhase: MoonPhase.waxingCrescent,
+    ingredients: [
+      'Vela laranja ou amarela',
+      'Óleo de laranja doce',
+      'Canela',
+      'Citrino ou quartzo rosa',
+    ],
+    steps: '''1. Unja a vela com óleo de laranja
+2. Role em canela
+3. Coloque o cristal ao lado
+4. Acenda a vela
+5. Diga: "Atrair amigos verdadeiros, almas afins, conexões de alegria e lealdade"
+6. Visualize-se rodeado de boas amizades
+7. Deixe queimar
+8. Saia e socialize (a magia precisa de oportunidade!)''',
+    duration: 1,
+    observations: 'Laranja é cor de alegria e sociabilidade. A magia abre caminhos, mas você precisa andar neles.',
+    isPreloaded: true,
+  ),
+
+  SpellModel(
+    name: 'Nó de Amizade',
+    purpose: 'Fortalecer laço de amizade existente',
+    type: SpellType.attraction,
+    category: SpellCategory.friendship,
+    moonPhase: MoonPhase.fullMoon,
+    ingredients: [
+      '2 fitas ou cordas (cores que você e seu amigo gostem)',
+      'Vela rosa ou laranja',
+    ],
+    steps: '''1. Acenda a vela
+2. Segure as duas fitas
+3. Visualize você e seu amigo felizes juntos
+4. Dê 3 nós nas fitas entrelaçadas
+5. Em cada nó diga: "Nossa amizade é forte, verdadeira e duradoura"
+6. Guarde as fitas amarradas ou presenteie uma ao amigo
+7. Deixe a vela queimar''',
+    observations: 'Magia de nó é antiga e poderosa. Desfaça os nós apenas se a amizade terminar.',
+    isPreloaded: true,
+  ),
+
+  // ============================================
+  // TRABALHO (2 feitiços)
+  // ============================================
+
+  SpellModel(
+    name: 'Vela Verde do Sucesso Profissional',
+    purpose: 'Atrair sucesso no trabalho',
+    type: SpellType.attraction,
+    category: SpellCategory.work,
+    moonPhase: MoonPhase.waxingCrescent,
+    ingredients: [
+      'Vela verde ou dourada',
+      'Óleo de manjericão ou canela',
+      'Manjericão',
+      'Citrino ou pirita',
+      'Cartão de visita ou papel com objetivo profissional',
+    ],
+    steps: '''1. Escreva seu objetivo profissional no papel
+2. Coloque embaixo da vela
+3. Unja a vela com óleo
+4. Role em manjericão
+5. Coloque o cristal ao lado
+6. Acenda a vela
+7. Diga: "Sucesso vem a mim, sou reconhecido e valorizado em meu trabalho"
+8. Deixe queimar completamente
+9. Carregue o cristal para entrevistas/trabalho''',
+    duration: 1,
+    observations: 'Quinta-feira (dia de Júpiter) é ideal para feitiços de trabalho e carreira.',
+    isPreloaded: true,
+  ),
+
+  SpellModel(
+    name: 'Óleo de Unção para Entrevista',
+    purpose: 'Sucesso em entrevistas de emprego',
+    type: SpellType.attraction,
+    category: SpellCategory.work,
+    moonPhase: MoonPhase.waxingCrescent,
+    ingredients: [
+      'Óleo base (jojoba ou amêndoas)',
+      'Óleo essencial de manjericão',
+      'Óleo essencial de laranja',
+      'Canela em pó',
+      'Pequeno frasco',
+    ],
+    steps: '''1. Misture os óleos essenciais com óleo base
+2. Adicione pitada de canela
+3. Segure o frasco e visualize sucesso na entrevista
+4. Diga: "Este óleo me traz confiança, clareza e sucesso"
+5. Antes da entrevista, unja pulsos e atrás das orelhas
+6. Diga mentalmente: "Eu sou a pessoa certa para este trabalho"
+7. Vá confiante!''',
+    observations: 'Use também para apresentações ou reuniões importantes. A confiança é mágica!',
+    isPreloaded: true,
+  ),
+
+  // ============================================
+  // DIVINAÇÃO (2 feitiços)
+  // ============================================
+
+  SpellModel(
+    name: 'Água da Lua para Vidência',
+    purpose: 'Amplificar habilidades divinatórias',
+    type: SpellType.attraction,
+    category: SpellCategory.divination,
+    moonPhase: MoonPhase.fullMoon,
+    ingredients: [
+      'Tigela ou taça de vidro/prata',
+      'Água pura',
+      'Ametista ou pedra da lua',
+      'Lavanda',
+    ],
+    steps: '''1. Na lua cheia, coloque água na tigela
+2. Adicione o cristal e pitada de lavanda
+3. Deixe sob a luz lunar toda a noite
+4. Pela manhã, retire o cristal e coe a lavanda
+5. Use essa água para limpar ferramentas divinatórias (tarô, runas, pêndulo)
+6. Ou beba um gole antes de fazer leituras
+7. Diga: "Minha visão é clara, minha intuição é forte"''',
+    observations: 'Água lunar carregada na lua cheia tem forte energia psíquica.',
+    isPreloaded: true,
+  ),
+
+  SpellModel(
+    name: 'Ritual de Abertura do Terceiro Olho',
+    purpose: 'Desenvolver intuição e clarividência',
+    type: SpellType.attraction,
+    category: SpellCategory.divination,
+    moonPhase: MoonPhase.fullMoon,
+    ingredients: [
+      'Vela roxa ou índigo',
+      'Ametista ou lápis lazúli',
+      'Incenso de lavanda ou artemísia',
+      'Óleo de lavanda',
+    ],
+    steps: '''1. Acenda a vela e incenso
+2. Sente-se confortavelmente
+3. Coloque o cristal no terceiro olho (entre sobrancelhas)
+4. Unja terceiro olho com uma gota de óleo
+5. Feche os olhos e respire profundamente
+6. Visualize luz índigo girando no terceiro olho
+7. Diga: "Meu terceiro olho está aberto, vejo além do véu"
+8. Medite por 10-15 minutos
+9. Anote qualquer visão ou sensação''',
+    duration: 7,
+    observations: 'Faça por 7 noites seguidas para melhores resultados. Mantenha diário das experiências.',
+    isPreloaded: true,
+  ),
 ];

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'crystals_list_page.dart';
 import 'colors_list_page.dart';
 import 'herbs_list_page.dart';
+import 'metals_list_page.dart';
 import 'altar_page.dart';
 import 'elements_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
@@ -14,7 +15,7 @@ class EncyclopediaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 7,
+      length: 8,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Enciclopédia Mágica'),
@@ -30,6 +31,7 @@ class EncyclopediaPage extends StatelessWidget {
                 tabs: const [
                   Tab(text: 'Cristais'),
                   Tab(text: 'Ervas'),
+                  Tab(text: 'Metais'),
                   Tab(text: 'Cores'),
                   Tab(text: 'Elementos'),
                   Tab(text: 'Altar'),
@@ -44,6 +46,7 @@ class EncyclopediaPage extends StatelessWidget {
           children: [
             CrystalsListPage(),
             HerbsListPage(),
+            MetalsListPage(),
             ColorsListPage(),
             ElementsPage(),
             AltarPage(),
