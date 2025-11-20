@@ -17,27 +17,42 @@ class GrimoirePage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Grimório Digital'),
-          bottom: const TabBar(
+          bottom: TabBar(
             indicatorColor: AppColors.lilac,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 8),
             tabs: [
-              Tab(text: 'Tradição'),
-              Tab(text: 'Meu Grimório'),
-              Tab(text: 'Ferramentas'),
+              const Tab(text: 'Meu Grimório'),
+              Tab(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: const Text(
+                    'Grimório Ancestral',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
+              ),
+              const Tab(text: 'Ferramentas'),
             ],
           ),
         ),
-        body: TabBarView(
+        body: const TabBarView(
           children: [
-            const AppSpellsListPage(),
-            const UserSpellsListPage(),
-            _buildToolsTab(context),
+            UserSpellsListPage(),
+            AppSpellsListPage(),
+            _ToolsTab(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildToolsTab(BuildContext context) {
+}
+
+class _ToolsTab extends StatelessWidget {
+  const _ToolsTab();
+
+  @override
+  Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
