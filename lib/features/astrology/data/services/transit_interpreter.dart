@@ -14,21 +14,15 @@ class TransitInterpreter {
     try {
       final transits = await _calculator.calculateTransits(date);
 
-      // Verificar se temos trânsitos
-      if (transits.isEmpty) {
-        print('⚠️ Nenhum trânsito calculado, usando valores padrão');
-      }
+      print('🌟 TransitInterpreter: ${transits.length} trânsitos calculados inicialmente');
 
-      // Buscar Lua com fallback seguro
-      final moonTransit = transits.firstWhere(
-        (t) => t.planet == Planet.moon,
-        orElse: () {
-          print('⚠️ Lua não encontrada nos trânsitos, usando posição estimada');
-          // Fallback: calcular posição aproximada da Lua
-          return _estimateMoonPosition(date);
-        },
-      );
+      // Garantir que temos pelo menos Sol e Lua (CRÍTICO!)
+      _ensureEssentialTransits(transits, date);
 
+      print('✅ TransitInterpreter: ${transits.length} trânsitos após garantir essenciais');
+
+      // Agora podemos assumir que a Lua está presente
+      final moonTransit = transits.firstWhere((t) => t.planet == Planet.moon);
       final moonPhase = _calculateMoonPhase(date);
 
       // Analisar aspectos entre planetas em trânsito
@@ -84,6 +78,14 @@ class TransitInterpreter {
   ) async {
     final suggestions = <PersonalizedSuggestion>[];
     final transits = await _calculator.calculateTransits(date);
+
+    print('🌟 PersonalizedSuggestions: ${transits.length} trânsitos calculados');
+
+    // Garantir que temos pelo menos Sol e Lua (CRÍTICO!)
+    _ensureEssentialTransits(transits, date);
+
+    print('✅ PersonalizedSuggestions: ${transits.length} trânsitos após garantir essenciais');
+
     final aspects =
         await _calculator.calculateTransitAspects(transits, natalChart);
 
@@ -444,5 +446,37 @@ class TransitInterpreter {
       degree: degree,
       isRetrograde: false,
     );
+  }
+
+  /// Estima a posição do Sol quando o cálculo preciso falhar
+  Transit _estimateSunPosition(DateTime date) {
+    // O Sol se move aproximadamente 0.9856 graus por dia
+    final daysSinceEpoch = date.difference(DateTime(2000, 1, 1)).inDays;
+    final sunLongitude = (280.0 + (0.9856 * daysSinceEpoch)) % 360;
+
+    final signIndex = (sunLongitude / 30).floor() % 12;
+    final degree = sunLongitude % 30;
+
+    return Transit(
+      planet: Planet.sun,
+      sign: ZodiacSign.values[signIndex],
+      degree: degree,
+      isRetrograde: false,
+    );
+  }
+
+  /// Garante que temos pelo menos Sol e Lua nos trânsitos
+  void _ensureEssentialTransits(List<Transit> transits, DateTime date) {
+    // Garantir Sol
+    if (!transits.any((t) => t.planet == Planet.sun)) {
+      print('⚠️ Sol não encontrado, adicionando posição estimada');
+      transits.add(_estimateSunPosition(date));
+    }
+
+    // Garantir Lua
+    if (!transits.any((t) => t.planet == Planet.moon)) {
+      print('⚠️ Lua não encontrada, adicionando posição estimada');
+      transits.add(_estimateMoonPosition(date));
+    }
   }
 }
