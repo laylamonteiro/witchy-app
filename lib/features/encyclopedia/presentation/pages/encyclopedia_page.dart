@@ -18,19 +18,26 @@ class EncyclopediaPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Enciclopédia Mágica'),
-          bottom: const TabBar(
-            indicatorColor: AppColors.lilac,
-            isScrollable: true,
-            padding: EdgeInsets.zero,
-            tabs: [
-              Tab(text: 'Cristais'),
-              Tab(text: 'Ervas'),
-              Tab(text: 'Cores'),
-              Tab(text: 'Elementos'),
-              Tab(text: 'Altar'),
-              Tab(text: 'Runas'),
-              Tab(text: 'Sigilos'),
-            ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TabBar(
+                indicatorColor: AppColors.lilac,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: EdgeInsets.zero,
+                tabs: const [
+                  Tab(text: 'Cristais'),
+                  Tab(text: 'Ervas'),
+                  Tab(text: 'Cores'),
+                  Tab(text: 'Elementos'),
+                  Tab(text: 'Altar'),
+                  Tab(text: 'Runas'),
+                  Tab(text: 'Sigilos'),
+                ],
+              ),
+            ),
           ),
         ),
         body: const TabBarView(

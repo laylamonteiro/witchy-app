@@ -89,37 +89,51 @@ class SigilStep2LettersPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  // Letras em destaque
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: sigil.processedLetters.split('').map((letter) {
-                      return Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: AppColors.lilac,
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            letter,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  color: AppColors.starYellow,
-                                  fontWeight: FontWeight.bold,
+                  // Letras em destaque com tamanho dinâmico
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final letterCount = sigil.processedLetters.length;
+                      // Ajustar tamanho da caixa baseado no número de letras
+                      // Se muitas letras, caixas menores para caber em uma linha
+                      final boxSize = letterCount > 10
+                          ? (constraints.maxWidth - 16) / letterCount - 4
+                          : letterCount > 7
+                              ? 36.0
+                              : 48.0;
+                      final fontSize = boxSize < 36 ? 16.0 : 22.0;
+
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: sigil.processedLetters.split('').map((letter) {
+                            return Container(
+                              width: boxSize.clamp(24.0, 48.0),
+                              height: boxSize.clamp(24.0, 48.0),
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: AppColors.lilac,
+                                  width: 2,
                                 ),
-                          ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  letter,
+                                  style: TextStyle(
+                                    color: AppColors.starYellow,
+                                    fontSize: fontSize,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       );
-                    }).toList(),
+                    },
                   ),
                 ],
               ),
@@ -143,19 +157,19 @@ class SigilStep2LettersPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Sua palavra foi transformada para revelar sua essência:',
+                    'Sua palavra foi simplificada seguindo a tradição dos sigilos:',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
-                  _buildStep('1. Espaços foram removidos'),
-                  _buildStep('2. Acentos foram simplificados'),
-                  _buildStep('3. Letras repetidas foram eliminadas'),
+                  _buildStep('1. Acentos foram normalizados'),
+                  _buildStep('2. Espaços e símbolos foram removidos'),
+                  _buildStep('3. Vogais e consoantes repetidas consecutivas foram simplificadas'),
                   const SizedBox(height: 12),
                   Text(
-                    'Estas letras únicas são a base mágica do seu sigilo. '
-                    'Elas representam a essência concentrada da sua intenção.',
+                    'Esta sequência simplificada será conectada na Roda das Bruxas '
+                    'para formar o símbolo mágico do seu sigilo.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                           fontStyle: FontStyle.italic,
