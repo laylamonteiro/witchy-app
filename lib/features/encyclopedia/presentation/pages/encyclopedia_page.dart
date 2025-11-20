@@ -21,8 +21,7 @@ class EncyclopediaPage extends StatelessWidget {
           bottom: const TabBar(
             indicatorColor: AppColors.lilac,
             isScrollable: true,
-            padding: EdgeInsets.only(left: 0),
-            labelPadding: EdgeInsets.symmetric(horizontal: 12),
+            padding: EdgeInsets.zero,
             tabs: [
               Tab(text: 'Cristais'),
               Tab(text: 'Ervas'),
