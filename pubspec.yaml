@@ -40,6 +40,22 @@ dependencies:
   # For web support of sqflite
   sqflite_common_ffi_web: ^0.4.1+1
 
+  # Astrology calculations
+  sweph: ^3.2.1+2.10.3
+
+  # Location & Geocoding
+  geocoding: ^3.0.0
+  geolocator: ^13.0.2
+
+  # HTTP client for AI API calls
+  dio: ^5.4.0
+
+  # Secure storage for API keys
+  flutter_secure_storage: ^9.0.0
+
+  # Crypto utilities
+  crypto: ^3.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -54,6 +70,7 @@ flutter:
     - assets/images/crystals/
     - assets/images/herbs/
     - assets/icons/
+    - assets/ephe/
 
 # Configuração do ícone do app
 flutter_launcher_icons:

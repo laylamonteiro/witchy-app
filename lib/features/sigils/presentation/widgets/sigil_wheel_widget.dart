@@ -38,6 +38,7 @@ class SigilWheelWidget extends StatelessWidget {
           ),
         ],
       ),
+      clipBehavior: Clip.none, // Permite círculo dourado ser desenhado fora dos limites
       child: CustomPaint(
         size: Size(size, size),
         painter: SigilWheelPainter(
@@ -67,7 +68,7 @@ class SigilWheelPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = math.min(size.width, size.height) * 0.42;
+    final maxRadius = math.min(size.width, size.height) * 0.35; // Reduzido para caber o círculo dourado
 
     // Paint para o círculo principal
     final circlePaint = Paint()
@@ -84,6 +85,14 @@ class SigilWheelPainter extends CustomPainter {
 
       // Círculo principal
       canvas.drawCircle(center, maxRadius, circlePaint);
+
+      // Círculo dourado ao redor das letras externas
+      final outerCirclePaint = Paint()
+        ..color = const Color(0xFFFFD700) // Dourado
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5; // Ligeiramente mais grosso para destaque
+
+      canvas.drawCircle(center, maxRadius + 35, outerCirclePaint);
     }
 
     // Desenha as letras

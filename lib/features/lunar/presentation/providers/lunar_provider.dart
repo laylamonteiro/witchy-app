@@ -60,29 +60,92 @@ class LunarProvider with ChangeNotifier {
   }
 
   DateTime? getNextFullMoon() {
-    // Buscar próxima lua cheia
-    for (int i = 1; i <= 30; i++) {
-      final nextDate = _selectedDate.add(Duration(days: i));
-      final tempProvider = LunarProvider();
-      tempProvider._selectedDate = nextDate;
-      if (tempProvider.getCurrentMoonPhase() == MoonPhase.fullMoon) {
-        return nextDate;
-      }
-    }
-    return null;
+    return _getNextPhaseWithTime(MoonPhase.fullMoon);
   }
 
   DateTime? getNextNewMoon() {
-    // Buscar próxima lua nova
+    return _getNextPhaseWithTime(MoonPhase.newMoon);
+  }
+
+  DateTime? getNextWaxingCrescent() {
+    return _getNextPhaseWithTime(MoonPhase.waxingCrescent);
+  }
+
+  DateTime? getNextFirstQuarter() {
+    return _getNextPhaseWithTime(MoonPhase.firstQuarter);
+  }
+
+  DateTime? getNextWaxingGibbous() {
+    return _getNextPhaseWithTime(MoonPhase.waxingGibbous);
+  }
+
+  DateTime? getNextWaningGibbous() {
+    return _getNextPhaseWithTime(MoonPhase.waningGibbous);
+  }
+
+  DateTime? getNextLastQuarter() {
+    return _getNextPhaseWithTime(MoonPhase.lastQuarter);
+  }
+
+  DateTime? getNextWaningCrescent() {
+    return _getNextPhaseWithTime(MoonPhase.waningCrescent);
+  }
+
+  // Método melhorado que calcula com precisão de horas
+  DateTime? _getNextPhaseWithTime(MoonPhase targetPhase) {
+    // Buscar o dia aproximado primeiro
+    DateTime? approximateDate;
     for (int i = 1; i <= 30; i++) {
       final nextDate = _selectedDate.add(Duration(days: i));
       final tempProvider = LunarProvider();
       tempProvider._selectedDate = nextDate;
-      if (tempProvider.getCurrentMoonPhase() == MoonPhase.newMoon) {
-        return nextDate;
+      if (tempProvider.getCurrentMoonPhase() == targetPhase) {
+        approximateDate = nextDate;
+        break;
       }
     }
-    return null;
+
+    if (approximateDate == null) return null;
+
+    // Refinar para encontrar a hora mais precisa dentro do dia
+    // Procurar desde o dia anterior até o dia seguinte, a cada hora
+    final startSearch = approximateDate.subtract(const Duration(days: 1));
+    for (int hour = 0; hour < 72; hour++) {
+      final candidateDate = startSearch.add(Duration(hours: hour));
+      final tempProvider = LunarProvider();
+      tempProvider._selectedDate = candidateDate;
+
+      // Se encontramos a fase alvo e está no futuro
+      if (tempProvider.getCurrentMoonPhase() == targetPhase &&
+          candidateDate.isAfter(_selectedDate)) {
+        return candidateDate;
+      }
+    }
+
+    return approximateDate;
+  }
+
+  // Retorna lista de todas as próximas fases em ordem cronológica
+  List<Map<String, dynamic>> getAllNextPhases() {
+    final phases = <Map<String, dynamic>>[];
+
+    for (final phase in MoonPhase.values) {
+      final nextDate = _getNextPhaseWithTime(phase);
+      if (nextDate != null) {
+        phases.add({
+          'phase': phase,
+          'date': nextDate,
+          'daysUntil': nextDate.difference(_selectedDate).inDays,
+          'hoursUntil': nextDate.difference(_selectedDate).inHours,
+        });
+      }
+    }
+
+    // Ordenar por data
+    phases.sort((a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime));
+
+    // Retornar apenas as próximas 4 fases
+    return phases.take(4).toList();
   }
 
   int? getDaysUntilFullMoon() {

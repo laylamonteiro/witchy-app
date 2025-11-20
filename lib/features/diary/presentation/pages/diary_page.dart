@@ -15,23 +15,15 @@ class DiaryPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Diários'),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TabBar(
-                indicatorColor: AppColors.lilac,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                padding: EdgeInsets.zero,
-                tabs: const [
-                  Tab(text: 'Gratidão'),
-                  Tab(text: 'Afirmações'),
-                  Tab(text: 'Sonhos'),
-                  Tab(text: 'Desejos'),
-                ],
-              ),
-            ),
+          bottom: const TabBar(
+            indicatorColor: AppColors.lilac,
+            labelPadding: EdgeInsets.symmetric(horizontal: 12),
+            tabs: [
+              Tab(text: 'Gratidão'),
+              Tab(text: 'Afirmações'),
+              Tab(text: 'Sonhos'),
+              Tab(text: 'Desejos'),
+            ],
           ),
         ),
         body: const TabBarView(
