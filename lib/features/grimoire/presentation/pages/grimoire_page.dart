@@ -19,19 +19,33 @@ class GrimoirePage extends StatelessWidget {
           title: const Text('Grimório Digital'),
           bottom: TabBar(
             indicatorColor: AppColors.lilac,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+            isScrollable: false,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
             tabs: [
-              const Tab(text: 'Meu Grimório'),
+              const Tab(
+                child: Text(
+                  'Meu Grimório',
+                  style: TextStyle(fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+              ),
               Tab(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: const Text(
                     'Grimório Ancestral',
-                    style: TextStyle(fontSize: 13),
+                    style: TextStyle(fontSize: 12),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
-              const Tab(text: 'Ferramentas'),
+              const Tab(
+                child: Text(
+                  'Ferramentas',
+                  style: TextStyle(fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ],
           ),
         ),

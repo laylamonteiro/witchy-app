@@ -196,43 +196,24 @@ class _PersonalizedSuggestionsPageState
   }
 
   Widget _buildDateSelector() {
-    final isToday = DateUtils.isSameDay(_selectedDate, DateTime.now());
-
     return MagicalCard(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          IconButton(
-            onPressed: () => _changeDate(-1),
-            icon: const Icon(Icons.chevron_left, color: AppColors.lilac),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  isToday
-                      ? 'Hoje'
-                      : DateFormat('dd/MM/yyyy').format(_selectedDate),
-                  style: const TextStyle(
-                    color: AppColors.lilac,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (!isToday)
-                  Text(
-                    DateFormat('EEEE', 'pt_BR').format(_selectedDate),
-                    style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-              ],
+          Text(
+            'Hoje',
+            style: const TextStyle(
+              color: AppColors.lilac,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          IconButton(
-            onPressed: () => _changeDate(1),
-            icon: const Icon(Icons.chevron_right, color: AppColors.lilac),
+          const SizedBox(height: 4),
+          Text(
+            DateFormat('dd/MM/yyyy - EEEE', 'pt_BR').format(DateTime.now()),
+            style: TextStyle(
+              color: AppColors.softWhite.withOpacity(0.7),
+              fontSize: 14,
+            ),
           ),
         ],
       ),

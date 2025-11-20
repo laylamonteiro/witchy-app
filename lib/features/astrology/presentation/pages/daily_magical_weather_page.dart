@@ -31,17 +31,26 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
 
     try {
       final weather = await _interpreter.getDailyMagicalWeather(_selectedDate);
+      if (!mounted) return;
+
       setState(() {
         _weather = weather;
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Erro ao calcular clima mágico: $e');
+      print('Stack trace: $stackTrace');
+
+      if (!mounted) return;
+
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao calcular clima mágico: $e')),
-        );
-      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao calcular clima mágico. Por favor, tente novamente.'),
+          backgroundColor: AppColors.alert,
+        ),
+      );
     }
   }
 
