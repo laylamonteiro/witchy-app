@@ -24,6 +24,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
   late TextEditingController _observationsController;
 
   SpellType _selectedType = SpellType.attraction;
+  SpellCategory _selectedCategory = SpellCategory.other;
   MoonPhase? _selectedMoonPhase;
 
   @override
@@ -42,6 +43,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
 
     if (widget.spell != null) {
       _selectedType = widget.spell!.type;
+      _selectedCategory = widget.spell!.category;
       _selectedMoonPhase = widget.spell!.moonPhase;
     }
   }
@@ -112,6 +114,30 @@ class _SpellFormPageState extends State<SpellFormPage> {
               onChanged: (value) {
                 setState(() {
                   _selectedType = value!;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<SpellCategory>(
+              initialValue: _selectedCategory,
+              decoration: const InputDecoration(
+                labelText: 'Categoria *',
+              ),
+              items: SpellCategory.values.map((category) {
+                return DropdownMenuItem(
+                  value: category,
+                  child: Row(
+                    children: [
+                      Text(category.icon),
+                      const SizedBox(width: 8),
+                      Text(category.displayName),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCategory = value!;
                 });
               },
             ),
@@ -212,6 +238,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
             name: _nameController.text,
             purpose: _purposeController.text,
             type: _selectedType,
+            category: _selectedCategory,
             moonPhase: _selectedMoonPhase,
             ingredients: ingredients,
             steps: _stepsController.text,
@@ -224,6 +251,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
             name: _nameController.text,
             purpose: _purposeController.text,
             type: _selectedType,
+            category: _selectedCategory,
             moonPhase: _selectedMoonPhase,
             ingredients: ingredients,
             steps: _stepsController.text,

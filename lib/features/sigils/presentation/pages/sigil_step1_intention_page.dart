@@ -66,50 +66,34 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Título da etapa
-            Text(
-              'Defina sua Intenção',
-              style: Theme.of(context).textTheme.headlineMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Escolha uma palavra que represente sua intenção',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-
-            // Card de explicação
+            // Card de explicação - PRIMEIRO
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Text('✨', style: TextStyle(fontSize: 24)),
+                      const Text('🃏', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
                       Text(
                         'O que é um Sigilo?',
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Um sigilo é um símbolo mágico criado a partir de uma intenção. '
-                    'Ele transforma seu desejo em uma forma visual única, que pode ser '
-                    'usada em rituais, meditações ou para focar sua energia.',
+                    'Sigilos são símbolos mágicos criados para manifestar intenções. '
+                    'Ao transformar palavras em símbolos abstratos, você cria uma marca energética '
+                    'que carrega o poder da sua vontade, sem revelar sua intenção para outras pessoas.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Este app ajuda na parte técnica (letras e desenho base). '
-                    'A magia acontece quando você desenha e ativa o sigilo na sua prática pessoal.',
+                    'Defina sua intenção, escolha uma palavra que a represente, '
+                    'e o app criará automaticamente seu sigilo único.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -117,6 +101,14 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 24),
+
+            // Título da etapa - DEPOIS
+            Text(
+              'Defina sua Intenção',
+              style: Theme.of(context).textTheme.headlineMedium,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
 

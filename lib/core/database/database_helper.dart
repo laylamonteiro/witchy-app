@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -42,11 +42,13 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         purpose TEXT NOT NULL,
         type TEXT NOT NULL,
+        category TEXT NOT NULL,
         moon_phase TEXT,
         ingredients TEXT,
         steps TEXT NOT NULL,
         duration INTEGER,
         observations TEXT,
+        is_preloaded INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -108,6 +110,30 @@ class DatabaseHelper {
         intention TEXT NOT NULL,
         image_path TEXT NOT NULL,
         created_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Tabela de Gratidões
+    await db.execute('''
+      CREATE TABLE gratitudes (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        tags TEXT,
+        date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Tabela de Afirmações
+    await db.execute('''
+      CREATE TABLE affirmations (
+        id TEXT PRIMARY KEY,
+        text TEXT NOT NULL,
+        category TEXT NOT NULL,
+        is_preloaded INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        is_favorite INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -200,6 +226,65 @@ class DatabaseHelper {
             intention TEXT NOT NULL,
             image_path TEXT NOT NULL,
             created_at INTEGER NOT NULL
+          )
+        ''');
+      }
+    }
+
+    // Migração da versão 2 para 3
+    if (oldVersion < 3) {
+      // Adicionar campos category e is_preloaded na tabela spells
+      try {
+        // Verifica se a coluna já existe
+        final columns = await db.rawQuery('PRAGMA table_info(spells)');
+        final categoryExists = columns.any((col) => col['name'] == 'category');
+        final isPreloadedExists = columns.any((col) => col['name'] == 'is_preloaded');
+
+        if (!categoryExists) {
+          await db.execute('ALTER TABLE spells ADD COLUMN category TEXT NOT NULL DEFAULT "other"');
+        }
+        if (!isPreloadedExists) {
+          await db.execute('ALTER TABLE spells ADD COLUMN is_preloaded INTEGER NOT NULL DEFAULT 0');
+        }
+      } catch (e) {
+        print('Erro ao adicionar colunas: $e');
+      }
+    }
+
+    // Migração da versão 3 para 4
+    if (oldVersion < 4) {
+      // Verificar se a tabela gratitudes existe, se não, criar
+      final gratitudesTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='gratitudes'"
+      );
+
+      if (gratitudesTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE gratitudes (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            tags TEXT,
+            date INTEGER NOT NULL,
+            created_at INTEGER NOT NULL
+          )
+        ''');
+      }
+
+      // Verificar se a tabela affirmations existe, se não, criar
+      final affirmationsTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='affirmations'"
+      );
+
+      if (affirmationsTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE affirmations (
+            id TEXT PRIMARY KEY,
+            text TEXT NOT NULL,
+            category TEXT NOT NULL,
+            is_preloaded INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL,
+            is_favorite INTEGER NOT NULL DEFAULT 0
           )
         ''');
       }

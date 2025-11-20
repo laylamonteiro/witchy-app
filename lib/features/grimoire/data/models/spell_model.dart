@@ -5,6 +5,29 @@ enum SpellType {
   banishment, // Banimento/corte
 }
 
+enum SpellCategory {
+  love, // Amor e romance
+  selfLove, // Amor próprio
+  protection, // Proteção
+  prosperity, // Prosperidade e dinheiro
+  healing, // Cura
+  cleansing, // Limpeza energética
+  banishing, // Banimento
+  luck, // Sorte
+  creativity, // Criatividade
+  communication, // Comunicação
+  dreams, // Sonhos
+  divination, // Adivinhação
+  energy, // Energia e vitalidade
+  wisdom, // Sabedoria
+  courage, // Coragem
+  friendship, // Amizade
+  home, // Casa e lar
+  work, // Trabalho e carreira
+  study, // Estudos
+  other, // Outros
+}
+
 enum MoonPhase {
   newMoon, // Lua nova
   waxingCrescent, // Crescente
@@ -21,11 +44,13 @@ class SpellModel {
   final String name;
   final String purpose;
   final SpellType type;
+  final SpellCategory category;
   final MoonPhase? moonPhase;
   final List<String> ingredients;
   final String steps;
   final int? duration; // em dias
   final String? observations;
+  final bool isPreloaded; // Se é um feitiço pré-carregado do app
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -34,11 +59,13 @@ class SpellModel {
     required this.name,
     required this.purpose,
     required this.type,
+    required this.category,
     this.moonPhase,
     required this.ingredients,
     required this.steps,
     this.duration,
     this.observations,
+    this.isPreloaded = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   })  : id = id ?? const Uuid().v4(),
@@ -51,11 +78,13 @@ class SpellModel {
       'name': name,
       'purpose': purpose,
       'type': type.name,
+      'category': category.name,
       'moon_phase': moonPhase?.name,
       'ingredients': ingredients.join('|||'), // separador
       'steps': steps,
       'duration': duration,
       'observations': observations,
+      'is_preloaded': isPreloaded ? 1 : 0,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
@@ -70,6 +99,10 @@ class SpellModel {
         (e) => e.name == map['type'],
         orElse: () => SpellType.attraction,
       ),
+      category: SpellCategory.values.firstWhere(
+        (e) => e.name == map['category'],
+        orElse: () => SpellCategory.other,
+      ),
       moonPhase: map['moon_phase'] != null
           ? MoonPhase.values.firstWhere(
               (e) => e.name == map['moon_phase'],
@@ -82,6 +115,7 @@ class SpellModel {
       steps: map['steps'],
       duration: map['duration'],
       observations: map['observations'],
+      isPreloaded: map['is_preloaded'] == 1,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']),
     );
@@ -91,6 +125,7 @@ class SpellModel {
     String? name,
     String? purpose,
     SpellType? type,
+    SpellCategory? category,
     MoonPhase? moonPhase,
     List<String>? ingredients,
     String? steps,
@@ -102,11 +137,13 @@ class SpellModel {
       name: name ?? this.name,
       purpose: purpose ?? this.purpose,
       type: type ?? this.type,
+      category: category ?? this.category,
       moonPhase: moonPhase ?? this.moonPhase,
       ingredients: ingredients ?? this.ingredients,
       steps: steps ?? this.steps,
       duration: duration ?? this.duration,
       observations: observations ?? this.observations,
+      isPreloaded: isPreloaded,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
     );
@@ -121,6 +158,98 @@ extension SpellTypeExtension on SpellType {
         return 'Atração/Crescimento';
       case SpellType.banishment:
         return 'Banimento/Corte';
+    }
+  }
+}
+
+extension SpellCategoryExtension on SpellCategory {
+  String get displayName {
+    switch (this) {
+      case SpellCategory.love:
+        return 'Amor e Romance';
+      case SpellCategory.selfLove:
+        return 'Amor Próprio';
+      case SpellCategory.protection:
+        return 'Proteção';
+      case SpellCategory.prosperity:
+        return 'Prosperidade';
+      case SpellCategory.healing:
+        return 'Cura';
+      case SpellCategory.cleansing:
+        return 'Limpeza';
+      case SpellCategory.banishing:
+        return 'Banimento';
+      case SpellCategory.luck:
+        return 'Sorte';
+      case SpellCategory.creativity:
+        return 'Criatividade';
+      case SpellCategory.communication:
+        return 'Comunicação';
+      case SpellCategory.dreams:
+        return 'Sonhos';
+      case SpellCategory.divination:
+        return 'Adivinhação';
+      case SpellCategory.energy:
+        return 'Energia';
+      case SpellCategory.wisdom:
+        return 'Sabedoria';
+      case SpellCategory.courage:
+        return 'Coragem';
+      case SpellCategory.friendship:
+        return 'Amizade';
+      case SpellCategory.home:
+        return 'Casa e Lar';
+      case SpellCategory.work:
+        return 'Trabalho';
+      case SpellCategory.study:
+        return 'Estudos';
+      case SpellCategory.other:
+        return 'Outros';
+    }
+  }
+
+  String get icon {
+    switch (this) {
+      case SpellCategory.love:
+        return '💖';
+      case SpellCategory.selfLove:
+        return '💗';
+      case SpellCategory.protection:
+        return '🛡️';
+      case SpellCategory.prosperity:
+        return '💰';
+      case SpellCategory.healing:
+        return '💚';
+      case SpellCategory.cleansing:
+        return '✨';
+      case SpellCategory.banishing:
+        return '🚫';
+      case SpellCategory.luck:
+        return '🍀';
+      case SpellCategory.creativity:
+        return '🎨';
+      case SpellCategory.communication:
+        return '💬';
+      case SpellCategory.dreams:
+        return '💤';
+      case SpellCategory.divination:
+        return '🔮';
+      case SpellCategory.energy:
+        return '⚡';
+      case SpellCategory.wisdom:
+        return '📚';
+      case SpellCategory.courage:
+        return '🦁';
+      case SpellCategory.friendship:
+        return '👥';
+      case SpellCategory.home:
+        return '🏠';
+      case SpellCategory.work:
+        return '💼';
+      case SpellCategory.study:
+        return '📖';
+      case SpellCategory.other:
+        return '🌟';
     }
   }
 }

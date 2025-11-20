@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/desire_provider.dart';
 import '../../data/models/desire_model.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -27,6 +28,8 @@ class _DesiresListPageState extends State<DesiresListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
     return Scaffold(
       body: Consumer<DesireProvider>(
         builder: (context, provider, _) {
@@ -55,58 +58,45 @@ class _DesiresListPageState extends State<DesiresListPage> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          desire.status.emoji,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             desire.title,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                         ),
+                        Text(
+                          dateFormat.format(desire.createdAt),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                        ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    Chip(
-                      label: Text(desire.status.displayName),
-                      backgroundColor: _getStatusColor(desire.status).withOpacity(0.2),
-                      side: BorderSide(color: _getStatusColor(desire.status)),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       desire.description,
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    if (desire.evolution != null &&
-                        desire.evolution!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.info.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        Chip(
+                          avatar: Text(desire.status.emoji),
+                          label: Text(
+                            desire.status.displayName,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          backgroundColor:
+                              _getStatusColor(desire.status).withOpacity(0.2),
+                          side: BorderSide(color: _getStatusColor(desire.status)),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.trending_up,
-                                size: 16, color: AppColors.info),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                desire.evolution!,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ],
                 ),
               );

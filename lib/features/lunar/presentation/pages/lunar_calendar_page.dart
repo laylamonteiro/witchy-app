@@ -129,21 +129,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 16),
-                        _buildNextPhaseItem(
-                          context,
-                          lunarProvider,
-                          'Lua Nova',
-                          MoonPhase.newMoon.emoji,
-                          isFullMoon: false,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildNextPhaseItem(
-                          context,
-                          lunarProvider,
-                          'Lua Cheia',
-                          MoonPhase.fullMoon.emoji,
-                          isFullMoon: true,
-                        ),
+                        ..._buildNextPhasesInOrder(context, lunarProvider),
                       ],
                     ),
                   ),
@@ -387,6 +373,60 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
         ),
       ],
     );
+  }
+
+  List<Widget> _buildNextPhasesInOrder(
+    BuildContext context,
+    LunarProvider provider,
+  ) {
+    final daysUntilNewMoon = provider.getDaysUntilNewMoon();
+    final daysUntilFullMoon = provider.getDaysUntilFullMoon();
+
+    // Determinar qual fase vem primeiro
+    bool newMoonFirst = true;
+    if (daysUntilNewMoon != null && daysUntilFullMoon != null) {
+      newMoonFirst = daysUntilNewMoon <= daysUntilFullMoon;
+    } else if (daysUntilNewMoon == null) {
+      newMoonFirst = false;
+    }
+
+    final phases = [
+      if (newMoonFirst) ...[
+        _buildNextPhaseItem(
+          context,
+          provider,
+          'Lua Nova',
+          MoonPhase.newMoon.emoji,
+          isFullMoon: false,
+        ),
+        const SizedBox(height: 16),
+        _buildNextPhaseItem(
+          context,
+          provider,
+          'Lua Cheia',
+          MoonPhase.fullMoon.emoji,
+          isFullMoon: true,
+        ),
+      ] else ...[
+        _buildNextPhaseItem(
+          context,
+          provider,
+          'Lua Cheia',
+          MoonPhase.fullMoon.emoji,
+          isFullMoon: true,
+        ),
+        const SizedBox(height: 16),
+        _buildNextPhaseItem(
+          context,
+          provider,
+          'Lua Nova',
+          MoonPhase.newMoon.emoji,
+          isFullMoon: false,
+        ),
+      ],
+    ];
+
+    return phases;
   }
 
   Widget _buildSpellRecommendation(

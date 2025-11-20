@@ -2,18 +2,22 @@ import 'package:flutter/foundation.dart';
 import '../../data/models/crystal_model.dart';
 import '../../data/models/color_model.dart';
 import '../../data/models/herb_model.dart';
+import '../../data/models/metal_model.dart';
 import '../../data/data_sources/crystals_data.dart';
 import '../../data/data_sources/colors_data.dart';
 import '../../data/data_sources/herbs_data.dart';
+import '../../data/data_sources/metals_data.dart';
 
 class EncyclopediaProvider with ChangeNotifier {
   final List<CrystalModel> _crystals = crystalsData;
   final List<ColorModel> _colors = colorsData;
   final List<HerbModel> _herbs = herbsData;
+  final List<MetalModel> _metals = metalsData;
 
   List<CrystalModel> get crystals => _crystals;
   List<ColorModel> get colors => _colors;
   List<HerbModel> get herbs => _herbs;
+  List<MetalModel> get metals => _metals;
 
   List<CrystalModel> searchCrystals(String query) {
     final lowerQuery = query.toLowerCase();
@@ -82,5 +86,35 @@ class EncyclopediaProvider with ChangeNotifier {
 
   List<HerbModel> getEdibleHerbs() {
     return _herbs.where((herb) => herb.edible).toList();
+  }
+
+  // Métodos para Metais
+  List<MetalModel> searchMetals(String query) {
+    final lowerQuery = query.toLowerCase();
+    return _metals.where((metal) {
+      return metal.name.toLowerCase().contains(lowerQuery) ||
+          metal.description.toLowerCase().contains(lowerQuery) ||
+          metal.magicalProperties
+              .any((p) => p.toLowerCase().contains(lowerQuery));
+    }).toList();
+  }
+
+  List<MetalModel> getMetalsByElement(Element element) {
+    return _metals.where((metal) => metal.element == element).toList();
+  }
+
+  List<MetalModel> getMetalsByPlanet(Planet planet) {
+    return _metals.where((metal) => metal.planet == planet).toList();
+  }
+
+  List<MetalModel> getMetalsByProperty(String property) {
+    return _metals.where((metal) {
+      return metal.magicalProperties
+          .any((p) => p.toLowerCase().contains(property.toLowerCase()));
+    }).toList();
+  }
+
+  List<MetalModel> getConductiveMetals() {
+    return _metals.where((metal) => metal.conductsPower).toList();
   }
 }
