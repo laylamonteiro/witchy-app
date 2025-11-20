@@ -24,6 +24,13 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   bool _isTesting = false;
   String? _result;
 
+  // Controllers para input manual do mapa astral
+  final _dateController = TextEditingController(text: '31/03/1994');
+  final _timeController = TextEditingController(text: '19:39');
+  final _placeController = TextEditingController(text: 'São Paulo');
+  final _latController = TextEditingController(text: '-23.5505');
+  final _lonController = TextEditingController(text: '-46.6333');
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +40,11 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   @override
   void dispose() {
     _tabController.dispose();
+    _dateController.dispose();
+    _timeController.dispose();
+    _placeController.dispose();
+    _latController.dispose();
+    _lonController.dispose();
     super.dispose();
   }
 
@@ -150,16 +162,31 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     _addLog('🌟 Testando cálculo de mapa astral...');
 
     try {
-      _addLog('📅 Data teste: 31/03/1994 19:39');
-      _addLog('📍 Local: São Paulo (-23.5505, -46.6333)');
+      // Parse inputs
+      final dateParts = _dateController.text.split('/');
+      final day = int.parse(dateParts[0]);
+      final month = int.parse(dateParts[1]);
+      final year = int.parse(dateParts[2]);
+
+      final timeParts = _timeController.text.split(':');
+      final hour = int.parse(timeParts[0]);
+      final minute = int.parse(timeParts[1]);
+
+      final latitude = double.parse(_latController.text);
+      final longitude = double.parse(_lonController.text);
+      final place = _placeController.text;
+
+      _addLog('📅 Data teste: ${_dateController.text} ${_timeController.text}');
+      _addLog('📍 Local: $place ($latitude, $longitude)');
 
       final calculator = ChartCalculator.instance;
       final chart = await calculator.calculateBirthChart(
-        birthDate: DateTime(1994, 3, 31),
-        birthTime: const TimeOfDay(hour: 19, minute: 39),
-        birthPlace: 'São Paulo',
-        latitude: -23.5505,
-        longitude: -46.6333,
+        birthDate: DateTime(year, month, day),
+        birthTime: TimeOfDay(hour: hour, minute: minute),
+        birthPlace: place,
+        latitude: latitude,
+        longitude: longitude,
+        onLog: _addLog,
       );
 
       _addLog('✅ MAPA CALCULADO!');
@@ -330,12 +357,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
             description: 'Testa geração de feitiços com Llama 3.1',
             onTest: _testGroqAPI,
           ),
-          _buildTestSection(
-            icon: Icons.star,
-            title: 'Mapa Astral',
-            description: 'Testa cálculos astronômicos locais',
-            onTest: _testBirthChart,
-          ),
+          _buildBirthChartSection(),
           _buildTestSection(
             icon: Icons.wb_twilight,
             title: 'Clima Mágico',
@@ -348,6 +370,235 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
             description: 'Testa sugestões personalizadas',
             onTest: _testSuggestions,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBirthChartSection() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              children: [
+                const Icon(Icons.star, size: 64, color: AppColors.lilac),
+                const SizedBox(height: 16),
+                Text(
+                  'Mapa Astral',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppColors.lilac,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Testa cálculos astronômicos locais',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.softWhite.withOpacity(0.8),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Input fields
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Dados do Nascimento',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.lilac,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _dateController,
+                        style: const TextStyle(color: AppColors.softWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Data',
+                          hintText: 'DD/MM/AAAA',
+                          labelStyle: TextStyle(color: AppColors.lilac),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.lilac),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _timeController,
+                        style: const TextStyle(color: AppColors.softWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Hora',
+                          hintText: 'HH:MM',
+                          labelStyle: TextStyle(color: AppColors.lilac),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.lilac),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _placeController,
+                  style: const TextStyle(color: AppColors.softWhite),
+                  decoration: const InputDecoration(
+                    labelText: 'Local',
+                    hintText: 'Cidade',
+                    labelStyle: TextStyle(color: AppColors.lilac),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.surfaceBorder),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.lilac),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _latController,
+                        style: const TextStyle(color: AppColors.softWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Latitude',
+                          hintText: '-23.5505',
+                          labelStyle: TextStyle(color: AppColors.lilac),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.lilac),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _lonController,
+                        style: const TextStyle(color: AppColors.softWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Longitude',
+                          hintText: '-46.6333',
+                          labelStyle: TextStyle(color: AppColors.lilac),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.lilac),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          ElevatedButton.icon(
+            onPressed: _isTesting ? null : _testBirthChart,
+            icon: _isTesting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkBackground),
+                    ),
+                  )
+                : const Icon(Icons.play_arrow),
+            label: Text(_isTesting ? 'Testando...' : 'Executar Teste'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.lilac,
+              foregroundColor: AppColors.darkBackground,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+
+          if (_result != null) ...[
+            const SizedBox(height: 16),
+            MagicalCard(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _result!.contains('SUCESSO')
+                      ? AppColors.success.withOpacity(0.2)
+                      : AppColors.error.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _result!,
+                  style: TextStyle(
+                    color: _result!.contains('SUCESSO') ? AppColors.success : AppColors.error,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+
+          if (_logs.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Logs de Diagnóstico',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.lilac,
+                      ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy, color: AppColors.lilac),
+                  onPressed: _copyLogs,
+                  tooltip: 'Copiar logs',
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            MagicalCard(
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 400),
+                child: SingleChildScrollView(
+                  child: SelectableText(
+                    _logs.join('\n'),
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      color: AppColors.softWhite,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -449,38 +700,11 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
           if (_logs.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Text(
-                  'Logs de Diagnóstico',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.lilac,
-                      ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.lilac.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+            Text(
+              'Logs de Diagnóstico',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.lilac,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.info_outline, size: 16, color: AppColors.lilac),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Use o botão 📋 acima para copiar',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.lilac,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
             const SizedBox(height: 8),
             MagicalCard(

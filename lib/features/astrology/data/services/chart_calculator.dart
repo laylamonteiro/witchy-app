@@ -20,6 +20,18 @@ class ChartCalculator {
 
   ChartCalculator._();
 
+  // Callback para logging (se não fornecido, usa print)
+  Function(String)? _logCallback;
+
+  // Helper para logging
+  void _log(String message) {
+    if (_logCallback != null) {
+      _logCallback!(message);
+    } else {
+      print(message);
+    }
+  }
+
   /// Calcula o mapa natal completo
   Future<BirthChartModel> calculateBirthChart({
     required DateTime birthDate,
@@ -28,12 +40,15 @@ class ChartCalculator {
     required double latitude,
     required double longitude,
     bool unknownBirthTime = false,
+    Function(String)? onLog,
   }) async {
     try {
-      print('🔧 Calculando mapa astral localmente...');
-      print('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
-      print('   Hora: ${birthTime.hour}:${birthTime.minute}');
-      print('   Local: $birthPlace');
+      _logCallback = onLog;
+
+      _log('🔧 Calculando mapa astral localmente...');
+      _log('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
+      _log('   Hora: ${birthTime.hour}:${birthTime.minute}');
+      _log('   Local: $birthPlace');
 
       return await _calculateWithLocalMethod(
         birthDate: birthDate,
@@ -57,10 +72,10 @@ class ChartCalculator {
     required double longitude,
     required bool unknownBirthTime,
   }) async {
-    print('🔧 Usando cálculos LOCAIS (método simplificado)');
-    print('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
-    print('   Hora: ${birthTime.hour}:${birthTime.minute}');
-    print('   Local: $birthPlace');
+    _log('🔧 Usando cálculos LOCAIS (método simplificado)');
+    _log('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
+    _log('   Hora: ${birthTime.hour}:${birthTime.minute}');
+    _log('   Local: $birthPlace');
 
     // 1. Converter para Julian Day
     final julianDay = _dateTimeToJulianDay(
@@ -190,10 +205,10 @@ class ChartCalculator {
 
     final jdDouble = jd.toDouble() + (hourUTC - 12) / 24.0;
 
-    print('   🕐 Hora local: ${time.hour}:${time.minute}');
-    print('   🌍 Timezone offset: $timezoneOffset horas');
-    print('   ⏰ Hora UTC: ${hourUTC.toStringAsFixed(2)}');
-    print('   📅 Julian Day: ${jdDouble.toStringAsFixed(5)}');
+    _log('   🕐 Hora local: ${time.hour}:${time.minute}');
+    _log('   🌍 Timezone offset: $timezoneOffset horas');
+    _log('   ⏰ Hora UTC: ${hourUTC.toStringAsFixed(2)}');
+    _log('   📅 Julian Day: ${jdDouble.toStringAsFixed(5)}');
 
     return jdDouble;
   }
@@ -367,8 +382,8 @@ class ChartCalculator {
     final gmst = _calculateGMST(julianDay);
     final lst = gmst + longitude / 15.0; // LST em horas
 
-    print('   ⏰ GMST: ${gmst.toStringAsFixed(6)} horas');
-    print('   🌍 LST: ${lst.toStringAsFixed(6)} horas (${(lst * 15).toStringAsFixed(2)}°)');
+    _log('   ⏰ GMST: ${gmst.toStringAsFixed(6)} horas');
+    _log('   🌍 LST: ${lst.toStringAsFixed(6)} horas (${(lst * 15).toStringAsFixed(2)}°)');
 
     // RAMC em graus (0-360)
     final ramc = (lst * 15.0) % 360;
@@ -429,15 +444,15 @@ class ChartCalculator {
     houses.sort((a, b) => a.number.compareTo(b.number));
 
     // Log detalhado de todas as casas
-    print('   🏠 CASAS ASTROLÓGICAS (${houses.length} casas):');
+    _log('   🏠 CASAS ASTROLÓGICAS (${houses.length} casas):');
     for (final house in houses) {
-      print('      Casa ${house.number.toString().padLeft(2)}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°${house.minute}\')');
+      _log('      Casa ${house.number.toString().padLeft(2)}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°${house.minute}\')');
     }
-    print('   ');
-    print('   📊 COMPARAÇÃO COM ASTRO.COM:');
-    print('      Asc esperado: 11°27\' Escorpião (221.463°)');
-    print('      MC esperado: 0°0\' Leão (120.014°)');
-    print('      LST esperado: 8:08:47 (122.196°)');
+    _log('   ');
+    _log('   📊 COMPARAÇÃO COM ASTRO.COM:');
+    _log('      Asc esperado: 11°27\' Escorpião (221.463°)');
+    _log('      MC esperado: 0°0\' Leão (120.014°)');
+    _log('      LST esperado: 8:08:47 (122.196°)');
 
     return houses;
   }
@@ -462,9 +477,9 @@ class ChartCalculator {
     asc = asc % 360;
     if (asc < 0) asc += 360;
 
-    print('   🔮 RAMC: ${ramc.toStringAsFixed(2)}°');
-    print('   📍 Latitude: ${latitude.toStringAsFixed(2)}°');
-    print('   ♈ Ascendente: ${asc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(asc).displayName})');
+    _log('   🔮 RAMC: ${ramc.toStringAsFixed(2)}°');
+    _log('   📍 Latitude: ${latitude.toStringAsFixed(2)}°');
+    _log('   ♈ Ascendente: ${asc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(asc).displayName})');
 
     return asc;
   }
