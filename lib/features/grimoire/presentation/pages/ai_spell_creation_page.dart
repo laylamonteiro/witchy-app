@@ -323,10 +323,11 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                               );
                             },
                             icon: const Icon(Icons.visibility, size: 18),
-                            label: const Text('Detalhes', style: TextStyle(fontSize: 13)),
+                            label: const Text('Detalhes', style: TextStyle(fontSize: 14)),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.lilac,
                               side: const BorderSide(color: AppColors.lilac),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             ),
                           ),
                         ),
@@ -334,11 +335,12 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: _saveSpell,
-                            icon: const Icon(Icons.save),
-                            label: const Text('Salvar'),
+                            icon: const Icon(Icons.save, size: 18),
+                            label: const Text('Salvar', style: TextStyle(fontSize: 14)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.lilac,
                               foregroundColor: AppColors.darkBackground,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             ),
                           ),
                         ),

@@ -425,6 +425,12 @@ class ChartCalculator {
     // Ordenar casas por número
     houses.sort((a, b) => a.number.compareTo(b.number));
 
+    // Log detalhado de todas as casas
+    print('   🏠 CASAS ASTROLÓGICAS:');
+    for (final house in houses) {
+      print('      Casa ${house.number}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°)');
+    }
+
     return houses;
   }
 
@@ -436,11 +442,11 @@ class ChartCalculator {
     final latRad = latitude * math.pi / 180;
     final ramcRad = ramc * math.pi / 180;
 
-    // Fórmula do ascendente (longitude eclíptica):
-    // tan(ASC) = -cos(RAMC) / (sin(RAMC) * cos(ε) + tan(lat) * sin(ε))
+    // Fórmula CORRETA do ascendente (longitude eclíptica):
+    // tan(ASC) = cos(RAMC) / -(sin(ε) * tan(lat) + cos(ε) * sin(RAMC))
 
-    final numerator = -math.cos(ramcRad);
-    final denominator = math.sin(ramcRad) * math.cos(oblRad) + math.tan(latRad) * math.sin(oblRad);
+    final numerator = math.cos(ramcRad);
+    final denominator = -(math.sin(oblRad) * math.tan(latRad) + math.cos(oblRad) * math.sin(ramcRad));
 
     var asc = math.atan2(numerator, denominator) * 180 / math.pi;
 
