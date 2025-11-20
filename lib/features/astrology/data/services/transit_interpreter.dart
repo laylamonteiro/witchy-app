@@ -16,13 +16,17 @@ class TransitInterpreter {
 
       // Verificar se temos trânsitos
       if (transits.isEmpty) {
-        throw Exception('Nenhum trânsito calculado para a data');
+        print('⚠️ Nenhum trânsito calculado, usando valores padrão');
       }
 
-      // Buscar Lua com verificação
+      // Buscar Lua com fallback seguro
       final moonTransit = transits.firstWhere(
         (t) => t.planet == Planet.moon,
-        orElse: () => throw Exception('Posição da Lua não encontrada'),
+        orElse: () {
+          print('⚠️ Lua não encontrada nos trânsitos, usando posição estimada');
+          // Fallback: calcular posição aproximada da Lua
+          return _estimateMoonPosition(date);
+        },
       );
 
       final moonPhase = _calculateMoonPhase(date);
@@ -109,9 +113,13 @@ class TransitInterpreter {
       suggestions.add(_createSuggestionFromAspect(date, aspect, 'challenging'));
     }
 
-    // Sugestão baseada na Lua
-    final moonTransit = transits.firstWhere((t) => t.planet == Planet.moon);
-    suggestions.add(_createMoonSuggestion(date, moonTransit));
+    // Sugestão baseada na Lua (se disponível)
+    try {
+      final moonTransit = transits.firstWhere((t) => t.planet == Planet.moon);
+      suggestions.add(_createMoonSuggestion(date, moonTransit));
+    } catch (e) {
+      print('⚠️ Lua não encontrada nos trânsitos, pulando sugestão lunar');
+    }
 
     return suggestions;
   }
@@ -418,6 +426,23 @@ class TransitInterpreter {
       relevantAspects: [],
       priority: EnergyLevel.moderate,
       category: 'divination',
+    );
+  }
+
+  /// Estima a posição da Lua quando o cálculo preciso falhar
+  Transit _estimateMoonPosition(DateTime date) {
+    // A Lua se move aproximadamente 13.17 graus por dia
+    final daysSinceEpoch = date.difference(DateTime(2000, 1, 1)).inDays;
+    final moonLongitude = (218.0 + (13.1764 * daysSinceEpoch)) % 360;
+
+    final signIndex = (moonLongitude / 30).floor() % 12;
+    final degree = moonLongitude % 30;
+
+    return Transit(
+      planet: Planet.moon,
+      sign: ZodiacSign.values[signIndex],
+      degree: degree,
+      isRetrograde: false,
     );
   }
 }
