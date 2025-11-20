@@ -43,17 +43,33 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   }
 
   void _copyLogs() {
-    print('📋 Copiando logs: ${_logs.length} linhas');
-    print('📋 Primeiras 3 linhas: ${_logs.take(3).join(" | ")}');
-    print('📋 Últimas 3 linhas: ${_logs.skip(_logs.length - 3).join(" | ")}');
+    print('========== DEBUG DE CÓPIA ==========');
+    print('📋 Total de linhas em _logs: ${_logs.length}');
+    print('📋 _logs.isEmpty: ${_logs.isEmpty}');
+
+    // Print de CADA linha individual
+    for (int i = 0; i < _logs.length; i++) {
+      print('📋 Linha $i: ${_logs[i].substring(0, _logs[i].length > 60 ? 60 : _logs[i].length)}...');
+    }
+
+    print('📋 Primeiras 3: ${_logs.take(3).join(" | ")}');
+    if (_logs.length > 3) {
+      print('📋 Últimas 3: ${_logs.skip(_logs.length - 3).join(" | ")}');
+    }
 
     final logsText = _logs.join('\n');
 
     print('📋 Texto total: ${logsText.length} caracteres');
-    print('📋 Número de quebras de linha: ${'\n'.allMatches(logsText).length}');
+    print('📋 Quebras de linha: ${'\n'.allMatches(logsText).length}');
+    print('📋 Primeiros 200 chars: ${logsText.substring(0, logsText.length > 200 ? 200 : logsText.length)}');
+
+    if (logsText.length > 200) {
+      print('📋 Últimos 200 chars: ${logsText.substring(logsText.length - 200)}');
+    }
 
     Clipboard.setData(ClipboardData(text: logsText)).then((_) {
-      print('✅ Logs copiados com sucesso!');
+      print('✅ Clipboard.setData COMPLETO!');
+      print('✅ Dados enviados para clipboard: ${logsText.length} caracteres');
 
       if (!mounted) return;
 
@@ -68,6 +84,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           duration: const Duration(seconds: 3),
         ),
       );
+    }).catchError((error) {
+      print('❌ ERRO ao copiar: $error');
     });
   }
 
