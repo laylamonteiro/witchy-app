@@ -126,20 +126,6 @@ class _ToolsTab extends StatelessWidget {
           const SizedBox(height: 12),
           _buildToolCard(
             context,
-            icon: '🔍',
-            title: 'Diagnóstico IA',
-            description: 'Testar configuração da API Groq',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const AIDiagnosticPage(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildToolCard(
-            context,
             icon: '🔮',
             title: 'Divinação',
             description: 'Runas, pêndulo e oracle cards para orientação',
@@ -147,6 +133,20 @@ class _ToolsTab extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DivinationHubPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '🔍',
+            title: 'Diagnóstico IA',
+            description: 'Testar configuração da API Groq',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const AIDiagnosticPage(),
                 ),
               );
             },

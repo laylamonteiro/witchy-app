@@ -38,6 +38,7 @@ class SigilWheelWidget extends StatelessWidget {
           ),
         ],
       ),
+      clipBehavior: Clip.none, // Permite círculo dourado ser desenhado fora dos limites
       child: CustomPaint(
         size: Size(size, size),
         painter: SigilWheelPainter(

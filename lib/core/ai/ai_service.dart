@@ -24,6 +24,28 @@ class AIService {
 
   Future<SpellModel> _generateWithGroq(String intention) async {
     try {
+      print('🤖 Gerando feitiço com Groq...');
+      print('📝 Intenção: $intention');
+
+      final requestData = {
+        'model': 'llama-3.1-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': _buildSystemPrompt(),
+          },
+          {
+            'role': 'user',
+            'content': intention,
+          },
+        ],
+        'temperature': 0.8,
+        'max_tokens': 1024,
+        'response_format': {'type': 'json_object'},
+      };
+
+      print('📡 Enviando requisição para Groq API...');
+
       final response = await _dio.post(
         'https://api.groq.com/openai/v1/chat/completions',
         options: Options(
@@ -34,30 +56,39 @@ class AIService {
           receiveTimeout: const Duration(seconds: 30),
           sendTimeout: const Duration(seconds: 30),
         ),
-        data: {
-          'model': 'llama-3.1-70b-versatile',
-          'messages': [
-            {
-              'role': 'system',
-              'content': _buildSystemPrompt(),
-            },
-            {
-              'role': 'user',
-              'content': intention,
-            },
-          ],
-          'temperature': 0.8,
-          'max_tokens': 1024,
-          'response_format': {'type': 'json_object'},
-        },
+        data: requestData,
       );
 
+      print('✅ Resposta recebida: ${response.statusCode}');
+
       final content = response.data['choices'][0]['message']['content'];
+      print('📦 Conteúdo recebido, parseando JSON...');
+
       final spellData = jsonDecode(content);
+      print('✅ JSON parseado com sucesso');
 
       return _parseSpellData(spellData);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      print('❌ DioException: ${e.response?.statusCode}');
+      print('📄 Response data: ${e.response?.data}');
+
+      if (e.response?.statusCode == 400) {
+        // Erro 400 - requisição inválida
+        final errorData = e.response?.data;
+        String errorMessage = 'Requisição inválida (400)';
+
+        if (errorData != null && errorData is Map) {
+          if (errorData.containsKey('error')) {
+            final error = errorData['error'];
+            if (error is Map && error.containsKey('message')) {
+              errorMessage = error['message'];
+            }
+          }
+        }
+
+        print('⚠️ Erro 400 detalhado: $errorMessage');
+        throw Exception('Erro 400: $errorMessage');
+      } else if (e.response?.statusCode == 401) {
         throw Exception('Erro de autenticação');
       } else if (e.response?.statusCode == 429) {
         throw Exception('Limite de uso excedido');
@@ -66,6 +97,7 @@ class AIService {
       }
       throw Exception('Erro na conexão: ${e.message}');
     } catch (e) {
+      print('❌ Exceção geral: $e');
       throw Exception('Erro ao processar resposta: $e');
     }
   }

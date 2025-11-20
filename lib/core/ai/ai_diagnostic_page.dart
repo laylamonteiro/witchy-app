@@ -74,7 +74,24 @@ class _AIDiagnosticPageState extends State<AIDiagnosticPage> {
       _addLog('❌ ERRO AO TESTAR API: $e');
 
       // Diagnóstico de erros comuns
-      if (e.toString().contains('401') || e.toString().contains('Unauthorized')) {
+      if (e.toString().contains('400')) {
+        _addLog('');
+        _addLog('🔍 DIAGNÓSTICO: Requisição Inválida (400)');
+        _addLog('   Possíveis causas:');
+        _addLog('   1. Modelo solicitado não existe ou mudou de nome');
+        _addLog('   2. Parâmetro response_format não suportado pelo modelo');
+        _addLog('   3. Formato da requisição incorreto');
+        _addLog('');
+        _addLog('📝 Mensagem de erro da API:');
+        final errorMatch = RegExp(r'Erro 400: (.+)').firstMatch(e.toString());
+        if (errorMatch != null) {
+          _addLog('   ${errorMatch.group(1)}');
+        }
+        _addLog('');
+        _addLog('✅ SOLUÇÃO:');
+        _addLog('   Verifique os logs detalhados acima');
+        _addLog('   O erro específico da API está descrito');
+      } else if (e.toString().contains('401') || e.toString().contains('Unauthorized')) {
         _addLog('');
         _addLog('🔍 DIAGNÓSTICO: Erro de Autenticação (401)');
         _addLog('   Possíveis causas:');
