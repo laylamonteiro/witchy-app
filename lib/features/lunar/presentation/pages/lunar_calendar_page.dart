@@ -125,11 +125,18 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Próximas Fases',
+                          'Próximas Fases Lunares',
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Acompanhe as próximas mudanças da lua',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                         const SizedBox(height: 16),
-                        ..._buildNextPhasesInOrder(context, lunarProvider),
+                        ..._buildAllNextPhases(context, lunarProvider),
                       ],
                     ),
                   ),
@@ -305,128 +312,110 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
     );
   }
 
-  Widget _buildNextPhaseItem(
+  List<Widget> _buildAllNextPhases(
     BuildContext context,
     LunarProvider provider,
-    String phaseName,
-    String emoji, {
-    required bool isFullMoon,
-  }) {
-    final dateFormat = DateFormat('dd/MM/yyyy');
-    final date = isFullMoon
-        ? provider.getNextFullMoon()
-        : provider.getNextNewMoon();
-    final daysUntil = isFullMoon
-        ? provider.getDaysUntilFullMoon()
-        : provider.getDaysUntilNewMoon();
+  ) {
+    final allPhases = provider.getAllNextPhases();
+    final widgets = <Widget>[];
 
-    String daysText = '';
-    if (daysUntil != null) {
-      if (daysUntil == 0) {
-        daysText = 'Hoje!';
-      } else if (daysUntil == 1) {
-        daysText = 'Amanhã';
-      } else {
-        daysText = 'Em $daysUntil dias';
+    for (int i = 0; i < allPhases.length; i++) {
+      final phaseData = allPhases[i];
+      final phase = phaseData['phase'] as MoonPhase;
+      final date = phaseData['date'] as DateTime;
+      final daysUntil = phaseData['daysUntil'] as int;
+      final hoursUntil = phaseData['hoursUntil'] as int;
+
+      widgets.add(_buildEnhancedPhaseItem(
+        context,
+        phase.displayName,
+        phase.emoji,
+        date,
+        daysUntil,
+        hoursUntil,
+      ));
+
+      if (i < allPhases.length - 1) {
+        widgets.add(const SizedBox(height: 16));
       }
     }
 
-    return Row(
-      children: [
-        Text(
-          emoji,
-          style: const TextStyle(fontSize: 32),
+    return widgets;
+  }
+
+  Widget _buildEnhancedPhaseItem(
+    BuildContext context,
+    String phaseName,
+    String emoji,
+    DateTime date,
+    int daysUntil,
+    int hoursUntil,
+  ) {
+    final dateFormat = DateFormat('dd/MM/yyyy');
+    final timeFormat = DateFormat('HH:mm');
+
+    String timeText = '';
+    if (daysUntil == 0) {
+      if (hoursUntil == 0) {
+        timeText = 'Agora!';
+      } else if (hoursUntil == 1) {
+        timeText = 'Em 1 hora';
+      } else {
+        timeText = 'Em $hoursUntil horas';
+      }
+    } else if (daysUntil == 1) {
+      timeText = 'Amanhã às ${timeFormat.format(date)}';
+    } else {
+      timeText = 'Em $daysUntil dias às ${timeFormat.format(date)}';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.lilac.withOpacity(0.3),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                phaseName,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              if (date != null) ...[
+      ),
+      child: Row(
+        children: [
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 32),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  phaseName,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Text(
                   dateFormat.format(date),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
                       ),
                 ),
-                if (daysText.isNotEmpty)
-                  Text(
-                    daysText,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.lilac,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-              ] else
+                const SizedBox(height: 2),
                 Text(
-                  'Calculando...',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                  timeText,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.lilac,
+                        fontWeight: FontWeight.w600,
                       ),
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
-  }
-
-  List<Widget> _buildNextPhasesInOrder(
-    BuildContext context,
-    LunarProvider provider,
-  ) {
-    final daysUntilNewMoon = provider.getDaysUntilNewMoon();
-    final daysUntilFullMoon = provider.getDaysUntilFullMoon();
-
-    // Determinar qual fase vem primeiro
-    bool newMoonFirst = true;
-    if (daysUntilNewMoon != null && daysUntilFullMoon != null) {
-      newMoonFirst = daysUntilNewMoon <= daysUntilFullMoon;
-    } else if (daysUntilNewMoon == null) {
-      newMoonFirst = false;
-    }
-
-    final phases = [
-      if (newMoonFirst) ...[
-        _buildNextPhaseItem(
-          context,
-          provider,
-          'Lua Nova',
-          MoonPhase.newMoon.emoji,
-          isFullMoon: false,
-        ),
-        const SizedBox(height: 16),
-        _buildNextPhaseItem(
-          context,
-          provider,
-          'Lua Cheia',
-          MoonPhase.fullMoon.emoji,
-          isFullMoon: true,
-        ),
-      ] else ...[
-        _buildNextPhaseItem(
-          context,
-          provider,
-          'Lua Cheia',
-          MoonPhase.fullMoon.emoji,
-          isFullMoon: true,
-        ),
-        const SizedBox(height: 16),
-        _buildNextPhaseItem(
-          context,
-          provider,
-          'Lua Nova',
-          MoonPhase.newMoon.emoji,
-          isFullMoon: false,
-        ),
-      ],
-    ];
-
-    return phases;
   }
 
   Widget _buildSpellRecommendation(
