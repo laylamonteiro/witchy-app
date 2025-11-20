@@ -67,7 +67,7 @@ class SigilWheelPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = math.min(size.width, size.height) * 0.42;
+    final maxRadius = math.min(size.width, size.height) * 0.35; // Reduzido para caber o círculo dourado
 
     // Paint para o círculo principal
     final circlePaint = Paint()
@@ -89,7 +89,7 @@ class SigilWheelPainter extends CustomPainter {
       final outerCirclePaint = Paint()
         ..color = const Color(0xFFFFD700) // Dourado
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
+        ..strokeWidth = 2.5; // Ligeiramente mais grosso para destaque
 
       canvas.drawCircle(center, maxRadius + 35, outerCirclePaint);
     }

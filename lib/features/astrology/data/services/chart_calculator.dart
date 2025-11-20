@@ -6,24 +6,19 @@ import '../models/planet_position_model.dart';
 import '../models/house_model.dart';
 import '../models/aspect_model.dart';
 import '../models/enums.dart';
-import 'external_chart_api.dart';
 
 /// Calculadora de Mapa Astral
 ///
-/// ATUALIZAÇÃO: Agora usa API externa (Prokerala) para cálculos precisos
-/// baseados em Swiss Ephemeris. A implementação local simplificada (±2°)
-/// é mantida como fallback.
+/// Usa cálculos astronômicos locais baseados em fórmulas do VSOP87
+/// para posições planetárias. Acuracidade aproximada: ±2° para uso
+/// em contexto de bruxaria e magia prática.
 ///
-/// Para usar a API externa:
-/// 1. Obtenha uma API key gratuita em https://api.prokerala.com/
-/// 2. Configure em external_chart_api.dart
+/// Para aplicações que requerem precisão astronômica profissional,
+/// considere integrar Swiss Ephemeris ou outra biblioteca especializada.
 class ChartCalculator {
   static final ChartCalculator instance = ChartCalculator._();
 
   ChartCalculator._();
-
-  // Usar API externa por padrão (mude para false para usar cálculos locais)
-  static const bool _useExternalAPI = true;
 
   /// Calcula o mapa natal completo
   Future<BirthChartModel> calculateBirthChart({
@@ -35,34 +30,11 @@ class ChartCalculator {
     bool unknownBirthTime = false,
   }) async {
     try {
-      // Tentar usar API externa primeiro se habilitado
-      if (_useExternalAPI && !unknownBirthTime) {
-        try {
-          print('📡 Tentando usar API externa (Prokerala)...');
-          final result = await _calculateWithExternalAPI(
-            birthDate: birthDate,
-            birthTime: birthTime,
-            birthPlace: birthPlace,
-            latitude: latitude,
-            longitude: longitude,
-          );
-          print('✅ API externa funcionou! Usando cálculos precisos (Swiss Ephemeris).');
-          print('   ACURACIDADE: ±0.1° nas posições planetárias');
-          return result;
-        } catch (e, stackTrace) {
-          print('');
-          print('❌ ERRO NA API EXTERNA: $e');
-          print('📋 Stack trace: ${stackTrace.toString().split('\n').take(3).join('\n')}');
-          print('');
-          print('⚠️  ATENÇÃO: Usando cálculos locais como FALLBACK');
-          print('   ACURACIDADE REDUZIDA: ±2° nas posições planetárias');
-          print('   Para máxima precisão, resolva o erro da API acima.');
-          print('');
-          // Continua para usar cálculos locais como fallback
-        }
-      }
+      print('🔧 Calculando mapa astral localmente...');
+      print('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
+      print('   Hora: ${birthTime.hour}:${birthTime.minute}');
+      print('   Local: $birthPlace');
 
-      // Usar cálculos locais (implementação original)
       return await _calculateWithLocalMethod(
         birthDate: birthDate,
         birthTime: birthTime,
@@ -76,81 +48,7 @@ class ChartCalculator {
     }
   }
 
-  /// Calcula usando API externa (Prokerala)
-  Future<BirthChartModel> _calculateWithExternalAPI({
-    required DateTime birthDate,
-    required TimeOfDay birthTime,
-    required String birthPlace,
-    required double latitude,
-    required double longitude,
-  }) async {
-    // IMPORTANTE: Criar DateTime representando o HORÁRIO LOCAL do local de nascimento
-    // Este DateTime não tem timezone, é apenas a representação da hora informada
-    // A API Prokerala vai usar as coordenadas para determinar o timezone correto
-    final fullBirthDateTime = DateTime(
-      birthDate.year,
-      birthDate.month,
-      birthDate.day,
-      birthTime.hour,
-      birthTime.minute,
-      0, // segundos
-    );
-
-    print('🕐 Hora informada (LOCAL do nascimento): '
-        '${birthTime.hour}:${birthTime.minute}');
-    print('📍 Local: $birthPlace ($latitude, $longitude)');
-
-    // Chamar API externa
-    final apiData = await ExternalChartAPI.instance.calculateBirthChart(
-      birthDate: fullBirthDateTime,
-      latitude: latitude,
-      longitude: longitude,
-      houseSystem: 'placidus',
-    );
-
-    print('📦 Processando resposta da API...');
-    // Processar resposta da API
-    final parsedData = ExternalChartAPI.instance.parseAPIResponse(apiData);
-
-    final planets = parsedData['planets'] as List<PlanetPosition>;
-    final houses = parsedData['houses'] as List<House>;
-    final ascendant = parsedData['ascendant'] as PlanetPosition?;
-    final midheaven = parsedData['midheaven'] as PlanetPosition?;
-
-    print('✅ API retornou:');
-    print('   - ${planets.length} planetas');
-    print('   - ${houses.length} casas');
-    if (ascendant != null) {
-      print('   - Ascendente: ${ascendant.sign.name} ${ascendant.degree}°${ascendant.minute}\'');
-    }
-    if (planets.isNotEmpty) {
-      final sun = planets.firstWhere((p) => p.planet == Planet.sun, orElse: () => planets.first);
-      print('   - Sol: ${sun.sign.name} ${sun.degree}°${sun.minute}\'');
-    }
-
-    // Calcular aspectos
-    final aspects = _calculateAspects(planets);
-
-    return BirthChartModel(
-      id: const Uuid().v4(),
-      userId: 'current_user',
-      birthDate: birthDate,
-      birthTime: birthTime,
-      birthPlace: birthPlace,
-      latitude: latitude,
-      longitude: longitude,
-      timezone: 'UTC',
-      unknownBirthTime: false,
-      planets: planets,
-      houses: houses,
-      ascendant: ascendant,
-      midheaven: midheaven,
-      aspects: aspects,
-      calculatedAt: DateTime.now(),
-    );
-  }
-
-  /// Calcula usando método local simplificado (fallback)
+  /// Calcula usando método local (VSOP87)
   Future<BirthChartModel> _calculateWithLocalMethod({
     required DateTime birthDate,
     required TimeOfDay birthTime,
