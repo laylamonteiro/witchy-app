@@ -6,6 +6,8 @@ import '../providers/astrology_provider.dart';
 import 'birth_chart_input_page.dart';
 import 'birth_chart_view_page.dart';
 import 'magical_profile_page.dart';
+import 'daily_magical_weather_page.dart';
+import 'personalized_suggestions_page.dart';
 
 class AstrologyPage extends StatefulWidget {
   const AstrologyPage({super.key});
@@ -115,6 +117,40 @@ class _AstrologyPageState extends State<AstrologyPage> {
                       );
                     },
                   ),
+
+                const SizedBox(height: 12),
+
+                // Clima Mágico Diário
+                _buildOption(
+                  context,
+                  icon: '🌙',
+                  title: 'Clima Mágico Diário',
+                  description: 'Trânsitos planetários e energia do dia',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const DailyMagicalWeatherPage(),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 12),
+
+                // Sugestões Personalizadas
+                _buildOption(
+                  context,
+                  icon: '🔮',
+                  title: 'Sugestões Personalizadas',
+                  description: 'Práticas baseadas nos seus trânsitos',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const PersonalizedSuggestionsPage(),
+                      ),
+                    );
+                  },
+                ),
 
                 const SizedBox(height: 12),
 
