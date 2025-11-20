@@ -17,6 +17,7 @@ class BirthChartInputPage extends StatefulWidget {
 class _BirthChartInputPageState extends State<BirthChartInputPage> {
   final _formKey = GlobalKey<FormState>();
   final _birthPlaceController = TextEditingController();
+  final FocusNode _birthPlaceFocusNode = FocusNode();
 
   DateTime? _birthDate;
   TimeOfDay? _birthTime;
@@ -24,10 +25,103 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   bool _unknownBirthTime = false;
   bool _isCalculating = false;
 
+  List<Location> _locationSuggestions = [];
+  List<Placemark> _placemarkSuggestions = [];
+  bool _isSearchingLocation = false;
+  bool _showSuggestions = false;
+  double? _selectedLatitude;
+  double? _selectedLongitude;
+
   @override
   void dispose() {
     _birthPlaceController.dispose();
+    _birthPlaceFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _searchLocation(String query) async {
+    if (query.length < 3) {
+      setState(() {
+        _locationSuggestions = [];
+        _placemarkSuggestions = [];
+        _showSuggestions = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearchingLocation = true;
+      _showSuggestions = true;
+    });
+
+    try {
+      final locations = await locationFromAddress(query);
+
+      // Get placemarks for each location to show readable addresses
+      final placemarks = <Placemark>[];
+      for (final location in locations.take(5)) {
+        try {
+          final placemark = await placemarkFromCoordinates(
+            location.latitude,
+            location.longitude,
+          );
+          if (placemark.isNotEmpty) {
+            placemarks.add(placemark.first);
+          }
+        } catch (e) {
+          // Skip locations that can't be reverse geocoded
+        }
+      }
+
+      setState(() {
+        _locationSuggestions = locations.take(5).toList();
+        _placemarkSuggestions = placemarks;
+        _isSearchingLocation = false;
+      });
+    } catch (e) {
+      setState(() {
+        _locationSuggestions = [];
+        _placemarkSuggestions = [];
+        _isSearchingLocation = false;
+      });
+    }
+  }
+
+  void _selectLocation(int index) {
+    final location = _locationSuggestions[index];
+    final placemark = _placemarkSuggestions.length > index
+        ? _placemarkSuggestions[index]
+        : null;
+
+    String displayName;
+    if (placemark != null) {
+      final parts = <String>[];
+      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+        parts.add(placemark.locality!);
+      }
+      if (placemark.administrativeArea != null &&
+          placemark.administrativeArea!.isNotEmpty) {
+        parts.add(placemark.administrativeArea!);
+      }
+      if (placemark.country != null && placemark.country!.isNotEmpty) {
+        parts.add(placemark.country!);
+      }
+      displayName = parts.join(', ');
+    } else {
+      displayName = _birthPlaceController.text;
+    }
+
+    setState(() {
+      _birthPlace = displayName;
+      _birthPlaceController.text = displayName;
+      _selectedLatitude = location.latitude;
+      _selectedLongitude = location.longitude;
+      _showSuggestions = false;
+      _locationSuggestions = [];
+      _placemarkSuggestions = [];
+    });
+
+    _birthPlaceFocusNode.unfocus();
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -100,14 +194,25 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     });
 
     try {
-      // Geocodificar local de nascimento
-      final locations = await locationFromAddress(_birthPlace!);
+      // Use coordenadas já selecionadas ou geocodificar
+      double latitude;
+      double longitude;
 
-      if (locations.isEmpty) {
-        throw Exception('Local não encontrado');
+      if (_selectedLatitude != null && _selectedLongitude != null) {
+        latitude = _selectedLatitude!;
+        longitude = _selectedLongitude!;
+      } else {
+        // Geocodificar local de nascimento
+        final locations = await locationFromAddress(_birthPlace!);
+
+        if (locations.isEmpty) {
+          throw Exception('Local não encontrado');
+        }
+
+        final location = locations.first;
+        latitude = location.latitude;
+        longitude = location.longitude;
       }
-
-      final location = locations.first;
 
       // Calcular mapa
       final provider = context.read<AstrologyProvider>();
@@ -115,8 +220,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
         birthDate: _birthDate!,
         birthTime: _birthTime ?? const TimeOfDay(hour: 12, minute: 0),
         birthPlace: _birthPlace!,
-        latitude: location.latitude,
-        longitude: location.longitude,
+        latitude: latitude,
+        longitude: longitude,
         unknownBirthTime: _unknownBirthTime,
       );
 
@@ -292,9 +397,17 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                             color: AppColors.lilac,
                           ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Digite pelo menos 3 caracteres para buscar',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.softWhite.withOpacity(0.7),
+                          ),
+                    ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _birthPlaceController,
+                      focusNode: _birthPlaceFocusNode,
                       style: const TextStyle(color: AppColors.softWhite),
                       decoration: InputDecoration(
                         hintText: 'Ex: São Paulo, Brasil',
@@ -305,6 +418,21 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           Icons.location_on,
                           color: AppColors.lilac,
                         ),
+                        suffixIcon: _isSearchingLocation
+                            ? const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.lilac,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : null,
                         filled: true,
                         fillColor: AppColors.cardBackground,
                         border: OutlineInputBorder(
@@ -315,9 +443,77 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       onChanged: (value) {
                         setState(() {
                           _birthPlace = value;
+                          _selectedLatitude = null;
+                          _selectedLongitude = null;
                         });
+                        _searchLocation(value);
                       },
                     ),
+                    if (_showSuggestions && _locationSuggestions.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.cardBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.lilac.withOpacity(0.3),
+                          ),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _locationSuggestions.length,
+                          separatorBuilder: (context, index) => Divider(
+                            color: AppColors.lilac.withOpacity(0.2),
+                            height: 1,
+                          ),
+                          itemBuilder: (context, index) {
+                            final placemark = _placemarkSuggestions.length > index
+                                ? _placemarkSuggestions[index]
+                                : null;
+
+                            String displayText;
+                            if (placemark != null) {
+                              final parts = <String>[];
+                              if (placemark.locality != null &&
+                                  placemark.locality!.isNotEmpty) {
+                                parts.add(placemark.locality!);
+                              }
+                              if (placemark.administrativeArea != null &&
+                                  placemark.administrativeArea!.isNotEmpty) {
+                                parts.add(placemark.administrativeArea!);
+                              }
+                              if (placemark.country != null &&
+                                  placemark.country!.isNotEmpty) {
+                                parts.add(placemark.country!);
+                              }
+                              displayText = parts.join(', ');
+                            } else {
+                              final loc = _locationSuggestions[index];
+                              displayText =
+                                  'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
+                            }
+
+                            return ListTile(
+                              dense: true,
+                              leading: const Icon(
+                                Icons.place,
+                                color: AppColors.lilac,
+                                size: 20,
+                              ),
+                              title: Text(
+                                displayText,
+                                style: const TextStyle(
+                                  color: AppColors.softWhite,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              onTap: () => _selectLocation(index),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

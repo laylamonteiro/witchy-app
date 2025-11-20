@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/astrology_provider.dart';
@@ -73,18 +74,23 @@ class MagicalProfilePage extends StatelessWidget {
                           const SizedBox(width: 12),
                           Text(
                             'Elemento ${profile.dominantElement.displayName}',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color: AppColors.lilac,
-                                ),
+                            style: GoogleFonts.cinzelDecorative(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.lilac,
+                            ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
                       const Divider(color: AppColors.lilac),
+                      const SizedBox(height: 12),
                       Text(
                         profile.dominantElement.magicalDescription,
                         style: const TextStyle(
                           color: AppColors.softWhite,
                           height: 1.5,
+                          fontSize: 15,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -129,16 +135,21 @@ class MagicalProfilePage extends StatelessWidget {
                     children: [
                       Text(
                         'Modalidade ${profile.dominantModality.displayName}',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.lilac,
-                            ),
+                        style: GoogleFonts.cinzelDecorative(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.lilac,
+                        ),
                       ),
+                      const SizedBox(height: 8),
                       const Divider(color: AppColors.lilac),
+                      const SizedBox(height: 12),
                       Text(
                         profile.dominantModality.description,
                         style: const TextStyle(
                           color: AppColors.softWhite,
                           height: 1.5,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -154,16 +165,21 @@ class MagicalProfilePage extends StatelessWidget {
                     children: [
                       Text(
                         '☉ Essência Mágica',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.lilac,
-                            ),
+                        style: GoogleFonts.cinzelDecorative(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.lilac,
+                        ),
                       ),
+                      const SizedBox(height: 8),
                       const Divider(color: AppColors.lilac),
+                      const SizedBox(height: 12),
                       Text(
                         profile.magicalEssence,
                         style: const TextStyle(
                           color: AppColors.softWhite,
                           height: 1.5,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -179,16 +195,21 @@ class MagicalProfilePage extends StatelessWidget {
                     children: [
                       Text(
                         '☽ Dons Intuitivos',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.lilac,
-                            ),
+                        style: GoogleFonts.cinzelDecorative(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.lilac,
+                        ),
                       ),
+                      const SizedBox(height: 8),
                       const Divider(color: AppColors.lilac),
+                      const SizedBox(height: 12),
                       Text(
                         profile.intuitiveGifts,
                         style: const TextStyle(
                           color: AppColors.softWhite,
                           height: 1.5,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -204,16 +225,21 @@ class MagicalProfilePage extends StatelessWidget {
                     children: [
                       Text(
                         '☿ Comunicação Mágica',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.lilac,
-                            ),
+                        style: GoogleFonts.cinzelDecorative(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.lilac,
+                        ),
                       ),
+                      const SizedBox(height: 8),
                       const Divider(color: AppColors.lilac),
+                      const SizedBox(height: 12),
                       Text(
                         profile.communicationStyle,
                         style: const TextStyle(
                           color: AppColors.softWhite,
                           height: 1.5,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -229,16 +255,21 @@ class MagicalProfilePage extends StatelessWidget {
                     children: [
                       Text(
                         '🔮 Casa da Magia',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.lilac,
-                            ),
+                        style: GoogleFonts.cinzelDecorative(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.lilac,
+                        ),
                       ),
+                      const SizedBox(height: 8),
                       const Divider(color: AppColors.lilac),
+                      const SizedBox(height: 12),
                       Text(
                         profile.houseOfMagic,
                         style: const TextStyle(
                           color: AppColors.softWhite,
                           height: 1.5,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -254,16 +285,21 @@ class MagicalProfilePage extends StatelessWidget {
                     children: [
                       Text(
                         '🌙 Casa do Espírito',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.lilac,
-                            ),
+                        style: GoogleFonts.cinzelDecorative(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.lilac,
+                        ),
                       ),
+                      const SizedBox(height: 8),
                       const Divider(color: AppColors.lilac),
+                      const SizedBox(height: 12),
                       Text(
                         profile.houseOfSpirit,
                         style: const TextStyle(
                           color: AppColors.softWhite,
                           height: 1.5,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -280,11 +316,15 @@ class MagicalProfilePage extends StatelessWidget {
                       children: [
                         Text(
                           '⭐ Suas Forças Mágicas',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: AppColors.lilac,
-                              ),
+                          style: GoogleFonts.cinzelDecorative(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.lilac,
+                          ),
                         ),
+                        const SizedBox(height: 8),
                         const Divider(color: AppColors.lilac),
+                        const SizedBox(height: 12),
                         ...profile.magicalStrengths.map((strength) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -325,11 +365,15 @@ class MagicalProfilePage extends StatelessWidget {
                       children: [
                         Text(
                           '📿 Práticas Recomendadas',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: AppColors.lilac,
-                              ),
+                          style: GoogleFonts.cinzelDecorative(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.lilac,
+                          ),
                         ),
+                        const SizedBox(height: 8),
                         const Divider(color: AppColors.lilac),
+                        const SizedBox(height: 12),
                         ...profile.recommendedPractices.map((practice) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -370,11 +414,15 @@ class MagicalProfilePage extends StatelessWidget {
                       children: [
                         Text(
                           '🔮 Ferramentas Favoráveis',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: AppColors.lilac,
-                              ),
+                          style: GoogleFonts.cinzelDecorative(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.lilac,
+                          ),
                         ),
+                        const SizedBox(height: 8),
                         const Divider(color: AppColors.lilac),
+                        const SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -415,11 +463,15 @@ class MagicalProfilePage extends StatelessWidget {
                       children: [
                         Text(
                           '🌑 Trabalho com Sombras',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: AppColors.lilac,
-                              ),
+                          style: GoogleFonts.cinzelDecorative(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.lilac,
+                          ),
                         ),
+                        const SizedBox(height: 8),
                         const Divider(color: AppColors.lilac),
+                        const SizedBox(height: 12),
                         ...profile.shadowWork.map((work) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
