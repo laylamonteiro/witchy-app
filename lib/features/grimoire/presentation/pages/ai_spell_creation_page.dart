@@ -322,8 +322,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.visibility),
-                            label: const Text('Ver Detalhes'),
+                            icon: const Icon(Icons.visibility, size: 18),
+                            label: const Text('Detalhes', style: TextStyle(fontSize: 13)),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.lilac,
                               side: const BorderSide(color: AppColors.lilac),

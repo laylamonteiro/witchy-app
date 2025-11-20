@@ -154,14 +154,33 @@ class ChartCalculator {
     final year = date.year;
     final month = date.month;
     final day = date.day;
-    final hour = time.hour + time.minute / 60.0;
+
+    // IMPORTANTE: Converter hora local para UTC
+    // Estimar timezone baseado na longitude (aproximação)
+    // Longitude negativa = Oeste do meridiano de Greenwich
+    // Cada 15° de longitude = 1 hora de diferença
+    final timezoneOffset = (longitude / 15.0).round();
+
+    // Converter hora local para UTC
+    final hourLocal = time.hour + time.minute / 60.0;
+    var hourUTC = hourLocal - timezoneOffset;
+
+    // Ajustar dia se necessário
+    var adjustedDay = day;
+    if (hourUTC < 0) {
+      hourUTC += 24;
+      adjustedDay -= 1;
+    } else if (hourUTC >= 24) {
+      hourUTC -= 24;
+      adjustedDay += 1;
+    }
 
     // Algoritmo para cálculo do Julian Day
     final a = ((14 - month) / 12).floor();
     final y = year + 4800 - a;
     final m = month + 12 * a - 3;
 
-    var jd = day +
+    var jd = adjustedDay +
         ((153 * m + 2) / 5).floor() +
         365 * y +
         (y / 4).floor() -
@@ -169,7 +188,12 @@ class ChartCalculator {
         (y / 400).floor() -
         32045;
 
-    final jdDouble = jd.toDouble() + (hour - 12) / 24.0;
+    final jdDouble = jd.toDouble() + (hourUTC - 12) / 24.0;
+
+    print('   🕐 Hora local: ${time.hour}:${time.minute}');
+    print('   🌍 Timezone offset: $timezoneOffset horas');
+    print('   ⏰ Hora UTC: ${hourUTC.toStringAsFixed(2)}');
+    print('   📅 Julian Day: ${jdDouble.toStringAsFixed(5)}');
 
     return jdDouble;
   }
@@ -423,6 +447,10 @@ class ChartCalculator {
     // Normalizar para 0-360
     asc = asc % 360;
     if (asc < 0) asc += 360;
+
+    print('   🔮 RAMC: ${ramc.toStringAsFixed(2)}°');
+    print('   📍 Latitude: ${latitude.toStringAsFixed(2)}°');
+    print('   ♈ Ascendente: ${asc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(asc).displayName})');
 
     return asc;
   }

@@ -232,7 +232,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       _addLog('✅ SUGESTÕES GERADAS!');
       _addLog('   Total: ${suggestions.length}');
       for (final suggestion in suggestions.take(3)) {
-        _addLog('   • ${suggestion.title}');
+        _addLog('   • ${suggestion.title ?? "Sugestão sem título"}');
       }
 
       setState(() {
