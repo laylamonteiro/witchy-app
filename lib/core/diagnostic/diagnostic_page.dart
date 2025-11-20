@@ -550,13 +550,13 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                 decoration: BoxDecoration(
                   color: _result!.contains('SUCESSO')
                       ? AppColors.success.withOpacity(0.2)
-                      : AppColors.error.withOpacity(0.2),
+                      : AppColors.alert.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   _result!,
                   style: TextStyle(
-                    color: _result!.contains('SUCESSO') ? AppColors.success : AppColors.error,
+                    color: _result!.contains('SUCESSO') ? AppColors.success : AppColors.alert,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
