@@ -110,14 +110,6 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Escolha uma palavra que represente seu desejo ou objetivo',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
             const SizedBox(height: 24),
 
             // Campo de entrada
