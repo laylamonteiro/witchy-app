@@ -83,12 +83,12 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     } catch (e) {
       if (!mounted) return;
 
-      String errorMessage = 'Erro ao gerar feitiço. Tente novamente mais tarde.';
+      String errorMessage = 'O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.';
 
       if (e.toString().contains('limit') || e.toString().contains('quota') || e.toString().contains('usage')) {
-        errorMessage = 'Limite de uso da API atingido. Por favor, verifique seu plano ou aguarde um momento.';
+        errorMessage = 'O conselheiro precisa de descanso. Por favor, aguarde um momento antes de tentar novamente.';
       } else if (e.toString().contains('key') || e.toString().contains('authentication')) {
-        errorMessage = 'Erro de autenticação. Verifique sua chave de API nas configurações.';
+        errorMessage = 'A conexão mística foi perdida. Verifique suas configurações.';
       } else if (e.toString().contains('network') || e.toString().contains('connection')) {
         errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
       }
@@ -131,7 +131,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Criar Feitiço com IA'),
+        title: const Text('Conselheiro Místico'),
         backgroundColor: AppColors.darkBackground,
         actions: [
           IconButton(
@@ -145,7 +145,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                 _checkApiKey();
               }
             },
-            tooltip: 'Configurar IA',
+            tooltip: 'Configurar Conselheiro',
           ),
         ],
       ),
@@ -168,8 +168,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Conte ao assistente de IA o que você deseja manifestar. '
-                    'Quanto mais detalhes, melhor!',
+                    'Compartilhe com o conselheiro místico o que você deseja manifestar. '
+                    'Quanto mais detalhes, mais poderoso será o feitiço!',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.softWhite.withOpacity(0.8),
                         ),
@@ -227,7 +227,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                         ),
                       )
                     : const Icon(Icons.auto_awesome),
-                label: Text(_isGenerating ? 'Gerando...' : 'Gerar Feitiço ✨'),
+                label: Text(_isGenerating ? 'Manifestando...' : 'Manifestar Feitiço ✨'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.lilac,
                   foregroundColor: AppColors.darkBackground,

@@ -20,7 +20,7 @@ class GrimoirePage extends StatelessWidget {
           bottom: const TabBar(
             indicatorColor: AppColors.lilac,
             tabs: [
-              Tab(text: 'Grimório Ancestral'),
+              Tab(text: 'Tradição'),
               Tab(text: 'Meu Grimório'),
               Tab(text: 'Ferramentas'),
             ],
@@ -82,9 +82,9 @@ class GrimoirePage extends StatelessWidget {
           const SizedBox(height: 12),
           _buildToolCard(
             context,
-            icon: '🤖',
-            title: 'Assistente de IA',
-            description: 'Gere feitiços personalizados com inteligência artificial',
+            icon: '✨',
+            title: 'Conselheiro Místico',
+            description: 'Manifeste feitiços personalizados com sabedoria arcana',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(

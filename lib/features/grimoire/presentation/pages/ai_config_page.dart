@@ -57,7 +57,7 @@ class _AIConfigPageState extends State<AIConfigPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('API key salva com sucesso! ✨'),
+          content: Text('Chave arcana salva com sucesso! ✨'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -81,11 +81,11 @@ class _AIConfigPageState extends State<AIConfigPage> {
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         title: const Text(
-          'Remover API key?',
+          'Remover chave arcana?',
           style: TextStyle(color: AppColors.softWhite),
         ),
         content: const Text(
-          'Você precisará configurar novamente para usar o assistente de IA.',
+          'Você precisará configurar novamente para invocar o conselheiro místico.',
           style: TextStyle(color: AppColors.softWhite),
         ),
         actions: [
@@ -112,7 +112,7 @@ class _AIConfigPageState extends State<AIConfigPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('API key removida'),
+          content: Text('Chave arcana removida'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -124,7 +124,7 @@ class _AIConfigPageState extends State<AIConfigPage> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Configurar IA'),
+          title: const Text('Configurar Conselheiro'),
           backgroundColor: AppColors.darkBackground,
         ),
         backgroundColor: AppColors.darkBackground,
@@ -138,7 +138,7 @@ class _AIConfigPageState extends State<AIConfigPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Configurar Assistente IA'),
+        title: const Text('Configurar Conselheiro Místico'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,
@@ -152,17 +152,17 @@ class _AIConfigPageState extends State<AIConfigPage> {
               MagicalCard(
                 child: Column(
                   children: [
-                    const Text('🤖', style: TextStyle(fontSize: 48)),
+                    const Text('🔮', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      'Assistente de IA',
+                      'Conselheiro Místico',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             color: AppColors.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Configure sua própria API key para usar o assistente de IA na criação de feitiços personalizados.',
+                      'Configure sua chave arcana para invocar o conselheiro místico e manifestar feitiços personalizados.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.softWhite.withOpacity(0.8),
                           ),
@@ -182,7 +182,7 @@ class _AIConfigPageState extends State<AIConfigPage> {
                       const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
-                          'API key configurada ✅',
+                          'Chave arcana configurada ✅',
                           style: TextStyle(color: AppColors.softWhite),
                         ),
                       ),
@@ -205,7 +205,7 @@ class _AIConfigPageState extends State<AIConfigPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Provedor de IA',
+                      'Fonte de Sabedoria',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: AppColors.lilac,
                           ),
@@ -220,11 +220,11 @@ class _AIConfigPageState extends State<AIConfigPage> {
                         });
                       },
                       title: const Text(
-                        'OpenAI (GPT-4)',
+                        'Oráculo Primordial',
                         style: TextStyle(color: AppColors.softWhite),
                       ),
                       subtitle: const Text(
-                        'Mais preciso, ~\$0.0003 por feitiço',
+                        'Mais preciso, pequeno custo por consulta',
                         style: TextStyle(color: AppColors.softWhite),
                       ),
                       activeColor: AppColors.lilac,
@@ -238,11 +238,11 @@ class _AIConfigPageState extends State<AIConfigPage> {
                         });
                       },
                       title: const Text(
-                        'Google Gemini',
+                        'Espírito Estelar',
                         style: TextStyle(color: AppColors.softWhite),
                       ),
                       subtitle: const Text(
-                        'Gratuito até certo limite',
+                        'Generoso e abundante em suas ofertas',
                         style: TextStyle(color: AppColors.softWhite),
                       ),
                       activeColor: AppColors.lilac,
@@ -259,7 +259,7 @@ class _AIConfigPageState extends State<AIConfigPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'API Key',
+                      'Chave Arcana',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: AppColors.lilac,
                           ),
@@ -267,8 +267,8 @@ class _AIConfigPageState extends State<AIConfigPage> {
                     const SizedBox(height: 8),
                     Text(
                       _selectedProvider == AIProvider.openai
-                          ? 'Obtenha sua API key em: platform.openai.com'
-                          : 'Obtenha sua API key em: makersuite.google.com/app/apikey',
+                          ? 'Obtenha sua chave em: platform.openai.com'
+                          : 'Obtenha sua chave em: makersuite.google.com/app/apikey',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.softWhite.withOpacity(0.7),
                           ),
@@ -295,11 +295,11 @@ class _AIConfigPageState extends State<AIConfigPage> {
                       obscureText: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Digite a API key';
+                          return 'Digite a chave arcana';
                         }
                         if (_selectedProvider == AIProvider.openai &&
                             !value.startsWith('sk-')) {
-                          return 'API key da OpenAI deve começar com "sk-"';
+                          return 'A chave do Oráculo Primordial deve começar com "sk-"';
                         }
                         return null;
                       },
@@ -350,11 +350,11 @@ class _AIConfigPageState extends State<AIConfigPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '• Sua API key é armazenada apenas localmente no seu dispositivo\n'
-                      '• Você será cobrado diretamente pelo provedor (OpenAI/Google)\n'
-                      '• Estimativa de custo: ~\$0.0003 por feitiço gerado (OpenAI)\n'
-                      '• Gemini oferece quota gratuita generosa\n'
-                      '• Você pode remover a API key a qualquer momento',
+                      '• Sua chave arcana é armazenada apenas no seu dispositivo\n'
+                      '• Há custos mínimos para consultar o Oráculo Primordial\n'
+                      '• O Espírito Estelar oferece consultas generosas sem custo\n'
+                      '• Você controla totalmente sua conexão mística\n'
+                      '• Pode remover a chave arcana a qualquer momento',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.softWhite.withOpacity(0.8),
                           ),
