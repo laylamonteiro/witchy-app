@@ -30,6 +30,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   final _placeController = TextEditingController(text: 'São Paulo');
   final _latController = TextEditingController(text: '-23.5505');
   final _lonController = TextEditingController(text: '-46.6333');
+  final _timezoneController = TextEditingController(text: '-3');
 
   @override
   void initState() {
@@ -45,6 +46,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     _placeController.dispose();
     _latController.dispose();
     _lonController.dispose();
+    _timezoneController.dispose();
     super.dispose();
   }
 
@@ -175,9 +177,11 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       final latitude = double.parse(_latController.text);
       final longitude = double.parse(_lonController.text);
       final place = _placeController.text;
+      final timezone = double.parse(_timezoneController.text);
 
       _addLog('📅 Data teste: ${_dateController.text} ${_timeController.text}');
       _addLog('📍 Local: $place ($latitude, $longitude)');
+      _addLog('🌍 Timezone: UTC${timezone >= 0 ? "+" : ""}$timezone');
 
       final calculator = ChartCalculator.instance;
       final chart = await calculator.calculateBirthChart(
@@ -186,6 +190,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         birthPlace: place,
         latitude: latitude,
         longitude: longitude,
+        timezoneOffsetHours: timezone,
         onLog: _addLog,
       );
 
@@ -512,6 +517,22 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _timezoneController,
+                  style: const TextStyle(color: AppColors.softWhite),
+                  decoration: const InputDecoration(
+                    labelText: 'Timezone (UTC)',
+                    hintText: '-3 (São Paulo padrão) ou -2 (horário de verão)',
+                    labelStyle: TextStyle(color: AppColors.lilac),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.surfaceBorder),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.lilac),
+                    ),
+                  ),
                 ),
               ],
             ),

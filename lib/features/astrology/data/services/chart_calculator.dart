@@ -40,6 +40,7 @@ class ChartCalculator {
     required double latitude,
     required double longitude,
     bool unknownBirthTime = false,
+    double? timezoneOffsetHours,
     Function(String)? onLog,
   }) async {
     try {
@@ -57,6 +58,7 @@ class ChartCalculator {
         latitude: latitude,
         longitude: longitude,
         unknownBirthTime: unknownBirthTime,
+        timezoneOffsetHours: timezoneOffsetHours,
       );
     } catch (e) {
       throw Exception('Erro ao calcular mapa natal: $e');
@@ -71,6 +73,7 @@ class ChartCalculator {
     required double latitude,
     required double longitude,
     required bool unknownBirthTime,
+    double? timezoneOffsetHours,
   }) async {
     _log('🔧 Usando cálculos LOCAIS (método simplificado)');
     _log('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
@@ -82,6 +85,7 @@ class ChartCalculator {
       birthDate,
       birthTime,
       longitude,
+      timezoneOffsetHours: timezoneOffsetHours,
     );
 
     // 2. Calcular posições planetárias
@@ -164,17 +168,18 @@ class ChartCalculator {
   double _dateTimeToJulianDay(
     DateTime date,
     TimeOfDay time,
-    double longitude,
-  ) {
+    double longitude, {
+    double? timezoneOffsetHours,
+  }) {
     final year = date.year;
     final month = date.month;
     final day = date.day;
 
     // IMPORTANTE: Converter hora local para UTC
-    // Estimar timezone baseado na longitude (aproximação)
+    // Se timezone fornecido, usa ele; senão, estima baseado na longitude
     // Longitude negativa = Oeste do meridiano de Greenwich
     // Cada 15° de longitude = 1 hora de diferença
-    final timezoneOffset = (longitude / 15.0).round();
+    final timezoneOffset = timezoneOffsetHours?.round() ?? (longitude / 15.0).round();
 
     // Converter hora local para UTC
     final hourLocal = time.hour + time.minute / 60.0;
@@ -389,8 +394,22 @@ class ChartCalculator {
     final ramc = (lst * 15.0) % 360;
 
     // Calcular MC (longitude eclíptica do Meio do Céu)
-    // Simplificação: MC ≈ RAMC (mais preciso seria converter de equatorial para eclíptica)
-    final mc = ramc;
+    // Converter de coordenadas equatoriais (RAMC) para eclípticas (MC)
+    // Fórmula: tan(MC) = tan(RAMC) / cos(ε)
+    final obliquity = 23.43929; // Obliquidade da eclíptica
+    final oblRad = obliquity * math.pi / 180;
+    final ramcRad = ramc * math.pi / 180;
+
+    var mc = math.atan2(
+      math.sin(ramcRad),
+      math.cos(ramcRad) * math.cos(oblRad)
+    ) * 180 / math.pi;
+
+    // Normalizar para 0-360
+    mc = mc % 360;
+    if (mc < 0) mc += 360;
+
+    _log('   🌟 MC (Meio do Céu): ${mc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(mc).displayName})');
 
     // IC (Imum Coeli) - oposto ao MC
     final ic = (mc + 180) % 360;
@@ -448,11 +467,6 @@ class ChartCalculator {
     for (final house in houses) {
       _log('      Casa ${house.number.toString().padLeft(2)}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°${house.minute}\')');
     }
-    _log('   ');
-    _log('   📊 COMPARAÇÃO COM ASTRO.COM:');
-    _log('      Asc esperado: 11°27\' Escorpião (221.463°)');
-    _log('      MC esperado: 0°0\' Leão (120.014°)');
-    _log('      LST esperado: 8:08:47 (122.196°)');
 
     return houses;
   }
