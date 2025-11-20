@@ -46,12 +46,18 @@ class ChartCalculator {
             latitude: latitude,
             longitude: longitude,
           );
-          print('✅ API externa funcionou! Usando cálculos precisos.');
+          print('✅ API externa funcionou! Usando cálculos precisos (Swiss Ephemeris).');
+          print('   ACURACIDADE: ±0.1° nas posições planetárias');
           return result;
         } catch (e, stackTrace) {
-          print('❌ Erro na API externa: $e');
-          print('Stack trace: $stackTrace');
-          print('⚠️ Usando cálculos locais como fallback (±2° precisão)');
+          print('');
+          print('❌ ERRO NA API EXTERNA: $e');
+          print('📋 Stack trace: ${stackTrace.toString().split('\n').take(3).join('\n')}');
+          print('');
+          print('⚠️  ATENÇÃO: Usando cálculos locais como FALLBACK');
+          print('   ACURACIDADE REDUZIDA: ±2° nas posições planetárias');
+          print('   Para máxima precisão, resolva o erro da API acima.');
+          print('');
           // Continua para usar cálculos locais como fallback
         }
       }
@@ -102,6 +108,7 @@ class ChartCalculator {
       houseSystem: 'placidus',
     );
 
+    print('📦 Processando resposta da API...');
     // Processar resposta da API
     final parsedData = ExternalChartAPI.instance.parseAPIResponse(apiData);
 
@@ -109,6 +116,17 @@ class ChartCalculator {
     final houses = parsedData['houses'] as List<House>;
     final ascendant = parsedData['ascendant'] as PlanetPosition?;
     final midheaven = parsedData['midheaven'] as PlanetPosition?;
+
+    print('✅ API retornou:');
+    print('   - ${planets.length} planetas');
+    print('   - ${houses.length} casas');
+    if (ascendant != null) {
+      print('   - Ascendente: ${ascendant.sign.name} ${ascendant.degree}°${ascendant.minute}\'');
+    }
+    if (planets.isNotEmpty) {
+      final sun = planets.firstWhere((p) => p.planet == Planet.sun, orElse: () => planets.first);
+      print('   - Sol: ${sun.sign.name} ${sun.degree}°${sun.minute}\'');
+    }
 
     // Calcular aspectos
     final aspects = _calculateAspects(planets);
@@ -141,6 +159,11 @@ class ChartCalculator {
     required double longitude,
     required bool unknownBirthTime,
   }) async {
+    print('🔧 Usando cálculos LOCAIS (método simplificado)');
+    print('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
+    print('   Hora: ${birthTime.hour}:${birthTime.minute}');
+    print('   Local: $birthPlace');
+
     // 1. Converter para Julian Day
     final julianDay = _dateTimeToJulianDay(
       birthDate,
