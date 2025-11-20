@@ -31,6 +31,16 @@ class _PersonalizedSuggestionsPageState
     _loadNatalChart();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recarregar quando a página aparecer novamente
+    // (por exemplo, após criar um mapa astral)
+    if (_hasNatalChart == false && !_isLoading) {
+      _loadNatalChart();
+    }
+  }
+
   Future<void> _loadNatalChart() async {
     setState(() => _isLoading = true);
 
@@ -72,22 +82,34 @@ class _PersonalizedSuggestionsPageState
   }
 
   Future<void> _loadSuggestions() async {
-    if (_natalChart == null) return;
+    if (_natalChart == null) {
+      print('⚠️ Não pode gerar sugestões: mapa natal não encontrado');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
+      print('📊 Gerando sugestões personalizadas...');
       final suggestions = await _interpreter.generatePersonalizedSuggestions(
         _selectedDate,
         _natalChart!,
       );
 
+      print('✅ ${suggestions.length} sugestões geradas');
       setState(() {
         _suggestions = suggestions;
         _isLoading = false;
       });
-    } catch (e) {
-      setState(() => _isLoading = false);
+    } catch (e, stackTrace) {
+      print('❌ Erro ao gerar sugestões: $e');
+      print('Stack trace: $stackTrace');
+
+      setState(() {
+        _suggestions = [];
+        _isLoading = false;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

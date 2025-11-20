@@ -38,15 +38,20 @@ class ChartCalculator {
       // Tentar usar API externa primeiro se habilitado
       if (_useExternalAPI && !unknownBirthTime) {
         try {
-          return await _calculateWithExternalAPI(
+          print('📡 Tentando usar API externa (Prokerala)...');
+          final result = await _calculateWithExternalAPI(
             birthDate: birthDate,
             birthTime: birthTime,
             birthPlace: birthPlace,
             latitude: latitude,
             longitude: longitude,
           );
-        } catch (e) {
-          print('Erro na API externa, usando cálculos locais: $e');
+          print('✅ API externa funcionou! Usando cálculos precisos.');
+          return result;
+        } catch (e, stackTrace) {
+          print('❌ Erro na API externa: $e');
+          print('Stack trace: $stackTrace');
+          print('⚠️ Usando cálculos locais como fallback (±2° precisão)');
           // Continua para usar cálculos locais como fallback
         }
       }

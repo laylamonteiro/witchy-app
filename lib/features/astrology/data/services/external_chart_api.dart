@@ -39,9 +39,11 @@ class ExternalChartAPI {
     if (_accessToken != null &&
         _tokenExpiry != null &&
         DateTime.now().isBefore(_tokenExpiry!)) {
+      print('🔑 Usando token em cache (ainda válido)');
       return _accessToken!;
     }
 
+    print('🔑 Solicitando novo token OAuth 2.0...');
     try {
       // Requisitar novo token usando Client Credentials
       final response = await _dio.post(
@@ -58,6 +60,8 @@ class ExternalChartAPI {
         ),
       );
 
+      print('🔑 Resposta do token: status=${response.statusCode}');
+
       if (response.statusCode == 200) {
         _accessToken = response.data['access_token'];
 
@@ -67,11 +71,14 @@ class ExternalChartAPI {
           Duration(seconds: expiresIn - 60), // Renovar 1 min antes
         );
 
+        print('✅ Token obtido com sucesso! Expira em $expiresIn segundos');
         return _accessToken!;
       } else {
         throw Exception('Erro ao obter token: ${response.statusCode}');
       }
     } on DioException catch (e) {
+      print('❌ Erro ao obter token: ${e.response?.statusCode} - ${e.message}');
+      print('Resposta: ${e.response?.data}');
       if (e.response?.statusCode == 401) {
         throw Exception(
           'Credenciais inválidas. Verifique Client ID e Secret.',
@@ -89,16 +96,21 @@ class ExternalChartAPI {
     String houseSystem = 'placidus',
   }) async {
     try {
+      print('📍 Calculando mapa: $birthDate, lat=$latitude, long=$longitude');
+
       // Obter token de acesso
       final accessToken = await _getAccessToken();
 
       // Formatar datetime no formato ISO 8601
       final datetime = birthDate.toIso8601String();
+      print('📅 DateTime formatado: $datetime');
 
       // Construir URL do endpoint
       final url = '$_baseUrl/astrology/western/natal-chart';
+      print('🌐 Endpoint: $url');
 
       // Fazer requisição à API
+      print('📡 Fazendo requisição...');
       final response = await _dio.get(
         url,
         options: Options(
@@ -117,12 +129,18 @@ class ExternalChartAPI {
         },
       );
 
+      print('📊 Resposta da API: status=${response.statusCode}');
+
       if (response.statusCode == 200) {
+        print('✅ Resposta recebida com sucesso!');
         return response.data;
       } else {
         throw Exception('Erro na API: ${response.statusCode}');
       }
     } on DioException catch (e) {
+      print('❌ DioException: ${e.response?.statusCode} - ${e.message}');
+      print('Resposta da API: ${e.response?.data}');
+
       if (e.response?.statusCode == 401) {
         // Token expirado, limpar cache e tentar novamente
         _accessToken = null;
@@ -141,6 +159,7 @@ class ExternalChartAPI {
       }
       throw Exception('Erro na conexão com a API: ${e.message}');
     } catch (e) {
+      print('❌ Exceção geral: $e');
       throw Exception('Erro ao processar resposta da API: $e');
     }
   }

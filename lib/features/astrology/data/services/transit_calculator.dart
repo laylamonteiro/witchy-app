@@ -8,6 +8,7 @@ import '../models/birth_chart_model.dart';
 class TransitCalculator {
   /// Calcula as posições dos planetas para uma data específica
   Future<List<Transit>> calculateTransits(DateTime date) async {
+    print('🌟 Calculando trânsitos para: $date');
     final transits = <Transit>[];
 
     try {
@@ -28,16 +29,20 @@ class TransitCalculator {
               degree: position.degree.toDouble(),
               isRetrograde: position.isRetrograde,
             ));
+            print('  ✓ ${planet.name}: ${position.sign.name} ${position.degree}°');
+          } else {
+            print('  ✗ ${planet.name}: posição inválida (NaN/Infinite)');
           }
         } catch (e) {
-          print('Erro ao calcular posição de ${planet.name}: $e');
+          print('  ✗ ${planet.name}: erro - $e');
           // Continua com os outros planetas
         }
       }
 
+      print('✅ Total de trânsitos calculados: ${transits.length}');
       return transits;
     } catch (e) {
-      print('Erro em calculateTransits: $e');
+      print('❌ Erro em calculateTransits: $e');
       rethrow;
     }
   }
