@@ -20,6 +20,15 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   bool _isGenerating = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Listener para habilitar/desabilitar botão conforme usuário digita
+    _intentionController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
     _intentionController.dispose();
     super.dispose();
