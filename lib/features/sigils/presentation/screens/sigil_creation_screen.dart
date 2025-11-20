@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:grimorio_de_bolso/features/sigils/data/models/sigil_wheel_model.dart';
 import 'package:grimorio_de_bolso/features/sigils/presentation/widgets/sigil_wheel_widget.dart';
 import 'package:grimorio_de_bolso/core/theme/app_theme.dart';
+import 'package:grimorio_de_bolso/core/widgets/magical_card.dart';
 
 class SigilCreationScreen extends ConsumerStatefulWidget {
   const SigilCreationScreen({super.key});
@@ -652,42 +653,39 @@ class _SigilCreationScreenState extends ConsumerState<SigilCreationScreen>
   }
 
   Widget _buildIntroductionCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Text('✨', style: TextStyle(fontSize: 32)),
-                const SizedBox(width: 12),
-                Text(
-                  'O que é um Sigilo?',
-                  style: Theme.of(context).textTheme.headlineSmall,
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('✨', style: TextStyle(fontSize: 32)),
+              const SizedBox(width: 12),
+              Text(
+                'O que é um Sigilo?',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Sigilos são símbolos mágicos criados para manifestar intenções. '
+            'Ao transformar palavras em símbolos abstratos, você cria uma marca energética '
+            'que carrega o poder da sua vontade.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Sigilos são símbolos mágicos criados para manifestar intenções. '
-              'Ao transformar palavras em símbolos abstratos, você cria uma marca energética '
-              'que carrega o poder da sua vontade.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Defina sua intenção, escolha uma palavra ou frase que a represente, '
-              'e o app criará automaticamente seu sigilo único na Roda Mágica.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontStyle: FontStyle.italic,
-                  ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Defina sua intenção, escolha uma palavra ou frase que a represente, '
+            'e o app criará automaticamente seu sigilo único na Roda Mágica.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
+          ),
+        ],
       ),
     );
   }
