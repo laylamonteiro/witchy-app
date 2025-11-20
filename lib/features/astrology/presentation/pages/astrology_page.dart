@@ -8,6 +8,7 @@ import 'birth_chart_view_page.dart';
 import 'magical_profile_page.dart';
 import 'daily_magical_weather_page.dart';
 import 'personalized_suggestions_page.dart';
+import 'api_diagnostic_page.dart';
 
 class AstrologyPage extends StatefulWidget {
   const AstrologyPage({super.key});
@@ -165,6 +166,23 @@ class _AstrologyPageState extends State<AstrologyPage> {
                       _showRecalculateDialog(context, provider);
                     },
                   ),
+
+                const SizedBox(height: 24),
+
+                // Diagnóstico da API
+                _buildOption(
+                  context,
+                  icon: '🔍',
+                  title: 'Diagnóstico da API',
+                  description: 'Testar credenciais e verificar logs',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const APIDiagnosticPage(),
+                      ),
+                    );
+                  },
+                ),
 
                 const SizedBox(height: 24),
 

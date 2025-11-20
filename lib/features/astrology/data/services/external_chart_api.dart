@@ -33,6 +33,17 @@ class ExternalChartAPI {
   String? _accessToken;
   DateTime? _tokenExpiry;
 
+  /// Limpa o cache de token (útil para testes)
+  void clearTokenCache() {
+    _accessToken = null;
+    _tokenExpiry = null;
+  }
+
+  /// Método público para obter token (para diagnóstico)
+  Future<String> getAccessToken() async {
+    return await _getAccessToken();
+  }
+
   /// Obtém token de acesso OAuth 2.0
   Future<String> _getAccessToken() async {
     // Se já temos um token válido, retorná-lo
