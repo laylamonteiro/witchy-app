@@ -155,6 +155,15 @@ class _SigilCreationScreenState extends ConsumerState<SigilCreationScreen>
               // Introdução - O que é um Sigilo
               _buildIntroductionCard(),
 
+              const SizedBox(height: 24),
+
+              // Título da seção
+              Text(
+                'Defina sua Intenção',
+                style: Theme.of(context).textTheme.headlineMedium,
+                textAlign: TextAlign.center,
+              ),
+
               const SizedBox(height: 16),
 
               // Card de Intenção
@@ -192,24 +201,6 @@ class _SigilCreationScreenState extends ConsumerState<SigilCreationScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.psychology,
-                  color: AppColors.lilac,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Defina sua Intenção',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.lilac,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
             // Campo de intenção
             TextFormField(
               controller: _intentionController,
