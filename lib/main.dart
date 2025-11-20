@@ -20,6 +20,7 @@ import 'features/diary/presentation/providers/affirmation_provider.dart';
 import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart';
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
+import 'features/astrology/presentation/providers/astrology_provider.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -76,6 +77,7 @@ class GrimorioDeBolsoApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EncyclopediaProvider()),
         ChangeNotifierProvider(create: (_) => LunarProvider()),
         ChangeNotifierProvider(create: (_) => WheelOfYearProvider()),
+        ChangeNotifierProvider(create: (_) => AstrologyProvider()),
         ChangeNotifierProvider(
           create: (_) => NotificationProvider(
             flutterLocalNotificationsPlugin,
