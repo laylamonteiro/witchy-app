@@ -650,7 +650,7 @@ class _SigilCreationScreenState extends ConsumerState<SigilCreationScreen>
         children: [
           Row(
             children: [
-              const Text('✨', style: TextStyle(fontSize: 32)),
+              const Text('🃏', style: TextStyle(fontSize: 32)),
               const SizedBox(width: 12),
               Text(
                 'O que é um Sigilo?',
@@ -662,7 +662,7 @@ class _SigilCreationScreenState extends ConsumerState<SigilCreationScreen>
           Text(
             'Sigilos são símbolos mágicos criados para manifestar intenções. '
             'Ao transformar palavras em símbolos abstratos, você cria uma marca energética '
-            'que carrega o poder da sua vontade.',
+            'que carrega o poder da sua vontade, sem revelar sua intenção para outras pessoas.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                 ),
