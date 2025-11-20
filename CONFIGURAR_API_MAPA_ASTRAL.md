@@ -1,6 +1,6 @@
 # Configurar API para Cálculos Precisos de Mapa Astral
 
-O app agora usa a **Prokerala Astrology API** para cálculos precisos de mapas astrais baseados em Swiss Ephemeris.
+O app usa a **Prokerala Astrology API** para cálculos precisos de mapas astrais baseados em Swiss Ephemeris.
 
 ## Por que usar API externa?
 
@@ -10,123 +10,133 @@ O app agora usa a **Prokerala Astrology API** para cálculos precisos de mapas a
 - 📊 **Dados completos**: Posições planetárias, casas, aspectos, retrógrados
 - 🔐 **OAuth 2.0**: Autenticação segura com renovação automática de tokens
 
-## ✅ Credenciais Já Configuradas!
+## 🔐 Configuração Segura de Credenciais
 
-O app já está configurado com as credenciais do **Grimório de Bolso**:
-- Client ID: `1575f4ab-2cde-4be0-9fc9-51d820fbd6e6`
-- Client Secret: `CbgSDMjlGuFyEOwLdlMEJXR2MJ6SlFKH2ETbfvpz`
-
-**Você não precisa fazer nada!** Basta compilar o app e testar.
-
-## Como Obter Suas Próprias Credenciais (Opcional)
-
-Se quiser criar suas próprias credenciais no futuro:
-
-### Passo 1: Criar Conta
+### Passo 1: Obter Credenciais Gratuitas
 
 1. Acesse: https://api.prokerala.com/
-2. Clique em **"Sign Up"** (canto superior direito)
-3. Preencha:
-   - Nome
-   - Email
-   - Senha
-4. Confirme seu email
-
-### Passo 2: Criar Client OAuth 2.0
-
-1. Faça login no painel: https://api.prokerala.com/
-2. Vá em **"Clients"** → **"Create New Client"**
-3. Preencha:
+2. Clique em **"Sign Up"** e crie uma conta gratuita
+3. Confirme seu email
+4. No dashboard, vá em **"Clients"** → **"Create New Client"**
+5. Preencha:
    - **Client Name**: Grimório de Bolso (ou qualquer nome)
    - **HTTP Origins**: `https://localhost` (necessário para mobile apps)
    - **Environment**: Production
-4. Clique em **"Create"**
-5. Copie:
-   - **Client ID** (UUID)
+6. Clique em **"Create"**
+7. Copie:
+   - **Client ID** (UUID longo)
    - **Client Secret** (string longa)
 
-### Passo 3: Configurar no App (Se Usar Suas Próprias Credenciais)
+### Passo 2: Configurar no App (SEGURO)
 
-Abra o arquivo: `lib/features/astrology/data/services/external_chart_api.dart`
+O app usa um sistema seguro onde as credenciais **NÃO são commitadas no Git**.
 
-Substitua as linhas 25-26:
+1. Navegue até: `lib/features/astrology/data/services/`
 
-```dart
-// ANTES:
-static const _clientId = '1575f4ab-2cde-4be0-9fc9-51d820fbd6e6';
-static const _clientSecret = 'CbgSDMjlGuFyEOwLdlMEJXR2MJ6SlFKH2ETbfvpz';
+2. Copie o arquivo de exemplo:
+   ```bash
+   cp prokerala_credentials.example.dart prokerala_credentials.dart
+   ```
 
-// DEPOIS (com suas credenciais):
-static const _clientId = 'seu-client-id-aqui';
-static const _clientSecret = 'seu-client-secret-aqui';
+3. Edite `prokerala_credentials.dart` e substitua pelos seus valores:
+   ```dart
+   class ProkeralaCredentials {
+     static const String clientId = 'COLE_SEU_CLIENT_ID_AQUI';
+     static const String clientSecret = 'COLE_SEU_CLIENT_SECRET_AQUI';
+   }
+   ```
+
+4. **NÃO commite este arquivo!** Ele está protegido pelo `.gitignore`
+
+### Passo 3: Testar
+
+1. Compile o app:
+   ```bash
+   flutter build apk --release
+   ```
+
+2. Instale no dispositivo
+
+3. Vá em **Ferramentas → Astrologia → Calcular Mapa Astral**
+
+4. Insira dados de nascimento e teste os cálculos
+
+## ⚠️ Segurança - O Que Foi Corrigido
+
+### ❌ ANTES (Inseguro):
+- Credenciais hardcoded no código
+- Commitadas no histórico do Git
+- Visíveis no repositório remoto
+- **NUNCA faça isso!**
+
+### ✅ AGORA (Seguro):
+- Credenciais em arquivo separado (`prokerala_credentials.dart`)
+- Arquivo no `.gitignore` (não vai para o Git)
+- Arquivo exemplo (`prokerala_credentials.example.dart`) no Git (sem credenciais reais)
+- Cada desenvolvedor configura suas próprias credenciais localmente
+
+## 🚨 Ação Recomendada
+
+Se você já tinha credenciais configuradas antes, **revogue-as**:
+
+1. Acesse: https://api.prokerala.com/
+2. Faça login
+3. Vá em **"Clients"**
+4. Encontre o client "Grimório de Bolso"
+5. Clique em **"Delete"** ou **"Regenerate Secret"**
+6. Crie um novo client com novas credenciais
+7. Configure no arquivo `prokerala_credentials.dart` local
+
+## 📁 Estrutura de Arquivos
+
+```
+lib/features/astrology/data/services/
+├── prokerala_credentials.example.dart  ✅ (vai pro Git - sem segredos)
+├── prokerala_credentials.dart          🔒 (NÃO vai pro Git - com suas credenciais reais)
+└── external_chart_api.dart             ✅ (vai pro Git - importa as credenciais)
 ```
 
-### Passo 4: Testar
+## ❓ FAQ
 
-1. Compile o app: `flutter build apk --release`
-2. Instale no dispositivo
-3. Vá em **Ferramentas → Astrologia → Calcular Mapa Astral**
-4. Insira dados de nascimento:
-   - Data: 31/03/1994
-   - Hora: 19:39
-   - Local: São Paulo, Brazil
-5. Verifique se os resultados são precisos comparando com astro.com
+**P: O que fazer se eu commitar credenciais por acidente?**
+R:
+1. Revogue as credenciais imediatamente no painel da Prokerala
+2. Crie novas credenciais
+3. Limpe o histórico do Git (ou aceite que as antigas estão comprometidas)
 
-## Limites do Plano Gratuito
+**P: As credenciais vão no APK compilado?**
+R: Sim, mas o APK em si é distribuído a usuários específicos (você). APIs gratuitas geralmente têm rate limits por IP, então o risco é controlado.
 
-- **Requisições**: Suficiente para uso pessoal
-- **Tempo**: Sem expiração
-- **Custo**: R$ 0,00 / mês
-- **Cartão**: Não necessário
+**P: Como compartilhar o projeto com outros desenvolvedores?**
+R:
+1. Compartilhe o repositório normalmente
+2. Cada desenvolvedor cria suas próprias credenciais Prokerala (grátis)
+3. Cada um configura seu próprio arquivo `prokerala_credentials.dart` local
 
-## Troubleshooting
+**P: E se eu não configurar as credenciais?**
+R: O app usa cálculos locais como fallback (±2° de precisão). Funciona, mas menos preciso.
+
+## 🔧 Troubleshooting
+
+### Erro: "Cannot find prokerala_credentials.dart"
+**Solução**: Você esqueceu de copiar o arquivo exemplo. Execute:
+```bash
+cp lib/features/astrology/data/services/prokerala_credentials.example.dart \
+   lib/features/astrology/data/services/prokerala_credentials.dart
+```
 
 ### Erro: "API key inválida"
-- ✅ Verifique se copiou a API key completa (começa com `pk_`)
-- ✅ Confirme que o User ID está correto
-- ✅ Certifique-se de que confirmou o email
+**Solução**: Verifique se copiou corretamente o Client ID e Secret
 
 ### Erro: "Limite de requisições excedido"
-- ✅ Aguarde alguns minutos
-- ✅ No plano gratuito, há limite diário razoável
-- ✅ Se precisar mais, considere upgrade
+**Solução**: Aguarde alguns minutos. O plano gratuito tem rate limits
 
-### Erro: "Erro na conexão"
-- ✅ Verifique sua conexão com internet
-- ✅ Tente novamente em alguns segundos
-- ✅ Se persistir, verifique status da API: https://status.prokerala.com/
+## 📚 Recursos
 
-## Fallback para Cálculos Locais
-
-Se a API externa falhar, o app automaticamente usa cálculos locais simplificados (±2° de precisão) como fallback.
-
-Para **desabilitar** a API externa e usar apenas cálculos locais:
-
-Arquivo: `lib/features/astrology/data/services/chart_calculator.dart`
-
-```dart
-// Linha 26 - mudar de true para false:
-static const bool _useExternalAPI = false;
-```
-
-## Upgrade para Plano Pago (Opcional)
-
-Se você quiser mais requisições ou recursos avançados:
-
-1. Acesse: https://api.prokerala.com/pricing
-2. Planos a partir de ₹1000/mês (~R$ 60)
-3. Recursos extras:
-   - Mais requisições por dia
-   - Suporte prioritário
-   - Webhooks
-   - PDF reports
-
-## Suporte
-
-- 📧 Email: support@prokerala.com
-- 📚 Docs: https://api.prokerala.com/docs
-- 💬 GitHub: https://github.com/prokerala/astrology-sdk
+- **API Docs**: https://api.prokerala.com/docs
+- **Dashboard**: https://api.prokerala.com/
+- **Suporte**: support@prokerala.com
 
 ---
 
-**Nota**: As instruções acima são para a API Prokerala Western Astrology. O app está configurado para usar astrologia ocidental (tropical), que é o padrão usado no Brasil e no mundo ocidental.
+**Nota**: A API Prokerala usa astrologia tropical ocidental, padrão no Brasil e mundo ocidental.

@@ -2,28 +2,28 @@ import 'package:dio/dio.dart';
 import '../models/planet_position_model.dart';
 import '../models/house_model.dart';
 import '../models/enums.dart';
+import 'prokerala_credentials.dart';
 
 /// Serviço para calcular mapas astrais usando API externa (Prokerala)
 ///
-/// Credenciais configuradas:
-/// - Client Name: Grimório de Bolso
-/// - Autenticação: OAuth 2.0 Client Credentials
+/// Autenticação: OAuth 2.0 Client Credentials
 ///
-/// IMPORTANTE: Não compartilhe essas credenciais publicamente!
-/// Para obter suas próprias credenciais gratuitas:
-/// 1. Acesse https://api.prokerala.com/
-/// 2. Crie uma conta gratuita
-/// 3. No dashboard, crie um novo Client
-/// 4. Use https://localhost como HTTP Origin
-/// 5. Copie Client ID e Client Secret
+/// ⚠️ SEGURANÇA:
+/// As credenciais agora estão em um arquivo separado (prokerala_credentials.dart)
+/// que NÃO é commitado no Git (protegido pelo .gitignore).
+///
+/// Para configurar suas próprias credenciais:
+/// 1. Copie prokerala_credentials.example.dart para prokerala_credentials.dart
+/// 2. Edite prokerala_credentials.dart com suas credenciais reais
+/// 3. Obtenha credenciais gratuitas em https://api.prokerala.com/
 class ExternalChartAPI {
   static final ExternalChartAPI instance = ExternalChartAPI._();
 
   ExternalChartAPI._();
 
-  // Credenciais OAuth 2.0
-  static const _clientId = '1575f4ab-2cde-4be0-9fc9-51d820fbd6e6';
-  static const _clientSecret = 'CbgSDMjlGuFyEOwLdlMEJXR2MJ6SlFKH2ETbfvpz';
+  // Credenciais OAuth 2.0 (importadas de arquivo seguro)
+  static final _clientId = ProkeralaCredentials.clientId;
+  static final _clientSecret = ProkeralaCredentials.clientSecret;
   static const _tokenUrl = 'https://api.prokerala.com/token';
   static const _baseUrl = 'https://api.prokerala.com/v2';
 
