@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geocoding/geocoding.dart';
 import '../theme/app_theme.dart';
 import '../widgets/magical_card.dart';
 import '../ai/ai_service.dart';
@@ -27,9 +28,17 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   // Controllers para input manual do mapa astral
   final _dateController = TextEditingController(text: '31/03/1994');
   final _timeController = TextEditingController(text: '19:39');
-  final _placeController = TextEditingController(text: 'São Paulo');
-  final _latController = TextEditingController(text: '-23.5505');
-  final _lonController = TextEditingController(text: '-46.6333');
+  final _birthPlaceController = TextEditingController();
+  final FocusNode _birthPlaceFocusNode = FocusNode();
+
+  // Geolocalização
+  List<Location> _locationSuggestions = [];
+  List<Placemark> _placemarkSuggestions = [];
+  bool _isSearchingLocation = false;
+  bool _showSuggestions = false;
+  String? _birthPlace;
+  double? _selectedLatitude;
+  double? _selectedLongitude;
 
   @override
   void initState() {
@@ -42,10 +51,102 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     _tabController.dispose();
     _dateController.dispose();
     _timeController.dispose();
-    _placeController.dispose();
-    _latController.dispose();
-    _lonController.dispose();
+    _birthPlaceController.dispose();
+    _birthPlaceFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _searchLocation(String query) async {
+    if (query.length < 3) {
+      setState(() {
+        _locationSuggestions = [];
+        _placemarkSuggestions = [];
+        _showSuggestions = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearchingLocation = true;
+      _showSuggestions = true;
+    });
+
+    try {
+      // Adicionar ", Brasil" se não especificar país
+      String searchQuery = query;
+      if (!query.toLowerCase().contains('brasil') &&
+          !query.toLowerCase().contains('brazil') &&
+          !query.toLowerCase().contains(',')) {
+        searchQuery = '$query, Brasil';
+      }
+
+      final locations = await locationFromAddress(searchQuery);
+
+      // Get placemarks for each location
+      final placemarks = <Placemark>[];
+      for (final location in locations.take(5)) {
+        try {
+          final placemark = await placemarkFromCoordinates(
+            location.latitude,
+            location.longitude,
+          );
+          if (placemark.isNotEmpty) {
+            placemarks.add(placemark.first);
+          }
+        } catch (e) {
+          // Skip locations that can't be reverse geocoded
+        }
+      }
+
+      setState(() {
+        _locationSuggestions = locations.take(5).toList();
+        _placemarkSuggestions = placemarks;
+        _isSearchingLocation = false;
+      });
+    } catch (e) {
+      setState(() {
+        _locationSuggestions = [];
+        _placemarkSuggestions = [];
+        _isSearchingLocation = false;
+      });
+    }
+  }
+
+  void _selectLocation(int index) {
+    final location = _locationSuggestions[index];
+    final placemark = _placemarkSuggestions.length > index
+        ? _placemarkSuggestions[index]
+        : null;
+
+    String displayName;
+    if (placemark != null) {
+      final parts = <String>[];
+      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+        parts.add(placemark.locality!);
+      }
+      if (placemark.administrativeArea != null &&
+          placemark.administrativeArea!.isNotEmpty) {
+        parts.add(placemark.administrativeArea!);
+      }
+      if (placemark.country != null && placemark.country!.isNotEmpty) {
+        parts.add(placemark.country!);
+      }
+      displayName = parts.join(', ');
+    } else {
+      displayName = _birthPlaceController.text;
+    }
+
+    setState(() {
+      _birthPlace = displayName;
+      _birthPlaceController.text = displayName;
+      _selectedLatitude = location.latitude;
+      _selectedLongitude = location.longitude;
+      _showSuggestions = false;
+      _locationSuggestions = [];
+      _placemarkSuggestions = [];
+    });
+
+    _birthPlaceFocusNode.unfocus();
   }
 
   void _addLog(String message) {
@@ -162,6 +263,16 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     _addLog('🌟 Testando cálculo de mapa astral...');
 
     try {
+      // Validar se local foi selecionado
+      if (_selectedLatitude == null || _selectedLongitude == null || _birthPlace == null) {
+        _addLog('❌ Selecione um local de nascimento');
+        setState(() {
+          _result = 'ERRO: Local não selecionado';
+          _isTesting = false;
+        });
+        return;
+      }
+
       // Parse inputs
       final dateParts = _dateController.text.split('/');
       final day = int.parse(dateParts[0]);
@@ -172,20 +283,17 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       final hour = int.parse(timeParts[0]);
       final minute = int.parse(timeParts[1]);
 
-      final latitude = double.parse(_latController.text);
-      final longitude = double.parse(_lonController.text);
-      final place = _placeController.text;
-
       _addLog('📅 Data teste: ${_dateController.text} ${_timeController.text}');
-      _addLog('📍 Local: $place ($latitude, $longitude)');
+      _addLog('📍 Local: $_birthPlace');
+      _addLog('🗺️ Coordenadas: (${_selectedLatitude!.toStringAsFixed(4)}, ${_selectedLongitude!.toStringAsFixed(4)})');
 
       final calculator = ChartCalculator.instance;
       final chart = await calculator.calculateBirthChart(
         birthDate: DateTime(year, month, day),
         birthTime: TimeOfDay(hour: hour, minute: minute),
-        birthPlace: place,
-        latitude: latitude,
-        longitude: longitude,
+        birthPlace: _birthPlace!,
+        latitude: _selectedLatitude!,
+        longitude: _selectedLongitude!,
         onLog: _addLog,
       );
 
@@ -458,61 +566,175 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                   ],
                 ),
                 const SizedBox(height: 16),
+                Text(
+                  'Local de Nascimento',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.lilac,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
                 TextField(
-                  controller: _placeController,
+                  controller: _birthPlaceController,
+                  focusNode: _birthPlaceFocusNode,
                   style: const TextStyle(color: AppColors.softWhite),
-                  decoration: const InputDecoration(
-                    labelText: 'Local',
-                    hintText: 'Cidade',
-                    labelStyle: TextStyle(color: AppColors.lilac),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: AppColors.surfaceBorder),
+                  decoration: InputDecoration(
+                    hintText: 'Ex: Campinas, Bueno Brandão, São Paulo...',
+                    hintStyle: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.5),
                     ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: AppColors.lilac),
+                    prefixIcon: const Icon(
+                      Icons.location_on,
+                      color: AppColors.lilac,
+                    ),
+                    suffixIcon: _isSearchingLocation
+                        ? const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.lilac,
+                                ),
+                              ),
+                            ),
+                          )
+                        : (_selectedLatitude != null && _selectedLongitude != null)
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                              )
+                            : null,
+                    filled: true,
+                    fillColor: AppColors.cardBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
+                  onChanged: (value) {
+                    setState(() {
+                      _birthPlace = value;
+                      _selectedLatitude = null;
+                      _selectedLongitude = null;
+                    });
+                    _searchLocation(value);
+                  },
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _latController,
-                        style: const TextStyle(color: AppColors.softWhite),
-                        decoration: const InputDecoration(
-                          labelText: 'Latitude',
-                          hintText: '-23.5505',
-                          labelStyle: TextStyle(color: AppColors.lilac),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.surfaceBorder),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.lilac),
-                          ),
-                        ),
+                if (_showSuggestions && _locationSuggestions.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.lilac.withOpacity(0.3),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: _lonController,
-                        style: const TextStyle(color: AppColors.softWhite),
-                        decoration: const InputDecoration(
-                          labelText: 'Longitude',
-                          hintText: '-46.6333',
-                          labelStyle: TextStyle(color: AppColors.lilac),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _locationSuggestions.length,
+                      separatorBuilder: (context, index) => Divider(
+                        color: AppColors.lilac.withOpacity(0.2),
+                        height: 1,
+                      ),
+                      itemBuilder: (context, index) {
+                        final placemark = _placemarkSuggestions.length > index
+                            ? _placemarkSuggestions[index]
+                            : null;
+
+                        final loc = _locationSuggestions[index];
+                        String displayText;
+                        String coordsText =
+                            'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
+
+                        if (placemark != null) {
+                          final parts = <String>[];
+
+                          if (placemark.locality != null &&
+                              placemark.locality!.isNotEmpty) {
+                            parts.add(placemark.locality!);
+                          }
+
+                          if (placemark.administrativeArea != null &&
+                              placemark.administrativeArea!.isNotEmpty) {
+                            parts.add(placemark.administrativeArea!);
+                          }
+
+                          if (placemark.country != null &&
+                              placemark.country!.isNotEmpty) {
+                            parts.add(placemark.country!);
+                          }
+
+                          displayText = parts.join(', ');
+                        } else {
+                          displayText = coordsText;
+                        }
+
+                        return ListTile(
+                          dense: true,
+                          leading: const Icon(
+                            Icons.place,
+                            color: AppColors.lilac,
+                            size: 20,
                           ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.lilac),
+                          title: Text(
+                            displayText,
+                            style: const TextStyle(
+                              color: AppColors.softWhite,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
+                          subtitle: Text(
+                            coordsText,
+                            style: TextStyle(
+                              color: AppColors.softWhite.withOpacity(0.6),
+                              fontSize: 11,
+                            ),
+                          ),
+                          onTap: () => _selectLocation(index),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                if (_selectedLatitude != null && _selectedLongitude != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.success.withOpacity(0.3),
                       ),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: AppColors.success,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '✓ $_birthPlace\n'
+                            'Lat: ${_selectedLatitude!.toStringAsFixed(4)}, Lon: ${_selectedLongitude!.toStringAsFixed(4)}',
+                            style: TextStyle(
+                              color: AppColors.success,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
