@@ -15,6 +15,8 @@ import 'features/home/presentation/pages/home_page.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
+import 'features/diary/presentation/providers/gratitude_provider.dart';
+import 'features/diary/presentation/providers/affirmation_provider.dart';
 import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart';
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
@@ -69,6 +71,8 @@ class GrimorioDeBolsoApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SpellProvider()),
         ChangeNotifierProvider(create: (_) => DreamProvider()),
         ChangeNotifierProvider(create: (_) => DesireProvider()),
+        ChangeNotifierProvider(create: (_) => GratitudeProvider()),
+        ChangeNotifierProvider(create: (_) => AffirmationProvider()),
         ChangeNotifierProvider(create: (_) => EncyclopediaProvider()),
         ChangeNotifierProvider(create: (_) => LunarProvider()),
         ChangeNotifierProvider(create: (_) => WheelOfYearProvider()),

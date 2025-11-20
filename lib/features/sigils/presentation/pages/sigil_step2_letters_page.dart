@@ -143,19 +143,19 @@ class SigilStep2LettersPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Sua palavra foi transformada para revelar sua essência:',
+                    'Sua palavra foi simplificada seguindo a tradição dos sigilos:',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
-                  _buildStep('1. Espaços foram removidos'),
-                  _buildStep('2. Acentos foram simplificados'),
-                  _buildStep('3. Letras repetidas foram eliminadas'),
+                  _buildStep('1. Acentos foram normalizados'),
+                  _buildStep('2. Espaços e símbolos foram removidos'),
+                  _buildStep('3. Letras duplicadas foram eliminadas (mantém apenas a primeira ocorrência)'),
                   const SizedBox(height: 12),
                   Text(
-                    'Estas letras únicas são a base mágica do seu sigilo. '
-                    'Elas representam a essência concentrada da sua intenção.',
+                    'Esta sequência simplificada será conectada na Roda das Bruxas '
+                    'para formar o símbolo mágico do seu sigilo.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                           fontStyle: FontStyle.italic,

@@ -83,69 +83,118 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Ícone principal (lua e estrelas)
+                  // Ícone principal - Lua crescente com bola de cristal
                   Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Círculo de fundo com brilho
+                      // Círculo de fundo com brilho mágico
                       Container(
-                        width: 180,
-                        height: 180,
+                        width: 200,
+                        height: 200,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppColors.lilac.withOpacity(0.3),
+                              AppColors.lilac.withOpacity(0.4),
+                              AppColors.mint.withOpacity(0.2),
                               AppColors.background,
+                            ],
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
+                        ),
+                      ),
+                      // Segundo círculo para efeito de profundidade
+                      Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              AppColors.lilac.withOpacity(0.2),
+                              Colors.transparent,
                             ],
                           ),
                         ),
                       ),
-                      // Lua (emoji)
-                      const Text(
-                        '🌙',
-                        style: TextStyle(fontSize: 100),
+                      // Bola de cristal central
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            '🔮',
+                            style: TextStyle(fontSize: 90),
+                          ),
+                          const SizedBox(height: 4),
+                          // Lua pequena acima da bola de cristal
+                          const Text(
+                            '🌙',
+                            style: TextStyle(fontSize: 40),
+                          ),
+                        ],
                       ),
-                      // Estrelas ao redor
-                      ...List.generate(8, (index) {
-                        final angle = (index * 45) * math.pi / 180;
-                        final distance = 80.0;
-                        return Positioned(
-                          left: 90 + distance * math.cos(angle) - 8,
-                          top: 90 + distance * math.sin(angle) - 8,
-                          child: _buildStar(index),
-                        );
-                      }),
+                      // Estrelas ao redor em posições específicas
+                      Positioned(
+                        left: 30,
+                        top: 40,
+                        child: _buildStar(0),
+                      ),
+                      Positioned(
+                        right: 30,
+                        top: 40,
+                        child: _buildStar(1),
+                      ),
+                      Positioned(
+                        left: 20,
+                        bottom: 50,
+                        child: _buildStar(2),
+                      ),
+                      Positioned(
+                        right: 20,
+                        bottom: 50,
+                        child: _buildStar(3),
+                      ),
+                      Positioned(
+                        left: 60,
+                        top: 20,
+                        child: _buildStar(4),
+                      ),
+                      Positioned(
+                        right: 60,
+                        top: 20,
+                        child: _buildStar(5),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                   // Nome do app
                   Text(
                     'Grimório de Bolso',
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
                           color: AppColors.lilac,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   // Subtítulo
                   Text(
-                    'Sua jornada mágica começa aqui',
+                    'Sua jornada mágica começa aqui ✨',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textSecondary,
                         ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
-                  // Loading indicator
+                  // Loading indicator místico
                   SizedBox(
                     width: 40,
                     height: 40,
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.lilac.withOpacity(0.5),
+                        AppColors.lilac.withOpacity(0.6),
                       ),
                     ),
                   ),
