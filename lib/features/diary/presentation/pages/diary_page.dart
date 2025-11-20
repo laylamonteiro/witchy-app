@@ -19,6 +19,8 @@ class DiaryPage extends StatelessWidget {
             indicatorColor: AppColors.lilac,
             labelPadding: EdgeInsets.symmetric(horizontal: 8),
             isScrollable: true,
+            labelStyle: TextStyle(fontSize: 14),
+            unselectedLabelStyle: TextStyle(fontSize: 14),
             tabs: [
               Tab(text: 'Gratidão'),
               Tab(text: 'Afirmações'),

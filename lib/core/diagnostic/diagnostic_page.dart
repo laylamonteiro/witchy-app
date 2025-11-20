@@ -261,6 +261,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           controller: _tabController,
           indicatorColor: AppColors.lilac,
           isScrollable: true,
+          labelStyle: const TextStyle(fontSize: 14),
+          unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
             Tab(text: 'IA Groq'),
             Tab(text: 'Mapa Astral'),

@@ -22,6 +22,8 @@ class GrimoirePage extends StatelessWidget {
             indicatorColor: AppColors.lilac,
             isScrollable: true,
             labelPadding: EdgeInsets.symmetric(horizontal: 12),
+            labelStyle: TextStyle(fontSize: 14),
+            unselectedLabelStyle: TextStyle(fontSize: 14),
             tabs: [
               Tab(text: 'Meu Grimório'),
               Tab(text: 'Grimório Ancestral'),
