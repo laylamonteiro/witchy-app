@@ -644,7 +644,9 @@ class _SigilCreationScreenState extends ConsumerState<SigilCreationScreen>
   }
 
   Widget _buildIntroductionCard() {
-    // Caixa introdutória com padrão das outras páginas
+    // DEBUG: Confirmação de build
+    debugPrint('🃏 Building Introduction Card with MagicalCard');
+
     return MagicalCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
