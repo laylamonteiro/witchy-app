@@ -27,7 +27,7 @@ class ElementsPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Text('🌍💧🔥💨', style: TextStyle(fontSize: 32)),
+                      const Text('✨', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
                       Text(
                         'Sobre os 4 Elementos',
