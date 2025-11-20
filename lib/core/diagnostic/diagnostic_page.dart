@@ -46,8 +46,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     final logsText = _logs.join('\n');
     Clipboard.setData(ClipboardData(text: logsText));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Logs copiados para a área de transferência'),
+      SnackBar(
+        content: Text('${_logs.length} linhas copiadas para a área de transferência'),
         backgroundColor: AppColors.success,
       ),
     );
@@ -261,6 +261,9 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           controller: _tabController,
           indicatorColor: AppColors.lilac,
           isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          padding: EdgeInsets.zero,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 16),
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [

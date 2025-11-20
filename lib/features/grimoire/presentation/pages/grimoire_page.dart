@@ -21,7 +21,9 @@ class GrimoirePage extends StatelessWidget {
           bottom: const TabBar(
             indicatorColor: AppColors.lilac,
             isScrollable: true,
-            labelPadding: EdgeInsets.symmetric(horizontal: 12),
+            tabAlignment: TabAlignment.start,
+            padding: EdgeInsets.zero,
+            labelPadding: EdgeInsets.symmetric(horizontal: 16),
             labelStyle: TextStyle(fontSize: 14),
             unselectedLabelStyle: TextStyle(fontSize: 14),
             tabs: [
