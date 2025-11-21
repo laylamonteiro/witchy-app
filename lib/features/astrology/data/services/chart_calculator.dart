@@ -433,7 +433,11 @@ class ChartCalculator {
     // Calcular RAMC (Right Ascension of Medium Coeli) em graus
     final T = (julianDay - 2451545.0) / 36525.0;
     final gmst = _calculateGMST(julianDay);
-    final lst = gmst + longitude / 15.0; // LST em horas
+    var lst = gmst + longitude / 15.0; // LST em horas
+
+    // Normalizar LST para o intervalo [0, 24)
+    while (lst < 0) lst += 24;
+    while (lst >= 24) lst -= 24;
 
     _log('   ⏰ GMST: ${gmst.toStringAsFixed(6)} horas');
     _log('   🌍 LST: ${lst.toStringAsFixed(6)} horas (${(lst * 15).toStringAsFixed(2)}°)');
