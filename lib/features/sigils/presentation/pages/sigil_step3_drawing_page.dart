@@ -35,7 +35,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       // Recalcular os pontos do sigilo com as novas posições
       _shuffledPoints = SigilWheel.generateSigilPointsWithCustom(
         widget.sigil.intention,
-        const Size(280, 280),
+        const Size(320, 320),
         _shuffledPositions,
       );
     });
@@ -128,18 +128,18 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
 
                   // Desenho do sigilo
                   Container(
-                    width: 280,
-                    height: 280,
+                    width: 320,
+                    height: 320,
                     decoration: BoxDecoration(
                       color: AppColors.background,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: CustomPaint(
-                      size: const Size(280, 280),
+                      size: const Size(320, 320),
                       painter: _showWheel
                           ? WitchWheelPainter(
                               showLetters: true,
-                              radius: 100.0,
+                              radius: 120.0,
                               highlightedLetters: widget.sigil.processedLetters.split('').toSet(),
                               customPositions: _shuffledPositions,
                             )

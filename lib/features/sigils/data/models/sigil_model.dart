@@ -21,8 +21,8 @@ class Sigil {
     final processedLetters = sequence.join('');
 
     // Gerar pontos usando a Roda de 3 anéis
-    // Tamanho do canvas usado no desenho (280x280)
-    const canvasSize = Size(280, 280);
+    // Tamanho do canvas usado no desenho (320x320)
+    const canvasSize = Size(320, 320);
     final points = SigilWheel.generateSigilPoints(intention, canvasSize);
 
     return Sigil(

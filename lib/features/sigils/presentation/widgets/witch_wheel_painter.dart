@@ -44,19 +44,12 @@ class WitchWheelPainter extends CustomPainter {
     final middleBorder = radius * 0.65;
     final outerBorder = radius;
 
-    // Círculo dourado externo (envolvendo as letras O-Z)
+    // Círculo dourado externo único
     final goldOuterPaint = Paint()
-      ..color = AppColors.starYellow.withOpacity(0.7)
+      ..color = AppColors.starYellow.withOpacity(0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
-    canvas.drawCircle(center, radius + 3, goldOuterPaint);
-
-    // Segundo círculo dourado decorativo (mais externo)
-    final goldDecorPaint = Paint()
-      ..color = AppColors.starYellow.withOpacity(0.4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawCircle(center, radius + 10, goldDecorPaint);
+    canvas.drawCircle(center, radius + 4, goldOuterPaint);
 
     // Desenhar os 3 círculos de borda
     canvas.drawCircle(center, outerBorder, circlePaint);
