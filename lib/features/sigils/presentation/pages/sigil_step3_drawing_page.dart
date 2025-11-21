@@ -25,19 +25,12 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
   bool _showStartEnd = true;
   bool _isShuffled = false;
   Map<String, WheelPosition>? _shuffledPositions;
-  List<Offset>? _shuffledPoints;
 
   /// Embaralha as posições das letras na roda (como no "Sigilo Nada" do livro)
   void _shuffleLetters() {
     setState(() {
       _isShuffled = true;
       _shuffledPositions = SigilWheel.generateShuffledPositions();
-      // Recalcular os pontos do sigilo com as novas posições
-      _shuffledPoints = SigilWheel.generateSigilPointsWithCustom(
-        widget.sigil.intention,
-        const Size(360, 360),
-        _shuffledPositions,
-      );
     });
   }
 
@@ -46,7 +39,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     setState(() {
       _isShuffled = false;
       _shuffledPositions = null;
-      _shuffledPoints = null;
     });
   }
 
@@ -102,8 +94,9 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                             )
                           : null,
                       foregroundPainter: SigilDrawingPainter(
-                        points: _shuffledPoints ?? widget.sigil.points,
+                        intention: widget.sigil.intention,
                         showStartEnd: _showStartEnd,
+                        customPositions: _shuffledPositions,
                       ),
                     ),
                   ),
