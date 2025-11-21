@@ -17,12 +17,10 @@ class DiaryPage extends StatelessWidget {
           title: const Text('Diários'),
           bottom: const TabBar(
             indicatorColor: AppColors.lilac,
-            labelPadding: EdgeInsets.symmetric(horizontal: 16),
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            padding: EdgeInsets.zero,
-            labelStyle: TextStyle(fontSize: 14),
-            unselectedLabelStyle: TextStyle(fontSize: 14),
+            labelPadding: EdgeInsets.symmetric(horizontal: 8),
+            isScrollable: false,
+            labelStyle: TextStyle(fontSize: 13),
+            unselectedLabelStyle: TextStyle(fontSize: 13),
             tabs: [
               Tab(text: 'Gratidão'),
               Tab(text: 'Afirmações'),
