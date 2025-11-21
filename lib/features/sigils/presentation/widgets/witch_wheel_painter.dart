@@ -4,92 +4,186 @@ import '../../../../core/theme/app_theme.dart';
 import '../../data/models/sigil_wheel_model.dart';
 
 /// Painter para desenhar a Roda Alfabética das Bruxas
-/// Baseado no livro - 3 anéis concêntricos
+/// Baseado no livro - 3 anéis concêntricos com letras dentro dos segmentos
 class WitchWheelPainter extends CustomPainter {
   final bool showLetters;
   final double radius;
+  final Set<String> highlightedLetters;
+  final Map<String, WheelPosition>? customPositions;
 
   WitchWheelPainter({
     this.showLetters = true,
     this.radius = 100.0,
+    this.highlightedLetters = const {},
+    this.customPositions,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
 
+    // Paint para os círculos principais
     final circlePaint = Paint()
       ..color = AppColors.surfaceBorder
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 1.5;
 
-    // Desenhar 3 círculos concêntricos
-    // Anel Externo (raio = 1.0) - 12 letras O-Z
-    canvas.drawCircle(center, radius, circlePaint);
-
-    // Anel Médio (raio = 0.66) - 8 letras G-N
-    canvas.drawCircle(center, radius * 0.66, circlePaint);
-
-    // Anel Interno (raio = 0.33) - 6 letras A-F
-    canvas.drawCircle(center, radius * 0.33, circlePaint);
-
-    // Círculo central (ponto inicial)
-    canvas.drawCircle(center, radius * 0.08, circlePaint);
-
-    // Círculo dourado em volta das letras externas
-    final goldCirclePaint = Paint()
-      ..color = AppColors.starYellow.withOpacity(0.4)
+    // Paint para círculo externo decorativo
+    final outerDecorPaint = Paint()
+      ..color = AppColors.starYellow.withOpacity(0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
-    canvas.drawCircle(center, radius + 30, goldCirclePaint);
+
+    // Raios dos anéis (posicionamento das letras no meio de cada faixa)
+    final innerRingRadius = radius * 0.22; // Centro do anel interno
+    final middleRingRadius = radius * 0.50; // Centro do anel médio
+    final outerRingRadius = radius * 0.80; // Centro do anel externo
+
+    // Bordas dos anéis
+    final innerBorder = radius * 0.35;
+    final middleBorder = radius * 0.65;
+    final outerBorder = radius;
+
+    // Círculo dourado externo (envolvendo as letras O-Z)
+    final goldOuterPaint = Paint()
+      ..color = AppColors.starYellow.withOpacity(0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawCircle(center, radius + 3, goldOuterPaint);
+
+    // Segundo círculo dourado decorativo (mais externo)
+    final goldDecorPaint = Paint()
+      ..color = AppColors.starYellow.withOpacity(0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(center, radius + 10, goldDecorPaint);
+
+    // Desenhar os 3 círculos de borda
+    canvas.drawCircle(center, outerBorder, circlePaint);
+    canvas.drawCircle(center, middleBorder, circlePaint);
+    canvas.drawCircle(center, innerBorder, circlePaint);
+
+    // Círculo central (ponto de início/fim)
+    final centerPaint = Paint()
+      ..color = AppColors.starYellow
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, radius * 0.06, centerPaint);
+
+    final centerBorderPaint = Paint()
+      ..color = AppColors.lilac
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(center, radius * 0.06, centerBorderPaint);
+
+    // Desenhar linhas divisórias para cada anel
+    _drawDivisionLines(canvas, center, innerBorder, 6, 0); // 6 divisões (A-F)
+    _drawDivisionLines(canvas, center, middleBorder, 8, innerBorder); // 8 divisões (G-N)
+    _drawDivisionLines(canvas, center, outerBorder, 12, middleBorder); // 12 divisões (O-Z)
 
     if (showLetters) {
-      // Desenhar letras usando as posições definidas no modelo
-      SigilWheel.letterPositions.forEach((letter, position) {
-        _drawLetter(canvas, center, letter, position);
+      final positions = customPositions ?? SigilWheel.letterPositions;
+      // Desenhar letras dentro dos segmentos
+      positions.forEach((letter, position) {
+        _drawLetterInSegment(
+          canvas,
+          center,
+          letter,
+          position,
+          innerRingRadius,
+          middleRingRadius,
+          outerRingRadius,
+        );
       });
     }
   }
 
-  /// Desenha uma letra na posição correta do anel
-  void _drawLetter(
+  /// Desenha linhas divisórias radiais para um anel
+  void _drawDivisionLines(
+    Canvas canvas,
+    Offset center,
+    double outerRadius,
+    int divisions,
+    double innerRadius,
+  ) {
+    final linePaint = Paint()
+      ..color = AppColors.surfaceBorder.withOpacity(0.5)
+      ..strokeWidth = 1.0;
+
+    final angleStep = 360.0 / divisions;
+    for (int i = 0; i < divisions; i++) {
+      final angle = (i * angleStep - 90) * (math.pi / 180);
+
+      final startRadius = innerRadius > 0 ? innerRadius : radius * 0.08;
+      final start = Offset(
+        center.dx + startRadius * math.cos(angle),
+        center.dy + startRadius * math.sin(angle),
+      );
+      final end = Offset(
+        center.dx + outerRadius * math.cos(angle),
+        center.dy + outerRadius * math.sin(angle),
+      );
+
+      canvas.drawLine(start, end, linePaint);
+    }
+  }
+
+  /// Desenha uma letra no centro do seu segmento
+  void _drawLetterInSegment(
     Canvas canvas,
     Offset center,
     String letter,
     WheelPosition position,
+    double innerRingRadius,
+    double middleRingRadius,
+    double outerRingRadius,
   ) {
-    // Calcula o raio baseado no anel
+    // Calcula o raio baseado no anel (posição no centro da faixa)
     double ringRadius;
+    double fontSize;
     switch (position.ring) {
       case 1: // Anel interno (A-F)
-        ringRadius = radius * 0.33;
+        ringRadius = innerRingRadius;
+        fontSize = 11;
         break;
       case 2: // Anel médio (G-N)
-        ringRadius = radius * 0.66;
+        ringRadius = middleRingRadius;
+        fontSize = 12;
         break;
       case 3: // Anel externo (O-Z)
-        ringRadius = radius;
+        ringRadius = outerRingRadius;
+        fontSize = 13;
         break;
       default:
-        ringRadius = radius;
+        ringRadius = outerRingRadius;
+        fontSize = 12;
     }
 
     // Converte ângulo para radianos (subtrai 90° para começar do topo)
     final angleRad = (position.angle - 90) * (math.pi / 180);
 
-    // Posição da letra (um pouco mais afastada do círculo)
-    final letterDistance = ringRadius + 20;
-    final x = center.dx + letterDistance * math.cos(angleRad);
-    final y = center.dy + letterDistance * math.sin(angleRad);
+    // Posição da letra no centro do segmento
+    final x = center.dx + ringRadius * math.cos(angleRad);
+    final y = center.dy + ringRadius * math.sin(angleRad);
+
+    // Verifica se a letra está destacada
+    final isHighlighted = highlightedLetters.contains(letter);
+
+    // Desenhar fundo circular se destacada
+    if (isHighlighted) {
+      final highlightPaint = Paint()
+        ..color = AppColors.lilac.withOpacity(0.3)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(x, y), fontSize * 0.8, highlightPaint);
+    }
 
     // Desenhar letra
     final textPainter = TextPainter(
       text: TextSpan(
         text: letter,
-        style: const TextStyle(
-          color: AppColors.lilac,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
+        style: TextStyle(
+          color: isHighlighted ? AppColors.starYellow : AppColors.lilac,
+          fontSize: fontSize,
+          fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -103,24 +197,12 @@ class WitchWheelPainter extends CustomPainter {
         y - textPainter.height / 2,
       ),
     );
-
-    // Desenhar linha do círculo até perto da letra
-    final lineStart = Offset(
-      center.dx + ringRadius * math.cos(angleRad),
-      center.dy + ringRadius * math.sin(angleRad),
-    );
-    final lineEnd = Offset(
-      center.dx + (ringRadius + 10) * math.cos(angleRad),
-      center.dy + (ringRadius + 10) * math.sin(angleRad),
-    );
-
-    final linePaint = Paint()
-      ..color = AppColors.surfaceBorder.withOpacity(0.3)
-      ..strokeWidth = 1.0;
-
-    canvas.drawLine(lineStart, lineEnd, linePaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant WitchWheelPainter oldDelegate) {
+    return oldDelegate.highlightedLetters != highlightedLetters ||
+        oldDelegate.customPositions != customPositions ||
+        oldDelegate.showLetters != showLetters;
+  }
 }

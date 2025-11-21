@@ -3,6 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../data/models/sigil_model.dart';
+import '../../data/models/sigil_wheel_model.dart';
 import '../widgets/witch_wheel_painter.dart';
 import '../widgets/sigil_drawing_painter.dart';
 
@@ -22,6 +23,32 @@ class SigilStep3DrawingPage extends StatefulWidget {
 class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
   bool _showWheel = true;
   bool _showStartEnd = true;
+  bool _isShuffled = false;
+  Map<String, WheelPosition>? _shuffledPositions;
+  List<Offset>? _shuffledPoints;
+
+  /// Embaralha as posições das letras na roda (como no "Sigilo Nada" do livro)
+  void _shuffleLetters() {
+    setState(() {
+      _isShuffled = true;
+      _shuffledPositions = SigilWheel.generateShuffledPositions();
+      // Recalcular os pontos do sigilo com as novas posições
+      _shuffledPoints = SigilWheel.generateSigilPointsWithCustom(
+        widget.sigil.intention,
+        const Size(280, 280),
+        _shuffledPositions,
+      );
+    });
+  }
+
+  /// Restaura as posições originais das letras
+  void _resetLetters() {
+    setState(() {
+      _isShuffled = false;
+      _shuffledPositions = null;
+      _shuffledPoints = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,10 +97,12 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                           ? WitchWheelPainter(
                               showLetters: true,
                               radius: 100.0,
+                              highlightedLetters: widget.sigil.processedLetters.split('').toSet(),
+                              customPositions: _shuffledPositions,
                             )
                           : null,
                       foregroundPainter: SigilDrawingPainter(
-                        points: widget.sigil.points,
+                        points: _shuffledPoints ?? widget.sigil.points,
                         showStartEnd: _showStartEnd,
                       ),
                     ),
@@ -96,8 +125,10 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                   ],
 
                   // Controles de visualização
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       FilterChip(
                         label: Text(_showWheel ? 'Ocultar Roda' : 'Mostrar Roda'),
@@ -110,7 +141,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         selectedColor: AppColors.lilac.withOpacity(0.3),
                         checkmarkColor: AppColors.lilac,
                       ),
-                      const SizedBox(width: 8),
                       FilterChip(
                         label: Text(_showStartEnd ? 'Ocultar Pontos' : 'Mostrar Pontos'),
                         selected: _showStartEnd,
@@ -124,6 +154,45 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+
+                  // Botão de embaralhar
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _shuffleLetters,
+                        icon: const Icon(Icons.shuffle, size: 18),
+                        label: const Text('Embaralhar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.lilac.withOpacity(0.2),
+                          foregroundColor: AppColors.lilac,
+                        ),
+                      ),
+                      if (_isShuffled) ...[
+                        const SizedBox(width: 8),
+                        TextButton.icon(
+                          onPressed: _resetLetters,
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('Restaurar'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (_isShuffled) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Letras embaralhadas (como no "Sigilo Nada")',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ],
               ),
             ),
