@@ -75,14 +75,14 @@ class _AstrologyPageState extends State<AstrologyPage> {
 
                 const SizedBox(height: 16),
 
-                // Mapa Natal
+                // Mapa Astral
                 _buildOption(
                   context,
                   icon: '🌟',
                   title: 'Mapa Astral',
                   description: provider.hasBirthChart
-                      ? 'Ver seu mapa natal completo'
-                      : 'Criar seu mapa natal',
+                      ? 'Ver seu mapa astral completo'
+                      : 'Criar seu mapa astral',
                   onTap: () {
                     if (provider.hasBirthChart) {
                       Navigator.of(context).push(

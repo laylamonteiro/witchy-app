@@ -3,6 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../data/models/sigil_model.dart';
+import '../../data/models/sigil_wheel_model.dart';
 import '../widgets/witch_wheel_painter.dart';
 import '../widgets/sigil_drawing_painter.dart';
 
@@ -22,6 +23,24 @@ class SigilStep3DrawingPage extends StatefulWidget {
 class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
   bool _showWheel = true;
   bool _showStartEnd = true;
+  bool _isShuffled = false;
+  Map<String, WheelPosition>? _shuffledPositions;
+
+  /// Embaralha as posições das letras na roda (como no "Sigilo Nada" do livro)
+  void _shuffleLetters() {
+    setState(() {
+      _isShuffled = true;
+      _shuffledPositions = SigilWheel.generateShuffledPositions();
+    });
+  }
+
+  /// Restaura as posições originais das letras
+  void _resetLetters() {
+    setState(() {
+      _isShuffled = false;
+      _shuffledPositions = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,23 +77,26 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                 children: [
                   // Desenho do sigilo
                   Container(
-                    width: 280,
-                    height: 280,
+                    width: 360,
+                    height: 360,
                     decoration: BoxDecoration(
                       color: AppColors.background,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: CustomPaint(
-                      size: const Size(280, 280),
+                      size: const Size(360, 360),
                       painter: _showWheel
                           ? WitchWheelPainter(
                               showLetters: true,
-                              // radius usa SigilWheel.wheelRadius por padrão
+                              radius: 140.0,
+                              highlightedLetters: widget.sigil.processedLetters.split('').toSet(),
+                              customPositions: _shuffledPositions,
                             )
                           : null,
                       foregroundPainter: SigilDrawingPainter(
-                        points: widget.sigil.points,
+                        intention: widget.sigil.intention,
                         showStartEnd: _showStartEnd,
+                        customPositions: _shuffledPositions,
                       ),
                     ),
                   ),
@@ -92,36 +114,98 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         _buildLegendItem(Colors.red.shade300, 'Fim'),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                   ],
 
-                  // Controles de visualização
+                  // Controles de visualização (todos lado a lado)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      FilterChip(
-                        label: Text(_showWheel ? 'Ocultar Roda' : 'Mostrar Roda'),
+                      ChoiceChip(
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _showWheel ? Icons.visibility : Icons.visibility_off,
+                              size: 16,
+                              color: _showWheel ? AppColors.lilac : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text('Roda'),
+                          ],
+                        ),
                         selected: _showWheel,
                         onSelected: (value) {
                           setState(() {
                             _showWheel = value;
                           });
                         },
-                        selectedColor: AppColors.lilac.withOpacity(0.3),
-                        checkmarkColor: AppColors.lilac,
+                        selectedColor: AppColors.lilac.withOpacity(0.2),
+                        backgroundColor: AppColors.surface,
+                        labelStyle: TextStyle(
+                          color: _showWheel ? AppColors.lilac : AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                        side: BorderSide(
+                          color: _showWheel ? AppColors.lilac : Colors.transparent,
+                        ),
+                        showCheckmark: false,
                       ),
                       const SizedBox(width: 8),
-                      FilterChip(
-                        label: Text(_showStartEnd ? 'Ocultar Pontos' : 'Mostrar Pontos'),
+                      ChoiceChip(
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _showStartEnd ? Icons.visibility : Icons.visibility_off,
+                              size: 16,
+                              color: _showStartEnd ? AppColors.starYellow : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text('Pontos'),
+                          ],
+                        ),
                         selected: _showStartEnd,
                         onSelected: (value) {
                           setState(() {
                             _showStartEnd = value;
                           });
                         },
-                        selectedColor: AppColors.starYellow.withOpacity(0.3),
-                        checkmarkColor: AppColors.starYellow,
+                        selectedColor: AppColors.starYellow.withOpacity(0.2),
+                        backgroundColor: AppColors.surface,
+                        labelStyle: TextStyle(
+                          color: _showStartEnd ? AppColors.starYellow : AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                        side: BorderSide(
+                          color: _showStartEnd ? AppColors.starYellow : Colors.transparent,
+                        ),
+                        showCheckmark: false,
                       ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: _shuffleLetters,
+                        icon: const Icon(Icons.shuffle, size: 20),
+                        tooltip: 'Embaralhar letras',
+                        style: IconButton.styleFrom(
+                          backgroundColor: _isShuffled
+                              ? AppColors.mint.withOpacity(0.3)
+                              : AppColors.surface,
+                          foregroundColor: _isShuffled ? AppColors.mint : AppColors.textSecondary,
+                        ),
+                      ),
+                      if (_isShuffled) ...[
+                        const SizedBox(width: 4),
+                        IconButton(
+                          onPressed: _resetLetters,
+                          icon: const Icon(Icons.restart_alt, size: 20),
+                          tooltip: 'Restaurar posições',
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.surface,
+                            foregroundColor: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],

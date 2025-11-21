@@ -62,30 +62,18 @@ class _DesireFormPageState extends State<DesireFormPage> {
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'Título *',
+                labelText: 'Título',
                 hintText: 'Ex: Viajar para o exterior',
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
-                labelText: 'Descrição *',
+                labelText: 'Descrição',
                 hintText: 'Descreva seu desejo em detalhes',
               ),
               maxLines: 5,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<DesireStatus>(
@@ -133,32 +121,41 @@ class _DesireFormPageState extends State<DesireFormPage> {
   }
 
   void _saveDesire() {
-    if (_formKey.currentState!.validate()) {
-      final desire = widget.desire?.copyWith(
-            title: _titleController.text,
-            description: _descriptionController.text,
-            status: _selectedStatus,
-            evolution: _evolutionController.text.isEmpty
-                ? null
-                : _evolutionController.text,
-          ) ??
-          DesireModel(
-            title: _titleController.text,
-            description: _descriptionController.text,
-            status: _selectedStatus,
-            evolution: _evolutionController.text.isEmpty
-                ? null
-                : _evolutionController.text,
-          );
-
-      if (widget.desire == null) {
-        context.read<DesireProvider>().addDesire(desire);
-      } else {
-        context.read<DesireProvider>().updateDesire(desire);
-      }
-
-      Navigator.pop(context);
+    // Verificar se pelo menos um campo foi preenchido
+    if (_titleController.text.isEmpty && _descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preencha pelo menos o título ou a descrição'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
     }
+
+    final desire = widget.desire?.copyWith(
+          title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          description: _descriptionController.text,
+          status: _selectedStatus,
+          evolution: _evolutionController.text.isEmpty
+              ? null
+              : _evolutionController.text,
+        ) ??
+        DesireModel(
+          title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          description: _descriptionController.text,
+          status: _selectedStatus,
+          evolution: _evolutionController.text.isEmpty
+              ? null
+              : _evolutionController.text,
+        );
+
+    if (widget.desire == null) {
+      context.read<DesireProvider>().addDesire(desire);
+    } else {
+      context.read<DesireProvider>().updateDesire(desire);
+    }
+
+    Navigator.pop(context);
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
