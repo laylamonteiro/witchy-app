@@ -41,7 +41,9 @@ dependencies:
   sqflite_common_ffi_web: ^0.4.1+1
 
   # Astrology calculations
-  sweph: ^3.2.1+2.10.3
+  # Pinned to a Dart 3.0-compatible release so `flutter pub get` works on the
+  # GitHub Actions runner (Dart 3.4.0).
+  sweph: ^2.10.3+18
 
   # Location & Geocoding
   geocoding: ^3.0.0
