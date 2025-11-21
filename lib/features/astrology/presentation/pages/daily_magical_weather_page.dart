@@ -109,7 +109,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'A IA está analisando os trânsitos de hoje',
+              'O Conselheiro Místico está analisando os trânsitos de hoje',
               style: TextStyle(
                 color: AppColors.softWhite.withOpacity(0.7),
                 fontSize: 14,
@@ -367,7 +367,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Gerada com IA baseada nos trânsitos astrológicos',
+            'Criada pelo Conselheiro Místico baseada nos trânsitos astrológicos',
             style: TextStyle(
               color: AppColors.softWhite.withOpacity(0.6),
               fontSize: 12,
@@ -547,7 +547,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'O Clima Mágico é calculado diariamente com base nos trânsitos planetários reais e interpretado pela IA para práticas mágicas.',
+              'O Clima Mágico é calculado diariamente com base nos trânsitos planetários reais e interpretado pelo Conselheiro Místico para práticas mágicas.',
               style: TextStyle(
                 color: AppColors.softWhite.withOpacity(0.9),
                 height: 1.5,

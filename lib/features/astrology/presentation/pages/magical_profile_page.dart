@@ -15,19 +15,6 @@ class MagicalProfilePage extends StatefulWidget {
 
 class _MagicalProfilePageState extends State<MagicalProfilePage> {
   @override
-  void initState() {
-    super.initState();
-    // Gerar texto IA se ainda não existir
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<AstrologyProvider>();
-      if (provider.magicalProfile != null &&
-          provider.magicalProfile!.aiGeneratedText == null) {
-        provider.generateAIMagicalProfile();
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -272,7 +259,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'A IA está analisando seu mapa astral e criando\numa interpretação única para você.',
+              'O Conselheiro Místico está analisando seu mapa astral\ne criando uma interpretação única para você.',
               style: TextStyle(
                 color: AppColors.softWhite.withOpacity(0.7),
                 fontSize: 14,
@@ -294,12 +281,14 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               children: [
                 const Text('🌟', style: TextStyle(fontSize: 24)),
                 const SizedBox(width: 8),
-                Text(
-                  'Sua Análise Personalizada',
-                  style: GoogleFonts.cinzelDecorative(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.lilac,
+                Expanded(
+                  child: Text(
+                    'Sua Análise Personalizada',
+                    style: GoogleFonts.cinzelDecorative(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.lilac,
+                    ),
                   ),
                 ),
               ],
@@ -401,7 +390,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Gere uma análise única do seu perfil mágico\ncom inteligência artificial.',
+            'Consulte o Conselheiro Místico para uma\nanálise única do seu perfil mágico.',
             style: TextStyle(
               color: AppColors.softWhite.withOpacity(0.8),
               fontSize: 14,

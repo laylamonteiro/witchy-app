@@ -86,6 +86,13 @@ class AstrologyProvider with ChangeNotifier {
       _birthChart = chart;
       _magicalProfile = profile;
 
+      // Gerar texto personalizado com Conselheiro Místico automaticamente
+      _isLoading = false;
+      notifyListeners();
+
+      // Iniciar geração do texto IA em background
+      generateAIMagicalProfile();
+
       return chart;
     } catch (e) {
       _error = 'Erro ao calcular mapa natal: $e';
@@ -111,6 +118,15 @@ class AstrologyProvider with ChangeNotifier {
 
       _birthChart = chart;
       _magicalProfile = profile;
+
+      // Regenerar texto personalizado com Conselheiro Místico
+      _isLoading = false;
+      notifyListeners();
+
+      // Iniciar geração do texto em background
+      generateAIMagicalProfile();
+
+      return;
     } catch (e) {
       _error = 'Erro ao atualizar mapa natal: $e';
     } finally {

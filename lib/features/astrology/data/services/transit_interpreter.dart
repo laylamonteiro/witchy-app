@@ -126,22 +126,38 @@ class TransitInterpreter {
     return suggestions;
   }
 
-  /// Calcula a fase da lua (simplificado)
+  /// Calcula a fase da lua (sincronizado com LunarProvider)
   String _calculateMoonPhase(DateTime date) {
-    // Ciclo lunar: ~29.53 dias
-    final referenceNewMoon = DateTime(2000, 1, 6); // Lua Nova conhecida
-    final daysSinceReference = date.difference(referenceNewMoon).inDays;
-    final phaseInCycle = (daysSinceReference % 29.53) / 29.53;
+    // Usar a mesma referência do LunarProvider para consistência
+    // Lua nova conhecida: 1 de novembro de 2024, 12:47 UTC
+    final knownNewMoon = DateTime.utc(2024, 11, 1, 12, 47);
 
-    if (phaseInCycle < 0.0625) return 'Lua Nova';
-    if (phaseInCycle < 0.1875) return 'Lua Crescente';
-    if (phaseInCycle < 0.3125) return 'Quarto Crescente';
-    if (phaseInCycle < 0.4375) return 'Lua Gibosa Crescente';
-    if (phaseInCycle < 0.5625) return 'Lua Cheia';
-    if (phaseInCycle < 0.6875) return 'Lua Gibosa Minguante';
-    if (phaseInCycle < 0.8125) return 'Quarto Minguante';
-    if (phaseInCycle < 0.9375) return 'Lua Minguante';
-    return 'Lua Nova';
+    // Calcular diferença em dias com precisão de horas
+    final difference = date.toUtc().difference(knownNewMoon);
+    final daysSinceKnownNewMoon = difference.inHours / 24.0;
+
+    // Ciclo lunar médio é de 29.53059 dias
+    const lunarCycle = 29.53059;
+    final phase = (daysSinceKnownNewMoon % lunarCycle) / lunarCycle;
+
+    // Usar os mesmos thresholds do LunarProvider para consistência
+    if (phase < 0.017 || phase >= 0.983) {
+      return 'Lua Nova';
+    } else if (phase < 0.1875) {
+      return 'Lua Crescente';
+    } else if (phase < 0.3125) {
+      return 'Quarto Crescente';
+    } else if (phase < 0.4375) {
+      return 'Lua Gibosa Crescente';
+    } else if (phase < 0.5625) {
+      return 'Lua Cheia';
+    } else if (phase < 0.6875) {
+      return 'Lua Gibosa Minguante';
+    } else if (phase < 0.8125) {
+      return 'Quarto Minguante';
+    } else {
+      return 'Lua Minguante';
+    }
   }
 
   /// Identifica aspectos significativos entre planetas em trânsito
