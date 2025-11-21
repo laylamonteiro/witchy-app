@@ -103,8 +103,8 @@ class SigilWheel {
     if (position == null) return Offset(canvasSize.width / 2, canvasSize.height / 2);
 
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
-    // Multiplicador deve ser igual a radius/canvasSize usado no painter (140/360 = 0.389)
-    final maxRadius = math.min(canvasSize.width, canvasSize.height) * 0.389;
+    // Usar exatamente 140.0 para canvas 360x360 (mesmo valor do painter)
+    final maxRadius = 140.0;
 
     // Calcula o raio baseado no anel (centro da faixa, igual ao painter)
     double radius;
@@ -237,8 +237,8 @@ class SigilWheel {
     if (position == null) return Offset(canvasSize.width / 2, canvasSize.height / 2);
 
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
-    // Multiplicador deve ser igual a radius/canvasSize usado no painter (140/360 = 0.389)
-    final maxRadius = math.min(canvasSize.width, canvasSize.height) * 0.389;
+    // Usar exatamente 140.0 para canvas 360x360 (mesmo valor do painter)
+    final maxRadius = 140.0;
 
     // Calcula o raio baseado no anel (DEVE ser igual ao painter!)
     double radius;
