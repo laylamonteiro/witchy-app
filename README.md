@@ -184,6 +184,25 @@ flutter pub get
 flutter run
 ```
 
+## Como configurar os secrets do GitHub Actions (pipeline do APK)
+
+Para a esteira de build e envio de APK funcionar, configure os secrets do repositório no GitHub:
+
+1. Acesse **Settings → Secrets and variables → Actions** no repositório.
+2. Clique em **New repository secret** e crie os seguintes itens obrigatórios (fornecidos pelo seu provedor SMTP):
+   - `EMAIL_SERVER` (endereço do servidor SMTP, ex.: `smtp.gmail.com` ou `smtp.office365.com`)
+   - `EMAIL_PORT` (porta de envio, geralmente `587` para STARTTLS ou `465` para SSL)
+   - `EMAIL_USERNAME`
+   - `EMAIL_PASSWORD`
+   - `EMAIL_FROM`
+3. (Opcional) Crie o secret `APK_RECIPIENTS` com o(s) e-mail(s) destino separados por vírgula para definir explicitamente quem recebe o APK. Se não definir, a pipeline tenta usar o e-mail do push (pusher/autor/committer) e, se indisponível, usa o endereço `noreply` do seu usuário GitHub.
+4. Salve cada secret. Após isso, basta rodar o workflow via push para `main` ou manualmente em **Actions → Build and Send Android APK → Run workflow**.
+
+> Dica rápida: se você só tem o endereço de e-mail, consulte a documentação do seu provedor para descobrir o host e a porta SMTP. Exemplos comuns:
+> - Gmail / Google Workspace: `EMAIL_SERVER=smtp.gmail.com`, `EMAIL_PORT=587` (requer "App Password" com 2FA ativo).
+> - Outlook/Office 365: `EMAIL_SERVER=smtp.office365.com`, `EMAIL_PORT=587`.
+> - Provedores de hospedagem (cPanel, etc.): procure por "Configurações SMTP" no painel, o host costuma ser `mail.seudominio.com` e a porta 587.
+
 ## Próximas Fases
 
 ### Fase 2 - Backend + Conta + IA Básica
