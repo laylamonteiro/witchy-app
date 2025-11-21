@@ -26,7 +26,7 @@ class _PersonalizedSuggestionsPageState
   BirthChartModel? _natalChart;
   bool _isLoading = false;
   bool _hasNatalChart = false;
-  List<PlanetPosition>? _retrogradePlanets;
+  List<Transit>? _retrogradePlanets;
 
   @override
   void initState() {
