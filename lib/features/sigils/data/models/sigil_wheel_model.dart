@@ -103,23 +103,27 @@ class SigilWheel {
     if (position == null) return Offset(canvasSize.width / 2, canvasSize.height / 2);
 
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
-    // Usar exatamente 140.0 para canvas 360x360 (mesmo valor do painter)
-    final maxRadius = 140.0;
+    // Calcular radius proporcional ao canvas (140/360 para 360x360)
+    // O painter recebe radius=140 para canvas 360x360
+    final painterRadius = math.min(canvasSize.width, canvasSize.height) * (140.0 / 360.0);
 
-    // Calcula o raio baseado no anel (centro da faixa, igual ao painter)
+    // EXATAMENTE os mesmos multiplicadores do WitchWheelPainter:
+    // innerRingRadius = radius * 0.22
+    // middleRingRadius = radius * 0.50
+    // outerRingRadius = radius * 0.80
     double radius;
     switch (position.ring) {
       case 1: // Anel interno (A-F)
-        radius = maxRadius * 0.22;
+        radius = painterRadius * 0.22;
         break;
       case 2: // Anel médio (G-N)
-        radius = maxRadius * 0.50;
+        radius = painterRadius * 0.50;
         break;
       case 3: // Anel externo (O-Z)
-        radius = maxRadius * 0.80;
+        radius = painterRadius * 0.80;
         break;
       default:
-        radius = maxRadius * 0.80;
+        radius = painterRadius * 0.80;
     }
 
     // Converte ângulo para radianos (subtrai 90° para começar do topo)
@@ -237,23 +241,27 @@ class SigilWheel {
     if (position == null) return Offset(canvasSize.width / 2, canvasSize.height / 2);
 
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
-    // Usar exatamente 140.0 para canvas 360x360 (mesmo valor do painter)
-    final maxRadius = 140.0;
+    // Calcular radius proporcional ao canvas (140/360 para 360x360)
+    // O painter recebe radius=140 para canvas 360x360
+    final painterRadius = math.min(canvasSize.width, canvasSize.height) * (140.0 / 360.0);
 
-    // Calcula o raio baseado no anel (DEVE ser igual ao painter!)
+    // EXATAMENTE os mesmos multiplicadores do WitchWheelPainter:
+    // innerRingRadius = radius * 0.22
+    // middleRingRadius = radius * 0.50
+    // outerRingRadius = radius * 0.80
     double radius;
     switch (position.ring) {
       case 1: // Anel interno (A-F)
-        radius = maxRadius * 0.22;
+        radius = painterRadius * 0.22;
         break;
       case 2: // Anel médio (G-N)
-        radius = maxRadius * 0.50;
+        radius = painterRadius * 0.50;
         break;
       case 3: // Anel externo (O-Z)
-        radius = maxRadius * 0.80;
+        radius = painterRadius * 0.80;
         break;
       default:
-        radius = maxRadius * 0.80;
+        radius = painterRadius * 0.80;
     }
 
     // Converte ângulo para radianos (subtrai 90° para começar do topo)
