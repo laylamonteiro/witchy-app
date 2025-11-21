@@ -7,6 +7,7 @@ import '../ai/ai_service.dart';
 import '../ai/groq_credentials.dart';
 import '../../features/astrology/data/services/chart_calculator.dart';
 import '../../features/astrology/data/services/transit_interpreter.dart';
+import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../core/database/database_helper.dart';
 
 // Mapa de capitais brasileiras com coordenadas exatas
@@ -72,7 +73,6 @@ const Map<String, Map<String, dynamic>> _brazilianCapitals = {
     'lon': -60.0217,
   },
 };
-import '../../features/astrology/data/models/birth_chart_model.dart';
 
 /// Página de diagnóstico completo do app
 /// Testa todas as funcionalidades críticas
