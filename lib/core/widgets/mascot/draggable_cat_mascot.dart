@@ -64,6 +64,11 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   // Para o rastro durante arraste
   DateTime? _lastParticleTime;
 
+  // Limite de partículas e debounce
+  static const int _maxParticles = 100;
+  static const int _maxTrailParticles = 50;
+  bool _isTapAnimating = false;
+
   @override
   void initState() {
     super.initState();
@@ -232,17 +237,26 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   }
 
   void _onTap() {
-    // Criar explosão de partículas
+    // Evitar cliques durante arraste ou animação em andamento
+    if (_isDragging || _isTapAnimating) return;
+
+    _isTapAnimating = true;
+
+    // Criar explosão de partículas (com limite)
     _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
 
     // Animação de "pulo" - escala e movimento vertical
     _scaleController.forward().then((_) {
-      _scaleController.reverse();
+      if (mounted) _scaleController.reverse();
     });
 
     // Animação de pulo para cima
     _jumpController.forward().then((_) {
-      _jumpController.reverse();
+      if (mounted) {
+        _jumpController.reverse().then((_) {
+          if (mounted) _isTapAnimating = false;
+        });
+      }
     });
 
     // Callback opcional
@@ -250,9 +264,15 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   }
 
   void _createParticleBurst(double x, double y) {
+    // Limitar quantidade de partículas
+    if (_particles.length >= _maxParticles) {
+      // Remover as mais antigas
+      _particles.removeRange(0, 20);
+    }
+
     final random = math.Random();
-    // Partículas mágicas com cores fofas
-    for (int i = 0; i < 20; i++) {
+    // Partículas mágicas com cores fofas (reduzido para 12)
+    for (int i = 0; i < 12; i++) {
       final colors = [
         AppColors.lilac,
         AppColors.starYellow,
@@ -267,33 +287,35 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
         size: random.nextDouble() * 5 + 3,
         color: colors[random.nextInt(colors.length)],
         opacity: 1.0,
-        isHeart: random.nextDouble() > 0.5, // 50% chance de ser coração
-        isStar: random.nextDouble() > 0.7, // 30% chance de ser estrela
+        isHeart: random.nextDouble() > 0.6, // 40% chance de ser coração
+        isStar: random.nextDouble() > 0.75, // 25% chance de ser estrela
       ));
     }
   }
 
   void _createTrailParticle(double x, double y) {
+    // Limitar quantidade de partículas de rastro
+    if (_trailParticles.length >= _maxTrailParticles) {
+      _trailParticles.removeRange(0, 10);
+    }
+
     final now = DateTime.now();
-    // Reduzir intervalo para rastro mais denso (de 50ms para 30ms)
+    // Intervalo para rastro (40ms)
     if (_lastParticleTime == null ||
-        now.difference(_lastParticleTime!).inMilliseconds > 30) {
+        now.difference(_lastParticleTime!).inMilliseconds > 40) {
       _lastParticleTime = now;
 
       final random = math.Random();
-      // Criar 2 partículas por vez para rastro mais denso
-      for (int i = 0; i < 2; i++) {
-        _trailParticles.add(TrailParticle(
-          x: x + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
-          y: y + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
-          size: random.nextDouble() * 3 + 1.5,
-          color: random.nextBool()
-            ? AppColors.lilac.withOpacity(0.7)
-            : AppColors.starYellow.withOpacity(0.7),
-          opacity: 1.0,
-          rotation: random.nextDouble() * math.pi * 2, // Ângulo aleatório fixo
-        ));
-      }
+      _trailParticles.add(TrailParticle(
+        x: x + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
+        y: y + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
+        size: random.nextDouble() * 3 + 1.5,
+        color: random.nextBool()
+          ? AppColors.lilac.withOpacity(0.7)
+          : AppColors.starYellow.withOpacity(0.7),
+        opacity: 1.0,
+        rotation: random.nextDouble() * math.pi * 2,
+      ));
     }
   }
 
@@ -319,6 +341,15 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
           child: GestureDetector(
             onTap: _onTap,
             onPanStart: (details) {
+              // Resetar estado de animação de tap
+              _isTapAnimating = false;
+
+              // Parar animações em andamento antes de iniciar arraste
+              if (_jumpController.isAnimating) {
+                _jumpController.stop();
+                _jumpController.reset();
+              }
+
               setState(() {
                 _isDragging = true;
               });
@@ -343,7 +374,11 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                 _isDragging = false;
               });
               _shadowController.reverse();
-              _scaleController.reverse();
+              // Só reverter se estiver no estado forward
+              if (_scaleController.status == AnimationStatus.completed ||
+                  _scaleController.status == AnimationStatus.forward) {
+                _scaleController.reverse();
+              }
             },
             child: AnimatedBuilder(
               animation: Listenable.merge([
