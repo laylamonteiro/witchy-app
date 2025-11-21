@@ -6,7 +6,7 @@ import '../models/magical_profile_model.dart';
 class AstrologyRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  // Salvar Mapa Natal
+  // Salvar Mapa Astral
   Future<void> saveBirthChart(BirthChartModel chart) async {
     final db = await _dbHelper.database;
 
@@ -30,7 +30,7 @@ class AstrologyRepository {
     );
   }
 
-  // Buscar Mapa Natal do usuário
+  // Buscar Mapa Astral do usuário
   Future<BirthChartModel?> getBirthChart(String userId) async {
     final db = await _dbHelper.database;
 
@@ -50,7 +50,7 @@ class AstrologyRepository {
     return BirthChartModel.fromJsonString(chartData);
   }
 
-  // Verificar se usuário tem mapa natal
+  // Verificar se usuário tem mapa astral
   Future<bool> hasBirthChart(String userId) async {
     final db = await _dbHelper.database;
 
@@ -64,7 +64,7 @@ class AstrologyRepository {
     return result.isNotEmpty;
   }
 
-  // Atualizar Mapa Natal
+  // Atualizar Mapa Astral
   Future<void> updateBirthChart(BirthChartModel chart) async {
     final db = await _dbHelper.database;
 
@@ -87,7 +87,7 @@ class AstrologyRepository {
     );
   }
 
-  // Deletar Mapa Natal
+  // Deletar Mapa Astral
   Future<void> deleteBirthChart(String chartId) async {
     final db = await _dbHelper.database;
 

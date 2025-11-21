@@ -66,15 +66,9 @@ class _DreamFormPageState extends State<DreamFormPage> {
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'Título *',
+                labelText: 'Título',
                 hintText: 'Ex: Sonho com borboletas',
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 16),
             ListTile(
@@ -102,16 +96,10 @@ class _DreamFormPageState extends State<DreamFormPage> {
             TextFormField(
               controller: _contentController,
               decoration: const InputDecoration(
-                labelText: 'Descrição do Sonho *',
+                labelText: 'Descrição do Sonho',
                 hintText: 'Descreva seu sonho em detalhes',
               ),
               maxLines: 10,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -143,40 +131,49 @@ class _DreamFormPageState extends State<DreamFormPage> {
   }
 
   void _saveDream() {
-    if (_formKey.currentState!.validate()) {
-      final tags = _tagsController.text
-          .split(',')
-          .map((t) => t.trim())
-          .where((t) => t.isNotEmpty)
-          .toList();
-
-      final dream = widget.dream?.copyWith(
-            title: _titleController.text,
-            content: _contentController.text,
-            tags: tags,
-            feeling: _feelingController.text.isEmpty
-                ? null
-                : _feelingController.text,
-            date: _selectedDate,
-          ) ??
-          DreamModel(
-            title: _titleController.text,
-            content: _contentController.text,
-            tags: tags,
-            feeling: _feelingController.text.isEmpty
-                ? null
-                : _feelingController.text,
-            date: _selectedDate,
-          );
-
-      if (widget.dream == null) {
-        context.read<DreamProvider>().addDream(dream);
-      } else {
-        context.read<DreamProvider>().updateDream(dream);
-      }
-
-      Navigator.pop(context);
+    // Verificar se pelo menos um campo foi preenchido
+    if (_titleController.text.isEmpty && _contentController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preencha pelo menos o título ou a descrição'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
     }
+
+    final tags = _tagsController.text
+        .split(',')
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
+
+    final dream = widget.dream?.copyWith(
+          title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          content: _contentController.text,
+          tags: tags,
+          feeling: _feelingController.text.isEmpty
+              ? null
+              : _feelingController.text,
+          date: _selectedDate,
+        ) ??
+        DreamModel(
+          title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          content: _contentController.text,
+          tags: tags,
+          feeling: _feelingController.text.isEmpty
+              ? null
+              : _feelingController.text,
+          date: _selectedDate,
+        );
+
+    if (widget.dream == null) {
+      context.read<DreamProvider>().addDream(dream);
+    } else {
+      context.read<DreamProvider>().updateDream(dream);
+    }
+
+    Navigator.pop(context);
   }
 
   Future<void> _confirmDelete(BuildContext context) async {

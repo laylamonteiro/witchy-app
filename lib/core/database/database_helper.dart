@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -197,6 +197,17 @@ class DatabaseHelper {
         spread_type TEXT NOT NULL,
         reading_data TEXT NOT NULL,
         date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Tabela de Clima Mágico Diário (gerado por IA)
+    await db.execute('''
+      CREATE TABLE daily_magical_weather (
+        id TEXT PRIMARY KEY,
+        date TEXT NOT NULL UNIQUE,
+        ai_generated_text TEXT NOT NULL,
+        weather_data TEXT NOT NULL,
         created_at INTEGER NOT NULL
       )
     ''');
@@ -445,6 +456,26 @@ class DatabaseHelper {
             spread_type TEXT NOT NULL,
             reading_data TEXT NOT NULL,
             date INTEGER NOT NULL,
+            created_at INTEGER NOT NULL
+          )
+        ''');
+      }
+    }
+
+    // Migração da versão 5 para 6
+    if (oldVersion < 6) {
+      // Verificar e criar tabela daily_magical_weather
+      final weatherTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='daily_magical_weather'"
+      );
+
+      if (weatherTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE daily_magical_weather (
+            id TEXT PRIMARY KEY,
+            date TEXT NOT NULL UNIQUE,
+            ai_generated_text TEXT NOT NULL,
+            weather_data TEXT NOT NULL,
             created_at INTEGER NOT NULL
           )
         ''');

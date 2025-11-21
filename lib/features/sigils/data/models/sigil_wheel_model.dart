@@ -5,6 +5,17 @@ class SigilWheel {
   // Distribuição das letras nos 3 anéis da roda
   // Baseado no livro: Roda Alfabética das Bruxas
   // ESTRUTURA CORRETA - 3 CAMADAS CONCÊNTRICAS
+
+  // Letras por anel (para embaralhamento - "Sigilo Nada")
+  static const List<String> innerRingLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  static const List<String> middleRingLetters = ['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
+  static const List<String> outerRingLetters = ['O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+
+  // Ângulos padrão para cada anel
+  static List<double> get innerRingAngles => [0, 60, 120, 180, 240, 300];
+  static List<double> get middleRingAngles => [0, 45, 90, 135, 180, 225, 270, 315];
+  static List<double> get outerRingAngles => [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+
   static const Map<String, WheelPosition> letterPositions = {
     // Anel Interno (raio = 0.33) - 6 letras (A-F)
     // 60° entre cada letra (360° / 6 = 60°)
@@ -41,7 +52,107 @@ class SigilWheel {
     'Y': WheelPosition(ring: 3, angle: 300, index: 10),
     'Z': WheelPosition(ring: 3, angle: 330, index: 11),
   };
-  
+
+  /// Gera posições embaralhadas para as letras (como no "Sigilo Nada" do livro)
+  /// Mantém cada letra em seu anel original, mas em posição aleatória
+  static Map<String, WheelPosition> generateShuffledPositions() {
+    final random = math.Random();
+    final shuffledPositions = <String, WheelPosition>{};
+
+    // Embaralhar anel interno (A-F)
+    final shuffledInner = List<String>.from(innerRingLetters)..shuffle(random);
+    for (int i = 0; i < shuffledInner.length; i++) {
+      shuffledPositions[shuffledInner[i]] = WheelPosition(
+        ring: 1,
+        angle: innerRingAngles[i],
+        index: i,
+      );
+    }
+
+    // Embaralhar anel médio (G-N)
+    final shuffledMiddle = List<String>.from(middleRingLetters)..shuffle(random);
+    for (int i = 0; i < shuffledMiddle.length; i++) {
+      shuffledPositions[shuffledMiddle[i]] = WheelPosition(
+        ring: 2,
+        angle: middleRingAngles[i],
+        index: i,
+      );
+    }
+
+    // Embaralhar anel externo (O-Z)
+    final shuffledOuter = List<String>.from(outerRingLetters)..shuffle(random);
+    for (int i = 0; i < shuffledOuter.length; i++) {
+      shuffledPositions[shuffledOuter[i]] = WheelPosition(
+        ring: 3,
+        angle: outerRingAngles[i],
+        index: i,
+      );
+    }
+
+    return shuffledPositions;
+  }
+
+  /// Calcula posição no canvas com posições customizadas (para embaralhamento)
+  static Offset getCanvasPositionWithCustom(
+    String letter,
+    Size canvasSize,
+    Map<String, WheelPosition>? customPositions,
+  ) {
+    final positions = customPositions ?? letterPositions;
+    final position = positions[letter];
+    if (position == null) return Offset(canvasSize.width / 2, canvasSize.height / 2);
+
+    final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
+    // Calcular radius proporcional ao canvas (140/360 para 360x360)
+    // O painter recebe radius=140 para canvas 360x360
+    final painterRadius = math.min(canvasSize.width, canvasSize.height) * (140.0 / 360.0);
+
+    // EXATAMENTE os mesmos multiplicadores do WitchWheelPainter:
+    // innerRingRadius = radius * 0.22
+    // middleRingRadius = radius * 0.50
+    // outerRingRadius = radius * 0.80
+    double radius;
+    switch (position.ring) {
+      case 1: // Anel interno (A-F)
+        radius = painterRadius * 0.22;
+        break;
+      case 2: // Anel médio (G-N)
+        radius = painterRadius * 0.50;
+        break;
+      case 3: // Anel externo (O-Z)
+        radius = painterRadius * 0.80;
+        break;
+      default:
+        radius = painterRadius * 0.80;
+    }
+
+    // Converte ângulo para radianos (subtrai 90° para começar do topo)
+    final angleRad = (position.angle - 90) * (math.pi / 180);
+
+    // Calcula posição X,Y
+    final x = center.dx + radius * math.cos(angleRad);
+    final y = center.dy + radius * math.sin(angleRad);
+
+    return Offset(x, y);
+  }
+
+  /// Gera pontos do sigilo com posições customizadas
+  static List<Offset> generateSigilPointsWithCustom(
+    String text,
+    Size canvasSize,
+    Map<String, WheelPosition>? customPositions,
+  ) {
+    final sequence = textToSigilSequence(text);
+    final points = <Offset>[];
+
+    for (String letter in sequence) {
+      final position = getCanvasPositionWithCustom(letter, canvasSize, customPositions);
+      points.add(position);
+    }
+
+    return points;
+  }
+
   // Converte texto em sequência para sigilo
   // Remove TODAS as letras duplicadas (método tradicional da Roda das Bruxas)
   static List<String> textToSigilSequence(String text) {
@@ -121,39 +232,45 @@ class SigilWheel {
   }
   
   // Calcula posição no canvas baseado na posição da roda
+  // IMPORTANTE: Os raios devem ser iguais aos do WitchWheelPainter!
   static Offset getCanvasPosition(
     String letter,
     Size canvasSize,
   ) {
     final position = letterPositions[letter];
     if (position == null) return Offset(canvasSize.width / 2, canvasSize.height / 2);
-    
+
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
-    final maxRadius = math.min(canvasSize.width, canvasSize.height) * 0.4;
-    
-    // Calcula o raio baseado no anel
+    // Calcular radius proporcional ao canvas (140/360 para 360x360)
+    // O painter recebe radius=140 para canvas 360x360
+    final painterRadius = math.min(canvasSize.width, canvasSize.height) * (140.0 / 360.0);
+
+    // EXATAMENTE os mesmos multiplicadores do WitchWheelPainter:
+    // innerRingRadius = radius * 0.22
+    // middleRingRadius = radius * 0.50
+    // outerRingRadius = radius * 0.80
     double radius;
     switch (position.ring) {
       case 1: // Anel interno (A-F)
-        radius = maxRadius * 0.33;
+        radius = painterRadius * 0.22;
         break;
       case 2: // Anel médio (G-N)
-        radius = maxRadius * 0.66;
+        radius = painterRadius * 0.50;
         break;
       case 3: // Anel externo (O-Z)
-        radius = maxRadius;
+        radius = painterRadius * 0.80;
         break;
       default:
-        radius = maxRadius;
+        radius = painterRadius * 0.80;
     }
-    
-    // Converte ângulo para radianos
-    final angleRad = position.angle * (math.pi / 180);
-    
+
+    // Converte ângulo para radianos (subtrai 90° para começar do topo)
+    final angleRad = (position.angle - 90) * (math.pi / 180);
+
     // Calcula posição X,Y
-    final x = center.dx + radius * math.cos(angleRad - math.pi / 2);
-    final y = center.dy + radius * math.sin(angleRad - math.pi / 2);
-    
+    final x = center.dx + radius * math.cos(angleRad);
+    final y = center.dy + radius * math.sin(angleRad);
+
     return Offset(x, y);
   }
   

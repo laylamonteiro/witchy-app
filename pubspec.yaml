@@ -56,6 +56,9 @@ dependencies:
   # Crypto utilities
   crypto: ^3.0.3
 
+  # Markdown rendering
+  flutter_markdown: ^0.6.18+2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

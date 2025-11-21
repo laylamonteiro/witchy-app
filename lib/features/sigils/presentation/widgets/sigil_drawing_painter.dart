@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../data/models/sigil_wheel_model.dart';
 
 /// Painter para desenhar o sigilo (linhas conectando os pontos)
-/// Os pontos já vêm calculados nas coordenadas corretas do canvas
-/// pela Roda Alfabética das Bruxas com 3 anéis concêntricos
+/// Calcula os pontos no momento da pintura usando o tamanho real do canvas
 class SigilDrawingPainter extends CustomPainter {
-  final List<Offset> points;
+  final String intention;
   final bool showStartEnd;
+  final Map<String, WheelPosition>? customPositions;
 
   SigilDrawingPainter({
-    required this.points,
+    required this.intention,
     this.showStartEnd = true,
+    this.customPositions,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Calcular pontos usando o tamanho REAL do canvas
+    final points = customPositions != null
+        ? SigilWheel.generateSigilPointsWithCustom(intention, size, customPositions)
+        : SigilWheel.generateSigilPoints(intention, size);
+
     if (points.length < 2) return;
 
     // Desenhar linhas conectando os pontos
@@ -27,7 +34,6 @@ class SigilDrawingPainter extends CustomPainter {
 
     final path = Path();
 
-    // Os pontos já vêm nas coordenadas corretas, usar diretamente
     final firstPoint = points[0];
     path.moveTo(firstPoint.dx, firstPoint.dy);
 
@@ -65,5 +71,9 @@ class SigilDrawingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant SigilDrawingPainter oldDelegate) {
+    return oldDelegate.intention != intention ||
+        oldDelegate.showStartEnd != showStartEnd ||
+        oldDelegate.customPositions != customPositions;
+  }
 }
