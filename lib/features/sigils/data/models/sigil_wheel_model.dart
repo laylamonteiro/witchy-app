@@ -227,39 +227,40 @@ class SigilWheel {
   }
   
   // Calcula posição no canvas baseado na posição da roda
+  // IMPORTANTE: Os raios devem ser iguais aos do WitchWheelPainter!
   static Offset getCanvasPosition(
     String letter,
     Size canvasSize,
   ) {
     final position = letterPositions[letter];
     if (position == null) return Offset(canvasSize.width / 2, canvasSize.height / 2);
-    
+
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
     final maxRadius = math.min(canvasSize.width, canvasSize.height) * 0.4;
-    
-    // Calcula o raio baseado no anel
+
+    // Calcula o raio baseado no anel (DEVE ser igual ao painter!)
     double radius;
     switch (position.ring) {
       case 1: // Anel interno (A-F)
-        radius = maxRadius * 0.33;
+        radius = maxRadius * 0.22;
         break;
       case 2: // Anel médio (G-N)
-        radius = maxRadius * 0.66;
+        radius = maxRadius * 0.50;
         break;
       case 3: // Anel externo (O-Z)
-        radius = maxRadius;
+        radius = maxRadius * 0.80;
         break;
       default:
-        radius = maxRadius;
+        radius = maxRadius * 0.80;
     }
-    
-    // Converte ângulo para radianos
-    final angleRad = position.angle * (math.pi / 180);
-    
+
+    // Converte ângulo para radianos (subtrai 90° para começar do topo)
+    final angleRad = (position.angle - 90) * (math.pi / 180);
+
     // Calcula posição X,Y
-    final x = center.dx + radius * math.cos(angleRad - math.pi / 2);
-    final y = center.dy + radius * math.sin(angleRad - math.pi / 2);
-    
+    final x = center.dx + radius * math.cos(angleRad);
+    final y = center.dy + radius * math.sin(angleRad);
+
     return Offset(x, y);
   }
   
