@@ -52,8 +52,8 @@ class EncyclopediaPage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            LunarCalendarPage(),
-            WheelOfYearPage(),
+            LunarCalendarPage(embedded: true),
+            WheelOfYearPage(embedded: true),
             CrystalsListPage(),
             HerbsListPage(),
             MetalsListPage(),

@@ -10,7 +10,9 @@ import '../../../grimoire/data/models/spell_model.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 
 class LunarCalendarPage extends StatefulWidget {
-  const LunarCalendarPage({super.key});
+  final bool embedded;
+
+  const LunarCalendarPage({super.key, this.embedded = false});
 
   @override
   State<LunarCalendarPage> createState() => _LunarCalendarPageState();
@@ -28,24 +30,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Calendário Lunar'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Consumer<LunarProvider>(
+    final content = Consumer<LunarProvider>(
         builder: (context, lunarProvider, _) {
           try {
             final currentPhase = lunarProvider.getCurrentMoonPhase();
@@ -255,6 +240,30 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
           }
         },
       ),
+    );
+
+    if (widget.embedded) {
+      return content;
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Calendário Lunar'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: content,
     );
   }
 
