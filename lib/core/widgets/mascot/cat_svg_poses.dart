@@ -29,32 +29,32 @@ String getCatSvgForPose(CatPose pose, bool isBlinking) {
 String _getSittingCat(bool isBlinking) {
   final eyes = isBlinking
     ? '''
-      <!-- Olhos fechados felizes (estilo ^_^) -->
-      <path d="M 22 22 Q 25 19 28 22" stroke="#C9A7FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <path d="M 36 22 Q 39 19 42 22" stroke="#C9A7FF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Olhos fechados felizes (estilo ^_^) - menores -->
+      <path d="M 22 22 Q 25 19.5 28 22" stroke="#C9A7FF" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M 36 22 Q 39 19.5 42 22" stroke="#C9A7FF" stroke-width="2" fill="none" stroke-linecap="round"/>
       <!-- Blush de felicidade -->
-      <ellipse cx="20" cy="27" rx="4" ry="2.5" fill="#FF9EBB" opacity="0.6"/>
-      <ellipse cx="44" cy="27" rx="4" ry="2.5" fill="#FF9EBB" opacity="0.6"/>
+      <ellipse cx="19" cy="27" rx="3.5" ry="2" fill="#FF9EBB" opacity="0.6"/>
+      <ellipse cx="45" cy="27" rx="3.5" ry="2" fill="#FF9EBB" opacity="0.6"/>
     '''
     : '''
-      <!-- Olhos grandes e expressivos -->
-      <ellipse cx="25" cy="22" rx="5.5" ry="6" fill="#FFFFFF"/>
-      <ellipse cx="39" cy="22" rx="5.5" ry="6" fill="#FFFFFF"/>
+      <!-- Olhos menores e fofos -->
+      <ellipse cx="25" cy="22" rx="4" ry="4.5" fill="#FFFFFF"/>
+      <ellipse cx="39" cy="22" rx="4" ry="4.5" fill="#FFFFFF"/>
       <!-- Outline dos olhos para mais definição -->
-      <ellipse cx="25" cy="22" rx="5.5" ry="6" fill="none" stroke="#0B0A16" stroke-width="0.5"/>
-      <ellipse cx="39" cy="22" rx="5.5" ry="6" fill="none" stroke="#0B0A16" stroke-width="0.5"/>
-      <!-- Pupilas grandes -->
-      <ellipse cx="26" cy="23" rx="3" ry="3.5" fill="#1A1A2E"/>
-      <ellipse cx="40" cy="23" rx="3" ry="3.5" fill="#1A1A2E"/>
-      <!-- Brilho principal (grande) -->
-      <circle cx="23.5" cy="20" r="2" fill="#FFFFFF"/>
-      <circle cx="37.5" cy="20" r="2" fill="#FFFFFF"/>
+      <ellipse cx="25" cy="22" rx="4" ry="4.5" fill="none" stroke="#0B0A16" stroke-width="0.5"/>
+      <ellipse cx="39" cy="22" rx="4" ry="4.5" fill="none" stroke="#0B0A16" stroke-width="0.5"/>
+      <!-- Pupilas -->
+      <ellipse cx="25.5" cy="22.5" rx="2.2" ry="2.8" fill="#1A1A2E"/>
+      <ellipse cx="39.5" cy="22.5" rx="2.2" ry="2.8" fill="#1A1A2E"/>
+      <!-- Brilho principal -->
+      <circle cx="24" cy="20.5" r="1.5" fill="#FFFFFF"/>
+      <circle cx="38" cy="20.5" r="1.5" fill="#FFFFFF"/>
       <!-- Brilho secundário -->
-      <circle cx="27" cy="24" r="1" fill="#FFFFFF" opacity="0.8"/>
-      <circle cx="41" cy="24" r="1" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="26.5" cy="23.5" r="0.8" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="40.5" cy="23.5" r="0.8" fill="#FFFFFF" opacity="0.8"/>
       <!-- Blush fofo permanente -->
-      <ellipse cx="18" cy="28" rx="4" ry="2.5" fill="#FF9EBB" opacity="0.5"/>
-      <ellipse cx="46" cy="28" rx="4" ry="2.5" fill="#FF9EBB" opacity="0.5"/>
+      <ellipse cx="19" cy="27" rx="3.5" ry="2" fill="#FF9EBB" opacity="0.5"/>
+      <ellipse cx="45" cy="27" rx="3.5" ry="2" fill="#FF9EBB" opacity="0.5"/>
     ''';
 
   return '''
@@ -114,26 +114,26 @@ String _getSittingCat(bool isBlinking) {
 
       $eyes
 
-      <!-- === NARIZ DE CORAÇÃO BEM DEFINIDO === -->
-      <path d="M 32 29
-               C 29 27, 28 29, 29 31
-               L 32 35
-               L 35 31
-               C 36 29, 35 27, 32 29 Z"
+      <!-- === NARIZ DE CORAÇÃO PEQUENO E MAIS ALTO === -->
+      <path d="M 32 27
+               C 30 25.5, 29.5 27, 30 28.5
+               L 32 31
+               L 34 28.5
+               C 34.5 27, 34 25.5, 32 27 Z"
             fill="#FF6B9D"/>
       <!-- Brilho no nariz coração -->
-      <ellipse cx="30" cy="29.5" rx="1" ry="0.7" fill="#FFFFFF" opacity="0.6"/>
+      <ellipse cx="30.8" cy="27" rx="0.8" ry="0.5" fill="#FFFFFF" opacity="0.6"/>
       <!-- Contorno sutil do nariz -->
-      <path d="M 32 29
-               C 29 27, 28 29, 29 31
-               L 32 35
-               L 35 31
-               C 36 29, 35 27, 32 29 Z"
+      <path d="M 32 27
+               C 30 25.5, 29.5 27, 30 28.5
+               L 32 31
+               L 34 28.5
+               C 34.5 27, 34 25.5, 32 27 Z"
             fill="none" stroke="#E85A8A" stroke-width="0.3"/>
 
-      <!-- === BOQUINHA FOFA === -->
-      <path d="M 29 37 Q 30.5 39 32 37 Q 33.5 39 35 37"
-            stroke="#FF6B9D" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- === BOQUINHA FOFA LOGO EMBAIXO DO NARIZ === -->
+      <path d="M 29.5 33 Q 30.8 34.5 32 33 Q 33.2 34.5 34.5 33"
+            stroke="#FF6B9D" stroke-width="1.2" fill="none" stroke-linecap="round"/>
 
       <!-- === BIGODES ELEGANTES === -->
       <!-- Esquerda -->

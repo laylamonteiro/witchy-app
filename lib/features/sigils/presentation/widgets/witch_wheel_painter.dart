@@ -7,13 +7,11 @@ import '../../data/models/sigil_wheel_model.dart';
 /// Baseado no livro - 3 anéis concêntricos com letras dentro dos segmentos
 class WitchWheelPainter extends CustomPainter {
   final bool showLetters;
-  final double radius;
   final Set<String> highlightedLetters;
   final Map<String, WheelPosition>? customPositions;
 
   WitchWheelPainter({
     this.showLetters = true,
-    this.radius = 100.0,
     this.highlightedLetters = const {},
     this.customPositions,
   });
@@ -21,6 +19,10 @@ class WitchWheelPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
+
+    // IMPORTANTE: Calcular radius proporcionalmente ao canvas
+    // Mesma fórmula usada em SigilWheel.getCanvasPosition para garantir consistência
+    final radius = math.min(size.width, size.height) * (140.0 / 360.0);
 
     // Paint para os círculos principais
     final circlePaint = Paint()
@@ -35,6 +37,7 @@ class WitchWheelPainter extends CustomPainter {
       ..strokeWidth = 2.0;
 
     // Raios dos anéis (posicionamento das letras no meio de cada faixa)
+    // IMPORTANTE: Mesmos multiplicadores de SigilWheel.getCanvasPosition
     final innerRingRadius = radius * 0.22; // Centro do anel interno
     final middleRingRadius = radius * 0.50; // Centro do anel médio
     final outerRingRadius = radius * 0.80; // Centro do anel externo
