@@ -115,8 +115,7 @@ class WheelOfYearPage extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
+      );
 
     if (embedded) {
       return content;

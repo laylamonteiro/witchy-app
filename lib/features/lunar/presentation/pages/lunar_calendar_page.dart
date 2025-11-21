@@ -239,8 +239,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
             );
           }
         },
-      ),
-    );
+      );
 
     if (widget.embedded) {
       return content;
