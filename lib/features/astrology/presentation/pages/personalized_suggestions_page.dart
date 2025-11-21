@@ -5,8 +5,10 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/birth_chart_model.dart';
+import '../../data/models/planet_position_model.dart';
 import '../../data/models/enums.dart';
 import '../../data/services/transit_interpreter.dart';
+import '../../data/services/transit_calculator.dart';
 
 class PersonalizedSuggestionsPage extends StatefulWidget {
   const PersonalizedSuggestionsPage({super.key});
@@ -24,6 +26,7 @@ class _PersonalizedSuggestionsPageState
   BirthChartModel? _natalChart;
   bool _isLoading = false;
   bool _hasNatalChart = false;
+  List<PlanetPosition>? _retrogradePlanets;
 
   @override
   void initState() {
@@ -99,12 +102,21 @@ class _PersonalizedSuggestionsPageState
 
     try {
       print('📊 PersonalizedSuggestionsPage: Chamando generatePersonalizedSuggestions...');
+
+      // Carregar sugestões e planetas retrógrados em paralelo
+      final calculator = TransitCalculator();
+      final transits = await calculator.calculateTransits(_selectedDate);
+
+      // Filtrar planetas retrógrados
+      final retrograde = transits.where((t) => t.isRetrograde).toList();
+
       final suggestions = await _interpreter.generatePersonalizedSuggestions(
         _selectedDate,
         _natalChart!,
       );
 
       print('✅ PersonalizedSuggestionsPage: ${suggestions.length} sugestões geradas');
+      print('🔄 PersonalizedSuggestionsPage: ${retrograde.length} planetas retrógrados');
 
       if (!mounted) {
         print('⚠️ PersonalizedSuggestionsPage: Widget não está montado, abortando');
@@ -113,6 +125,7 @@ class _PersonalizedSuggestionsPageState
 
       setState(() {
         _suggestions = suggestions;
+        _retrogradePlanets = retrograde;
         _isLoading = false;
       });
       print('✅ PersonalizedSuggestionsPage: Estado atualizado! _suggestions.length=${_suggestions?.length}');
@@ -124,6 +137,7 @@ class _PersonalizedSuggestionsPageState
 
       setState(() {
         _suggestions = [];
+        _retrogradePlanets = [];
         _isLoading = false;
       });
 
@@ -169,6 +183,10 @@ class _PersonalizedSuggestionsPageState
                       const SizedBox(height: 16),
                       _buildInfoCard(),
                       const SizedBox(height: 16),
+                      if (_retrogradePlanets != null && _retrogradePlanets!.isNotEmpty)
+                        _buildRetrogradeCard(),
+                      if (_retrogradePlanets != null && _retrogradePlanets!.isNotEmpty)
+                        const SizedBox(height: 16),
                       if (_suggestions != null && _suggestions!.isNotEmpty)
                         ..._suggestions!.map((s) => Padding(
                               padding: const EdgeInsets.only(bottom: 12),
@@ -267,13 +285,161 @@ class _PersonalizedSuggestionsPageState
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Sugestões baseadas nos trânsitos planetários e seu mapa natal',
+              'Sugestões baseadas nos trânsitos planetários e seu mapa astral',
               style: TextStyle(
                 color: AppColors.softWhite.withOpacity(0.8),
                 fontSize: 12,
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRetrogradeCard() {
+    final retrogradeInfo = {
+      Planet.mercury: {
+        'icon': '☿️',
+        'title': 'Mercúrio Retrógrado',
+        'effects': 'Comunicação confusa, atrasos em viagens, problemas tecnológicos',
+        'tips': 'Revise contratos, evite iniciar projetos novos, faça backup de dados',
+      },
+      Planet.venus: {
+        'icon': '♀️',
+        'title': 'Vênus Retrógrada',
+        'effects': 'Questões de relacionamento, gastos impulsivos, autoestima',
+        'tips': 'Reavalie relacionamentos, evite cirurgias estéticas, reflita sobre valores',
+      },
+      Planet.mars: {
+        'icon': '♂️',
+        'title': 'Marte Retrógrado',
+        'effects': 'Energia baixa, frustrações, agressividade reprimida',
+        'tips': 'Evite conflitos, não inicie batalhas legais, pratique paciência',
+      },
+      Planet.jupiter: {
+        'icon': '♃',
+        'title': 'Júpiter Retrógrado',
+        'effects': 'Expansão interior, reavaliação de crenças e filosofias',
+        'tips': 'Momento de introspecção espiritual, revise metas de longo prazo',
+      },
+      Planet.saturn: {
+        'icon': '♄',
+        'title': 'Saturno Retrógrado',
+        'effects': 'Responsabilidades passadas retornam, karma sendo trabalhado',
+        'tips': 'Resolva assuntos pendentes, trabalhe disciplina interior',
+      },
+      Planet.uranus: {
+        'icon': '♅',
+        'title': 'Urano Retrógrado',
+        'effects': 'Mudanças internas antes de externas, revelações pessoais',
+        'tips': 'Liberte-se de padrões antigos, aceite mudanças graduais',
+      },
+      Planet.neptune: {
+        'icon': '♆',
+        'title': 'Netuno Retrógrado',
+        'effects': 'Véus se levantam, ilusões reveladas, intuição aguçada',
+        'tips': 'Medite, trabalhe sonhos, cuidado com escapismo',
+      },
+      Planet.pluto: {
+        'icon': '♇',
+        'title': 'Plutão Retrógrado',
+        'effects': 'Transformação profunda, confronto com sombras',
+        'tips': 'Trabalho de sombra, deixe ir o que não serve mais',
+      },
+    };
+
+    // Verificar se Mercúrio está retrógrado (destaque especial)
+    final mercuryRetrograde = _retrogradePlanets!.any((p) => p.planet == Planet.mercury);
+
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                mercuryRetrograde ? '☿️' : '🔄',
+                style: const TextStyle(fontSize: 28),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      mercuryRetrograde
+                          ? 'Mercúrio Retrógrado Ativo!'
+                          : 'Planetas Retrógrados',
+                      style: TextStyle(
+                        color: mercuryRetrograde ? Colors.orange : AppColors.lilac,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${_retrogradePlanets!.length} planeta${_retrogradePlanets!.length > 1 ? 's' : ''} em movimento retrógrado',
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: AppColors.lilac),
+          const SizedBox(height: 12),
+          ..._retrogradePlanets!.map((planet) {
+            final info = retrogradeInfo[planet.planet];
+            if (info == null) return const SizedBox.shrink();
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(info['icon']!, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${info['title']} em ${planet.sign.displayName}',
+                          style: const TextStyle(
+                            color: AppColors.lilac,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Efeitos: ${info['effects']}',
+                    style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.8),
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Dicas: ${info['tips']}',
+                    style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.6),
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
