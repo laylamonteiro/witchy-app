@@ -150,7 +150,9 @@ class BirthChartModel {
     return BirthChartModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
-      birthDate: DateTime.parse(json['birthDate']),
+      birthDate: json['birthDate'] != null
+          ? DateTime.parse(json['birthDate'])
+          : DateTime.now(),
       birthTime: TimeOfDay(
         hour: json['birthTimeHour'] ?? 12,
         minute: json['birthTimeMinute'] ?? 0,
@@ -160,22 +162,24 @@ class BirthChartModel {
       longitude: (json['longitude'] ?? -46.6333).toDouble(),
       timezone: json['timezone'] ?? 'America/Sao_Paulo',
       unknownBirthTime: json['unknownBirthTime'] ?? false,
-      planets: (json['planets'] as List)
-          .map((p) => PlanetPosition.fromJson(p))
-          .toList(),
-      houses: (json['houses'] as List)
-          .map((h) => House.fromJson(h))
-          .toList(),
+      planets: (json['planets'] as List?)
+          ?.map((p) => PlanetPosition.fromJson(p))
+          .toList() ?? [],
+      houses: (json['houses'] as List?)
+          ?.map((h) => House.fromJson(h))
+          .toList() ?? [],
       ascendant: json['ascendant'] != null
           ? PlanetPosition.fromJson(json['ascendant'])
           : null,
       midheaven: json['midheaven'] != null
           ? PlanetPosition.fromJson(json['midheaven'])
           : null,
-      aspects: (json['aspects'] as List)
-          .map((a) => Aspect.fromJson(a))
-          .toList(),
-      calculatedAt: DateTime.parse(json['calculatedAt']),
+      aspects: (json['aspects'] as List?)
+          ?.map((a) => Aspect.fromJson(a))
+          .toList() ?? [],
+      calculatedAt: json['calculatedAt'] != null
+          ? DateTime.parse(json['calculatedAt'])
+          : DateTime.now(),
     );
   }
 
