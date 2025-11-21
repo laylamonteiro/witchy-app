@@ -7,8 +7,72 @@ import '../ai/ai_service.dart';
 import '../ai/groq_credentials.dart';
 import '../../features/astrology/data/services/chart_calculator.dart';
 import '../../features/astrology/data/services/transit_interpreter.dart';
-import '../../core/database/database_helper.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
+import '../../core/database/database_helper.dart';
+
+// Mapa de capitais brasileiras com coordenadas exatas
+const Map<String, Map<String, dynamic>> _brazilianCapitals = {
+  'sao paulo': {
+    'name': 'São Paulo',
+    'state': 'São Paulo',
+    'lat': -23.5505,
+    'lon': -46.6333,
+  },
+  'rio de janeiro': {
+    'name': 'Rio de Janeiro',
+    'state': 'Rio de Janeiro',
+    'lat': -22.9068,
+    'lon': -43.1729,
+  },
+  'belo horizonte': {
+    'name': 'Belo Horizonte',
+    'state': 'Minas Gerais',
+    'lat': -19.9167,
+    'lon': -43.9345,
+  },
+  'brasilia': {
+    'name': 'Brasília',
+    'state': 'Distrito Federal',
+    'lat': -15.7939,
+    'lon': -47.8828,
+  },
+  'salvador': {
+    'name': 'Salvador',
+    'state': 'Bahia',
+    'lat': -12.9714,
+    'lon': -38.5014,
+  },
+  'fortaleza': {
+    'name': 'Fortaleza',
+    'state': 'Ceará',
+    'lat': -3.7172,
+    'lon': -38.5433,
+  },
+  'recife': {
+    'name': 'Recife',
+    'state': 'Pernambuco',
+    'lat': -8.0476,
+    'lon': -34.8770,
+  },
+  'curitiba': {
+    'name': 'Curitiba',
+    'state': 'Paraná',
+    'lat': -25.4284,
+    'lon': -49.2733,
+  },
+  'porto alegre': {
+    'name': 'Porto Alegre',
+    'state': 'Rio Grande do Sul',
+    'lat': -30.0346,
+    'lon': -51.2177,
+  },
+  'manaus': {
+    'name': 'Manaus',
+    'state': 'Amazonas',
+    'lat': -3.1190,
+    'lon': -60.0217,
+  },
+};
 
 /// Página de diagnóstico completo do app
 /// Testa todas as funcionalidades críticas
@@ -92,7 +156,26 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
             .replaceAll('ç', 'c');
       }
 
-      // Adicionar ", Brasil" se não especificar país
+      final normalizedQuery = normalize(query.trim());
+      final results = <MapEntry<Location, Placemark>>[];
+
+      // PRIORIDADE MÁXIMA: Verificar se é uma capital brasileira conhecida
+      if (_brazilianCapitals.containsKey(normalizedQuery)) {
+        final capital = _brazilianCapitals[normalizedQuery]!;
+        final capitalLocation = Location(
+          latitude: capital['lat'] as double,
+          longitude: capital['lon'] as double,
+          timestamp: DateTime.now(),
+        );
+        final capitalPlacemark = Placemark(
+          locality: capital['name'] as String,
+          administrativeArea: capital['state'] as String,
+          country: 'Brazil',
+        );
+        results.add(MapEntry(capitalLocation, capitalPlacemark));
+      }
+
+      // Buscar outros resultados via API de geocoding
       String searchQuery = query;
       if (!query.toLowerCase().contains('brasil') &&
           !query.toLowerCase().contains('brazil') &&
@@ -100,29 +183,34 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         searchQuery = '$query, Brasil';
       }
 
-      // Para cidades que têm o mesmo nome do estado (São Paulo, Rio de Janeiro),
-      // fazer busca duplicada para garantir que encontre a capital
-      final normalizedQuery = normalize(query.trim());
-      if (normalizedQuery == 'sao paulo' || normalizedQuery == 'rio de janeiro') {
-        searchQuery = '$query, $query, Brasil';
-      }
+      try {
+        final locations = await locationFromAddress(searchQuery);
 
-      final locations = await locationFromAddress(searchQuery);
+        for (final location in locations.take(10)) {
+          try {
+            final placemark = await placemarkFromCoordinates(
+              location.latitude,
+              location.longitude,
+            );
+            if (placemark.isNotEmpty) {
+              // Evitar duplicar capital se já está nos resultados
+              final isDuplicate = results.any((existing) {
+                final distance = (existing.key.latitude - location.latitude).abs() +
+                    (existing.key.longitude - location.longitude).abs();
+                return distance < 0.1; // ~10km de tolerância
+              });
 
-      // Get placemarks for each location
-      final results = <MapEntry<Location, Placemark>>[];
-      for (final location in locations.take(10)) {
-        try {
-          final placemark = await placemarkFromCoordinates(
-            location.latitude,
-            location.longitude,
-          );
-          if (placemark.isNotEmpty) {
-            results.add(MapEntry(location, placemark.first));
+              if (!isDuplicate) {
+                results.add(MapEntry(location, placemark.first));
+              }
+            }
+          } catch (e) {
+            // Skip locations that can't be reverse geocoded
           }
-        } catch (e) {
-          // Skip locations that can't be reverse geocoded
         }
+      } catch (e) {
+        // Se falhar busca da API mas temos capital, continuar
+        if (results.isEmpty) rethrow;
       }
 
       // Ordenar resultados por relevância
