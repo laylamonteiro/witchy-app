@@ -1,0 +1,72 @@
+name: Build and Send Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    env:
+      # Recipient priority:
+      # 1) APK_RECIPIENTS secret (comma-separated)
+      # 2) Email from the push payload (pusher/head commit author/committer)
+      # 3) GitHub noreply fallback using the actor username
+      APK_RECIPIENTS: ${{ secrets.APK_RECIPIENTS
+        || github.event.pusher.email
+        || github.event.head_commit.author.email
+        || github.event.head_commit.committer.email
+        || format('{0}@users.noreply.github.com', github.actor) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.0"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Send APK via email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server: ${{ secrets.EMAIL_SERVER }}
+          port: ${{ secrets.EMAIL_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          # Defaults to the user who pushed (if email is available) or GitHub noreply.
+          # Override with the APK_RECIPIENTS secret (comma-separated) when needed.
+          to: ${{ env.APK_RECIPIENTS }}
+          from: ${{ secrets.EMAIL_FROM }}
+          subject: "Grimório de Bolso - APK de release"
+          body: |
+            Olá,
+
+            A compilação automática do Grimório de Bolso terminou com sucesso.
+            O APK de release está anexado e também armazenado como artifact na execução da pipeline.
+
+            - Branch: ${{ github.ref }}
+            - Commit: ${{ github.sha }}
+            - Workflow: ${{ github.workflow }}
+          attachments: build/app/outputs/flutter-apk/app-release.apk
