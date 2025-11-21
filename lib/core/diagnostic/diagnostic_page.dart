@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geocoding/geocoding.dart';
 import '../theme/app_theme.dart';
 import '../widgets/magical_card.dart';
 import '../ai/ai_service.dart';
@@ -24,6 +25,21 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   bool _isTesting = false;
   String? _result;
 
+  // Controllers para input manual do mapa astral
+  final _dateController = TextEditingController(text: '31/03/1994');
+  final _timeController = TextEditingController(text: '19:39');
+  final _birthPlaceController = TextEditingController();
+  final FocusNode _birthPlaceFocusNode = FocusNode();
+
+  // Geolocalização
+  List<Location> _locationSuggestions = [];
+  List<Placemark> _placemarkSuggestions = [];
+  bool _isSearchingLocation = false;
+  bool _showSuggestions = false;
+  String? _birthPlace;
+  double? _selectedLatitude;
+  double? _selectedLongitude;
+
   @override
   void initState() {
     super.initState();
@@ -33,7 +49,170 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   @override
   void dispose() {
     _tabController.dispose();
+    _dateController.dispose();
+    _timeController.dispose();
+    _birthPlaceController.dispose();
+    _birthPlaceFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _searchLocation(String query) async {
+    if (query.length < 3) {
+      setState(() {
+        _locationSuggestions = [];
+        _placemarkSuggestions = [];
+        _showSuggestions = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearchingLocation = true;
+      _showSuggestions = true;
+    });
+
+    try {
+      // Normalizar string para comparação (remover acentos e lowercase)
+      String normalize(String? text) {
+        if (text == null) return '';
+        return text
+            .toLowerCase()
+            .replaceAll('á', 'a')
+            .replaceAll('à', 'a')
+            .replaceAll('ã', 'a')
+            .replaceAll('â', 'a')
+            .replaceAll('é', 'e')
+            .replaceAll('ê', 'e')
+            .replaceAll('í', 'i')
+            .replaceAll('ó', 'o')
+            .replaceAll('ô', 'o')
+            .replaceAll('õ', 'o')
+            .replaceAll('ú', 'u')
+            .replaceAll('ü', 'u')
+            .replaceAll('ç', 'c');
+      }
+
+      // Adicionar ", Brasil" se não especificar país
+      String searchQuery = query;
+      if (!query.toLowerCase().contains('brasil') &&
+          !query.toLowerCase().contains('brazil') &&
+          !query.toLowerCase().contains(',')) {
+        searchQuery = '$query, Brasil';
+      }
+
+      // Para cidades que têm o mesmo nome do estado (São Paulo, Rio de Janeiro),
+      // fazer busca duplicada para garantir que encontre a capital
+      final normalizedQuery = normalize(query.trim());
+      if (normalizedQuery == 'sao paulo' || normalizedQuery == 'rio de janeiro') {
+        searchQuery = '$query, $query, Brasil';
+      }
+
+      final locations = await locationFromAddress(searchQuery);
+
+      // Get placemarks for each location
+      final results = <MapEntry<Location, Placemark>>[];
+      for (final location in locations.take(10)) {
+        try {
+          final placemark = await placemarkFromCoordinates(
+            location.latitude,
+            location.longitude,
+          );
+          if (placemark.isNotEmpty) {
+            results.add(MapEntry(location, placemark.first));
+          }
+        } catch (e) {
+          // Skip locations that can't be reverse geocoded
+        }
+      }
+
+      // Ordenar resultados por relevância
+      results.sort((a, b) {
+        final aPlace = a.value;
+        final bPlace = b.value;
+
+        // Prioridade 0: Capitais onde locality == administrativeArea e ambos == query
+        // Ex: São Paulo (cidade) no estado de São Paulo
+        final aIsCapital = normalize(aPlace.locality) == normalizedQuery &&
+            normalize(aPlace.administrativeArea) == normalizedQuery;
+        final bIsCapital = normalize(bPlace.locality) == normalizedQuery &&
+            normalize(bPlace.administrativeArea) == normalizedQuery;
+        if (aIsCapital && !bIsCapital) return -1;
+        if (!aIsCapital && bIsCapital) return 1;
+
+        // Prioridade 1: locality exatamente igual ao termo de busca
+        final aLocalityMatch = normalize(aPlace.locality) == normalizedQuery;
+        final bLocalityMatch = normalize(bPlace.locality) == normalizedQuery;
+        if (aLocalityMatch && !bLocalityMatch) return -1;
+        if (!aLocalityMatch && bLocalityMatch) return 1;
+
+        // Prioridade 2: subAdministrativeArea exatamente igual
+        final aSubMatch = normalize(aPlace.subAdministrativeArea) == normalizedQuery;
+        final bSubMatch = normalize(bPlace.subAdministrativeArea) == normalizedQuery;
+        if (aSubMatch && !bSubMatch) return -1;
+        if (!aSubMatch && bSubMatch) return 1;
+
+        // Prioridade 3: locality contém o termo
+        final aLocalityContains = normalize(aPlace.locality).contains(normalizedQuery);
+        final bLocalityContains = normalize(bPlace.locality).contains(normalizedQuery);
+        if (aLocalityContains && !bLocalityContains) return -1;
+        if (!aLocalityContains && bLocalityContains) return 1;
+
+        return 0;
+      });
+
+      setState(() {
+        _locationSuggestions = results.take(5).map((e) => e.key).toList();
+        _placemarkSuggestions = results.take(5).map((e) => e.value).toList();
+        _isSearchingLocation = false;
+      });
+    } catch (e) {
+      setState(() {
+        _locationSuggestions = [];
+        _placemarkSuggestions = [];
+        _isSearchingLocation = false;
+      });
+    }
+  }
+
+  void _selectLocation(int index) {
+    final location = _locationSuggestions[index];
+    final placemark = _placemarkSuggestions.length > index
+        ? _placemarkSuggestions[index]
+        : null;
+
+    String displayName;
+    if (placemark != null) {
+      final parts = <String>[];
+      // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
+      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+        parts.add(placemark.locality!);
+      } else if (placemark.subAdministrativeArea != null &&
+          placemark.subAdministrativeArea!.isNotEmpty) {
+        parts.add(placemark.subAdministrativeArea!);
+      }
+      if (placemark.administrativeArea != null &&
+          placemark.administrativeArea!.isNotEmpty) {
+        parts.add(placemark.administrativeArea!);
+      }
+      if (placemark.country != null && placemark.country!.isNotEmpty) {
+        parts.add(placemark.country!);
+      }
+      displayName = parts.join(', ');
+    } else {
+      displayName = _birthPlaceController.text;
+    }
+
+    setState(() {
+      _birthPlace = displayName;
+      _birthPlaceController.text = displayName;
+      _selectedLatitude = location.latitude;
+      _selectedLongitude = location.longitude;
+      _showSuggestions = false;
+      _locationSuggestions = [];
+      _placemarkSuggestions = [];
+    });
+
+    _birthPlaceFocusNode.unfocus();
   }
 
   void _addLog(String message) {
@@ -43,14 +222,50 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   }
 
   void _copyLogs() {
+    print('========== DEBUG DE CÓPIA ==========');
+    print('📋 Total de linhas em _logs: ${_logs.length}');
+    print('📋 _logs.isEmpty: ${_logs.isEmpty}');
+
+    // Print de CADA linha individual
+    for (int i = 0; i < _logs.length; i++) {
+      print('📋 Linha $i: ${_logs[i].substring(0, _logs[i].length > 60 ? 60 : _logs[i].length)}...');
+    }
+
+    print('📋 Primeiras 3: ${_logs.take(3).join(" | ")}');
+    if (_logs.length > 3) {
+      print('📋 Últimas 3: ${_logs.skip(_logs.length - 3).join(" | ")}');
+    }
+
     final logsText = _logs.join('\n');
-    Clipboard.setData(ClipboardData(text: logsText));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Logs copiados para a área de transferência'),
-        backgroundColor: AppColors.success,
-      ),
-    );
+
+    print('📋 Texto total: ${logsText.length} caracteres');
+    print('📋 Quebras de linha: ${'\n'.allMatches(logsText).length}');
+    print('📋 Primeiros 200 chars: ${logsText.substring(0, logsText.length > 200 ? 200 : logsText.length)}');
+
+    if (logsText.length > 200) {
+      print('📋 Últimos 200 chars: ${logsText.substring(logsText.length - 200)}');
+    }
+
+    Clipboard.setData(ClipboardData(text: logsText)).then((_) {
+      print('✅ Clipboard.setData COMPLETO!');
+      print('✅ Dados enviados para clipboard: ${logsText.length} caracteres');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '✅ ${_logs.length} linhas copiadas!\n'
+            '${logsText.length} caracteres no total',
+            style: const TextStyle(fontSize: 13),
+          ),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }).catchError((error) {
+      print('❌ ERRO ao copiar: $error');
+    });
   }
 
   Future<void> _testGroqAPI() async {
@@ -114,16 +329,38 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     _addLog('🌟 Testando cálculo de mapa astral...');
 
     try {
-      _addLog('📅 Data teste: 31/03/1994 19:39');
-      _addLog('📍 Local: São Paulo (-23.5505, -46.6333)');
+      // Validar se local foi selecionado
+      if (_selectedLatitude == null || _selectedLongitude == null || _birthPlace == null) {
+        _addLog('❌ Selecione um local de nascimento');
+        setState(() {
+          _result = 'ERRO: Local não selecionado';
+          _isTesting = false;
+        });
+        return;
+      }
+
+      // Parse inputs
+      final dateParts = _dateController.text.split('/');
+      final day = int.parse(dateParts[0]);
+      final month = int.parse(dateParts[1]);
+      final year = int.parse(dateParts[2]);
+
+      final timeParts = _timeController.text.split(':');
+      final hour = int.parse(timeParts[0]);
+      final minute = int.parse(timeParts[1]);
+
+      _addLog('📅 Data teste: ${_dateController.text} ${_timeController.text}');
+      _addLog('📍 Local: $_birthPlace');
+      _addLog('🗺️ Coordenadas: (${_selectedLatitude!.toStringAsFixed(4)}, ${_selectedLongitude!.toStringAsFixed(4)})');
 
       final calculator = ChartCalculator.instance;
       final chart = await calculator.calculateBirthChart(
-        birthDate: DateTime(1994, 3, 31),
-        birthTime: const TimeOfDay(hour: 19, minute: 39),
-        birthPlace: 'São Paulo',
-        latitude: -23.5505,
-        longitude: -46.6333,
+        birthDate: DateTime(year, month, day),
+        birthTime: TimeOfDay(hour: hour, minute: minute),
+        birthPlace: _birthPlace!,
+        latitude: _selectedLatitude!,
+        longitude: _selectedLongitude!,
+        onLog: _addLog,
       );
 
       _addLog('✅ MAPA CALCULADO!');
@@ -172,9 +409,9 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
       _addLog('✅ CLIMA CALCULADO!');
       _addLog('   Trânsitos: ${weather.transits.length}');
-      _addLog('   Lua: ${weather.moonPhase?.name ?? "N/A"}');
-      _addLog('   Energia: ${weather.energy.name}');
-      _addLog('   Elementos: ${weather.dominantElements.join(", ")}');
+      _addLog('   Lua: ${weather.moonPhase ?? "N/A"}');
+      _addLog('   Energia: ${weather.overallEnergy.name}');
+      _addLog('   Palavras-chave: ${weather.energyKeywords.join(", ")}');
 
       setState(() {
         _result = 'SUCESSO: Clima calculado!';
@@ -220,7 +457,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       _addLog('✅ Mapa encontrado');
 
       final mapData = maps.first;
-      final chart = BirthChartModel.fromMap(mapData);
+      final chart = BirthChartModel.fromJson(mapData);
 
       _addLog('📡 Gerando sugestões...');
       final interpreter = TransitInterpreter();
@@ -232,7 +469,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       _addLog('✅ SUGESTÕES GERADAS!');
       _addLog('   Total: ${suggestions.length}');
       for (final suggestion in suggestions.take(3)) {
-        _addLog('   • ${suggestion.title}');
+        _addLog('   • ${suggestion.title ?? "Sugestão sem título"}');
       }
 
       setState(() {
@@ -261,6 +498,11 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           controller: _tabController,
           indicatorColor: AppColors.lilac,
           isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          padding: EdgeInsets.zero,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+          labelStyle: const TextStyle(fontSize: 14),
+          unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
             Tab(text: 'IA Groq'),
             Tab(text: 'Mapa Astral'),
@@ -270,10 +512,12 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         ),
         actions: [
           if (_logs.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.copy),
-              onPressed: _copyLogs,
-              tooltip: 'Copiar logs',
+            Tooltip(
+              message: 'Copiar TODOS os logs (${_logs.length} linhas)',
+              child: IconButton(
+                icon: const Icon(Icons.copy),
+                onPressed: _copyLogs,
+              ),
             ),
         ],
       ),
@@ -287,12 +531,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
             description: 'Testa geração de feitiços com Llama 3.1',
             onTest: _testGroqAPI,
           ),
-          _buildTestSection(
-            icon: Icons.star,
-            title: 'Mapa Astral',
-            description: 'Testa cálculos astronômicos locais',
-            onTest: _testBirthChart,
-          ),
+          _buildBirthChartSection(),
           _buildTestSection(
             icon: Icons.wb_twilight,
             title: 'Clima Mágico',
@@ -305,6 +544,353 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
             description: 'Testa sugestões personalizadas',
             onTest: _testSuggestions,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBirthChartSection() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              children: [
+                const Icon(Icons.star, size: 64, color: AppColors.lilac),
+                const SizedBox(height: 16),
+                Text(
+                  'Mapa Astral',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppColors.lilac,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Testa cálculos astronômicos locais',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.softWhite.withOpacity(0.8),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Input fields
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Dados do Nascimento',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.lilac,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _dateController,
+                        style: const TextStyle(color: AppColors.softWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Data',
+                          hintText: 'DD/MM/AAAA',
+                          labelStyle: TextStyle(color: AppColors.lilac),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.lilac),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _timeController,
+                        style: const TextStyle(color: AppColors.softWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Hora',
+                          hintText: 'HH:MM',
+                          labelStyle: TextStyle(color: AppColors.lilac),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.lilac),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Local de Nascimento',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.lilac,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _birthPlaceController,
+                  focusNode: _birthPlaceFocusNode,
+                  style: const TextStyle(color: AppColors.softWhite),
+                  decoration: InputDecoration(
+                    hintText: 'Ex: Campinas, Bueno Brandão, São Paulo...',
+                    hintStyle: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.5),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.location_on,
+                      color: AppColors.lilac,
+                    ),
+                    suffixIcon: _isSearchingLocation
+                        ? const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.lilac,
+                                ),
+                              ),
+                            ),
+                          )
+                        : (_selectedLatitude != null && _selectedLongitude != null)
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                              )
+                            : null,
+                    filled: true,
+                    fillColor: AppColors.cardBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _birthPlace = value;
+                      _selectedLatitude = null;
+                      _selectedLongitude = null;
+                    });
+                    _searchLocation(value);
+                  },
+                ),
+                if (_showSuggestions && _locationSuggestions.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.lilac.withOpacity(0.3),
+                      ),
+                    ),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _locationSuggestions.length,
+                      separatorBuilder: (context, index) => Divider(
+                        color: AppColors.lilac.withOpacity(0.2),
+                        height: 1,
+                      ),
+                      itemBuilder: (context, index) {
+                        final placemark = _placemarkSuggestions.length > index
+                            ? _placemarkSuggestions[index]
+                            : null;
+
+                        final loc = _locationSuggestions[index];
+                        String displayText;
+                        String coordsText =
+                            'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
+
+                        if (placemark != null) {
+                          final parts = <String>[];
+
+                          // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
+                          if (placemark.locality != null &&
+                              placemark.locality!.isNotEmpty) {
+                            parts.add(placemark.locality!);
+                          } else if (placemark.subAdministrativeArea != null &&
+                              placemark.subAdministrativeArea!.isNotEmpty) {
+                            parts.add(placemark.subAdministrativeArea!);
+                          }
+
+                          if (placemark.administrativeArea != null &&
+                              placemark.administrativeArea!.isNotEmpty) {
+                            parts.add(placemark.administrativeArea!);
+                          }
+
+                          if (placemark.country != null &&
+                              placemark.country!.isNotEmpty) {
+                            parts.add(placemark.country!);
+                          }
+
+                          displayText = parts.join(', ');
+                        } else {
+                          displayText = coordsText;
+                        }
+
+                        return ListTile(
+                          dense: true,
+                          leading: const Icon(
+                            Icons.place,
+                            color: AppColors.lilac,
+                            size: 20,
+                          ),
+                          title: Text(
+                            displayText,
+                            style: const TextStyle(
+                              color: AppColors.softWhite,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Text(
+                            coordsText,
+                            style: TextStyle(
+                              color: AppColors.softWhite.withOpacity(0.6),
+                              fontSize: 11,
+                            ),
+                          ),
+                          onTap: () => _selectLocation(index),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                if (_selectedLatitude != null && _selectedLongitude != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.success.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: AppColors.success,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '✓ $_birthPlace\n'
+                            'Lat: ${_selectedLatitude!.toStringAsFixed(4)}, Lon: ${_selectedLongitude!.toStringAsFixed(4)}',
+                            style: TextStyle(
+                              color: AppColors.success,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          ElevatedButton.icon(
+            onPressed: _isTesting ? null : _testBirthChart,
+            icon: _isTesting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkBackground),
+                    ),
+                  )
+                : const Icon(Icons.play_arrow),
+            label: Text(_isTesting ? 'Testando...' : 'Executar Teste'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.lilac,
+              foregroundColor: AppColors.darkBackground,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+
+          if (_result != null) ...[
+            const SizedBox(height: 16),
+            MagicalCard(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _result!.contains('SUCESSO')
+                      ? AppColors.success.withOpacity(0.2)
+                      : AppColors.alert.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _result!,
+                  style: TextStyle(
+                    color: _result!.contains('SUCESSO') ? AppColors.success : AppColors.alert,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+
+          if (_logs.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Logs de Diagnóstico',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.lilac,
+                      ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy, color: AppColors.lilac),
+                  onPressed: _copyLogs,
+                  tooltip: 'Copiar logs',
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            MagicalCard(
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 400),
+                child: SingleChildScrollView(
+                  child: SelectableText(
+                    _logs.join('\n'),
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      color: AppColors.softWhite,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

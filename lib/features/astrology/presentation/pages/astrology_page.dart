@@ -100,10 +100,10 @@ class _AstrologyPageState extends State<AstrologyPage> {
                   },
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 // Perfil Mágico
-                if (provider.hasMagicalProfile)
+                if (provider.hasMagicalProfile) ...[
                   _buildOption(
                     context,
                     icon: '✨',
@@ -117,8 +117,8 @@ class _AstrologyPageState extends State<AstrologyPage> {
                       );
                     },
                   ),
-
-                const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                ],
 
                 // Clima Mágico Diário
                 _buildOption(
@@ -135,7 +135,7 @@ class _AstrologyPageState extends State<AstrologyPage> {
                   },
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 // Sugestões Personalizadas
                 _buildOption(
@@ -152,10 +152,10 @@ class _AstrologyPageState extends State<AstrologyPage> {
                   },
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 // Opção de recriar mapa (se já existe)
-                if (provider.hasBirthChart)
+                if (provider.hasBirthChart) ...[
                   _buildOption(
                     context,
                     icon: '🔄',
@@ -165,8 +165,10 @@ class _AstrologyPageState extends State<AstrologyPage> {
                       _showRecalculateDialog(context, provider);
                     },
                   ),
+                  const SizedBox(height: 16),
+                ],
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
 
                 // Informações
                 MagicalCard(

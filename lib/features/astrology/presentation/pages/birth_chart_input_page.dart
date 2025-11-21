@@ -55,27 +55,97 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     });
 
     try {
-      final locations = await locationFromAddress(query);
+      // Normalizar string para comparação (remover acentos e lowercase)
+      String normalize(String? text) {
+        if (text == null) return '';
+        return text
+            .toLowerCase()
+            .replaceAll('á', 'a')
+            .replaceAll('à', 'a')
+            .replaceAll('ã', 'a')
+            .replaceAll('â', 'a')
+            .replaceAll('é', 'e')
+            .replaceAll('ê', 'e')
+            .replaceAll('í', 'i')
+            .replaceAll('ó', 'o')
+            .replaceAll('ô', 'o')
+            .replaceAll('õ', 'o')
+            .replaceAll('ú', 'u')
+            .replaceAll('ü', 'u')
+            .replaceAll('ç', 'c');
+      }
+
+      // Adicionar ", Brasil" se não especificar país para resultados mais precisos
+      String searchQuery = query;
+      if (!query.toLowerCase().contains('brasil') &&
+          !query.toLowerCase().contains('brazil') &&
+          !query.toLowerCase().contains(',')) {
+        searchQuery = '$query, Brasil';
+      }
+
+      // Para cidades que têm o mesmo nome do estado (São Paulo, Rio de Janeiro),
+      // fazer busca duplicada para garantir que encontre a capital
+      final normalizedQuery = normalize(query.trim());
+      if (normalizedQuery == 'sao paulo' || normalizedQuery == 'rio de janeiro') {
+        searchQuery = '$query, $query, Brasil';
+      }
+
+      final locations = await locationFromAddress(searchQuery);
 
       // Get placemarks for each location to show readable addresses
-      final placemarks = <Placemark>[];
-      for (final location in locations.take(5)) {
+      final results = <MapEntry<Location, Placemark>>[];
+      for (final location in locations.take(10)) {
         try {
           final placemark = await placemarkFromCoordinates(
             location.latitude,
             location.longitude,
           );
           if (placemark.isNotEmpty) {
-            placemarks.add(placemark.first);
+            results.add(MapEntry(location, placemark.first));
           }
         } catch (e) {
           // Skip locations that can't be reverse geocoded
         }
       }
 
+      // Ordenar resultados por relevância
+      results.sort((a, b) {
+        final aPlace = a.value;
+        final bPlace = b.value;
+
+        // Prioridade 0: Capitais onde locality == administrativeArea e ambos == query
+        // Ex: São Paulo (cidade) no estado de São Paulo
+        final aIsCapital = normalize(aPlace.locality) == normalizedQuery &&
+            normalize(aPlace.administrativeArea) == normalizedQuery;
+        final bIsCapital = normalize(bPlace.locality) == normalizedQuery &&
+            normalize(bPlace.administrativeArea) == normalizedQuery;
+        if (aIsCapital && !bIsCapital) return -1;
+        if (!aIsCapital && bIsCapital) return 1;
+
+        // Prioridade 1: locality exatamente igual ao termo de busca
+        final aLocalityMatch = normalize(aPlace.locality) == normalizedQuery;
+        final bLocalityMatch = normalize(bPlace.locality) == normalizedQuery;
+        if (aLocalityMatch && !bLocalityMatch) return -1;
+        if (!aLocalityMatch && bLocalityMatch) return 1;
+
+        // Prioridade 2: subAdministrativeArea exatamente igual
+        final aSubMatch = normalize(aPlace.subAdministrativeArea) == normalizedQuery;
+        final bSubMatch = normalize(bPlace.subAdministrativeArea) == normalizedQuery;
+        if (aSubMatch && !bSubMatch) return -1;
+        if (!aSubMatch && bSubMatch) return 1;
+
+        // Prioridade 3: locality contém o termo
+        final aLocalityContains = normalize(aPlace.locality).contains(normalizedQuery);
+        final bLocalityContains = normalize(bPlace.locality).contains(normalizedQuery);
+        if (aLocalityContains && !bLocalityContains) return -1;
+        if (!aLocalityContains && bLocalityContains) return 1;
+
+        return 0;
+      });
+
       setState(() {
-        _locationSuggestions = locations.take(5).toList();
-        _placemarkSuggestions = placemarks;
+        _locationSuggestions = results.take(5).map((e) => e.key).toList();
+        _placemarkSuggestions = results.take(5).map((e) => e.value).toList();
         _isSearchingLocation = false;
       });
     } catch (e) {
@@ -96,8 +166,12 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     String displayName;
     if (placemark != null) {
       final parts = <String>[];
+      // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
       if (placemark.locality != null && placemark.locality!.isNotEmpty) {
         parts.add(placemark.locality!);
+      } else if (placemark.subAdministrativeArea != null &&
+          placemark.subAdministrativeArea!.isNotEmpty) {
+        parts.add(placemark.subAdministrativeArea!);
       }
       if (placemark.administrativeArea != null &&
           placemark.administrativeArea!.isNotEmpty) {
@@ -127,7 +201,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 25)),
+      initialDate: DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
       builder: (context, child) {
@@ -432,7 +506,12 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                   ),
                                 ),
                               )
-                            : null,
+                            : (_selectedLatitude != null && _selectedLongitude != null)
+                                ? const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.success,
+                                  )
+                                : null,
                         filled: true,
                         fillColor: AppColors.cardBackground,
                         border: OutlineInputBorder(
@@ -472,26 +551,35 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                 ? _placemarkSuggestions[index]
                                 : null;
 
+                            final loc = _locationSuggestions[index];
                             String displayText;
+                            String coordsText = 'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
+
                             if (placemark != null) {
                               final parts = <String>[];
+
+                              // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
                               if (placemark.locality != null &&
                                   placemark.locality!.isNotEmpty) {
                                 parts.add(placemark.locality!);
+                              } else if (placemark.subAdministrativeArea != null &&
+                                  placemark.subAdministrativeArea!.isNotEmpty) {
+                                parts.add(placemark.subAdministrativeArea!);
                               }
+
                               if (placemark.administrativeArea != null &&
                                   placemark.administrativeArea!.isNotEmpty) {
                                 parts.add(placemark.administrativeArea!);
                               }
+
                               if (placemark.country != null &&
                                   placemark.country!.isNotEmpty) {
                                 parts.add(placemark.country!);
                               }
+
                               displayText = parts.join(', ');
                             } else {
-                              final loc = _locationSuggestions[index];
-                              displayText =
-                                  'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
+                              displayText = coordsText;
                             }
 
                             return ListTile(
@@ -508,9 +596,50 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                   fontSize: 14,
                                 ),
                               ),
+                              subtitle: Text(
+                                coordsText,
+                                style: TextStyle(
+                                  color: AppColors.softWhite.withOpacity(0.6),
+                                  fontSize: 11,
+                                ),
+                              ),
                               onTap: () => _selectLocation(index),
                             );
                           },
+                        ),
+                      ),
+                    ],
+                    if (_selectedLatitude != null && _selectedLongitude != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.success.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: AppColors.success,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '✓ $_birthPlace\n'
+                                'Lat: ${_selectedLatitude!.toStringAsFixed(4)}, Lon: ${_selectedLongitude!.toStringAsFixed(4)}',
+                                style: TextStyle(
+                                  color: AppColors.success,
+                                  fontSize: 12,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

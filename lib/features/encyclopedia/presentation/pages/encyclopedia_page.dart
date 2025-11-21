@@ -28,6 +28,8 @@ class EncyclopediaPage extends StatelessWidget {
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
                 padding: EdgeInsets.zero,
+                labelStyle: const TextStyle(fontSize: 14),
+                unselectedLabelStyle: const TextStyle(fontSize: 14),
                 tabs: const [
                   Tab(text: 'Cristais'),
                   Tab(text: 'Ervas'),

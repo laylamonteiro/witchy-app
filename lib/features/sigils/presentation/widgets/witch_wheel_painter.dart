@@ -36,6 +36,13 @@ class WitchWheelPainter extends CustomPainter {
     // Círculo central (ponto inicial)
     canvas.drawCircle(center, radius * 0.08, circlePaint);
 
+    // Círculo dourado em volta das letras externas
+    final goldCirclePaint = Paint()
+      ..color = AppColors.starYellow.withOpacity(0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(center, radius + 30, goldCirclePaint);
+
     if (showLetters) {
       // Desenhar letras usando as posições definidas no modelo
       SigilWheel.letterPositions.forEach((letter, position) {

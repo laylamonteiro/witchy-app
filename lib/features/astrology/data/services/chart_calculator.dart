@@ -20,6 +20,18 @@ class ChartCalculator {
 
   ChartCalculator._();
 
+  // Callback para logging (se não fornecido, usa print)
+  Function(String)? _logCallback;
+
+  // Helper para logging
+  void _log(String message) {
+    if (_logCallback != null) {
+      _logCallback!(message);
+    } else {
+      print(message);
+    }
+  }
+
   /// Calcula o mapa natal completo
   Future<BirthChartModel> calculateBirthChart({
     required DateTime birthDate,
@@ -28,12 +40,16 @@ class ChartCalculator {
     required double latitude,
     required double longitude,
     bool unknownBirthTime = false,
+    double? timezoneOffsetHours,
+    Function(String)? onLog,
   }) async {
     try {
-      print('🔧 Calculando mapa astral localmente...');
-      print('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
-      print('   Hora: ${birthTime.hour}:${birthTime.minute}');
-      print('   Local: $birthPlace');
+      _logCallback = onLog;
+
+      _log('🔧 Calculando mapa astral localmente...');
+      _log('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
+      _log('   Hora: ${birthTime.hour}:${birthTime.minute}');
+      _log('   Local: $birthPlace');
 
       return await _calculateWithLocalMethod(
         birthDate: birthDate,
@@ -42,6 +58,7 @@ class ChartCalculator {
         latitude: latitude,
         longitude: longitude,
         unknownBirthTime: unknownBirthTime,
+        timezoneOffsetHours: timezoneOffsetHours,
       );
     } catch (e) {
       throw Exception('Erro ao calcular mapa natal: $e');
@@ -56,17 +73,20 @@ class ChartCalculator {
     required double latitude,
     required double longitude,
     required bool unknownBirthTime,
+    double? timezoneOffsetHours,
   }) async {
-    print('🔧 Usando cálculos LOCAIS (método simplificado)');
-    print('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
-    print('   Hora: ${birthTime.hour}:${birthTime.minute}');
-    print('   Local: $birthPlace');
+    _log('🔧 Usando cálculos LOCAIS (método simplificado)');
+    _log('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
+    _log('   Hora: ${birthTime.hour}:${birthTime.minute}');
+    _log('   Local: $birthPlace');
 
     // 1. Converter para Julian Day
     final julianDay = _dateTimeToJulianDay(
       birthDate,
       birthTime,
       longitude,
+      latitude,
+      timezoneOffsetHours: timezoneOffsetHours,
     );
 
     // 2. Calcular posições planetárias
@@ -145,23 +165,90 @@ class ChartCalculator {
     );
   }
 
+  /// Detecta automaticamente o timezone brasileiro baseado na data e localização
+  /// Considera horário de verão histórico (usado até 2019)
+  double _detectBrazilianTimezone(DateTime date, double latitude) {
+    // Timezone padrão do Brasil (maioria das regiões)
+    const standardOffset = -3.0;
+
+    // Horário de verão foi abolido em 2019
+    if (date.year >= 2019) {
+      return standardOffset;
+    }
+
+    // Regiões Norte e Nordeste (latitude > -15) não usavam horário de verão
+    if (latitude > -15) {
+      return standardOffset;
+    }
+
+    // Verificar se estava em período de horário de verão
+    // Horário de verão geralmente: outubro/novembro até fevereiro/março
+    final month = date.month;
+    final day = date.day;
+
+    // Período de verão brasileiro (simplificado):
+    // - Início: terceiro domingo de outubro (geralmente dia 15-21)
+    // - Fim: terceiro domingo de fevereiro (geralmente dia 15-21)
+
+    bool isInDST = false;
+
+    if (month >= 10) {
+      // Outubro a dezembro: verão começa em meados de outubro
+      if (month == 10 && day >= 15) {
+        isInDST = true;
+      } else if (month > 10) {
+        isInDST = true;
+      }
+    } else if (month <= 2) {
+      // Janeiro a fevereiro: verão termina em meados de fevereiro
+      if (month == 1) {
+        isInDST = true;
+      } else if (month == 2 && day <= 20) {
+        isInDST = true;
+      }
+    }
+
+    // Durante horário de verão: UTC-2
+    // Fora do horário de verão: UTC-3
+    return isInDST ? -2.0 : standardOffset;
+  }
+
   /// Converte DateTime para Julian Day
   double _dateTimeToJulianDay(
     DateTime date,
     TimeOfDay time,
     double longitude,
-  ) {
+    double latitude, {
+    double? timezoneOffsetHours,
+  }) {
     final year = date.year;
     final month = date.month;
     final day = date.day;
-    final hour = time.hour + time.minute / 60.0;
+
+    // IMPORTANTE: Converter hora local para UTC
+    // Se timezone fornecido, usa ele; senão, detecta automaticamente
+    final timezoneOffset = (timezoneOffsetHours ?? _detectBrazilianTimezone(date, latitude)).round();
+
+    // Converter hora local para UTC
+    final hourLocal = time.hour + time.minute / 60.0;
+    var hourUTC = hourLocal - timezoneOffset;
+
+    // Ajustar dia se necessário
+    var adjustedDay = day;
+    if (hourUTC < 0) {
+      hourUTC += 24;
+      adjustedDay -= 1;
+    } else if (hourUTC >= 24) {
+      hourUTC -= 24;
+      adjustedDay += 1;
+    }
 
     // Algoritmo para cálculo do Julian Day
     final a = ((14 - month) / 12).floor();
     final y = year + 4800 - a;
     final m = month + 12 * a - 3;
 
-    var jd = day +
+    var jd = adjustedDay +
         ((153 * m + 2) / 5).floor() +
         365 * y +
         (y / 4).floor() -
@@ -169,7 +256,12 @@ class ChartCalculator {
         (y / 400).floor() -
         32045;
 
-    final jdDouble = jd.toDouble() + (hour - 12) / 24.0;
+    final jdDouble = jd.toDouble() + (hourUTC - 12) / 24.0;
+
+    _log('   🕐 Hora local: ${time.hour}:${time.minute}');
+    _log('   🌍 Timezone: UTC${timezoneOffset >= 0 ? "+" : ""}$timezoneOffset ${timezoneOffsetHours == null ? "(detectado automaticamente)" : "(manual)"}');
+    _log('   ⏰ Hora UTC: ${hourUTC.toStringAsFixed(2)}');
+    _log('   📅 Julian Day: ${jdDouble.toStringAsFixed(5)}');
 
     return jdDouble;
   }
@@ -338,66 +430,122 @@ class ChartCalculator {
   ) {
     final houses = <House>[];
 
-    // Cálculo simplificado usando Placidus
-    // Em produção, usar biblioteca completa
-
-    // Calcular RAMC (Right Ascension of Medium Coeli)
+    // Calcular RAMC (Right Ascension of Medium Coeli) em graus
     final T = (julianDay - 2451545.0) / 36525.0;
     final gmst = _calculateGMST(julianDay);
-    final lst = gmst + longitude / 15.0;
+    var lst = gmst + longitude / 15.0; // LST em horas
 
-    // MC (Medium Coeli) - Casa 10
-    final mc = (lst * 15.0) % 360;
+    // Normalizar LST para o intervalo [0, 24)
+    while (lst < 0) lst += 24;
+    while (lst >= 24) lst -= 24;
 
-    // IC (Imum Coeli) - Casa 4
+    _log('   ⏰ GMST: ${gmst.toStringAsFixed(6)} horas');
+    _log('   🌍 LST: ${lst.toStringAsFixed(6)} horas (${(lst * 15).toStringAsFixed(2)}°)');
+
+    // RAMC em graus (0-360)
+    final ramc = (lst * 15.0) % 360;
+
+    // Calcular MC (longitude eclíptica do Meio do Céu)
+    // Converter de coordenadas equatoriais (RAMC) para eclípticas (MC)
+    // Fórmula: tan(MC) = tan(RAMC) / cos(ε)
+    final obliquity = 23.43929; // Obliquidade da eclíptica
+    final oblRad = obliquity * math.pi / 180;
+    final ramcRad = ramc * math.pi / 180;
+
+    var mc = math.atan2(
+      math.sin(ramcRad),
+      math.cos(ramcRad) * math.cos(oblRad)
+    ) * 180 / math.pi;
+
+    // Normalizar para 0-360
+    mc = mc % 360;
+    if (mc < 0) mc += 360;
+
+    _log('   🌟 MC (Meio do Céu): ${mc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(mc).displayName})');
+
+    // IC (Imum Coeli) - oposto ao MC
     final ic = (mc + 180) % 360;
 
-    // Para simplificação, usar divisão de 30° a partir do MC
-    // Casa 10 (MC)
-    houses.add(_createHouse(10, mc));
+    // Casa 1 (Ascendente) - calcular com fórmula trigonométrica correta
+    final asc = _calculateAscendantFromRAMC(ramc, latitude);
 
-    // Casas 11, 12, 1, 2, 3 (sentido anti-horário)
-    for (int i = 11; i <= 12; i++) {
-      final cuspLongitude = (mc + (i - 10) * 30) % 360;
-      houses.add(_createHouse(i, cuspLongitude));
-    }
+    // Casa 7 (Descendente) - oposto ao Ascendente
+    final dsc = (asc + 180) % 360;
 
-    // Casa 1 (Ascendente) - calcular com fórmula mais precisa
-    final asc = _calculateAscendant(mc, latitude);
-    houses.insert(0, _createHouse(1, asc));
+    // Para simplificação, usar sistema de casas igual
+    // (em produção, usar Placidus completo com cálculos trigonométricos para cada cúspide)
 
-    // Casas 2 e 3
+    // Casa 1 (ASC)
+    houses.add(_createHouse(1, asc));
+
+    // Casas 2-3 (divisão igual entre ASC e IC)
     for (int i = 2; i <= 3; i++) {
-      final cuspLongitude = (asc + (i - 1) * 30) % 360;
+      final cuspLongitude = (asc + ((ic - asc + 360) % 360) * (i - 1) / 3) % 360;
       houses.add(_createHouse(i, cuspLongitude));
     }
 
     // Casa 4 (IC)
     houses.add(_createHouse(4, ic));
 
-    // Casas 5, 6, 7, 8, 9
-    for (int i = 5; i <= 9; i++) {
-      final cuspLongitude = (ic + (i - 4) * 30) % 360;
+    // Casas 5-6 (divisão igual entre IC e DSC)
+    for (int i = 5; i <= 6; i++) {
+      final cuspLongitude = (ic + ((dsc - ic + 360) % 360) * (i - 4) / 3) % 360;
+      houses.add(_createHouse(i, cuspLongitude));
+    }
+
+    // Casa 7 (DSC)
+    houses.add(_createHouse(7, dsc));
+
+    // Casas 8-9 (divisão igual entre DSC e MC)
+    for (int i = 8; i <= 9; i++) {
+      final cuspLongitude = (dsc + ((mc - dsc + 360) % 360) * (i - 7) / 3) % 360;
+      houses.add(_createHouse(i, cuspLongitude));
+    }
+
+    // Casa 10 (MC)
+    houses.add(_createHouse(10, mc));
+
+    // Casas 11-12 (divisão igual entre MC e ASC)
+    for (int i = 11; i <= 12; i++) {
+      final cuspLongitude = (mc + ((asc - mc + 360) % 360) * (i - 10) / 3) % 360;
       houses.add(_createHouse(i, cuspLongitude));
     }
 
     // Ordenar casas por número
     houses.sort((a, b) => a.number.compareTo(b.number));
 
+    // Log detalhado de todas as casas
+    _log('   🏠 CASAS ASTROLÓGICAS (${houses.length} casas):');
+    for (final house in houses) {
+      _log('      Casa ${house.number.toString().padLeft(2)}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°${house.minute}\')');
+    }
+
     return houses;
   }
 
-  /// Calcula Ascendente
-  double _calculateAscendant(double mc, double latitude) {
-    // Fórmula simplificada
-    // Em produção, usar cálculo trigonométrico completo
+  /// Calcula Ascendente com fórmula trigonométrica correta a partir do RAMC
+  double _calculateAscendantFromRAMC(double ramc, double latitude) {
+    // Obliquidade da eclíptica (ε = 23.43929°)
+    final obliquity = 23.43929;
+    final oblRad = obliquity * math.pi / 180;
     final latRad = latitude * math.pi / 180;
-    final mcRad = mc * math.pi / 180;
+    final ramcRad = ramc * math.pi / 180;
 
-    // Aproximação: ASC depende de MC e latitude
-    var asc = mc - 90 + (latitude / 2);
+    // Fórmula CORRETA do ascendente (longitude eclíptica):
+    // tan(ASC) = cos(RAMC) / -(sin(ε) * tan(lat) + cos(ε) * sin(RAMC))
+
+    final numerator = math.cos(ramcRad);
+    final denominator = -(math.sin(oblRad) * math.tan(latRad) + math.cos(oblRad) * math.sin(ramcRad));
+
+    var asc = math.atan2(numerator, denominator) * 180 / math.pi;
+
+    // Normalizar para 0-360
     asc = asc % 360;
     if (asc < 0) asc += 360;
+
+    _log('   🔮 RAMC: ${ramc.toStringAsFixed(2)}°');
+    _log('   📍 Latitude: ${latitude.toStringAsFixed(2)}°');
+    _log('   ♈ Ascendente: ${asc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(asc).displayName})');
 
     return asc;
   }
