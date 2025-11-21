@@ -67,7 +67,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   // Limite de partículas e debounce
   static const int _maxParticles = 100;
   static const int _maxTrailParticles = 50;
-  bool _isTapAnimating = false;
+  static const int _maxRapidTaps = 5;
+  int _rapidTapCount = 0;
+  DateTime? _lastTapTime;
 
   @override
   void initState() {
@@ -237,27 +239,46 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   }
 
   void _onTap() {
-    // Evitar cliques durante arraste ou animação em andamento
-    if (_isDragging || _isTapAnimating) return;
+    // Evitar cliques durante arraste
+    if (_isDragging) return;
 
-    _isTapAnimating = true;
+    final now = DateTime.now();
+
+    // Resetar contador se passou mais de 1 segundo desde o último tap
+    if (_lastTapTime != null && now.difference(_lastTapTime!).inMilliseconds > 1000) {
+      _rapidTapCount = 0;
+    }
+
+    // Limitar a 5 taps rápidos
+    if (_rapidTapCount >= _maxRapidTaps) return;
+
+    _rapidTapCount++;
+    _lastTapTime = now;
 
     // Criar explosão de partículas (com limite)
     _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
 
     // Animação de "pulo" - escala e movimento vertical
-    _scaleController.forward().then((_) {
-      if (mounted) _scaleController.reverse();
-    });
+    if (!_scaleController.isAnimating) {
+      _scaleController.forward().then((_) {
+        if (mounted) _scaleController.reverse();
+      });
+    }
 
     // Animação de pulo para cima
-    _jumpController.forward().then((_) {
-      if (mounted) {
-        _jumpController.reverse().then((_) {
-          if (mounted) _isTapAnimating = false;
-        });
-      }
-    });
+    if (!_jumpController.isAnimating) {
+      _jumpController.forward().then((_) {
+        if (mounted) {
+          _jumpController.reverse().then((_) {
+            // Resetar contador após animação completa se passou tempo suficiente
+            if (mounted && _lastTapTime != null &&
+                DateTime.now().difference(_lastTapTime!).inMilliseconds > 500) {
+              _rapidTapCount = 0;
+            }
+          });
+        }
+      });
+    }
 
     // Callback opcional
     widget.onTap?.call();
@@ -341,8 +362,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
           child: GestureDetector(
             onTap: _onTap,
             onPanStart: (details) {
-              // Resetar estado de animação de tap
-              _isTapAnimating = false;
+              // Resetar contador de taps
+              _rapidTapCount = 0;
 
               // Parar animações em andamento antes de iniciar arraste
               if (_jumpController.isAnimating) {
