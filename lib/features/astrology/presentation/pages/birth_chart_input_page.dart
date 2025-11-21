@@ -104,8 +104,12 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     String displayName;
     if (placemark != null) {
       final parts = <String>[];
+      // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
       if (placemark.locality != null && placemark.locality!.isNotEmpty) {
         parts.add(placemark.locality!);
+      } else if (placemark.subAdministrativeArea != null &&
+          placemark.subAdministrativeArea!.isNotEmpty) {
+        parts.add(placemark.subAdministrativeArea!);
       }
       if (placemark.administrativeArea != null &&
           placemark.administrativeArea!.isNotEmpty) {
@@ -492,9 +496,13 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                             if (placemark != null) {
                               final parts = <String>[];
 
+                              // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
                               if (placemark.locality != null &&
                                   placemark.locality!.isNotEmpty) {
                                 parts.add(placemark.locality!);
+                              } else if (placemark.subAdministrativeArea != null &&
+                                  placemark.subAdministrativeArea!.isNotEmpty) {
+                                parts.add(placemark.subAdministrativeArea!);
                               }
 
                               if (placemark.administrativeArea != null &&

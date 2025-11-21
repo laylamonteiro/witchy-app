@@ -121,8 +121,12 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     String displayName;
     if (placemark != null) {
       final parts = <String>[];
+      // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
       if (placemark.locality != null && placemark.locality!.isNotEmpty) {
         parts.add(placemark.locality!);
+      } else if (placemark.subAdministrativeArea != null &&
+          placemark.subAdministrativeArea!.isNotEmpty) {
+        parts.add(placemark.subAdministrativeArea!);
       }
       if (placemark.administrativeArea != null &&
           placemark.administrativeArea!.isNotEmpty) {
@@ -654,9 +658,13 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                         if (placemark != null) {
                           final parts = <String>[];
 
+                          // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
                           if (placemark.locality != null &&
                               placemark.locality!.isNotEmpty) {
                             parts.add(placemark.locality!);
+                          } else if (placemark.subAdministrativeArea != null &&
+                              placemark.subAdministrativeArea!.isNotEmpty) {
+                            parts.add(placemark.subAdministrativeArea!);
                           }
 
                           if (placemark.administrativeArea != null &&
