@@ -7,6 +7,8 @@ import 'user_spells_list_page.dart';
 import 'ai_spell_creation_page.dart';
 import '../../../astrology/presentation/pages/astrology_page.dart';
 import '../../../divination/presentation/pages/divination_hub_page.dart';
+import '../../../runes/presentation/pages/runes_list_page.dart';
+import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 
 class GrimoirePage extends StatelessWidget {
   const GrimoirePage({super.key});
@@ -111,11 +113,39 @@ class _ToolsTab extends StatelessWidget {
             context,
             icon: '🔮',
             title: 'Divinação',
-            description: 'Runas, pêndulo e oracle cards para orientação',
+            description: 'Pêndulo e oracle cards para orientação',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DivinationHubPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: 'ᚱ',
+            title: 'Runas',
+            description: 'Alfabeto mágico para divinação e proteção',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const RunesListPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '⛤',
+            title: 'Sigilos',
+            description: 'Crie símbolos mágicos para suas intenções',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const SigilStep1IntentionPage(),
                 ),
               );
             },
