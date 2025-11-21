@@ -80,7 +80,7 @@ class _PersonalizedSuggestionsPageState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erro ao carregar mapa natal. Por favor, crie seu mapa astral primeiro.'),
+            content: Text('Erro ao carregar mapa astral. Por favor, crie seu mapa astral primeiro.'),
             backgroundColor: AppColors.alert,
           ),
         );
@@ -193,7 +193,7 @@ class _PersonalizedSuggestionsPageState
               const Text('🔮', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               const Text(
-                'Mapa Natal Necessário',
+                'Mapa Astral Necessário',
                 style: TextStyle(
                   color: AppColors.lilac,
                   fontSize: 20,
@@ -203,7 +203,7 @@ class _PersonalizedSuggestionsPageState
               ),
               const SizedBox(height: 12),
               Text(
-                'Para receber sugestões personalizadas baseadas nos trânsitos astrológicos, você precisa criar seu mapa natal primeiro.',
+                'Para receber sugestões personalizadas baseadas nos trânsitos astrológicos, você precisa criar seu mapa astral primeiro.',
                 style: TextStyle(
                   color: AppColors.softWhite.withOpacity(0.8),
                   fontSize: 14,

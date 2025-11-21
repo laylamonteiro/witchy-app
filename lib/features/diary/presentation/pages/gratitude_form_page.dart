@@ -64,15 +64,9 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'Título *',
+                labelText: 'Título',
                 hintText: 'Ex: Gratidão pelo dia de hoje',
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 16),
             ListTile(
@@ -100,16 +94,10 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _contentController,
               decoration: const InputDecoration(
-                labelText: 'Pelo que você é grato(a) hoje? *',
+                labelText: 'Pelo que você é grato(a) hoje?',
                 hintText: 'Descreva suas gratidões...',
               ),
               maxLines: 10,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -133,30 +121,39 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
   }
 
   void _saveGratitude() {
-    if (_formKey.currentState!.validate()) {
-      final tags = _tagsController.text
-          .split(',')
-          .map((t) => t.trim())
-          .where((t) => t.isNotEmpty)
-          .toList();
-
-      final gratitude = GratitudeModel(
-        id: widget.gratitude?.id,
-        title: _titleController.text,
-        content: _contentController.text,
-        tags: tags,
-        date: _selectedDate,
+    // Verificar se pelo menos um campo foi preenchido
+    if (_titleController.text.isEmpty && _contentController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preencha pelo menos o título ou o conteúdo'),
+          backgroundColor: Colors.orange,
+        ),
       );
-
-      final provider = context.read<GratitudeProvider>();
-      if (widget.gratitude == null) {
-        provider.addGratitude(gratitude);
-      } else {
-        provider.updateGratitude(gratitude);
-      }
-
-      Navigator.pop(context);
+      return;
     }
+
+    final tags = _tagsController.text
+        .split(',')
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
+
+    final gratitude = GratitudeModel(
+      id: widget.gratitude?.id,
+      title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+      content: _contentController.text,
+      tags: tags,
+      date: _selectedDate,
+    );
+
+    final provider = context.read<GratitudeProvider>();
+    if (widget.gratitude == null) {
+      provider.addGratitude(gratitude);
+    } else {
+      provider.updateGratitude(gratitude);
+    }
+
+    Navigator.pop(context);
   }
 
   void _confirmDelete(BuildContext context) {

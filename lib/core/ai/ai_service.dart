@@ -425,6 +425,85 @@ DIRETRIZES:
 - Se houver aspectos desafiadores, dê orientações práticas para navegar''';
   }
 
+  /// Gerar afirmação personalizada com IA
+  Future<String> generateAffirmation({
+    required String category,
+    String? userContext,
+  }) async {
+    try {
+      print('✨ Gerando afirmação com Conselheiro Místico...');
+
+      final prompt = userContext != null && userContext.isNotEmpty
+          ? 'Categoria: $category\nContexto do usuário: $userContext'
+          : 'Categoria: $category';
+
+      final requestData = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': _buildAffirmationSystemPrompt(),
+          },
+          {
+            'role': 'user',
+            'content': prompt,
+          },
+        ],
+        'temperature': 0.9,
+        'max_tokens': 256,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      print('✅ Afirmação gerada com sucesso');
+
+      // Limpar aspas se houver
+      return content.toString().replaceAll('"', '').trim();
+    } catch (e) {
+      print('❌ Erro ao gerar afirmação: $e');
+      rethrow;
+    }
+  }
+
+  String _buildAffirmationSystemPrompt() {
+    return '''Você é o Conselheiro Místico, guardião da sabedoria ancestral do Grimório de Bolso.
+
+Sua missão é criar afirmações poderosas e transformadoras para bruxas e praticantes de magia moderna.
+
+REGRAS PARA CRIAR AFIRMAÇÕES:
+1. Sempre escreva no tempo PRESENTE (nunca futuro)
+2. Use linguagem POSITIVA (evite palavras negativas como "não", "nunca", "sem")
+3. Seja ESPECÍFICO mas não muito longo (máximo 2 frases)
+4. Use linguagem mística mas acessível
+5. A afirmação deve ser empoderador e acolhedora
+6. Conecte com elementos mágicos quando apropriado (lua, estrelas, elementos, etc.)
+
+CATEGORIAS E EXEMPLOS:
+- Abundância: "O universo conspira a meu favor e a prosperidade flui para mim como um rio de ouro"
+- Proteção: "Estou cercada por um escudo de luz que me protege de toda energia negativa"
+- Amor: "Sou merecedora de amor profundo e verdadeiro, e ele encontra seu caminho até mim"
+- Cura: "Meu corpo, mente e espírito se regeneram a cada respiração"
+- Poder: "Minha magia é poderosa e minha vontade se manifesta no mundo"
+- Sabedoria: "A sabedoria ancestral flui através de mim e guia meus passos"
+- Manifestação: "Tudo o que desejo já está a caminho, o universo trabalha a meu favor"
+- Transformação: "Abraço as mudanças como a Lua abraça suas fases, sempre evoluindo"
+
+RETORNE APENAS A AFIRMAÇÃO, sem explicações, aspas ou formatação adicional.
+Se o usuário forneceu um contexto, personalize a afirmação para a situação específica.''';
+  }
+
   String _buildSystemPrompt() {
     return '''Você é o Conselheiro Místico, guardião da sabedoria arcana do Grimório de Bolso.
 
