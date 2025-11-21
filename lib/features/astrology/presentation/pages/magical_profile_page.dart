@@ -1,12 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/astrology_provider.dart';
 
-class MagicalProfilePage extends StatelessWidget {
+class MagicalProfilePage extends StatefulWidget {
   const MagicalProfilePage({super.key});
+
+  @override
+  State<MagicalProfilePage> createState() => _MagicalProfilePageState();
+}
+
+class _MagicalProfilePageState extends State<MagicalProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Gerar texto IA se ainda não existir
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<AstrologyProvider>();
+      if (provider.magicalProfile != null &&
+          provider.magicalProfile!.aiGeneratedText == null) {
+        provider.generateAIMagicalProfile();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +33,22 @@ class MagicalProfilePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Perfil Mágico'),
         backgroundColor: AppColors.darkBackground,
+        actions: [
+          Consumer<AstrologyProvider>(
+            builder: (context, provider, _) {
+              if (provider.hasAIGeneratedProfile) {
+                return IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: provider.isGeneratingAI
+                      ? null
+                      : () => provider.regenerateAIMagicalProfile(),
+                  tooltip: 'Regenerar análise',
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
       backgroundColor: AppColors.darkBackground,
       body: Consumer<AstrologyProvider>(
@@ -121,7 +156,7 @@ class MagicalProfilePage extends StatelessWidget {
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),
@@ -156,255 +191,12 @@ class MagicalProfilePage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-                // Essência Mágica (Sol)
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '☉ Essência Mágica',
-                        style: GoogleFonts.cinzelDecorative(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.lilac,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Divider(color: AppColors.lilac),
-                      const SizedBox(height: 12),
-                      Text(
-                        profile.magicalEssence,
-                        style: const TextStyle(
-                          color: AppColors.softWhite,
-                          height: 1.5,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                // Texto Personalizado IA
+                _buildAISection(provider),
 
-                const SizedBox(height: 16),
-
-                // Dons Intuitivos (Lua)
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '☽ Dons Intuitivos',
-                        style: GoogleFonts.cinzelDecorative(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.lilac,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Divider(color: AppColors.lilac),
-                      const SizedBox(height: 12),
-                      Text(
-                        profile.intuitiveGifts,
-                        style: const TextStyle(
-                          color: AppColors.softWhite,
-                          height: 1.5,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Comunicação Mágica (Mercúrio)
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '☿ Comunicação Mágica',
-                        style: GoogleFonts.cinzelDecorative(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.lilac,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Divider(color: AppColors.lilac),
-                      const SizedBox(height: 12),
-                      Text(
-                        profile.communicationStyle,
-                        style: const TextStyle(
-                          color: AppColors.softWhite,
-                          height: 1.5,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Casa 8 (Magia)
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '🔮 Casa da Magia',
-                        style: GoogleFonts.cinzelDecorative(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.lilac,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Divider(color: AppColors.lilac),
-                      const SizedBox(height: 12),
-                      Text(
-                        profile.houseOfMagic,
-                        style: const TextStyle(
-                          color: AppColors.softWhite,
-                          height: 1.5,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Casa 12 (Espiritualidade)
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '🌙 Casa do Espírito',
-                        style: GoogleFonts.cinzelDecorative(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.lilac,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Divider(color: AppColors.lilac),
-                      const SizedBox(height: 12),
-                      Text(
-                        profile.houseOfSpirit,
-                        style: const TextStyle(
-                          color: AppColors.softWhite,
-                          height: 1.5,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Forças Mágicas
-                if (profile.magicalStrengths.isNotEmpty)
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '⭐ Suas Forças Mágicas',
-                          style: GoogleFonts.cinzelDecorative(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.lilac,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Divider(color: AppColors.lilac),
-                        const SizedBox(height: 12),
-                        ...profile.magicalStrengths.map((strength) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '• ',
-                                  style: TextStyle(
-                                    color: AppColors.lilac,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    strength,
-                                    style: const TextStyle(
-                                      color: AppColors.softWhite,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
-
-                const SizedBox(height: 16),
-
-                // Práticas Recomendadas
-                if (profile.recommendedPractices.isNotEmpty)
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '📿 Práticas Recomendadas',
-                          style: GoogleFonts.cinzelDecorative(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.lilac,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Divider(color: AppColors.lilac),
-                        const SizedBox(height: 12),
-                        ...profile.recommendedPractices.map((practice) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '• ',
-                                  style: TextStyle(
-                                    color: AppColors.lilac,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    practice,
-                                    style: const TextStyle(
-                                      color: AppColors.softWhite,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
-
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 // Ferramentas Favoráveis
                 if (profile.favorableTools.isNotEmpty)
@@ -452,59 +244,182 @@ class MagicalProfilePage extends StatelessWidget {
                       ],
                     ),
                   ),
-
-                const SizedBox(height: 16),
-
-                // Trabalho com Sombras
-                if (profile.shadowWork.isNotEmpty)
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '🌑 Trabalho com Sombras',
-                          style: GoogleFonts.cinzelDecorative(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.lilac,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Divider(color: AppColors.lilac),
-                        const SizedBox(height: 12),
-                        ...profile.shadowWork.map((work) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '• ',
-                                  style: TextStyle(
-                                    color: AppColors.lilac,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    work,
-                                    style: const TextStyle(
-                                      color: AppColors.softWhite,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildAISection(AstrologyProvider provider) {
+    final profile = provider.magicalProfile;
+
+    // Se está gerando IA
+    if (provider.isGeneratingAI) {
+      return MagicalCard(
+        child: Column(
+          children: [
+            const CircularProgressIndicator(color: AppColors.lilac),
+            const SizedBox(height: 16),
+            Text(
+              'Gerando sua análise personalizada...',
+              style: GoogleFonts.cinzelDecorative(
+                fontSize: 18,
+                color: AppColors.lilac,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'A IA está analisando seu mapa astral e criando\numa interpretação única para você.',
+              style: TextStyle(
+                color: AppColors.softWhite.withOpacity(0.7),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Se tem texto IA gerado
+    if (profile?.aiGeneratedText != null) {
+      return MagicalCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text('🌟', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 8),
+                Text(
+                  'Sua Análise Personalizada',
+                  style: GoogleFonts.cinzelDecorative(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.lilac,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Gerada especialmente para você com base no seu mapa astral',
+              style: TextStyle(
+                color: AppColors.softWhite.withOpacity(0.6),
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Divider(color: AppColors.lilac),
+            const SizedBox(height: 12),
+            MarkdownBody(
+              data: profile!.aiGeneratedText!,
+              styleSheet: MarkdownStyleSheet(
+                h2: GoogleFonts.cinzelDecorative(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.lilac,
+                ),
+                p: const TextStyle(
+                  color: AppColors.softWhite,
+                  height: 1.6,
+                  fontSize: 15,
+                ),
+                listBullet: const TextStyle(
+                  color: AppColors.lilac,
+                  fontSize: 15,
+                ),
+                strong: const TextStyle(
+                  color: AppColors.lilac,
+                  fontWeight: FontWeight.bold,
+                ),
+                em: TextStyle(
+                  color: AppColors.softWhite.withOpacity(0.9),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Se não tem texto IA e houve erro
+    if (provider.error != null) {
+      return MagicalCard(
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: AppColors.alert, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'Não foi possível gerar sua análise',
+              style: GoogleFonts.cinzelDecorative(
+                fontSize: 18,
+                color: AppColors.alert,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Verifique sua conexão e tente novamente.',
+              style: TextStyle(
+                color: AppColors.softWhite.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => provider.generateAIMagicalProfile(),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.lilac,
+                foregroundColor: AppColors.darkBackground,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Botão para gerar
+    return MagicalCard(
+      child: Column(
+        children: [
+          const Text('🔮', style: TextStyle(fontSize: 48)),
+          const SizedBox(height: 16),
+          Text(
+            'Análise Personalizada',
+            style: GoogleFonts.cinzelDecorative(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.lilac,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Gere uma análise única do seu perfil mágico\ncom inteligência artificial.',
+            style: TextStyle(
+              color: AppColors.softWhite.withOpacity(0.8),
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () => provider.generateAIMagicalProfile(),
+            icon: const Icon(Icons.auto_awesome),
+            label: const Text('Gerar Análise'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.lilac,
+              foregroundColor: AppColors.darkBackground,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
       ),
     );
   }

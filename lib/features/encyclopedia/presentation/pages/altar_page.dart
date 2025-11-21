@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
@@ -56,6 +57,11 @@ class AltarPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+
+            // NOVO: Passo-a-Passo para Iniciantes
+            _buildPassoAPasso(context),
+
+            const SizedBox(height: 16),
 
             // Como montar
             ExpansionMagicalCard(
@@ -311,7 +317,7 @@ class AltarPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  Center(
+                  const Center(
                     child: Text(
                       '✨🕯️🌙',
                       style: TextStyle(fontSize: 32),
@@ -322,6 +328,348 @@ class AltarPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPassoAPasso(BuildContext context) {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('✨', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Passo-a-Passo para Iniciantes',
+                      style: GoogleFonts.cinzelDecorative(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.lilac,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Seu primeiro encontro com seu altar',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: AppColors.lilac),
+          const SizedBox(height: 16),
+
+          // Introdução
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.lilac.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+            ),
+            child: Text(
+              'Não se preocupe se você não tem todos os itens "tradicionais". '
+              'Um altar pode começar com uma vela e uma intenção. O importante é que '
+              'seja significativo para VOCÊ. Não existe altar errado quando é feito com coração.',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Passos numerados
+          _buildPassoNumerado('1', 'Escolha o Local',
+              'Um cantinho onde você não será perturbado(a). Pode ser uma mesinha, prateleira, ou até uma caixa que você abre quando for praticar.',
+              'Não precisa ser grande! Um espaço de 30x30cm já é suficiente.'),
+
+          _buildPassoNumerado('2', 'Limpe o Espaço',
+              'Limpe fisicamente com um pano, depois passe fumaça de incenso ou visualize uma luz branca purificando.',
+              'Diga: "Que este espaço seja purificado e abençoado."'),
+
+          _buildPassoNumerado('3', 'Adicione uma Vela',
+              'A vela é o coração do altar - representa o fogo e a luz divina. Uma única vela branca já é suficiente.',
+              'Velas brancas são universais e podem substituir qualquer cor.'),
+
+          _buildPassoNumerado('4', 'Adicione Itens Significativos',
+              'Coloque o que tem significado para você: foto de ancestrais, cristal que ganhou, flores, uma concha da praia.',
+              'Comece com 3-5 itens e vá adicionando com o tempo.'),
+
+          _buildPassoNumerado('5', 'Consagre seu Altar',
+              'Acenda a vela, respire fundo e diga: "Consagro este altar como meu espaço sagrado. Que ele seja um portal de conexão."',
+              'Use suas próprias palavras! O importante é a intenção.'),
+
+          const SizedBox(height: 20),
+
+          // O que fazer no altar
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.mint.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.mint.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '🌟 Nas primeiras vezes no altar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.mint,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildListaSimples('1. Acenda a vela com intenção, observe a chama'),
+                _buildListaSimples('2. Faça 3 respirações profundas para se centrar'),
+                _buildListaSimples('3. Agradeça pelo dia, pela vida, por algo bom'),
+                _buildListaSimples('4. Defina uma intenção: "Hoje eu peço/agradeço..."'),
+                _buildListaSimples('5. Fique alguns minutos em silêncio ou converse'),
+                _buildListaSimples('6. Feche: "Agradeço pela conexão. Que assim seja."'),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // O que falar
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.starYellow.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.starYellow.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '💬 O que falar no altar?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.starYellow,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildExemploFala(context, 'Para abrir:',
+                    '"Acendo esta vela como símbolo da minha conexão com o sagrado."'),
+                _buildExemploFala(context, 'Para pedir:',
+                    '"Peço orientação para [situação]. Que a sabedoria ilumine meu caminho."'),
+                _buildExemploFala(context, 'Para agradecer:',
+                    '"Agradeço por [bênção específica]. Meu coração está cheio de gratidão."'),
+                _buildExemploFala(context, 'Para fechar:',
+                    '"Agradeço a conexão. Que a magia continue comigo. Assim seja."'),
+                const SizedBox(height: 8),
+                Text(
+                  'Lembre-se: Não existe fórmula errada. O universo entende sua intenção!',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Dúvidas comuns
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.pink.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.pink.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '❓ Dúvidas Comuns de Iniciantes',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.pink,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildDuvida(context, 'Posso ter um altar secreto?',
+                    'Sim! Use uma caixa que você abre quando for praticar.'),
+                _buildDuvida(context, 'Preciso ir ao altar todo dia?',
+                    'Não há regra. Vá quando sentir vontade. Uma rotina fortalece, mas não é obrigatória.'),
+                _buildDuvida(context, 'Posso mexer nas coisas?',
+                    'Sim! O altar é vivo e deve mudar com você.'),
+                _buildDuvida(context, 'E se eu esquecer as palavras?',
+                    'Improvise! O divino não se importa com palavras perfeitas.'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPassoNumerado(String numero, String titulo, String descricao, String dica) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.lilac.withOpacity(0.2),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.lilac),
+            ),
+            child: Center(
+              child: Text(
+                numero,
+                style: const TextStyle(
+                  color: AppColors.lilac,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                    color: AppColors.lilac,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  descricao,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('💡 ', style: TextStyle(color: AppColors.starYellow)),
+                    Expanded(
+                      child: Text(
+                        dica,
+                        style: TextStyle(
+                          color: AppColors.starYellow,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListaSimples(String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        texto,
+        style: TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 13,
+          height: 1.4,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExemploFala(BuildContext context, String titulo, String fala) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            titulo,
+            style: TextStyle(
+              color: AppColors.starYellow,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              fala,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontStyle: FontStyle.italic,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDuvida(BuildContext context, String pergunta, String resposta) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            pergunta,
+            style: TextStyle(
+              color: AppColors.pink,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            resposta,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -351,7 +699,6 @@ class AltarPage extends StatelessWidget {
   }
 
   Widget _buildItem(BuildContext context, String iconTitle, String description) {
-    // Separar emoji do título (emoji é o primeiro caractere)
     final emoji = iconTitle.substring(0, iconTitle.indexOf(' ') + 1);
     final title = iconTitle.substring(iconTitle.indexOf(' ') + 1);
 
@@ -506,5 +853,4 @@ class AltarPage extends StatelessWidget {
       ),
     );
   }
-
 }

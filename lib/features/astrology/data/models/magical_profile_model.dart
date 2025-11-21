@@ -32,6 +32,10 @@ class MagicalProfile {
   // Desafios
   final List<String> shadowWork;
 
+  // Texto personalizado gerado por IA
+  final String? aiGeneratedText;
+  final String? chartHash; // Hash dos dados do mapa para verificar se mudou
+
   final DateTime generatedAt;
 
   const MagicalProfile({
@@ -53,6 +57,8 @@ class MagicalProfile {
     required this.favorableTools,
     required this.shadowWork,
     required this.generatedAt,
+    this.aiGeneratedText,
+    this.chartHash,
   });
 
   Map<String, dynamic> toJson() {
@@ -79,7 +85,55 @@ class MagicalProfile {
       'favorableTools': favorableTools,
       'shadowWork': shadowWork,
       'generatedAt': generatedAt.toIso8601String(),
+      'aiGeneratedText': aiGeneratedText,
+      'chartHash': chartHash,
     };
+  }
+
+  MagicalProfile copyWith({
+    String? userId,
+    String? birthChartId,
+    Element? dominantElement,
+    Map<Element, int>? elementDistribution,
+    Modality? dominantModality,
+    Map<Modality, int>? modalityDistribution,
+    String? magicalEssence,
+    String? intuitiveGifts,
+    String? communicationStyle,
+    String? loveAndBeauty,
+    String? protectiveEnergy,
+    String? houseOfMagic,
+    String? houseOfSpirit,
+    List<String>? magicalStrengths,
+    List<String>? recommendedPractices,
+    List<String>? favorableTools,
+    List<String>? shadowWork,
+    DateTime? generatedAt,
+    String? aiGeneratedText,
+    String? chartHash,
+  }) {
+    return MagicalProfile(
+      userId: userId ?? this.userId,
+      birthChartId: birthChartId ?? this.birthChartId,
+      dominantElement: dominantElement ?? this.dominantElement,
+      elementDistribution: elementDistribution ?? this.elementDistribution,
+      dominantModality: dominantModality ?? this.dominantModality,
+      modalityDistribution: modalityDistribution ?? this.modalityDistribution,
+      magicalEssence: magicalEssence ?? this.magicalEssence,
+      intuitiveGifts: intuitiveGifts ?? this.intuitiveGifts,
+      communicationStyle: communicationStyle ?? this.communicationStyle,
+      loveAndBeauty: loveAndBeauty ?? this.loveAndBeauty,
+      protectiveEnergy: protectiveEnergy ?? this.protectiveEnergy,
+      houseOfMagic: houseOfMagic ?? this.houseOfMagic,
+      houseOfSpirit: houseOfSpirit ?? this.houseOfSpirit,
+      magicalStrengths: magicalStrengths ?? this.magicalStrengths,
+      recommendedPractices: recommendedPractices ?? this.recommendedPractices,
+      favorableTools: favorableTools ?? this.favorableTools,
+      shadowWork: shadowWork ?? this.shadowWork,
+      generatedAt: generatedAt ?? this.generatedAt,
+      aiGeneratedText: aiGeneratedText ?? this.aiGeneratedText,
+      chartHash: chartHash ?? this.chartHash,
+    );
   }
 
   String toJsonString() {
@@ -120,6 +174,8 @@ class MagicalProfile {
       favorableTools: List<String>.from(json['favorableTools']),
       shadowWork: List<String>.from(json['shadowWork']),
       generatedAt: DateTime.parse(json['generatedAt']),
+      aiGeneratedText: json['aiGeneratedText'],
+      chartHash: json['chartHash'],
     );
   }
 
