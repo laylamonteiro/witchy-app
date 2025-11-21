@@ -11,7 +11,7 @@ class WitchWheelPainter extends CustomPainter {
 
   WitchWheelPainter({
     this.showLetters = true,
-    this.radius = 100.0,
+    this.radius = SigilWheel.wheelRadius, // Usa a constante do modelo
   });
 
   @override

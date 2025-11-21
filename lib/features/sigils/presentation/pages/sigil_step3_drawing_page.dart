@@ -69,7 +69,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       painter: _showWheel
                           ? WitchWheelPainter(
                               showLetters: true,
-                              radius: 100.0,
+                              // radius usa SigilWheel.wheelRadius por padrão
                             )
                           : null,
                       foregroundPainter: SigilDrawingPainter(

@@ -120,40 +120,46 @@ class SigilWheel {
     return result.toString();
   }
   
+  // Raio base usado pelo WitchWheelPainter - DEVE ser o mesmo valor
+  static const double wheelRadius = 100.0;
+
   // Calcula posição no canvas baseado na posição da roda
+  // IMPORTANTE: Usa o mesmo raio que o WitchWheelPainter para garantir
+  // que os pontos do sigilo coincidam com os círculos da roda
   static Offset getCanvasPosition(
     String letter,
     Size canvasSize,
   ) {
     final position = letterPositions[letter];
     if (position == null) return Offset(canvasSize.width / 2, canvasSize.height / 2);
-    
+
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
-    final maxRadius = math.min(canvasSize.width, canvasSize.height) * 0.4;
-    
+
     // Calcula o raio baseado no anel
-    double radius;
+    // Usa o mesmo raio base (100.0) que o WitchWheelPainter
+    double ringRadius;
     switch (position.ring) {
       case 1: // Anel interno (A-F)
-        radius = maxRadius * 0.33;
+        ringRadius = wheelRadius * 0.33;
         break;
       case 2: // Anel médio (G-N)
-        radius = maxRadius * 0.66;
+        ringRadius = wheelRadius * 0.66;
         break;
       case 3: // Anel externo (O-Z)
-        radius = maxRadius;
+        ringRadius = wheelRadius;
         break;
       default:
-        radius = maxRadius;
+        ringRadius = wheelRadius;
     }
-    
-    // Converte ângulo para radianos
-    final angleRad = position.angle * (math.pi / 180);
-    
-    // Calcula posição X,Y
-    final x = center.dx + radius * math.cos(angleRad - math.pi / 2);
-    final y = center.dy + radius * math.sin(angleRad - math.pi / 2);
-    
+
+    // Converte ângulo para radianos (subtrai 90° para começar do topo)
+    // DEVE usar a mesma fórmula que o WitchWheelPainter
+    final angleRad = (position.angle - 90) * (math.pi / 180);
+
+    // Calcula posição X,Y (no círculo, não na letra)
+    final x = center.dx + ringRadius * math.cos(angleRad);
+    final y = center.dy + ringRadius * math.sin(angleRad);
+
     return Offset(x, y);
   }
   
