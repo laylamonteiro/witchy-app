@@ -55,32 +55,6 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     });
 
     try {
-      // Adicionar ", Brasil" se não especificar país para resultados mais precisos
-      String searchQuery = query;
-      if (!query.toLowerCase().contains('brasil') &&
-          !query.toLowerCase().contains('brazil') &&
-          !query.toLowerCase().contains(',')) {
-        searchQuery = '$query, Brasil';
-      }
-
-      final locations = await locationFromAddress(searchQuery);
-
-      // Get placemarks for each location to show readable addresses
-      final results = <MapEntry<Location, Placemark>>[];
-      for (final location in locations.take(10)) {
-        try {
-          final placemark = await placemarkFromCoordinates(
-            location.latitude,
-            location.longitude,
-          );
-          if (placemark.isNotEmpty) {
-            results.add(MapEntry(location, placemark.first));
-          }
-        } catch (e) {
-          // Skip locations that can't be reverse geocoded
-        }
-      }
-
       // Normalizar string para comparação (remover acentos e lowercase)
       String normalize(String? text) {
         if (text == null) return '';
@@ -101,12 +75,52 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
             .replaceAll('ç', 'c');
       }
 
+      // Adicionar ", Brasil" se não especificar país para resultados mais precisos
+      String searchQuery = query;
+      if (!query.toLowerCase().contains('brasil') &&
+          !query.toLowerCase().contains('brazil') &&
+          !query.toLowerCase().contains(',')) {
+        searchQuery = '$query, Brasil';
+      }
+
+      // Para cidades que têm o mesmo nome do estado (São Paulo, Rio de Janeiro),
+      // fazer busca duplicada para garantir que encontre a capital
       final normalizedQuery = normalize(query.trim());
+      if (normalizedQuery == 'sao paulo' || normalizedQuery == 'rio de janeiro') {
+        searchQuery = '$query, $query, Brasil';
+      }
+
+      final locations = await locationFromAddress(searchQuery);
+
+      // Get placemarks for each location to show readable addresses
+      final results = <MapEntry<Location, Placemark>>[];
+      for (final location in locations.take(10)) {
+        try {
+          final placemark = await placemarkFromCoordinates(
+            location.latitude,
+            location.longitude,
+          );
+          if (placemark.isNotEmpty) {
+            results.add(MapEntry(location, placemark.first));
+          }
+        } catch (e) {
+          // Skip locations that can't be reverse geocoded
+        }
+      }
 
       // Ordenar resultados por relevância
       results.sort((a, b) {
         final aPlace = a.value;
         final bPlace = b.value;
+
+        // Prioridade 0: Capitais onde locality == administrativeArea e ambos == query
+        // Ex: São Paulo (cidade) no estado de São Paulo
+        final aIsCapital = normalize(aPlace.locality) == normalizedQuery &&
+            normalize(aPlace.administrativeArea) == normalizedQuery;
+        final bIsCapital = normalize(bPlace.locality) == normalizedQuery &&
+            normalize(bPlace.administrativeArea) == normalizedQuery;
+        if (aIsCapital && !bIsCapital) return -1;
+        if (!aIsCapital && bIsCapital) return 1;
 
         // Prioridade 1: locality exatamente igual ao termo de busca
         final aLocalityMatch = normalize(aPlace.locality) == normalizedQuery;
