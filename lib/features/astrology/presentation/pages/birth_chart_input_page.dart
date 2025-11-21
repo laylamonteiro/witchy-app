@@ -66,24 +66,72 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
       final locations = await locationFromAddress(searchQuery);
 
       // Get placemarks for each location to show readable addresses
-      final placemarks = <Placemark>[];
-      for (final location in locations.take(5)) {
+      final results = <MapEntry<Location, Placemark>>[];
+      for (final location in locations.take(10)) {
         try {
           final placemark = await placemarkFromCoordinates(
             location.latitude,
             location.longitude,
           );
           if (placemark.isNotEmpty) {
-            placemarks.add(placemark.first);
+            results.add(MapEntry(location, placemark.first));
           }
         } catch (e) {
           // Skip locations that can't be reverse geocoded
         }
       }
 
+      // Normalizar string para comparação (remover acentos e lowercase)
+      String normalize(String? text) {
+        if (text == null) return '';
+        return text
+            .toLowerCase()
+            .replaceAll('á', 'a')
+            .replaceAll('à', 'a')
+            .replaceAll('ã', 'a')
+            .replaceAll('â', 'a')
+            .replaceAll('é', 'e')
+            .replaceAll('ê', 'e')
+            .replaceAll('í', 'i')
+            .replaceAll('ó', 'o')
+            .replaceAll('ô', 'o')
+            .replaceAll('õ', 'o')
+            .replaceAll('ú', 'u')
+            .replaceAll('ü', 'u')
+            .replaceAll('ç', 'c');
+      }
+
+      final normalizedQuery = normalize(query.trim());
+
+      // Ordenar resultados por relevância
+      results.sort((a, b) {
+        final aPlace = a.value;
+        final bPlace = b.value;
+
+        // Prioridade 1: locality exatamente igual ao termo de busca
+        final aLocalityMatch = normalize(aPlace.locality) == normalizedQuery;
+        final bLocalityMatch = normalize(bPlace.locality) == normalizedQuery;
+        if (aLocalityMatch && !bLocalityMatch) return -1;
+        if (!aLocalityMatch && bLocalityMatch) return 1;
+
+        // Prioridade 2: subAdministrativeArea exatamente igual
+        final aSubMatch = normalize(aPlace.subAdministrativeArea) == normalizedQuery;
+        final bSubMatch = normalize(bPlace.subAdministrativeArea) == normalizedQuery;
+        if (aSubMatch && !bSubMatch) return -1;
+        if (!aSubMatch && bSubMatch) return 1;
+
+        // Prioridade 3: locality contém o termo
+        final aLocalityContains = normalize(aPlace.locality).contains(normalizedQuery);
+        final bLocalityContains = normalize(bPlace.locality).contains(normalizedQuery);
+        if (aLocalityContains && !bLocalityContains) return -1;
+        if (!aLocalityContains && bLocalityContains) return 1;
+
+        return 0;
+      });
+
       setState(() {
-        _locationSuggestions = locations.take(5).toList();
-        _placemarkSuggestions = placemarks;
+        _locationSuggestions = results.take(5).map((e) => e.key).toList();
+        _placemarkSuggestions = results.take(5).map((e) => e.value).toList();
         _isSearchingLocation = false;
       });
     } catch (e) {
