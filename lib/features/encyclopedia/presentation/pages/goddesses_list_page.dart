@@ -50,63 +50,137 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
       backgroundColor: AppColors.darkBackground,
       body: Column(
         children: [
-          // Search bar
+          // Search bar com filtro ao lado (igual Grimório Ancestral)
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar deusas...',
-                prefixIcon: const Icon(Icons.search, color: AppColors.lilac),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _filterGoddesses('');
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppColors.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: _filterGoddesses,
-            ),
-          ),
-
-          // Origin filter chips
-          SizedBox(
-            height: 50,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
               children: [
-                _buildFilterChip(null, 'Todas'),
-                ...GoddessOrigin.values.map((origin) =>
-                    _buildFilterChip(origin, origin.displayName)),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Buscar deusas...',
+                      prefixIcon: const Icon(Icons.search, color: AppColors.lilac),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                _filterGoddesses('');
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppColors.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: _filterGoddesses,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<GoddessOrigin?>(
+                  icon: Icon(
+                    Icons.filter_list,
+                    color: _selectedOrigin != null ? AppColors.lilac : AppColors.softWhite,
+                  ),
+                  tooltip: 'Filtrar por origem',
+                  onSelected: (origin) {
+                    setState(() {
+                      _selectedOrigin = origin;
+                      _filterGoddesses(_searchController.text);
+                    });
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: null,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.public,
+                            size: 20,
+                            color: _selectedOrigin == null ? AppColors.lilac : AppColors.softWhite,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Todas as Origens',
+                            style: TextStyle(
+                              color: _selectedOrigin == null ? AppColors.lilac : null,
+                              fontWeight: _selectedOrigin == null ? FontWeight.bold : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    ...GoddessOrigin.values.map((origin) => PopupMenuItem(
+                          value: origin,
+                          child: Row(
+                            children: [
+                              Text(origin.emoji, style: const TextStyle(fontSize: 16)),
+                              const SizedBox(width: 8),
+                              Text(
+                                origin.displayName,
+                                style: TextStyle(
+                                  color: _selectedOrigin == origin ? AppColors.lilac : null,
+                                  fontWeight: _selectedOrigin == origin ? FontWeight.bold : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                  ],
+                ),
               ],
             ),
           ),
 
-          const SizedBox(height: 8),
+          // Indicador de filtro ativo
+          if (_selectedOrigin != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Chip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_selectedOrigin!.emoji),
+                        const SizedBox(width: 4),
+                        Text(_selectedOrigin!.displayName),
+                      ],
+                    ),
+                    deleteIcon: const Icon(Icons.close, size: 16),
+                    onDeleted: () {
+                      setState(() {
+                        _selectedOrigin = null;
+                        _filterGoddesses(_searchController.text);
+                      });
+                    },
+                    backgroundColor: AppColors.lilac.withOpacity(0.2),
+                    side: const BorderSide(color: AppColors.lilac),
+                    labelStyle: const TextStyle(color: AppColors.lilac, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
 
           // Results count
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              '${_filteredGoddesses.length} deusa${_filteredGoddesses.length != 1 ? 's' : ''} encontrada${_filteredGoddesses.length != 1 ? 's' : ''}',
-              style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.6),
-                fontSize: 12,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${_filteredGoddesses.length} deusa${_filteredGoddesses.length != 1 ? 's' : ''} encontrada${_filteredGoddesses.length != 1 ? 's' : ''}',
+                style: TextStyle(
+                  color: AppColors.softWhite.withOpacity(0.6),
+                  fontSize: 12,
+                ),
               ),
             ),
           ),
-
-          const SizedBox(height: 8),
 
           // Goddesses list
           Expanded(
@@ -120,32 +194,6 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(GoddessOrigin? origin, String label) {
-    final isSelected = _selectedOrigin == origin;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (selected) {
-          setState(() {
-            _selectedOrigin = selected ? origin : null;
-            _filterGoddesses(_searchController.text);
-          });
-        },
-        backgroundColor: AppColors.surface,
-        selectedColor: AppColors.lilac.withOpacity(0.3),
-        labelStyle: TextStyle(
-          color: isSelected ? AppColors.lilac : AppColors.softWhite,
-          fontSize: 12,
-        ),
-        side: BorderSide(
-          color: isSelected ? AppColors.lilac : Colors.transparent,
-        ),
       ),
     );
   }
