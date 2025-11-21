@@ -43,10 +43,6 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Deusas'),
-        backgroundColor: AppColors.darkBackground,
-      ),
       backgroundColor: AppColors.darkBackground,
       body: Column(
         children: [

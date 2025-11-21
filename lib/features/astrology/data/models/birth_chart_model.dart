@@ -148,17 +148,17 @@ class BirthChartModel {
 
   factory BirthChartModel.fromJson(Map<String, dynamic> json) {
     return BirthChartModel(
-      id: json['id'],
-      userId: json['userId'],
+      id: json['id'] ?? '',
+      userId: json['userId'] ?? '',
       birthDate: DateTime.parse(json['birthDate']),
       birthTime: TimeOfDay(
-        hour: json['birthTimeHour'],
-        minute: json['birthTimeMinute'],
+        hour: json['birthTimeHour'] ?? 12,
+        minute: json['birthTimeMinute'] ?? 0,
       ),
-      birthPlace: json['birthPlace'],
-      latitude: json['latitude'],
-      longitude: json['longitude'],
-      timezone: json['timezone'],
+      birthPlace: json['birthPlace'] ?? 'Local desconhecido',
+      latitude: (json['latitude'] ?? -23.5505).toDouble(),
+      longitude: (json['longitude'] ?? -46.6333).toDouble(),
+      timezone: json['timezone'] ?? 'America/Sao_Paulo',
       unknownBirthTime: json['unknownBirthTime'] ?? false,
       planets: (json['planets'] as List)
           .map((p) => PlanetPosition.fromJson(p))
