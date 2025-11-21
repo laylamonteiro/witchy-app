@@ -83,6 +83,49 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
             MagicalCard(
               child: Column(
                 children: [
+                  // Botões de embaralhar/restaurar acima da roda
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed: _shuffleLetters,
+                        icon: const Icon(Icons.auto_awesome),
+                        tooltip: 'Embaralhar letras',
+                        style: IconButton.styleFrom(
+                          backgroundColor: _isShuffled
+                              ? AppColors.lilac.withOpacity(0.3)
+                              : AppColors.surface,
+                          foregroundColor: AppColors.lilac,
+                        ),
+                      ),
+                      if (_isShuffled) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: _resetLetters,
+                          icon: const Icon(Icons.restart_alt),
+                          tooltip: 'Restaurar posições',
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.surface,
+                            foregroundColor: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (_isShuffled)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        'Modo Sigilo Nada',
+                        style: TextStyle(
+                          color: AppColors.lilac.withOpacity(0.7),
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+
                   // Desenho do sigilo
                   Container(
                     width: 280,
@@ -121,78 +164,76 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         _buildLegendItem(Colors.red.shade300, 'Fim'),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                   ],
 
-                  // Controles de visualização
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
+                  // Controles de visualização (lado a lado)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      FilterChip(
-                        label: Text(_showWheel ? 'Ocultar Roda' : 'Mostrar Roda'),
+                      ChoiceChip(
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _showWheel ? Icons.visibility : Icons.visibility_off,
+                              size: 16,
+                              color: _showWheel ? AppColors.lilac : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(_showWheel ? 'Roda' : 'Roda'),
+                          ],
+                        ),
                         selected: _showWheel,
                         onSelected: (value) {
                           setState(() {
                             _showWheel = value;
                           });
                         },
-                        selectedColor: AppColors.lilac.withOpacity(0.3),
-                        checkmarkColor: AppColors.lilac,
+                        selectedColor: AppColors.lilac.withOpacity(0.2),
+                        backgroundColor: AppColors.surface,
+                        labelStyle: TextStyle(
+                          color: _showWheel ? AppColors.lilac : AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                        side: BorderSide(
+                          color: _showWheel ? AppColors.lilac : Colors.transparent,
+                        ),
+                        showCheckmark: false,
                       ),
-                      FilterChip(
-                        label: Text(_showStartEnd ? 'Ocultar Pontos' : 'Mostrar Pontos'),
+                      const SizedBox(width: 12),
+                      ChoiceChip(
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _showStartEnd ? Icons.visibility : Icons.visibility_off,
+                              size: 16,
+                              color: _showStartEnd ? AppColors.starYellow : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(_showStartEnd ? 'Pontos' : 'Pontos'),
+                          ],
+                        ),
                         selected: _showStartEnd,
                         onSelected: (value) {
                           setState(() {
                             _showStartEnd = value;
                           });
                         },
-                        selectedColor: AppColors.starYellow.withOpacity(0.3),
-                        checkmarkColor: AppColors.starYellow,
+                        selectedColor: AppColors.starYellow.withOpacity(0.2),
+                        backgroundColor: AppColors.surface,
+                        labelStyle: TextStyle(
+                          color: _showStartEnd ? AppColors.starYellow : AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                        side: BorderSide(
+                          color: _showStartEnd ? AppColors.starYellow : Colors.transparent,
+                        ),
+                        showCheckmark: false,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Botão de embaralhar
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _shuffleLetters,
-                        icon: const Icon(Icons.shuffle, size: 18),
-                        label: const Text('Embaralhar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lilac.withOpacity(0.2),
-                          foregroundColor: AppColors.lilac,
-                        ),
-                      ),
-                      if (_isShuffled) ...[
-                        const SizedBox(width: 8),
-                        TextButton.icon(
-                          onPressed: _resetLetters,
-                          icon: const Icon(Icons.refresh, size: 18),
-                          label: const Text('Restaurar'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (_isShuffled) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Letras embaralhadas (como no "Sigilo Nada")',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
                 ],
               ),
             ),
