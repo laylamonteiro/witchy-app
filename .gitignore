@@ -122,5 +122,6 @@ visual-inspo/
 
 # API Credentials (NEVER commit these!)
 **/groq_credentials.dart
+!lib/core/ai/groq_credentials.dart
 .env
 *.env
