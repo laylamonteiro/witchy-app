@@ -81,21 +81,25 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                PopupMenuButton<GoddessOrigin?>(
+                PopupMenuButton<String>(
                   icon: Icon(
                     Icons.filter_list,
                     color: _selectedOrigin != null ? AppColors.lilac : AppColors.softWhite,
                   ),
                   tooltip: 'Filtrar por origem',
-                  onSelected: (origin) {
+                  onSelected: (value) {
                     setState(() {
-                      _selectedOrigin = origin;
+                      if (value == 'all') {
+                        _selectedOrigin = null;
+                      } else {
+                        _selectedOrigin = GoddessOrigin.values.firstWhere((o) => o.name == value);
+                      }
                       _filterGoddesses(_searchController.text);
                     });
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem(
-                      value: null,
+                      value: 'all',
                       child: Row(
                         children: [
                           Icon(
@@ -116,7 +120,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                     ),
                     const PopupMenuDivider(),
                     ...GoddessOrigin.values.map((origin) => PopupMenuItem(
-                          value: origin,
+                          value: origin.name,
                           child: Row(
                             children: [
                               Text(origin.emoji, style: const TextStyle(fontSize: 16)),
@@ -140,7 +144,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
           // Indicador de filtro ativo
           if (_selectedOrigin != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Chip(
@@ -166,21 +170,6 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                 ],
               ),
             ),
-
-          // Results count
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${_filteredGoddesses.length} deusa${_filteredGoddesses.length != 1 ? 's' : ''} encontrada${_filteredGoddesses.length != 1 ? 's' : ''}',
-                style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.6),
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
 
           // Goddesses list
           Expanded(

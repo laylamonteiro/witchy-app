@@ -35,7 +35,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       // Recalcular os pontos do sigilo com as novas posições
       _shuffledPoints = SigilWheel.generateSigilPointsWithCustom(
         widget.sigil.intention,
-        const Size(320, 320),
+        const Size(360, 360),
         _shuffledPositions,
       );
     });
@@ -83,63 +83,20 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
             MagicalCard(
               child: Column(
                 children: [
-                  // Botões de embaralhar/restaurar acima da roda
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: _shuffleLetters,
-                        icon: const Icon(Icons.auto_awesome),
-                        tooltip: 'Embaralhar letras',
-                        style: IconButton.styleFrom(
-                          backgroundColor: _isShuffled
-                              ? AppColors.lilac.withOpacity(0.3)
-                              : AppColors.surface,
-                          foregroundColor: AppColors.lilac,
-                        ),
-                      ),
-                      if (_isShuffled) ...[
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: _resetLetters,
-                          icon: const Icon(Icons.restart_alt),
-                          tooltip: 'Restaurar posições',
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppColors.surface,
-                            foregroundColor: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (_isShuffled)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        'Modo Sigilo Nada',
-                        style: TextStyle(
-                          color: AppColors.lilac.withOpacity(0.7),
-                          fontSize: 11,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-
                   // Desenho do sigilo
                   Container(
-                    width: 320,
-                    height: 320,
+                    width: 360,
+                    height: 360,
                     decoration: BoxDecoration(
                       color: AppColors.background,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: CustomPaint(
-                      size: const Size(320, 320),
+                      size: const Size(360, 360),
                       painter: _showWheel
                           ? WitchWheelPainter(
                               showLetters: true,
-                              radius: 120.0,
+                              radius: 140.0,
                               highlightedLetters: widget.sigil.processedLetters.split('').toSet(),
                               customPositions: _shuffledPositions,
                             )
@@ -167,7 +124,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                     const SizedBox(height: 12),
                   ],
 
-                  // Controles de visualização (lado a lado)
+                  // Controles de visualização (todos lado a lado)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -181,7 +138,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                               color: _showWheel ? AppColors.lilac : AppColors.textSecondary,
                             ),
                             const SizedBox(width: 4),
-                            Text(_showWheel ? 'Roda' : 'Roda'),
+                            const Text('Roda'),
                           ],
                         ),
                         selected: _showWheel,
@@ -201,7 +158,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         ),
                         showCheckmark: false,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       ChoiceChip(
                         label: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -212,7 +169,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                               color: _showStartEnd ? AppColors.starYellow : AppColors.textSecondary,
                             ),
                             const SizedBox(width: 4),
-                            Text(_showStartEnd ? 'Pontos' : 'Pontos'),
+                            const Text('Pontos'),
                           ],
                         ),
                         selected: _showStartEnd,
@@ -232,6 +189,30 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         ),
                         showCheckmark: false,
                       ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: _shuffleLetters,
+                        icon: const Icon(Icons.shuffle, size: 20),
+                        tooltip: 'Embaralhar letras',
+                        style: IconButton.styleFrom(
+                          backgroundColor: _isShuffled
+                              ? AppColors.mint.withOpacity(0.3)
+                              : AppColors.surface,
+                          foregroundColor: _isShuffled ? AppColors.mint : AppColors.textSecondary,
+                        ),
+                      ),
+                      if (_isShuffled) ...[
+                        const SizedBox(width: 4),
+                        IconButton(
+                          onPressed: _resetLetters,
+                          icon: const Icon(Icons.restart_alt, size: 20),
+                          tooltip: 'Restaurar posições',
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.surface,
+                            foregroundColor: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
