@@ -72,9 +72,9 @@ class WitchWheelPainter extends CustomPainter {
     canvas.drawCircle(center, radius * 0.06, centerBorderPaint);
 
     // Desenhar linhas divisórias para cada anel
-    _drawDivisionLines(canvas, center, innerBorder, 6, 0); // 6 divisões (A-F)
-    _drawDivisionLines(canvas, center, middleBorder, 8, innerBorder); // 8 divisões (G-N)
-    _drawDivisionLines(canvas, center, outerBorder, 12, middleBorder); // 12 divisões (O-Z)
+    _drawDivisionLines(canvas, center, innerBorder, 6, 0, radius); // 6 divisões (A-F)
+    _drawDivisionLines(canvas, center, middleBorder, 8, innerBorder, radius); // 8 divisões (G-N)
+    _drawDivisionLines(canvas, center, outerBorder, 12, middleBorder, radius); // 12 divisões (O-Z)
 
     if (showLetters) {
       final positions = customPositions ?? SigilWheel.letterPositions;
@@ -100,6 +100,7 @@ class WitchWheelPainter extends CustomPainter {
     double outerRadius,
     int divisions,
     double innerRadius,
+    double radius,
   ) {
     final linePaint = Paint()
       ..color = AppColors.surfaceBorder.withOpacity(0.5)

@@ -8,6 +8,8 @@ import 'elements_page.dart';
 import 'goddesses_list_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
+import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
+import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class EncyclopediaPage extends StatelessWidget {
@@ -16,7 +18,7 @@ class EncyclopediaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 9,
+      length: 11,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Enciclopédia Mágica'),
@@ -32,6 +34,8 @@ class EncyclopediaPage extends StatelessWidget {
                 labelStyle: const TextStyle(fontSize: 14),
                 unselectedLabelStyle: const TextStyle(fontSize: 14),
                 tabs: const [
+                  Tab(text: 'Lua'),
+                  Tab(text: 'Sabbats'),
                   Tab(text: 'Cristais'),
                   Tab(text: 'Ervas'),
                   Tab(text: 'Metais'),
@@ -48,6 +52,8 @@ class EncyclopediaPage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
+            LunarCalendarPage(),
+            WheelOfYearPage(),
             CrystalsListPage(),
             HerbsListPage(),
             MetalsListPage(),
