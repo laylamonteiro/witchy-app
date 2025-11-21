@@ -184,18 +184,16 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
   }
 
   Widget _buildGoddessCard(GoddessModel goddess) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: MagicalCard(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => GoddessDetailPage(goddess: goddess),
-            ),
-          );
-        },
-        child: Row(
+    return MagicalCard(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GoddessDetailPage(goddess: goddess),
+          ),
+        );
+      },
+      child: Row(
           children: [
             // Emoji
             Container(
@@ -276,7 +274,6 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
             ),
           ],
         ),
-      ),
     );
   }
 
