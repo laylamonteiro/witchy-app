@@ -170,7 +170,6 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
           // Goddesses list
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
               itemCount: _filteredGoddesses.length,
               itemBuilder: (context, index) {
                 final goddess = _filteredGoddesses[index];
