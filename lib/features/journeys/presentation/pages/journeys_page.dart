@@ -171,7 +171,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -189,8 +189,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          indicatorColor: AppTheme.primary,
-          labelColor: AppTheme.primary,
+          indicatorColor: AppColors.lilac,
+          labelColor: AppColors.lilac,
           unselectedLabelColor: Colors.white54,
           tabs: const [
             Tab(text: 'Todas'),
@@ -201,7 +201,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.lilac))
           : Column(
               children: [
                 // XP Header
@@ -241,12 +241,12 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primary.withValues(alpha: 0.3),
-            AppTheme.secondary.withValues(alpha: 0.3),
+            AppColors.lilac.withValues(alpha: 0.3),
+            AppColors.pink.withValues(alpha: 0.3),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -256,7 +256,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [AppTheme.primary, AppTheme.secondary],
+                colors: [AppColors.lilac, AppColors.pink],
               ),
             ),
             child: Center(
@@ -297,7 +297,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                   child: LinearProgressIndicator(
                     value: xpInLevel / xpForNextLevel,
                     backgroundColor: Colors.white24,
-                    valueColor: const AlwaysStoppedAnimation(AppTheme.accent),
+                    valueColor: const AlwaysStoppedAnimation(AppColors.starYellow),
                     minHeight: 6,
                   ),
                 ),
@@ -338,7 +338,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
 
     return RefreshIndicator(
       onRefresh: _loadUserStats,
-      color: AppTheme.primary,
+      color: AppColors.lilac,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: journeys.length,
@@ -367,7 +367,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCompleted
@@ -465,18 +465,18 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppTheme.accent.withValues(alpha: 0.2),
+                        color: AppColors.starYellow.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star, color: AppTheme.accent, size: 14),
+                          const Icon(Icons.star, color: AppColors.starYellow, size: 14),
                           const SizedBox(width: 4),
                           Text(
                             '$earnedXp/${journey.xpReward} XP',
                             style: const TextStyle(
-                              color: AppTheme.accent,
+                              color: AppColors.starYellow,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -506,7 +506,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
         expand: false,
         builder: (context, scrollController) => Container(
           decoration: const BoxDecoration(
-            color: AppTheme.cardBackground,
+            color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -672,13 +672,13 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppTheme.accent.withValues(alpha: 0.2),
+                                color: AppColors.starYellow.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 '+${step.xpReward} XP',
                                 style: const TextStyle(
-                                  color: AppTheme.accent,
+                                  color: AppColors.starYellow,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),

@@ -228,7 +228,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -251,10 +251,10 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.lilac))
           : RefreshIndicator(
               onRefresh: _loadStats,
-              color: AppTheme.primary,
+              color: AppColors.lilac,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
@@ -297,21 +297,21 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primary.withValues(alpha: 0.3),
-            AppTheme.secondary.withValues(alpha: 0.3),
+            AppColors.lilac.withValues(alpha: 0.3),
+            AppColors.pink.withValues(alpha: 0.3),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
           const Icon(
             Icons.auto_awesome,
             size: 48,
-            color: AppTheme.accent,
+            color: AppColors.starYellow,
           ),
           const SizedBox(height: 12),
           Text(
@@ -373,7 +373,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -524,7 +524,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -564,7 +564,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -659,7 +659,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
