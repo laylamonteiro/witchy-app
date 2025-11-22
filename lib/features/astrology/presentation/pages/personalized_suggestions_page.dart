@@ -492,49 +492,71 @@ class _PersonalizedSuggestionsPageState
                     ],
                   ),
                   const SizedBox(height: 6),
+                  // Título "Efeitos" sempre visível
+                  Text(
+                    'Efeitos:',
+                    style: TextStyle(
+                      color: AppColors.lilac,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   // Conteúdo com blur para free
-                  if (isFree) ...[
+                  if (isFree)
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(4),
                       child: ImageFiltered(
                         imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Efeitos: ${info['effects']}',
-                              style: TextStyle(
-                                color: AppColors.softWhite.withOpacity(0.8),
-                                fontSize: 12,
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Dicas: ${info['tips']}',
-                              style: TextStyle(
-                                color: AppColors.softWhite.withOpacity(0.6),
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          info['effects']!,
+                          style: TextStyle(
+                            color: AppColors.softWhite.withOpacity(0.8),
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
                         ),
                       ),
-                    ),
-                  ] else ...[
+                    )
+                  else
                     Text(
-                      'Efeitos: ${info['effects']}',
+                      info['effects']!,
                       style: TextStyle(
                         color: AppColors.softWhite.withOpacity(0.8),
                         fontSize: 12,
                         height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                  const SizedBox(height: 8),
+                  // Título "Dicas" sempre visível
+                  Text(
+                    'Dicas:',
+                    style: TextStyle(
+                      color: AppColors.lilac,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  if (isFree)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                        child: Text(
+                          info['tips']!,
+                          style: TextStyle(
+                            color: AppColors.softWhite.withOpacity(0.6),
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
                     Text(
-                      'Dicas: ${info['tips']}',
+                      info['tips']!,
                       style: TextStyle(
                         color: AppColors.softWhite.withOpacity(0.6),
                         fontSize: 12,
@@ -542,7 +564,6 @@ class _PersonalizedSuggestionsPageState
                         height: 1.4,
                       ),
                     ),
-                  ],
                 ],
               ),
             );
@@ -567,89 +588,25 @@ class _PersonalizedSuggestionsPageState
       EnergyLevel.harmonious: Colors.green,
     };
 
-    // Widget do conteúdo (descrição, práticas, aspectos)
-    Widget contentWidget = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          suggestion.description,
-          style: const TextStyle(
-            color: AppColors.softWhite,
-            fontSize: 14,
-            height: 1.5,
+    // Widget para aplicar blur apenas no texto de conteúdo
+    Widget blurIfFree(Widget child) {
+      if (isFree) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+            child: child,
           ),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Práticas Sugeridas:',
-          style: TextStyle(
-            color: AppColors.lilac,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...suggestion.practices.map((practice) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '• ',
-                  style: TextStyle(
-                    color: AppColors.lilac,
-                    fontSize: 14,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    practice,
-                    style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.9),
-                      fontSize: 12,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-        if (suggestion.relevantAspects.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          const Divider(color: AppColors.lilac),
-          const SizedBox(height: 8),
-          const Text(
-            'Aspectos Relevantes:',
-            style: TextStyle(
-              color: AppColors.lilac,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          ...suggestion.relevantAspects.map((aspect) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                aspect.description,
-                style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.7),
-                  fontSize: 11,
-                ),
-              ),
-            );
-          }),
-        ],
-      ],
-    );
+        );
+      }
+      return child;
+    }
 
     return MagicalCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título sempre visível
+          // Título principal sempre visível
           Row(
             children: [
               Text(
@@ -701,17 +658,88 @@ class _PersonalizedSuggestionsPageState
           const SizedBox(height: 12),
           const Divider(color: AppColors.lilac),
           const SizedBox(height: 8),
-          // Conteúdo com blur para free
-          if (isFree)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                child: contentWidget,
+          // Descrição - blur apenas no conteúdo
+          blurIfFree(
+            Text(
+              suggestion.description,
+              style: const TextStyle(
+                color: AppColors.softWhite,
+                fontSize: 14,
+                height: 1.5,
               ),
-            )
-          else
-            contentWidget,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Título "Práticas Sugeridas" sempre visível
+          const Text(
+            'Práticas Sugeridas:',
+            style: TextStyle(
+              color: AppColors.lilac,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Lista de práticas - blur apenas no conteúdo
+          ...suggestion.practices.map((practice) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '• ',
+                    style: TextStyle(
+                      color: AppColors.lilac,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Expanded(
+                    child: blurIfFree(
+                      Text(
+                        practice,
+                        style: TextStyle(
+                          color: AppColors.softWhite.withOpacity(0.9),
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          if (suggestion.relevantAspects.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Divider(color: AppColors.lilac),
+            const SizedBox(height: 8),
+            // Título "Aspectos Relevantes" sempre visível
+            const Text(
+              'Aspectos Relevantes:',
+              style: TextStyle(
+                color: AppColors.lilac,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            // Lista de aspectos - blur apenas no conteúdo
+            ...suggestion.relevantAspects.map((aspect) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: blurIfFree(
+                  Text(
+                    aspect.description,
+                    style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.7),
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
         ],
       ),
     );
