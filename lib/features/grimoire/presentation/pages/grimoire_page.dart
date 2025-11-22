@@ -141,7 +141,7 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: '🔮',
-            title: 'Oracle Cards',
+            title: 'Cartas do Oráculo',
             description: 'Mensagens e orientação do universo',
             onTap: () {
               Navigator.of(context).push(

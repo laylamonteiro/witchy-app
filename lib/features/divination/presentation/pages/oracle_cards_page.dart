@@ -119,7 +119,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Oracle Cards'),
+        title: const Text('Cartas do Oráculo'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,

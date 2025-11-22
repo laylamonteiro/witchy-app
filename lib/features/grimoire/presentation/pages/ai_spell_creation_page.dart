@@ -38,6 +38,9 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   }
 
   Future<void> _generateSpell() async {
+    // Esconder teclado
+    FocusScope.of(context).unfocus();
+
     print('✨ AISpellCreationPage: Iniciando geração de feitiço...');
 
     if (_intentionController.text.trim().isEmpty) {
@@ -334,43 +337,26 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => SpellDetailPage(
-                                    spell: _generatedSpell!,
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.visibility, size: 18),
-                            label: const Text('Detalhes', style: TextStyle(fontSize: 14)),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.lilac,
-                              side: const BorderSide(color: AppColors.lilac),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    Center(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => SpellDetailPage(
+                                spell: _generatedSpell!,
+                                showSaveButton: true,
+                              ),
                             ),
-                          ),
+                          );
+                        },
+                        icon: const Icon(Icons.visibility, size: 18),
+                        label: const Text('Ver Detalhes'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.lilac,
+                          foregroundColor: AppColors.darkBackground,
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _saveSpell,
-                            icon: const Icon(Icons.save, size: 18),
-                            label: const Text('Salvar', style: TextStyle(fontSize: 14)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.lilac,
-                              foregroundColor: AppColors.darkBackground,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),

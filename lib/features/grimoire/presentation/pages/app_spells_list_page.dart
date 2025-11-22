@@ -60,29 +60,85 @@ class _AppSpellsListPageState extends State<AppSpellsListPage> {
                       .toList()
                     ..sort((a, b) => a.displayName.compareTo(b.displayName));
 
-                  return PopupMenuButton<SpellCategory?>(
-                    icon: const Icon(Icons.filter_list),
-                    tooltip: 'Filtrar por categoria',
-                    onSelected: (category) {
-                      setState(() {
-                        _filterCategory = category;
-                      });
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: null,
-                        child: Text('Todas Categorias'),
-                      ),
-                      ...availableCategories.map((category) => PopupMenuItem(
-                            value: category,
+                  return Stack(
+                    children: [
+                      PopupMenuButton<SpellCategory?>(
+                        icon: Icon(
+                          Icons.filter_list,
+                          color: _filterCategory != null
+                              ? AppColors.lilac
+                              : null,
+                        ),
+                        tooltip: 'Filtrar por categoria',
+                        onSelected: (category) {
+                          FocusScope.of(context).unfocus();
+                          setState(() {
+                            _filterCategory = category;
+                          });
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: null,
                             child: Row(
                               children: [
-                                Text(category.icon),
+                                Icon(
+                                  _filterCategory == null
+                                      ? Icons.check
+                                      : Icons.filter_list_off,
+                                  size: 18,
+                                  color: _filterCategory == null
+                                      ? AppColors.lilac
+                                      : AppColors.softWhite,
+                                ),
                                 const SizedBox(width: 8),
-                                Text(category.displayName),
+                                Text(
+                                  'Todas Categorias',
+                                  style: TextStyle(
+                                    fontWeight: _filterCategory == null
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
                               ],
                             ),
-                          )),
+                          ),
+                          ...availableCategories.map((category) => PopupMenuItem(
+                                value: category,
+                                child: Row(
+                                  children: [
+                                    Text(category.icon),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      category.displayName,
+                                      style: TextStyle(
+                                        fontWeight: _filterCategory == category
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                    if (_filterCategory == category) ...[
+                                      const Spacer(),
+                                      const Icon(Icons.check, size: 18, color: AppColors.lilac),
+                                    ],
+                                  ],
+                                ),
+                              )),
+                        ],
+                      ),
+                      // Indicador de filtro ativo
+                      if (_filterCategory != null)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.lilac,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
                     ],
                   );
                 },
