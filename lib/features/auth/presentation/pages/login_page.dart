@@ -146,6 +146,8 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira seu email';
         }
+        // Permitir "admin" como login especial
+        if (value == 'admin') return null;
         if (!value.contains('@') || !value.contains('.')) {
           return 'Por favor, insira um email válido';
         }
@@ -179,6 +181,9 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira sua senha';
         }
+        // Permitir senha "admin" para login admin
+        final email = _emailController.text.trim();
+        if (email == 'admin' && value == 'admin') return null;
         if (value.length < 6) {
           return 'A senha deve ter pelo menos 6 caracteres';
         }
@@ -355,6 +360,20 @@ class _LoginPageState extends State<LoginPage> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
 
+      final authProvider = context.read<AuthProvider>();
+
+      // Login de admin especial (para desenvolvimento/teste)
+      if (email == 'admin' && password == 'admin') {
+        await authProvider.activateAdminMode();
+        await authProvider.updateProfile(email: 'admin@grimorio.app', displayName: 'Administrador');
+        await authProvider.markOnboardingSeen();
+
+        if (mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        }
+        return;
+      }
+
       // Usar Supabase se configurado, senão modo local
       if (SupabaseConfig.isConfigured) {
         final authRepo = SupabaseAuthRepository();
@@ -366,7 +385,6 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       // Atualizar estado local
-      final authProvider = context.read<AuthProvider>();
       await authProvider.updateProfile(email: email);
       await authProvider.markOnboardingSeen();
 
