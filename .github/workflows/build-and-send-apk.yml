@@ -36,6 +36,16 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Create Groq credentials file
+        run: |
+          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Groq API.
+          ///
+          class GroqCredentials {
+            static const apiKey = '${{ secrets.GROQ_API_KEY }}';
+          }
+          CREDENTIALS
+
       - name: Install dependencies
         run: flutter pub get
 

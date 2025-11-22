@@ -13,6 +13,12 @@ name: Build APK - Download no Celular
 #
 # LINK DIRETO PARA RELEASES:
 # https://github.com/laylamonteiro/witchy-app/releases
+#
+# CONFIGURAÇÃO NECESSÁRIA:
+# Adicione o secret GROQ_API_KEY nas configurações do repositório:
+# Settings > Secrets and variables > Actions > New repository secret
+# Nome: GROQ_API_KEY
+# Valor: sua chave da API do Groq
 
 on:
   workflow_dispatch:
@@ -52,6 +58,16 @@ jobs:
           flutter-version: "3.22.0"
           channel: stable
           cache: true
+
+      - name: Create Groq credentials file
+        run: |
+          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Groq API.
+          ///
+          class GroqCredentials {
+            static const apiKey = '${{ secrets.GROQ_API_KEY }}';
+          }
+          CREDENTIALS
 
       - name: Install dependencies
         run: flutter pub get
