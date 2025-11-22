@@ -308,6 +308,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Atualiza apenas o nome do usuário
+  Future<void> updateDisplayName(String name) async {
+    _currentUser = _currentUser.copyWith(displayName: name);
+    await _saveUser();
+    notifyListeners();
+  }
+
   /// Simula upgrade para premium (para testes - será substituído por compra real)
   Future<void> upgradeToPremium() async {
     _currentUser = _currentUser.copyWith(

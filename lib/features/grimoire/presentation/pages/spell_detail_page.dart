@@ -10,8 +10,31 @@ import 'spell_form_page.dart';
 
 class SpellDetailPage extends StatelessWidget {
   final SpellModel spell;
+  final bool showSaveButton;
 
-  const SpellDetailPage({super.key, required this.spell});
+  const SpellDetailPage({
+    super.key,
+    required this.spell,
+    this.showSaveButton = false,
+  });
+
+  Future<void> _saveSpell(BuildContext context) async {
+    final provider = context.read<SpellProvider>();
+    await provider.addSpell(spell);
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Feitiço salvo no seu grimório! ✨'),
+        backgroundColor: AppColors.success,
+      ),
+    );
+
+    // Voltar duas páginas (SpellDetailPage e AISpellCreationPage)
+    Navigator.of(context).pop();
+    Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,21 +44,29 @@ class SpellDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Detalhes'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SpellFormPage(spell: spell),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _confirmDelete(context),
-          ),
+          if (showSaveButton) ...[
+            IconButton(
+              icon: const Icon(Icons.save_alt),
+              tooltip: 'Salvar no Grimório',
+              onPressed: () => _saveSpell(context),
+            ),
+          ] else ...[
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SpellFormPage(spell: spell),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _confirmDelete(context),
+            ),
+          ],
         ],
       ),
       body: SingleChildScrollView(

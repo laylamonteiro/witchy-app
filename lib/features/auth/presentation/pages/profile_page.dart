@@ -56,42 +56,58 @@ class ProfilePage extends StatelessWidget {
   Widget _buildProfileHeader(BuildContext context, UserModel user) {
     return Column(
       children: [
-        // Avatar
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: _getRoleColors(user.role),
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _getRoleColors(user.role).first.withValues(alpha: 0.4),
-                blurRadius: 20,
-                spreadRadius: 2,
+        // Avatar com botão de editar
+        Stack(
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: _getRoleColors(user.role),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _getRoleColors(user.role).first.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Center(
-            child: Icon(
-              _getRoleIcon(user.role),
-              color: Colors.white,
-              size: 48,
+              child: Center(
+                child: Icon(
+                  _getRoleIcon(user.role),
+                  color: Colors.white,
+                  size: 48,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
         const SizedBox(height: 16),
-        // Nome
-        Text(
-          user.displayName ?? 'Bruxa Anônima',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+        // Nome com botão de editar
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              user.displayName ?? 'Bruxa Anônima',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.edit, color: Color(0xFF9C27B0), size: 20),
+              onPressed: () => _showEditNameDialog(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         // Badge de role
@@ -113,6 +129,65 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showEditNameDialog(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
+    final controller = TextEditingController(
+      text: authProvider.currentUser.displayName ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Text(
+          'Editar Nome',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Seu nome mágico',
+            hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: const Color(0xFF9C27B0).withOpacity(0.5)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF9C27B0)),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                await authProvider.updateDisplayName(name);
+              }
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF9C27B0),
+            ),
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
     );
   }
 
