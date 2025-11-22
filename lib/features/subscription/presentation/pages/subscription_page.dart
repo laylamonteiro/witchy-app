@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -38,7 +37,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -60,7 +59,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           if (_isLoading) {
             return const Center(
               child: CircularProgressIndicator(
-                color: AppTheme.primary,
+                color: AppColors.lilac,
               ),
             );
           }
@@ -106,17 +105,17 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         gradient: isPro
             ? LinearGradient(
                 colors: [
-                  AppTheme.primary.withValues(alpha: 0.3),
-                  AppTheme.secondary.withValues(alpha: 0.3),
+                  AppColors.lilac.withValues(alpha: 0.3),
+                  AppColors.pink.withValues(alpha: 0.3),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : null,
-        color: isPro ? null : AppTheme.cardBackground,
+        color: isPro ? null : AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isPro ? AppTheme.primary : Colors.white24,
+          color: isPro ? AppColors.lilac : Colors.white24,
           width: isPro ? 2 : 1,
         ),
       ),
@@ -126,7 +125,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           Icon(
             isPro ? Icons.star : Icons.star_border,
             size: 48,
-            color: isPro ? AppTheme.accent : Colors.white54,
+            color: isPro ? AppColors.starYellow : Colors.white54,
           ),
           const SizedBox(height: 12),
 
@@ -147,7 +146,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               const Text(
                 'Acesso Vitalicio',
                 style: TextStyle(
-                  color: AppTheme.accent,
+                  color: AppColors.starYellow,
                   fontSize: 14,
                 ),
               )
@@ -177,7 +176,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -207,7 +206,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppTheme.accent),
+          Icon(icon, size: 20, color: AppColors.starYellow),
           const SizedBox(width: 12),
           Text(
             text,
@@ -230,7 +229,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           child: ElevatedButton(
             onPressed: _showPaywall,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
+              backgroundColor: AppColors.lilac,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -259,7 +258,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.cardBackground,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
