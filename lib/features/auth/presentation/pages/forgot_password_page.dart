@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/config/supabase_config.dart';
+import '../../data/repositories/supabase_auth_repository.dart';
 import 'login_page.dart';
 
 /// Tela de recuperação de senha
@@ -282,9 +284,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implementar recuperação real com Supabase
-      // Por enquanto, simula envio
-      await Future.delayed(const Duration(seconds: 2));
+      final email = _emailController.text.trim();
+
+      // Usar Supabase se configurado
+      if (SupabaseConfig.isConfigured) {
+        final authRepo = SupabaseAuthRepository();
+        final result = await authRepo.sendPasswordResetEmail(email);
+
+        if (!result.success) {
+          throw Exception(result.errorMessage ?? 'Erro ao enviar email');
+        }
+      } else {
+        // Simular envio se Supabase não configurado
+        await Future.delayed(const Duration(seconds: 2));
+      }
 
       if (mounted) {
         setState(() {
@@ -297,7 +310,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao enviar email: $e'),
+            content: Text('Erro ao enviar email: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: AppColors.alert,
           ),
         );
@@ -309,8 +322,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implementar reenvio real com Supabase
-      await Future.delayed(const Duration(seconds: 2));
+      final email = _emailController.text.trim();
+
+      // Usar Supabase se configurado
+      if (SupabaseConfig.isConfigured) {
+        final authRepo = SupabaseAuthRepository();
+        final result = await authRepo.sendPasswordResetEmail(email);
+
+        if (!result.success) {
+          throw Exception(result.errorMessage ?? 'Erro ao reenviar email');
+        }
+      } else {
+        await Future.delayed(const Duration(seconds: 2));
+      }
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -326,7 +350,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao reenviar: $e'),
+            content: Text('Erro ao reenviar: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: AppColors.alert,
           ),
         );

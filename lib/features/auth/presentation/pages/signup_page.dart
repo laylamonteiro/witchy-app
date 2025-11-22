@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
+import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'login_page.dart';
 
@@ -469,16 +471,30 @@ class _SignupPageState extends State<SignupPage> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implementar cadastro real com Supabase
-      // Por enquanto, simula cadastro local
-      await Future.delayed(const Duration(seconds: 1));
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+      final displayName = _nameController.text.trim();
+
+      // Usar Supabase se configurado
+      if (SupabaseConfig.isConfigured) {
+        final authRepo = SupabaseAuthRepository();
+        final result = await authRepo.signUpWithEmail(
+          email: email,
+          password: password,
+          displayName: displayName,
+        );
+
+        if (!result.success) {
+          throw Exception(result.errorMessage ?? 'Erro ao criar conta');
+        }
+      }
 
       final authProvider = context.read<AuthProvider>();
 
-      // Criar usuário local
+      // Atualizar perfil local também
       await authProvider.updateProfile(
-        displayName: _nameController.text.trim(),
-        email: _emailController.text.trim(),
+        displayName: displayName,
+        email: email,
       );
 
       // Marcar onboarding como visto (nova conta não precisa ver)
@@ -498,9 +514,20 @@ class _SignupPageState extends State<SignupPage> {
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage = 'Erro ao criar conta';
+        if (e.toString().contains('already')) {
+          errorMessage = 'Este email já está em uso';
+        } else if (e.toString().contains('password')) {
+          errorMessage = 'A senha deve ter pelo menos 6 caracteres';
+        } else if (e.toString().contains('email')) {
+          errorMessage = 'Email inválido';
+        } else {
+          errorMessage = e.toString().replaceAll('Exception: ', '');
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao criar conta: $e'),
+            content: Text(errorMessage),
             backgroundColor: AppColors.alert,
           ),
         );
@@ -512,23 +539,99 @@ class _SignupPageState extends State<SignupPage> {
     }
   }
 
-  void _handleGoogleSignup() {
-    // TODO: Implementar cadastro com Google
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cadastro com Google será implementado em breve'),
-        backgroundColor: AppColors.info,
-      ),
-    );
+  Future<void> _handleGoogleSignup() async {
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Você precisa aceitar os termos de uso'),
+          backgroundColor: AppColors.alert,
+        ),
+      );
+      return;
+    }
+
+    if (!SupabaseConfig.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cadastro com Google não disponível no momento'),
+          backgroundColor: AppColors.info,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authRepo = SupabaseAuthRepository();
+      final result = await authRepo.signInWithGoogle();
+
+      if (!result.success) {
+        throw Exception(result.errorMessage ?? 'Erro no cadastro com Google');
+      }
+
+      // OAuth vai redirecionar, então não precisamos fazer nada aqui
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro no cadastro com Google: $e'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  void _handleAppleSignup() {
-    // TODO: Implementar cadastro com Apple
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cadastro com Apple será implementado em breve'),
-        backgroundColor: AppColors.info,
-      ),
-    );
+  Future<void> _handleAppleSignup() async {
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Você precisa aceitar os termos de uso'),
+          backgroundColor: AppColors.alert,
+        ),
+      );
+      return;
+    }
+
+    if (!SupabaseConfig.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cadastro com Apple não disponível no momento'),
+          backgroundColor: AppColors.info,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authRepo = SupabaseAuthRepository();
+      final result = await authRepo.signInWithApple();
+
+      if (!result.success) {
+        throw Exception(result.errorMessage ?? 'Erro no cadastro com Apple');
+      }
+
+      // OAuth vai redirecionar, então não precisamos fazer nada aqui
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro no cadastro com Apple: $e'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/config/supabase_config.dart';
+import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'forgot_password_page.dart';
 import 'signup_page.dart';
@@ -350,24 +352,32 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implementar login real com Supabase
-      // Por enquanto, simula login local
-      await Future.delayed(const Duration(seconds: 1));
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
 
+      // Usar Supabase se configurado, senão modo local
+      if (SupabaseConfig.isConfigured) {
+        final authRepo = SupabaseAuthRepository();
+        final result = await authRepo.signInWithEmail(email, password);
+
+        if (!result.success) {
+          throw Exception(result.errorMessage ?? 'Erro ao fazer login');
+        }
+      }
+
+      // Atualizar estado local
       final authProvider = context.read<AuthProvider>();
-      await authProvider.updateProfile(
-        email: _emailController.text.trim(),
-      );
+      await authProvider.updateProfile(email: email);
+      await authProvider.markOnboardingSeen();
 
       if (mounted) {
-        // Navegar para home
         Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao fazer login: $e'),
+            content: Text('$e'.replaceAll('Exception: ', '')),
             backgroundColor: AppColors.alert,
           ),
         );
@@ -379,23 +389,67 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _handleGoogleLogin() {
-    // TODO: Implementar login com Google
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Login com Google será implementado em breve'),
-        backgroundColor: AppColors.info,
-      ),
-    );
+  Future<void> _handleGoogleLogin() async {
+    if (!SupabaseConfig.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login social não disponível no momento'),
+          backgroundColor: AppColors.info,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final authRepo = SupabaseAuthRepository();
+      await authRepo.signInWithGoogle();
+      // O resultado vem via listener de auth state
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro no login com Google: $e'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  void _handleAppleLogin() {
-    // TODO: Implementar login com Apple
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Login com Apple será implementado em breve'),
-        backgroundColor: AppColors.info,
-      ),
-    );
+  Future<void> _handleAppleLogin() async {
+    if (!SupabaseConfig.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login social não disponível no momento'),
+          backgroundColor: AppColors.info,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final authRepo = SupabaseAuthRepository();
+      await authRepo.signInWithApple();
+      // O resultado vem via listener de auth state
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro no login com Apple: $e'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 }

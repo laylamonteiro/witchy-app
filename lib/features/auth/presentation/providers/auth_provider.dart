@@ -364,4 +364,18 @@ class AuthProvider extends ChangeNotifier {
     _hasSeenOnboarding = false;
     notifyListeners();
   }
+
+  /// Faz logout do usuário (mantém preferências locais)
+  Future<void> signOut() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Mantém hasSeenOnboarding para não mostrar onboarding novamente
+    // Limpa apenas dados do usuário
+    await prefs.remove(_userKey);
+    await prefs.remove(_isOriginalAdminKey);
+
+    _currentUser = UserModel.defaultUser();
+    _isOriginalAdmin = false;
+    notifyListeners();
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
+import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/premium_blur_widget.dart';
 import '../widgets/profile_avatar_picker.dart';
@@ -419,9 +421,82 @@ class ProfilePage extends StatelessWidget {
               // TODO: Mostrar sobre
             },
           ),
+          _buildDivider(),
+          _buildOptionTile(
+            icon: Icons.logout,
+            title: 'Sair da Conta',
+            textColor: const Color(0xFFF44336),
+            onTap: () => _showLogoutConfirmation(context, authProvider),
+          ),
         ],
       ),
     );
+  }
+
+  void _showLogoutConfirmation(BuildContext context, AuthProvider authProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Text(
+          'Sair da Conta',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Tem certeza que deseja sair?\nSeus dados locais serão mantidos.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _handleLogout(context, authProvider);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF44336),
+            ),
+            child: const Text(
+              'Sair',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleLogout(BuildContext context, AuthProvider authProvider) async {
+    try {
+      // Logout do Supabase se configurado
+      if (SupabaseConfig.isConfigured) {
+        final authRepo = SupabaseAuthRepository();
+        await authRepo.signOut();
+      }
+
+      // Limpar estado local
+      await authProvider.signOut();
+
+      // Navegar para tela de welcome
+      if (context.mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao sair: $e'),
+            backgroundColor: const Color(0xFFF44336),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildAdminOptions(BuildContext context, AuthProvider authProvider) {
@@ -522,16 +597,18 @@ class ProfilePage extends StatelessWidget {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    Color? textColor,
   }) {
+    final color = textColor ?? Colors.white;
     return ListTile(
-      leading: Icon(icon, color: Colors.white70),
+      leading: Icon(icon, color: textColor ?? Colors.white70),
       title: Text(
         title,
-        style: const TextStyle(color: Colors.white),
+        style: TextStyle(color: color),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_right,
-        color: Colors.white38,
+        color: textColor?.withValues(alpha: 0.5) ?? Colors.white38,
       ),
       onTap: onTap,
     );
