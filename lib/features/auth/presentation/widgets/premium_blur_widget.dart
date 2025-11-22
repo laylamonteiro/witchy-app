@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
 
 /// Widget que aplica blur em conteúdo premium para usuários free
+/// Mostra o conteúdo com blur simples, sem overlay nem botões
 class PremiumBlurWidget extends StatelessWidget {
   /// O conteúdo que será mostrado (com blur se não tiver acesso)
   final Widget child;
@@ -15,22 +16,22 @@ class PremiumBlurWidget extends StatelessWidget {
   /// Intensidade do blur (0-20)
   final double blurIntensity;
 
-  /// Mensagem customizada para o overlay
+  /// Mensagem customizada (não usada mais, mantido para compatibilidade)
   final String? customMessage;
 
-  /// Se deve mostrar o botão de upgrade
+  /// Se deve mostrar o botão de upgrade (não usada mais, mantido para compatibilidade)
   final bool showUpgradeButton;
 
-  /// Callback quando o botão de upgrade é pressionado
+  /// Callback quando o botão de upgrade é pressionado (não usada mais)
   final VoidCallback? onUpgradePressed;
 
   const PremiumBlurWidget({
     super.key,
     required this.child,
     required this.feature,
-    this.blurIntensity = 8.0,
+    this.blurIntensity = 6.0,
     this.customMessage,
-    this.showUpgradeButton = true,
+    this.showUpgradeButton = false,
     this.onUpgradePressed,
   });
 
@@ -44,16 +45,8 @@ class PremiumBlurWidget extends StatelessWidget {
           return child;
         }
 
-        return _buildBlurredContent(context, access);
-      },
-    );
-  }
-
-  Widget _buildBlurredContent(BuildContext context, AccessResult access) {
-    return Stack(
-      children: [
-        // Conteúdo com blur
-        ClipRRect(
+        // Blur simples, sem overlay nem botões
+        return ClipRRect(
           child: ImageFiltered(
             imageFilter: ImageFilter.blur(
               sigmaX: blurIntensity,
@@ -61,126 +54,8 @@ class PremiumBlurWidget extends StatelessWidget {
             ),
             child: child,
           ),
-        ),
-        // Overlay com mensagem e botão
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.1),
-                  Colors.black.withValues(alpha: 0.6),
-                ],
-              ),
-            ),
-            child: Center(
-              child: _buildOverlayContent(context, access),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOverlayContent(BuildContext context, AccessResult access) {
-    return Container(
-      margin: const EdgeInsets.all(24),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF9C27B0).withValues(alpha: 0.5),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF9C27B0).withValues(alpha: 0.3),
-            blurRadius: 20,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Ícone
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF9C27B0),
-                  const Color(0xFF7B1FA2),
-                ],
-              ),
-            ),
-            child: const Icon(
-              Icons.lock_outline,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Título
-          const Text(
-            'Conteúdo Premium',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Mensagem
-          Text(
-            customMessage ?? access.message ?? 'Desbloqueie com o plano Premium',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 14,
-            ),
-          ),
-          if (showUpgradeButton) ...[
-            const SizedBox(height: 20),
-            // Botão de upgrade
-            ElevatedButton(
-              onPressed: onUpgradePressed ?? () => _showUpgradeDialog(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF9C27B0),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.star, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'Seja Premium',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  void _showUpgradeDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremiumUpgradeSheet(),
+        );
+      },
     );
   }
 }
