@@ -7,15 +7,13 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class WheelOfYearPage extends StatelessWidget {
-  const WheelOfYearPage({super.key});
+  final bool embedded;
+
+  const WheelOfYearPage({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Roda do Ano'),
-      ),
-      body: Consumer<WheelOfYearProvider>(
+    final content = Consumer<WheelOfYearProvider>(
         builder: (context, provider, _) {
           final sabbats = provider.getAllSabbats();
           final nextSabbat = provider.getNextSabbat();
@@ -117,7 +115,17 @@ class WheelOfYearPage extends StatelessWidget {
             ),
           );
         },
+      );
+
+    if (embedded) {
+      return content;
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Roda do Ano'),
       ),
+      body: content,
     );
   }
 

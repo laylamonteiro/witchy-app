@@ -5,6 +5,8 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/astrology_provider.dart';
+import '../../data/models/enums.dart';
+import '../../data/data_sources/planet_sign_interpretations.dart';
 
 class MagicalProfilePage extends StatefulWidget {
   const MagicalProfilePage({super.key});
@@ -180,6 +182,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
 
                 const SizedBox(height: 24),
 
+                // Seção de Planetas em Signos
+                _buildPlanetSignsSection(provider),
+
+                const SizedBox(height: 24),
+
                 // Texto Personalizado IA
                 _buildAISection(provider),
 
@@ -235,6 +242,245 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// Seção que mostra cada planeta em seu signo com explicação detalhada
+  Widget _buildPlanetSignsSection(AstrologyProvider provider) {
+    final birthChart = provider.birthChart;
+
+    if (birthChart == null || birthChart.planets.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Planetas pessoais para mostrar (os mais importantes para iniciantes)
+    final personalPlanets = [
+      Planet.sun,
+      Planet.moon,
+      Planet.mercury,
+      Planet.venus,
+      Planet.mars,
+    ];
+
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Seus Planetas nos Signos',
+                  style: GoogleFonts.cinzelDecorative(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.lilac,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Toque em cada planeta para entender seu significado no seu mapa',
+            style: TextStyle(
+              color: AppColors.softWhite.withOpacity(0.6),
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Divider(color: AppColors.lilac),
+          const SizedBox(height: 12),
+
+          // Lista de planetas pessoais
+          ...personalPlanets.map((planet) {
+            final planetPosition = birthChart.planets.firstWhere(
+              (p) => p.planet == planet,
+              orElse: () => birthChart.planets.first,
+            );
+
+            return _buildPlanetTile(
+              planet: planetPosition.planet,
+              sign: planetPosition.sign,
+              houseNumber: planetPosition.houseNumber,
+              isRetrograde: planetPosition.isRetrograde,
+            );
+          }),
+
+          const SizedBox(height: 16),
+
+          // Botão para ver todos os planetas
+          Center(
+            child: TextButton.icon(
+              onPressed: () => _showAllPlanetsDialog(context, birthChart.planets),
+              icon: const Icon(Icons.expand_more, color: AppColors.lilac),
+              label: const Text(
+                'Ver todos os planetas',
+                style: TextStyle(color: AppColors.lilac),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Constrói um tile expansível para cada planeta
+  Widget _buildPlanetTile({
+    required Planet planet,
+    required ZodiacSign sign,
+    required int houseNumber,
+    required bool isRetrograde,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(bottom: 16),
+        leading: Text(
+          planet.symbol,
+          style: const TextStyle(fontSize: 28),
+        ),
+        title: Row(
+          children: [
+            Text(
+              '${planet.displayName} em ',
+              style: const TextStyle(
+                color: AppColors.softWhite,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              sign.displayName,
+              style: const TextStyle(
+                color: AppColors.lilac,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              sign.symbol,
+              style: const TextStyle(fontSize: 16),
+            ),
+            if (isRetrograde) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.alert.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'R',
+                  style: TextStyle(
+                    color: AppColors.alert,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        subtitle: Text(
+          'Casa $houseNumber | ${sign.element.symbol} ${sign.element.displayName}',
+          style: TextStyle(
+            color: AppColors.softWhite.withOpacity(0.6),
+            fontSize: 12,
+          ),
+        ),
+        iconColor: AppColors.lilac,
+        collapsedIconColor: AppColors.lilac.withOpacity(0.6),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surface.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.lilac.withOpacity(0.2),
+              ),
+            ),
+            child: Text(
+              PlanetSignInterpretations.getInterpretation(planet, sign),
+              style: const TextStyle(
+                color: AppColors.softWhite,
+                height: 1.6,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Mostra dialog com todos os planetas
+  void _showAllPlanetsDialog(BuildContext context, List<dynamic> planets) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardBackground,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.lilac.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Título
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Todos os Planetas',
+                style: GoogleFonts.cinzelDecorative(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.lilac,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Divider(color: AppColors.lilac),
+            // Lista
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: planets.length,
+                itemBuilder: (context, index) {
+                  final p = planets[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _buildPlanetTile(
+                      planet: p.planet,
+                      sign: p.sign,
+                      houseNumber: p.houseNumber,
+                      isRetrograde: p.isRetrograde,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

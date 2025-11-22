@@ -8,6 +8,7 @@ import 'birth_chart_view_page.dart';
 import 'magical_profile_page.dart';
 import 'daily_magical_weather_page.dart';
 import 'personalized_suggestions_page.dart';
+import 'zodiac_signs_page.dart';
 
 class AstrologyPage extends StatefulWidget {
   const AstrologyPage({super.key});
@@ -71,6 +72,23 @@ class _AstrologyPageState extends State<AstrologyPage> {
                       ),
                     ],
                   ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Signos do Zodíaco
+                _buildOption(
+                  context,
+                  icon: '',
+                  title: 'Signos do Zodíaco',
+                  description: 'Conheça os 12 signos e seus significados mágicos',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ZodiacSignsPage(),
+                      ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 16),

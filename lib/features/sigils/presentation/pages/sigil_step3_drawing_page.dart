@@ -88,7 +88,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       painter: _showWheel
                           ? WitchWheelPainter(
                               showLetters: true,
-                              radius: 140.0,
                               highlightedLetters: widget.sigil.processedLetters.split('').toSet(),
                               customPositions: _shuffledPositions,
                             )

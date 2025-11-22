@@ -6,7 +6,10 @@ import 'app_spells_list_page.dart';
 import 'user_spells_list_page.dart';
 import 'ai_spell_creation_page.dart';
 import '../../../astrology/presentation/pages/astrology_page.dart';
-import '../../../divination/presentation/pages/divination_hub_page.dart';
+import '../../../runes/presentation/pages/rune_reading_page.dart';
+import '../../../divination/presentation/pages/pendulum_page.dart';
+import '../../../divination/presentation/pages/oracle_cards_page.dart';
+import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 
 class GrimoirePage extends StatelessWidget {
   const GrimoirePage({super.key});
@@ -109,13 +112,55 @@ class _ToolsTab extends StatelessWidget {
           const SizedBox(height: 12),
           _buildToolCard(
             context,
-            icon: '🔮',
-            title: 'Divinação',
-            description: 'Runas, pêndulo e oracle cards para orientação',
+            icon: 'ᚱ',
+            title: 'Leitura de Runas',
+            description: 'Consulte as antigas runas nórdicas',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const DivinationHubPage(),
+                  builder: (_) => const RuneReadingPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '⟟',
+            title: 'Pêndulo',
+            description: 'Perguntas de sim ou não',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const PendulumPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '🔮',
+            title: 'Oracle Cards',
+            description: 'Mensagens e orientação do universo',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const OracleCardsPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '⛤',
+            title: 'Sigilos',
+            description: 'Crie símbolos mágicos para suas intenções',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const SigilStep1IntentionPage(),
                 ),
               );
             },
