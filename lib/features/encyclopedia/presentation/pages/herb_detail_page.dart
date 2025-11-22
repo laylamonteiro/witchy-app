@@ -211,105 +211,103 @@ class HerbDetailPage extends StatelessWidget {
                   ),
                 ),
               ),
-            // Premium content - blur para usuários free
-            PremiumBlurWidget(
-              feature: AppFeature.encyclopediaHerbsDetails,
-              customMessage: 'Desbloqueie informações detalhadas sobre ervas',
+            // Propriedades Mágicas - visível para todos
+            MagicalCard(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Propriedades Mágicas',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: herb.magicalProperties
-                              .map((property) => Chip(
-                                    label: Text(property),
-                                    backgroundColor: AppColors.mint.withOpacity(0.2),
-                                    side: const BorderSide(color: AppColors.mint),
-                                  ))
-                              .toList(),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    'Propriedades Mágicas',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Usos Rituais',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 12),
-                        ...herb.ritualUses.map(
-                          (use) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(
-                                  Icons.auto_awesome,
-                                  size: 16,
-                                  color: AppColors.starYellow,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    use,
-                                    style: Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  MagicalCard(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Column(
-                          children: [
-                            Icon(
-                              herb.edible ? Icons.restaurant : Icons.no_meals,
-                              color: herb.edible ? AppColors.mint : AppColors.alert,
-                              size: 32,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              herb.edible ? 'Comestível' : 'Não Comestível',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Icon(
-                              herb.toxic ? Icons.dangerous : Icons.verified_user,
-                              color: herb.toxic ? AppColors.alert : AppColors.mint,
-                              size: 32,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              herb.toxic ? 'Tóxica' : 'Não Tóxica',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: herb.magicalProperties
+                        .map((property) => Chip(
+                              label: Text(property),
+                              backgroundColor: AppColors.mint.withOpacity(0.2),
+                              side: const BorderSide(color: AppColors.mint),
+                            ))
+                        .toList(),
                   ),
                 ],
+              ),
+            ),
+            // Indicadores - visível para todos
+            MagicalCard(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      Icon(
+                        herb.edible ? Icons.restaurant : Icons.no_meals,
+                        color: herb.edible ? AppColors.mint : AppColors.alert,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        herb.edible ? 'Comestível' : 'Não Comestível',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Icon(
+                        herb.toxic ? Icons.dangerous : Icons.verified_user,
+                        color: herb.toxic ? AppColors.alert : AppColors.mint,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        herb.toxic ? 'Tóxica' : 'Não Tóxica',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Premium content - blur apenas nas sugestões de uso ritual
+            PremiumBlurWidget(
+              feature: AppFeature.encyclopediaHerbsDetails,
+              customMessage: 'Desbloqueie sugestões de usos rituais',
+              child: MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Usos Rituais',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    ...herb.ritualUses.map(
+                      (use) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: AppColors.starYellow,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                use,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

@@ -49,70 +49,67 @@ class ColorDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            // Premium content - blur para usuários free
-            PremiumBlurWidget(
-              feature: AppFeature.encyclopediaColorsDetails,
-              customMessage: 'Desbloqueie informações detalhadas sobre cores na magia',
+            // Intenções - visível para todos
+            MagicalCard(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Intenções',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: colorModel.intentions
-                              .map((intention) => Chip(
-                                    label: Text(intention),
-                                    backgroundColor: colorModel.color.withOpacity(0.3),
-                                    side: BorderSide(color: colorModel.color),
-                                  ))
-                              .toList(),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    'Intenções',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Como Usar na Magia',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 12),
-                        ...colorModel.usageTips.map(
-                          (tip) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.auto_awesome,
-                                  size: 16,
-                                  color: colorModel.color,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    tip,
-                                    style: Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: colorModel.intentions
+                        .map((intention) => Chip(
+                              label: Text(intention),
+                              backgroundColor: colorModel.color.withOpacity(0.3),
+                              side: BorderSide(color: colorModel.color),
+                            ))
+                        .toList(),
                   ),
                 ],
+              ),
+            ),
+            // Premium content - blur apenas nas sugestões de uso
+            PremiumBlurWidget(
+              feature: AppFeature.encyclopediaColorsDetails,
+              customMessage: 'Desbloqueie sugestões de uso mágico',
+              child: MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Como Usar na Magia',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    ...colorModel.usageTips.map(
+                      (tip) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: colorModel.color,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                tip,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

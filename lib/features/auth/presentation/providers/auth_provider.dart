@@ -10,6 +10,7 @@ class AuthProvider extends ChangeNotifier {
   static const String _hasSeenOnboardingKey = 'has_seen_onboarding';
   static const String _lastDiaryResetKey = 'last_diary_reset';
   static const String _lastAiResetKey = 'last_ai_reset';
+  static const String _lastPendulumResetKey = 'last_pendulum_reset';
 
   UserModel _currentUser = UserModel.defaultUser();
   bool _isInitialized = false;
@@ -97,6 +98,21 @@ class AuthProvider extends ChangeNotifier {
       await prefs.setString(_lastDiaryResetKey, now.toIso8601String());
     }
 
+    // Reset diário do pêndulo (para TODOS os usuários)
+    final lastPendulumReset = prefs.getString(_lastPendulumResetKey);
+    if (lastPendulumReset != null) {
+      final lastDate = DateTime.parse(lastPendulumReset);
+      if (now.day != lastDate.day ||
+          now.month != lastDate.month ||
+          now.year != lastDate.year) {
+        _currentUser = _currentUser.copyWith(pendulumUsesToday: 0);
+        await prefs.setString(_lastPendulumResetKey, now.toIso8601String());
+        needsSave = true;
+      }
+    } else {
+      await prefs.setString(_lastPendulumResetKey, now.toIso8601String());
+    }
+
     if (needsSave) {
       await _saveUser();
     }
@@ -154,6 +170,21 @@ class AuthProvider extends ChangeNotifier {
       await _saveUser();
       notifyListeners();
     }
+  }
+
+  /// Verifica se pode usar o pêndulo hoje (limite para TODOS)
+  bool get canUsePendulum => _currentUser.canUsePendulum;
+
+  /// Quantos usos do pêndulo restam hoje
+  int get remainingPendulumUses => _currentUser.remainingPendulumUses;
+
+  /// Incrementa contador de uso do pêndulo (para TODOS os usuários)
+  Future<void> incrementPendulumUses() async {
+    _currentUser = _currentUser.copyWith(
+      pendulumUsesToday: _currentUser.pendulumUsesToday + 1,
+    );
+    await _saveUser();
+    notifyListeners();
   }
 
   /// Atualiza o role do usuário (para testes/admin)

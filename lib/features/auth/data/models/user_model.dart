@@ -46,6 +46,10 @@ class UserModel {
   final int aiConsultationsToday;
   final DateTime? lastAiConsultationReset;
 
+  /// Contador de uso do pêndulo (limite diário para TODOS os usuários)
+  final int pendulumUsesToday;
+  final DateTime? lastPendulumReset;
+
   const UserModel({
     required this.id,
     this.email,
@@ -63,6 +67,8 @@ class UserModel {
     this.diaryEntriesThisMonth = 0,
     this.aiConsultationsToday = 0,
     this.lastAiConsultationReset,
+    this.pendulumUsesToday = 0,
+    this.lastPendulumReset,
   });
 
   /// Usuário padrão (local, sem autenticação)
@@ -107,6 +113,9 @@ class UserModel {
   /// Limite de consultas IA por dia para plano free
   static const int freeAiConsultationsLimit = 3;
 
+  /// Limite de uso do pêndulo por dia para TODOS os usuários
+  static const int dailyPendulumLimit = 1;
+
   /// Verifica se pode criar mais feitiços
   bool get canCreateSpell => isPremium || spellsCount < freeSpellsLimit;
 
@@ -121,6 +130,12 @@ class UserModel {
     if (isPremium) return -1; // ilimitado
     return freeAiConsultationsLimit - aiConsultationsToday;
   }
+
+  /// Verifica se pode usar o pêndulo hoje (limite para TODOS)
+  bool get canUsePendulum => pendulumUsesToday < dailyPendulumLimit;
+
+  /// Quantos usos do pêndulo restam hoje
+  int get remainingPendulumUses => dailyPendulumLimit - pendulumUsesToday;
 
   UserModel copyWith({
     String? id,
@@ -139,6 +154,8 @@ class UserModel {
     int? diaryEntriesThisMonth,
     int? aiConsultationsToday,
     DateTime? lastAiConsultationReset,
+    int? pendulumUsesToday,
+    DateTime? lastPendulumReset,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -157,6 +174,8 @@ class UserModel {
       diaryEntriesThisMonth: diaryEntriesThisMonth ?? this.diaryEntriesThisMonth,
       aiConsultationsToday: aiConsultationsToday ?? this.aiConsultationsToday,
       lastAiConsultationReset: lastAiConsultationReset ?? this.lastAiConsultationReset,
+      pendulumUsesToday: pendulumUsesToday ?? this.pendulumUsesToday,
+      lastPendulumReset: lastPendulumReset ?? this.lastPendulumReset,
     );
   }
 
@@ -178,6 +197,8 @@ class UserModel {
       'diaryEntriesThisMonth': diaryEntriesThisMonth,
       'aiConsultationsToday': aiConsultationsToday,
       'lastAiConsultationReset': lastAiConsultationReset?.toIso8601String(),
+      'pendulumUsesToday': pendulumUsesToday,
+      'lastPendulumReset': lastPendulumReset?.toIso8601String(),
     };
   }
 
@@ -212,6 +233,10 @@ class UserModel {
       aiConsultationsToday: json['aiConsultationsToday'] ?? 0,
       lastAiConsultationReset: json['lastAiConsultationReset'] != null
           ? DateTime.parse(json['lastAiConsultationReset'])
+          : null,
+      pendulumUsesToday: json['pendulumUsesToday'] ?? 0,
+      lastPendulumReset: json['lastPendulumReset'] != null
+          ? DateTime.parse(json['lastPendulumReset'])
           : null,
     );
   }
