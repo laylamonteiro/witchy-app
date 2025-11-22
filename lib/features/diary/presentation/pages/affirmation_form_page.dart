@@ -5,6 +5,9 @@ import '../providers/affirmation_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ai/ai_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../auth/data/models/user_model.dart';
 
 class AffirmationFormPage extends StatefulWidget {
   final AffirmationModel? affirmation;
@@ -219,6 +222,27 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 icon: Icons.auto_awesome,
                 onPressed: _saveAffirmation,
               ),
+            // Exibir usos restantes para usuários free (apenas ao criar nova)
+            if (!isPreloaded && widget.affirmation == null)
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  if (authProvider.isPremium) return const SizedBox.shrink();
+                  final remaining = authProvider.currentUser.remainingAffirmations;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      'Afirmações restantes hoje: $remaining/${UserModel.freeAffirmationsLimit}',
+                      style: TextStyle(
+                        color: remaining > 0
+                            ? AppColors.softWhite.withOpacity(0.6)
+                            : AppColors.alert,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -266,13 +290,32 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     }
   }
 
-  void _saveAffirmation() {
+  Future<void> _saveAffirmation() async {
     if (_textController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Digite ou gere uma afirmação'),
           backgroundColor: Colors.orange,
         ),
+      );
+      return;
+    }
+
+    // Verificar limite diário para novas afirmações (usuários free)
+    final authProvider = context.read<AuthProvider>();
+    if (widget.affirmation == null && !authProvider.currentUser.canUseAffirmations) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Você atingiu o limite diário de afirmações. Volte amanhã ou seja Premium!'),
+          backgroundColor: AppColors.alert,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
       );
       return;
     }
@@ -287,8 +330,11 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     final provider = context.read<AffirmationProvider>();
     if (widget.affirmation == null) {
       provider.addAffirmation(affirmation);
+      // Incrementar uso de afirmações
+      await authProvider.incrementAffirmations();
     }
 
+    if (!mounted) return;
     Navigator.pop(context);
   }
 

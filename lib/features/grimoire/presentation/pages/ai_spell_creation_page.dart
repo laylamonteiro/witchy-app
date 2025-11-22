@@ -262,6 +262,27 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
               ),
             ),
 
+            // Exibir usos restantes para usuários free
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, _) {
+                if (authProvider.isPremium) return const SizedBox.shrink();
+                final remaining = authProvider.currentUser.remainingAiConsultations;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    'Consultas restantes hoje: $remaining/${UserModel.freeAiConsultationsLimit}',
+                    style: TextStyle(
+                      color: remaining > 0
+                          ? AppColors.softWhite.withOpacity(0.6)
+                          : AppColors.alert,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              },
+            ),
+
             if (_generatedSpell != null) ...[
               const SizedBox(height: 24),
               MagicalCard(

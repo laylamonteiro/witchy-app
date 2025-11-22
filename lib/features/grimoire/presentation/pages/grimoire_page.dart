@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/diagnostic/diagnostic_page.dart';
@@ -11,42 +12,86 @@ import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 
-class GrimoirePage extends StatelessWidget {
+class GrimoirePage extends StatefulWidget {
   const GrimoirePage({super.key});
 
   @override
+  State<GrimoirePage> createState() => _GrimoirePageState();
+}
+
+class _GrimoirePageState extends State<GrimoirePage> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  late TabController _tabController;
+  static const String _lastTabKey = 'grimoire_last_tab';
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
+    _loadLastTab();
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      _saveLastTab(_tabController.index);
+    }
+  }
+
+  Future<void> _loadLastTab() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastTab = prefs.getInt(_lastTabKey) ?? 0;
+    if (mounted && lastTab != _tabController.index) {
+      _tabController.animateTo(lastTab);
+    }
+  }
+
+  Future<void> _saveLastTab(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastTabKey, index);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Grimório Digital'),
-          bottom: const TabBar(
-            indicatorColor: AppColors.lilac,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            padding: EdgeInsets.zero,
-            labelPadding: EdgeInsets.symmetric(horizontal: 16),
-            labelStyle: TextStyle(fontSize: 14),
-            unselectedLabelStyle: TextStyle(fontSize: 14),
-            tabs: [
-              Tab(text: 'Meu Grimório'),
-              Tab(text: 'Grimório Ancestral'),
-              Tab(text: 'Ferramentas'),
-            ],
-          ),
-        ),
-        body: const TabBarView(
-          children: [
-            UserSpellsListPage(),
-            AppSpellsListPage(),
-            _ToolsTab(),
+    super.build(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Grimório Digital'),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: AppColors.lilac,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          padding: EdgeInsets.zero,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+          labelStyle: const TextStyle(fontSize: 14),
+          unselectedLabelStyle: const TextStyle(fontSize: 14),
+          tabs: const [
+            Tab(text: 'Meu Grimório'),
+            Tab(text: 'Grimório Ancestral'),
+            Tab(text: 'Ferramentas'),
           ],
         ),
       ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          UserSpellsListPage(),
+          AppSpellsListPage(),
+          _ToolsTab(),
+        ],
+      ),
     );
   }
-
 }
 
 class _ToolsTab extends StatelessWidget {

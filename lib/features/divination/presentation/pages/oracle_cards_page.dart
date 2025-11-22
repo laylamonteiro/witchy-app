@@ -9,6 +9,7 @@ import '../../data/models/oracle_card_model.dart';
 import '../../data/data_sources/oracle_cards_data.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../auth/data/models/user_model.dart';
 
 class OracleCardsPage extends StatefulWidget {
   const OracleCardsPage({super.key});
@@ -186,6 +187,27 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   ),
                   disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
                 ),
+              ),
+
+              // Exibir usos restantes para usuários free
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  if (authProvider.isPremium) return const SizedBox.shrink();
+                  final remaining = authProvider.currentUser.remainingOracleReadings;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      'Leituras restantes hoje: $remaining/${UserModel.freeOracleReadingsLimit}',
+                      style: TextStyle(
+                        color: remaining > 0
+                            ? AppColors.softWhite.withOpacity(0.6)
+                            : AppColors.alert,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                },
               ),
             ],
 
