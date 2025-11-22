@@ -4,6 +4,8 @@ import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
 import '../../../settings/settings.dart';
+import '../../../analytics/analytics.dart';
+import '../../../journeys/journeys.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
@@ -419,6 +421,26 @@ class ProfilePage extends StatelessWidget {
             ),
             _buildDivider(),
           ],
+          // Estatísticas mágicas
+          _buildOptionTile(
+            icon: Icons.analytics_outlined,
+            title: 'Estatisticas Magicas',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
+            ),
+          ),
+          _buildDivider(),
+          // Jornadas gamificadas
+          _buildOptionTile(
+            icon: Icons.explore_outlined,
+            title: 'Jornadas Magicas',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const JourneysPage()),
+            ),
+          ),
+          _buildDivider(),
           _buildOptionTile(
             icon: Icons.notifications_outlined,
             title: 'Notificações',

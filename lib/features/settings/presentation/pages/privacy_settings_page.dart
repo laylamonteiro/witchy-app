@@ -48,7 +48,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -65,7 +65,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.lilac))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -183,7 +183,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       child: Text(
         title,
         style: const TextStyle(
-          color: AppTheme.primary,
+          color: AppColors.lilac,
           fontSize: 14,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
@@ -195,7 +195,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Widget _buildSettingsCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -214,10 +214,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppTheme.primary.withValues(alpha: 0.2),
+          color: AppColors.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppTheme.primary, size: 20),
+        child: Icon(icon, color: AppColors.lilac, size: 20),
       ),
       title: Text(
         title,
@@ -236,7 +236,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: AppTheme.primary,
+        activeColor: AppColors.lilac,
       ),
     );
   }
@@ -251,8 +251,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     final color = isDestructive ? Colors.red : Colors.white;
     final iconBgColor = isDestructive
         ? Colors.red.withValues(alpha: 0.2)
-        : AppTheme.primary.withValues(alpha: 0.2);
-    final iconColor = isDestructive ? Colors.red : AppTheme.primary;
+        : AppColors.lilac.withValues(alpha: 0.2);
+    final iconColor = isDestructive ? Colors.red : AppColors.lilac;
 
     return ListTile(
       leading: Container(
@@ -294,21 +294,21 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.1),
+        color: AppColors.lilac.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.shield_outlined, color: AppTheme.primary, size: 20),
+              Icon(Icons.shield_outlined, color: AppColors.lilac, size: 20),
               SizedBox(width: 8),
               Text(
                 'Sua Privacidade Importa',
                 style: TextStyle(
-                  color: AppTheme.primary,
+                  color: AppColors.lilac,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -335,7 +335,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             child: const Text(
               'Ler Politica de Privacidade completa',
               style: TextStyle(
-                color: AppTheme.primary,
+                color: AppColors.lilac,
                 decoration: TextDecoration.underline,
               ),
             ),
@@ -349,7 +349,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBackground,
+        backgroundColor: AppColors.surface,
         title: const Text(
           'Exportar Dados',
           style: TextStyle(color: Colors.white),
@@ -371,12 +371,12 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Exportacao iniciada...'),
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: AppColors.lilac,
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
+              backgroundColor: AppColors.lilac,
             ),
             child: const Text('Exportar', style: TextStyle(color: Colors.white)),
           ),
@@ -389,7 +389,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBackground,
+        backgroundColor: AppColors.surface,
         title: const Text(
           'Limpar Dados Locais?',
           style: TextStyle(color: Colors.white),
@@ -430,7 +430,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBackground,
+        backgroundColor: AppColors.surface,
         title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.red),
@@ -484,7 +484,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackground,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

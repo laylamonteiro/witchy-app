@@ -27,7 +27,7 @@ class PaywallPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.background,
       body: PaywallView(
         displayCloseButton: displayCloseButton,
         onDismiss: () {
@@ -82,7 +82,7 @@ class PaywallWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PaywallView(
-      onPurchaseCompleted: (customerInfo) {
+      onPurchaseCompleted: (customerInfo, storeTransaction) {
         onPurchaseCompleted?.call();
       },
       onRestoreCompleted: (customerInfo) {

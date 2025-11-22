@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../config/revenuecat_config.dart';
@@ -113,10 +114,7 @@ class PaymentService extends ChangeNotifier {
       }
 
       // Configurar RevenueCat
-      final configuration = PurchasesConfiguration(RevenueCatConfig.apiKey)
-        ..appUserID = null // Usar ID anônimo inicialmente
-        ..observerMode = false
-        ..usesStoreKit2IfAvailable = true;
+      final configuration = PurchasesConfiguration(RevenueCatConfig.apiKey);
 
       await Purchases.configure(configuration);
 
