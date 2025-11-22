@@ -14,9 +14,11 @@ import 'core/database/database_helper.dart';
 import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/config/supabase_config.dart';
+import 'core/services/payment_service.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/presentation/pages/auth_wrapper.dart';
+import 'features/subscription/subscription.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
@@ -53,6 +55,11 @@ void main() async {
       url: SupabaseConfig.url,
       anonKey: SupabaseConfig.anonKey,
     );
+  }
+
+  // Initialize RevenueCat (only for mobile platforms)
+  if (!kIsWeb) {
+    await PaymentService().initialize();
   }
 
   // Initialize SharedPreferences
@@ -132,6 +139,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
+        ChangeNotifierProvider.value(value: PaymentService()),
         ChangeNotifierProvider(create: (_) => SpellProvider()),
         ChangeNotifierProvider(create: (_) => DreamProvider()),
         ChangeNotifierProvider(create: (_) => DesireProvider()),
@@ -158,6 +166,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           '/login': (context) => const LoginPage(),
           '/signup': (context) => const SignupPage(),
           '/onboarding': (context) => const OnboardingPage(),
+          '/subscription': (context) => const SubscriptionPage(),
         },
         debugShowCheckedModeBanner: false,
       ),

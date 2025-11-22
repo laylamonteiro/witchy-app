@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/config/supabase_config.dart';
+import '../../../../core/services/payment_service.dart';
+import '../../../subscription/subscription.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
@@ -382,6 +384,8 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildAccountOptions(BuildContext context, AuthProvider authProvider) {
+    final paymentService = PaymentService();
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
@@ -398,6 +402,22 @@ class ProfilePage extends StatelessWidget {
             onTap: () => _showEditProfileDialog(context, authProvider),
           ),
           _buildDivider(),
+          // Opção de gerenciar assinatura
+          _buildOptionTile(
+            icon: Icons.card_membership,
+            title: 'Gerenciar Assinatura',
+            onTap: () => Navigator.pushNamed(context, '/subscription'),
+          ),
+          _buildDivider(),
+          // Customer Center para assinantes
+          if (paymentService.isPro) ...[
+            _buildOptionTile(
+              icon: Icons.support_agent,
+              title: 'Central do Assinante',
+              onTap: () => paymentService.presentCustomerCenter(),
+            ),
+            _buildDivider(),
+          ],
           _buildOptionTile(
             icon: Icons.notifications_outlined,
             title: 'Notificações',
@@ -621,13 +641,10 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  void _showUpgradeSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremiumUpgradeSheet(),
-    );
+  void _showUpgradeSheet(BuildContext context) async {
+    // Usar o paywall do RevenueCat
+    final paymentService = PaymentService();
+    await paymentService.presentPaywall();
   }
 
   void _showEditProfileDialog(BuildContext context, AuthProvider authProvider) {
