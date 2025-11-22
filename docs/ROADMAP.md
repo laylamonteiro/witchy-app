@@ -5,9 +5,9 @@
 | Fase | Nome | Status |
 |------|------|--------|
 | 1 | MVP Local-First | ✅ Completo |
-| 2 | Backend + Conta + IA | ⏳ Próxima |
-| 3 | Premium 1.0 | 📋 Planejado |
-| 4 | Premium 2.0: Astrologia | ✅ Antecipado |
+| 2 | Backend + Conta + IA | 🔄 Parcial (Local) |
+| 3 | Premium 1.0 | 🔄 Parcial (Local) |
+| 4 | Premium 2.0: Astrologia | ✅ Completo |
 | 5 | Refinos e Conteúdo | 🔄 Parcial |
 
 ---
@@ -23,12 +23,14 @@
 ### Grimório Digital ✅
 - [x] CRUD completo de feitiços
 - [x] Campos: nome, propósito, tipo, fase lunar, ingredientes, passos
-- [x] Busca e filtros
+- [x] Busca e filtros (com feedback visual)
 - [x] Visualização detalhada
 
 ### Diários ✅
 - [x] Diário de Sonhos (título, descrição, tags, sentimentos)
 - [x] Diário de Desejos (status, evolução, manifestação)
+- [x] Diário de Gratidão
+- [x] Afirmações
 
 ### Enciclopédia Mágica ✅
 - [x] Cristais (6 básicos)
@@ -41,41 +43,44 @@
 
 ---
 
-## Fase 2 - Backend + Conta + IA ⏳
+## Fase 2 - Backend + Conta + IA 🔄
 
-### Etapa 2.1 - Infraestrutura de Autenticação
-- [ ] Escolher backend (Firebase Auth / Supabase / Custom)
-- [ ] Configurar projeto no backend escolhido
-- [ ] Criar modelo de usuário (`UserModel`)
-- [ ] Implementar `AuthRepository`
-- [ ] Criar `AuthProvider`
+### Etapa 2.1 - Infraestrutura de Autenticação (LOCAL) ✅
+- [x] Modelo de usuário (`UserModel`) - **Implementado localmente**
+- [x] `AuthProvider` com SharedPreferences
+- [x] Sistema de roles (free, premium, admin)
+- [ ] **FALTA**: Escolher backend (Firebase Auth / Supabase)
+- [ ] **FALTA**: Configurar projeto no backend escolhido
+- [ ] **FALTA**: Implementar `AuthRepository` com backend real
 
-### Etapa 2.2 - Telas de Autenticação
+### Etapa 2.2 - Telas de Autenticação ❌
 - [ ] Tela de boas-vindas/onboarding
 - [ ] Tela de login (email/senha)
 - [ ] Tela de cadastro
 - [ ] Tela de recuperação de senha
 - [ ] Login social (Google, Apple)
 
-### Etapa 2.3 - Perfil de Usuário
-- [ ] Tela de perfil
-- [ ] Edição de dados pessoais
-- [ ] Foto de perfil
-- [ ] Dados de nascimento (para astrologia)
-- [ ] Configurações de privacidade
+### Etapa 2.3 - Perfil de Usuário 🔄
+- [x] Tela de perfil básica
+- [x] Edição de nome (displayName)
+- [x] Dados de nascimento (para astrologia)
+- [ ] **FALTA**: Foto de perfil
+- [ ] **FALTA**: Configurações de privacidade
+- [ ] **FALTA**: Email verificado
 
-### Etapa 2.4 - Sistema de Roles
-- [ ] Definir roles: `user`, `premium`, `admin`
-- [ ] Criar modelo `UserRole`
-- [ ] Implementar verificação de permissões
-- [ ] Middleware de autorização
+### Etapa 2.4 - Sistema de Roles ✅
+- [x] Definir roles: `free`, `premium`, `admin`
+- [x] Criar modelo `UserRole` e `SubscriptionPlan`
+- [x] Implementar verificação de permissões (FeatureAccess)
+- [x] Middleware de autorização (checkFeatureAccess)
 
-### Etapa 2.5 - Feature Toggles
-- [ ] Sistema de feature flags
-- [ ] Configuração por role/plano
-- [ ] Toggle remoto (Firebase Remote Config ou similar)
+### Etapa 2.5 - Feature Toggles ✅ (Local)
+- [x] Sistema de feature flags (`AppFeature` enum)
+- [x] Configuração por role/plano (`FeatureAccess`)
+- [x] Diferentes AccessTypes (full, preview, blocked, limited)
+- [ ] **FALTA**: Toggle remoto (Firebase Remote Config)
 
-### Etapa 2.6 - Sincronização Básica
+### Etapa 2.6 - Sincronização ❌
 - [ ] Estrutura de dados na nuvem
 - [ ] Sync de feitiços do usuário
 - [ ] Sync de diários
@@ -83,62 +88,80 @@
 
 ---
 
-## Fase 3 - Premium 1.0 📋
+## Fase 3 - Premium 1.0 🔄
 
-### Monetização
+### Monetização ❌
 - [ ] Integração com loja (Google Play / App Store)
-- [ ] Definir planos (Free / Premium)
-- [ ] Implementar paywall
-- [ ] Gerenciamento de assinaturas
+- [ ] Implementar paywall real
+- [ ] Gerenciamento de assinaturas reais
 
-### Limites por Plano
-| Feature | Free | Premium |
-|---------|------|---------|
-| Feitiços salvos | 10 | Ilimitado |
-| Entradas de diário | 30/mês | Ilimitado |
-| Backup em nuvem | ❌ | ✅ |
-| Conselheiro IA | 3/dia | Ilimitado |
-| Mapa Astral completo | ❌ | ✅ |
+### UI Premium ✅
+- [x] `PremiumUpgradeSheet` (tela de upgrade)
+- [x] Preços definidos (R$ 9,90/mês, R$ 79,90/ano)
+- [x] Botão "Seja Premium" nas seções bloqueadas
+- [x] Blur para conteúdo premium (título visível, conteúdo blur)
 
-### Backup em Nuvem
+### Limites por Plano ✅ (Implementado Localmente)
+
+| Feature | Free | Premium | Admin |
+|---------|------|---------|-------|
+| Feitiços salvos | 10 | Ilimitado | Ilimitado |
+| Entradas de diário | 30/mês | Ilimitado | Ilimitado |
+| Conselheiro Místico | 1/dia | Ilimitado | Ilimitado |
+| Leitura de Runas | 1/dia | Ilimitado | Ilimitado |
+| Cartas do Oráculo | 1/dia | Ilimitado | Ilimitado |
+| Afirmações | 3/dia | Ilimitado | Ilimitado |
+| Pêndulo | 1/dia | 1/dia | Ilimitado |
+| Perfil Mágico (análise IA) | Blur | ✅ | ✅ |
+| Clima Mágico (previsão) | Blur | ✅ | ✅ |
+| Sugestões Personalizadas | Blur | ✅ | ✅ |
+| Fase Lunar nos feitiços | ❌ | ✅ | ✅ |
+
+### Backup em Nuvem ❌
 - [ ] Backup automático para premium
 - [ ] Restauração de dados
 - [ ] Exportação de dados (GDPR)
 
 ---
 
-## Fase 4 - Premium 2.0: Astrologia ✅ (Antecipado)
+## Fase 4 - Premium 2.0: Astrologia ✅
 
 - [x] Mapa astral completo
 - [x] Perfil mágico personalizado
 - [x] Signos do zodíaco
 - [x] Interpretações planeta-em-signo
-- [ ] Clima mágico diário
+- [x] Clima mágico diário
+- [x] Trânsitos planetários
 - [ ] Jornadas gamificadas
 
 ---
 
 ## Fase 5 - Refinos e Conteúdo 🔄
 
-### Implementado
+### Implementado ✅
 - [x] Runas (alfabeto, significados, divinação)
 - [x] Sigilos (criação com Roda das Bruxas)
-- [x] Divinação (pêndulo, oracle cards)
+- [x] Divinação (pêndulo, Cartas do Oráculo)
 - [x] Sabbats / Roda do Ano
 - [x] Conselheiro Místico (IA)
 - [x] Mascote interativo
+- [x] Notificações (Lua cheia, Lua nova, Sabbats)
+- [x] Restauração de estado do app (tab persistida, sem splash ao voltar)
+- [x] Formatadores de data/hora amigáveis
+- [x] Pre-fill do mapa astral com dados anteriores
 
-### Pendente
+### Pendente ❌
 - [ ] Analytics mágicos (estatísticas de uso)
 - [ ] Busca natural por IA
 - [ ] Packs mensais de conteúdo
 - [ ] Comunidade / Social features
+- [ ] Scroll position persistence (parcial)
 
 ---
 
-## Sistema de Usuários e Admin (Detalhado)
+## Sistema de Usuários e Admin (Status Atual)
 
-### Modelo de Dados
+### Modelo de Dados ✅
 
 ```dart
 class UserModel {
@@ -153,73 +176,159 @@ class UserModel {
   final SubscriptionPlan plan;
   final DateTime createdAt;
   final DateTime lastLoginAt;
-  final Map<String, dynamic>? settings;
+
+  // Contadores de uso
+  final int spellsCount;
+  final int diaryEntriesThisMonth;
+  final int aiConsultationsToday;
+  final int pendulumUsesToday;
+  final int affirmationsToday;
+  final int runeReadingsToday;
+  final int oracleReadingsToday;
 }
 
-enum UserRole {
-  user,      // Usuário comum
-  premium,   // Assinante
-  admin,     // Administrador
-}
-
-enum SubscriptionPlan {
-  free,
-  monthly,
-  yearly,
-  lifetime,
-}
+enum UserRole { free, premium, admin }
+enum SubscriptionPlan { free, monthly, yearly, lifetime }
 ```
 
-### Painel Admin
+### Painel Admin/Debug ✅
 
-#### Dashboard
-- Total de usuários
-- Usuários ativos (7d, 30d)
-- Conversão free → premium
-- Features mais usadas
+#### Implementado
+- [x] Diagnóstico completo (na página de diagnóstico)
+- [x] Alternância de roles (Free/Premium/Admin)
+- [x] Estatísticas de uso do usuário
+- [x] Reset de dados
+- [x] `isOriginalAdmin` para manter acesso ao painel ao simular outros roles
 
-#### Gerenciamento de Usuários
-- Lista de usuários com filtros
-- Visualizar perfil de usuário
-- Alterar role/plano
-- Suspender/banir conta
-
-#### Gerenciamento de Conteúdo
-- CRUD de feitiços do app (Grimório Ancestral)
-- CRUD de cristais, ervas, etc.
-- Moderação de conteúdo (futuro social)
-
-#### Feature Flags
-- Ligar/desligar features por ambiente
-- A/B testing
-- Rollout gradual
+#### Pendente (requer backend)
+- [ ] Dashboard com métricas reais
+- [ ] Lista de usuários com filtros
+- [ ] Alterar role/plano de outros usuários
+- [ ] Gerenciamento de conteúdo centralizado
 
 ---
 
-## Prioridades Imediatas
+## O QUE FALTA IMPLEMENTAR (Detalhado)
 
-1. **Escolher e configurar backend** (Firebase recomendado para MVP)
-2. **Implementar autenticação básica** (email/senha)
-3. **Criar tela de perfil**
-4. **Implementar roles básicos** (user/admin)
-5. **Esconder Diagnóstico** para usuários não-admin
+### PRIORIDADE ALTA - Para App Funcional com Monetização
+
+#### 1. Backend Real (Escolher um)
+```
+Opção A - Firebase (Recomendado para MVP rápido):
+- Firebase Authentication (email, Google, Apple)
+- Cloud Firestore (dados do usuário)
+- Firebase Storage (fotos de perfil)
+- Remote Config (feature flags)
+
+Opção B - Supabase (Mais controle):
+- Supabase Auth
+- PostgreSQL
+- Storage
+```
+
+#### 2. Autenticação Real
+- Criar telas: Login, Cadastro, Recuperação de senha
+- Implementar AuthRepository com backend
+- Migrar dados locais para nuvem no primeiro login
+- Login social (Google Sign-In, Apple Sign-In)
+
+#### 3. Integração com Lojas
+- Google Play Billing (Android)
+- StoreKit 2 (iOS)
+- Usar pacote `purchases_flutter` (RevenueCat) ou `in_app_purchase`
+- Webhook para validar compras no backend
+
+#### 4. Sincronização de Dados
+- Sincronizar feitiços, diários, configurações
+- Tratamento de conflitos (last-write-wins ou merge)
+- Modo offline com sync posterior
+
+### PRIORIDADE MÉDIA - Melhorias de UX
+
+#### 5. Foto de Perfil
+- Picker de imagem (câmera/galeria)
+- Crop circular
+- Upload para Storage
+- Cache local
+
+#### 6. Onboarding
+- Tela de boas-vindas com slides
+- Explicação das funcionalidades
+- Coleta de dados iniciais (nome, data nascimento)
+- Skip para usuários que já usaram
+
+#### 7. Scroll Position Persistence
+- Salvar posição de scroll das listas
+- Restaurar ao voltar para a página
+
+### PRIORIDADE BAIXA - Futuro
+
+#### 8. Analytics
+- Firebase Analytics ou similar
+- Eventos: uso de features, conversão, retenção
+- Funnel de upgrade
+
+#### 9. Busca por IA
+- Integrar com IA para busca natural
+- "Encontre feitiços para prosperidade"
+
+#### 10. Social Features
+- Compartilhar feitiços
+- Feed de comunidade
+- Comentários
 
 ---
 
-## Notas Técnicas
+## Arquivos Principais do Sistema de Monetização
 
-### Backend Recomendado: Firebase
-- Auth: Firebase Authentication
-- Database: Cloud Firestore
-- Storage: Firebase Storage (fotos)
-- Remote Config: Feature flags
-- Analytics: Firebase Analytics
+```
+lib/
+├── features/auth/
+│   ├── data/models/
+│   │   ├── user_model.dart          # Modelo do usuário com contadores
+│   │   └── feature_access.dart      # AppFeature enum e AccessResult
+│   ├── presentation/
+│   │   ├── providers/
+│   │   │   └── auth_provider.dart   # Estado do usuário, limites, roles
+│   │   ├── pages/
+│   │   │   └── profile_page.dart    # Tela de perfil
+│   │   └── widgets/
+│   │       ├── premium_blur_widget.dart     # PremiumBlurWidget, PremiumContentSection
+│   │       └── usage_limit_widget.dart      # Indicadores de uso
+│   └── auth.dart                    # Exports
+├── features/settings/
+│   └── presentation/pages/
+│       └── settings_page.dart       # Configurações com notificações
+└── core/diagnostic/
+    └── diagnostic_page.dart         # Debug/Admin com role switcher
+```
 
-### Alternativa: Supabase
-- Auth: Supabase Auth
-- Database: PostgreSQL
-- Storage: Supabase Storage
-- Mais controle, menos vendor lock-in
+---
+
+## Comandos Úteis para Continuar
+
+```bash
+# Verificar status do código
+git status
+
+# Build para testar
+flutter build apk --release
+
+# Rodar em debug
+flutter run
+
+# Gerar ícones (se necessário)
+flutter pub run flutter_launcher_icons
+```
+
+---
+
+## Notas para Próximo Chat
+
+1. **Estado atual**: Sistema de monetização/roles funciona localmente com SharedPreferences
+2. **Próximo passo lógico**: Escolher e configurar backend (Firebase ou Supabase)
+3. **Branch atual**: `claude/implement-roadmap-phases-019ftQAa3BvDcZhd2UUksGSM`
+4. **Sem erros de build conhecidos**: Último build bem-sucedido
 
 ---
 
