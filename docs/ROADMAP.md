@@ -7,8 +7,8 @@
 | 1 | MVP Local-First | ✅ Completo |
 | 2 | Backend + Conta + IA | ✅ Completo (Supabase integrado) |
 | 3 | Premium 1.0 | ✅ Completo (RevenueCat configurado) |
-| 4 | Premium 2.0: Astrologia | ✅ Completo |
-| 5 | Refinos e Conteúdo | 🔄 Parcial |
+| 4 | Premium 2.0: Astrologia + Jornadas | ✅ Completo |
+| 5 | Refinos e Conteúdo | ✅ Quase Completo |
 
 ---
 
@@ -63,7 +63,7 @@
 - [x] Tela de recuperação de senha com Supabase
 - [x] AuthWrapper para gerenciar fluxo de navegação
 - [x] Deep Links configurados (iOS e Android) para OAuth
-- [ ] **OPCIONAL**: Login social (Google, Apple) - estrutura pronta, requer configuração OAuth no Supabase
+- [x] **OPCIONAL**: Login social (Google, Apple) - pacotes habilitados (google_sign_in, sign_in_with_apple), requer configuração OAuth no Supabase Dashboard
 
 ### Etapa 2.3 - Perfil de Usuário ✅
 - [x] Tela de perfil completa com logout
@@ -71,7 +71,7 @@
 - [x] Dados de nascimento (para astrologia)
 - [x] Foto de perfil (picker + crop)
 - [x] Botão de logout com confirmação
-- [ ] **OPCIONAL**: Configurações de privacidade
+- [x] **OPCIONAL**: Configurações de privacidade (PrivacySettingsPage com toggles, export e delete)
 - [x] Email verificado via Supabase
 
 ### Etapa 2.4 - Sistema de Roles ✅
@@ -91,7 +91,7 @@
 - [x] Sync de todas as entidades (feitiços, diários, etc.)
 - [x] Upload e download de dados
 - [x] Marcação de items sincronizados
-- [ ] **OPCIONAL**: Tratamento de conflitos avançado
+- [x] **OPCIONAL**: Tratamento de conflitos avançado (ConflictResolution: serverWins, clientWins, mostRecent, manual)
 
 ---
 
@@ -145,7 +145,7 @@
 - [x] Interpretações planeta-em-signo
 - [x] Clima mágico diário
 - [x] Trânsitos planetários
-- [ ] Jornadas gamificadas
+- [x] Jornadas gamificadas (6 jornadas com XP, níveis e progresso)
 
 ---
 
@@ -164,11 +164,11 @@
 - [x] Pre-fill do mapa astral com dados anteriores
 
 ### Pendente ❌
-- [ ] Analytics mágicos (estatísticas de uso)
+- [x] Analytics mágicos (MagicalAnalyticsPage com estatísticas de uso)
 - [ ] Busca natural por IA
 - [ ] Packs mensais de conteúdo
 - [ ] Comunidade / Social features
-- [ ] Scroll position persistence (parcial)
+- [x] Scroll position persistence (ScrollPositionService)
 
 ---
 
@@ -229,15 +229,15 @@ enum SubscriptionPlan { free, monthly, yearly, lifetime }
 - [x] Criar projeto no Supabase
 - [x] Executar schema SQL (`docs/supabase_schema.sql`)
 - [x] Configurar URL e API key no código
-- [ ] **DEPLOY**: Habilitar RLS em todas as tabelas
-- [ ] **DEPLOY**: Configurar OAuth providers (Google, Apple) se necessário
+- [x] **DEPLOY**: Habilitar RLS em todas as tabelas
+- [ ] **DEPLOY**: Configurar OAuth providers no Supabase Dashboard (Google, Apple) - pacotes já integrados
 
-#### 2. Configurar RevenueCat
-- [ ] Criar conta no RevenueCat
-- [ ] Criar app iOS e Android
-- [ ] Configurar API keys no código
-- [ ] Criar produtos (monthly, yearly, lifetime)
-- [ ] Criar Offering com os pacotes
+#### 2. Configurar RevenueCat ✅
+- [x] Criar conta no RevenueCat
+- [x] Criar app iOS e Android
+- [x] Configurar API keys no código (test_pXihQfrQyXPuOlWoYzUGYCruxym)
+- [x] Criar produtos (monthly, yearly, lifetime)
+- [ ] Criar Offering com os pacotes (aguardando validação das lojas)
 
 #### 3. Configurar Lojas
 - [ ] Google Play Console: criar produtos de assinatura
@@ -246,14 +246,15 @@ enum SubscriptionPlan { free, monthly, yearly, lifetime }
 
 ### PRIORIDADE MÉDIA - Melhorias
 
-#### 4. Analytics
-- [ ] Firebase Analytics ou similar
-- [ ] Eventos: uso de features, conversão, retenção
-- [ ] Funnel de upgrade
+#### 4. Analytics ✅
+- [x] MagicalAnalyticsPage com estatísticas de uso
+- [x] Contadores de streak, categorias, taxas de manifestação
+- [ ] Firebase Analytics (opcional, para métricas de negócio)
 
-#### 5. Scroll Position Persistence
-- [ ] Salvar posição de scroll das listas
-- [ ] Restaurar ao voltar para a página
+#### 5. Scroll Position Persistence ✅
+- [x] ScrollPositionService com SharedPreferences
+- [x] ScrollPositionMixin para fácil integração
+- [x] ScrollPositionWrapper widget
 
 ### PRIORIDADE BAIXA - Futuro
 
@@ -333,20 +334,24 @@ flutter pub run flutter_launcher_icons
 ## Status Atual e Próximos Passos
 
 ### Implementado ✅
-1. **Backend**: Supabase integrado (Auth, Database, RLS)
+1. **Backend**: Supabase integrado (Auth, Database, RLS habilitado)
 2. **Autenticação**: Login/Signup/Logout com email/senha via Supabase
-3. **Sincronização**: `DataSyncService` para sync SQLite <-> Supabase
-4. **Pagamentos**: `PaymentService` com RevenueCat (estrutura pronta)
-5. **Deep Links**: Configurados para iOS e Android (OAuth callbacks)
+3. **Login Social**: Pacotes google_sign_in e sign_in_with_apple habilitados
+4. **Sincronização**: `DataSyncService` com tratamento de conflitos avançado
+5. **Pagamentos**: `PaymentService` com RevenueCat (Paywall e Customer Center)
+6. **Deep Links**: Configurados para iOS e Android (OAuth callbacks)
+7. **Analytics**: MagicalAnalyticsPage com estatísticas de uso
+8. **Jornadas**: Sistema gamificado com XP e níveis
+9. **Privacidade**: PrivacySettingsPage com toggles e gestão de dados
+10. **Scroll Position**: ScrollPositionService para persistência
 
 ### Para Deploy
-1. Executar `docs/supabase_schema.sql` no Supabase (se ainda não fez)
-2. Configurar produtos no RevenueCat Dashboard
-3. Configurar produtos nas lojas (Google Play / App Store)
-4. Testar fluxo completo em ambiente de produção
+1. Configurar OAuth providers no Supabase Dashboard (Google, Apple)
+2. Aguardar validação das lojas para criar Offerings no RevenueCat
+3. Testar fluxo completo em ambiente de produção
 
 ### Branch
-- **Atual**: `claude/multi-user-implementation-01FJcT6xrQVBbGBy7qhXpc2e`
+- **Atual**: `claude/pull-from-branch-b-01MkZMHFbRTCa1wsNKQgLTmh`
 
 ---
 
