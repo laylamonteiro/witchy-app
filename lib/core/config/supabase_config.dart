@@ -1,16 +1,16 @@
 /// Configuração do Supabase
 ///
-/// IMPORTANTE: Em produção, use variáveis de ambiente ou flutter_dotenv
-/// para não expor as chaves no código fonte.
+/// IMPORTANTE: Em produção, considere usar variáveis de ambiente
+/// para não expor as chaves no código fonte público.
 class SupabaseConfig {
   /// URL do projeto Supabase
   static const String url = 'https://jdncobtussylzfabrebe.supabase.co';
 
   /// Anon Key (chave pública) do Supabase
-  /// Obtenha em: Supabase Dashboard > Settings > API > Project API keys > anon public
+  /// Esta é a publishable key - segura para usar no cliente
   static const String anonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: '', // Será preenchido via --dart-define ou .env
+    defaultValue: 'sb_publishable_79SfND3aYJcqveRfKd7ljw_vTkXNVLb',
   );
 
   /// Verifica se o Supabase está configurado
