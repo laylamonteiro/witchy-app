@@ -162,18 +162,20 @@ class _PendulumPageState extends State<PendulumPage>
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) {
                       final remaining = auth.remainingPendulumUses;
+                      final isUnlimited = remaining < 0; // Admin
+                      final hasRemaining = isUnlimited || remaining > 0;
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: remaining > 0
+                          color: hasRemaining
                               ? AppColors.success.withOpacity(0.2)
                               : AppColors.alert.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: remaining > 0
+                            color: hasRemaining
                                 ? AppColors.success.withOpacity(0.5)
                                 : AppColors.alert.withOpacity(0.5),
                           ),
@@ -182,20 +184,24 @@ class _PendulumPageState extends State<PendulumPage>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              remaining > 0 ? Icons.check_circle : Icons.timer,
+                              isUnlimited
+                                  ? Icons.all_inclusive
+                                  : (hasRemaining ? Icons.check_circle : Icons.timer),
                               size: 16,
-                              color: remaining > 0
+                              color: hasRemaining
                                   ? AppColors.success
                                   : AppColors.alert,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              remaining > 0
-                                  ? '1 consulta disponível hoje'
-                                  : 'Consulta usada - volte amanhã',
+                              isUnlimited
+                                  ? 'Consultas ilimitadas (Admin)'
+                                  : (hasRemaining
+                                      ? '1 consulta disponível hoje'
+                                      : 'Consulta usada - volte amanhã'),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: remaining > 0
+                                color: hasRemaining
                                     ? AppColors.success
                                     : AppColors.alert,
                               ),

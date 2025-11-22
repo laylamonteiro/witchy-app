@@ -131,11 +131,14 @@ class UserModel {
     return freeAiConsultationsLimit - aiConsultationsToday;
   }
 
-  /// Verifica se pode usar o pêndulo hoje (limite para TODOS)
-  bool get canUsePendulum => pendulumUsesToday < dailyPendulumLimit;
+  /// Verifica se pode usar o pêndulo hoje (admin ilimitado, outros 1/dia)
+  bool get canUsePendulum => isAdmin || pendulumUsesToday < dailyPendulumLimit;
 
   /// Quantos usos do pêndulo restam hoje
-  int get remainingPendulumUses => dailyPendulumLimit - pendulumUsesToday;
+  int get remainingPendulumUses {
+    if (isAdmin) return -1; // ilimitado
+    return dailyPendulumLimit - pendulumUsesToday;
+  }
 
   UserModel copyWith({
     String? id,
