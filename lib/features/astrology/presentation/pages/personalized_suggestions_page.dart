@@ -6,7 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_upgrade_sheet.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/birth_chart_model.dart';
 import '../../data/models/planet_position_model.dart';
