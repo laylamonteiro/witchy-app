@@ -172,8 +172,8 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
 
-                // Card de Admin (apenas para admins)
-                if (user.isAdmin) _buildAdminCard(context, authProvider),
+                // Card de Admin (para admins originais, mesmo simulando outros roles)
+                if (authProvider.isOriginalAdmin) _buildAdminCard(context, authProvider),
               ],
             ),
           );
@@ -360,9 +360,9 @@ class SettingsPage extends StatelessWidget {
               Icons.bug_report,
               color: AppColors.lilac,
             ),
-            title: const Text('Diagnóstico'),
+            title: const Text('Diagnóstico & Debug'),
             subtitle: Text(
-              'Testar funcionalidades do app',
+              'Testes, alternância de roles e mais',
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
@@ -378,81 +378,7 @@ class SettingsPage extends StatelessWidget {
               );
             },
           ),
-          const Divider(color: AppColors.surfaceBorder),
-          // Simular planos
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Simular Plano:',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _buildRoleButton(
-                      context,
-                      'Free',
-                      UserRole.free,
-                      authProvider,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildRoleButton(
-                      context,
-                      'Premium',
-                      UserRole.premium,
-                      authProvider,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildRoleButton(
-                      context,
-                      'Admin',
-                      UserRole.admin,
-                      authProvider,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildRoleButton(
-    BuildContext context,
-    String label,
-    UserRole role,
-    AuthProvider authProvider,
-  ) {
-    final isSelected = authProvider.currentUser.role == role;
-
-    return Expanded(
-      child: ElevatedButton(
-        onPressed: () => authProvider.setUserRole(role),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected
-              ? const Color(0xFF9C27B0)
-              : Colors.white.withOpacity(0.1),
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
       ),
     );
   }

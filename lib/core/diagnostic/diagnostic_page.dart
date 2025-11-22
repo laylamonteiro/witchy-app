@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/magical_card.dart';
 import '../ai/ai_service.dart';
@@ -9,6 +10,7 @@ import '../../features/astrology/data/services/chart_calculator.dart';
 import '../../features/astrology/data/services/transit_interpreter.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../core/database/database_helper.dart';
+import '../../features/auth/auth.dart';
 
 // Mapa de capitais brasileiras com coordenadas exatas
 const Map<String, Map<String, dynamic>> _brazilianCapitals = {
@@ -107,7 +109,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -592,6 +594,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
+            Tab(text: 'Debug'),
             Tab(text: 'IA Groq'),
             Tab(text: 'Mapa Astral'),
             Tab(text: 'Clima Mágico'),
@@ -613,6 +616,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: [
+          _buildDebugSection(),
           _buildTestSection(
             icon: Icons.psychology,
             title: 'IA Groq',
@@ -635,6 +639,292 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         ],
       ),
     );
+  }
+
+  Widget _buildDebugSection() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        final user = authProvider.currentUser;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Card de Role Atual
+              MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _getRoleIcon(user.role),
+                          color: _getRoleColor(user.role),
+                          size: 32,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Role Atual',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                              Text(
+                                _getRoleLabel(user.role),
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                      color: _getRoleColor(user.role),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _getRoleColor(user.role).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            user.plan.name.toUpperCase(),
+                            style: TextStyle(
+                              color: _getRoleColor(user.role),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Alternador de Roles
+              MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.swap_horiz,
+                          color: AppColors.lilac,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Simular Plano',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppColors.lilac,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Alterne entre roles para testar a experiência de cada tipo de usuário',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _buildRoleButton(context, 'Free', UserRole.free, authProvider),
+                        const SizedBox(width: 8),
+                        _buildRoleButton(context, 'Premium', UserRole.premium, authProvider),
+                        const SizedBox(width: 8),
+                        _buildRoleButton(context, 'Admin', UserRole.admin, authProvider),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Estatísticas de Uso
+              MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.analytics,
+                          color: AppColors.mint,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Estatísticas de Uso',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppColors.mint,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildStatRow('Feitiços salvos', '${user.spellsCount}/${UserModel.freeSpellsLimit}'),
+                    _buildStatRow('Diários este mês', '${user.diaryEntriesThisMonth}/${UserModel.freeDiaryEntriesLimit}'),
+                    _buildStatRow('Consultas IA hoje', '${user.aiConsultationsToday}/${UserModel.freeAiConsultationsLimit}'),
+                    _buildStatRow('Pêndulo hoje', '${user.pendulumUsesToday}/${UserModel.dailyPendulumLimit}'),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Ações de Reset
+              MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.refresh,
+                          color: AppColors.alert,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Ações de Reset',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppColors.alert,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          await authProvider.resetUser();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Usuário resetado para padrão'),
+                                backgroundColor: AppColors.alert,
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.person_off),
+                        label: const Text('Resetar Usuário'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.alert,
+                          side: const BorderSide(color: AppColors.alert),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRoleButton(
+    BuildContext context,
+    String label,
+    UserRole role,
+    AuthProvider authProvider,
+  ) {
+    final isSelected = authProvider.currentUser.role == role;
+
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () => authProvider.setUserRole(role),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSelected
+              ? _getRoleColor(role)
+              : Colors.white.withOpacity(0.1),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: AppColors.softWhite.withOpacity(0.8),
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.softWhite,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getRoleIcon(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return Icons.shield;
+      case UserRole.premium:
+        return Icons.star;
+      case UserRole.free:
+        return Icons.person;
+    }
+  }
+
+  Color _getRoleColor(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return const Color(0xFFFFD700);
+      case UserRole.premium:
+        return const Color(0xFF9C27B0);
+      case UserRole.free:
+        return const Color(0xFF2196F3);
+    }
+  }
+
+  String _getRoleLabel(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return 'Administrador';
+      case UserRole.premium:
+        return 'Premium';
+      case UserRole.free:
+        return 'Gratuito';
+    }
   }
 
   Widget _buildBirthChartSection() {

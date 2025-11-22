@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../grimoire/presentation/pages/grimoire_page.dart';
 import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
@@ -12,14 +13,51 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _selectedIndex = 0;
+  static const String _lastTabKey = 'last_selected_tab';
 
   final List<Widget> _pages = [
     const DiaryPage(),
     const GrimoirePage(),
     const EncyclopediaPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadLastTab();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _loadLastTab() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastTab = prefs.getInt(_lastTabKey) ?? 0;
+    if (mounted && lastTab != _selectedIndex) {
+      setState(() {
+        _selectedIndex = lastTab;
+      });
+    }
+  }
+
+  Future<void> _saveLastTab(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastTabKey, index);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      // Salvar tab atual quando app vai para background
+      _saveLastTab(_selectedIndex);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +95,7 @@ class _HomePageState extends State<HomePage> {
             setState(() {
               _selectedIndex = index;
             });
+            _saveLastTab(index);
           },
           items: const [
             BottomNavigationBarItem(

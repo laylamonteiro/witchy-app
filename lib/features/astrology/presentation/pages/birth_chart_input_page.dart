@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/input_formatters.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_view_page.dart';
 
@@ -81,6 +82,8 @@ class BirthChartInputPage extends StatefulWidget {
 class _BirthChartInputPageState extends State<BirthChartInputPage> {
   final _formKey = GlobalKey<FormState>();
   final _birthPlaceController = TextEditingController();
+  final _dateController = TextEditingController();
+  final _timeController = TextEditingController();
   final FocusNode _birthPlaceFocusNode = FocusNode();
 
   DateTime? _birthDate;
@@ -88,6 +91,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   String? _birthPlace;
   bool _unknownBirthTime = false;
   bool _isCalculating = false;
+  String? _dateError;
+  String? _timeError;
 
   List<Location> _locationSuggestions = [];
   List<Placemark> _placemarkSuggestions = [];
@@ -97,8 +102,74 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   double? _selectedLongitude;
 
   @override
+  void initState() {
+    super.initState();
+    _loadPreviousData();
+  }
+
+  Future<void> _loadPreviousData() async {
+    final provider = context.read<AstrologyProvider>();
+    await provider.loadBirthChart('current_user');
+
+    if (provider.birthChart != null && mounted) {
+      final chart = provider.birthChart!;
+      setState(() {
+        _birthDate = chart.birthDate;
+        _birthTime = chart.birthTime;
+        _birthPlace = chart.birthPlace;
+        _birthPlaceController.text = chart.birthPlace;
+        _dateController.text = formatDate(chart.birthDate);
+        if (!chart.unknownBirthTime) {
+          _timeController.text = formatTime(chart.birthTime);
+        }
+        _selectedLatitude = chart.latitude;
+        _selectedLongitude = chart.longitude;
+        _unknownBirthTime = chart.unknownBirthTime;
+      });
+    }
+  }
+
+  void _onDateChanged(String value) {
+    setState(() {
+      if (value.length == 10) {
+        final date = parseDate(value);
+        if (date != null) {
+          _birthDate = date;
+          _dateError = null;
+        } else {
+          _birthDate = null;
+          _dateError = 'Data inválida';
+        }
+      } else {
+        _birthDate = null;
+        _dateError = null;
+      }
+    });
+  }
+
+  void _onTimeChanged(String value) {
+    setState(() {
+      if (value.length == 5) {
+        final time = parseTime(value);
+        if (time != null) {
+          _birthTime = time;
+          _timeError = null;
+        } else {
+          _birthTime = null;
+          _timeError = 'Hora inválida';
+        }
+      } else {
+        _birthTime = null;
+        _timeError = null;
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _birthPlaceController.dispose();
+    _dateController.dispose();
+    _timeController.dispose();
     _birthPlaceFocusNode.dispose();
     super.dispose();
   }
@@ -286,60 +357,6 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     _birthPlaceFocusNode.unfocus();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.lilac,
-              surface: AppColors.darkBackground,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && picked != _birthDate) {
-      setState(() {
-        _birthDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 12, minute: 0),
-      helpText: 'Selecione a hora',
-      cancelText: 'Cancelar',
-      confirmText: 'Confirmar',
-      hourLabelText: 'Hora',
-      minuteLabelText: 'Minuto',
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.lilac,
-              surface: AppColors.darkBackground,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && picked != _birthTime) {
-      setState(() {
-        _birthTime = picked;
-      });
-    }
-  }
 
   bool _canCalculate() {
     return _birthDate != null &&
@@ -475,18 +492,52 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                             color: AppColors.lilac,
                           ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Digite no formato dd/mm/aaaa',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.softWhite.withOpacity(0.7),
+                          ),
+                    ),
                     const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () => _selectDate(context),
-                      icon: const Icon(Icons.calendar_today),
-                      label: Text(
-                        _birthDate == null
-                            ? 'Selecionar data'
-                            : DateFormat('dd/MM/yyyy').format(_birthDate!),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.cardBackground,
-                        foregroundColor: AppColors.softWhite,
+                    TextField(
+                      controller: _dateController,
+                      style: const TextStyle(color: AppColors.softWhite),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        DateInputFormatter(),
+                      ],
+                      onChanged: _onDateChanged,
+                      decoration: InputDecoration(
+                        hintText: '31/03/1994',
+                        hintStyle: TextStyle(
+                          color: AppColors.softWhite.withOpacity(0.4),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.calendar_today,
+                          color: AppColors.lilac,
+                        ),
+                        suffixIcon: _birthDate != null
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                              )
+                            : null,
+                        errorText: _dateError,
+                        filled: true,
+                        fillColor: AppColors.cardBackground,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.lilac,
+                            width: 1,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -514,17 +565,55 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           ),
                     ),
                     const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: _unknownBirthTime ? null : () => _selectTime(context),
-                      icon: const Icon(Icons.access_time),
-                      label: Text(
-                        _birthTime == null
-                            ? 'Selecionar hora'
-                            : _birthTime!.format(context),
+                    TextField(
+                      controller: _timeController,
+                      enabled: !_unknownBirthTime,
+                      style: TextStyle(
+                        color: _unknownBirthTime
+                            ? AppColors.softWhite.withOpacity(0.3)
+                            : AppColors.softWhite,
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.cardBackground,
-                        foregroundColor: AppColors.softWhite,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        TimeInputFormatter(),
+                      ],
+                      onChanged: _onTimeChanged,
+                      decoration: InputDecoration(
+                        hintText: '19:39',
+                        hintStyle: TextStyle(
+                          color: AppColors.softWhite.withOpacity(0.4),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.access_time,
+                          color: _unknownBirthTime
+                              ? AppColors.lilac.withOpacity(0.3)
+                              : AppColors.lilac,
+                        ),
+                        suffixIcon: _birthTime != null && !_unknownBirthTime
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                              )
+                            : null,
+                        errorText: _timeError,
+                        filled: true,
+                        fillColor: AppColors.cardBackground,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.lilac,
+                            width: 1,
+                          ),
+                        ),
+                        disabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -533,7 +622,11 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       onChanged: (value) {
                         setState(() {
                           _unknownBirthTime = value ?? false;
-                          if (_unknownBirthTime) _birthTime = null;
+                          if (_unknownBirthTime) {
+                            _birthTime = null;
+                            _timeController.clear();
+                            _timeError = null;
+                          }
                         });
                       },
                       title: const Text(
@@ -541,6 +634,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                         style: TextStyle(color: AppColors.softWhite),
                       ),
                       activeColor: AppColors.lilac,
+                      contentPadding: EdgeInsets.zero,
                     ),
                   ],
                 ),
