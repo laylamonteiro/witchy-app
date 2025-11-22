@@ -224,79 +224,81 @@ class FeatureGate extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A2E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) {
+        final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+        return Container(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1A1A2E),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            const Icon(
-              Icons.lock_outline,
-              color: Color(0xFF9C27B0),
-              size: 48,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              blockedMessage ?? access.message ?? 'Funcionalidade Premium',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
+              const SizedBox(height: 24),
+              const Icon(
+                Icons.lock_outline,
+                color: Color(0xFF9C27B0),
+                size: 48,
               ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => const PremiumUpgradeSheet(),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9C27B0),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+              const SizedBox(height: 16),
+              Text(
+                blockedMessage ?? access.message ?? 'Funcionalidade Premium',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => const PremiumUpgradeSheet(),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF9C27B0),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    'Desbloquear com Premium',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
                 child: const Text(
-                  'Desbloquear com Premium',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'Agora não',
+                  style: TextStyle(color: Colors.white54),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Agora não',
-                style: TextStyle(color: Colors.white54),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
