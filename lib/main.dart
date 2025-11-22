@@ -7,13 +7,16 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:sqflite_common/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/database/database_helper.dart';
 import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
+import 'core/config/supabase_config.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
+import 'features/auth/presentation/pages/auth_wrapper.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
@@ -43,6 +46,14 @@ void main() async {
 
   // Initialize database
   await DatabaseHelper.instance.database;
+
+  // Initialize Supabase
+  if (SupabaseConfig.isConfigured) {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      anonKey: SupabaseConfig.anonKey,
+    );
+  }
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
@@ -140,9 +151,14 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       child: MaterialApp(
         title: 'Grimório de Bolso',
         theme: AppTheme.darkTheme,
-        home: _showSplash
-            ? const SplashScreen(child: HomePage())
-            : const HomePage(),
+        home: AuthWrapper(showSplash: _showSplash),
+        routes: {
+          '/home': (context) => const HomePage(),
+          '/welcome': (context) => const WelcomePage(),
+          '/login': (context) => const LoginPage(),
+          '/signup': (context) => const SignupPage(),
+          '/onboarding': (context) => const OnboardingPage(),
+        },
         debugShowCheckedModeBanner: false,
       ),
     );

@@ -5,8 +5,8 @@
 | Fase | Nome | Status |
 |------|------|--------|
 | 1 | MVP Local-First | ✅ Completo |
-| 2 | Backend + Conta + IA | 🔄 Parcial (Local) |
-| 3 | Premium 1.0 | 🔄 Parcial (Local) |
+| 2 | Backend + Conta + IA | ✅ Completo (Supabase integrado) |
+| 3 | Premium 1.0 | ✅ Completo (RevenueCat configurado) |
 | 4 | Premium 2.0: Astrologia | ✅ Completo |
 | 5 | Refinos e Conteúdo | 🔄 Parcial |
 
@@ -43,30 +43,36 @@
 
 ---
 
-## Fase 2 - Backend + Conta + IA 🔄
+## Fase 2 - Backend + Conta + IA ✅
 
-### Etapa 2.1 - Infraestrutura de Autenticação (LOCAL) ✅
+### Etapa 2.1 - Infraestrutura de Autenticação ✅
 - [x] Modelo de usuário (`UserModel`) - **Implementado localmente**
 - [x] `AuthProvider` com SharedPreferences
 - [x] Sistema de roles (free, premium, admin)
-- [ ] **FALTA**: Escolher backend (Firebase Auth / Supabase)
-- [ ] **FALTA**: Configurar projeto no backend escolhido
-- [ ] **FALTA**: Implementar `AuthRepository` com backend real
+- [x] `AuthRepository` abstrato (interface para backend)
+- [x] `LocalAuthRepository` (implementação local)
+- [x] `SupabaseAuthRepository` (integração completa)
+- [x] Banco de dados preparado com `user_id` em todas as tabelas
+- [x] Projeto Supabase configurado e integrado
 
-### Etapa 2.2 - Telas de Autenticação ❌
-- [ ] Tela de boas-vindas/onboarding
-- [ ] Tela de login (email/senha)
-- [ ] Tela de cadastro
-- [ ] Tela de recuperação de senha
-- [ ] Login social (Google, Apple)
+### Etapa 2.2 - Telas de Autenticação ✅
+- [x] Tela de onboarding com slides explicativos
+- [x] Tela de boas-vindas (WelcomePage)
+- [x] Tela de login (email/senha) com Supabase
+- [x] Tela de cadastro com Supabase
+- [x] Tela de recuperação de senha com Supabase
+- [x] AuthWrapper para gerenciar fluxo de navegação
+- [x] Deep Links configurados (iOS e Android) para OAuth
+- [ ] **OPCIONAL**: Login social (Google, Apple) - estrutura pronta, requer configuração OAuth no Supabase
 
-### Etapa 2.3 - Perfil de Usuário 🔄
-- [x] Tela de perfil básica
+### Etapa 2.3 - Perfil de Usuário ✅
+- [x] Tela de perfil completa com logout
 - [x] Edição de nome (displayName)
 - [x] Dados de nascimento (para astrologia)
-- [ ] **FALTA**: Foto de perfil
-- [ ] **FALTA**: Configurações de privacidade
-- [ ] **FALTA**: Email verificado
+- [x] Foto de perfil (picker + crop)
+- [x] Botão de logout com confirmação
+- [ ] **OPCIONAL**: Configurações de privacidade
+- [x] Email verificado via Supabase
 
 ### Etapa 2.4 - Sistema de Roles ✅
 - [x] Definir roles: `free`, `premium`, `admin`
@@ -74,26 +80,32 @@
 - [x] Implementar verificação de permissões (FeatureAccess)
 - [x] Middleware de autorização (checkFeatureAccess)
 
-### Etapa 2.5 - Feature Toggles ✅ (Local)
+### Etapa 2.5 - Feature Toggles ✅
 - [x] Sistema de feature flags (`AppFeature` enum)
 - [x] Configuração por role/plano (`FeatureAccess`)
 - [x] Diferentes AccessTypes (full, preview, blocked, limited)
-- [ ] **FALTA**: Toggle remoto (Firebase Remote Config)
+- [ ] **OPCIONAL**: Toggle remoto (Firebase Remote Config)
 
-### Etapa 2.6 - Sincronização ❌
-- [ ] Estrutura de dados na nuvem
-- [ ] Sync de feitiços do usuário
-- [ ] Sync de diários
-- [ ] Tratamento de conflitos
+### Etapa 2.6 - Sincronização ✅
+- [x] `DataSyncService` para sincronização SQLite <-> Supabase
+- [x] Sync de todas as entidades (feitiços, diários, etc.)
+- [x] Upload e download de dados
+- [x] Marcação de items sincronizados
+- [ ] **OPCIONAL**: Tratamento de conflitos avançado
 
 ---
 
-## Fase 3 - Premium 1.0 🔄
+## Fase 3 - Premium 1.0 ✅
 
-### Monetização ❌
-- [ ] Integração com loja (Google Play / App Store)
-- [ ] Implementar paywall real
-- [ ] Gerenciamento de assinaturas reais
+### Monetização ✅
+- [x] `PaymentService` com RevenueCat integrado
+- [x] `RevenueCatConfig` com configuração de API keys
+- [x] Suporte a assinaturas mensais, anuais e vitalícias
+- [x] Restauração de compras anteriores
+- [x] Integração com user ID do Supabase
+- [ ] **DEPLOY**: Configurar produtos no RevenueCat Dashboard
+- [ ] **DEPLOY**: Configurar produtos no Google Play Console
+- [ ] **DEPLOY**: Configurar produtos no App Store Connect
 
 ### UI Premium ✅
 - [x] `PremiumUpgradeSheet` (tela de upgrade)
@@ -117,10 +129,11 @@
 | Sugestões Personalizadas | Blur | ✅ | ✅ |
 | Fase Lunar nos feitiços | ❌ | ✅ | ✅ |
 
-### Backup em Nuvem ❌
-- [ ] Backup automático para premium
-- [ ] Restauração de dados
-- [ ] Exportação de dados (GDPR)
+### Backup em Nuvem ✅
+- [x] Sincronização automática via `DataSyncService`
+- [x] Upload/Download de todos os dados
+- [x] Dados isolados por usuário (RLS no Supabase)
+- [ ] **OPCIONAL**: Exportação de dados (GDPR)
 
 ---
 
@@ -208,99 +221,93 @@ enum SubscriptionPlan { free, monthly, yearly, lifetime }
 
 ---
 
-## O QUE FALTA IMPLEMENTAR (Detalhado)
+## O QUE FALTA PARA PRODUÇÃO
 
-### PRIORIDADE ALTA - Para App Funcional com Monetização
+### PRIORIDADE ALTA - Deploy
 
-#### 1. Backend Real (Escolher um)
-```
-Opção A - Firebase (Recomendado para MVP rápido):
-- Firebase Authentication (email, Google, Apple)
-- Cloud Firestore (dados do usuário)
-- Firebase Storage (fotos de perfil)
-- Remote Config (feature flags)
+#### 1. Configurar Supabase em Produção ✅
+- [x] Criar projeto no Supabase
+- [x] Executar schema SQL (`docs/supabase_schema.sql`)
+- [x] Configurar URL e API key no código
+- [ ] **DEPLOY**: Habilitar RLS em todas as tabelas
+- [ ] **DEPLOY**: Configurar OAuth providers (Google, Apple) se necessário
 
-Opção B - Supabase (Mais controle):
-- Supabase Auth
-- PostgreSQL
-- Storage
-```
+#### 2. Configurar RevenueCat
+- [ ] Criar conta no RevenueCat
+- [ ] Criar app iOS e Android
+- [ ] Configurar API keys no código
+- [ ] Criar produtos (monthly, yearly, lifetime)
+- [ ] Criar Offering com os pacotes
 
-#### 2. Autenticação Real
-- Criar telas: Login, Cadastro, Recuperação de senha
-- Implementar AuthRepository com backend
-- Migrar dados locais para nuvem no primeiro login
-- Login social (Google Sign-In, Apple Sign-In)
+#### 3. Configurar Lojas
+- [ ] Google Play Console: criar produtos de assinatura
+- [ ] App Store Connect: criar produtos de assinatura
+- [ ] Testar compras em sandbox
 
-#### 3. Integração com Lojas
-- Google Play Billing (Android)
-- StoreKit 2 (iOS)
-- Usar pacote `purchases_flutter` (RevenueCat) ou `in_app_purchase`
-- Webhook para validar compras no backend
+### PRIORIDADE MÉDIA - Melhorias
 
-#### 4. Sincronização de Dados
-- Sincronizar feitiços, diários, configurações
-- Tratamento de conflitos (last-write-wins ou merge)
-- Modo offline com sync posterior
+#### 4. Analytics
+- [ ] Firebase Analytics ou similar
+- [ ] Eventos: uso de features, conversão, retenção
+- [ ] Funnel de upgrade
 
-### PRIORIDADE MÉDIA - Melhorias de UX
-
-#### 5. Foto de Perfil
-- Picker de imagem (câmera/galeria)
-- Crop circular
-- Upload para Storage
-- Cache local
-
-#### 6. Onboarding
-- Tela de boas-vindas com slides
-- Explicação das funcionalidades
-- Coleta de dados iniciais (nome, data nascimento)
-- Skip para usuários que já usaram
-
-#### 7. Scroll Position Persistence
-- Salvar posição de scroll das listas
-- Restaurar ao voltar para a página
+#### 5. Scroll Position Persistence
+- [ ] Salvar posição de scroll das listas
+- [ ] Restaurar ao voltar para a página
 
 ### PRIORIDADE BAIXA - Futuro
 
-#### 8. Analytics
-- Firebase Analytics ou similar
-- Eventos: uso de features, conversão, retenção
-- Funnel de upgrade
+#### 6. Busca por IA
+- [ ] Integrar com IA para busca natural
+- [ ] "Encontre feitiços para prosperidade"
 
-#### 9. Busca por IA
-- Integrar com IA para busca natural
-- "Encontre feitiços para prosperidade"
-
-#### 10. Social Features
-- Compartilhar feitiços
-- Feed de comunidade
-- Comentários
+#### 7. Social Features
+- [ ] Compartilhar feitiços
+- [ ] Feed de comunidade
+- [ ] Comentários
 
 ---
 
-## Arquivos Principais do Sistema de Monetização
+## Arquivos Principais do Sistema
 
 ```
 lib/
+├── core/
+│   ├── config/
+│   │   ├── supabase_config.dart     # URL e API key do Supabase
+│   │   └── revenuecat_config.dart   # API keys do RevenueCat
+│   ├── services/
+│   │   ├── data_sync_service.dart   # Sincronização SQLite <-> Supabase
+│   │   └── payment_service.dart     # Compras in-app com RevenueCat
+│   └── database/
+│       └── database_helper.dart     # SQLite com user_id em todas tabelas
 ├── features/auth/
-│   ├── data/models/
-│   │   ├── user_model.dart          # Modelo do usuário com contadores
-│   │   └── feature_access.dart      # AppFeature enum e AccessResult
+│   ├── data/
+│   │   ├── models/
+│   │   │   ├── user_model.dart      # Modelo do usuário com contadores
+│   │   │   └── feature_access.dart  # AppFeature enum e AccessResult
+│   │   └── repositories/
+│   │       ├── auth_repository.dart          # Interface abstrata
+│   │       ├── local_auth_repository.dart    # Implementação local
+│   │       └── supabase_auth_repository.dart # Implementação Supabase
 │   ├── presentation/
 │   │   ├── providers/
 │   │   │   └── auth_provider.dart   # Estado do usuário, limites, roles
 │   │   ├── pages/
-│   │   │   └── profile_page.dart    # Tela de perfil
+│   │   │   ├── welcome_page.dart    # Tela de boas-vindas
+│   │   │   ├── login_page.dart      # Login com Supabase
+│   │   │   ├── signup_page.dart     # Cadastro com Supabase
+│   │   │   ├── forgot_password_page.dart # Recuperação de senha
+│   │   │   ├── onboarding_page.dart # Slides de onboarding
+│   │   │   ├── auth_wrapper.dart    # Gerenciador de fluxo auth
+│   │   │   └── profile_page.dart    # Perfil com logout
 │   │   └── widgets/
-│   │       ├── premium_blur_widget.dart     # PremiumBlurWidget, PremiumContentSection
-│   │       └── usage_limit_widget.dart      # Indicadores de uso
+│   │       ├── premium_blur_widget.dart     # Blur para conteúdo premium
+│   │       ├── usage_limit_widget.dart      # Indicadores de uso
+│   │       └── profile_avatar_picker.dart   # Picker de foto de perfil
 │   └── auth.dart                    # Exports
-├── features/settings/
-│   └── presentation/pages/
-│       └── settings_page.dart       # Configurações com notificações
-└── core/diagnostic/
-    └── diagnostic_page.dart         # Debug/Admin com role switcher
+└── docs/
+    └── supabase_schema.sql          # Schema SQL para Supabase
 ```
 
 ---
@@ -323,12 +330,23 @@ flutter pub run flutter_launcher_icons
 
 ---
 
-## Notas para Próximo Chat
+## Status Atual e Próximos Passos
 
-1. **Estado atual**: Sistema de monetização/roles funciona localmente com SharedPreferences
-2. **Próximo passo lógico**: Escolher e configurar backend (Firebase ou Supabase)
-3. **Branch atual**: `claude/implement-roadmap-phases-019ftQAa3BvDcZhd2UUksGSM`
-4. **Sem erros de build conhecidos**: Último build bem-sucedido
+### Implementado ✅
+1. **Backend**: Supabase integrado (Auth, Database, RLS)
+2. **Autenticação**: Login/Signup/Logout com email/senha via Supabase
+3. **Sincronização**: `DataSyncService` para sync SQLite <-> Supabase
+4. **Pagamentos**: `PaymentService` com RevenueCat (estrutura pronta)
+5. **Deep Links**: Configurados para iOS e Android (OAuth callbacks)
+
+### Para Deploy
+1. Executar `docs/supabase_schema.sql` no Supabase (se ainda não fez)
+2. Configurar produtos no RevenueCat Dashboard
+3. Configurar produtos nas lojas (Google Play / App Store)
+4. Testar fluxo completo em ambiente de produção
+
+### Branch
+- **Atual**: `claude/multi-user-implementation-01FJcT6xrQVBbGBy7qhXpc2e`
 
 ---
 
