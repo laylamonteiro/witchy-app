@@ -16,6 +16,13 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    // Define flutter properties for plugins that need them
+    ext {
+        set('flutter.compileSdkVersion', 34)
+        set('flutter.minSdkVersion', 21)
+        set('flutter.targetSdkVersion', 34)
+    }
 }
 
 rootProject.buildDir = '../build'
