@@ -559,17 +559,9 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                 const SizedBox(height: 8),
                 const Divider(color: AppColors.lilac),
                 const SizedBox(height: 12),
-                // Conteúdo com blur para free
+                // Conteúdo com blur para free (títulos visíveis)
                 if (isFree) ...[
-                  ClipRRect(
-                    child: ImageFiltered(
-                      imageFilter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
-                      child: MarkdownBody(
-                        data: profile!.aiGeneratedText!,
-                        styleSheet: _getMarkdownStyleSheet(),
-                      ),
-                    ),
-                  ),
+                  _buildMarkdownWithBlurredContent(profile!.aiGeneratedText!),
                   const SizedBox(height: 16),
                   Center(
                     child: ElevatedButton.icon(
@@ -679,6 +671,58 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Renderiza markdown com blur apenas no conteúdo, mantendo títulos visíveis
+  Widget _buildMarkdownWithBlurredContent(String markdownText) {
+    final lines = markdownText.split('\n');
+    final List<Widget> widgets = [];
+    final StringBuffer contentBuffer = StringBuffer();
+
+    void flushContent() {
+      if (contentBuffer.isNotEmpty) {
+        final content = contentBuffer.toString().trim();
+        if (content.isNotEmpty) {
+          widgets.add(
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+                child: MarkdownBody(
+                  data: content,
+                  styleSheet: _getMarkdownStyleSheet(),
+                ),
+              ),
+            ),
+          );
+        }
+        contentBuffer.clear();
+      }
+    }
+
+    for (final line in lines) {
+      // Detecta linhas que são títulos (começam com #)
+      if (line.trimLeft().startsWith('#')) {
+        flushContent();
+        // Renderiza o título sem blur
+        widgets.add(
+          MarkdownBody(
+            data: line,
+            styleSheet: _getMarkdownStyleSheet(),
+          ),
+        );
+      } else {
+        contentBuffer.writeln(line);
+      }
+    }
+
+    // Flush conteúdo restante
+    flushContent();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
     );
   }
 

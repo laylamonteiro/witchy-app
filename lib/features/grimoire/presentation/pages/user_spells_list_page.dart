@@ -46,26 +46,67 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  PopupMenuButton<SpellCategory?>(
-                    icon: const Icon(Icons.filter_list),
+                  PopupMenuButton<String>(
+                    icon: Icon(
+                      Icons.filter_list,
+                      color: _filterCategory != null ? AppColors.lilac : null,
+                    ),
                     tooltip: 'Filtrar por categoria',
-                    onSelected: (category) {
+                    onSelected: (value) {
                       setState(() {
-                        _filterCategory = category;
+                        if (value == 'all') {
+                          _filterCategory = null;
+                        } else {
+                          _filterCategory = SpellCategory.values.firstWhere(
+                            (c) => c.name == value,
+                          );
+                        }
                       });
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: null,
-                        child: Text('Todas Categorias'),
+                      PopupMenuItem<String>(
+                        value: 'all',
+                        child: Row(
+                          children: [
+                            Icon(
+                              _filterCategory == null
+                                  ? Icons.check
+                                  : Icons.filter_list_off,
+                              size: 18,
+                              color: _filterCategory == null
+                                  ? AppColors.lilac
+                                  : AppColors.softWhite,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Todas Categorias',
+                              style: TextStyle(
+                                fontWeight: _filterCategory == null
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      ...SpellCategory.values.map((category) => PopupMenuItem(
-                            value: category,
+                      ...SpellCategory.values.map((category) => PopupMenuItem<String>(
+                            value: category.name,
                             child: Row(
                               children: [
                                 Text(category.icon),
                                 const SizedBox(width: 8),
-                                Text(category.displayName),
+                                Text(
+                                  category.displayName,
+                                  style: TextStyle(
+                                    fontWeight: _filterCategory == category
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                                if (_filterCategory == category) ...[
+                                  const Spacer(),
+                                  const Icon(Icons.check, size: 18, color: AppColors.lilac),
+                                ],
                               ],
                             ),
                           )),
