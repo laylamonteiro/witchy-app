@@ -6,7 +6,9 @@ import 'app_spells_list_page.dart';
 import 'user_spells_list_page.dart';
 import 'ai_spell_creation_page.dart';
 import '../../../astrology/presentation/pages/astrology_page.dart';
-import '../../../divination/presentation/pages/divination_hub_page.dart';
+import '../../../runes/presentation/pages/rune_reading_page.dart';
+import '../../../divination/presentation/pages/pendulum_page.dart';
+import '../../../divination/presentation/pages/oracle_cards_page.dart';
 
 class GrimoirePage extends StatelessWidget {
   const GrimoirePage({super.key});
@@ -109,13 +111,41 @@ class _ToolsTab extends StatelessWidget {
           const SizedBox(height: 12),
           _buildToolCard(
             context,
-            icon: '🔮',
-            title: 'Divinação',
-            description: 'Runas, pêndulo e oracle cards para orientação',
+            icon: 'ᚱ',
+            title: 'Runas',
+            description: 'Leitura de runas nórdicas antigas',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const DivinationHubPage(),
+                  builder: (_) => const RuneReadingPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '🔮',
+            title: 'Pêndulo',
+            description: 'Consultas de sim ou não com o pêndulo',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const PendulumPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '🃏',
+            title: 'Oracle Cards',
+            description: 'Mensagens e orientações diárias',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const OracleCardsPage(),
                 ),
               );
             },
