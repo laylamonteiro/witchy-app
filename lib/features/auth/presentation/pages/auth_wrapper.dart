@@ -32,10 +32,12 @@ class AuthWrapper extends StatelessWidget {
 
         // Verificar se usuário já usou o app antes
         final hasSeenOnboarding = authProvider.hasSeenOnboarding;
-        final hasAccount = authProvider.currentUser.email != 'local@grimorio.app';
+
+        // Verificar se tem conta autenticada (email válido)
+        final isAuthenticated = authProvider.currentUser.isAuthenticated;
 
         // Se tem conta logada, ir para home
-        if (hasAccount) {
+        if (isAuthenticated) {
           return showSplash
               ? const SplashScreen(child: HomePage())
               : const HomePage();
@@ -47,7 +49,7 @@ class AuthWrapper extends StatelessWidget {
         }
 
         // Se é primeira vez, mostrar onboarding
-        return const OnboardingPage();
+        return const OnboardingPage()
       },
     );
   }

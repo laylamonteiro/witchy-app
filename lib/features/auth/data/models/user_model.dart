@@ -112,6 +112,12 @@ class UserModel {
   /// Verifica se é usuário free
   bool get isFree => role == UserRole.free;
 
+  /// Verifica se é um usuário autenticado (com conta real, não local)
+  bool get isAuthenticated => email != null && email!.isNotEmpty;
+
+  /// Verifica se é o usuário local padrão (sem conta)
+  bool get isLocalUser => id == 'local_user' && email == null;
+
   /// Limite de feitiços para plano free
   static const int freeSpellsLimit = 10;
 
