@@ -85,6 +85,21 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Fix geolocator_android compatibility
+        run: |
+          # Find and patch geolocator_android build.gradle to use hardcoded SDK versions
+          GEOLOCATOR_PATH=$(find ~/.pub-cache/hosted/pub.dev -name "geolocator_android-*" -type d | head -1)
+          if [ -n "$GEOLOCATOR_PATH" ]; then
+            BUILD_FILE="$GEOLOCATOR_PATH/android/build.gradle"
+            if [ -f "$BUILD_FILE" ]; then
+              echo "Patching $BUILD_FILE"
+              sed -i 's/flutter.compileSdkVersion/34/g' "$BUILD_FILE"
+              sed -i 's/flutter.minSdkVersion/21/g' "$BUILD_FILE"
+              sed -i 's/flutter.targetSdkVersion/34/g' "$BUILD_FILE"
+              echo "Patch applied successfully"
+            fi
+          fi
+
       - name: Build release APK
         run: flutter build apk --release
 
