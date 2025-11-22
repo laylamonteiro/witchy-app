@@ -65,10 +65,56 @@ void main() async {
   runApp(GrimorioDeBolsoApp(prefs: prefs));
 }
 
-class GrimorioDeBolsoApp extends StatelessWidget {
+class GrimorioDeBolsoApp extends StatefulWidget {
   final SharedPreferences prefs;
 
   const GrimorioDeBolsoApp({super.key, required this.prefs});
+
+  @override
+  State<GrimorioDeBolsoApp> createState() => _GrimorioDeBolsoAppState();
+}
+
+class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
+    with WidgetsBindingObserver {
+  static const String _lastOpenedKey = 'last_opened_timestamp';
+  bool _showSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkSplashDisplay();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _checkSplashDisplay() async {
+    final lastOpened = widget.prefs.getInt(_lastOpenedKey) ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    // Se o app foi aberto nos últimos 5 minutos, não mostrar splash
+    // (significa que está voltando de background, não de um fechamento completo)
+    if (now - lastOpened < 5 * 60 * 1000) {
+      setState(() {
+        _showSplash = false;
+      });
+    }
+
+    // Atualizar timestamp de abertura
+    await widget.prefs.setInt(_lastOpenedKey, now);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Atualizar timestamp quando o app volta do background
+      widget.prefs.setInt(_lastOpenedKey, DateTime.now().millisecondsSinceEpoch);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,14 +133,16 @@ class GrimorioDeBolsoApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => NotificationProvider(
             flutterLocalNotificationsPlugin,
-            prefs,
+            widget.prefs,
           ),
         ),
       ],
       child: MaterialApp(
         title: 'Grimório de Bolso',
         theme: AppTheme.darkTheme,
-        home: const SplashScreen(child: HomePage()),
+        home: _showSplash
+            ? const SplashScreen(child: HomePage())
+            : const HomePage(),
         debugShowCheckedModeBanner: false,
       ),
     );

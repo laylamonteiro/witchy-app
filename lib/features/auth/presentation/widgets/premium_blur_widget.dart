@@ -60,6 +60,102 @@ class PremiumBlurWidget extends StatelessWidget {
   }
 }
 
+/// Widget que mostra conteúdo premium com título visível, conteúdo com blur e botão premium
+/// Ideal para seções onde queremos que o usuário veja o título mas não o conteúdo
+class PremiumContentSection extends StatelessWidget {
+  /// Título da seção (sempre visível, sem blur)
+  final Widget title;
+
+  /// Conteúdo que terá blur se não tiver acesso
+  final Widget content;
+
+  /// Feature necessária para acesso completo
+  final AppFeature feature;
+
+  /// Intensidade do blur
+  final double blurIntensity;
+
+  /// Se deve mostrar o botão de upgrade
+  final bool showUpgradeButton;
+
+  const PremiumContentSection({
+    super.key,
+    required this.title,
+    required this.content,
+    required this.feature,
+    this.blurIntensity = 6.0,
+    this.showUpgradeButton = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        final access = authProvider.checkFeatureAccess(feature);
+
+        if (access.hasFullAccess) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              title,
+              content,
+            ],
+          );
+        }
+
+        // Título sem blur + conteúdo com blur + botão premium
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Título sempre visível
+            title,
+            // Conteúdo com blur
+            ClipRRect(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(
+                  sigmaX: blurIntensity,
+                  sigmaY: blurIntensity,
+                ),
+                child: content,
+              ),
+            ),
+            // Botão premium
+            if (showUpgradeButton) ...[
+              const SizedBox(height: 16),
+              _buildPremiumButton(context),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPremiumButton(BuildContext context) {
+    return Center(
+      child: ElevatedButton.icon(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const PremiumUpgradeSheet(),
+          );
+        },
+        icon: const Icon(Icons.star, size: 18),
+        label: const Text('Seja Premium'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF9C27B0),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Widget para blur apenas em texto
 class PremiumBlurText extends StatelessWidget {
   final String text;

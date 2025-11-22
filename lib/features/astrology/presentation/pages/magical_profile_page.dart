@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +8,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/astrology_provider.dart';
 import '../../data/models/enums.dart';
 import '../../data/data_sources/planet_sign_interpretations.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
 class MagicalProfilePage extends StatefulWidget {
   const MagicalProfilePage({super.key});
@@ -519,67 +522,87 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
 
     // Se tem texto IA gerado
     if (profile?.aiGeneratedText != null) {
-      return MagicalCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      return Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          final isFree = authProvider.isFree;
+
+          return MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('🌟', style: TextStyle(fontSize: 24)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Sua Análise Personalizada',
-                    style: GoogleFonts.cinzelDecorative(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lilac,
+                // Título sempre visível
+                Row(
+                  children: [
+                    const Text('🌟', style: TextStyle(fontSize: 24)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Sua Análise Personalizada',
+                        style: GoogleFonts.cinzelDecorative(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.lilac,
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Gerada especialmente para você com base no seu mapa astral',
+                  style: TextStyle(
+                    color: AppColors.softWhite.withOpacity(0.6),
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
+                const SizedBox(height: 8),
+                const Divider(color: AppColors.lilac),
+                const SizedBox(height: 12),
+                // Conteúdo com blur para free
+                if (isFree) ...[
+                  ClipRRect(
+                    child: ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+                      child: MarkdownBody(
+                        data: profile!.aiGeneratedText!,
+                        styleSheet: _getMarkdownStyleSheet(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const PremiumUpgradeSheet(),
+                        );
+                      },
+                      icon: const Icon(Icons.star, size: 18),
+                      label: const Text('Seja Premium'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF9C27B0),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  MarkdownBody(
+                    data: profile!.aiGeneratedText!,
+                    styleSheet: _getMarkdownStyleSheet(),
+                  ),
+                ],
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Gerada especialmente para você com base no seu mapa astral',
-              style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.6),
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Divider(color: AppColors.lilac),
-            const SizedBox(height: 12),
-            MarkdownBody(
-              data: profile!.aiGeneratedText!,
-              styleSheet: MarkdownStyleSheet(
-                h2: GoogleFonts.cinzelDecorative(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.lilac,
-                ),
-                p: const TextStyle(
-                  color: AppColors.softWhite,
-                  height: 1.6,
-                  fontSize: 15,
-                ),
-                listBullet: const TextStyle(
-                  color: AppColors.lilac,
-                  fontSize: 15,
-                ),
-                strong: const TextStyle(
-                  color: AppColors.lilac,
-                  fontWeight: FontWeight.bold,
-                ),
-                em: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.9),
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       );
     }
 
@@ -655,6 +678,33 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  MarkdownStyleSheet _getMarkdownStyleSheet() {
+    return MarkdownStyleSheet(
+      h2: GoogleFonts.cinzelDecorative(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: AppColors.lilac,
+      ),
+      p: const TextStyle(
+        color: AppColors.softWhite,
+        height: 1.6,
+        fontSize: 15,
+      ),
+      listBullet: const TextStyle(
+        color: AppColors.lilac,
+        fontSize: 15,
+      ),
+      strong: const TextStyle(
+        color: AppColors.lilac,
+        fontWeight: FontWeight.bold,
+      ),
+      em: TextStyle(
+        color: AppColors.softWhite.withOpacity(0.9),
+        fontStyle: FontStyle.italic,
       ),
     );
   }

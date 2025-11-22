@@ -50,6 +50,11 @@ class UserModel {
   final int pendulumUsesToday;
   final DateTime? lastPendulumReset;
 
+  /// Contadores de uso diário para free (novos limites)
+  final int affirmationsToday;  // Limite: 3/dia
+  final int runeReadingsToday;  // Limite: 1/dia (cada tipo)
+  final int oracleReadingsToday;  // Limite: 1/dia (cada tipo)
+
   const UserModel({
     required this.id,
     this.email,
@@ -69,6 +74,9 @@ class UserModel {
     this.lastAiConsultationReset,
     this.pendulumUsesToday = 0,
     this.lastPendulumReset,
+    this.affirmationsToday = 0,
+    this.runeReadingsToday = 0,
+    this.oracleReadingsToday = 0,
   });
 
   /// Usuário padrão (local, sem autenticação)
@@ -110,11 +118,20 @@ class UserModel {
   /// Limite de entradas de diário por mês para plano free
   static const int freeDiaryEntriesLimit = 30;
 
-  /// Limite de consultas IA por dia para plano free
-  static const int freeAiConsultationsLimit = 3;
+  /// Limite de consultas IA por dia para plano free (Conselheiro Místico)
+  static const int freeAiConsultationsLimit = 1;
 
   /// Limite de uso do pêndulo por dia para TODOS os usuários
   static const int dailyPendulumLimit = 1;
+
+  /// Limite de afirmações por dia para free
+  static const int freeAffirmationsLimit = 3;
+
+  /// Limite de leituras de runas por dia para free
+  static const int freeRuneReadingsLimit = 1;
+
+  /// Limite de leituras de oracle por dia para free
+  static const int freeOracleReadingsLimit = 1;
 
   /// Verifica se pode criar mais feitiços
   bool get canCreateSpell => isPremium || spellsCount < freeSpellsLimit;
@@ -140,6 +157,33 @@ class UserModel {
     return dailyPendulumLimit - pendulumUsesToday;
   }
 
+  /// Verifica se pode usar afirmações hoje
+  bool get canUseAffirmations => isPremium || affirmationsToday < freeAffirmationsLimit;
+
+  /// Quantas afirmações restam hoje
+  int get remainingAffirmations {
+    if (isPremium) return -1; // ilimitado
+    return freeAffirmationsLimit - affirmationsToday;
+  }
+
+  /// Verifica se pode fazer leitura de runas hoje
+  bool get canUseRunes => isPremium || runeReadingsToday < freeRuneReadingsLimit;
+
+  /// Quantas leituras de runas restam hoje
+  int get remainingRuneReadings {
+    if (isPremium) return -1; // ilimitado
+    return freeRuneReadingsLimit - runeReadingsToday;
+  }
+
+  /// Verifica se pode fazer leitura de oracle hoje
+  bool get canUseOracle => isPremium || oracleReadingsToday < freeOracleReadingsLimit;
+
+  /// Quantas leituras de oracle restam hoje
+  int get remainingOracleReadings {
+    if (isPremium) return -1; // ilimitado
+    return freeOracleReadingsLimit - oracleReadingsToday;
+  }
+
   UserModel copyWith({
     String? id,
     String? email,
@@ -159,6 +203,9 @@ class UserModel {
     DateTime? lastAiConsultationReset,
     int? pendulumUsesToday,
     DateTime? lastPendulumReset,
+    int? affirmationsToday,
+    int? runeReadingsToday,
+    int? oracleReadingsToday,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -179,6 +226,9 @@ class UserModel {
       lastAiConsultationReset: lastAiConsultationReset ?? this.lastAiConsultationReset,
       pendulumUsesToday: pendulumUsesToday ?? this.pendulumUsesToday,
       lastPendulumReset: lastPendulumReset ?? this.lastPendulumReset,
+      affirmationsToday: affirmationsToday ?? this.affirmationsToday,
+      runeReadingsToday: runeReadingsToday ?? this.runeReadingsToday,
+      oracleReadingsToday: oracleReadingsToday ?? this.oracleReadingsToday,
     );
   }
 
@@ -202,6 +252,9 @@ class UserModel {
       'lastAiConsultationReset': lastAiConsultationReset?.toIso8601String(),
       'pendulumUsesToday': pendulumUsesToday,
       'lastPendulumReset': lastPendulumReset?.toIso8601String(),
+      'affirmationsToday': affirmationsToday,
+      'runeReadingsToday': runeReadingsToday,
+      'oracleReadingsToday': oracleReadingsToday,
     };
   }
 
@@ -241,6 +294,9 @@ class UserModel {
       lastPendulumReset: json['lastPendulumReset'] != null
           ? DateTime.parse(json['lastPendulumReset'])
           : null,
+      affirmationsToday: json['affirmationsToday'] ?? 0,
+      runeReadingsToday: json['runeReadingsToday'] ?? 0,
+      oracleReadingsToday: json['oracleReadingsToday'] ?? 0,
     );
   }
 }

@@ -6,6 +6,9 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/spell_provider.dart';
 import '../../data/models/spell_model.dart';
 import 'spell_detail_page.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../auth/data/models/user_model.dart';
 
 class AISpellCreationPage extends StatefulWidget {
   const AISpellCreationPage({super.key});
@@ -48,6 +51,26 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       return;
     }
 
+    // Verificar limite diário para usuários free
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.currentUser.canUseAi) {
+      print('⚠️ AISpellCreationPage: Limite diário atingido');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Você atingiu o limite diário de consultas. Volte amanhã ou seja Premium!'),
+          backgroundColor: AppColors.alert,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
+      );
+      return;
+    }
+
     print('📝 AISpellCreationPage: Intenção: "${_intentionController.text.trim()}"');
 
     setState(() {
@@ -65,6 +88,9 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       print('✅ AISpellCreationPage: Feitiço gerado com sucesso!');
       print('   Nome: ${spell.name}');
       print('   Categoria: ${spell.category}');
+
+      // Incrementar uso de IA
+      await authProvider.incrementAiConsultations();
 
       if (!mounted) {
         print('⚠️ AISpellCreationPage: Widget não está montado, abortando');
