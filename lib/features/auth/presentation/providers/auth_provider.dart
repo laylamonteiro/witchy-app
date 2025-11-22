@@ -11,6 +11,7 @@ class AuthProvider extends ChangeNotifier {
   static const String _lastDiaryResetKey = 'last_diary_reset';
   static const String _lastAiResetKey = 'last_ai_reset';
   static const String _lastPendulumResetKey = 'last_pendulum_reset';
+  static const String _lastDailyLimitsResetKey = 'last_daily_limits_reset';
   static const String _isOriginalAdminKey = 'is_original_admin';
 
   UserModel _currentUser = UserModel.defaultUser();
@@ -121,6 +122,25 @@ class AuthProvider extends ChangeNotifier {
       await prefs.setString(_lastPendulumResetKey, now.toIso8601String());
     }
 
+    // Reset diário dos novos limites (afirmações, runas, oracle)
+    final lastDailyLimitsReset = prefs.getString(_lastDailyLimitsResetKey);
+    if (lastDailyLimitsReset != null) {
+      final lastDate = DateTime.parse(lastDailyLimitsReset);
+      if (now.day != lastDate.day ||
+          now.month != lastDate.month ||
+          now.year != lastDate.year) {
+        _currentUser = _currentUser.copyWith(
+          affirmationsToday: 0,
+          runeReadingsToday: 0,
+          oracleReadingsToday: 0,
+        );
+        await prefs.setString(_lastDailyLimitsResetKey, now.toIso8601String());
+        needsSave = true;
+      }
+    } else {
+      await prefs.setString(_lastDailyLimitsResetKey, now.toIso8601String());
+    }
+
     if (needsSave) {
       await _saveUser();
     }
@@ -193,6 +213,57 @@ class AuthProvider extends ChangeNotifier {
     );
     await _saveUser();
     notifyListeners();
+  }
+
+  /// Verifica se pode usar afirmações hoje
+  bool get canUseAffirmations => _currentUser.canUseAffirmations;
+
+  /// Quantas afirmações restam hoje
+  int get remainingAffirmations => _currentUser.remainingAffirmations;
+
+  /// Incrementa contador de afirmações
+  Future<void> incrementAffirmations() async {
+    if (_currentUser.isFree) {
+      _currentUser = _currentUser.copyWith(
+        affirmationsToday: _currentUser.affirmationsToday + 1,
+      );
+      await _saveUser();
+      notifyListeners();
+    }
+  }
+
+  /// Verifica se pode fazer leitura de runas hoje
+  bool get canUseRunes => _currentUser.canUseRunes;
+
+  /// Quantas leituras de runas restam hoje
+  int get remainingRuneReadings => _currentUser.remainingRuneReadings;
+
+  /// Incrementa contador de leituras de runas
+  Future<void> incrementRuneReadings() async {
+    if (_currentUser.isFree) {
+      _currentUser = _currentUser.copyWith(
+        runeReadingsToday: _currentUser.runeReadingsToday + 1,
+      );
+      await _saveUser();
+      notifyListeners();
+    }
+  }
+
+  /// Verifica se pode fazer leitura de oracle hoje
+  bool get canUseOracle => _currentUser.canUseOracle;
+
+  /// Quantas leituras de oracle restam hoje
+  int get remainingOracleReadings => _currentUser.remainingOracleReadings;
+
+  /// Incrementa contador de leituras de oracle
+  Future<void> incrementOracleReadings() async {
+    if (_currentUser.isFree) {
+      _currentUser = _currentUser.copyWith(
+        oracleReadingsToday: _currentUser.oracleReadingsToday + 1,
+      );
+      await _saveUser();
+      notifyListeners();
+    }
   }
 
   /// Atualiza o role do usuário (para testes/admin)

@@ -7,6 +7,7 @@ import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'spell_detail_page.dart';
 import '../../data/models/spell_model.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class AppSpellsListPage extends StatefulWidget {
   const AppSpellsListPage({super.key});
@@ -124,70 +125,74 @@ class _AppSpellsListPageState extends State<AppSpellsListPage> {
                 );
               }
 
-              return ListView.builder(
-                itemCount: spells.length,
-                itemBuilder: (context, index) {
-                  final spell = spells[index];
-                  return MagicalCard(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SpellDetailPage(spell: spell),
+              return Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  final isPremium = authProvider.isPremium;
+
+                  return ListView.builder(
+                    itemCount: spells.length,
+                    itemBuilder: (context, index) {
+                      final spell = spells[index];
+                      return MagicalCard(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SpellDetailPage(spell: spell),
+                            ),
+                          );
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                // Emoji da categoria - sempre visível
+                                // Emoji da fase lunar - apenas para premium
+                                if (isPremium && spell.moonPhase != null) ...[
+                                  Text(
+                                    spell.moonPhase!.emoji,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Expanded(
+                                  child: Text(
+                                    spell.name,
+                                    style: Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                _buildChip(
+                                  spell.category.displayName,
+                                  AppColors.lilac,
+                                ),
+                                _buildChip(
+                                  spell.type.displayName,
+                                  spell.type == SpellType.attraction
+                                      ? AppColors.mint
+                                      : AppColors.pink,
+                                ),
+                              ],
+                            ),
+                            // Fase lunar recomendada - apenas para premium
+                            if (isPremium && spell.moonPhase != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Lua: ${spell.moonPhase!.displayName}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ],
                         ),
                       );
                     },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              spell.category.icon,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                            const SizedBox(width: 8),
-                            if (spell.moonPhase != null) ...[
-                              Text(
-                                spell.moonPhase!.emoji,
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            Expanded(
-                              child: Text(
-                                spell.name,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: [
-                            _buildChip(
-                              spell.category.displayName,
-                              AppColors.lilac,
-                            ),
-                            _buildChip(
-                              spell.type.displayName,
-                              spell.type == SpellType.attraction
-                                  ? AppColors.mint
-                                  : AppColors.pink,
-                            ),
-                          ],
-                        ),
-                        if (spell.moonPhase != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            'Lua: ${spell.moonPhase!.displayName}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ],
-                    ),
                   );
                 },
               );

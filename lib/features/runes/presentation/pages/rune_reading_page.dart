@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -8,6 +9,8 @@ import '../../data/models/rune_spread_model.dart';
 import '../../data/data_sources/runes_data.dart';
 import '../../data/repositories/rune_reading_repository.dart';
 import 'rune_detail_page.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
 class RuneReadingPage extends StatefulWidget {
   const RuneReadingPage({super.key});
@@ -43,6 +46,25 @@ class _RuneReadingPageState extends State<RuneReadingPage>
   }
 
   Future<void> _drawRunes() async {
+    // Verificar limite diário para usuários free
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.canUseRunes) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
+          backgroundColor: AppColors.alert,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
+      );
+      return;
+    }
+
     setState(() {
       _isDrawing = true;
     });
@@ -68,6 +90,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
         positionMeaning: _selectedSpread.getPositionMeaning(i),
       ));
     }
+
+    // Incrementar uso de runas
+    await authProvider.incrementRuneReadings();
 
     setState(() {
       _drawnRunes = drawn;

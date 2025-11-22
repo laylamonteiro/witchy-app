@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../data/models/oracle_card_model.dart';
 import '../../data/data_sources/oracle_cards_data.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
 class OracleCardsPage extends StatefulWidget {
   const OracleCardsPage({super.key});
@@ -37,6 +40,25 @@ class _OracleCardsPageState extends State<OracleCardsPage>
   }
 
   Future<void> _drawCards() async {
+    // Verificar limite diário para usuários free
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.canUseOracle) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
+          backgroundColor: AppColors.alert,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
+      );
+      return;
+    }
+
     setState(() {
       _isDrawing = true;
     });
@@ -57,6 +79,9 @@ class _OracleCardsPageState extends State<OracleCardsPage>
         positionMeaning: _selectedSpread.getPositionMeaning(i),
       ));
     }
+
+    // Incrementar uso de oracle
+    await authProvider.incrementOracleReadings();
 
     setState(() {
       _drawnCards = drawn;
