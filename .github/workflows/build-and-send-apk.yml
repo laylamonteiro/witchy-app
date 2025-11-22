@@ -46,6 +46,17 @@ jobs:
           }
           CREDENTIALS
 
+      - name: Create Prokerala credentials file
+        run: |
+          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Prokerala API.
+          ///
+          class ProkeralaCredentials {
+            static const String clientId = '${{ secrets.PROKERALA_CLIENT_ID }}';
+            static const String clientSecret = '${{ secrets.PROKERALA_CLIENT_SECRET }}';
+          }
+          CREDENTIALS
+
       - name: Install dependencies
         run: flutter pub get
 

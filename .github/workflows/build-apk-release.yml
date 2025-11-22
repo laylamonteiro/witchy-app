@@ -15,10 +15,12 @@ name: Build APK - Download no Celular
 # https://github.com/laylamonteiro/witchy-app/releases
 #
 # CONFIGURAÇÃO NECESSÁRIA:
-# Adicione o secret GROQ_API_KEY nas configurações do repositório:
+# Adicione os seguintes secrets nas configurações do repositório:
 # Settings > Secrets and variables > Actions > New repository secret
-# Nome: GROQ_API_KEY
-# Valor: sua chave da API do Groq
+#
+# 1. GROQ_API_KEY - sua chave da API do Groq
+# 2. PROKERALA_CLIENT_ID - Client ID da API Prokerala
+# 3. PROKERALA_CLIENT_SECRET - Client Secret da API Prokerala
 
 on:
   workflow_dispatch:
@@ -66,6 +68,17 @@ jobs:
           ///
           class GroqCredentials {
             static const apiKey = '${{ secrets.GROQ_API_KEY }}';
+          }
+          CREDENTIALS
+
+      - name: Create Prokerala credentials file
+        run: |
+          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Prokerala API.
+          ///
+          class ProkeralaCredentials {
+            static const String clientId = '${{ secrets.PROKERALA_CLIENT_ID }}';
+            static const String clientSecret = '${{ secrets.PROKERALA_CLIENT_SECRET }}';
           }
           CREDENTIALS
 
