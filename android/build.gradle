@@ -19,9 +19,9 @@ allprojects {
 
     // Define flutter properties for plugins that need them
     ext {
-        set('flutter.compileSdkVersion', 34)
+        set('flutter.compileSdkVersion', 36)
         set('flutter.minSdkVersion', 21)
-        set('flutter.targetSdkVersion', 34)
+        set('flutter.targetSdkVersion', 36)
     }
 }
 
