@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/spell_model.dart';
 import '../providers/spell_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/moon_phase_widget.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -103,8 +104,8 @@ class SpellDetailPage extends StatelessWidget {
               ),
             ),
 
-            // Fase da lua
-            if (spell.moonPhase != null)
+            // Fase da lua - apenas para premium
+            if (spell.moonPhase != null && context.watch<AuthProvider>().isPremium)
               MagicalCard(
                 child: Column(
                   children: [
