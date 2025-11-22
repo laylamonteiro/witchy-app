@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
@@ -26,6 +27,65 @@ enum SyncStatus {
   syncing,
   success,
   error,
+  conflict,
+}
+
+/// Estratégia de resolução de conflitos
+enum ConflictResolution {
+  /// Servidor sempre vence (padrão)
+  serverWins,
+
+  /// Cliente sempre vence
+  clientWins,
+
+  /// Manter o mais recente baseado em updated_at
+  mostRecent,
+
+  /// Merge manual - mantém ambos e marca para revisão
+  manual,
+}
+
+/// Representa um conflito de sincronização
+class SyncConflict {
+  final String id;
+  final SyncEntity entity;
+  final Map<String, dynamic> localData;
+  final Map<String, dynamic> remoteData;
+  final DateTime localUpdatedAt;
+  final DateTime remoteUpdatedAt;
+  final ConflictResolution? resolution;
+
+  SyncConflict({
+    required this.id,
+    required this.entity,
+    required this.localData,
+    required this.remoteData,
+    required this.localUpdatedAt,
+    required this.remoteUpdatedAt,
+    this.resolution,
+  });
+
+  /// Retorna qual versão é mais recente
+  bool get isLocalMoreRecent => localUpdatedAt.isAfter(remoteUpdatedAt);
+
+  /// Retorna os campos que diferem entre local e remoto
+  Map<String, List<dynamic>> get differences {
+    final diffs = <String, List<dynamic>>{};
+
+    final allKeys = {...localData.keys, ...remoteData.keys};
+    for (final key in allKeys) {
+      if (key == 'synced' || key == 'updated_at') continue;
+
+      final localValue = localData[key];
+      final remoteValue = remoteData[key];
+
+      if (localValue != remoteValue) {
+        diffs[key] = [localValue, remoteValue];
+      }
+    }
+
+    return diffs;
+  }
 }
 
 /// Resultado de sincronização
@@ -33,25 +93,47 @@ class SyncResult {
   final bool success;
   final int uploaded;
   final int downloaded;
+  final int conflictsResolved;
+  final List<SyncConflict> unresolvedConflicts;
   final String? error;
 
   SyncResult({
     required this.success,
     this.uploaded = 0,
     this.downloaded = 0,
+    this.conflictsResolved = 0,
+    this.unresolvedConflicts = const [],
     this.error,
   });
 
-  factory SyncResult.success({int uploaded = 0, int downloaded = 0}) {
-    return SyncResult(success: true, uploaded: uploaded, downloaded: downloaded);
+  factory SyncResult.success({
+    int uploaded = 0,
+    int downloaded = 0,
+    int conflictsResolved = 0,
+  }) {
+    return SyncResult(
+      success: true,
+      uploaded: uploaded,
+      downloaded: downloaded,
+      conflictsResolved: conflictsResolved,
+    );
   }
 
   factory SyncResult.error(String message) {
     return SyncResult(success: false, error: message);
   }
+
+  factory SyncResult.withConflicts(List<SyncConflict> conflicts) {
+    return SyncResult(
+      success: false,
+      unresolvedConflicts: conflicts,
+      error: '${conflicts.length} conflito(s) requer(em) resolução manual',
+    );
+  }
 }
 
 /// Serviço de sincronização de dados entre SQLite local e Supabase
+/// Com tratamento avançado de conflitos
 class DataSyncService {
   static final DataSyncService _instance = DataSyncService._internal();
   factory DataSyncService() => _instance;
@@ -62,9 +144,23 @@ class DataSyncService {
 
   SyncStatus _status = SyncStatus.idle;
   final _statusController = StreamController<SyncStatus>.broadcast();
+  final _conflictsController = StreamController<List<SyncConflict>>.broadcast();
+
+  /// Estratégia padrão de resolução de conflitos
+  ConflictResolution _defaultResolution = ConflictResolution.mostRecent;
+
+  /// Lista de conflitos pendentes
+  final List<SyncConflict> _pendingConflicts = [];
 
   Stream<SyncStatus> get statusStream => _statusController.stream;
+  Stream<List<SyncConflict>> get conflictsStream => _conflictsController.stream;
   SyncStatus get status => _status;
+  List<SyncConflict> get pendingConflicts => List.unmodifiable(_pendingConflicts);
+
+  /// Define a estratégia padrão de resolução
+  set defaultResolution(ConflictResolution resolution) {
+    _defaultResolution = resolution;
+  }
 
   /// Inicializa o serviço
   void initialize() {
@@ -79,31 +175,44 @@ class DataSyncService {
   /// ID do usuário atual
   String? get currentUserId => _supabase?.auth.currentUser?.id;
 
-  /// Sincroniza todos os dados
-  Future<SyncResult> syncAll() async {
+  /// Sincroniza todos os dados com tratamento de conflitos
+  Future<SyncResult> syncAll({
+    ConflictResolution? resolution,
+  }) async {
     if (!isReady) {
       return SyncResult.error('Usuário não autenticado');
     }
 
+    final useResolution = resolution ?? _defaultResolution;
     _setStatus(SyncStatus.syncing);
+    _pendingConflicts.clear();
 
     try {
       int totalUploaded = 0;
       int totalDownloaded = 0;
+      int totalConflictsResolved = 0;
 
-      // Sincronizar cada entidade
       for (final entity in SyncEntity.values) {
-        final result = await _syncEntity(entity);
+        final result = await _syncEntity(entity, useResolution);
         if (result.success) {
           totalUploaded += result.uploaded;
           totalDownloaded += result.downloaded;
+          totalConflictsResolved += result.conflictsResolved;
         }
+        _pendingConflicts.addAll(result.unresolvedConflicts);
+      }
+
+      if (_pendingConflicts.isNotEmpty) {
+        _setStatus(SyncStatus.conflict);
+        _conflictsController.add(_pendingConflicts);
+        return SyncResult.withConflicts(_pendingConflicts);
       }
 
       _setStatus(SyncStatus.success);
       return SyncResult.success(
         uploaded: totalUploaded,
         downloaded: totalDownloaded,
+        conflictsResolved: totalConflictsResolved,
       );
     } catch (e) {
       _setStatus(SyncStatus.error);
@@ -111,41 +220,193 @@ class DataSyncService {
     }
   }
 
-  /// Sincroniza uma entidade específica
-  Future<SyncResult> _syncEntity(SyncEntity entity) async {
+  /// Sincroniza uma entidade específica com detecção de conflitos
+  Future<SyncResult> _syncEntity(
+    SyncEntity entity,
+    ConflictResolution resolution,
+  ) async {
     try {
       final tableName = _getTableName(entity);
       final localTable = _getLocalTableName(entity);
 
-      // 1. Buscar dados locais não sincronizados
-      final localData = await _getUnsyncedLocalData(localTable);
-
-      // 2. Enviar dados locais para o Supabase
       int uploaded = 0;
-      for (final item in localData) {
-        await _uploadItem(tableName, item);
-        await _markAsSynced(localTable, item['id']);
-        uploaded++;
-      }
-
-      // 3. Buscar dados do Supabase
-      final remoteData = await _getRemoteData(tableName);
-
-      // 4. Baixar dados que não existem localmente
       int downloaded = 0;
-      for (final item in remoteData) {
-        final exists = await _existsLocally(localTable, item['id']);
-        if (!exists) {
-          await _insertLocally(localTable, item);
-          downloaded++;
+      int conflictsResolved = 0;
+      final conflicts = <SyncConflict>[];
+
+      // 1. Buscar dados locais modificados
+      final localData = await _getModifiedLocalData(localTable);
+
+      // 2. Buscar dados remotos
+      final remoteData = await _getRemoteData(tableName);
+      final remoteMap = {for (var item in remoteData) item['id']: item};
+
+      // 3. Processar dados locais
+      for (final local in localData) {
+        final id = local['id'];
+        final remote = remoteMap[id];
+
+        if (remote == null) {
+          // Não existe no servidor - upload direto
+          await _uploadItem(tableName, local);
+          await _markAsSynced(localTable, id);
+          uploaded++;
+        } else {
+          // Existe em ambos - verificar conflito
+          final localUpdatedAt = _parseDateTime(local['updated_at']);
+          final remoteUpdatedAt = _parseDateTime(remote['updated_at']);
+
+          if (_hasChanges(local, remote)) {
+            // Há diferenças - resolver conflito
+            final conflict = SyncConflict(
+              id: id.toString(),
+              entity: entity,
+              localData: local,
+              remoteData: remote,
+              localUpdatedAt: localUpdatedAt,
+              remoteUpdatedAt: remoteUpdatedAt,
+            );
+
+            final resolved = await _resolveConflict(
+              conflict,
+              resolution,
+              tableName,
+              localTable,
+            );
+
+            if (resolved) {
+              conflictsResolved++;
+            } else {
+              conflicts.add(conflict);
+            }
+          } else {
+            // Sem diferenças - apenas marcar como sincronizado
+            await _markAsSynced(localTable, id);
+          }
         }
       }
 
-      return SyncResult.success(uploaded: uploaded, downloaded: downloaded);
+      // 4. Baixar dados que só existem no servidor
+      final localIds = localData.map((e) => e['id']).toSet();
+      for (final remote in remoteData) {
+        if (!localIds.contains(remote['id'])) {
+          final exists = await _existsLocally(localTable, remote['id']);
+          if (!exists) {
+            await _insertLocally(localTable, remote);
+            downloaded++;
+          }
+        }
+      }
+
+      if (conflicts.isNotEmpty) {
+        return SyncResult(
+          success: false,
+          uploaded: uploaded,
+          downloaded: downloaded,
+          conflictsResolved: conflictsResolved,
+          unresolvedConflicts: conflicts,
+        );
+      }
+
+      return SyncResult.success(
+        uploaded: uploaded,
+        downloaded: downloaded,
+        conflictsResolved: conflictsResolved,
+      );
     } catch (e) {
-      print('Erro ao sincronizar ${entity.name}: $e');
+      debugPrint('Erro ao sincronizar ${entity.name}: $e');
       return SyncResult.error(e.toString());
     }
+  }
+
+  /// Verifica se há diferenças entre local e remoto
+  bool _hasChanges(Map<String, dynamic> local, Map<String, dynamic> remote) {
+    final ignoreKeys = {'synced', 'updated_at', 'created_at'};
+
+    for (final key in local.keys) {
+      if (ignoreKeys.contains(key)) continue;
+      if (local[key] != remote[key]) return true;
+    }
+
+    return false;
+  }
+
+  /// Resolve um conflito baseado na estratégia
+  Future<bool> _resolveConflict(
+    SyncConflict conflict,
+    ConflictResolution resolution,
+    String tableName,
+    String localTable,
+  ) async {
+    switch (resolution) {
+      case ConflictResolution.serverWins:
+        // Sobrescrever local com remoto
+        await _updateLocally(localTable, conflict.remoteData);
+        return true;
+
+      case ConflictResolution.clientWins:
+        // Enviar local para servidor
+        await _uploadItem(tableName, conflict.localData);
+        await _markAsSynced(localTable, conflict.id);
+        return true;
+
+      case ConflictResolution.mostRecent:
+        if (conflict.isLocalMoreRecent) {
+          // Local é mais recente - upload
+          await _uploadItem(tableName, conflict.localData);
+          await _markAsSynced(localTable, conflict.id);
+        } else {
+          // Remoto é mais recente - download
+          await _updateLocally(localTable, conflict.remoteData);
+        }
+        return true;
+
+      case ConflictResolution.manual:
+        // Não resolve automaticamente
+        return false;
+    }
+  }
+
+  /// Resolve um conflito manualmente
+  Future<void> resolveConflictManually(
+    SyncConflict conflict,
+    ConflictResolution resolution,
+  ) async {
+    if (resolution == ConflictResolution.manual) {
+      throw ArgumentError('Escolha uma resolução válida');
+    }
+
+    final tableName = _getTableName(conflict.entity);
+    final localTable = _getLocalTableName(conflict.entity);
+
+    await _resolveConflict(conflict, resolution, tableName, localTable);
+
+    _pendingConflicts.removeWhere((c) => c.id == conflict.id);
+    _conflictsController.add(_pendingConflicts);
+
+    if (_pendingConflicts.isEmpty) {
+      _setStatus(SyncStatus.success);
+    }
+  }
+
+  /// Resolve todos os conflitos pendentes com uma estratégia
+  Future<void> resolveAllConflicts(ConflictResolution resolution) async {
+    if (resolution == ConflictResolution.manual) {
+      throw ArgumentError('Escolha uma resolução válida');
+    }
+
+    for (final conflict in List.from(_pendingConflicts)) {
+      await resolveConflictManually(conflict, resolution);
+    }
+  }
+
+  /// Parse de DateTime robusto
+  DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.fromMillisecondsSinceEpoch(0);
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+    if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
+    return DateTime.fromMillisecondsSinceEpoch(0);
   }
 
   /// Obtém o nome da tabela no Supabase
@@ -212,19 +473,17 @@ class DataSyncService {
     }
   }
 
-  /// Busca dados locais não sincronizados
-  Future<List<Map<String, dynamic>>> _getUnsyncedLocalData(String table) async {
+  /// Busca dados locais modificados (não sincronizados ou atualizados)
+  Future<List<Map<String, dynamic>>> _getModifiedLocalData(String table) async {
     final db = await _db.database;
 
-    // Verificar se a coluna synced existe
     try {
       return await db.query(
         table,
-        where: 'synced = ? AND user_id = ?',
+        where: '(synced = ? OR synced IS NULL) AND user_id = ?',
         whereArgs: [0, currentUserId],
       );
     } catch (e) {
-      // Se não existir coluna synced, retornar todos os dados do usuário
       return await db.query(
         table,
         where: 'user_id = ?',
@@ -236,12 +495,9 @@ class DataSyncService {
   /// Envia item para o Supabase
   Future<void> _uploadItem(String table, Map<String, dynamic> item) async {
     final data = Map<String, dynamic>.from(item);
-
-    // Remover campos locais
     data.remove('synced');
-
-    // Garantir user_id
     data['user_id'] = currentUserId;
+    data['updated_at'] = DateTime.now().toIso8601String();
 
     await _supabase!.from(table).upsert(data);
   }
@@ -260,6 +516,20 @@ class DataSyncService {
     } catch (e) {
       // Ignorar se não existir coluna synced
     }
+  }
+
+  /// Atualiza item localmente
+  Future<void> _updateLocally(String table, Map<String, dynamic> item) async {
+    final db = await _db.database;
+    final data = Map<String, dynamic>.from(item);
+    data['synced'] = 1;
+
+    await db.update(
+      table,
+      data,
+      where: 'id = ?',
+      whereArgs: [item['id']],
+    );
   }
 
   /// Busca dados do Supabase
@@ -287,7 +557,7 @@ class DataSyncService {
   Future<void> _insertLocally(String table, Map<String, dynamic> item) async {
     final db = await _db.database;
     final data = Map<String, dynamic>.from(item);
-    data['synced'] = 1; // Marcar como sincronizado
+    data['synced'] = 1;
 
     await db.insert(table, data);
   }
@@ -306,7 +576,7 @@ class DataSyncService {
       final tableName = _getTableName(entity);
       await _uploadItem(tableName, item);
     } catch (e) {
-      print('Erro ao sincronizar item: $e');
+      debugPrint('Erro ao sincronizar item: $e');
     }
   }
 
@@ -318,7 +588,7 @@ class DataSyncService {
       final tableName = _getTableName(entity);
       await _supabase!.from(tableName).delete().eq('id', id);
     } catch (e) {
-      print('Erro ao deletar item do Supabase: $e');
+      debugPrint('Erro ao deletar item do Supabase: $e');
     }
   }
 
@@ -337,7 +607,6 @@ class DataSyncService {
         final tableName = _getTableName(entity);
         final localTable = _getLocalTableName(entity);
 
-        // Limpar dados locais do usuário
         final db = await _db.database;
         await db.delete(
           localTable,
@@ -345,7 +614,6 @@ class DataSyncService {
           whereArgs: [currentUserId],
         );
 
-        // Baixar todos os dados do servidor
         final remoteData = await _getRemoteData(tableName);
         for (final item in remoteData) {
           await _insertLocally(localTable, item);
@@ -376,7 +644,6 @@ class DataSyncService {
         final tableName = _getTableName(entity);
         final localTable = _getLocalTableName(entity);
 
-        // Buscar todos os dados locais do usuário
         final db = await _db.database;
         final localData = await db.query(
           localTable,
@@ -384,7 +651,6 @@ class DataSyncService {
           whereArgs: [currentUserId],
         );
 
-        // Enviar para o servidor
         for (final item in localData) {
           await _uploadItem(tableName, item);
           await _markAsSynced(localTable, item['id']);
@@ -402,5 +668,6 @@ class DataSyncService {
 
   void dispose() {
     _statusController.close();
+    _conflictsController.close();
   }
 }

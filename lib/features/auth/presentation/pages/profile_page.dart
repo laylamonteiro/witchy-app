@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
+import '../../../settings/settings.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
@@ -424,6 +425,15 @@ class ProfilePage extends StatelessWidget {
             onTap: () {
               // TODO: Navegar para configurações de notificações
             },
+          ),
+          _buildDivider(),
+          _buildOptionTile(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacidade',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PrivacySettingsPage()),
+            ),
           ),
           _buildDivider(),
           _buildOptionTile(

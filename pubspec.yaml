@@ -67,9 +67,10 @@ dependencies:
 
   # Backend Authentication (Supabase)
   supabase_flutter: ^2.3.0
-  # Login social (ativar quando configurar OAuth no Supabase)
-  # google_sign_in: ^6.2.1
-  # sign_in_with_apple: ^6.1.0
+
+  # Login social
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.0
 
   # In-App Purchases (RevenueCat)
   purchases_flutter: ^8.10.0
