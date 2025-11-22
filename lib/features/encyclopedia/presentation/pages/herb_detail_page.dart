@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/herb_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/auth.dart';
 
 class HerbDetailPage extends StatelessWidget {
   final HerbModel herb;
@@ -209,94 +211,103 @@ class HerbDetailPage extends StatelessWidget {
                   ),
                 ),
               ),
-            MagicalCard(
+            // Premium content - blur para usuários free
+            PremiumBlurWidget(
+              feature: AppFeature.encyclopediaHerbsDetails,
+              customMessage: 'Desbloqueie informações detalhadas sobre ervas',
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Propriedades Mágicas',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: herb.magicalProperties
-                        .map((property) => Chip(
-                              label: Text(property),
-                              backgroundColor: AppColors.mint.withOpacity(0.2),
-                              side: const BorderSide(color: AppColors.mint),
-                            ))
-                        .toList(),
-                  ),
-                ],
-              ),
-            ),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Usos Rituais',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...herb.ritualUses.map(
-                    (use) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: AppColors.starYellow,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              use,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Propriedades Mágicas',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: herb.magicalProperties
+                              .map((property) => Chip(
+                                    label: Text(property),
+                                    backgroundColor: AppColors.mint.withOpacity(0.2),
+                                    side: const BorderSide(color: AppColors.mint),
+                                  ))
+                              .toList(),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            MagicalCard(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Column(
-                    children: [
-                      Icon(
-                        herb.edible ? Icons.restaurant : Icons.no_meals,
-                        color: herb.edible ? AppColors.mint : AppColors.alert,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        herb.edible ? 'Comestível' : 'Não Comestível',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Usos Rituais',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        ...herb.ritualUses.map(
+                          (use) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.auto_awesome,
+                                  size: 16,
+                                  color: AppColors.starYellow,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    use,
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  Column(
-                    children: [
-                      Icon(
-                        herb.toxic ? Icons.dangerous : Icons.verified_user,
-                        color: herb.toxic ? AppColors.alert : AppColors.mint,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        herb.toxic ? 'Tóxica' : 'Não Tóxica',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+                  MagicalCard(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Icon(
+                              herb.edible ? Icons.restaurant : Icons.no_meals,
+                              color: herb.edible ? AppColors.mint : AppColors.alert,
+                              size: 32,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              herb.edible ? 'Comestível' : 'Não Comestível',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            Icon(
+                              herb.toxic ? Icons.dangerous : Icons.verified_user,
+                              color: herb.toxic ? AppColors.alert : AppColors.mint,
+                              size: 32,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              herb.toxic ? 'Tóxica' : 'Não Tóxica',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
+import '../../../auth/auth.dart';
 import '../../data/models/sigil_model.dart';
 import 'sigil_step2_letters_page.dart';
 
@@ -55,13 +57,85 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Criar Sigilo'),
-        backgroundColor: AppColors.surface,
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        final access = authProvider.checkFeatureAccess(AppFeature.sigilsCreate);
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text('Criar Sigilo'),
+            backgroundColor: AppColors.surface,
+          ),
+          body: access.hasFullAccess
+              ? _buildContent(context)
+              : _buildPremiumLocked(context),
+        );
+      },
+    );
+  }
+
+  Widget _buildPremiumLocked(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('🃏', style: TextStyle(fontSize: 80)),
+            const SizedBox(height: 24),
+            Text(
+              'Criação de Sigilos',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: AppColors.lilac,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'A criação de sigilos personalizados é uma funcionalidade exclusiva para assinantes Premium.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const PremiumUpgradeSheet(),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF9C27B0),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.star, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Desbloquear com Premium',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      body: SingleChildScrollView(
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

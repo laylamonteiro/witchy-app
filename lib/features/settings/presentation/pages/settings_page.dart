@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/diagnostic/diagnostic_page.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
+import '../../../auth/auth.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -15,21 +17,28 @@ class SettingsPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Configurações'),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      body: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          final user = authProvider.currentUser;
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Card de Perfil
+                _buildProfileCard(context, user),
+
+                // Card de Notificações
+                MagicalCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.notifications_active,
-                        color: AppColors.starYellow,
-                        size: 28,
-                      ),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.notifications_active,
+                            color: AppColors.starYellow,
+                            size: 28,
+                          ),
                       const SizedBox(width: 12),
                       Text(
                         'Notificações',
@@ -125,45 +134,50 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.info_outline,
-                        color: AppColors.lilac,
-                        size: 28,
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: AppColors.lilac,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Sobre',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(height: 16),
+                      _InfoRow(
+                        label: 'Versão',
+                        value: '1.0.0',
+                      ),
+                      const SizedBox(height: 12),
+                      _InfoRow(
+                        label: 'Desenvolvido por',
+                        value: 'Claude + Layla',
+                      ),
+                      const SizedBox(height: 12),
                       Text(
-                        'Sobre',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        'Grimório de Bolso é um app mágico para bruxas e bruxos iniciantes, com informações precisas e culturalmente adaptadas para o Brasil.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  _InfoRow(
-                    label: 'Versão',
-                    value: '1.0.0',
-                  ),
-                  const SizedBox(height: 12),
-                  _InfoRow(
-                    label: 'Desenvolvido por',
-                    value: 'Claude + Layla',
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Grimório de Bolso é um app mágico para bruxas e bruxos iniciantes, com informações precisas e culturalmente adaptadas para o Brasil.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                  ),
-                ],
-              ),
+                ),
+
+                // Card de Admin (apenas para admins)
+                if (user.isAdmin) _buildAdminCard(context, authProvider),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -186,6 +200,293 @@ class SettingsPage extends StatelessWidget {
           backgroundColor: AppColors.mint,
         ),
       );
+    }
+  }
+
+  Widget _buildProfileCard(BuildContext context, UserModel user) {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Avatar com badge de role
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: _getRoleColors(user.role),
+                  ),
+                ),
+                child: Center(
+                  child: Icon(
+                    _getRoleIcon(user.role),
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.displayName ?? 'Bruxa Anônima',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: _getRoleColors(user.role),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _getRoleLabel(user.role),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfilePage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          if (user.isFree) ...[
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const PremiumUpgradeSheet(),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF9C27B0).withOpacity(0.2),
+                      const Color(0xFFE91E63).withOpacity(0.2),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF9C27B0).withOpacity(0.5),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      color: Color(0xFF9C27B0),
+                      size: 20,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Desbloqueie recursos Premium',
+                        style: TextStyle(
+                          color: Color(0xFF9C27B0),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: Color(0xFF9C27B0),
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminCard(BuildContext context, AuthProvider authProvider) {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.admin_panel_settings,
+                color: Color(0xFFFFD700),
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Admin',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: const Color(0xFFFFD700),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Diagnóstico
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(
+              Icons.bug_report,
+              color: AppColors.lilac,
+            ),
+            title: const Text('Diagnóstico'),
+            subtitle: Text(
+              'Testar funcionalidades do app',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DiagnosticPage(),
+                ),
+              );
+            },
+          ),
+          const Divider(color: AppColors.surfaceBorder),
+          // Simular planos
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Simular Plano:',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _buildRoleButton(
+                      context,
+                      'Free',
+                      UserRole.free,
+                      authProvider,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildRoleButton(
+                      context,
+                      'Premium',
+                      UserRole.premium,
+                      authProvider,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildRoleButton(
+                      context,
+                      'Admin',
+                      UserRole.admin,
+                      authProvider,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleButton(
+    BuildContext context,
+    String label,
+    UserRole role,
+    AuthProvider authProvider,
+  ) {
+    final isSelected = authProvider.currentUser.role == role;
+
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () => authProvider.setUserRole(role),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSelected
+              ? const Color(0xFF9C27B0)
+              : Colors.white.withOpacity(0.1),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Color> _getRoleColors(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return [const Color(0xFFFFD700), const Color(0xFFFF8C00)];
+      case UserRole.premium:
+        return [const Color(0xFF9C27B0), const Color(0xFFE91E63)];
+      case UserRole.free:
+        return [const Color(0xFF3F51B5), const Color(0xFF2196F3)];
+    }
+  }
+
+  IconData _getRoleIcon(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return Icons.shield;
+      case UserRole.premium:
+        return Icons.star;
+      case UserRole.free:
+        return Icons.person;
+    }
+  }
+
+  String _getRoleLabel(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return 'ADMIN';
+      case UserRole.premium:
+        return 'PREMIUM';
+      case UserRole.free:
+        return 'GRATUITO';
     }
   }
 }

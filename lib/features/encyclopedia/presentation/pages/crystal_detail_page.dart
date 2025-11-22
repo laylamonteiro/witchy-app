@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/crystal_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/auth.dart';
 
 class CrystalDetailPage extends StatelessWidget {
   final CrystalModel crystal;
@@ -120,172 +122,181 @@ class CrystalDetailPage extends StatelessWidget {
                   ),
                 ),
               ),
-            MagicalCard(
+            // Premium content - blur para usuários free
+            PremiumBlurWidget(
+              feature: AppFeature.encyclopediaCrystalsDetails,
+              customMessage: 'Desbloqueie informações detalhadas sobre cristais',
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Intenções',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: crystal.intentions
-                        .map((intention) => Chip(
-                              label: Text(intention),
-                              backgroundColor: AppColors.mint.withOpacity(0.2),
-                              side: const BorderSide(color: AppColors.mint),
-                            ))
-                        .toList(),
-                  ),
-                ],
-              ),
-            ),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Como Usar',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...crystal.usageTips.map(
-                    (tip) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: AppColors.starYellow,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              tip,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Intenções',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: crystal.intentions
+                              .map((intention) => Chip(
+                                    label: Text(intention),
+                                    backgroundColor: AppColors.mint.withOpacity(0.2),
+                                    side: const BorderSide(color: AppColors.mint),
+                                  ))
+                              .toList(),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Limpeza',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...crystal.cleaningMethods.map(
-                    (methodObj) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                methodObj.isSafe ? Icons.water_drop : Icons.dangerous,
-                                size: 16,
-                                color: methodObj.isSafe ? AppColors.info : AppColors.alert,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  methodObj.method,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        decoration: methodObj.isSafe
-                                            ? null
-                                            : TextDecoration.lineThrough,
-                                        color: methodObj.isSafe
-                                            ? null
-                                            : AppColors.textSecondary,
-                                      ),
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Como Usar',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        ...crystal.usageTips.map(
+                          (tip) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.auto_awesome,
+                                  size: 16,
+                                  color: AppColors.starYellow,
                                 ),
-                              ),
-                            ],
-                          ),
-                          if (!methodObj.isSafe && methodObj.warning != null)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 24, top: 4),
-                              child: Text(
-                                '⚠️ ${methodObj.warning}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.alert,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                              ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    tip,
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ),
+                              ],
                             ),
-                        ],
-                      ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Recarga',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...crystal.chargingMethods.map(
-                    (methodObj) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                methodObj.isSafe ? Icons.bolt : Icons.dangerous,
-                                size: 16,
-                                color: methodObj.isSafe ? AppColors.starYellow : AppColors.alert,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  methodObj.method,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        decoration: methodObj.isSafe
-                                            ? null
-                                            : TextDecoration.lineThrough,
-                                        color: methodObj.isSafe
-                                            ? null
-                                            : AppColors.textSecondary,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (!methodObj.isSafe && methodObj.warning != null)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 24, top: 4),
-                              child: Text(
-                                '⚠️ ${methodObj.warning}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.alert,
-                                      fontStyle: FontStyle.italic,
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Limpeza',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        ...crystal.cleaningMethods.map(
+                          (methodObj) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      methodObj.isSafe ? Icons.water_drop : Icons.dangerous,
+                                      size: 16,
+                                      color: methodObj.isSafe ? AppColors.info : AppColors.alert,
                                     ),
-                              ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        methodObj.method,
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                              decoration: methodObj.isSafe
+                                                  ? null
+                                                  : TextDecoration.lineThrough,
+                                              color: methodObj.isSafe
+                                                  ? null
+                                                  : AppColors.textSecondary,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (!methodObj.isSafe && methodObj.warning != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 24, top: 4),
+                                    child: Text(
+                                      '⚠️ ${methodObj.warning}',
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: AppColors.alert,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                        ],
-                      ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  MagicalCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Recarga',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        ...crystal.chargingMethods.map(
+                          (methodObj) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      methodObj.isSafe ? Icons.bolt : Icons.dangerous,
+                                      size: 16,
+                                      color: methodObj.isSafe ? AppColors.starYellow : AppColors.alert,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        methodObj.method,
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                              decoration: methodObj.isSafe
+                                                  ? null
+                                                  : TextDecoration.lineThrough,
+                                              color: methodObj.isSafe
+                                                  ? null
+                                                  : AppColors.textSecondary,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (!methodObj.isSafe && methodObj.warning != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 24, top: 4),
+                                    child: Text(
+                                      '⚠️ ${methodObj.warning}',
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: AppColors.alert,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
