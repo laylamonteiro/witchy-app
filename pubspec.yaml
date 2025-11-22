@@ -61,6 +61,16 @@ dependencies:
   # Markdown rendering
   flutter_markdown: ^0.6.18+2
 
+  # Image picker for profile photos
+  image_picker: ^1.0.7
+  image_cropper: ^5.0.1
+
+  # Backend Authentication (Supabase) - Pronto para produção
+  # Descomente quando configurar o projeto Supabase:
+  # supabase_flutter: ^2.3.0
+  # google_sign_in: ^6.2.1
+  # sign_in_with_apple: ^6.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

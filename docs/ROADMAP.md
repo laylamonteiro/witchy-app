@@ -5,8 +5,8 @@
 | Fase | Nome | Status |
 |------|------|--------|
 | 1 | MVP Local-First | ✅ Completo |
-| 2 | Backend + Conta + IA | 🔄 Parcial (Local) |
-| 3 | Premium 1.0 | 🔄 Parcial (Local) |
+| 2 | Backend + Conta + IA | ✅ Pronto (falta ativar Supabase) |
+| 3 | Premium 1.0 | 🔄 Parcial (falta pagamentos reais) |
 | 4 | Premium 2.0: Astrologia | ✅ Completo |
 | 5 | Refinos e Conteúdo | 🔄 Parcial |
 
@@ -45,28 +45,32 @@
 
 ## Fase 2 - Backend + Conta + IA 🔄
 
-### Etapa 2.1 - Infraestrutura de Autenticação (LOCAL) ✅
+### Etapa 2.1 - Infraestrutura de Autenticação ✅
 - [x] Modelo de usuário (`UserModel`) - **Implementado localmente**
 - [x] `AuthProvider` com SharedPreferences
 - [x] Sistema de roles (free, premium, admin)
-- [ ] **FALTA**: Escolher backend (Firebase Auth / Supabase)
-- [ ] **FALTA**: Configurar projeto no backend escolhido
-- [ ] **FALTA**: Implementar `AuthRepository` com backend real
+- [x] `AuthRepository` abstrato (interface para backend)
+- [x] `LocalAuthRepository` (implementação local)
+- [x] `SupabaseAuthRepository` (estrutura pronta para ativar)
+- [x] Banco de dados preparado com `user_id` em todas as tabelas
+- [ ] **FALTA**: Configurar projeto Supabase e ativar integração
 
-### Etapa 2.2 - Telas de Autenticação ❌
-- [ ] Tela de boas-vindas/onboarding
-- [ ] Tela de login (email/senha)
-- [ ] Tela de cadastro
-- [ ] Tela de recuperação de senha
-- [ ] Login social (Google, Apple)
+### Etapa 2.2 - Telas de Autenticação ✅
+- [x] Tela de onboarding com slides explicativos
+- [x] Tela de boas-vindas (WelcomePage)
+- [x] Tela de login (email/senha)
+- [x] Tela de cadastro
+- [x] Tela de recuperação de senha
+- [x] AuthWrapper para gerenciar fluxo de navegação
+- [ ] **FALTA**: Login social (Google, Apple) - estrutura pronta
 
-### Etapa 2.3 - Perfil de Usuário 🔄
+### Etapa 2.3 - Perfil de Usuário ✅
 - [x] Tela de perfil básica
 - [x] Edição de nome (displayName)
 - [x] Dados de nascimento (para astrologia)
-- [ ] **FALTA**: Foto de perfil
+- [x] Foto de perfil (picker + crop)
 - [ ] **FALTA**: Configurações de privacidade
-- [ ] **FALTA**: Email verificado
+- [ ] **FALTA**: Email verificado (requer backend)
 
 ### Etapa 2.4 - Sistema de Roles ✅
 - [x] Definir roles: `free`, `premium`, `admin`

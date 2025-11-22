@@ -14,6 +14,7 @@ import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
+import 'features/auth/presentation/pages/auth_wrapper.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
@@ -140,9 +141,14 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       child: MaterialApp(
         title: 'Grimório de Bolso',
         theme: AppTheme.darkTheme,
-        home: _showSplash
-            ? const SplashScreen(child: HomePage())
-            : const HomePage(),
+        home: AuthWrapper(showSplash: _showSplash),
+        routes: {
+          '/home': (context) => const HomePage(),
+          '/welcome': (context) => const WelcomePage(),
+          '/login': (context) => const LoginPage(),
+          '/signup': (context) => const SignupPage(),
+          '/onboarding': (context) => const OnboardingPage(),
+        },
         debugShowCheckedModeBanner: false,
       ),
     );

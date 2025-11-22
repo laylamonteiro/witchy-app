@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/premium_blur_widget.dart';
+import '../widgets/profile_avatar_picker.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -56,36 +57,17 @@ class ProfilePage extends StatelessWidget {
   Widget _buildProfileHeader(BuildContext context, UserModel user) {
     return Column(
       children: [
-        // Avatar com botão de editar
-        Stack(
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: _getRoleColors(user.role),
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _getRoleColors(user.role).first.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Icon(
-                  _getRoleIcon(user.role),
-                  color: Colors.white,
-                  size: 48,
-                ),
-              ),
-            ),
-          ],
+        // Avatar com foto de perfil
+        ProfileAvatarPicker(
+          currentPhotoUrl: user.photoUrl,
+          size: 100,
+          gradientColors: _getRoleColors(user.role),
+          onPhotoChanged: (photoPath) {
+            // Atualizar foto do perfil
+            context.read<AuthProvider>().updateProfile(
+              displayName: user.displayName,
+            );
+          },
         ),
         const SizedBox(height: 16),
         // Nome com botão de editar
