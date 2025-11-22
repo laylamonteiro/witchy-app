@@ -6,8 +6,9 @@ import 'app_spells_list_page.dart';
 import 'user_spells_list_page.dart';
 import 'ai_spell_creation_page.dart';
 import '../../../astrology/presentation/pages/astrology_page.dart';
-import '../../../divination/presentation/pages/divination_hub_page.dart';
-import '../../../runes/presentation/pages/runes_list_page.dart';
+import '../../../runes/presentation/pages/rune_reading_page.dart';
+import '../../../divination/presentation/pages/pendulum_page.dart';
+import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 
 class GrimoirePage extends StatelessWidget {
@@ -111,13 +112,13 @@ class _ToolsTab extends StatelessWidget {
           const SizedBox(height: 12),
           _buildToolCard(
             context,
-            icon: '🔮',
-            title: 'Divinação',
-            description: 'Pêndulo e oracle cards para orientação',
+            icon: 'ᚱ',
+            title: 'Leitura de Runas',
+            description: 'Consulte as antigas runas nórdicas',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const DivinationHubPage(),
+                  builder: (_) => const RuneReadingPage(),
                 ),
               );
             },
@@ -125,13 +126,27 @@ class _ToolsTab extends StatelessWidget {
           const SizedBox(height: 12),
           _buildToolCard(
             context,
-            icon: 'ᚱ',
-            title: 'Runas',
-            description: 'Alfabeto mágico para divinação e proteção',
+            icon: '⟟',
+            title: 'Pêndulo',
+            description: 'Perguntas de sim ou não',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const RunesListPage(),
+                  builder: (_) => const PendulumPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '🔮',
+            title: 'Oracle Cards',
+            description: 'Mensagens e orientação do universo',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const OracleCardsPage(),
                 ),
               );
             },
