@@ -1,8 +1,12 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_upgrade_sheet.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/birth_chart_model.dart';
 import '../../data/models/planet_position_model.dart';
@@ -162,41 +166,110 @@ class _PersonalizedSuggestionsPageState
   Widget build(BuildContext context) {
     print('🎨 PersonalizedSuggestionsPage.build: _isLoading=$_isLoading, _hasNatalChart=$_hasNatalChart, _suggestions?.length=${_suggestions?.length}');
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sugestões Personalizadas'),
-        backgroundColor: AppColors.darkBackground,
-      ),
-      backgroundColor: AppColors.darkBackground,
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.lilac),
-            )
-          : !_hasNatalChart
-              ? _buildNoChartView()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildDateSelector(),
-                      const SizedBox(height: 16),
-                      _buildInfoCard(),
-                      const SizedBox(height: 16),
-                      if (_retrogradePlanets != null && _retrogradePlanets!.isNotEmpty)
-                        _buildRetrogradeCard(),
-                      if (_retrogradePlanets != null && _retrogradePlanets!.isNotEmpty)
-                        const SizedBox(height: 16),
-                      if (_suggestions != null && _suggestions!.isNotEmpty)
-                        ..._suggestions!.map((s) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _buildSuggestionCard(s),
-                            )),
-                      if (_suggestions != null && _suggestions!.isEmpty)
-                        _buildNoSuggestionsCard(),
-                    ],
-                  ),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        final isFree = authProvider.isFree;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Sugestões Personalizadas'),
+            backgroundColor: AppColors.darkBackground,
+          ),
+          backgroundColor: AppColors.darkBackground,
+          body: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.lilac),
+                )
+              : !_hasNatalChart
+                  ? _buildNoChartView()
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildDateSelector(),
+                          const SizedBox(height: 16),
+                          _buildInfoCard(),
+                          const SizedBox(height: 16),
+                          // Botão premium para usuários free
+                          if (isFree) ...[
+                            _buildPremiumBanner(context),
+                            const SizedBox(height: 16),
+                          ],
+                          if (_retrogradePlanets != null && _retrogradePlanets!.isNotEmpty)
+                            _buildRetrogradeCard(isFree: isFree),
+                          if (_retrogradePlanets != null && _retrogradePlanets!.isNotEmpty)
+                            const SizedBox(height: 16),
+                          if (_suggestions != null && _suggestions!.isNotEmpty)
+                            ..._suggestions!.map((s) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildSuggestionCard(s, isFree: isFree),
+                                )),
+                          if (_suggestions != null && _suggestions!.isEmpty)
+                            _buildNoSuggestionsCard(),
+                        ],
+                      ),
+                    ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPremiumBanner(BuildContext context) {
+    return MagicalCard(
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('🔮', style: TextStyle(fontSize: 32)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Conteúdo Premium',
+                      style: TextStyle(
+                        color: AppColors.lilac,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Desbloqueie sugestões personalizadas completas',
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const PremiumUpgradeSheet(),
+                );
+              },
+              icon: const Icon(Icons.star, size: 18),
+              label: const Text('Seja Premium'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.lilac,
+                foregroundColor: AppColors.darkBackground,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -297,7 +370,7 @@ class _PersonalizedSuggestionsPageState
     );
   }
 
-  Widget _buildRetrogradeCard() {
+  Widget _buildRetrogradeCard({bool isFree = false}) {
     final retrogradeInfo = {
       Planet.mercury: {
         'icon': '☿️',
@@ -401,6 +474,7 @@ class _PersonalizedSuggestionsPageState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Título sempre visível
                   Row(
                     children: [
                       Text(info['icon']!, style: const TextStyle(fontSize: 20)),
@@ -418,24 +492,57 @@ class _PersonalizedSuggestionsPageState
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    'Efeitos: ${info['effects']}',
-                    style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.8),
-                      fontSize: 12,
-                      height: 1.4,
+                  // Conteúdo com blur para free
+                  if (isFree) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Efeitos: ${info['effects']}',
+                              style: TextStyle(
+                                color: AppColors.softWhite.withOpacity(0.8),
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Dicas: ${info['tips']}',
+                              style: TextStyle(
+                                color: AppColors.softWhite.withOpacity(0.6),
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Dicas: ${info['tips']}',
-                    style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.6),
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      height: 1.4,
+                  ] else ...[
+                    Text(
+                      'Efeitos: ${info['effects']}',
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.8),
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Dicas: ${info['tips']}',
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.6),
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );
@@ -445,7 +552,7 @@ class _PersonalizedSuggestionsPageState
     );
   }
 
-  Widget _buildSuggestionCard(PersonalizedSuggestion suggestion) {
+  Widget _buildSuggestionCard(PersonalizedSuggestion suggestion, {bool isFree = false}) {
     final categoryIcons = {
       'ritual': '🕯️',
       'spell': '✨',
@@ -460,10 +567,89 @@ class _PersonalizedSuggestionsPageState
       EnergyLevel.harmonious: Colors.green,
     };
 
+    // Widget do conteúdo (descrição, práticas, aspectos)
+    Widget contentWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          suggestion.description,
+          style: const TextStyle(
+            color: AppColors.softWhite,
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Práticas Sugeridas:',
+          style: TextStyle(
+            color: AppColors.lilac,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...suggestion.practices.map((practice) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '• ',
+                  style: TextStyle(
+                    color: AppColors.lilac,
+                    fontSize: 14,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    practice,
+                    style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.9),
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+        if (suggestion.relevantAspects.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          const Divider(color: AppColors.lilac),
+          const SizedBox(height: 8),
+          const Text(
+            'Aspectos Relevantes:',
+            style: TextStyle(
+              color: AppColors.lilac,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          ...suggestion.relevantAspects.map((aspect) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                aspect.description,
+                style: TextStyle(
+                  color: AppColors.softWhite.withOpacity(0.7),
+                  fontSize: 11,
+                ),
+              ),
+            );
+          }),
+        ],
+      ],
+    );
+
     return MagicalCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Título sempre visível
           Row(
             children: [
               Text(
@@ -515,77 +701,17 @@ class _PersonalizedSuggestionsPageState
           const SizedBox(height: 12),
           const Divider(color: AppColors.lilac),
           const SizedBox(height: 8),
-          Text(
-            suggestion.description,
-            style: const TextStyle(
-              color: AppColors.softWhite,
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Práticas Sugeridas:',
-            style: TextStyle(
-              color: AppColors.lilac,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...suggestion.practices.map((practice) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '• ',
-                    style: TextStyle(
-                      color: AppColors.lilac,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      practice,
-                      style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.9),
-                        fontSize: 12,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
+          // Conteúdo com blur para free
+          if (isFree)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                child: contentWidget,
               ),
-            );
-          }).toList(),
-          if (suggestion.relevantAspects.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            const Divider(color: AppColors.lilac),
-            const SizedBox(height: 8),
-            const Text(
-              'Aspectos Relevantes:',
-              style: TextStyle(
-                color: AppColors.lilac,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            ...suggestion.relevantAspects.map((aspect) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  aspect.description,
-                  style: TextStyle(
-                    color: AppColors.softWhite.withOpacity(0.7),
-                    fontSize: 11,
-                  ),
-                ),
-              );
-            }).toList(),
-          ],
+            )
+          else
+            contentWidget,
         ],
       ),
     );

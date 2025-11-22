@@ -38,6 +38,7 @@ enum AppFeature {
   astrologyBirthChart,
   astrologyMagicalProfile,
   astrologyDailyWeather,
+  astrologyPersonalizedSuggestions,
 
   // Runas
   runesBasic,
@@ -259,6 +260,7 @@ class FeatureAccess {
       case AppFeature.astrologyBirthChart:
       case AppFeature.astrologyMagicalProfile:
       case AppFeature.astrologyDailyWeather:
+      case AppFeature.astrologyPersonalizedSuggestions:
         return AccessResult.preview(
           message: 'Mapa astral completo e perfil mágico são exclusivos Premium',
         );
