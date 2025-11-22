@@ -12,17 +12,11 @@ class RunesListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final runes = Rune.getAllRunes();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Runas'),
-        backgroundColor: AppColors.surface,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
             // Introdução
             MagicalCard(
               child: Column(
@@ -86,9 +80,8 @@ class RunesListPage extends StatelessWidget {
                 return _buildRuneCard(context, rune);
               },
             ),
-            const SizedBox(height: 16),
-          ],
-        ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
