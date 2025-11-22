@@ -172,8 +172,8 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
 
-                // Card de Admin (apenas para admins)
-                if (user.isAdmin) _buildAdminCard(context, authProvider),
+                // Card de Admin (para admins originais, mesmo simulando outros roles)
+                if (authProvider.isOriginalAdmin) _buildAdminCard(context, authProvider),
               ],
             ),
           );

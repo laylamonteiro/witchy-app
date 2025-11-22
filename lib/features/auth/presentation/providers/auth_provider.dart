@@ -11,14 +11,19 @@ class AuthProvider extends ChangeNotifier {
   static const String _lastDiaryResetKey = 'last_diary_reset';
   static const String _lastAiResetKey = 'last_ai_reset';
   static const String _lastPendulumResetKey = 'last_pendulum_reset';
+  static const String _isOriginalAdminKey = 'is_original_admin';
 
   UserModel _currentUser = UserModel.defaultUser();
   bool _isInitialized = false;
   bool _hasSeenOnboarding = false;
+  bool _isOriginalAdmin = false; // Mantém acesso ao painel admin ao simular outros roles
 
   UserModel get currentUser => _currentUser;
   bool get isInitialized => _isInitialized;
   bool get hasSeenOnboarding => _hasSeenOnboarding;
+
+  /// Retorna true se o usuário é admin original (mesmo simulando outro role)
+  bool get isOriginalAdmin => _isOriginalAdmin;
 
   // Atalhos convenientes
   bool get isAdmin => _currentUser.isAdmin;
@@ -33,6 +38,9 @@ class AuthProvider extends ChangeNotifier {
 
     // Verificar se já viu onboarding
     _hasSeenOnboarding = prefs.getBool(_hasSeenOnboardingKey) ?? false;
+
+    // Carregar flag de admin original
+    _isOriginalAdmin = prefs.getBool(_isOriginalAdminKey) ?? false;
 
     // Carregar usuário salvo
     final userJson = prefs.getString(_userKey);
@@ -251,10 +259,13 @@ class AuthProvider extends ChangeNotifier {
 
   /// Ativa modo admin (para desenvolvimento)
   Future<void> activateAdminMode() async {
+    _isOriginalAdmin = true;
     _currentUser = _currentUser.copyWith(
       role: UserRole.admin,
       plan: SubscriptionPlan.lifetime,
     );
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isOriginalAdminKey, true);
     await _saveUser();
     notifyListeners();
   }
