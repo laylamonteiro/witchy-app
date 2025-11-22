@@ -5,7 +5,10 @@ export 'data/models/feature_access.dart';
 // Repositories
 export 'data/repositories/auth_repository.dart';
 export 'data/repositories/local_auth_repository.dart';
-// export 'data/repositories/supabase_auth_repository.dart'; // Ativar com Supabase
+export 'data/repositories/supabase_auth_repository.dart';
+
+// Config
+export '../../core/config/supabase_config.dart';
 
 // Providers
 export 'presentation/providers/auth_provider.dart';
