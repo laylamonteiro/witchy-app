@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../auth/auth.dart';
 import '../../data/models/pendulum_model.dart';
 
 class PendulumPage extends StatefulWidget {
@@ -45,6 +47,19 @@ class _PendulumPageState extends State<PendulumPage>
   }
 
   Future<void> _askPendulum() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Verificar limite diário (para TODOS os usuários)
+    if (!authProvider.canUsePendulum) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Você já consultou o pêndulo hoje. Volte amanhã!'),
+          backgroundColor: AppColors.alert,
+        ),
+      );
+      return;
+    }
+
     if (_question.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -104,6 +119,10 @@ class _PendulumPageState extends State<PendulumPage>
         'created_at': DateTime.now().millisecondsSinceEpoch,
       },
     );
+
+    // Incrementar contador de uso (limite diário para TODOS)
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.incrementPendulumUses();
   }
 
   @override
@@ -137,6 +156,60 @@ class _PendulumPageState extends State<PendulumPage>
                           color: AppColors.softWhite.withOpacity(0.8),
                         ),
                     textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  // Indicador de uso diário
+                  Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      final remaining = auth.remainingPendulumUses;
+                      final isUnlimited = remaining < 0; // Admin
+                      final hasRemaining = isUnlimited || remaining > 0;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: hasRemaining
+                              ? AppColors.success.withOpacity(0.2)
+                              : AppColors.alert.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: hasRemaining
+                                ? AppColors.success.withOpacity(0.5)
+                                : AppColors.alert.withOpacity(0.5),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isUnlimited
+                                  ? Icons.all_inclusive
+                                  : (hasRemaining ? Icons.check_circle : Icons.timer),
+                              size: 16,
+                              color: hasRemaining
+                                  ? AppColors.success
+                                  : AppColors.alert,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              isUnlimited
+                                  ? 'Consultas ilimitadas (Admin)'
+                                  : (hasRemaining
+                                      ? '1 consulta disponível hoje'
+                                      : 'Consulta usada - volte amanhã'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: hasRemaining
+                                    ? AppColors.success
+                                    : AppColors.alert,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

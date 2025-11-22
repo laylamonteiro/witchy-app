@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/color_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/auth.dart';
 
 class ColorDetailPage extends StatelessWidget {
   final ColorModel colorModel;
@@ -47,6 +49,7 @@ class ColorDetailPage extends StatelessWidget {
                 ],
               ),
             ),
+            // Intenções - visível para todos
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,38 +73,43 @@ class ColorDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Como Usar na Magia',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...colorModel.usageTips.map(
-                    (tip) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: colorModel.color,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              tip,
-                              style: Theme.of(context).textTheme.bodyMedium,
+            // Premium content - blur apenas nas sugestões de uso
+            PremiumBlurWidget(
+              feature: AppFeature.encyclopediaColorsDetails,
+              customMessage: 'Desbloqueie sugestões de uso mágico',
+              child: MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Como Usar na Magia',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    ...colorModel.usageTips.map(
+                      (tip) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: colorModel.color,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                tip,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

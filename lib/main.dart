@@ -13,6 +13,7 @@ import 'core/database/database_helper.dart';
 import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
 import 'features/home/presentation/pages/home_page.dart';
+import 'features/auth/auth.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
@@ -73,6 +74,7 @@ class GrimorioDeBolsoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider(create: (_) => SpellProvider()),
         ChangeNotifierProvider(create: (_) => DreamProvider()),
         ChangeNotifierProvider(create: (_) => DesireProvider()),

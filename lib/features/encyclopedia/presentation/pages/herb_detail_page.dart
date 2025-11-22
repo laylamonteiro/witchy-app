@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/herb_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/auth.dart';
 
 class HerbDetailPage extends StatelessWidget {
   final HerbModel herb;
@@ -209,6 +211,7 @@ class HerbDetailPage extends StatelessWidget {
                   ),
                 ),
               ),
+            // Propriedades Mágicas - visível para todos
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,40 +235,7 @@ class HerbDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Usos Rituais',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...herb.ritualUses.map(
-                    (use) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: AppColors.starYellow,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              use,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Indicadores - visível para todos
             MagicalCard(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -299,6 +269,45 @@ class HerbDetailPage extends StatelessWidget {
                     ],
                   ),
                 ],
+              ),
+            ),
+            // Premium content - blur apenas nas sugestões de uso ritual
+            PremiumBlurWidget(
+              feature: AppFeature.encyclopediaHerbsDetails,
+              customMessage: 'Desbloqueie sugestões de usos rituais',
+              child: MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Usos Rituais',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    ...herb.ritualUses.map(
+                      (use) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: AppColors.starYellow,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                use,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

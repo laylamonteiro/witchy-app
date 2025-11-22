@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/crystal_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/auth.dart';
 
 class CrystalDetailPage extends StatelessWidget {
   final CrystalModel crystal;
@@ -120,6 +122,7 @@ class CrystalDetailPage extends StatelessWidget {
                   ),
                 ),
               ),
+            // Intenções - visível para todos
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,40 +146,7 @@ class CrystalDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Como Usar',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...crystal.usageTips.map(
-                    (tip) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: AppColors.starYellow,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              tip,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Limpeza - visível para todos
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,6 +204,7 @@ class CrystalDetailPage extends StatelessWidget {
                 ],
               ),
             ),
+            // Recarga - visível para todos
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,6 +260,45 @@ class CrystalDetailPage extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+            // Premium content - blur apenas nas sugestões de uso
+            PremiumBlurWidget(
+              feature: AppFeature.encyclopediaCrystalsDetails,
+              customMessage: 'Desbloqueie sugestões de uso mágico',
+              child: MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Como Usar na Magia',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    ...crystal.usageTips.map(
+                      (tip) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: AppColors.starYellow,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                tip,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
