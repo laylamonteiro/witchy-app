@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'onboarding_page.dart';
+import 'welcome_page.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
 import '../../../../core/widgets/splash_screen.dart';
 
@@ -33,11 +34,16 @@ class AuthWrapper extends StatelessWidget {
         final hasSeenOnboarding = authProvider.hasSeenOnboarding;
         final hasAccount = authProvider.currentUser.email != 'local@grimorio.app';
 
-        // Se tem conta ou já viu onboarding, ir para home
-        if (hasAccount || hasSeenOnboarding) {
+        // Se tem conta logada, ir para home
+        if (hasAccount) {
           return showSplash
               ? const SplashScreen(child: HomePage())
               : const HomePage();
+        }
+
+        // Se já viu onboarding mas não tem conta, mostrar tela de boas-vindas
+        if (hasSeenOnboarding) {
+          return const WelcomePage();
         }
 
         // Se é primeira vez, mostrar onboarding
