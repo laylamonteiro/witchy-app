@@ -11,6 +11,7 @@ import '../../data/repositories/rune_reading_repository.dart';
 import 'rune_detail_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../auth/data/models/user_model.dart';
 
 class RuneReadingPage extends StatefulWidget {
   const RuneReadingPage({super.key});
@@ -264,6 +265,27 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   ),
                   disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
                 ),
+              ),
+
+              // Exibir usos restantes para usuários free
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  if (authProvider.isPremium) return const SizedBox.shrink();
+                  final remaining = authProvider.currentUser.remainingRuneReadings;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      'Leituras restantes hoje: $remaining/${UserModel.freeRuneReadingsLimit}',
+                      style: TextStyle(
+                        color: remaining > 0
+                            ? AppColors.softWhite.withOpacity(0.6)
+                            : AppColors.alert,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                },
               ),
             ],
 

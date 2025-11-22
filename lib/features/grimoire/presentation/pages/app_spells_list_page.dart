@@ -62,7 +62,7 @@ class _AppSpellsListPageState extends State<AppSpellsListPage> {
 
                   return Stack(
                     children: [
-                      PopupMenuButton<SpellCategory?>(
+                      PopupMenuButton<String>(
                         icon: Icon(
                           Icons.filter_list,
                           color: _filterCategory != null
@@ -70,15 +70,21 @@ class _AppSpellsListPageState extends State<AppSpellsListPage> {
                               : null,
                         ),
                         tooltip: 'Filtrar por categoria',
-                        onSelected: (category) {
+                        onSelected: (value) {
                           FocusScope.of(context).unfocus();
                           setState(() {
-                            _filterCategory = category;
+                            if (value == 'all') {
+                              _filterCategory = null;
+                            } else {
+                              _filterCategory = SpellCategory.values.firstWhere(
+                                (c) => c.name == value,
+                              );
+                            }
                           });
                         },
                         itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: null,
+                          PopupMenuItem<String>(
+                            value: 'all',
                             child: Row(
                               children: [
                                 Icon(
@@ -102,8 +108,8 @@ class _AppSpellsListPageState extends State<AppSpellsListPage> {
                               ],
                             ),
                           ),
-                          ...availableCategories.map((category) => PopupMenuItem(
-                                value: category,
+                          ...availableCategories.map((category) => PopupMenuItem<String>(
+                                value: category.name,
                                 child: Row(
                                   children: [
                                     Text(category.icon),

@@ -47,7 +47,7 @@ class SpellDetailPage extends StatelessWidget {
         actions: [
           if (showSaveButton) ...[
             IconButton(
-              icon: const Icon(Icons.save_alt),
+              icon: const Icon(Icons.save),
               tooltip: 'Salvar no Grimório',
               onPressed: () => _saveSpell(context),
             ),
