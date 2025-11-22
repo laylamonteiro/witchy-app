@@ -49,7 +49,7 @@ class AuthWrapper extends StatelessWidget {
         }
 
         // Se é primeira vez, mostrar onboarding
-        return const OnboardingPage()
+        return const OnboardingPage();
       },
     );
   }
