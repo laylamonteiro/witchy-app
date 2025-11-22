@@ -61,6 +61,21 @@ dependencies:
   # Markdown rendering
   flutter_markdown: ^0.6.18+2
 
+  # Image picker for profile photos
+  image_picker: ^1.0.7
+  image_cropper: ^5.0.1
+
+  # Backend Authentication (Supabase)
+  supabase_flutter: ^2.3.0
+
+  # Login social
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.0
+
+  # In-App Purchases (RevenueCat)
+  purchases_flutter: ^8.10.0
+  purchases_ui_flutter: ^8.10.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

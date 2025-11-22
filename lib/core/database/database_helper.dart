@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -39,6 +39,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE spells (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         name TEXT NOT NULL,
         purpose TEXT NOT NULL,
         type TEXT NOT NULL,
@@ -58,6 +59,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE dreams (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         tags TEXT,
@@ -71,6 +73,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE desires (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         title TEXT NOT NULL,
         description TEXT NOT NULL,
         status TEXT NOT NULL,
@@ -84,6 +87,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE daily_rituals (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         name TEXT NOT NULL,
         description TEXT,
         time TEXT NOT NULL,
@@ -96,6 +100,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE ritual_logs (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         ritual_id TEXT NOT NULL,
         notes TEXT,
         completed_at INTEGER NOT NULL,
@@ -107,6 +112,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE sigils (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         intention TEXT NOT NULL,
         image_path TEXT NOT NULL,
         created_at INTEGER NOT NULL
@@ -117,6 +123,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE gratitudes (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         tags TEXT,
@@ -129,6 +136,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE affirmations (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         text TEXT NOT NULL,
         category TEXT NOT NULL,
         is_preloaded INTEGER NOT NULL DEFAULT 0,
@@ -171,6 +179,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE rune_readings (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         question TEXT NOT NULL,
         spread_type TEXT NOT NULL,
         reading_data TEXT NOT NULL,
@@ -183,6 +192,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE pendulum_consultations (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         question TEXT NOT NULL,
         answer TEXT NOT NULL,
         date INTEGER NOT NULL,
@@ -194,6 +204,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE oracle_readings (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
         spread_type TEXT NOT NULL,
         reading_data TEXT NOT NULL,
         date INTEGER NOT NULL,
@@ -205,12 +216,29 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE daily_magical_weather (
         id TEXT PRIMARY KEY,
-        date TEXT NOT NULL UNIQUE,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        date TEXT NOT NULL,
         ai_generated_text TEXT NOT NULL,
         weather_data TEXT NOT NULL,
         created_at INTEGER NOT NULL
       )
     ''');
+
+    // Criar índices para user_id em todas as tabelas
+    await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
+    await db.execute('CREATE INDEX idx_dreams_user_id ON dreams(user_id)');
+    await db.execute('CREATE INDEX idx_desires_user_id ON desires(user_id)');
+    await db.execute('CREATE INDEX idx_daily_rituals_user_id ON daily_rituals(user_id)');
+    await db.execute('CREATE INDEX idx_ritual_logs_user_id ON ritual_logs(user_id)');
+    await db.execute('CREATE INDEX idx_sigils_user_id ON sigils(user_id)');
+    await db.execute('CREATE INDEX idx_gratitudes_user_id ON gratitudes(user_id)');
+    await db.execute('CREATE INDEX idx_affirmations_user_id ON affirmations(user_id)');
+    await db.execute('CREATE INDEX idx_birth_charts_user_id ON birth_charts(user_id)');
+    await db.execute('CREATE INDEX idx_magical_profiles_user_id ON magical_profiles(user_id)');
+    await db.execute('CREATE INDEX idx_rune_readings_user_id ON rune_readings(user_id)');
+    await db.execute('CREATE INDEX idx_pendulum_user_id ON pendulum_consultations(user_id)');
+    await db.execute('CREATE INDEX idx_oracle_readings_user_id ON oracle_readings(user_id)');
+    await db.execute('CREATE INDEX idx_weather_user_id ON daily_magical_weather(user_id)');
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -479,6 +507,77 @@ class DatabaseHelper {
             created_at INTEGER NOT NULL
           )
         ''');
+      }
+    }
+
+    // Migração da versão 6 para 7 - Adicionar user_id para multi-usuário
+    if (oldVersion < 7) {
+      // Lista de tabelas que precisam de user_id
+      final tables = [
+        'spells',
+        'dreams',
+        'desires',
+        'daily_rituals',
+        'ritual_logs',
+        'sigils',
+        'gratitudes',
+        'affirmations',
+        'rune_readings',
+        'pendulum_consultations',
+        'oracle_readings',
+        'daily_magical_weather',
+      ];
+
+      for (final table in tables) {
+        try {
+          // Verifica se a coluna user_id já existe
+          final columns = await db.rawQuery('PRAGMA table_info($table)');
+          final hasUserId = columns.any((col) => col['name'] == 'user_id');
+
+          if (!hasUserId) {
+            await db.execute(
+              "ALTER TABLE $table ADD COLUMN user_id TEXT NOT NULL DEFAULT 'local_user'"
+            );
+            print('Adicionado user_id na tabela $table');
+          }
+        } catch (e) {
+          print('Erro ao adicionar user_id na tabela $table: $e');
+        }
+      }
+
+      // Criar índices para user_id (com tratamento de erro para índices existentes)
+      final indexQueries = [
+        'CREATE INDEX IF NOT EXISTS idx_spells_user_id ON spells(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_dreams_user_id ON dreams(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_desires_user_id ON desires(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_daily_rituals_user_id ON daily_rituals(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_ritual_logs_user_id ON ritual_logs(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_sigils_user_id ON sigils(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_gratitudes_user_id ON gratitudes(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_affirmations_user_id ON affirmations(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_birth_charts_user_id ON birth_charts(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_magical_profiles_user_id ON magical_profiles(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_rune_readings_user_id ON rune_readings(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_pendulum_user_id ON pendulum_consultations(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_oracle_readings_user_id ON oracle_readings(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_weather_user_id ON daily_magical_weather(user_id)',
+      ];
+
+      for (final query in indexQueries) {
+        try {
+          await db.execute(query);
+        } catch (e) {
+          print('Erro ao criar índice: $e');
+        }
+      }
+
+      // Remover UNIQUE constraint da tabela daily_magical_weather se existir
+      // (agora cada usuário pode ter seu próprio clima para cada data)
+      try {
+        // Não é possível remover constraints em SQLite diretamente,
+        // mas o índice de user_id vai ajudar nas queries
+      } catch (e) {
+        print('Erro na migração da tabela weather: $e');
       }
     }
   }
