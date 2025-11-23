@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -36,8 +37,11 @@ class AuthWrapper extends StatelessWidget {
         // Verificar se tem conta autenticada (email válido)
         final isAuthenticated = authProvider.currentUser.isAuthenticated;
 
+        debugPrint('🔐 AuthWrapper: isAuthenticated=$isAuthenticated, hasSeenOnboarding=$hasSeenOnboarding, email=${authProvider.currentUser.email}');
+
         // Se tem conta logada, ir para home
         if (isAuthenticated) {
+          debugPrint('🔐 AuthWrapper: → HomePage (autenticado)');
           return showSplash
               ? const SplashScreen(child: HomePage())
               : const HomePage();
@@ -45,10 +49,12 @@ class AuthWrapper extends StatelessWidget {
 
         // Se já viu onboarding mas não tem conta, mostrar tela de boas-vindas
         if (hasSeenOnboarding) {
+          debugPrint('🔐 AuthWrapper: → WelcomePage (viu onboarding, sem conta)');
           return const WelcomePage();
         }
 
         // Se é primeira vez, mostrar onboarding
+        debugPrint('🔐 AuthWrapper: → OnboardingPage (primeira vez)');
         return const OnboardingPage();
       },
     );
