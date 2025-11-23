@@ -108,7 +108,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
   /// Google Sign-In configurado
   /// Requer: google-services.json (Android) e GoogleService-Info.plist (iOS)
-  static const _googleSignIn = GoogleSignIn(
+  static final _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
   );
 

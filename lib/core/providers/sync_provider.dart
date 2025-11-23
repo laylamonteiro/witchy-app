@@ -47,8 +47,8 @@ class SyncProvider extends ChangeNotifier {
   int get pendingSyncCount => _pendingSyncCount;
   bool get isSyncing => _status == SyncStatus.syncing;
   bool get hasConflicts => _conflicts.isNotEmpty;
-  bool get isReady => _syncService.isReady && _paymentService.isPremium;
-  bool get isPremium => _paymentService.isPremium;
+  bool get isReady => _syncService.isReady && _paymentService.isPro;
+  bool get isPremium => _paymentService.isPro;
 
   /// Status formatado para exibição
   String get statusText {
@@ -79,7 +79,7 @@ class SyncProvider extends ChangeNotifier {
 
   /// Inicia sincronização manual
   Future<SyncResult> sync() async {
-    if (!_paymentService.isPremium) {
+    if (!_paymentService.isPro) {
       _lastError = 'Sincronização é uma funcionalidade Premium';
       notifyListeners();
       return SyncResult.error(_lastError!);
@@ -107,7 +107,7 @@ class SyncProvider extends ChangeNotifier {
 
   /// Upload completo (enviar tudo para nuvem)
   Future<SyncResult> fullUpload() async {
-    if (!_paymentService.isPremium) {
+    if (!_paymentService.isPro) {
       return SyncResult.error('Sincronização é uma funcionalidade Premium');
     }
 
@@ -128,7 +128,7 @@ class SyncProvider extends ChangeNotifier {
 
   /// Download completo (baixar tudo da nuvem)
   Future<SyncResult> fullDownload() async {
-    if (!_paymentService.isPremium) {
+    if (!_paymentService.isPro) {
       return SyncResult.error('Sincronização é uma funcionalidade Premium');
     }
 
