@@ -1,9 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../models/affirmation_model.dart';
 
 class AffirmationRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final DataSyncService _syncService = DataSyncService();
 
   Future<List<AffirmationModel>> getAll() async {
     final db = await _dbHelper.database;
@@ -38,11 +40,15 @@ class AffirmationRepository {
 
   Future<int> insert(AffirmationModel affirmation) async {
     final db = await _dbHelper.database;
-    return await db.insert(
+    final result = await db.insert(
       'affirmations',
       affirmation.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    if (!affirmation.isPreloaded) {
+      _syncService.syncItem(SyncEntity.affirmations, affirmation.toMap());
+    }
+    return result;
   }
 
   Future<void> insertAll(List<AffirmationModel> affirmations) async {
@@ -60,21 +66,27 @@ class AffirmationRepository {
 
   Future<int> update(AffirmationModel affirmation) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    final result = await db.update(
       'affirmations',
       affirmation.toMap(),
       where: 'id = ?',
       whereArgs: [affirmation.id],
     );
+    if (!affirmation.isPreloaded) {
+      _syncService.syncItem(SyncEntity.affirmations, affirmation.toMap());
+    }
+    return result;
   }
 
   Future<int> delete(String id) async {
     final db = await _dbHelper.database;
-    return await db.delete(
+    final result = await db.delete(
       'affirmations',
       where: 'id = ? AND is_preloaded = ?',
       whereArgs: [id, 0], // Só permite deletar afirmações não-pré-carregadas
     );
+    _syncService.deleteItem(SyncEntity.affirmations, id);
+    return result;
   }
 
   Future<bool> hasPreloadedData() async {

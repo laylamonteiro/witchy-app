@@ -41,6 +41,7 @@ enum MoonPhase {
 
 class SpellModel {
   final String id;
+  final String? userId;
   final String name;
   final String purpose;
   final SpellType type;
@@ -53,9 +54,11 @@ class SpellModel {
   final bool isPreloaded; // Se é um feitiço pré-carregado do app
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool synced;
 
   SpellModel({
     String? id,
+    this.userId,
     required this.name,
     required this.purpose,
     required this.type,
@@ -68,6 +71,7 @@ class SpellModel {
     this.isPreloaded = false,
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.synced = false,
   })  : id = id ?? const Uuid().v4(),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
@@ -75,6 +79,7 @@ class SpellModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'user_id': userId ?? 'local_user',
       'name': name,
       'purpose': purpose,
       'type': type.name,
@@ -87,12 +92,14 @@ class SpellModel {
       'is_preloaded': isPreloaded ? 1 : 0,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
+      'synced': synced ? 1 : 0,
     };
   }
 
   factory SpellModel.fromMap(Map<String, dynamic> map) {
     return SpellModel(
       id: map['id'],
+      userId: map['user_id'],
       name: map['name'],
       purpose: map['purpose'],
       type: SpellType.values.firstWhere(
@@ -118,10 +125,12 @@ class SpellModel {
       isPreloaded: map['is_preloaded'] == 1,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']),
+      synced: map['synced'] == 1,
     );
   }
 
   SpellModel copyWith({
+    String? userId,
     String? name,
     String? purpose,
     SpellType? type,
@@ -131,9 +140,11 @@ class SpellModel {
     String? steps,
     int? duration,
     String? observations,
+    bool? synced,
   }) {
     return SpellModel(
       id: id,
+      userId: userId ?? this.userId,
       name: name ?? this.name,
       purpose: purpose ?? this.purpose,
       type: type ?? this.type,
@@ -146,6 +157,7 @@ class SpellModel {
       isPreloaded: isPreloaded,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      synced: synced ?? false,
     );
   }
 }

@@ -13,9 +13,11 @@ import 'core/theme/app_theme.dart';
 import 'core/database/database_helper.dart';
 import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
+import 'core/providers/sync_provider.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/payment_service.dart';
 import 'core/services/debug_log_service.dart';
+import 'core/services/data_sync_service.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/presentation/pages/auth_wrapper.dart';
@@ -60,6 +62,9 @@ void main() async {
       url: SupabaseConfig.url,
       anonKey: SupabaseConfig.anonKey,
     );
+    // Initialize DataSyncService after Supabase
+    DataSyncService().initialize();
+    await debugLog('SYNC', 'DataSyncService inicializado');
   }
 
   // Initialize RevenueCat (only for mobile platforms)
@@ -136,6 +141,24 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     if (state == AppLifecycleState.resumed) {
       // Atualizar timestamp quando o app volta do background
       widget.prefs.setInt(_lastOpenedKey, DateTime.now().millisecondsSinceEpoch);
+      // Trigger sync when app resumes (if user is authenticated)
+      _triggerBackgroundSync();
+    }
+  }
+
+  Future<void> _triggerBackgroundSync() async {
+    final syncService = DataSyncService();
+    final paymentService = PaymentService();
+    // Sincronização é exclusiva para usuários Premium
+    if (syncService.isReady && paymentService.isPremium) {
+      await debugLog('SYNC', 'App resumido - iniciando sync em background (Premium)');
+      syncService.syncAll().then((result) {
+        if (result.success) {
+          debugLog('SYNC', 'Sync em background concluído: ${result.uploaded} enviados, ${result.downloaded} recebidos');
+        } else {
+          debugLog('SYNC', 'Sync em background falhou: ${result.error}');
+        }
+      });
     }
   }
 
@@ -145,6 +168,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider.value(value: PaymentService()),
+        ChangeNotifierProvider(create: (_) => SyncProvider()),
         ChangeNotifierProvider(create: (_) => SpellProvider()),
         ChangeNotifierProvider(create: (_) => DreamProvider()),
         ChangeNotifierProvider(create: (_) => DesireProvider()),

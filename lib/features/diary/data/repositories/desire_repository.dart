@@ -1,9 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../models/desire_model.dart';
 
 class DesireRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final DataSyncService _syncService = DataSyncService();
 
   Future<List<DesireModel>> getAll() async {
     final db = await _dbHelper.database;
@@ -38,29 +40,35 @@ class DesireRepository {
 
   Future<int> insert(DesireModel desire) async {
     final db = await _dbHelper.database;
-    return await db.insert(
+    final result = await db.insert(
       'desires',
       desire.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    _syncService.syncItem(SyncEntity.desires, desire.toMap());
+    return result;
   }
 
   Future<int> update(DesireModel desire) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    final result = await db.update(
       'desires',
       desire.toMap(),
       where: 'id = ?',
       whereArgs: [desire.id],
     );
+    _syncService.syncItem(SyncEntity.desires, desire.toMap());
+    return result;
   }
 
   Future<int> delete(String id) async {
     final db = await _dbHelper.database;
-    return await db.delete(
+    final result = await db.delete(
       'desires',
       where: 'id = ?',
       whereArgs: [id],
     );
+    _syncService.deleteItem(SyncEntity.desires, id);
+    return result;
   }
 }
