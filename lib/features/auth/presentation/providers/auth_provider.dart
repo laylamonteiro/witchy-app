@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/services/debug_log_service.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 
@@ -45,11 +46,11 @@ class AuthProvider extends ChangeNotifier {
     // Verificar versão do fluxo de autenticação
     // Se a versão mudou, resetar o estado de onboarding e usuário
     final savedAuthVersion = prefs.getInt(_authVersionKey) ?? 0;
-    debugPrint('🔐 AuthProvider: savedVersion=$savedAuthVersion, currentVersion=$_currentAuthVersion');
+    await debugLog('AUTH', 'savedVersion=$savedAuthVersion, currentVersion=$_currentAuthVersion');
 
     if (savedAuthVersion < _currentAuthVersion) {
       // Nova versão do auth - limpar dados antigos para mostrar onboarding
-      debugPrint('🔐 AuthProvider: RESETTING - limpando dados antigos');
+      await debugLog('AUTH', 'RESETTING - limpando dados antigos');
       await prefs.remove(_hasSeenOnboardingKey);
       await prefs.remove(_userKey);
       await prefs.remove(_isOriginalAdminKey);
@@ -59,14 +60,14 @@ class AuthProvider extends ChangeNotifier {
       _isOriginalAdmin = false;
       _currentUser = UserModel.defaultUser();
       _isInitialized = true;
-      debugPrint('🔐 AuthProvider: RESET COMPLETE - hasSeenOnboarding=$_hasSeenOnboarding, email=${_currentUser.email}');
+      await debugLog('AUTH', 'RESET COMPLETE - hasSeenOnboarding=$_hasSeenOnboarding, email=${_currentUser.email}');
       notifyListeners();
       return;
     }
 
     // Verificar se já viu onboarding
     _hasSeenOnboarding = prefs.getBool(_hasSeenOnboardingKey) ?? false;
-    debugPrint('🔐 AuthProvider: hasSeenOnboarding=$_hasSeenOnboarding');
+    await debugLog('AUTH', 'hasSeenOnboarding=$_hasSeenOnboarding');
 
     // Carregar flag de admin original
     _isOriginalAdmin = prefs.getBool(_isOriginalAdminKey) ?? false;
