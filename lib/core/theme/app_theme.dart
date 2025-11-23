@@ -13,6 +13,7 @@ class AppColors {
   static const pinkWitch = Color(0xFFF1A7C5); // Alias para pink (usado em sigilos)
   static const mint = Color(0xFFA7F0D8); // Cura, natureza, bruxaria verde
   static const starYellow = Color(0xFFFFE8A3); // Brilho, glitter, feedback positivo
+  static const gold = Color(0xFFFFD700); // Dourado para premium
 
   // Texto
   static const textPrimary = Color(0xFFF6F4FF); // Branquinho suave

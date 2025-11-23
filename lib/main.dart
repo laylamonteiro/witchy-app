@@ -150,7 +150,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     final syncService = DataSyncService();
     final paymentService = PaymentService();
     // Sincronização é exclusiva para usuários Premium
-    if (syncService.isReady && paymentService.isPremium) {
+    if (syncService.isReady && paymentService.isPro) {
       await debugLog('SYNC', 'App resumido - iniciando sync em background (Premium)');
       syncService.syncAll().then((result) {
         if (result.success) {

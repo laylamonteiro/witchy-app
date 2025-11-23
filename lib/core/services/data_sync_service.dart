@@ -573,7 +573,7 @@ class DataSyncService {
   /// NOTA: Só funciona para usuários Premium
   Future<void> syncItem(SyncEntity entity, Map<String, dynamic> item) async {
     // Verifica se é premium antes de sincronizar
-    if (!PaymentService().isPremium) return;
+    if (!PaymentService().isPro) return;
     if (!isReady) return;
 
     try {
@@ -588,7 +588,7 @@ class DataSyncService {
   /// NOTA: Só funciona para usuários Premium
   Future<void> deleteItem(SyncEntity entity, dynamic id) async {
     // Verifica se é premium antes de deletar do cloud
-    if (!PaymentService().isPremium) return;
+    if (!PaymentService().isPro) return;
     if (!isReady) return;
 
     try {
