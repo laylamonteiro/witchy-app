@@ -13,6 +13,11 @@ class AuthProvider extends ChangeNotifier {
   static const String _lastPendulumResetKey = 'last_pendulum_reset';
   static const String _lastDailyLimitsResetKey = 'last_daily_limits_reset';
   static const String _isOriginalAdminKey = 'is_original_admin';
+  static const String _authVersionKey = 'auth_version';
+
+  /// Versão atual do fluxo de autenticação
+  /// Incrementar quando quiser forçar todos os usuários a ver o onboarding novamente
+  static const int _currentAuthVersion = 2;
 
   UserModel _currentUser = UserModel.defaultUser();
   bool _isInitialized = false;
@@ -36,6 +41,24 @@ class AuthProvider extends ChangeNotifier {
     if (_isInitialized) return;
 
     final prefs = await SharedPreferences.getInstance();
+
+    // Verificar versão do fluxo de autenticação
+    // Se a versão mudou, resetar o estado de onboarding e usuário
+    final savedAuthVersion = prefs.getInt(_authVersionKey) ?? 0;
+    if (savedAuthVersion < _currentAuthVersion) {
+      // Nova versão do auth - limpar dados antigos para mostrar onboarding
+      await prefs.remove(_hasSeenOnboardingKey);
+      await prefs.remove(_userKey);
+      await prefs.remove(_isOriginalAdminKey);
+      await prefs.setInt(_authVersionKey, _currentAuthVersion);
+
+      _hasSeenOnboarding = false;
+      _isOriginalAdmin = false;
+      _currentUser = UserModel.defaultUser();
+      _isInitialized = true;
+      notifyListeners();
+      return;
+    }
 
     // Verificar se já viu onboarding
     _hasSeenOnboarding = prefs.getBool(_hasSeenOnboardingKey) ?? false;

@@ -10,6 +10,7 @@ import 'goddesses_list_page.dart';
 import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
 import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class EncyclopediaPage extends StatefulWidget {
@@ -66,6 +67,16 @@ class _EncyclopediaPageState extends State<EncyclopediaPage> with SingleTickerPr
     return Scaffold(
       appBar: AppBar(
         title: const Text('Enciclopédia Mágica'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            ),
+            tooltip: 'Configurações',
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Align(

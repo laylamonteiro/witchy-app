@@ -11,6 +11,7 @@ import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
 
 class GrimoirePage extends StatefulWidget {
   const GrimoirePage({super.key});
@@ -66,6 +67,16 @@ class _GrimoirePageState extends State<GrimoirePage> with SingleTickerProviderSt
     return Scaffold(
       appBar: AppBar(
         title: const Text('Grimório Digital'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            ),
+            tooltip: 'Configurações',
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.lilac,
