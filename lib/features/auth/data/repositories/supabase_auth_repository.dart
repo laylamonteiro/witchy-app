@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import 'auth_repository.dart';
 import '../../../../core/config/supabase_config.dart';
+import '../../../../core/services/debug_log_service.dart';
 
 /// Implementação do AuthRepository usando Supabase
 class SupabaseAuthRepository implements AuthRepository {
@@ -102,18 +107,68 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// Google Sign-In configurado
+  /// Requer: google-services.json (Android) e GoogleService-Info.plist (iOS)
+  static const _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
+
   @override
   Future<AuthResult> signInWithGoogle() async {
     try {
-      await _supabase.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: SupabaseConfig.redirectUrl,
+      await debugLog('AUTH', 'Iniciando Google Sign-In...');
+
+      // Para web, usar OAuth redirect
+      if (kIsWeb) {
+        await _supabase.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: SupabaseConfig.redirectUrl,
+        );
+        return AuthResult.success(UserModel.defaultUser());
+      }
+
+      // Para mobile, usar Google Sign-In nativo
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        await debugLog('AUTH', 'Google Sign-In cancelado pelo usuário');
+        return AuthResult.error('Login cancelado');
+      }
+
+      await debugLog('AUTH', 'Google Sign-In: usuário obtido - ${googleUser.email}');
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null) {
+        await debugLog('AUTH', 'Google Sign-In: idToken é null');
+        return AuthResult.error('Não foi possível obter credenciais do Google');
+      }
+
+      await debugLog('AUTH', 'Google Sign-In: obtendo tokens...');
+
+      // Autenticar com Supabase usando o ID token do Google
+      final response = await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
       );
-      // O resultado vem via onAuthStateChange
-      return AuthResult.success(UserModel.defaultUser());
+
+      if (response.user != null) {
+        await debugLog('AUTH', 'Google Sign-In: sucesso! User ID: ${response.user!.id}');
+        // Criar/atualizar perfil
+        await _createProfile(response.user!, googleUser.displayName);
+        final user = await _userFromSupabaseUser(response.user!);
+        return AuthResult.success(user);
+      }
+
+      await debugLog('AUTH', 'Google Sign-In: falhou - user é null');
+      return AuthResult.error('Erro ao autenticar com Google');
     } on AuthException catch (e) {
+      await debugLog('AUTH', 'Google Sign-In AuthException: ${e.message}');
       return _handleAuthException(e);
     } catch (e) {
+      await debugLog('AUTH', 'Google Sign-In erro: $e');
       return AuthResult.error('Erro no login com Google: $e');
     }
   }
@@ -121,15 +176,76 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<AuthResult> signInWithApple() async {
     try {
-      await _supabase.auth.signInWithOAuth(
-        OAuthProvider.apple,
-        redirectTo: SupabaseConfig.redirectUrl,
+      await debugLog('AUTH', 'Iniciando Apple Sign-In...');
+
+      // Para web, usar OAuth redirect
+      if (kIsWeb) {
+        await _supabase.auth.signInWithOAuth(
+          OAuthProvider.apple,
+          redirectTo: SupabaseConfig.redirectUrl,
+        );
+        return AuthResult.success(UserModel.defaultUser());
+      }
+
+      // Verificar se está no iOS ou macOS (Apple Sign-In só funciona nessas plataformas)
+      if (!Platform.isIOS && !Platform.isMacOS) {
+        await debugLog('AUTH', 'Apple Sign-In: não disponível nesta plataforma');
+        return AuthResult.error('Login com Apple não disponível neste dispositivo');
+      }
+
+      // Usar Apple Sign-In nativo
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
       );
-      // O resultado vem via onAuthStateChange
-      return AuthResult.success(UserModel.defaultUser());
+
+      await debugLog('AUTH', 'Apple Sign-In: credencial obtida');
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        await debugLog('AUTH', 'Apple Sign-In: identityToken é null');
+        return AuthResult.error('Não foi possível obter credenciais da Apple');
+      }
+
+      // Autenticar com Supabase usando o ID token da Apple
+      final response = await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+      );
+
+      if (response.user != null) {
+        await debugLog('AUTH', 'Apple Sign-In: sucesso! User ID: ${response.user!.id}');
+
+        // Construir nome a partir das informações da Apple (se disponíveis)
+        String? displayName;
+        if (credential.givenName != null || credential.familyName != null) {
+          displayName = [credential.givenName, credential.familyName]
+              .where((s) => s != null && s.isNotEmpty)
+              .join(' ');
+        }
+
+        // Criar/atualizar perfil
+        await _createProfile(response.user!, displayName);
+        final user = await _userFromSupabaseUser(response.user!);
+        return AuthResult.success(user);
+      }
+
+      await debugLog('AUTH', 'Apple Sign-In: falhou - user é null');
+      return AuthResult.error('Erro ao autenticar com Apple');
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        await debugLog('AUTH', 'Apple Sign-In: cancelado pelo usuário');
+        return AuthResult.error('Login cancelado');
+      }
+      await debugLog('AUTH', 'Apple Sign-In erro: ${e.message}');
+      return AuthResult.error('Erro no login com Apple: ${e.message}');
     } on AuthException catch (e) {
+      await debugLog('AUTH', 'Apple Sign-In AuthException: ${e.message}');
       return _handleAuthException(e);
     } catch (e) {
+      await debugLog('AUTH', 'Apple Sign-In erro: $e');
       return AuthResult.error('Erro no login com Apple: $e');
     }
   }
