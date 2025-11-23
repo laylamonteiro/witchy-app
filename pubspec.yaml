@@ -70,7 +70,7 @@ dependencies:
 
   # Login social
   google_sign_in: ^6.2.1
-  sign_in_with_apple: ^6.1.0
+  flutter_facebook_auth: ^7.1.1
 
   # In-App Purchases (RevenueCat)
   purchases_flutter: ^8.10.0

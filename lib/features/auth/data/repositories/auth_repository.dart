@@ -57,7 +57,10 @@ abstract class AuthRepository {
   /// Login com Google
   Future<AuthResult> signInWithGoogle();
 
-  /// Login com Apple
+  /// Login com Facebook
+  Future<AuthResult> signInWithFacebook();
+
+  /// Login com Apple (mantido para compatibilidade)
   Future<AuthResult> signInWithApple();
 
   /// Logout

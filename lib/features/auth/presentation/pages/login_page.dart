@@ -263,12 +263,12 @@ class _LoginPageState extends State<LoginPage> {
           onPressed: _handleGoogleLogin,
         ),
         const SizedBox(width: 16),
-        // Apple
+        // Facebook
         _buildSocialButton(
-          icon: '',
-          label: 'Apple',
-          iconWidget: const Icon(Icons.apple, color: AppColors.textPrimary),
-          onPressed: _handleAppleLogin,
+          icon: 'f',
+          label: 'Facebook',
+          iconWidget: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
+          onPressed: _handleFacebookLogin,
         ),
       ],
     );
@@ -460,7 +460,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleAppleLogin() async {
+  Future<void> _handleFacebookLogin() async {
     if (!SupabaseConfig.isConfigured) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -474,7 +474,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     try {
       final authRepo = SupabaseAuthRepository();
-      final result = await authRepo.signInWithApple();
+      final result = await authRepo.signInWithFacebook();
 
       if (!mounted) return;
 
@@ -492,7 +492,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.errorMessage ?? 'Erro no login com Apple'),
+            content: Text(result.errorMessage ?? 'Erro no login com Facebook'),
             backgroundColor: AppColors.alert,
           ),
         );
@@ -501,7 +501,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro no login com Apple: $e'),
+            content: Text('Erro no login com Facebook: $e'),
             backgroundColor: AppColors.alert,
           ),
         );
