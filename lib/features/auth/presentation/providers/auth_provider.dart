@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/debug_log_service.dart';
+import '../../../../core/services/payment_service.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 
@@ -352,6 +353,26 @@ class AuthProvider extends ChangeNotifier {
     );
     await _saveUser();
     notifyListeners();
+  }
+
+  /// Atualiza o status premium baseado no PaymentService (RevenueCat)
+  Future<void> refreshPremiumStatus() async {
+    final paymentService = PaymentService();
+
+    if (!paymentService.isInitialized) {
+      await paymentService.initialize();
+    }
+
+    if (paymentService.isPro) {
+      // Usuário tem assinatura ativa
+      final isLifetime = paymentService.isLifetime;
+      _currentUser = _currentUser.copyWith(
+        role: UserRole.premium,
+        plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
+      );
+      await _saveUser();
+      notifyListeners();
+    }
   }
 
   /// Simula downgrade para free

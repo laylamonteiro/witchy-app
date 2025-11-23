@@ -73,18 +73,17 @@ class ColorDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            // Premium content - blur apenas nas sugestões de uso
-            PremiumBlurWidget(
-              feature: AppFeature.encyclopediaColorsDetails,
-              customMessage: 'Desbloqueie sugestões de uso mágico',
-              child: MagicalCard(
-                child: Column(
+            // Premium content - blur apenas nas sugestões de uso (título sem blur)
+            MagicalCard(
+              child: PremiumContentSection(
+                feature: AppFeature.encyclopediaColorsDetails,
+                title: Text(
+                  'Como Usar na Magia',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Como Usar na Magia',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
                     const SizedBox(height: 12),
                     ...colorModel.usageTips.map(
                       (tip) => Padding(

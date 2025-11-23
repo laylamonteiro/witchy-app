@@ -262,18 +262,17 @@ class CrystalDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            // Premium content - blur apenas nas sugestões de uso
-            PremiumBlurWidget(
-              feature: AppFeature.encyclopediaCrystalsDetails,
-              customMessage: 'Desbloqueie sugestões de uso mágico',
-              child: MagicalCard(
-                child: Column(
+            // Premium content - blur apenas nas sugestões de uso (título sem blur)
+            MagicalCard(
+              child: PremiumContentSection(
+                feature: AppFeature.encyclopediaCrystalsDetails,
+                title: Text(
+                  'Como Usar na Magia',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Como Usar na Magia',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
                     const SizedBox(height: 12),
                     ...crystal.usageTips.map(
                       (tip) => Padding(

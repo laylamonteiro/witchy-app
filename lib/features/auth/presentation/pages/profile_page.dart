@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
@@ -444,9 +446,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             icon: Icons.notifications_outlined,
             title: 'Notificações',
-            onTap: () {
-              // TODO: Navegar para configurações de notificações
-            },
+            onTap: () => _showNotificationsDialog(context),
           ),
           _buildDivider(),
           _buildOptionTile(
@@ -461,17 +461,13 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             icon: Icons.help_outline,
             title: 'Ajuda & Suporte',
-            onTap: () {
-              // TODO: Abrir ajuda
-            },
+            onTap: () => _showHelpDialog(context),
           ),
           _buildDivider(),
           _buildOptionTile(
             icon: Icons.info_outline,
             title: 'Sobre o App',
-            onTap: () {
-              // TODO: Mostrar sobre
-            },
+            onTap: () => _showAboutDialog(context),
           ),
           _buildDivider(),
           _buildOptionTile(
@@ -761,5 +757,212 @@ class ProfilePage extends StatelessWidget {
       case UserRole.free:
         return 'GRATUITO';
     }
+  }
+
+  void _showNotificationsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Row(
+          children: [
+            Icon(Icons.notifications_outlined, color: Color(0xFF9C27B0)),
+            SizedBox(width: 8),
+            Text(
+              'Notificações',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: const Text(
+          'As configurações de notificações estarão disponíveis em breve!\n\nVocê poderá personalizar alertas para:\n• Lembretes de rituais\n• Fases da lua\n• Datas mágicas especiais',
+          style: TextStyle(color: Colors.white70, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: Color(0xFF9C27B0)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Row(
+          children: [
+            Icon(Icons.help_outline, color: Color(0xFF9C27B0)),
+            SizedBox(width: 8),
+            Text(
+              'Ajuda & Suporte',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHelpItem(
+              icon: Icons.email_outlined,
+              title: 'Email de Suporte',
+              subtitle: 'suporte@grimoriodebolso.com',
+              onTap: () => _launchEmail(),
+            ),
+            const SizedBox(height: 16),
+            _buildHelpItem(
+              icon: Icons.question_answer_outlined,
+              title: 'FAQ',
+              subtitle: 'Perguntas frequentes',
+              onTap: () => _launchFaq(),
+            ),
+            const SizedBox(height: 16),
+            _buildHelpItem(
+              icon: Icons.policy_outlined,
+              title: 'Política de Privacidade',
+              subtitle: 'Seus dados estão seguros',
+              onTap: () => _launchPrivacyPolicy(),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Fechar',
+              style: TextStyle(color: Color(0xFF9C27B0)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHelpItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFF9C27B0), size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white38),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchEmail() async {
+    final uri = Uri.parse('mailto:suporte@grimoriodebolso.com');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  Future<void> _launchFaq() async {
+    final uri = Uri.parse('https://grimoriodebolso.com/faq');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _launchPrivacyPolicy() async {
+    final uri = Uri.parse('https://grimoriodebolso.com/privacidade');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _showAboutDialog(BuildContext context) async {
+    final packageInfo = await PackageInfo.fromPlatform();
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Row(
+          children: [
+            Text('✨', style: TextStyle(fontSize: 24)),
+            SizedBox(width: 8),
+            Text(
+              'Grimório de Bolso',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Versão ${packageInfo.version} (${packageInfo.buildNumber})',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Seu companheiro para práticas mágicas, rituais e autoconhecimento através da astrologia e bruxaria moderna.',
+              style: TextStyle(color: Colors.white70, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Desenvolvido com 🔮 e ✨',
+              style: TextStyle(color: Color(0xFF9C27B0)),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '© 2024 Grimório de Bolso',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Fechar',
+              style: TextStyle(color: Color(0xFF9C27B0)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
