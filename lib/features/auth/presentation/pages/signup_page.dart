@@ -566,11 +566,27 @@ class _SignupPageState extends State<SignupPage> {
       final authRepo = SupabaseAuthRepository();
       final result = await authRepo.signInWithGoogle();
 
-      if (!result.success) {
-        throw Exception(result.errorMessage ?? 'Erro no cadastro com Google');
-      }
+      if (!mounted) return;
 
-      // OAuth vai redirecionar, então não precisamos fazer nada aqui
+      if (result.success && result.user != null) {
+        // Atualizar AuthProvider com os dados do usuário
+        final authProvider = context.read<AuthProvider>();
+        await authProvider.updateProfile(
+          email: result.user!.email,
+          displayName: result.user!.displayName,
+        );
+        await authProvider.markOnboardingSeen();
+
+        // Navegar para home
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Erro no cadastro com Google'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -614,11 +630,27 @@ class _SignupPageState extends State<SignupPage> {
       final authRepo = SupabaseAuthRepository();
       final result = await authRepo.signInWithApple();
 
-      if (!result.success) {
-        throw Exception(result.errorMessage ?? 'Erro no cadastro com Apple');
-      }
+      if (!mounted) return;
 
-      // OAuth vai redirecionar, então não precisamos fazer nada aqui
+      if (result.success && result.user != null) {
+        // Atualizar AuthProvider com os dados do usuário
+        final authProvider = context.read<AuthProvider>();
+        await authProvider.updateProfile(
+          email: result.user!.email,
+          displayName: result.user!.displayName,
+        );
+        await authProvider.markOnboardingSeen();
+
+        // Navegar para home
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Erro no cadastro com Apple'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

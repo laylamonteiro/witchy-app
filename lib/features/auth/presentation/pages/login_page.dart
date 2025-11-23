@@ -421,8 +421,29 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     try {
       final authRepo = SupabaseAuthRepository();
-      await authRepo.signInWithGoogle();
-      // O resultado vem via listener de auth state
+      final result = await authRepo.signInWithGoogle();
+
+      if (!mounted) return;
+
+      if (result.success && result.user != null) {
+        // Atualizar AuthProvider com os dados do usuário
+        final authProvider = context.read<AuthProvider>();
+        await authProvider.updateProfile(
+          email: result.user!.email,
+          displayName: result.user!.displayName,
+        );
+        await authProvider.markOnboardingSeen();
+
+        // Navegar para home
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Erro no login com Google'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -453,8 +474,29 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     try {
       final authRepo = SupabaseAuthRepository();
-      await authRepo.signInWithApple();
-      // O resultado vem via listener de auth state
+      final result = await authRepo.signInWithApple();
+
+      if (!mounted) return;
+
+      if (result.success && result.user != null) {
+        // Atualizar AuthProvider com os dados do usuário
+        final authProvider = context.read<AuthProvider>();
+        await authProvider.updateProfile(
+          email: result.user!.email,
+          displayName: result.user!.displayName,
+        );
+        await authProvider.markOnboardingSeen();
+
+        // Navegar para home
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Erro no login com Apple'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
