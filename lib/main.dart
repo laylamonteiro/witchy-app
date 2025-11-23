@@ -15,6 +15,7 @@ import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/payment_service.dart';
+import 'core/services/debug_log_service.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/presentation/pages/auth_wrapper.dart';
@@ -34,6 +35,10 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize debug log service FIRST
+  await DebugLogService().initialize();
+  await debugLog('SYSTEM', 'App iniciando...');
 
   // Initialize sqflite for web
   if (kIsWeb) {

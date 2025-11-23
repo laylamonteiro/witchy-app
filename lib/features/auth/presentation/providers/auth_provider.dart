@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/services/debug_log_service.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 
@@ -13,6 +14,11 @@ class AuthProvider extends ChangeNotifier {
   static const String _lastPendulumResetKey = 'last_pendulum_reset';
   static const String _lastDailyLimitsResetKey = 'last_daily_limits_reset';
   static const String _isOriginalAdminKey = 'is_original_admin';
+  static const String _authVersionKey = 'auth_version';
+
+  /// Versão atual do fluxo de autenticação
+  /// Incrementar quando quiser forçar todos os usuários a ver o onboarding novamente
+  static const int _currentAuthVersion = 3;
 
   UserModel _currentUser = UserModel.defaultUser();
   bool _isInitialized = false;
@@ -37,8 +43,31 @@ class AuthProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
 
+    // Verificar versão do fluxo de autenticação
+    // Se a versão mudou, resetar o estado de onboarding e usuário
+    final savedAuthVersion = prefs.getInt(_authVersionKey) ?? 0;
+    await debugLog('AUTH', 'savedVersion=$savedAuthVersion, currentVersion=$_currentAuthVersion');
+
+    if (savedAuthVersion < _currentAuthVersion) {
+      // Nova versão do auth - limpar dados antigos para mostrar onboarding
+      await debugLog('AUTH', 'RESETTING - limpando dados antigos');
+      await prefs.remove(_hasSeenOnboardingKey);
+      await prefs.remove(_userKey);
+      await prefs.remove(_isOriginalAdminKey);
+      await prefs.setInt(_authVersionKey, _currentAuthVersion);
+
+      _hasSeenOnboarding = false;
+      _isOriginalAdmin = false;
+      _currentUser = UserModel.defaultUser();
+      _isInitialized = true;
+      await debugLog('AUTH', 'RESET COMPLETE - hasSeenOnboarding=$_hasSeenOnboarding, email=${_currentUser.email}');
+      notifyListeners();
+      return;
+    }
+
     // Verificar se já viu onboarding
     _hasSeenOnboarding = prefs.getBool(_hasSeenOnboardingKey) ?? false;
+    await debugLog('AUTH', 'hasSeenOnboarding=$_hasSeenOnboarding');
 
     // Carregar flag de admin original
     _isOriginalAdmin = prefs.getBool(_isOriginalAdminKey) ?? false;

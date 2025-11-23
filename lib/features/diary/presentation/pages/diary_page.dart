@@ -5,6 +5,7 @@ import 'affirmations_list_page.dart';
 import 'dreams_list_page.dart';
 import 'desires_list_page.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
 
 class DiaryPage extends StatefulWidget {
   const DiaryPage({super.key});
@@ -60,6 +61,16 @@ class _DiaryPageState extends State<DiaryPage> with SingleTickerProviderStateMix
     return Scaffold(
       appBar: AppBar(
         title: const Text('Diários'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            ),
+            tooltip: 'Configurações',
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.lilac,

@@ -11,6 +11,7 @@ import '../../features/astrology/data/services/transit_interpreter.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../core/database/database_helper.dart';
 import '../../features/auth/auth.dart';
+import 'debug_logs_page.dart';
 
 // Mapa de capitais brasileiras com coordenadas exatas
 const Map<String, Map<String, dynamic>> _brazilianCapitals = {
@@ -602,6 +603,17 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           ],
         ),
         actions: [
+          // Botão para ver logs persistentes de inicialização
+          Tooltip(
+            message: 'Ver Logs de Inicialização',
+            child: IconButton(
+              icon: const Icon(Icons.article_outlined),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DebugLogsPage()),
+              ),
+            ),
+          ),
           if (_logs.isNotEmpty)
             Tooltip(
               message: 'Copiar TODOS os logs (${_logs.length} linhas)',
