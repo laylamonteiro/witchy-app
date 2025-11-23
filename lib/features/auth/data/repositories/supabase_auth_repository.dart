@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import 'auth_repository.dart';
@@ -174,57 +173,54 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> signInWithApple() async {
+  Future<AuthResult> signInWithFacebook() async {
     try {
-      await debugLog('AUTH', 'Iniciando Apple Sign-In...');
+      await debugLog('AUTH', 'Iniciando Facebook Sign-In...');
 
       // Para web, usar OAuth redirect
       if (kIsWeb) {
         await _supabase.auth.signInWithOAuth(
-          OAuthProvider.apple,
+          OAuthProvider.facebook,
           redirectTo: SupabaseConfig.redirectUrl,
         );
         return AuthResult.success(UserModel.defaultUser());
       }
 
-      // Verificar se está no iOS ou macOS (Apple Sign-In só funciona nessas plataformas)
-      if (!Platform.isIOS && !Platform.isMacOS) {
-        await debugLog('AUTH', 'Apple Sign-In: não disponível nesta plataforma');
-        return AuthResult.error('Login com Apple não disponível neste dispositivo');
-      }
-
-      // Usar Apple Sign-In nativo
-      final credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
+      // Usar Facebook Login nativo
+      final LoginResult result = await FacebookAuth.instance.login(
+        permissions: ['email', 'public_profile'],
       );
 
-      await debugLog('AUTH', 'Apple Sign-In: credencial obtida');
-
-      final idToken = credential.identityToken;
-      if (idToken == null) {
-        await debugLog('AUTH', 'Apple Sign-In: identityToken é null');
-        return AuthResult.error('Não foi possível obter credenciais da Apple');
+      if (result.status == LoginStatus.cancelled) {
+        await debugLog('AUTH', 'Facebook Sign-In: cancelado pelo usuário');
+        return AuthResult.error('Login cancelado');
       }
 
-      // Autenticar com Supabase usando o ID token da Apple
+      if (result.status != LoginStatus.success || result.accessToken == null) {
+        await debugLog('AUTH', 'Facebook Sign-In: falhou - ${result.message}');
+        return AuthResult.error(result.message ?? 'Erro no login com Facebook');
+      }
+
+      await debugLog('AUTH', 'Facebook Sign-In: token obtido');
+
+      final accessToken = result.accessToken!.tokenString;
+
+      // Autenticar com Supabase usando o access token do Facebook
       final response = await _supabase.auth.signInWithIdToken(
-        provider: OAuthProvider.apple,
-        idToken: idToken,
+        provider: OAuthProvider.facebook,
+        idToken: accessToken,
+        accessToken: accessToken,
       );
 
       if (response.user != null) {
-        await debugLog('AUTH', 'Apple Sign-In: sucesso! User ID: ${response.user!.id}');
+        await debugLog('AUTH', 'Facebook Sign-In: sucesso! User ID: ${response.user!.id}');
 
-        // Construir nome a partir das informações da Apple (se disponíveis)
-        String? displayName;
-        if (credential.givenName != null || credential.familyName != null) {
-          displayName = [credential.givenName, credential.familyName]
-              .where((s) => s != null && s.isNotEmpty)
-              .join(' ');
-        }
+        // Obter dados do perfil do Facebook
+        final userData = await FacebookAuth.instance.getUserData(
+          fields: 'name,email,picture.width(200)',
+        );
+
+        final displayName = userData['name'] as String?;
 
         // Criar/atualizar perfil
         await _createProfile(response.user!, displayName);
@@ -232,22 +228,21 @@ class SupabaseAuthRepository implements AuthRepository {
         return AuthResult.success(user);
       }
 
-      await debugLog('AUTH', 'Apple Sign-In: falhou - user é null');
-      return AuthResult.error('Erro ao autenticar com Apple');
-    } on SignInWithAppleAuthorizationException catch (e) {
-      if (e.code == AuthorizationErrorCode.canceled) {
-        await debugLog('AUTH', 'Apple Sign-In: cancelado pelo usuário');
-        return AuthResult.error('Login cancelado');
-      }
-      await debugLog('AUTH', 'Apple Sign-In erro: ${e.message}');
-      return AuthResult.error('Erro no login com Apple: ${e.message}');
+      await debugLog('AUTH', 'Facebook Sign-In: falhou - user é null');
+      return AuthResult.error('Erro ao autenticar com Facebook');
     } on AuthException catch (e) {
-      await debugLog('AUTH', 'Apple Sign-In AuthException: ${e.message}');
+      await debugLog('AUTH', 'Facebook Sign-In AuthException: ${e.message}');
       return _handleAuthException(e);
     } catch (e) {
-      await debugLog('AUTH', 'Apple Sign-In erro: $e');
-      return AuthResult.error('Erro no login com Apple: $e');
+      await debugLog('AUTH', 'Facebook Sign-In erro: $e');
+      return AuthResult.error('Erro no login com Facebook: $e');
     }
+  }
+
+  @override
+  Future<AuthResult> signInWithApple() async {
+    // Apple Sign-In não está habilitado neste app
+    return AuthResult.error('Login com Apple não disponível');
   }
 
   @override

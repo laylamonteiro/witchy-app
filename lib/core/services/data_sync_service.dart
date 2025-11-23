@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
+import 'payment_service.dart';
 
 /// Tipos de entidades sincronizáveis
 enum SyncEntity {
@@ -569,7 +570,10 @@ class DataSyncService {
   }
 
   /// Sincroniza um item específico após criação/atualização
+  /// NOTA: Só funciona para usuários Premium
   Future<void> syncItem(SyncEntity entity, Map<String, dynamic> item) async {
+    // Verifica se é premium antes de sincronizar
+    if (!PaymentService().isPremium) return;
     if (!isReady) return;
 
     try {
@@ -581,7 +585,10 @@ class DataSyncService {
   }
 
   /// Deleta um item do Supabase
+  /// NOTA: Só funciona para usuários Premium
   Future<void> deleteItem(SyncEntity entity, dynamic id) async {
+    // Verifica se é premium antes de deletar do cloud
+    if (!PaymentService().isPremium) return;
     if (!isReady) return;
 
     try {

@@ -367,12 +367,12 @@ class _SignupPageState extends State<SignupPage> {
           onPressed: _handleGoogleSignup,
         ),
         const SizedBox(width: 16),
-        // Apple
+        // Facebook
         _buildSocialButton(
-          icon: '',
-          label: 'Apple',
-          iconWidget: const Icon(Icons.apple, color: AppColors.textPrimary),
-          onPressed: _handleAppleSignup,
+          icon: 'f',
+          label: 'Facebook',
+          iconWidget: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
+          onPressed: _handleFacebookSignup,
         ),
       ],
     );
@@ -603,7 +603,7 @@ class _SignupPageState extends State<SignupPage> {
     }
   }
 
-  Future<void> _handleAppleSignup() async {
+  Future<void> _handleFacebookSignup() async {
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -617,7 +617,7 @@ class _SignupPageState extends State<SignupPage> {
     if (!SupabaseConfig.isConfigured) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Cadastro com Apple não disponível no momento'),
+          content: Text('Cadastro com Facebook não disponível no momento'),
           backgroundColor: AppColors.info,
         ),
       );
@@ -628,7 +628,7 @@ class _SignupPageState extends State<SignupPage> {
 
     try {
       final authRepo = SupabaseAuthRepository();
-      final result = await authRepo.signInWithApple();
+      final result = await authRepo.signInWithFacebook();
 
       if (!mounted) return;
 
@@ -646,7 +646,7 @@ class _SignupPageState extends State<SignupPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.errorMessage ?? 'Erro no cadastro com Apple'),
+            content: Text(result.errorMessage ?? 'Erro no cadastro com Facebook'),
             backgroundColor: AppColors.alert,
           ),
         );
@@ -655,7 +655,7 @@ class _SignupPageState extends State<SignupPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro no cadastro com Apple: $e'),
+            content: Text('Erro no cadastro com Facebook: $e'),
             backgroundColor: AppColors.alert,
           ),
         );

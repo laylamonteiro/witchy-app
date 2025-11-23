@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -51,7 +51,8 @@ class DatabaseHelper {
         observations TEXT,
         is_preloaded INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -65,7 +66,9 @@ class DatabaseHelper {
         tags TEXT,
         feeling TEXT,
         date INTEGER NOT NULL,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -79,7 +82,8 @@ class DatabaseHelper {
         status TEXT NOT NULL,
         evolution TEXT,
         created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -92,7 +96,9 @@ class DatabaseHelper {
         description TEXT,
         time TEXT NOT NULL,
         is_active INTEGER NOT NULL DEFAULT 1,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -104,6 +110,8 @@ class DatabaseHelper {
         ritual_id TEXT NOT NULL,
         notes TEXT,
         completed_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (ritual_id) REFERENCES daily_rituals (id) ON DELETE CASCADE
       )
     ''');
@@ -115,7 +123,9 @@ class DatabaseHelper {
         user_id TEXT NOT NULL DEFAULT 'local_user',
         intention TEXT NOT NULL,
         image_path TEXT NOT NULL,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -128,7 +138,9 @@ class DatabaseHelper {
         content TEXT NOT NULL,
         tags TEXT,
         date INTEGER NOT NULL,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -141,6 +153,8 @@ class DatabaseHelper {
         category TEXT NOT NULL,
         is_preloaded INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0,
         is_favorite INTEGER NOT NULL DEFAULT 0
       )
     ''');
@@ -159,7 +173,9 @@ class DatabaseHelper {
         timezone TEXT NOT NULL,
         unknown_birth_time INTEGER NOT NULL DEFAULT 0,
         chart_data TEXT NOT NULL,
-        calculated_at INTEGER NOT NULL
+        calculated_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -171,6 +187,8 @@ class DatabaseHelper {
         birth_chart_id TEXT NOT NULL,
         profile_data TEXT NOT NULL,
         generated_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (birth_chart_id) REFERENCES birth_charts (id) ON DELETE CASCADE
       )
     ''');
@@ -184,7 +202,9 @@ class DatabaseHelper {
         spread_type TEXT NOT NULL,
         reading_data TEXT NOT NULL,
         date INTEGER NOT NULL,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -196,7 +216,9 @@ class DatabaseHelper {
         question TEXT NOT NULL,
         answer TEXT NOT NULL,
         date INTEGER NOT NULL,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -208,7 +230,9 @@ class DatabaseHelper {
         spread_type TEXT NOT NULL,
         reading_data TEXT NOT NULL,
         date INTEGER NOT NULL,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -220,7 +244,9 @@ class DatabaseHelper {
         date TEXT NOT NULL,
         ai_generated_text TEXT NOT NULL,
         weather_data TEXT NOT NULL,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -579,6 +605,90 @@ class DatabaseHelper {
       } catch (e) {
         print('Erro na migração da tabela weather: $e');
       }
+    }
+
+    // Migração da versão 7 para 8 - Adicionar colunas synced e updated_at para sincronização
+    if (oldVersion < 8) {
+      // Lista de tabelas que precisam de synced e updated_at
+      final tables = [
+        'spells',
+        'dreams',
+        'desires',
+        'daily_rituals',
+        'ritual_logs',
+        'sigils',
+        'gratitudes',
+        'affirmations',
+        'birth_charts',
+        'magical_profiles',
+        'rune_readings',
+        'pendulum_consultations',
+        'oracle_readings',
+        'daily_magical_weather',
+      ];
+
+      for (final table in tables) {
+        try {
+          // Verifica quais colunas existem
+          final columns = await db.rawQuery('PRAGMA table_info($table)');
+          final hasSynced = columns.any((col) => col['name'] == 'synced');
+          final hasUpdatedAt = columns.any((col) => col['name'] == 'updated_at');
+
+          if (!hasSynced) {
+            await db.execute(
+              'ALTER TABLE $table ADD COLUMN synced INTEGER NOT NULL DEFAULT 0'
+            );
+            print('Adicionado synced na tabela $table');
+          }
+
+          if (!hasUpdatedAt) {
+            // Usar created_at como valor inicial para updated_at, ou timestamp atual
+            await db.execute(
+              'ALTER TABLE $table ADD COLUMN updated_at INTEGER NOT NULL DEFAULT ${DateTime.now().millisecondsSinceEpoch}'
+            );
+            // Atualizar updated_at com created_at onde existir
+            try {
+              await db.execute(
+                'UPDATE $table SET updated_at = created_at WHERE created_at IS NOT NULL'
+              );
+            } catch (e) {
+              // Algumas tabelas podem não ter created_at
+              print('Tabela $table não tem created_at: $e');
+            }
+            print('Adicionado updated_at na tabela $table');
+          }
+        } catch (e) {
+          print('Erro ao adicionar colunas de sync na tabela $table: $e');
+        }
+      }
+
+      // Criar índices para synced (para queries de itens pendentes)
+      final syncIndexQueries = [
+        'CREATE INDEX IF NOT EXISTS idx_spells_synced ON spells(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_dreams_synced ON dreams(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_desires_synced ON desires(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_daily_rituals_synced ON daily_rituals(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_ritual_logs_synced ON ritual_logs(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_sigils_synced ON sigils(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_gratitudes_synced ON gratitudes(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_affirmations_synced ON affirmations(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_birth_charts_synced ON birth_charts(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_magical_profiles_synced ON magical_profiles(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_rune_readings_synced ON rune_readings(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_pendulum_synced ON pendulum_consultations(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_oracle_readings_synced ON oracle_readings(synced)',
+        'CREATE INDEX IF NOT EXISTS idx_weather_synced ON daily_magical_weather(synced)',
+      ];
+
+      for (final query in syncIndexQueries) {
+        try {
+          await db.execute(query);
+        } catch (e) {
+          print('Erro ao criar índice de sync: $e');
+        }
+      }
+
+      print('Migração v8 concluída - colunas de sincronização adicionadas');
     }
   }
 

@@ -1,9 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../models/spell_model.dart';
 
 class SpellRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final DataSyncService _syncService = DataSyncService();
 
   Future<List<SpellModel>> getAll() async {
     final db = await _dbHelper.database;
@@ -49,30 +51,36 @@ class SpellRepository {
 
   Future<int> insert(SpellModel spell) async {
     final db = await _dbHelper.database;
-    return await db.insert(
+    final result = await db.insert(
       'spells',
       spell.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    _syncService.syncItem(SyncEntity.spells, spell.toMap());
+    return result;
   }
 
   Future<int> update(SpellModel spell) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    final result = await db.update(
       'spells',
       spell.toMap(),
       where: 'id = ?',
       whereArgs: [spell.id],
     );
+    _syncService.syncItem(SyncEntity.spells, spell.toMap());
+    return result;
   }
 
   Future<int> delete(String id) async {
     final db = await _dbHelper.database;
-    return await db.delete(
+    final result = await db.delete(
       'spells',
       where: 'id = ?',
       whereArgs: [id],
     );
+    _syncService.deleteItem(SyncEntity.spells, id);
+    return result;
   }
 
   Future<int> count() async {

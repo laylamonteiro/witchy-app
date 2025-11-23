@@ -1,8 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_sync_service.dart';
+import '../../../../core/providers/sync_provider.dart';
+import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Página de configurações de privacidade
@@ -135,6 +141,12 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       },
                     ),
                   ]),
+
+                  const SizedBox(height: 24),
+
+                  // Seção: Status de Sincronização
+                  _buildSectionHeader('Status de Sincronizacao'),
+                  _buildSyncStatusCard(),
 
                   const SizedBox(height: 24),
 
@@ -290,6 +302,327 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     );
   }
 
+  Widget _buildSyncStatusCard() {
+    return Consumer<SyncProvider>(
+      builder: (context, syncProvider, _) {
+        final isPremium = syncProvider.isPremium;
+        final isReady = syncProvider.isReady;
+        final status = syncProvider.status;
+        final isSyncing = syncProvider.isSyncing;
+
+        // Se não é premium, mostrar upsell
+        if (!isPremium) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.lilac.withValues(alpha: 0.2),
+                  AppColors.gold.withValues(alpha: 0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.workspace_premium, color: AppColors.gold, size: 28),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Sincronizacao na Nuvem',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Recurso exclusivo Premium',
+                            style: TextStyle(
+                              color: AppColors.gold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Mantenha seus dados sincronizados entre todos os seus dispositivos e nunca perca seus feiticos e diarios.',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/subscription'),
+                    icon: const Icon(Icons.star, size: 18),
+                    label: const Text('Seja Premium'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _getSyncStatusColor(status).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getSyncStatusIcon(status),
+                      color: _getSyncStatusColor(status),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              isReady ? syncProvider.statusText : 'Nao conectado',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.gold.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'PREMIUM',
+                                style: TextStyle(
+                                  color: AppColors.gold,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isReady
+                              ? syncProvider.lastSyncText
+                              : 'Faca login para sincronizar',
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isReady && !isSyncing)
+                    IconButton(
+                      onPressed: () async {
+                        final result = await syncProvider.sync();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                result.success
+                                    ? 'Sincronizado! ${result.uploaded} enviados, ${result.downloaded} recebidos'
+                                    : result.error ?? 'Erro na sincronizacao',
+                              ),
+                              backgroundColor: result.success ? AppColors.success : AppColors.alert,
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.sync, color: AppColors.lilac),
+                      tooltip: 'Sincronizar agora',
+                    ),
+                  if (isSyncing)
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.lilac),
+                      ),
+                    ),
+                ],
+              ),
+              if (isReady) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: isSyncing ? null : () => _fullUpload(syncProvider),
+                        icon: const Icon(Icons.cloud_upload_outlined, size: 18),
+                        label: const Text('Enviar Tudo'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.lilac,
+                          side: const BorderSide(color: AppColors.lilac),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: isSyncing ? null : () => _fullDownload(syncProvider),
+                        icon: const Icon(Icons.cloud_download_outlined, size: 18),
+                        label: const Text('Baixar Tudo'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.mint,
+                          side: const BorderSide(color: AppColors.mint),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Color _getSyncStatusColor(SyncStatus status) {
+    switch (status) {
+      case SyncStatus.idle:
+        return Colors.grey;
+      case SyncStatus.syncing:
+        return AppColors.lilac;
+      case SyncStatus.success:
+        return AppColors.success;
+      case SyncStatus.error:
+        return AppColors.alert;
+      case SyncStatus.conflict:
+        return Colors.orange;
+    }
+  }
+
+  IconData _getSyncStatusIcon(SyncStatus status) {
+    switch (status) {
+      case SyncStatus.idle:
+        return Icons.cloud_off_outlined;
+      case SyncStatus.syncing:
+        return Icons.sync;
+      case SyncStatus.success:
+        return Icons.cloud_done_outlined;
+      case SyncStatus.error:
+        return Icons.cloud_off_outlined;
+      case SyncStatus.conflict:
+        return Icons.warning_amber_outlined;
+    }
+  }
+
+  Future<void> _fullUpload(SyncProvider syncProvider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Enviar Todos os Dados?', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Isso enviara todos os seus dados locais para a nuvem, substituindo qualquer dado existente no servidor.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.lilac),
+            child: const Text('Enviar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final result = await syncProvider.fullUpload();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.success ? '${result.uploaded} itens enviados!' : result.error ?? 'Erro'),
+            backgroundColor: result.success ? AppColors.success : AppColors.alert,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _fullDownload(SyncProvider syncProvider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Baixar Todos os Dados?', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'ATENCAO: Isso substituira todos os seus dados locais pelos dados da nuvem. Dados locais nao sincronizados serao perdidos.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.mint),
+            child: const Text('Baixar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final result = await syncProvider.fullDownload();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.success ? '${result.downloaded} itens baixados!' : result.error ?? 'Erro'),
+            backgroundColor: result.success ? AppColors.success : AppColors.alert,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildInfoCard() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -367,13 +700,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              // TODO: Implementar exportação de dados
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Exportacao iniciada...'),
-                  backgroundColor: AppColors.lilac,
-                ),
-              );
+              await _performExport();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.lilac,
@@ -383,6 +710,70 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _performExport() async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Exportando dados...'),
+          backgroundColor: AppColors.lilac,
+        ),
+      );
+
+      final db = await DatabaseHelper.instance.database;
+      final exportData = <String, dynamic>{};
+
+      // Tabelas para exportar
+      final tables = [
+        'spells', 'dreams', 'desires', 'gratitudes', 'affirmations',
+        'daily_rituals', 'ritual_logs', 'sigils', 'birth_charts',
+        'magical_profiles', 'rune_readings', 'pendulum_consultations',
+        'oracle_readings', 'daily_magical_weather'
+      ];
+
+      for (final table in tables) {
+        try {
+          final data = await db.query(table);
+          exportData[table] = data;
+        } catch (e) {
+          exportData[table] = [];
+        }
+      }
+
+      exportData['export_date'] = DateTime.now().toIso8601String();
+      exportData['app_version'] = '1.0.0';
+
+      final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
+
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = 'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsString(jsonString);
+
+      if (mounted) {
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          subject: 'Backup Grimorio de Bolso',
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Dados exportados com sucesso!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao exportar: $e'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _clearLocalData() async {
@@ -416,13 +807,48 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     );
 
     if (confirmed == true && mounted) {
-      // TODO: Implementar limpeza de dados locais
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Dados locais removidos'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      try {
+        final db = await DatabaseHelper.instance.database;
+
+        // Tabelas para limpar (exceto dados pré-carregados)
+        final tables = [
+          'spells', 'dreams', 'desires', 'gratitudes', 'daily_rituals',
+          'ritual_logs', 'sigils', 'birth_charts', 'magical_profiles',
+          'rune_readings', 'pendulum_consultations', 'oracle_readings',
+          'daily_magical_weather'
+        ];
+
+        for (final table in tables) {
+          try {
+            if (table == 'spells' || table == 'affirmations') {
+              // Manter itens pré-carregados
+              await db.delete(table, where: 'is_preloaded = ?', whereArgs: [0]);
+            } else {
+              await db.delete(table);
+            }
+          } catch (e) {
+            // Ignorar erros de tabelas que não existem
+          }
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Dados locais removidos com sucesso'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao limpar dados: $e'),
+              backgroundColor: AppColors.alert,
+            ),
+          );
+        }
+      }
     }
   }
 

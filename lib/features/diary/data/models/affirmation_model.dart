@@ -57,29 +57,39 @@ extension AffirmationCategoryExtension on AffirmationCategory {
 
 class AffirmationModel {
   final String id;
+  final String? userId;
   final String text;
   final AffirmationCategory category;
   final bool isPreloaded;
   final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool synced;
   final bool isFavorite;
 
   AffirmationModel({
     String? id,
+    this.userId,
     required this.text,
     required this.category,
     this.isPreloaded = false,
     DateTime? createdAt,
+    DateTime? updatedAt,
+    this.synced = false,
     this.isFavorite = false,
   })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now();
+        createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'user_id': userId ?? 'local_user',
       'text': text,
       'category': category.name,
       'is_preloaded': isPreloaded ? 1 : 0,
       'created_at': createdAt.millisecondsSinceEpoch,
+      'updated_at': updatedAt.millisecondsSinceEpoch,
+      'synced': synced ? 1 : 0,
       'is_favorite': isFavorite ? 1 : 0,
     };
   }
@@ -87,6 +97,7 @@ class AffirmationModel {
   factory AffirmationModel.fromMap(Map<String, dynamic> map) {
     return AffirmationModel(
       id: map['id'],
+      userId: map['user_id'],
       text: map['text'],
       category: AffirmationCategory.values.firstWhere(
         (e) => e.name == map['category'],
@@ -94,21 +105,30 @@ class AffirmationModel {
       ),
       isPreloaded: map['is_preloaded'] == 1,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
+      updatedAt: map['updated_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['updated_at'])
+          : DateTime.fromMillisecondsSinceEpoch(map['created_at']),
+      synced: map['synced'] == 1,
       isFavorite: map['is_favorite'] == 1,
     );
   }
 
   AffirmationModel copyWith({
+    String? userId,
     String? text,
     AffirmationCategory? category,
     bool? isFavorite,
+    bool? synced,
   }) {
     return AffirmationModel(
       id: id,
+      userId: userId ?? this.userId,
       text: text ?? this.text,
       category: category ?? this.category,
       isPreloaded: isPreloaded,
       createdAt: createdAt,
+      updatedAt: DateTime.now(),
+      synced: synced ?? false,
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }

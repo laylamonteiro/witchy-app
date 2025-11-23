@@ -105,7 +105,6 @@ class LocalAuthRepository implements AuthRepository {
 
   @override
   Future<AuthResult> signInWithGoogle() async {
-    // Simulação - será implementado com google_sign_in
     await Future.delayed(const Duration(milliseconds: 500));
     return AuthResult.error(
       'Login com Google não disponível no modo local',
@@ -114,8 +113,16 @@ class LocalAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<AuthResult> signInWithFacebook() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return AuthResult.error(
+      'Login com Facebook não disponível no modo local',
+      AuthErrorCode.unknown,
+    );
+  }
+
+  @override
   Future<AuthResult> signInWithApple() async {
-    // Simulação - será implementado com sign_in_with_apple
     await Future.delayed(const Duration(milliseconds: 500));
     return AuthResult.error(
       'Login com Apple não disponível no modo local',
