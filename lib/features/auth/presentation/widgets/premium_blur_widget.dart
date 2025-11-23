@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
+import '../../../../core/services/payment_service.dart';
 
 /// Widget que aplica blur em conteúdo premium para usuários free
 /// Mostra o conteúdo com blur simples, sem overlay nem botões
@@ -443,17 +445,34 @@ class PremiumUpgradeSheet extends StatelessWidget {
     );
   }
 
-  void _handleSubscribe(BuildContext context) {
-    // Por enquanto, simula upgrade (será substituído por compra real)
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.upgradeToPremium();
+  Future<void> _handleSubscribe(BuildContext context) async {
+    final paymentService = PaymentService();
+
+    // Inicializar se necessário
+    if (!paymentService.isInitialized) {
+      await paymentService.initialize();
+    }
+
+    // Fechar o bottom sheet antes de mostrar o paywall
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Parabéns! Você agora é Premium! ✨'),
-        backgroundColor: Color(0xFF9C27B0),
-      ),
-    );
+
+    // Apresentar paywall do RevenueCat
+    final result = await paymentService.presentPaywall();
+
+    if (result == PaywallResult.purchased || result == PaywallResult.restored) {
+      // Atualizar estado do AuthProvider após compra bem-sucedida
+      if (context.mounted) {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        authProvider.refreshPremiumStatus();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Parabéns! Você agora é Premium! ✨'),
+            backgroundColor: Color(0xFF9C27B0),
+          ),
+        );
+      }
+    }
   }
 }
 

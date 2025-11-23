@@ -271,18 +271,17 @@ class HerbDetailPage extends StatelessWidget {
                 ],
               ),
             ),
-            // Premium content - blur apenas nas sugestões de uso ritual
-            PremiumBlurWidget(
-              feature: AppFeature.encyclopediaHerbsDetails,
-              customMessage: 'Desbloqueie sugestões de usos rituais',
-              child: MagicalCard(
-                child: Column(
+            // Premium content - blur apenas nas sugestões de uso ritual (título sem blur)
+            MagicalCard(
+              child: PremiumContentSection(
+                feature: AppFeature.encyclopediaHerbsDetails,
+                title: Text(
+                  'Usos Rituais',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Usos Rituais',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
                     const SizedBox(height: 12),
                     ...herb.ritualUses.map(
                       (use) => Padding(
