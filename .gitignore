@@ -125,3 +125,7 @@ visual-inspo/
 **/prokerala_credentials.dart
 .env
 *.env
+
+# Firebase credentials (injected via CI/CD)
+**/google-services.json
+**/GoogleService-Info.plist

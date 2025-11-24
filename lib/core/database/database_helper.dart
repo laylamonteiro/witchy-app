@@ -692,6 +692,35 @@ class DatabaseHelper {
     }
   }
 
+  /// Limpa todos os dados de todas as tabelas (para exclusão de conta)
+  Future<void> clearAllTables() async {
+    final db = await database;
+    final tables = [
+      'spells',
+      'dreams',
+      'desires',
+      'gratitudes',
+      'affirmations',
+      'daily_rituals',
+      'ritual_logs',
+      'sigils',
+      'birth_charts',
+      'magical_profiles',
+      'rune_readings',
+      'pendulum_consultations',
+      'oracle_readings',
+      'daily_magical_weather',
+    ];
+
+    for (final table in tables) {
+      try {
+        await db.delete(table);
+      } catch (e) {
+        // Ignorar erros de tabelas que não existem
+      }
+    }
+  }
+
   Future<void> close() async {
     final db = await instance.database;
     db.close();

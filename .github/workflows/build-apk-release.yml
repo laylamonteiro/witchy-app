@@ -18,9 +18,17 @@ name: Build APK - Download no Celular
 # Adicione os seguintes secrets nas configurações do repositório:
 # Settings > Secrets and variables > Actions > New repository secret
 #
+# OBRIGATÓRIOS:
 # 1. GROQ_API_KEY - sua chave da API do Groq
 # 2. PROKERALA_CLIENT_ID - Client ID da API Prokerala
 # 3. PROKERALA_CLIENT_SECRET - Client Secret da API Prokerala
+# 4. SUPABASE_URL - URL do projeto Supabase (ex: https://xxx.supabase.co)
+# 5. SUPABASE_ANON_KEY - Anon Key do Supabase
+# 6. GOOGLE_SERVICES_JSON - Conteúdo do google-services.json (base64 encoded)
+#
+# OPCIONAIS (para produção):
+# 7. REVENUECAT_ANDROID_KEY - API Key do RevenueCat para Android
+# 8. REVENUECAT_IOS_KEY - API Key do RevenueCat para iOS
 
 on:
   workflow_dispatch:
@@ -82,6 +90,10 @@ jobs:
           }
           CREDENTIALS
 
+      - name: Create google-services.json
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 -d > android/app/google-services.json
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -101,7 +113,12 @@ jobs:
           fi
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
+            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
 
       - name: Get current date and time
         id: date

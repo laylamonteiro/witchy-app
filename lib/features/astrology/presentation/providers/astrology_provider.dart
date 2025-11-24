@@ -194,7 +194,6 @@ class AstrologyProvider with ChangeNotifier {
     final currentHash = _generateChartHash(_birthChart!);
     if (_magicalProfile!.aiGeneratedText != null &&
         _magicalProfile!.chartHash == currentHash) {
-      print('✅ Texto IA já existe para este mapa, usando cache');
       return;
     }
 
@@ -203,8 +202,6 @@ class AstrologyProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      print('🔮 Gerando texto personalizado com IA...');
-
       final aiText = await _aiService.generateMagicalProfileText(
         birthChart: _birthChart!,
         profile: _magicalProfile!,
@@ -218,10 +215,7 @@ class AstrologyProvider with ChangeNotifier {
 
       // Salvar perfil atualizado
       await _repository.saveMagicalProfile(_magicalProfile!);
-
-      print('✅ Perfil mágico com IA salvo');
     } catch (e) {
-      print('❌ Erro ao gerar perfil com IA: $e');
       _error = 'Erro ao gerar perfil personalizado: $e';
     } finally {
       _isGeneratingAI = false;
