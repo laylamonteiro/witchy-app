@@ -9,6 +9,7 @@ class AstrologyRepository {
   // Salvar Mapa Astral
   Future<void> saveBirthChart(BirthChartModel chart) async {
     final db = await _dbHelper.database;
+    final now = DateTime.now().millisecondsSinceEpoch;
 
     await db.insert(
       'birth_charts',
@@ -25,6 +26,7 @@ class AstrologyRepository {
         'unknown_birth_time': chart.unknownBirthTime ? 1 : 0,
         'chart_data': chart.toJsonString(),
         'calculated_at': chart.calculatedAt.millisecondsSinceEpoch,
+        'updated_at': now,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -67,6 +69,7 @@ class AstrologyRepository {
   // Atualizar Mapa Astral
   Future<void> updateBirthChart(BirthChartModel chart) async {
     final db = await _dbHelper.database;
+    final now = DateTime.now().millisecondsSinceEpoch;
 
     await db.update(
       'birth_charts',
@@ -81,6 +84,7 @@ class AstrologyRepository {
         'unknown_birth_time': chart.unknownBirthTime ? 1 : 0,
         'chart_data': chart.toJsonString(),
         'calculated_at': chart.calculatedAt.millisecondsSinceEpoch,
+        'updated_at': now,
       },
       where: 'id = ?',
       whereArgs: [chart.id],
@@ -101,6 +105,7 @@ class AstrologyRepository {
   // Salvar Perfil Mágico
   Future<void> saveMagicalProfile(MagicalProfile profile) async {
     final db = await _dbHelper.database;
+    final now = DateTime.now().millisecondsSinceEpoch;
 
     await db.insert(
       'magical_profiles',
@@ -110,6 +115,7 @@ class AstrologyRepository {
         'birth_chart_id': profile.birthChartId,
         'profile_data': profile.toJsonString(),
         'generated_at': profile.generatedAt.millisecondsSinceEpoch,
+        'updated_at': now,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
