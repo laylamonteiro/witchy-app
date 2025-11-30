@@ -109,6 +109,13 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Validate signing inputs
+        run: |
+          if [ -z "${{ secrets.ANDROID_KEYSTORE }}" ] || [ -z "${{ secrets.ANDROID_KEY_ALIAS }}" ] || [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ] || [ -z "${{ secrets.ANDROID_STORE_PASSWORD }}" ]; then
+            echo "Required signing secrets are missing."
+            exit 1
+          fi
+
       - name: Prepare Android signing keystore
         env:
           ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
@@ -117,6 +124,15 @@ jobs:
           echo "$ANDROID_KEYSTORE" | base64 -d > "$KEYSTORE_PATH"
           echo "ANDROID_KEYSTORE_FILE=$KEYSTORE_PATH" >> $GITHUB_ENV
           echo "Keystore saved to $KEYSTORE_PATH"
+
+      - name: Create key.properties for release signing
+        run: |
+          cat > android/key.properties <<EOF
+          storeFile=${ANDROID_KEYSTORE_FILE}
+          storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
 
       - name: Fix geolocator_android compatibility
         run: |
@@ -175,8 +191,9 @@ jobs:
       - name: Rename APK and AAB with version info
         run: |
           mkdir -p release-apk
-          cp build/app/outputs/flutter-apk/app-release.apk release-apk/grimorio-de-bolso-${{ steps.release_name.outputs.name }}.apk
-          cp build/app/outputs/bundle/release/app-release.aab release-apk/grimorio-de-bolso-${{ steps.release_name.outputs.name }}.aab
+          RELEASE_NAME="${{ steps.release_name.outputs.name }}"
+          cp build/app/outputs/flutter-apk/app-release.apk "release-apk/grimorio-de-bolso-${RELEASE_NAME}.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "release-apk/grimorio-de-bolso-${RELEASE_NAME}.aab"
 
       - name: Upload APK and AAB artifacts (backup)
         uses: actions/upload-artifact@v4
