@@ -1,9 +1,9 @@
 name: Build Android APK
 
-# Workflow de validação para branches de trabalho
-# - Valida código e faz build
-# - Se passar, cria PR para main automaticamente
-# - Na main, use o workflow "Build APK - Download no Celular" que gera releases
+# Workflow simplificado para branches de trabalho
+# - Valida código com flutter analyze
+# - Abre PR para main automaticamente se passar
+# - Build completo só roda na main após merge
 
 on:
   push:
@@ -12,18 +12,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-validation:
+  validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -32,44 +29,38 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Create Groq credentials file (dummy for validation)
-        run: |
-          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
-          /// Credentials for the Groq API.
-          class GroqCredentials {
-            static const apiKey = 'dummy-key-for-validation';
-          }
-          CREDENTIALS
-
-      - name: Create Prokerala credentials file (dummy for validation)
-        run: |
-          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
-          /// Credentials for the Prokerala API.
-          class ProkeralaCredentials {
-            static const String clientId = 'dummy-id';
-            static const String clientSecret = 'dummy-secret';
-          }
-          CREDENTIALS
-
       - name: Install dependencies
         run: flutter pub get
 
       - name: Analyze code
         run: flutter analyze
 
-      - name: Build APK (validation only)
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          flutter build apk --release \
-            --dart-define=SUPABASE_URL=https://dummy.supabase.co \
-            --dart-define=SUPABASE_ANON_KEY=dummy-key \
-            --dart-define=REVENUECAT_ANDROID_KEY=dummy-key \
-            --dart-define=REVENUECAT_IOS_KEY=dummy-key
+          # Verificar se já existe PR aberto para esta branch
+          EXISTING_PR=$(gh pr list --head ${{ github.ref_name }} --base main --json number --jq '.[0].number')
 
-      - name: Build validation complete
-        run: |
-          echo "✅ Build compilado com sucesso!"
-          echo ""
-          echo "📋 Próximos passos:"
-          echo "1. Revise as mudanças"
-          echo "2. Faça merge para 'main' para gerar build de produção"
-          echo "3. O workflow completo rodará automaticamente após o merge"
+          if [ -z "$EXISTING_PR" ]; then
+            echo "Criando novo Pull Request..."
+            gh pr create \
+              --base main \
+              --head ${{ github.ref_name }} \
+              --title "🚀 ${{ github.ref_name }}" \
+              --body "## ✅ Validação Automática Concluída
+
+          - Código analisado com \`flutter analyze\`
+          - Dependências verificadas
+          - Pronto para merge
+
+          ### 📋 Próximos passos:
+          1. Revise as mudanças
+          2. Faça merge para gerar build de produção
+          3. Build completo (APK/AAB) rodará automaticamente na main
+
+          ---
+          *PR criado automaticamente pelo workflow de validação*"
+          else
+            echo "Pull Request #$EXISTING_PR já existe para esta branch"
+          fi
