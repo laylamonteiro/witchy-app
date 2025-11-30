@@ -63,6 +63,7 @@ jobs:
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+      ANDROID_KEYSTORE_TYPE: ${{ secrets.ANDROID_KEYSTORE_TYPE || 'JKS' }}
 
     steps:
       - name: Checkout repository
@@ -121,7 +122,15 @@ jobs:
           ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
         run: |
           KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
-          echo "$ANDROID_KEYSTORE" | base64 -d > "$KEYSTORE_PATH"
+
+          # Decode keystore (supports base64 input or plain text secret)
+          if echo "$ANDROID_KEYSTORE" | base64 -d > "$KEYSTORE_PATH" 2>/dev/null; then
+            echo "Keystore decoded from base64."
+          else
+            echo "Base64 decode failed; writing secret as-is."
+            printf "%s" "$ANDROID_KEYSTORE" > "$KEYSTORE_PATH"
+          fi
+
           echo "ANDROID_KEYSTORE_FILE=$KEYSTORE_PATH" >> $GITHUB_ENV
           echo "Keystore saved to $KEYSTORE_PATH"
 
@@ -132,6 +141,7 @@ jobs:
           storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          storeType=${ANDROID_KEYSTORE_TYPE}
           EOF
 
       - name: Fix geolocator_android compatibility
