@@ -1,0 +1,64 @@
+name: Build Android APK
+
+# Workflow simplificado que roda automaticamente para validar o código
+# Para gerar builds completos, use o workflow "Build APK - Download no Celular" manualmente
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.0"
+          channel: stable
+          cache: true
+
+      - name: Create Groq credentials file (dummy)
+        run: |
+          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Groq API.
+          class GroqCredentials {
+            static const apiKey = 'dummy-key-for-validation';
+          }
+          CREDENTIALS
+
+      - name: Create Prokerala credentials file (dummy)
+        run: |
+          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Prokerala API.
+          class ProkeralaCredentials {
+            static const String clientId = 'dummy-id';
+            static const String clientSecret = 'dummy-secret';
+          }
+          CREDENTIALS
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Validation complete
+        run: |
+          echo "✅ Código validado com sucesso!"
+          echo ""
+          echo "Para gerar builds de produção (APK/AAB):"
+          echo "1. Acesse: https://github.com/${{ github.repository }}/actions"
+          echo "2. Clique em 'Build APK - Download no Celular'"
+          echo "3. Clique em 'Run workflow'"
