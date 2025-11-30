@@ -18,7 +18,7 @@ name: Build APK - Download no Celular
 # Adicione os seguintes secrets nas configurações do repositório:
 # Settings > Secrets and variables > Actions > New repository secret
 #
-# OBRIGATÓRIOS:
+# APIs:
 # 1. GROQ_API_KEY - sua chave da API do Groq
 # 2. PROKERALA_CLIENT_ID - Client ID da API Prokerala
 # 3. PROKERALA_CLIENT_SECRET - Client Secret da API Prokerala
@@ -26,9 +26,15 @@ name: Build APK - Download no Celular
 # 5. SUPABASE_ANON_KEY - Anon Key do Supabase
 # 6. GOOGLE_SERVICES_JSON - Conteúdo do google-services.json (base64 encoded)
 #
-# OPCIONAIS (para produção):
-# 7. REVENUECAT_ANDROID_KEY - API Key do RevenueCat para Android
-# 8. REVENUECAT_IOS_KEY - API Key do RevenueCat para iOS
+# Assinatura Android (para publicar na Play Store):
+# 7. ANDROID_KEYSTORE_BASE64 - Keystore em base64 (use: base64 -w 0 upload-keystore.jks)
+# 8. ANDROID_KEY_ALIAS - Alias da chave (ex: upload)
+# 9. ANDROID_KEY_PASSWORD - Senha da chave
+# 10. ANDROID_STORE_PASSWORD - Senha do keystore
+#
+# Opcionais (para produção):
+# 11. REVENUECAT_ANDROID_KEY - API Key do RevenueCat para Android
+# 12. REVENUECAT_IOS_KEY - API Key do RevenueCat para iOS
 
 on:
   workflow_dispatch:
@@ -91,6 +97,7 @@ jobs:
           CREDENTIALS
 
       - name: Create google-services.json
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         run: |
           echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 -d > android/app/google-services.json
 
@@ -112,9 +119,29 @@ jobs:
             fi
           fi
 
+      - name: Setup Android signing keystore
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        run: |
+          # Decode keystore from base64 and save it
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+
+          # Set environment variables for signing
+          echo "ANDROID_KEYSTORE_FILE=android/app/upload-keystore.jks" >> $GITHUB_ENV
+          echo "ANDROID_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> $GITHUB_ENV
+          echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> $GITHUB_ENV
+          echo "ANDROID_STORE_PASSWORD=${{ secrets.ANDROID_STORE_PASSWORD }}" >> $GITHUB_ENV
+
       - name: Build release APK
         run: |
           flutter build apk --release \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
+            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
+
+      - name: Build release AAB (App Bundle)
+        run: |
+          flutter build appbundle --release \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
@@ -139,16 +166,17 @@ jobs:
             echo "name=build-${{ steps.date.outputs.datetime }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Rename APK with version info
+      - name: Rename APK and AAB with version info
         run: |
           mkdir -p release-apk
           cp build/app/outputs/flutter-apk/app-release.apk release-apk/grimorio-de-bolso-${{ steps.release_name.outputs.name }}.apk
+          cp build/app/outputs/bundle/release/app-release.aab release-apk/grimorio-de-bolso-${{ steps.release_name.outputs.name }}.aab
 
-      - name: Upload APK artifact (backup)
+      - name: Upload APK and AAB artifacts (backup)
         uses: actions/upload-artifact@v4
         with:
-          name: grimorio-apk-${{ steps.date.outputs.datetime }}
-          path: release-apk/*.apk
+          name: grimorio-android-builds-${{ steps.date.outputs.datetime }}
+          path: release-apk/*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -156,9 +184,13 @@ jobs:
           tag_name: ${{ steps.release_name.outputs.name }}
           name: "Grimório de Bolso - ${{ steps.release_name.outputs.name }}"
           body: |
-            ## Download do APK
+            ## Downloads Disponíveis
 
+            ### 📱 Para instalação direta (APK)
             Clique no arquivo `.apk` abaixo para baixar diretamente no seu celular!
+
+            ### 🏪 Para publicação na Play Store (AAB)
+            Use o arquivo `.aab` para fazer upload na Google Play Console.
 
             ### Informações do Build
             - **Versão do app**: ${{ steps.version.outputs.version }}
@@ -167,15 +199,22 @@ jobs:
             - **Data**: ${{ steps.date.outputs.datetime }}
             - **Executado por**: @${{ github.actor }}
 
-            ### Como instalar no Android
+            ### Como instalar o APK no Android
             1. Baixe o arquivo `.apk` abaixo
             2. Abra o arquivo no celular
             3. Se aparecer aviso de "fonte desconhecida", permita a instalação
             4. Pronto! O app está instalado
 
+            ### Como publicar o AAB na Play Store
+            1. Baixe o arquivo `.aab` abaixo
+            2. Acesse a [Google Play Console](https://play.google.com/console)
+            3. Vá em "Produção" > "Criar nova versão"
+            4. Faça upload do arquivo `.aab`
+            5. Complete as informações da versão e publique
+
             ---
             *Build automático gerado via GitHub Actions*
-          files: release-apk/*.apk
+          files: release-apk/*
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
           generate_release_notes: false
 
@@ -183,7 +222,7 @@ jobs:
         run: |
           echo ""
           echo "=========================================="
-          echo "APK PRONTO PARA DOWNLOAD!"
+          echo "APK E AAB PRONTOS PARA DOWNLOAD!"
           echo "=========================================="
           echo ""
           echo "Acesse no seu celular:"
