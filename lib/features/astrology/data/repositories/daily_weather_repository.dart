@@ -148,11 +148,8 @@ class DailyWeatherRepository {
     // Verificar cache primeiro
     final cached = await getCachedWeather(date);
     if (cached != null) {
-      print('✅ Clima mágico encontrado no cache para ${_formatDate(date)}');
       return cached;
     }
-
-    print('🔮 Gerando novo clima mágico para ${_formatDate(date)}');
 
     // Calcular dados astrológicos do dia
     final weatherData = await _interpreter.getDailyMagicalWeather(date);
@@ -180,7 +177,6 @@ class DailyWeatherRepository {
         aspects: aspectsForAI.cast<Map<String, String>>(),
       );
     } catch (e) {
-      print('❌ Erro ao gerar texto IA: $e');
       // Usar interpretação padrão se IA falhar
       aiText = _generateFallbackText(weatherData);
     }
@@ -196,7 +192,6 @@ class DailyWeatherRepository {
 
     // Salvar no banco
     await saveWeatherCache(cache);
-    print('✅ Clima mágico salvo no cache');
 
     return cache;
   }

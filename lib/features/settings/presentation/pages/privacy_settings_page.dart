@@ -5,11 +5,14 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/providers/sync_provider.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/data/repositories/supabase_auth_repository.dart';
 
 /// Página de configurações de privacidade
 class PrivacySettingsPage extends StatefulWidget {
@@ -897,11 +900,76 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     );
 
     if (confirmed == true && mounted) {
-      // TODO: Implementar exclusão de conta
-      final authProvider = context.read<AuthProvider>();
-      await authProvider.signOut();
-      if (mounted) {
+      // Mostrar loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          backgroundColor: AppColors.surface,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: AppColors.lilac),
+              SizedBox(height: 16),
+              Text(
+                'Excluindo conta...',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      try {
+        // 1. Deletar dados do Supabase (se logado)
+        if (SupabaseConfig.isConfigured) {
+          final authRepository = SupabaseAuthRepository();
+          final result = await authRepository.deleteAccount();
+          if (!result.success) {
+            throw Exception(result.errorMessage ?? 'Erro ao deletar conta');
+          }
+        }
+
+        // 2. Limpar banco de dados local
+        final db = DatabaseHelper.instance;
+        await db.clearAllTables();
+
+        // 3. Limpar SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+
+        // 4. Fazer logout do provider
+        final authProvider = context.read<AuthProvider>();
+        await authProvider.clearAllData();
+
+        if (!mounted) return;
+
+        // Fechar loading
+        Navigator.of(context).pop();
+
+        // Mostrar mensagem de sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Conta excluída com sucesso'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+
+        // Redirecionar para tela inicial
         Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
+      } catch (e) {
+        if (!mounted) return;
+
+        // Fechar loading
+        Navigator.of(context).pop();
+
+        // Mostrar erro
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao excluir conta: $e'),
+            backgroundColor: AppColors.alert,
+          ),
+        );
       }
     }
   }

@@ -2,15 +2,22 @@ import 'dart:io';
 
 /// Configuração do RevenueCat para In-App Purchases
 ///
+/// As credenciais são carregadas via variáveis de ambiente no build.
+/// Configure os secrets no GitHub Actions ou passe via --dart-define.
+///
 /// Documentação: https://www.revenuecat.com/docs/getting-started/installation/flutter
 class RevenueCatConfig {
   /// API Key para iOS (App Store)
-  /// Em produção, use chaves diferentes para cada plataforma
-  static const String iosApiKey = 'test_pXihQfrQyXPuOlWoYzUGYCruxym';
+  static const String iosApiKey = String.fromEnvironment(
+    'REVENUECAT_IOS_KEY',
+    defaultValue: '',
+  );
 
   /// API Key para Android (Google Play)
-  /// Em produção, use chaves diferentes para cada plataforma
-  static const String androidApiKey = 'test_pXihQfrQyXPuOlWoYzUGYCruxym';
+  static const String androidApiKey = String.fromEnvironment(
+    'REVENUECAT_ANDROID_KEY',
+    defaultValue: '',
+  );
 
   /// Obtém a API key correta para a plataforma atual
   static String get apiKey {
@@ -24,7 +31,8 @@ class RevenueCatConfig {
 
   /// Verifica se o RevenueCat está configurado
   static bool get isConfigured =>
-      iosApiKey.isNotEmpty && androidApiKey.isNotEmpty;
+      (Platform.isIOS && iosApiKey.isNotEmpty) ||
+      (Platform.isAndroid && androidApiKey.isNotEmpty);
 
   /// Entitlement ID principal (configurado no RevenueCat Dashboard)
   /// Este é o entitlement que dá acesso às funcionalidades Pro

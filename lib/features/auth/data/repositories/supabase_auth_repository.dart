@@ -398,7 +398,7 @@ class SupabaseAuthRepository implements AuthRepository {
       try {
         await _supabase.from(table).delete().eq('user_id', userId);
       } catch (e) {
-        print('Erro ao deletar dados de $table: $e');
+        // Ignorar erros - tabela pode não existir
       }
     }
   }
@@ -417,7 +417,7 @@ class SupabaseAuthRepository implements AuthRepository {
           .maybeSingle();
       profileData = response;
     } catch (e) {
-      print('Erro ao buscar perfil: $e');
+      // Perfil pode não existir ainda
     }
 
     return UserModel(

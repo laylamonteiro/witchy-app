@@ -1,20 +1,23 @@
 /// Configuração do Supabase
 ///
-/// IMPORTANTE: Em produção, considere usar variáveis de ambiente
-/// para não expor as chaves no código fonte público.
+/// As credenciais são carregadas via variáveis de ambiente no build.
+/// Configure os secrets no GitHub Actions ou passe via --dart-define.
 class SupabaseConfig {
   /// URL do projeto Supabase
-  static const String url = 'https://jdncobtussylzfabrebe.supabase.co';
+  static const String url = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
 
   /// Anon Key (chave pública) do Supabase
   /// Esta é a publishable key - segura para usar no cliente
   static const String anonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'sb_publishable_79SfND3aYJcqveRfKd7ljw_vTkXNVLb',
+    defaultValue: '',
   );
 
   /// Verifica se o Supabase está configurado
-  static bool get isConfigured => anonKey.isNotEmpty;
+  static bool get isConfigured => url.isNotEmpty && anonKey.isNotEmpty;
 
   /// Schema do banco de dados
   static const String schema = 'public';

@@ -27,9 +27,6 @@ class AIService {
 
   Future<SpellModel> _generateWithGroq(String intention) async {
     try {
-      print('🤖 Gerando feitiço com Groq...');
-      print('📝 Intenção: $intention');
-
       final requestData = {
         'model': 'llama-3.3-70b-versatile',
         'messages': [
@@ -47,8 +44,6 @@ class AIService {
         'response_format': {'type': 'json_object'},
       };
 
-      print('📡 Enviando requisição para Groq API...');
-
       final response = await _dio.post(
         'https://api.groq.com/openai/v1/chat/completions',
         options: Options(
@@ -62,18 +57,10 @@ class AIService {
         data: requestData,
       );
 
-      print('✅ Resposta recebida: ${response.statusCode}');
-
       final content = response.data['choices'][0]['message']['content'];
-      print('📦 Conteúdo recebido, parseando JSON...');
-
       final spellData = jsonDecode(content);
-      print('✅ JSON parseado com sucesso');
-
       return _parseSpellData(spellData);
     } on DioException catch (e) {
-      print('❌ DioException: ${e.response?.statusCode}');
-      print('📄 Response data: ${e.response?.data}');
 
       if (e.response?.statusCode == 400) {
         // Erro 400 - requisição inválida
@@ -89,7 +76,6 @@ class AIService {
           }
         }
 
-        print('⚠️ Erro 400 detalhado: $errorMessage');
         throw Exception('Erro 400: $errorMessage');
       } else if (e.response?.statusCode == 401) {
         throw Exception('Erro de autenticação');
@@ -100,7 +86,6 @@ class AIService {
       }
       throw Exception('Erro na conexão: ${e.message}');
     } catch (e) {
-      print('❌ Exceção geral: $e');
       throw Exception('Erro ao processar resposta: $e');
     }
   }
@@ -167,8 +152,6 @@ class AIService {
     required MagicalProfile profile,
   }) async {
     try {
-      print('🔮 Gerando Perfil Mágico personalizado com IA...');
-
       final chartSummary = _buildChartSummary(birthChart, profile);
 
       final requestData = {
@@ -201,11 +184,8 @@ class AIService {
       );
 
       final content = response.data['choices'][0]['message']['content'];
-      print('✅ Perfil Mágico personalizado gerado com sucesso');
-
       return content;
     } catch (e) {
-      print('❌ Erro ao gerar perfil mágico: $e');
       rethrow;
     }
   }
@@ -220,8 +200,6 @@ class AIService {
     required List<Map<String, String>> aspects,
   }) async {
     try {
-      print('🌙 Gerando Clima Mágico Diário com IA...');
-
       final weatherSummary = _buildWeatherSummary(
         moonPhase: moonPhase,
         moonSign: moonSign,
@@ -261,11 +239,8 @@ class AIService {
       );
 
       final content = response.data['choices'][0]['message']['content'];
-      print('✅ Clima Mágico Diário gerado com sucesso');
-
       return content;
     } catch (e) {
-      print('❌ Erro ao gerar clima mágico: $e');
       rethrow;
     }
   }
@@ -431,8 +406,6 @@ DIRETRIZES:
     String? userContext,
   }) async {
     try {
-      print('✨ Gerando afirmação com Conselheiro Místico...');
-
       final prompt = userContext != null && userContext.isNotEmpty
           ? 'Categoria: $category\nContexto do usuário: $userContext'
           : 'Categoria: $category';
@@ -467,12 +440,9 @@ DIRETRIZES:
       );
 
       final content = response.data['choices'][0]['message']['content'];
-      print('✅ Afirmação gerada com sucesso');
-
       // Limpar aspas se houver
       return content.toString().replaceAll('"', '').trim();
     } catch (e) {
-      print('❌ Erro ao gerar afirmação: $e');
       rethrow;
     }
   }
