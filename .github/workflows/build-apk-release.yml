@@ -167,6 +167,8 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
 
       - name: Build release AAB (App Bundle)
         run: |
@@ -175,6 +177,8 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
 
       - name: Get current date and time
         id: date
