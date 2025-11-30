@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
-import '../../../../core/diagnostic/diagnostic_page.dart';
 import 'app_spells_list_page.dart';
 import 'user_spells_list_page.dart';
 import 'ai_spell_creation_page.dart';
@@ -217,20 +216,6 @@ class _ToolsTab extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const SigilStep1IntentionPage(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildToolCard(
-            context,
-            icon: '🔍',
-            title: 'Diagnóstico Completo',
-            description: 'Testar todas as funcionalidades do app',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const DiagnosticPage(),
                 ),
               );
             },
