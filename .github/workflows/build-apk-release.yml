@@ -25,6 +25,10 @@ name: Build APK - Download no Celular
 # 4. SUPABASE_URL - URL do projeto Supabase (ex: https://xxx.supabase.co)
 # 5. SUPABASE_ANON_KEY - Anon Key do Supabase
 # 6. GOOGLE_SERVICES_JSON - Conteúdo do google-services.json (base64 encoded)
+# 7. ANDROID_KEYSTORE - Keystore (base64) usado para assinar APK/AAB em modo release
+# 8. ANDROID_KEY_ALIAS - Alias da chave dentro do keystore
+# 9. ANDROID_KEY_PASSWORD - Senha da chave
+# 10. ANDROID_STORE_PASSWORD - Senha do keystore
 #
 # OPCIONAIS (para produção):
 # 7. REVENUECAT_ANDROID_KEY - API Key do RevenueCat para Android
@@ -54,6 +58,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
+    env:
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
 
     steps:
       - name: Checkout repository
@@ -100,6 +109,15 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Prepare Android signing keystore
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+        run: |
+          KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
+          echo "$ANDROID_KEYSTORE" | base64 -d > "$KEYSTORE_PATH"
+          echo "ANDROID_KEYSTORE_FILE=$KEYSTORE_PATH" >> $GITHUB_ENV
+          echo "Keystore saved to $KEYSTORE_PATH"
+
       - name: Fix geolocator_android compatibility
         run: |
           # Find and patch geolocator_android build.gradle to use hardcoded SDK versions
@@ -122,6 +140,8 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
 
       - name: Build release AAB (App Bundle)
         run: |
@@ -130,6 +150,8 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
 
       - name: Get current date and time
         id: date
