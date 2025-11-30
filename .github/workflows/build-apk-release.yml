@@ -31,6 +31,9 @@ name: Build APK - Download no Celular
 # 8. REVENUECAT_IOS_KEY - API Key do RevenueCat para iOS
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       release_name:
