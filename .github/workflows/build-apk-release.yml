@@ -60,6 +60,7 @@ jobs:
       contents: write
 
     env:
+      ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
@@ -112,7 +113,7 @@ jobs:
 
       - name: Validate signing inputs
         run: |
-          if [ -z "${{ secrets.ANDROID_KEYSTORE }}" ] || [ -z "${{ secrets.ANDROID_KEY_ALIAS }}" ] || [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ] || [ -z "${{ secrets.ANDROID_STORE_PASSWORD }}" ]; then
+          if [ -z "$ANDROID_KEYSTORE" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ] || [ -z "$ANDROID_STORE_PASSWORD" ]; then
             echo "Required signing secrets are missing."
             exit 1
           fi
