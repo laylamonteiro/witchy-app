@@ -18,9 +18,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   static const String _lastTabKey = 'last_selected_tab';
 
   final List<Widget> _pages = [
-    const DiaryPage(),
-    const GrimoirePage(),
     const EncyclopediaPage(),
+    const GrimoirePage(),
+    const DiaryPage(),
   ];
 
   @override
@@ -99,16 +99,16 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           },
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book),
-              label: 'Diários',
+              icon: Icon(Icons.auto_stories),
+              label: 'Enciclopédia',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.stars_outlined),
               label: 'Grimório',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.auto_stories),
-              label: 'Enciclopédia',
+              icon: Icon(Icons.menu_book),
+              label: 'Diários',
             ),
           ],
         ),

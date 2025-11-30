@@ -55,17 +55,24 @@ android {
     }
 
     signingConfigs {
-        release {
-            keyAlias keystoreProperties['keyAlias'] ?: System.getenv('ANDROID_KEY_ALIAS')
-            keyPassword keystoreProperties['keyPassword'] ?: System.getenv('ANDROID_KEY_PASSWORD')
-            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : (System.getenv('ANDROID_KEYSTORE_FILE') ? file(System.getenv('ANDROID_KEYSTORE_FILE')) : null)
-            storePassword keystoreProperties['storePassword'] ?: System.getenv('ANDROID_STORE_PASSWORD')
+        if (keystorePropertiesFile.exists() || System.getenv('ANDROID_KEYSTORE_FILE')) {
+            release {
+                keyAlias keystoreProperties['keyAlias'] ?: System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword keystoreProperties['keyPassword'] ?: System.getenv('ANDROID_KEY_PASSWORD')
+                storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : file(System.getenv('ANDROID_KEYSTORE_FILE'))
+                storePassword keystoreProperties['storePassword'] ?: System.getenv('ANDROID_STORE_PASSWORD')
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release ?: signingConfigs.debug
+            // Usa assinatura de release se configurada, caso contrário usa debug
+            if (keystorePropertiesFile.exists() || System.getenv('ANDROID_KEYSTORE_FILE')) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }
