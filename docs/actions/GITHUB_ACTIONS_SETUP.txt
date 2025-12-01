@@ -1,0 +1,365 @@
+═══════════════════════════════════════════════════════════════════════════
+🚀 GUIA COMPLETO: GITHUB ACTIONS - AUTOMAÇÃO DE VERSÃO E BUILD
+═══════════════════════════════════════════════════════════════════════════
+
+Este guia explica como configurar a esteira completa de CI/CD para o Grimório de Bolso.
+
+═══════════════════════════════════════════════════════════════════════════
+📋 ÍNDICE
+═══════════════════════════════════════════════════════════════════════════
+
+1. Visão Geral dos Workflows
+2. Configuração Inicial (Obrigatória)
+3. Configuração Avançada (Opcional)
+4. Como Usar os Workflows
+5. Troubleshooting
+6. Próximos Passos
+
+═══════════════════════════════════════════════════════════════════════════
+1️⃣ VISÃO GERAL DOS WORKFLOWS
+═══════════════════════════════════════════════════════════════════════════
+
+Você terá 3 workflows automatizados:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🔄 AUTO-INCREMENT (auto-increment.yml)                                  │
+│                                                                          │
+│ Dispara em: Push para main                                              │
+│ O que faz:                                                               │
+│   ✅ Incrementa automaticamente o build number (+1, +2, +3...)         │
+│   ✅ Commita a mudança no pubspec.yaml                                  │
+│   ✅ Evita loops infinitos                                              │
+│                                                                          │
+│ Exemplo:                                                                 │
+│   Você faz merge de um PR → workflow roda → versão vai de 1.0.0+5       │
+│   para 1.0.0+6 automaticamente                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🚀 BUILD & RELEASE (release.yml)                                        │
+│                                                                          │
+│ Dispara em:                                                              │
+│   • Tag de versão (v1.0.0, v1.1.0, etc.)                                │
+│   • Manualmente via GitHub UI                                            │
+│                                                                          │
+│ O que faz:                                                               │
+│   ✅ Incrementa versão (patch/minor/major/build)                        │
+│   ✅ Roda testes e análise de código                                    │
+│   ✅ Gera o .aab (Android App Bundle)                                   │
+│   ✅ Cria release no GitHub                                             │
+│   ✅ Faz upload do .aab como artifact                                   │
+│   ✅ [OPCIONAL] Faz upload automático para Play Store                   │
+│                                                                          │
+│ Exemplo:                                                                 │
+│   Você cria tag v1.1.0 → workflow roda → .aab é gerado e fica          │
+│   disponível para download                                               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 🧪 CI - PULL REQUEST (ci.yml)                                           │
+│                                                                          │
+│ Dispara em: Pull requests para main/develop                             │
+│                                                                          │
+│ O que faz:                                                               │
+│   ✅ Valida formatação do código                                        │
+│   ✅ Roda análise estática (flutter analyze)                            │
+│   ✅ Roda testes                                                         │
+│   ✅ Testa build APK                                                     │
+│   ✅ Gera relatório de coverage                                         │
+│                                                                          │
+│ Exemplo:                                                                 │
+│   Você abre um PR → workflow valida tudo → você vê se passou ou falhou  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+2️⃣ CONFIGURAÇÃO INICIAL (OBRIGATÓRIA)
+═══════════════════════════════════════════════════════════════════════════
+
+📁 PASSO 1: Criar estrutura de diretórios
+─────────────────────────────────────────
+
+No seu projeto witchy-app, crie:
+
+witchy-app/
+├── .github/
+│   └── workflows/
+│       ├── auto-increment.yml    ← Copie o conteúdo dos arquivos criados
+│       ├── release.yml
+│       └── ci.yml
+└── scripts/
+    └── bump_version.sh          ← Script helper para uso local
+
+🔧 PASSO 2: Configurar permissões do GitHub Actions
+────────────────────────────────────────────────────
+
+1. Acesse: https://github.com/laylamonteiro/witchy-app/settings/actions
+
+2. Em "Workflow permissions", selecione:
+   ✅ Read and write permissions
+   ✅ Allow GitHub Actions to create and approve pull requests
+
+3. Clique em "Save"
+
+📝 PASSO 3: Verificar pubspec.yaml
+──────────────────────────────────
+
+Certifique-se que seu pubspec.yaml tem a linha:
+
+version: 1.0.0+2   # ou qualquer versão atual
+
+🔐 PASSO 4: [OPCIONAL] Configurar assinatura de APK
+────────────────────────────────────────────────────
+
+Se você quiser que o GitHub Actions assine automaticamente seus .aab:
+
+1. Gere uma keystore (se não tiver):
+   keytool -genkey -v -keystore ~/grimorio-keystore.jks \
+     -keyalg RSA -keysize 2048 -validity 10000 \
+     -alias grimorio-key
+
+2. Converta keystore para Base64:
+   base64 ~/grimorio-keystore.jks > keystore-base64.txt
+
+3. Adicione secrets no GitHub:
+   a. Acesse: https://github.com/laylamonteiro/witchy-app/settings/secrets/actions
+   
+   b. Clique em "New repository secret" e adicione:
+      
+      Nome: KEYSTORE_BASE64
+      Valor: [conteúdo do arquivo keystore-base64.txt]
+      
+      Nome: KEYSTORE_PASSWORD
+      Valor: [senha da keystore]
+      
+      Nome: KEY_ALIAS
+      Valor: grimorio-key
+      
+      Nome: KEY_PASSWORD
+      Valor: [senha do alias]
+
+═══════════════════════════════════════════════════════════════════════════
+3️⃣ CONFIGURAÇÃO AVANÇADA (OPCIONAL)
+═══════════════════════════════════════════════════════════════════════════
+
+🎮 UPLOAD AUTOMÁTICO PARA PLAY STORE
+─────────────────────────────────────
+
+Se você quiser que o workflow faça upload automático para Play Store:
+
+PASSO 1: Criar Service Account no Google Cloud
+
+1. Acesse: https://console.cloud.google.com/
+2. Crie um novo projeto ou selecione existente
+3. Vá em "IAM & Admin" > "Service Accounts"
+4. Clique em "Create Service Account"
+5. Nome: "GitHub Actions - Grimório de Bolso"
+6. Clique em "Create and Continue"
+7. Role: "Service Account User"
+8. Clique em "Done"
+
+PASSO 2: Gerar chave JSON
+
+1. Clique no service account criado
+2. Aba "Keys"
+3. "Add Key" > "Create new key" > JSON
+4. Salve o arquivo JSON
+
+PASSO 3: Configurar na Play Console
+
+1. Acesse: https://play.google.com/console/
+2. Selecione seu app
+3. "Setup" > "API access"
+4. "Link" no service account criado
+5. "Grant access" e dê permissões:
+   - Release to production, exclude devices, and use Play App Signing
+   - View app information and download bulk reports
+   - Create and edit draft apps
+   - Release apps to testing tracks
+
+PASSO 4: Adicionar secret no GitHub
+
+Nome: PLAY_STORE_JSON_KEY
+Valor: [conteúdo completo do arquivo JSON]
+
+PASSO 5: Editar release.yml (linha ~190)
+
+Mude:
+  track: internal  # Para: internal, alpha, beta, ou production
+
+📊 COVERAGE E RELATÓRIOS
+────────────────────────
+
+Para habilitar relatórios de cobertura de testes:
+
+1. Crie conta gratuita em: https://codecov.io
+2. Conecte seu repositório
+3. Copie o token
+4. Adicione secret no GitHub:
+   Nome: CODECOV_TOKEN
+   Valor: [seu token]
+
+═══════════════════════════════════════════════════════════════════════════
+4️⃣ COMO USAR OS WORKFLOWS
+═══════════════════════════════════════════════════════════════════════════
+
+🔄 CENÁRIO 1: Desenvolvimento normal
+────────────────────────────────────
+
+1. Você desenvolve em uma branch feature/nova-funcionalidade
+2. Abre PR para main
+3. ✅ CI workflow roda automaticamente e valida tudo
+4. Merge do PR
+5. ✅ Auto-increment workflow roda e incrementa build number
+6. Resultado: versão foi de 1.0.0+5 para 1.0.0+6 automaticamente
+
+🚀 CENÁRIO 2: Fazer release de correção de bugs (patch)
+────────────────────────────────────────────────────────
+
+Opção A: Via GitHub UI (Recomendado)
+
+1. Acesse: https://github.com/laylamonteiro/witchy-app/actions
+2. Clique em "🚀 Build & Release Android"
+3. Clique em "Run workflow"
+4. Selecione:
+   - Branch: main
+   - Increment type: patch
+5. Clique em "Run workflow"
+6. ✅ Workflow gera .aab com versão 1.0.1+X
+7. Baixe o .aab em "Artifacts"
+
+Opção B: Via Git Tag
+
+1. Crie e push uma tag:
+   git tag v1.0.1
+   git push origin v1.0.1
+2. ✅ Workflow roda automaticamente
+3. Release é criada no GitHub
+
+Opção C: Script local
+
+1. Execute:
+   ./scripts/bump_version.sh
+2. Selecione "2) Patch"
+3. Script atualiza, faz build local e commit
+
+✨ CENÁRIO 3: Release com novas features (minor)
+─────────────────────────────────────────────────
+
+Via GitHub UI:
+
+1. Actions > "🚀 Build & Release Android" > "Run workflow"
+2. Increment type: minor
+3. ✅ Versão vai de 1.0.0 para 1.1.0
+
+Via Git Tag:
+
+git tag v1.1.0
+git push origin v1.1.0
+
+💥 CENÁRIO 4: Breaking changes (major)
+───────────────────────────────────────
+
+Via GitHub UI:
+
+1. Actions > "🚀 Build & Release Android" > "Run workflow"
+2. Increment type: major
+3. ✅ Versão vai de 1.x.x para 2.0.0
+
+🔨 CENÁRIO 5: Apenas incrementar build (sem mudar versão)
+──────────────────────────────────────────────────────────
+
+Via GitHub UI:
+
+1. Actions > "🚀 Build & Release Android" > "Run workflow"
+2. Increment type: build
+3. ✅ Versão vai de 1.0.0+5 para 1.0.0+6
+
+═══════════════════════════════════════════════════════════════════════════
+5️⃣ TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════
+
+❌ Problema: "Version code X has already been used"
+Solução: O auto-increment deve resolver isso automaticamente. Se persistir,
+         incremente manualmente no pubspec.yaml e faça commit.
+
+❌ Problema: Workflow fica em loop infinito
+Solução: Certifique-se que a mensagem de commit tem [skip-ci] no auto-increment
+
+❌ Problema: Workflow falha no "flutter analyze"
+Solução: Rode localmente: flutter analyze
+         Corrija os problemas apontados
+         Faça commit e push
+
+❌ Problema: Build do .aab falha
+Solução: Verifique:
+         1. pubspec.yaml está válido
+         2. Todas as dependências compilam
+         3. Rode localmente: flutter build appbundle --release
+
+❌ Problema: Upload para Play Store falha
+Solução: Verifique:
+         1. Service account tem permissões corretas
+         2. Secret PLAY_STORE_JSON_KEY está configurado
+         3. packageName está correto no release.yml
+
+❌ Problema: Permissão negada no script bump_version.sh
+Solução: Dê permissão de execução:
+         chmod +x scripts/bump_version.sh
+
+═══════════════════════════════════════════════════════════════════════════
+6️⃣ PRÓXIMOS PASSOS
+═══════════════════════════════════════════════════════════════════════════
+
+📋 CHECKLIST DE CONFIGURAÇÃO
+
+Configuração Básica:
+□ Criar diretório .github/workflows/
+□ Copiar os 3 arquivos .yml
+□ Configurar permissões do GitHub Actions
+□ Testar primeiro workflow
+
+Configuração Intermediária:
+□ Configurar secrets da keystore
+□ Testar assinatura automática
+□ Criar primeiro release via workflow
+
+Configuração Avançada:
+□ Configurar Google Play Service Account
+□ Adicionar secret PLAY_STORE_JSON_KEY
+□ Testar upload automático para track internal
+□ Depois testar em production
+
+Melhorias Futuras:
+□ Adicionar notificações (Slack, Discord)
+□ Configurar deploy em múltiplas tracks
+□ Adicionar testes automatizados E2E
+□ Configurar signed APK além do AAB
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 COMANDO RÁPIDO PARA CONFIGURAR TUDO:
+
+# Na raiz do projeto witchy-app
+mkdir -p .github/workflows scripts
+# Copie os arquivos .yml para .github/workflows/
+# Copie bump_version.sh para scripts/
+chmod +x scripts/bump_version.sh
+git add .github/ scripts/
+git commit -m "🚀 Adiciona CI/CD workflows"
+git push
+
+═══════════════════════════════════════════════════════════════════════════
+
+💜 DICA FINAL
+
+Comece simples:
+1. Configure apenas o CI (ci.yml) primeiro
+2. Teste com alguns PRs
+3. Depois adicione auto-increment
+4. Por último, configure upload automático para Play Store
+
+Não precisa configurar tudo de uma vez! Vá incrementando conforme necessário.
+
+═══════════════════════════════════════════════════════════════════════════
+
+🌙 Boa sorte! Se tiver dúvidas, é só me chamar! ✨
