@@ -128,8 +128,14 @@ class LunarProvider with ChangeNotifier {
   // Retorna lista de todas as próximas fases em ordem cronológica
   List<Map<String, dynamic>> getAllNextPhases() {
     final phases = <Map<String, dynamic>>[];
+    final currentPhase = getCurrentMoonPhase();
 
+    // Buscar próximas ocorrências de todas as fases, exceto a atual
     for (final phase in MoonPhase.values) {
+      // Pular a fase atual - não faz sentido mostrar "quanto tempo falta"
+      // para a fase que já estamos vivendo
+      if (phase == currentPhase) continue;
+
       final nextDate = _getNextPhaseWithTime(phase);
       if (nextDate != null) {
         phases.add({
