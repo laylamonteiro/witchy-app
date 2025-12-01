@@ -244,6 +244,23 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
 
+      - name: Prepare debug symbols for Play Store
+        run: |
+          echo "Copiando símbolos de debug..."
+          mkdir -p release-apk/symbols
+
+          # Copia os símbolos nativos do Flutter
+          if [ -d "build/app/outputs/symbols" ]; then
+            cp -r build/app/outputs/symbols/* release-apk/symbols/
+            echo "✅ Símbolos nativos copiados"
+          else
+            echo "⚠️ Pasta de símbolos não encontrada"
+          fi
+
+          # Lista o que foi copiado
+          echo "Arquivos de símbolos disponíveis:"
+          find release-apk/symbols -type f | head -20
+
       - name: Get current date and time
         id: date
         run: echo "datetime=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
@@ -270,11 +287,24 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk "release-apk/grimorio-de-bolso-${RELEASE_NAME}.apk"
           cp build/app/outputs/bundle/release/app-release.aab "release-apk/grimorio-de-bolso-${RELEASE_NAME}.aab"
 
+          # Cria zip dos símbolos se existirem
+          if [ -d "release-apk/symbols" ] && [ "$(ls -A release-apk/symbols)" ]; then
+            cd release-apk/symbols
+            zip -r "../grimorio-de-bolso-${RELEASE_NAME}-symbols.zip" .
+            cd ../..
+            echo "✅ Símbolos empacotados em grimorio-de-bolso-${RELEASE_NAME}-symbols.zip"
+          else
+            echo "⚠️ Nenhum símbolo para empacotar"
+          fi
+
       - name: Upload APK and AAB artifacts (backup)
         uses: actions/upload-artifact@v4
         with:
           name: grimorio-android-builds-${{ steps.date.outputs.datetime }}
-          path: release-apk/*
+          path: |
+            release-apk/*.apk
+            release-apk/*.aab
+            release-apk/*.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -289,6 +319,10 @@ jobs:
 
             ### 🏪 Para publicação na Play Store (AAB)
             Use o arquivo `.aab` para fazer upload na Google Play Console.
+
+            ### 🐛 Debug Symbols (símbolos de depuração)
+            Arquivo `*-symbols.zip` contém os símbolos nativos necessários para análise de crashes na Play Console.
+            **Importante**: Faça upload deste arquivo junto com o AAB para ter stack traces legíveis de crashes nativos!
 
             ### Informações do Build
             - **Versão do app**: ${{ steps.version.outputs.version }}
@@ -309,6 +343,12 @@ jobs:
             3. Vá em "Produção" > "Criar nova versão"
             4. Faça upload do arquivo `.aab`
             5. Complete as informações da versão e publique
+
+            ### Como fazer upload dos Debug Symbols
+            1. Na mesma tela onde fez upload do AAB, role até a seção "App bundles"
+            2. Clique em "Add" ao lado de "Native debug symbols"
+            3. Faça upload do arquivo `*-symbols.zip`
+            4. Isso eliminará o warning sobre símbolos faltando e permitirá análise detalhada de crashes
 
             ---
             *Build automático gerado via GitHub Actions*
