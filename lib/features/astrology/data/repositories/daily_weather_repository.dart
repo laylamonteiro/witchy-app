@@ -26,10 +26,13 @@ class DailyWeatherCache {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'user_id': 'local_user',
       'date': date,
       'ai_generated_text': aiGeneratedText,
       'weather_data': jsonEncode(_weatherDataToJson(weatherData)),
       'created_at': createdAt.millisecondsSinceEpoch,
+      'updated_at': createdAt.millisecondsSinceEpoch,
+      'synced': 0,
     };
   }
 
