@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade - Grimório de Bolso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .last-updated {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight-box {
+            background: #f8f4ff;
+            border-left: 4px solid #764ba2;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .contact {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+
+        .contact a {
+            color: #764ba2;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .contact a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌙 Política de Privacidade</h1>
+        <p class="last-updated">Última atualização: Dezembro de 2025</p>
+
+        <p><strong>Grimório de Bolso</strong> é um aplicativo desenvolvido para bruxas e bruxos que desejam organizar sua prática mágica pessoal. Levamos sua privacidade muito a sério e este documento explica como coletamos, usamos e protegemos suas informações.</p>
+
+        <h2>1. Informações que Coletamos</h2>
+        <p>Coletamos apenas os dados necessários para o funcionamento do aplicativo:</p>
+        <ul>
+            <li><strong>Dados de Conta:</strong> Email e senha (criptografada) para autenticação</li>
+            <li><strong>Dados de Perfil:</strong> Nome de exibição e foto (opcionais)</li>
+            <li><strong>Dados Astrológicos:</strong> Data, hora e local de nascimento (para cálculo do mapa astral)</li>
+            <li><strong>Conteúdo Criado:</strong> Feitiços, rituais, entradas de diário, sigilos e outros conteúdos criados por você no app</li>
+            <li><strong>Dados de Uso:</strong> Informações sobre como você usa o app (apenas se você optar por compartilhar analytics)</li>
+        </ul>
+
+        <h2>2. Como Usamos Suas Informações</h2>
+        <p>Seus dados são utilizados exclusivamente para:</p>
+        <ul>
+            <li>Prover os serviços e funcionalidades do aplicativo</li>
+            <li>Sincronizar seus dados entre dispositivos (apenas para usuários Premium com sincronização ativada)</li>
+            <li>Gerar seu mapa astral e perfil mágico personalizado</li>
+            <li>Enviar notificações sobre fases lunares e lembretes de rituais (se você permitir)</li>
+            <li>Melhorar a experiência do usuário e corrigir problemas técnicos</li>
+        </ul>
+
+        <div class="highlight-box">
+            <strong>📌 Importante:</strong> Seus dados mágicos pessoais (feitiços, diários, desejos) são <strong>privados e confidenciais</strong>. Nunca acessamos, lemos ou compartilhamos seu conteúdo pessoal.
+        </div>
+
+        <h2>3. Compartilhamento de Dados</h2>
+        <p><strong>NÃO vendemos, alugamos ou compartilhamos</strong> seus dados pessoais com terceiros para fins comerciais.</p>
+        <p>Podemos compartilhar dados apenas em situações específicas:</p>
+        <ul>
+            <li><strong>Provedores de Serviço:</strong> Utilizamos serviços de terceiros confiáveis (como Supabase para banco de dados e Google Cloud para infraestrutura) que processam dados em nosso nome, sob rígidos acordos de confidencialidade</li>
+            <li><strong>Obrigações Legais:</strong> Quando exigido por lei, ordem judicial ou processo legal</li>
+            <li><strong>Proteção de Direitos:</strong> Para proteger nossos direitos legais, segurança ou propriedade</li>
+        </ul>
+
+        <h2>4. Armazenamento e Segurança</h2>
+        <p>Suas informações são armazenadas de forma segura:</p>
+        <ul>
+            <li><strong>Criptografia:</strong> Senhas são criptografadas usando bcrypt/Supabase Auth</li>
+            <li><strong>Transmissão Segura:</strong> Todos os dados são transmitidos via HTTPS/TLS</li>
+            <li><strong>Acesso Restrito:</strong> Apenas servidores autorizados têm acesso aos dados</li>
+            <li><strong>Backup:</strong> Realizamos backups regulares para prevenir perda de dados</li>
+        </ul>
+
+        <h2>5. Seus Direitos (LGPD/GDPR)</h2>
+        <p>Você tem total controle sobre seus dados. Você pode:</p>
+        <ul>
+            <li><strong>Acessar:</strong> Visualizar todos os dados que temos sobre você</li>
+            <li><strong>Corrigir:</strong> Atualizar informações incorretas ou desatualizadas</li>
+            <li><strong>Exportar:</strong> Baixar uma cópia completa de todos os seus dados em formato JSON (função disponível no app em Configurações > Privacidade > Exportar Meus Dados)</li>
+            <li><strong>Excluir:</strong> Deletar permanentemente sua conta e todos os dados associados</li>
+            <li><strong>Revogar Permissões:</strong> Desativar analytics, sincronização e backup a qualquer momento</li>
+        </ul>
+
+        <div class="highlight-box">
+            <p><strong>Para exercer seus direitos:</strong></p>
+            <ul>
+                <li>No app: vá em <strong>Configurações > Privacidade</strong></li>
+                <li>Por email: <a href="mailto:privacidade@grimoriodebolso.com.br">privacidade@grimoriodebolso.com.br</a></li>
+                <li>Formulário web: <a href="data-deletion.html">Solicitação de Exclusão de Dados</a></li>
+            </ul>
+        </div>
+
+        <h2>6. Dados de Menores de Idade</h2>
+        <p>Nosso aplicativo não é destinado a menores de 13 anos. Não coletamos conscientemente dados de crianças. Se você acredita que coletamos dados de um menor inadvertidamente, entre em contato conosco imediatamente.</p>
+
+        <h2>7. Cookies e Tecnologias de Rastreamento</h2>
+        <p>Utilizamos tecnologias locais de armazenamento (SharedPreferences, SQLite) para salvar suas preferências e dados offline. Não utilizamos cookies de rastreamento de terceiros.</p>
+
+        <h2>8. Alterações nesta Política</h2>
+        <p>Podemos atualizar esta política periodicamente. Notificaremos você sobre mudanças significativas através do aplicativo ou por email. A versão mais recente estará sempre disponível nesta página e no aplicativo.</p>
+
+        <h2>9. Serviços de Terceiros</h2>
+        <p>O aplicativo utiliza os seguintes serviços de terceiros:</p>
+        <ul>
+            <li><strong>Supabase:</strong> Autenticação e banco de dados (<a href="https://supabase.com/privacy" target="_blank">Política de Privacidade</a>)</li>
+            <li><strong>Groq AI:</strong> Geração de interpretações astrológicas (<a href="https://groq.com/privacy-policy/" target="_blank">Política de Privacidade</a>)</li>
+            <li><strong>Prokerala:</strong> Cálculos astrológicos (<a href="https://www.prokerala.com/privacy/" target="_blank">Política de Privacidade</a>)</li>
+            <li><strong>Google Sign-In / Facebook Login:</strong> Autenticação social (opcional)</li>
+        </ul>
+
+        <div class="contact">
+            <h2>Contato</h2>
+            <p>Para dúvidas, solicitações ou reclamações sobre privacidade:</p>
+            <ul>
+                <li>📧 Email: <a href="mailto:privacidade@grimoriodebolso.com.br">privacidade@grimoriodebolso.com.br</a></li>
+                <li>🌐 Exclusão de dados: <a href="data-deletion.html">Formulário de Exclusão</a></li>
+                <li>💻 GitHub: <a href="https://github.com/laylamonteiro" target="_blank">@laylamonteiro</a></li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Grimório de Bolso © 2025 | Feito com magia e código 🌙✨</p>
+        </div>
+    </div>
+</body>
+</html>
