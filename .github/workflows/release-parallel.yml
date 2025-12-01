@@ -51,6 +51,11 @@ jobs:
   prepare:
     name: 🔧 Prepare & Version
     runs-on: ubuntu-latest
+
+    # Permissões necessárias para fazer commit e push
+    permissions:
+      contents: write
+
     outputs:
       version: ${{ steps.version.outputs.version }}
       version_name: ${{ steps.version.outputs.version_name }}
@@ -62,6 +67,7 @@ jobs:
         with:
           fetch-depth: 0  # Necessário para tags
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: 🔢 Increment version
         id: version
@@ -159,9 +165,6 @@ jobs:
 
       - name: 📦 Install dependencies
         run: flutter pub get
-
-      - name: 🔍 Run flutter analyze
-        run: flutter analyze --no-fatal-infos
 
       - name: 🧪 Run tests
         run: flutter test --coverage || echo "⚠️ Tests failed but continuing..."

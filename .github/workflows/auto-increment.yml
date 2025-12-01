@@ -22,6 +22,10 @@ jobs:
     name: 🔢 Auto Increment Build Number
     runs-on: ubuntu-latest
 
+    # Permissões necessárias para fazer push
+    permissions:
+      contents: write
+
     # Evita loops infinitos: não roda se commit foi feito pelo bot
     if: |
       !contains(github.event.head_commit.message, '[skip ci]') &&
@@ -33,6 +37,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: 🔢 Increment build number
         id: increment
