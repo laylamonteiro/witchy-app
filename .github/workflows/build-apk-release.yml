@@ -154,13 +154,54 @@ jobs:
 
       - name: Create key.properties for release signing
         run: |
-          cat > android/key.properties <<EOF
-          storeFile=${ANDROID_KEYSTORE_FILE}
-          storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
-          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-          storeType=${ANDROID_KEYSTORE_TYPE}
-          EOF
+          {
+            echo "storeFile=${ANDROID_KEYSTORE_FILE}"
+            echo "storePassword=${ANDROID_STORE_PASSWORD}"
+            echo "keyAlias=${ANDROID_KEY_ALIAS}"
+            echo "keyPassword=${ANDROID_KEY_PASSWORD}"
+            echo "storeType=${ANDROID_KEYSTORE_TYPE}"
+          } > android/key.properties
+
+          echo "key.properties criado com sucesso"
+          echo "Verificando conteúdo (sem senhas):"
+          grep -v "Password" android/key.properties || true
+
+      - name: Validate keystore and passwords
+        run: |
+          echo "Validando acesso ao keystore..."
+
+          # Tenta listar as chaves no keystore para validar senha
+          if keytool -list \
+            -keystore "${ANDROID_KEYSTORE_FILE}" \
+            -storepass "${ANDROID_STORE_PASSWORD}" \
+            -alias "${ANDROID_KEY_ALIAS}" \
+            > /dev/null 2>&1; then
+            echo "✅ Keystore validado com sucesso!"
+          else
+            echo "❌ Erro: Não foi possível acessar o keystore."
+            echo "Possíveis causas:"
+            echo "  1. ANDROID_STORE_PASSWORD está incorreta"
+            echo "  2. ANDROID_KEY_ALIAS não existe no keystore"
+            echo "  3. Keystore corrompido ou formato inválido"
+            echo ""
+            echo "Tentando listar todas as chaves no keystore..."
+            keytool -list -v -keystore "${ANDROID_KEYSTORE_FILE}" -storepass "${ANDROID_STORE_PASSWORD}" || true
+            exit 1
+          fi
+
+          # Valida a senha da chave específica
+          echo "Validando senha da chave..."
+          if keytool -list \
+            -keystore "${ANDROID_KEYSTORE_FILE}" \
+            -storepass "${ANDROID_STORE_PASSWORD}" \
+            -alias "${ANDROID_KEY_ALIAS}" \
+            -keypass "${ANDROID_KEY_PASSWORD}" \
+            > /dev/null 2>&1; then
+            echo "✅ Senha da chave validada com sucesso!"
+          else
+            echo "❌ Erro: ANDROID_KEY_PASSWORD está incorreta para o alias ${ANDROID_KEY_ALIAS}"
+            exit 1
+          fi
 
       - name: Fix geolocator_android compatibility
         run: |
@@ -186,6 +227,9 @@ jobs:
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
         env:
           ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
 
       - name: Build release AAB (App Bundle)
         run: |
@@ -196,6 +240,9 @@ jobs:
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
         env:
           ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
 
       - name: Get current date and time
         id: date
