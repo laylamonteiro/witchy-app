@@ -1,0 +1,86 @@
+name: 🔄 Auto Increment Version
+
+# Incrementa automaticamente o build number a cada push para main
+# Evita erro "Version code already used" na Play Store
+#
+# Comportamento:
+#   • Push para main → versão incrementa de 1.0.0+5 para 1.0.0+6
+#   • Commit é feito com [skip ci] para evitar loops infinitos
+#   • Ignora commits feitos pelo próprio GitHub Actions
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+
+jobs:
+  auto-increment:
+    name: 🔢 Auto Increment Build Number
+    runs-on: ubuntu-latest
+
+    # Evita loops infinitos: não roda se commit foi feito pelo bot
+    if: |
+      !contains(github.event.head_commit.message, '[skip ci]') &&
+      github.event.head_commit.author.name != 'github-actions[bot]'
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔢 Increment build number
+        id: increment
+        run: |
+          # Lê versão atual
+          CURRENT_VERSION=$(grep '^version: ' pubspec.yaml | sed 's/version: //')
+          echo "📌 Current version: $CURRENT_VERSION"
+
+          # Separa version name e version code
+          VERSION_NAME=$(echo $CURRENT_VERSION | cut -d'+' -f1)
+          VERSION_CODE=$(echo $CURRENT_VERSION | cut -d'+' -f2)
+
+          # Incrementa apenas o build number
+          NEW_VERSION_CODE=$((VERSION_CODE + 1))
+          NEW_VERSION="${VERSION_NAME}+${NEW_VERSION_CODE}"
+
+          echo "✨ New version: $NEW_VERSION"
+
+          # Atualiza pubspec.yaml
+          sed -i "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
+
+          # Define outputs
+          echo "old_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
+
+      - name: 💾 Commit version bump
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add pubspec.yaml
+
+          if git diff --staged --quiet; then
+            echo "⏭️ No changes to commit"
+          else
+            git commit -m "chore: auto-increment version to ${{ steps.increment.outputs.new_version }} [skip ci]"
+            git push
+            echo "✅ Version bumped and pushed"
+          fi
+
+      - name: 📊 Summary
+        if: success()
+        run: |
+          echo "## 🎉 Version Auto-Incremented" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Old Version**: ${{ steps.increment.outputs.old_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Version**: ${{ steps.increment.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number**: ${{ steps.increment.outputs.version_code }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Never worry about 'Version code already used' again!" >> $GITHUB_STEP_SUMMARY
