@@ -25,11 +25,11 @@ name: Build APK - Download no Celular
 # 4. SUPABASE_URL - URL do projeto Supabase (ex: https://xxx.supabase.co)
 # 5. SUPABASE_ANON_KEY - Anon Key do Supabase
 # 6. GOOGLE_SERVICES_JSON - Conteúdo do google-services.json (base64 encoded)
-# 7. ANDROID_KEYSTORE - Keystore (base64) usado para assinar APK/AAB em modo release
+# 7. ANDROID_KEYSTORE_BASE64 - Keystore (base64) usado para assinar APK/AAB em modo release
 # 8. ANDROID_KEY_ALIAS - Alias da chave dentro do keystore
 # 9. ANDROID_KEY_PASSWORD - Senha da chave
 # 10. ANDROID_STORE_PASSWORD - Senha do keystore
-#
+
 # OPCIONAIS (para produção):
 # 7. REVENUECAT_ANDROID_KEY - API Key do RevenueCat para Android
 # 8. REVENUECAT_IOS_KEY - API Key do RevenueCat para iOS
@@ -60,7 +60,7 @@ jobs:
       contents: write
 
     env:
-      ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
@@ -113,23 +113,40 @@ jobs:
 
       - name: Validate signing inputs
         run: |
-          if [ -z "$ANDROID_KEYSTORE" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ] || [ -z "$ANDROID_STORE_PASSWORD" ]; then
-            echo "Required signing secrets are missing."
+          MISSING_SECRETS=""
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            MISSING_SECRETS+="ANDROID_KEYSTORE_BASE64 "
+          fi
+          if [ -z "$ANDROID_KEY_ALIAS" ]; then
+            MISSING_SECRETS+="ANDROID_KEY_ALIAS "
+          fi
+          if [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            MISSING_SECRETS+="ANDROID_KEY_PASSWORD "
+          fi
+          if [ -z "$ANDROID_STORE_PASSWORD" ]; then
+            MISSING_SECRETS+="ANDROID_STORE_PASSWORD "
+          fi
+
+          if [ -n "$MISSING_SECRETS" ]; then
+            echo "Erro: Os seguintes secrets de assinatura são obrigatórios e estão faltando ou vazios:"
+            echo "$MISSING_SECRETS"
+            echo "Por favor, adicione ou atualize-os nas configurações do repositório:"
+            echo "Settings > Secrets and variables > Actions > New repository secret"
             exit 1
           fi
 
       - name: Prepare Android signing keystore
         env:
-          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
 
           # Decode keystore (supports base64 input or plain text secret)
-          if echo "$ANDROID_KEYSTORE" | base64 -d > "$KEYSTORE_PATH" 2>/dev/null; then
+          if echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH" 2>/dev/null; then
             echo "Keystore decoded from base64."
           else
             echo "Base64 decode failed; writing secret as-is."
-            printf "%s" "$ANDROID_KEYSTORE" > "$KEYSTORE_PATH"
+            printf "%s" "$ANDROID_KEYSTORE_BASE64" > "$KEYSTORE_PATH"
           fi
 
           echo "ANDROID_KEYSTORE_FILE=$KEYSTORE_PATH" >> $GITHUB_ENV
