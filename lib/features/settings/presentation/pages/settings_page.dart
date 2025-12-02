@@ -388,8 +388,6 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildAccountOptions(BuildContext context, AuthProvider authProvider) {
-    final paymentService = PaymentService();
-
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
@@ -412,14 +410,6 @@ class SettingsPage extends StatelessWidget {
             onTap: () => Navigator.pushNamed(context, '/subscription'),
           ),
           _buildDivider(),
-          if (paymentService.isPro) ...[
-            _buildOptionTile(
-              icon: Icons.support_agent,
-              title: 'Central do Assinante',
-              onTap: () => paymentService.presentCustomerCenter(),
-            ),
-            _buildDivider(),
-          ],
           _buildOptionTile(
             icon: Icons.analytics_outlined,
             title: 'Estatisticas Magicas',
