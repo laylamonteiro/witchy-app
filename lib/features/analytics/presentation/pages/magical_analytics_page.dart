@@ -94,10 +94,15 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
 
   Future<int> _countRecords(dynamic db, String table, String userId) async {
     try {
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM $table WHERE user_id = ?',
-        [userId],
-      );
+      // Para spells e affirmations, contar apenas os criados pelo usuário (is_preloaded = 0)
+      String query;
+      if (table == 'spells' || table == 'affirmations') {
+        query = 'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND is_preloaded = 0';
+      } else {
+        query = 'SELECT COUNT(*) as count FROM $table WHERE user_id = ?';
+      }
+
+      final result = await db.rawQuery(query, [userId]);
       return result.first['count'] as int? ?? 0;
     } catch (e) {
       return 0;
@@ -108,8 +113,17 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     try {
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
+
+      // Para spells e affirmations, contar apenas os criados pelo usuário (is_preloaded = 0)
+      String query;
+      if (table == 'spells' || table == 'affirmations') {
+        query = 'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ? AND is_preloaded = 0';
+      } else {
+        query = 'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?';
+      }
+
       final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?',
+        query,
         [userId, startOfMonth.toIso8601String()],
       );
       return result.first['count'] as int? ?? 0;
@@ -160,8 +174,9 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
 
   Future<Map<String, int>> _getSpellsByType(dynamic db, String userId) async {
     try {
+      // Contar apenas feitiços criados pelo usuário (is_preloaded = 0)
       final result = await db.rawQuery(
-        'SELECT type, COUNT(*) as count FROM spells WHERE user_id = ? GROUP BY type',
+        'SELECT type, COUNT(*) as count FROM spells WHERE user_id = ? AND is_preloaded = 0 GROUP BY type',
         [userId],
       );
       final map = <String, int>{};

@@ -24,9 +24,9 @@ enum PendulumAnswer {
       case PendulumAnswer.no:
         return 'A energia indica uma resposta negativa';
       case PendulumAnswer.maybe:
-        return 'A resposta não é clara. Reformule sua pergunta.';
+        return 'As energias estão em equilíbrio. A situação ainda está se definindo.';
       case PendulumAnswer.unclear:
-        return 'A energia está confusa. Tente mais tarde.';
+        return 'As energias estão dispersas no momento. Consulte novamente mais tarde.';
     }
   }
 

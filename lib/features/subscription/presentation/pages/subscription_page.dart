@@ -131,7 +131,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
           // Titulo
           Text(
-            isPro ? 'Grimorio de Bolso Pro' : 'Plano Gratuito',
+            isPro ? 'Grimorio de Bolso Premium' : 'Plano Gratuito',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -183,7 +183,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Seus Beneficios Pro',
+            'Seus Beneficios Premium',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -193,6 +193,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           const SizedBox(height: 12),
           _buildFeatureItem(Icons.auto_awesome, 'Previsoes Magicas ilimitadas'),
           _buildFeatureItem(Icons.book, 'Grimorio completo'),
+          _buildFeatureItem(Icons.psychology, 'Conselheiro Mistico'),
+          _buildFeatureItem(Icons.account_circle, 'Perfil magico personalizado'),
+          _buildFeatureItem(Icons.stars, 'Sugestoes personalizadas com base nos transitos'),
+          _buildFeatureItem(Icons.wb_sunny, 'Clima magico diario completo'),
           _buildFeatureItem(Icons.calendar_today, 'Calendario lunar avancado'),
           _buildFeatureItem(Icons.sync, 'Sincronizacao entre dispositivos'),
           _buildFeatureItem(Icons.support_agent, 'Suporte prioritario'),
@@ -242,7 +246,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 Icon(Icons.star),
                 SizedBox(width: 8),
                 Text(
-                  'Desbloquear Pro',
+                  'Desbloquear Premium',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -265,7 +269,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'O que voce ganha com o Pro:',
+                'O que voce ganha com o Premium:',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -275,9 +279,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               const SizedBox(height: 12),
               _buildFeatureItem(Icons.auto_awesome, 'Previsoes Magicas ilimitadas'),
               _buildFeatureItem(Icons.book, 'Acesso ao Grimorio completo'),
+              _buildFeatureItem(Icons.psychology, 'Conselheiro Mistico'),
+              _buildFeatureItem(Icons.account_circle, 'Perfil magico personalizado'),
+              _buildFeatureItem(Icons.stars, 'Sugestoes personalizadas com base nos transitos'),
+              _buildFeatureItem(Icons.wb_sunny, 'Clima magico diario completo'),
               _buildFeatureItem(Icons.calendar_today, 'Calendario lunar avancado'),
               _buildFeatureItem(Icons.sync, 'Sincronizacao na nuvem'),
-              _buildFeatureItem(Icons.block, 'Sem anuncios'),
             ],
           ),
         ),
@@ -345,7 +352,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         result == PaywallResult.restored) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Parabens! Voce agora e Pro!'),
+          content: Text('Parabens! Voce agora e Premium!'),
           backgroundColor: Colors.green,
         ),
       );

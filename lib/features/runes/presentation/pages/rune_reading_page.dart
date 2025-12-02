@@ -490,13 +490,6 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                Text(
-                                  position.rune.meaning,
-                                  style: TextStyle(
-                                    color: AppColors.softWhite.withOpacity(0.8),
-                                    fontSize: 12,
-                                  ),
-                                ),
                               ],
                             ),
                           ),

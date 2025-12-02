@@ -128,7 +128,7 @@ class UserModel {
   static const int freeAiConsultationsLimit = 1;
 
   /// Limite de uso do pêndulo por dia para TODOS os usuários
-  static const int dailyPendulumLimit = 1;
+  static const int dailyPendulumLimit = 3;
 
   /// Limite de afirmações por dia para free
   static const int freeAffirmationsLimit = 3;

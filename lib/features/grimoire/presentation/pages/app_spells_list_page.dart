@@ -209,8 +209,13 @@ class _AppSpellsListPageState extends State<AppSpellsListPage> {
                           children: [
                             Row(
                               children: [
-                                // Emoji da categoria - sempre visível
-                                // Emoji da fase lunar - apenas para premium
+                                // Emoji da categoria - sempre visível para todos
+                                Text(
+                                  spell.category.icon,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                const SizedBox(width: 8),
+                                // Emoji da fase lunar - apenas para premium/admin
                                 if (isPremium && spell.moonPhase != null) ...[
                                   Text(
                                     spell.moonPhase!.emoji,
