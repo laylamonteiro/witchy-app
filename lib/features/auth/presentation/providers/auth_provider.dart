@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
+import '../../../../core/database/database_helper.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 
@@ -418,6 +419,31 @@ class AuthProvider extends ChangeNotifier {
   /// Faz logout do usuário (mantém preferências locais)
   Future<void> signOut() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Verificar se o usuário tem sincronização na nuvem
+    // Usuários com cloud sync = autenticados (email != null) E premium
+    final hasCloudSync = _currentUser.email != null && _currentUser.isPremium;
+    final isAnonymous = _currentUser.id == 'local_user';
+
+    await debugLog('AUTH', 'signOut - userId=${_currentUser.id}, hasCloudSync=$hasCloudSync, isAnonymous=$isAnonymous');
+
+    // Regras de limpeza de dados:
+    // 1. Usuário anônimo (local_user): SEMPRE limpar (evita que próximo usuário anônimo veja os dados)
+    // 2. Usuário autenticado SEM cloud sync: limpar dados
+    // 3. Usuário autenticado COM cloud sync: manter dados (serão sincronizados ao fazer login novamente)
+    final shouldClearData = isAnonymous || !hasCloudSync;
+
+    if (shouldClearData) {
+      await debugLog('AUTH', 'Clearing database - reason: ${isAnonymous ? "anonymous user" : "no cloud sync"}');
+      try {
+        await DatabaseHelper.instance.clearAllTables();
+        await debugLog('AUTH', 'Database cleared successfully');
+      } catch (e) {
+        await debugLog('AUTH', 'Error clearing database: $e');
+      }
+    } else {
+      await debugLog('AUTH', 'Keeping database - user has cloud sync enabled');
+    }
 
     // Mantém hasSeenOnboarding para não mostrar onboarding novamente
     // Limpa apenas dados do usuário
