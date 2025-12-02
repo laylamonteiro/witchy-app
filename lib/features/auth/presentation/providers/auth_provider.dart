@@ -19,7 +19,16 @@ class AuthProvider extends ChangeNotifier {
   static const String _authVersionKey = 'auth_version';
 
   /// Versão atual do fluxo de autenticação
-  /// Incrementar quando quiser forçar todos os usuários a ver o onboarding novamente
+  ///
+  /// ⚠️ ATENÇÃO: Incrementar esta versão força TODOS os usuários a verem o onboarding novamente
+  /// e REMOVE suas credenciais (email, role). Use apenas para mudanças CRÍTICAS no fluxo de auth.
+  ///
+  /// IMPORTANTE: Esta versão NÃO afeta o banco de dados - os dados do usuário são PRESERVADOS.
+  /// Usuários autenticados precisarão fazer login novamente para ver seus dados após o reset.
+  ///
+  /// Para atualizações normais do app: NÃO incremente esta versão.
+  /// Para mudanças no onboarding que não afetam auth: considere usar outra flag.
+  /// Para mudanças críticas de segurança/auth: incremente com MUITO cuidado.
   static const int _currentAuthVersion = 3;
 
   UserModel _currentUser = UserModel.defaultUser();
@@ -51,8 +60,12 @@ class AuthProvider extends ChangeNotifier {
     await debugLog('AUTH', 'savedVersion=$savedAuthVersion, currentVersion=$_currentAuthVersion');
 
     if (savedAuthVersion < _currentAuthVersion) {
-      // Nova versão do auth - limpar dados antigos para mostrar onboarding
-      await debugLog('AUTH', 'RESETTING - limpando dados antigos');
+      // ⚠️ Auth version mudou - resetar credenciais mas PRESERVAR banco de dados
+      await debugLog('AUTH', 'AUTH VERSION UPDATE - resetting credentials but preserving database');
+      await debugLog('AUTH', 'Old version: $savedAuthVersion, New version: $_currentAuthVersion');
+
+      // Remove apenas credenciais de autenticação (SharedPreferences)
+      // ✅ BANCO DE DADOS É PRESERVADO - dados não são perdidos!
       await prefs.remove(_hasSeenOnboardingKey);
       await prefs.remove(_userKey);
       await prefs.remove(_isOriginalAdminKey);
@@ -62,7 +75,9 @@ class AuthProvider extends ChangeNotifier {
       _isOriginalAdmin = false;
       _currentUser = UserModel.defaultUser();
       _isInitialized = true;
-      await debugLog('AUTH', 'RESET COMPLETE - hasSeenOnboarding=$_hasSeenOnboarding, email=${_currentUser.email}');
+
+      await debugLog('AUTH', 'RESET COMPLETE - User credentials cleared, database preserved');
+      await debugLog('AUTH', 'User is now anonymous - authenticated users must login again to access their data');
       notifyListeners();
       return;
     }
