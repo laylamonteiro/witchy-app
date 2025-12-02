@@ -14,8 +14,8 @@ import '../../../auth/auth.dart';
 import '../../../subscription/subscription.dart';
 import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
-import '../../data/repositories/supabase_auth_repository.dart';
-import '../widgets/profile_avatar_picker.dart';
+import '../../../auth/data/repositories/supabase_auth_repository.dart';
+import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
 import 'privacy_settings_page.dart';
 
 class SettingsPage extends StatelessWidget {
