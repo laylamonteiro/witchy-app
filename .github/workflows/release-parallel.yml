@@ -354,7 +354,49 @@ jobs:
 
           echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 -d > android/app/google-services.json
 
- 
+
+
+      - name: 🔐 Create Groq credentials file
+
+        run: |
+
+          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
+
+          /// Credentials for the Groq API.
+
+          ///
+
+          class GroqCredentials {
+
+            static const apiKey = '${{ secrets.GROQ_API_KEY }}';
+
+          }
+
+          CREDENTIALS
+
+
+
+      - name: 🔐 Create Prokerala credentials file
+
+        run: |
+
+          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
+
+          /// Credentials for the Prokerala API.
+
+          ///
+
+          class ProkeralaCredentials {
+
+            static const String clientId = '${{ secrets.PROKERALA_CLIENT_ID }}';
+
+            static const String clientSecret = '${{ secrets.PROKERALA_CLIENT_SECRET }}';
+
+          }
+
+          CREDENTIALS
+
+
 
       - name: 📱 Build APK
 
@@ -488,7 +530,49 @@ jobs:
 
           echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 -d > android/app/google-services.json
 
- 
+
+
+      - name: 🔐 Create Groq credentials file
+
+        run: |
+
+          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
+
+          /// Credentials for the Groq API.
+
+          ///
+
+          class GroqCredentials {
+
+            static const apiKey = '${{ secrets.GROQ_API_KEY }}';
+
+          }
+
+          CREDENTIALS
+
+
+
+      - name: 🔐 Create Prokerala credentials file
+
+        run: |
+
+          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
+
+          /// Credentials for the Prokerala API.
+
+          ///
+
+          class ProkeralaCredentials {
+
+            static const String clientId = '${{ secrets.PROKERALA_CLIENT_ID }}';
+
+            static const String clientSecret = '${{ secrets.PROKERALA_CLIENT_SECRET }}';
+
+          }
+
+          CREDENTIALS
+
+
 
       - name: 🔑 Prepare Android signing keystore
 
