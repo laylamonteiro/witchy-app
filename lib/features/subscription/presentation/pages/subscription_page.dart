@@ -131,7 +131,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
           // Titulo
           Text(
-            isPro ? 'Grimorio de Bolso Pro' : 'Plano Gratuito',
+            isPro ? 'Grimorio de Bolso Premium' : 'Plano Gratuito',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -183,7 +183,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Seus Beneficios Pro',
+            'Seus Beneficios Premium',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -242,7 +242,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 Icon(Icons.star),
                 SizedBox(width: 8),
                 Text(
-                  'Desbloquear Pro',
+                  'Desbloquear Premium',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -265,7 +265,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'O que voce ganha com o Pro:',
+                'O que voce ganha com o Premium:',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -345,7 +345,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         result == PaywallResult.restored) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Parabens! Voce agora e Pro!'),
+          content: Text('Parabens! Voce agora e Premium!'),
           backgroundColor: Colors.green,
         ),
       );
