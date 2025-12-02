@@ -70,6 +70,9 @@ class _PendulumPageState extends State<PendulumPage>
       return;
     }
 
+    // ✅ Incrementar contador ANTES da animação (reserva a consulta imediatamente)
+    await authProvider.incrementPendulumUses();
+
     setState(() {
       _isSwinging = true;
       _answer = null;
@@ -123,9 +126,8 @@ class _PendulumPageState extends State<PendulumPage>
       },
     );
 
-    // Incrementar contador de uso (limite diário para TODOS)
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.incrementPendulumUses();
+    // Contador já foi incrementado em _askPendulum() antes da animação
+    // para prevenir múltiplas consultas simultâneas
   }
 
   @override
