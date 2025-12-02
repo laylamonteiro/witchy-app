@@ -53,7 +53,7 @@ class _PendulumPageState extends State<PendulumPage>
     if (!authProvider.canUsePendulum) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Você já consultou o pêndulo hoje. Volte amanhã!'),
+          content: Text('Você já usou suas 3 consultas de hoje. Volte amanhã!'),
           backgroundColor: AppColors.alert,
         ),
       );
@@ -162,6 +162,8 @@ class _PendulumPageState extends State<PendulumPage>
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) {
                       final remaining = auth.remainingPendulumUses;
+                      final used = auth.currentUser.pendulumUsesToday;
+                      final total = UserModel.dailyPendulumLimit;
                       final isUnlimited = remaining < 0; // Admin
                       final hasRemaining = isUnlimited || remaining > 0;
                       return Container(
@@ -197,8 +199,8 @@ class _PendulumPageState extends State<PendulumPage>
                               isUnlimited
                                   ? 'Consultas ilimitadas (Admin)'
                                   : (hasRemaining
-                                      ? '1 consulta disponível hoje'
-                                      : 'Consulta usada - volte amanhã'),
+                                      ? '$remaining de $total consultas disponíveis hoje'
+                                      : 'Consultas usadas ($used/$total) - volte amanhã'),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: hasRemaining
@@ -227,7 +229,7 @@ class _PendulumPageState extends State<PendulumPage>
                     return CustomPaint(
                       painter: PendulumPainter(
                         swingAngle: _isSwinging
-                            ? sin(_swingController.value * 2 * pi) * 0.3
+                            ? sin(_swingController.value * 2 * pi) * 0.8
                             : 0,
                         answer: _answer,
                       ),
