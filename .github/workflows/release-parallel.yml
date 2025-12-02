@@ -399,17 +399,11 @@ jobs:
 
 
       - name: 📱 Build APK
-
         run: |
-
           flutter build apk --release \
-
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-
             --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
-
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
 
  
@@ -663,19 +657,12 @@ jobs:
  
 
       - name: 📦 Build AAB
-
         run: |
-
           flutter build appbundle --release \
-
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-
             --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
-
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
-
         env:
 
           ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
