@@ -409,13 +409,9 @@ jobs:
  
 
       - name: 📝 Rename APK
-
         run: |
-
           mkdir -p release-artifacts
-
           cp build/app/outputs/flutter-apk/app-release.apk \
-
              "release-artifacts/grimorio-de-bolso-${{ needs.auto-increment-and-prepare.outputs.version }}.apk"
 
  
@@ -706,13 +702,9 @@ jobs:
  
 
       - name: 📝 Rename AAB
-
         run: |
-
           mkdir -p release-artifacts
-
           cp build/app/outputs/bundle/release/app-release.aab \
-
              "release-artifacts/grimorio-de-bolso-${{ needs.auto-increment-and-prepare.outputs.version }}.aab"
 
  
