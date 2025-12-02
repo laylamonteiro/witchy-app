@@ -267,6 +267,21 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_weather_user_id ON daily_magical_weather(user_id)');
   }
 
+  /// Migra o banco de dados de uma versão antiga para a nova
+  ///
+  /// ⚠️ REGRA CRÍTICA: Migrações DEVEM preservar TODOS os dados existentes!
+  ///
+  /// Práticas obrigatórias:
+  /// - ✅ Adicionar novas tabelas
+  /// - ✅ Adicionar novas colunas (com ALTER TABLE ADD COLUMN)
+  /// - ✅ Criar novos índices
+  /// - ✅ Verificar existência antes de criar (IF NOT EXISTS)
+  /// - ❌ NUNCA deletar tabelas (DROP TABLE)
+  /// - ❌ NUNCA deletar colunas (não suportado em SQLite)
+  /// - ❌ NUNCA limpar dados (DELETE, TRUNCATE)
+  ///
+  /// Atualizações do app devem ser transparentes para o usuário.
+  /// Dados devem ser mantidos independente da versão anterior.
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     // Migração da versão 1 para 2
     if (oldVersion < 2) {
@@ -692,7 +707,19 @@ class DatabaseHelper {
     }
   }
 
-  /// Limpa todos os dados de todas as tabelas (para exclusão de conta)
+  /// Limpa todos os dados de todas as tabelas
+  ///
+  /// ⚠️ ATENÇÃO: Esta operação é IRREVERSÍVEL e deleta TODOS os dados do usuário!
+  ///
+  /// Usado apenas em casos específicos:
+  /// - Logout de usuários SEM sincronização na nuvem
+  /// - Exclusão de conta
+  /// - Troca de conta (para limpar dados do usuário anterior)
+  ///
+  /// NUNCA deve ser chamado durante:
+  /// - Atualizações do app
+  /// - Mudanças de versão do banco de dados (use _upgradeDB)
+  /// - Upgrade/downgrade de plano
   Future<void> clearAllTables() async {
     final db = await database;
     final tables = [

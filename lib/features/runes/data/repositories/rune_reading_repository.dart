@@ -13,11 +13,14 @@ class RuneReadingRepository {
       'rune_readings',
       {
         'id': reading.id,
+        'user_id': 'local_user',
         'question': reading.question,
         'spread_type': reading.spreadType.name,
         'reading_data': reading.toJsonString(),
         'date': reading.date.millisecondsSinceEpoch,
         'created_at': DateTime.now().millisecondsSinceEpoch,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+        'synced': 0,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );

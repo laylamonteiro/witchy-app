@@ -1,8 +1,7 @@
 enum PendulumAnswer {
   yes,
   no,
-  maybe,
-  unclear;
+  maybe;
 
   String get displayName {
     switch (this) {
@@ -12,8 +11,6 @@ enum PendulumAnswer {
         return 'NÃO';
       case PendulumAnswer.maybe:
         return 'TALVEZ';
-      case PendulumAnswer.unclear:
-        return 'INCERTO';
     }
   }
 
@@ -25,8 +22,6 @@ enum PendulumAnswer {
         return 'A energia indica uma resposta negativa';
       case PendulumAnswer.maybe:
         return 'As energias estão em equilíbrio. A situação ainda está se definindo.';
-      case PendulumAnswer.unclear:
-        return 'As energias estão dispersas no momento. Consulte novamente mais tarde.';
     }
   }
 
@@ -38,8 +33,6 @@ enum PendulumAnswer {
         return '❌';
       case PendulumAnswer.maybe:
         return '❓';
-      case PendulumAnswer.unclear:
-        return '🌀';
     }
   }
 }

@@ -113,10 +113,13 @@ class _PendulumPageState extends State<PendulumPage>
       'pendulum_consultations',
       {
         'id': consultation.id,
+        'user_id': 'local_user',
         'question': consultation.question,
         'answer': consultation.answer.name,
         'date': consultation.date.millisecondsSinceEpoch,
         'created_at': DateTime.now().millisecondsSinceEpoch,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+        'synced': 0,
       },
     );
 
@@ -437,7 +440,6 @@ class PendulumPainter extends CustomPainter {
       _drawAnswerText(canvas, size, 'SIM', Offset(size.width * 0.2, size.height * 0.5), AppColors.success);
       _drawAnswerText(canvas, size, 'NÃO', Offset(size.width * 0.8, size.height * 0.5), AppColors.alert);
       _drawAnswerText(canvas, size, 'TALVEZ', Offset(size.width * 0.5, size.height * 0.2), AppColors.starYellow);
-      _drawAnswerText(canvas, size, 'INCERTO', Offset(size.width * 0.5, size.height * 0.8), AppColors.softWhite);
     }
   }
 

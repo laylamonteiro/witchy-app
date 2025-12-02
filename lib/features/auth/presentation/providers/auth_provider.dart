@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
+import '../../../../core/database/database_helper.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 
@@ -18,7 +19,16 @@ class AuthProvider extends ChangeNotifier {
   static const String _authVersionKey = 'auth_version';
 
   /// Versão atual do fluxo de autenticação
-  /// Incrementar quando quiser forçar todos os usuários a ver o onboarding novamente
+  ///
+  /// ⚠️ ATENÇÃO: Incrementar esta versão força TODOS os usuários a verem o onboarding novamente
+  /// e REMOVE suas credenciais (email, role). Use apenas para mudanças CRÍTICAS no fluxo de auth.
+  ///
+  /// IMPORTANTE: Esta versão NÃO afeta o banco de dados - os dados do usuário são PRESERVADOS.
+  /// Usuários autenticados precisarão fazer login novamente para ver seus dados após o reset.
+  ///
+  /// Para atualizações normais do app: NÃO incremente esta versão.
+  /// Para mudanças no onboarding que não afetam auth: considere usar outra flag.
+  /// Para mudanças críticas de segurança/auth: incremente com MUITO cuidado.
   static const int _currentAuthVersion = 3;
 
   UserModel _currentUser = UserModel.defaultUser();
@@ -50,8 +60,12 @@ class AuthProvider extends ChangeNotifier {
     await debugLog('AUTH', 'savedVersion=$savedAuthVersion, currentVersion=$_currentAuthVersion');
 
     if (savedAuthVersion < _currentAuthVersion) {
-      // Nova versão do auth - limpar dados antigos para mostrar onboarding
-      await debugLog('AUTH', 'RESETTING - limpando dados antigos');
+      // ⚠️ Auth version mudou - resetar credenciais mas PRESERVAR banco de dados
+      await debugLog('AUTH', 'AUTH VERSION UPDATE - resetting credentials but preserving database');
+      await debugLog('AUTH', 'Old version: $savedAuthVersion, New version: $_currentAuthVersion');
+
+      // Remove apenas credenciais de autenticação (SharedPreferences)
+      // ✅ BANCO DE DADOS É PRESERVADO - dados não são perdidos!
       await prefs.remove(_hasSeenOnboardingKey);
       await prefs.remove(_userKey);
       await prefs.remove(_isOriginalAdminKey);
@@ -61,7 +75,9 @@ class AuthProvider extends ChangeNotifier {
       _isOriginalAdmin = false;
       _currentUser = UserModel.defaultUser();
       _isInitialized = true;
-      await debugLog('AUTH', 'RESET COMPLETE - hasSeenOnboarding=$_hasSeenOnboarding, email=${_currentUser.email}');
+
+      await debugLog('AUTH', 'RESET COMPLETE - User credentials cleared, database preserved');
+      await debugLog('AUTH', 'User is now anonymous - authenticated users must login again to access their data');
       notifyListeners();
       return;
     }
@@ -418,6 +434,31 @@ class AuthProvider extends ChangeNotifier {
   /// Faz logout do usuário (mantém preferências locais)
   Future<void> signOut() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Verificar se o usuário tem sincronização na nuvem
+    // Usuários com cloud sync = autenticados (email != null) E premium
+    final hasCloudSync = _currentUser.email != null && _currentUser.isPremium;
+    final isAnonymous = _currentUser.id == 'local_user';
+
+    await debugLog('AUTH', 'signOut - userId=${_currentUser.id}, hasCloudSync=$hasCloudSync, isAnonymous=$isAnonymous');
+
+    // Regras de limpeza de dados:
+    // 1. Usuário anônimo (local_user): SEMPRE limpar (evita que próximo usuário anônimo veja os dados)
+    // 2. Usuário autenticado SEM cloud sync: limpar dados
+    // 3. Usuário autenticado COM cloud sync: manter dados (serão sincronizados ao fazer login novamente)
+    final shouldClearData = isAnonymous || !hasCloudSync;
+
+    if (shouldClearData) {
+      await debugLog('AUTH', 'Clearing database - reason: ${isAnonymous ? "anonymous user" : "no cloud sync"}');
+      try {
+        await DatabaseHelper.instance.clearAllTables();
+        await debugLog('AUTH', 'Database cleared successfully');
+      } catch (e) {
+        await debugLog('AUTH', 'Error clearing database: $e');
+      }
+    } else {
+      await debugLog('AUTH', 'Keeping database - user has cloud sync enabled');
+    }
 
     // Mantém hasSeenOnboarding para não mostrar onboarding novamente
     // Limpa apenas dados do usuário

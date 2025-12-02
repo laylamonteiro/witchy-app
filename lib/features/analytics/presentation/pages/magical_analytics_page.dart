@@ -3,6 +3,15 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../grimoire/presentation/pages/user_spells_list_page.dart';
+import '../../../diary/presentation/pages/dreams_list_page.dart';
+import '../../../diary/presentation/pages/gratitudes_list_page.dart';
+import '../../../diary/presentation/pages/affirmations_list_page.dart';
+import '../../../diary/presentation/pages/desires_list_page.dart';
+import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
+import '../../../runes/presentation/pages/rune_reading_page.dart';
+import '../../../divination/presentation/pages/oracle_cards_page.dart';
+import '../../../divination/presentation/pages/pendulum_page.dart';
 
 /// Página de Analytics Mágicos - Estatísticas de uso do app
 class MagicalAnalyticsPage extends StatefulWidget {
@@ -520,53 +529,138 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           crossAxisSpacing: 12,
           childAspectRatio: 1,
           children: [
-            _buildCategoryCard('Feiticos', _stats['spells'] ?? 0, Icons.auto_fix_high, Colors.purple),
-            _buildCategoryCard('Sonhos', _stats['dreams'] ?? 0, Icons.nights_stay, Colors.indigo),
-            _buildCategoryCard('Gratidao', _stats['gratitudes'] ?? 0, Icons.favorite, Colors.pink),
-            _buildCategoryCard('Afirmacoes', _stats['affirmations'] ?? 0, Icons.format_quote, Colors.teal),
-            _buildCategoryCard('Sigilos', _stats['sigils'] ?? 0, Icons.gesture, Colors.amber),
-            _buildCategoryCard('Runas', _stats['runeReadings'] ?? 0, Icons.casino, Colors.red),
-            _buildCategoryCard('Oraculo', _stats['oracleReadings'] ?? 0, Icons.style, Colors.cyan),
-            _buildCategoryCard('Pendulo', _stats['pendulum'] ?? 0, Icons.radio_button_checked, Colors.green),
-            _buildCategoryCard('Desejos', _stats['desires'] ?? 0, Icons.star, Colors.orange),
+            _buildCategoryCard(
+              'Feiticos',
+              _stats['spells'] ?? 0,
+              Icons.auto_fix_high,
+              Colors.purple,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const UserSpellsListPage()),
+              ),
+            ),
+            _buildCategoryCard(
+              'Sonhos',
+              _stats['dreams'] ?? 0,
+              Icons.nights_stay,
+              Colors.indigo,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DreamsListPage()),
+              ),
+            ),
+            _buildCategoryCard(
+              'Gratidao',
+              _stats['gratitudes'] ?? 0,
+              Icons.favorite,
+              Colors.pink,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const GratitudesListPage()),
+              ),
+            ),
+            _buildCategoryCard(
+              'Afirmacoes',
+              _stats['affirmations'] ?? 0,
+              Icons.format_quote,
+              Colors.teal,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AffirmationsListPage()),
+              ),
+            ),
+            _buildCategoryCard(
+              'Sigilos',
+              _stats['sigils'] ?? 0,
+              Icons.gesture,
+              Colors.amber,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SigilStep1IntentionPage()),
+              ),
+            ),
+            _buildCategoryCard(
+              'Runas',
+              _stats['runeReadings'] ?? 0,
+              Icons.casino,
+              Colors.red,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RuneReadingPage()),
+              ),
+            ),
+            _buildCategoryCard(
+              'Oraculo',
+              _stats['oracleReadings'] ?? 0,
+              Icons.style,
+              Colors.cyan,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OracleCardsPage()),
+              ),
+            ),
+            _buildCategoryCard(
+              'Pendulo',
+              _stats['pendulum'] ?? 0,
+              Icons.radio_button_checked,
+              Colors.green,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PendulumPage()),
+              ),
+            ),
+            _buildCategoryCard(
+              'Desejos',
+              _stats['desires'] ?? 0,
+              Icons.star,
+              Colors.orange,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DesiresListPage()),
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildCategoryCard(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            '$count',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+  Widget _buildCategoryCard(String label, int count, IconData icon, Color color, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              '$count',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 11,
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
