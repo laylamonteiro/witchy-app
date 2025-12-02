@@ -277,7 +277,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               _buildFeatureItem(Icons.book, 'Acesso ao Grimorio completo'),
               _buildFeatureItem(Icons.calendar_today, 'Calendario lunar avancado'),
               _buildFeatureItem(Icons.sync, 'Sincronizacao na nuvem'),
-              _buildFeatureItem(Icons.block, 'Sem anuncios'),
             ],
           ),
         ),
