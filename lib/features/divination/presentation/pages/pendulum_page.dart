@@ -437,22 +437,49 @@ class PendulumPainter extends CustomPainter {
 
     canvas.drawPath(pendulumPath, pendulumPaint);
 
-    // Desenhar respostas ao redor
-    if (answer == null) {
-      _drawAnswerText(canvas, size, 'SIM', Offset(size.width * 0.2, size.height * 0.5), AppColors.success);
-      _drawAnswerText(canvas, size, 'NÃO', Offset(size.width * 0.8, size.height * 0.5), AppColors.alert);
-      _drawAnswerText(canvas, size, 'TALVEZ', Offset(size.width * 0.5, size.height * 0.2), AppColors.starYellow);
-    }
+    // Desenhar respostas ao redor (sempre visíveis)
+    // Destacar a resposta selecionada quando houver resultado
+    _drawAnswerText(
+      canvas,
+      size,
+      'SIM',
+      Offset(size.width * 0.2, size.height * 0.5),
+      AppColors.success,
+      isSelected: answer == PendulumAnswer.yes,
+    );
+    _drawAnswerText(
+      canvas,
+      size,
+      'NÃO',
+      Offset(size.width * 0.8, size.height * 0.5),
+      AppColors.alert,
+      isSelected: answer == PendulumAnswer.no,
+    );
+    _drawAnswerText(
+      canvas,
+      size,
+      'TALVEZ',
+      Offset(size.width * 0.5, size.height * 0.8),
+      AppColors.starYellow,
+      isSelected: answer == PendulumAnswer.maybe,
+    );
   }
 
-  void _drawAnswerText(Canvas canvas, Size size, String text, Offset position, Color color) {
+  void _drawAnswerText(
+    Canvas canvas,
+    Size size,
+    String text,
+    Offset position,
+    Color color,
+    {bool isSelected = false}
+  ) {
     final textPainter = TextPainter(
       text: TextSpan(
         text: text,
         style: TextStyle(
-          color: color.withOpacity(0.5),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
+          color: isSelected ? color : color.withOpacity(0.4),
+          fontSize: isSelected ? 16 : 12,
+          fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
         ),
       ),
       textDirection: TextDirection.ltr,
