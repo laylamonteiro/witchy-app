@@ -625,29 +625,17 @@ jobs:
         if: env.ANDROID_KEYSTORE_BASE64 != ''
 
         run: |
-
           echo "🔍 Validating keystore access..."
 
- 
-
           if keytool -list \
-
             -keystore "${ANDROID_KEYSTORE_FILE}" \
-
             -storepass "${ANDROID_STORE_PASSWORD}" \
-
             -alias "${ANDROID_KEY_ALIAS}" \
-
             > /dev/null 2>&1; then
-
             echo "✅ Keystore validated successfully!"
-
           else
-
             echo "❌ Failed to access keystore"
-
             exit 1
-
           fi
 
  
