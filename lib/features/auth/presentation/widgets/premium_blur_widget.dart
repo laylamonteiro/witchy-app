@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
 import '../../../../core/services/payment_service.dart';
@@ -214,8 +213,16 @@ class PremiumBlurText extends StatelessWidget {
 }
 
 /// Sheet de upgrade para Premium
-class PremiumUpgradeSheet extends StatelessWidget {
+class PremiumUpgradeSheet extends StatefulWidget {
   const PremiumUpgradeSheet({super.key});
+
+  @override
+  State<PremiumUpgradeSheet> createState() => _PremiumUpgradeSheetState();
+}
+
+class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
+  SubscriptionType _selectedPlan = SubscriptionType.yearly; // Anual por padrão (popular)
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -293,6 +300,7 @@ class PremiumUpgradeSheet extends StatelessWidget {
                 'Mensal',
                 'R\$ 9,90',
                 '/mês',
+                SubscriptionType.monthly,
                 false,
               ),
               _buildPricingOption(
@@ -300,6 +308,7 @@ class PremiumUpgradeSheet extends StatelessWidget {
                 'Anual',
                 'R\$ 79,90',
                 '/ano',
+                SubscriptionType.yearly,
                 true,
                 savings: 'Economize 33%',
               ),
@@ -310,7 +319,7 @@ class PremiumUpgradeSheet extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => _handleSubscribe(context),
+              onPressed: _isLoading ? null : () => _handleSubscribe(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF9C27B0),
                 foregroundColor: Colors.white,
@@ -318,14 +327,24 @@ class PremiumUpgradeSheet extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
+                disabledBackgroundColor: const Color(0xFF9C27B0).withValues(alpha: 0.5),
               ),
-              child: const Text(
-                'Começar Agora',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'Começar Agora',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 12),
@@ -369,108 +388,167 @@ class PremiumUpgradeSheet extends StatelessWidget {
     String title,
     String price,
     String period,
+    SubscriptionType planType,
     bool isPopular, {
     String? savings,
   }) {
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isPopular
-            ? const Color(0xFF9C27B0).withValues(alpha: 0.2)
-            : Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isPopular
-              ? const Color(0xFF9C27B0)
-              : Colors.white.withValues(alpha: 0.1),
-          width: isPopular ? 2 : 1,
+    final isSelected = _selectedPlan == planType;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedPlan = planType;
+        });
+      },
+      child: Container(
+        width: 140,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF9C27B0).withValues(alpha: 0.3)
+              : isPopular
+                  ? const Color(0xFF9C27B0).withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF9C27B0)
+                : isPopular
+                    ? const Color(0xFF9C27B0).withValues(alpha: 0.5)
+                    : Colors.white.withValues(alpha: 0.1),
+            width: isSelected ? 3 : isPopular ? 2 : 1,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          if (isPopular)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF9C27B0),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'POPULAR',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+        child: Column(
+          children: [
+            if (isSelected)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9C27B0),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'SELECIONADO',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            else if (isPopular)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9C27B0).withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'POPULAR',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            price,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            period,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
-              fontSize: 12,
-            ),
-          ),
-          if (savings != null) ...[
             const SizedBox(height: 4),
             Text(
-              savings,
-              style: const TextStyle(
-                color: Color(0xFF4CAF50),
-                fontSize: 11,
+              price,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            Text(
+              period,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 12,
+              ),
+            ),
+            if (savings != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                savings,
+                style: const TextStyle(
+                  color: Color(0xFF4CAF50),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 
   Future<void> _handleSubscribe(BuildContext context) async {
-    final paymentService = PaymentService();
+    setState(() => _isLoading = true);
 
-    // Inicializar se necessário
-    if (!paymentService.isInitialized) {
-      await paymentService.initialize();
-    }
+    try {
+      final paymentService = PaymentService();
 
-    // Fechar o bottom sheet antes de mostrar o paywall
-    Navigator.pop(context);
+      // Inicializar se necessário
+      if (!paymentService.isInitialized) {
+        await paymentService.initialize();
+      }
 
-    // Apresentar paywall do RevenueCat
-    final result = await paymentService.presentPaywall();
+      // Comprar o plano selecionado diretamente
+      final result = await paymentService.purchase(_selectedPlan);
 
-    if (result == PaywallResult.purchased || result == PaywallResult.restored) {
-      // Atualizar estado do AuthProvider após compra bem-sucedida
-      if (context.mounted) {
+      if (!mounted) return;
+
+      if (result.success) {
+        // Atualizar estado do AuthProvider após compra bem-sucedida
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        authProvider.refreshPremiumStatus();
+        await authProvider.refreshPremiumStatus();
 
+        // Fechar o bottom sheet
+        Navigator.pop(context);
+
+        // Mostrar mensagem de sucesso
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Parabéns! Você agora é Premium! ✨'),
             backgroundColor: Color(0xFF9C27B0),
+            duration: Duration(seconds: 3),
           ),
         );
+      } else {
+        // Mostrar erro
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Erro ao processar pagamento'),
+            backgroundColor: const Color(0xFFF44336),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro inesperado: $e'),
+            backgroundColor: const Color(0xFFF44336),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }

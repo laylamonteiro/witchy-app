@@ -366,14 +366,6 @@ class _SignupPageState extends State<SignupPage> {
           label: 'Google',
           onPressed: _handleGoogleSignup,
         ),
-        const SizedBox(width: 16),
-        // Facebook
-        _buildSocialButton(
-          icon: 'f',
-          label: 'Facebook',
-          iconWidget: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
-          onPressed: _handleFacebookSignup,
-        ),
       ],
     );
   }
@@ -603,67 +595,4 @@ class _SignupPageState extends State<SignupPage> {
     }
   }
 
-  Future<void> _handleFacebookSignup() async {
-    if (!_acceptedTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Você precisa aceitar os termos de uso'),
-          backgroundColor: AppColors.alert,
-        ),
-      );
-      return;
-    }
-
-    if (!SupabaseConfig.isConfigured) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cadastro com Facebook não disponível no momento'),
-          backgroundColor: AppColors.info,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final authRepo = SupabaseAuthRepository();
-      final result = await authRepo.signInWithFacebook();
-
-      if (!mounted) return;
-
-      if (result.success && result.user != null) {
-        // Atualizar AuthProvider com os dados do usuário
-        final authProvider = context.read<AuthProvider>();
-        await authProvider.updateProfile(
-          email: result.user!.email,
-          displayName: result.user!.displayName,
-        );
-        await authProvider.markOnboardingSeen();
-
-        // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.errorMessage ?? 'Erro no cadastro com Facebook'),
-            backgroundColor: AppColors.alert,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro no cadastro com Facebook: $e'),
-            backgroundColor: AppColors.alert,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
 }
