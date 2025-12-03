@@ -283,16 +283,249 @@ lib/
 
 ---
 
+## 🐛 Troubleshooting
+
+### 🔍 **Problema: Paywall abre, mas ao clicar "Começar Agora" não acontece nada**
+
+**Sintomas:**
+- Paywall do RevenueCat abre normalmente
+- Produtos aparecem com preços
+- Ao selecionar um plano e clicar em "Começar Agora", nada acontece
+- Ao fechar o paywall, aparece: *"Erro ao processar compra. Tente novamente"*
+
+**Diagnóstico:**
+
+1. **Verifique os logs do console** durante a tentativa de compra:
+   ```bash
+   flutter run
+   # Tente fazer uma compra e observe os logs
+   ```
+
+2. **Logs esperados durante inicialização bem-sucedida:**
+   ```
+   🔄 Iniciando RevenueCat...
+   ✅ SDK configurado
+   📥 Carregando informações do cliente...
+   🛒 Carregando ofertas...
+   ✅ Offering encontrada: default
+   📦 Pacotes disponíveis: 3
+      📦 $rc_monthly:
+         - Product ID: grimorio_pro_monthly (ou com.grimoriodebolso.pro.monthly)
+         - Preço: R$ 9,90
+      📦 $rc_annual:
+         - Product ID: grimorio_pro_yearly (ou com.grimoriodebolso.pro.yearly)
+         - Preço: R$ 79,90
+   ✅ Produtos carregados: 3
+   ```
+
+3. **Logs durante tentativa de compra:**
+   ```
+   🛒 Iniciando compra: SubscriptionType.monthly
+   📦 Buscando ofertas...
+   ✅ Offering encontrada: default
+   ✅ Pacote encontrado: $rc_monthly
+   🚀 Iniciando compra na loja...
+   ```
+
+**Possíveis Causas e Soluções:**
+
+#### ❌ **Erro: "Produto não disponível para compra"**
+
+**Causa:** Os produtos não foram criados ou não estão aprovados nas lojas.
+
+**Solução:**
+
+**Para iOS:**
+1. Acesse [App Store Connect](https://appstoreconnect.apple.com/)
+2. Vá em: **App → Features → In-App Purchases**
+3. Verifique se os produtos existem:
+   - `com.grimoriodebolso.pro.monthly`
+   - `com.grimoriodebolso.pro.yearly`
+   - `com.grimoriodebolso.pro.lifetime`
+4. **Status deve ser:** "Ready to Submit" ou "Approved"
+5. **Importante:** Novos produtos podem demorar até 24h para sincronizar
+
+**Para Android:**
+1. Acesse [Google Play Console](https://play.google.com/console/)
+2. Vá em: **Monetize → Products → Subscriptions** (ou In-app products para lifetime)
+3. Verifique se os produtos existem:
+   - `grimorio_pro_monthly`
+   - `grimorio_pro_yearly`
+   - `grimorio_pro_lifetime`
+4. **Status deve ser:** "Active"
+5. Certifique-se de que o app foi publicado pelo menos como "Internal Testing"
+
+---
+
+#### ❌ **Erro: "Nenhuma oferta disponível"**
+
+**Causa:** A offering "default" não existe ou não tem produtos associados.
+
+**Solução:**
+1. Acesse [RevenueCat Dashboard](https://app.revenuecat.com/)
+2. Vá em: **Offerings**
+3. Verifique se existe uma offering chamada **"default"** (exatamente esse nome!)
+4. Abra a offering e verifique se os 3 pacotes estão adicionados:
+   - **Monthly** (Monthly package)
+   - **Annual** (Annual package)
+   - **Lifetime** (Lifetime package)
+
+---
+
+#### ❌ **Erro: "IDs dos produtos não correspondem"**
+
+**Causa:** Os Product IDs no RevenueCat não batem com os das lojas.
+
+**Solução:**
+1. No [RevenueCat Dashboard](https://app.revenuecat.com/), vá em **Products**
+2. Para cada produto, verifique:
+   - **iOS ID** deve ser EXATAMENTE: `com.grimoriodebolso.pro.monthly` (ou yearly/lifetime)
+   - **Android ID** deve ser EXATAMENTE: `grimorio_pro_monthly` (ou yearly/lifetime)
+3. **Atenção:** IDs são case-sensitive e devem ser idênticos aos criados nas lojas
+
+---
+
+#### ❌ **Erro: "Compras não permitidas neste dispositivo"**
+
+**Causa:** Restrições de compra no dispositivo ou conta não configurada para sandbox.
+
+**Solução:**
+
+**Para iOS:**
+1. Abra **Configurações → Screen Time → Content & Privacy Restrictions**
+2. Verifique se "In-App Purchases" está **permitido**
+3. Para testar em sandbox:
+   - Vá em **Configurações → App Store → Sandbox Account**
+   - Faça login com uma conta de teste criada no App Store Connect
+   - **Importante:** Use uma conta diferente da sua conta principal do Apple ID
+
+**Para Android:**
+1. Verifique se você está logado com uma conta Google válida
+2. Para testar:
+   - Adicione sua conta como "License tester" no Google Play Console
+   - Ou publique o app em "Internal Testing" e instale via Play Store
+
+---
+
+#### ❌ **Erro: "Entitlement não encontrado após compra"**
+
+**Causa:** O entitlement não está configurado corretamente.
+
+**Solução:**
+1. No [RevenueCat Dashboard](https://app.revenuecat.com/), vá em **Entitlements**
+2. Verifique se existe um entitlement chamado **"Grimorio de Bolso Pro"** (exatamente esse nome!)
+3. Abra o entitlement e verifique se os 3 produtos estão associados:
+   - grimorio_pro_monthly / com.grimoriodebolso.pro.monthly
+   - grimorio_pro_yearly / com.grimoriodebolso.pro.yearly
+   - grimorio_pro_lifetime / com.grimoriodebolso.pro.lifetime
+
+---
+
+### 📋 **Checklist de Configuração Completa**
+
+Use este checklist para garantir que tudo está configurado:
+
+#### RevenueCat Dashboard
+- [ ] Projeto "Grimório de Bolso" criado
+- [ ] App Store Connect conectado (iOS)
+- [ ] Google Play Console conectado (Android)
+- [ ] 3 produtos criados e configurados
+- [ ] Entitlement "Grimorio de Bolso Pro" criado
+- [ ] Os 3 produtos estão associados ao entitlement
+- [ ] Offering "default" criada
+- [ ] Os 3 pacotes (Monthly, Annual, Lifetime) estão na offering
+- [ ] API Keys copiadas (iOS e Android)
+
+#### App Store Connect (iOS)
+- [ ] 3 In-App Purchases criados
+- [ ] Product IDs corretos: `com.grimoriodebolso.pro.*`
+- [ ] Status: "Ready to Submit" ou "Approved"
+- [ ] Conta de teste sandbox criada
+- [ ] App-Specific Shared Secret configurado no RevenueCat
+
+#### Google Play Console (Android)
+- [ ] 2 Subscriptions criados (monthly, yearly)
+- [ ] 1 In-app product criado (lifetime)
+- [ ] Product IDs corretos: `grimorio_pro_*`
+- [ ] Status: "Active"
+- [ ] App publicado em "Internal Testing" (mínimo)
+- [ ] Service Account JSON configurado no RevenueCat
+- [ ] License testers adicionados
+
+#### GitHub / Local
+- [ ] Secrets configurados no GitHub Actions
+- [ ] Arquivo `.env` criado localmente (para dev)
+- [ ] App executado com `--dart-define-from-file=.env`
+
+---
+
+### 🧪 **Como Testar Compras em Sandbox**
+
+#### iOS (Sandbox Testing)
+```bash
+1. Crie uma conta de teste no App Store Connect:
+   - Users and Access → Sandbox Testers → Add (+)
+
+2. No dispositivo/simulador:
+   - Settings → App Store → Sandbox Account
+   - Faça login com a conta de teste
+
+3. Execute o app e tente comprar
+
+4. ⚠️  IMPORTANTE:
+   - Use SEMPRE a conta de teste, nunca sua conta real
+   - Não confirme pagamento com conta real (você será cobrado!)
+   - Sandbox não cobra valores reais
+```
+
+#### Android (Internal Testing)
+```bash
+1. Publique o app em Internal Testing:
+   - Google Play Console → Testing → Internal testing
+   - Upload do APK/AAB
+   - Adicione testers (email)
+
+2. Instale o app via Play Store (não via sideload)
+
+3. A compra será feita em modo sandbox automaticamente
+
+4. Para testar sem ser cobrado:
+   - Adicione sua conta em "License testing"
+   - Selecione "License response: LICENSED"
+```
+
+---
+
+### 📞 **Debug Avançado**
+
+Se os problemas persistirem, habilite logs detalhados:
+
+1. **Logs já estão habilitados automaticamente** em modo debug
+2. **Execute o app e observe o console:**
+   ```bash
+   flutter run --verbose
+   ```
+3. **Procure por estas mensagens:**
+   - ❌ Qualquer linha com "❌" indica um erro
+   - ⚠️  Linhas com "⚠️" indicam avisos importantes
+   - 🛒 "Iniciando compra" indica que o botão funcionou
+   - ✅ "Compra concluída" indica sucesso
+
+---
+
 ## 🆘 Suporte
 
-Problemas? Verifique:
-1. ✅ Logs no console (`flutter run`)
-2. ✅ Configuração do RevenueCat Dashboard
-3. ✅ Produtos criados nas lojas
-4. ✅ API keys corretas no `.env`
+Problemas? Siga esta ordem:
 
-Se o problema persistir, abra uma issue no repositório com:
-- Logs do console
-- Plataforma (iOS/Android)
-- Versão do Flutter
-- Passos para reproduzir
+1. ✅ **Verifique os logs** do console (`flutter run --verbose`)
+2. ✅ **Consulte o Troubleshooting** acima para seu erro específico
+3. ✅ **Use o checklist** para validar a configuração
+4. ✅ **Teste em sandbox** seguindo os passos acima
+5. ✅ **Aguarde 24h** se acabou de criar os produtos (sincronização das lojas)
+
+Se o problema persistir, abra uma issue no repositório incluindo:
+- **Logs completos** do console (do início até o erro)
+- **Plataforma** (iOS/Android + versão)
+- **Versão do Flutter** (`flutter --version`)
+- **Screenshots** da configuração no RevenueCat Dashboard
+- **Passos para reproduzir** o problema
