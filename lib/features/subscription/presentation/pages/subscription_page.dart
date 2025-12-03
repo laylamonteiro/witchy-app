@@ -356,7 +356,45 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           backgroundColor: Colors.green,
         ),
       );
+    } else if (result == PaywallResult.cancelled && !_paymentService.isInitialized) {
+      // Mostrar mensagem informativa sobre configuração
+      _showRevenueCatNotConfiguredDialog();
     }
+  }
+
+  void _showRevenueCatNotConfiguredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber, color: Color(0xFFFFC107)),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Pagamentos Não Configurados',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'O sistema de pagamentos ainda não foi configurado nesta versão do app.\n\n'
+          'Se você é desenvolvedor, verifique os logs do console para mais detalhes sobre como configurar o RevenueCat.',
+          style: TextStyle(color: Colors.white70, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Entendi',
+              style: TextStyle(color: AppColors.lilac),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _openCustomerCenter() async {

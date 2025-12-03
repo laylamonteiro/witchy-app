@@ -97,10 +97,21 @@ class PaymentService extends ChangeNotifier {
   ///
   /// Deve ser chamado no início do app, preferencialmente em main.dart
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      debugPrint('ℹ️  RevenueCat já inicializado');
+      return;
+    }
+
+    debugPrint('🔄 Iniciando RevenueCat...');
+    debugPrint('📋 Plataforma: ${Platform.operatingSystem}');
 
     if (!RevenueCatConfig.isConfigured) {
-      debugPrint('RevenueCat não configurado - usando modo demo');
+      debugPrint('⚠️  RevenueCat não configurado - chaves de API ausentes');
+      debugPrint('💡 Dica para desenvolvedores:');
+      debugPrint('   1. Copie .env.example para .env');
+      debugPrint('   2. Adicione suas chaves do RevenueCat');
+      debugPrint('   3. Execute: flutter run --dart-define-from-file=.env');
+      debugPrint('   OU configure os secrets no GitHub Actions');
       _isInitialized = true;
       return;
     }
@@ -108,34 +119,44 @@ class PaymentService extends ChangeNotifier {
     try {
       // Verificar se plataforma é suportada
       if (!Platform.isIOS && !Platform.isAndroid) {
-        debugPrint('Plataforma não suportada para pagamentos');
+        debugPrint('⚠️  Plataforma ${Platform.operatingSystem} não suportada para pagamentos');
         _isInitialized = true;
         return;
       }
 
       // Configurar RevenueCat
+      debugPrint('🔑 Configurando RevenueCat com API key...');
       final configuration = PurchasesConfiguration(RevenueCatConfig.apiKey);
 
       await Purchases.configure(configuration);
+      debugPrint('✅ SDK configurado');
 
       // Habilitar logs em debug
       if (kDebugMode) {
         await Purchases.setLogLevel(LogLevel.debug);
+        debugPrint('🐛 Logs de debug habilitados');
       }
 
       // Listener para mudanças no status do cliente
       Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdated);
+      debugPrint('👂 Listener de CustomerInfo registrado');
 
       // Carregar informações iniciais
+      debugPrint('📥 Carregando informações do cliente...');
       await _loadCustomerInfo();
+
+      debugPrint('🛒 Carregando ofertas...');
       await _loadOfferings();
 
       _isInitialized = true;
       notifyListeners();
 
-      debugPrint('RevenueCat inicializado com sucesso');
+      debugPrint('✅ RevenueCat inicializado com sucesso!');
+      debugPrint('   Status Pro: $_isPro');
+      debugPrint('   Produtos disponíveis: ${_products.length}');
     } catch (e) {
-      debugPrint('Erro ao inicializar RevenueCat: $e');
+      debugPrint('❌ Erro ao inicializar RevenueCat: $e');
+      debugPrint('⚠️  Continuando sem funcionalidade de pagamentos');
       _isInitialized = true; // Continuar sem pagamentos
     }
   }
@@ -243,9 +264,20 @@ class PaymentService extends ChangeNotifier {
     Offering? offering,
     bool displayCloseButton = true,
   }) async {
-    if (!_isInitialized || !RevenueCatConfig.isConfigured) {
+    if (!_isInitialized) {
+      debugPrint('❌ RevenueCat não inicializado');
       return PaywallResult.cancelled;
     }
+
+    if (!RevenueCatConfig.isConfigured) {
+      debugPrint('❌ RevenueCat não configurado - chaves de API não encontradas');
+      debugPrint('💡 Dica: Execute com --dart-define ou configure .env');
+      debugPrint('   iOS Key: ${RevenueCatConfig.iosApiKey.isEmpty ? "FALTANDO" : "OK"}');
+      debugPrint('   Android Key: ${RevenueCatConfig.androidApiKey.isEmpty ? "FALTANDO" : "OK"}');
+      return PaywallResult.cancelled;
+    }
+
+    debugPrint('🚀 Apresentando paywall do RevenueCat...');
 
     try {
       final result = await RevenueCatUI.presentPaywall(
@@ -253,12 +285,14 @@ class PaymentService extends ChangeNotifier {
         displayCloseButton: displayCloseButton,
       );
 
+      debugPrint('✅ Paywall fechado com resultado: $result');
+
       // Recarregar informações após paywall
       await _loadCustomerInfo();
 
       return result;
     } catch (e) {
-      debugPrint('Erro ao apresentar paywall: $e');
+      debugPrint('❌ Erro ao apresentar paywall: $e');
       return PaywallResult.error;
     }
   }
