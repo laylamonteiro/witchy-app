@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
@@ -174,69 +173,8 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AuthResult> signInWithFacebook() async {
-    try {
-      await debugLog('AUTH', 'Iniciando Facebook Sign-In...');
-
-      // Para web, usar OAuth redirect
-      if (kIsWeb) {
-        await _supabase.auth.signInWithOAuth(
-          OAuthProvider.facebook,
-          redirectTo: SupabaseConfig.redirectUrl,
-        );
-        return AuthResult.success(UserModel.defaultUser());
-      }
-
-      // Usar Facebook Login nativo
-      final LoginResult result = await FacebookAuth.instance.login(
-        permissions: ['email', 'public_profile'],
-      );
-
-      if (result.status == LoginStatus.cancelled) {
-        await debugLog('AUTH', 'Facebook Sign-In: cancelado pelo usuário');
-        return AuthResult.error('Login cancelado');
-      }
-
-      if (result.status != LoginStatus.success || result.accessToken == null) {
-        await debugLog('AUTH', 'Facebook Sign-In: falhou - ${result.message}');
-        return AuthResult.error(result.message ?? 'Erro no login com Facebook');
-      }
-
-      await debugLog('AUTH', 'Facebook Sign-In: token obtido');
-
-      final accessToken = result.accessToken!.tokenString;
-
-      // Autenticar com Supabase usando o access token do Facebook
-      final response = await _supabase.auth.signInWithIdToken(
-        provider: OAuthProvider.facebook,
-        idToken: accessToken,
-        accessToken: accessToken,
-      );
-
-      if (response.user != null) {
-        await debugLog('AUTH', 'Facebook Sign-In: sucesso! User ID: ${response.user!.id}');
-
-        // Obter dados do perfil do Facebook
-        final userData = await FacebookAuth.instance.getUserData(
-          fields: 'name,email,picture.width(200)',
-        );
-
-        final displayName = userData['name'] as String?;
-
-        // Criar/atualizar perfil
-        await _createProfile(response.user!, displayName);
-        final user = await _userFromSupabaseUser(response.user!);
-        return AuthResult.success(user);
-      }
-
-      await debugLog('AUTH', 'Facebook Sign-In: falhou - user é null');
-      return AuthResult.error('Erro ao autenticar com Facebook');
-    } on AuthException catch (e) {
-      await debugLog('AUTH', 'Facebook Sign-In AuthException: ${e.message}');
-      return _handleAuthException(e);
-    } catch (e) {
-      await debugLog('AUTH', 'Facebook Sign-In erro: $e');
-      return AuthResult.error('Erro no login com Facebook: $e');
-    }
+    // Facebook login foi removido - manter método para compatibilidade
+    return AuthResult.error('Login com Facebook não está mais disponível');
   }
 
   @override
