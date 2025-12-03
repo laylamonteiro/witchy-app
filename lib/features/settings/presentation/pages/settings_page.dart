@@ -16,6 +16,7 @@ import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../../auth/data/repositories/supabase_auth_repository.dart';
 import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
+import '../../../auth/presentation/pages/change_password_page.dart';
 import 'privacy_settings_page.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -402,6 +403,15 @@ class SettingsPage extends StatelessWidget {
             icon: Icons.person_outline,
             title: 'Editar Perfil',
             onTap: () => _showEditProfileDialog(context, authProvider),
+          ),
+          _buildDivider(),
+          _buildOptionTile(
+            icon: Icons.lock_outline,
+            title: 'Alterar Senha',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+            ),
           ),
           _buildDivider(),
           _buildOptionTile(

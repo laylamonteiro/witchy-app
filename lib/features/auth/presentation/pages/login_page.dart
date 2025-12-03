@@ -262,14 +262,6 @@ class _LoginPageState extends State<LoginPage> {
           label: 'Google',
           onPressed: _handleGoogleLogin,
         ),
-        const SizedBox(width: 16),
-        // Facebook
-        _buildSocialButton(
-          icon: 'f',
-          label: 'Facebook',
-          iconWidget: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
-          onPressed: _handleFacebookLogin,
-        ),
       ],
     );
   }
@@ -460,56 +452,4 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleFacebookLogin() async {
-    if (!SupabaseConfig.isConfigured) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login social não disponível no momento'),
-          backgroundColor: AppColors.info,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      final authRepo = SupabaseAuthRepository();
-      final result = await authRepo.signInWithFacebook();
-
-      if (!mounted) return;
-
-      if (result.success && result.user != null) {
-        // Atualizar AuthProvider com os dados do usuário
-        final authProvider = context.read<AuthProvider>();
-        await authProvider.updateProfile(
-          email: result.user!.email,
-          displayName: result.user!.displayName,
-        );
-        await authProvider.markOnboardingSeen();
-
-        // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.errorMessage ?? 'Erro no login com Facebook'),
-            backgroundColor: AppColors.alert,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro no login com Facebook: $e'),
-            backgroundColor: AppColors.alert,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
 }
