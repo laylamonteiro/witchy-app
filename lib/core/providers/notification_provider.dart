@@ -56,20 +56,36 @@ class NotificationProvider with ChangeNotifier {
   }) async {
     await _notificationService.cancelAllNotifications();
 
-    final now = DateTime.now();
     final List<DateTime> fullMoons = [];
     final List<DateTime> newMoons = [];
 
-    // Coletar próximas 3 luas cheias e novas
-    // Simplificação: usar datas aproximadas (dia 15 para cheia, dia 1 para nova)
-    // Em produção, usar cálculo preciso baseado em lunar
+    // Coletar próximas 3 luas cheias e novas usando cálculos precisos
     if (_fullMoonNotifications || _newMoonNotifications) {
-      for (int month = 0; month < 3; month++) {
+      // Criar uma cópia do provider para não afetar o estado atual
+      DateTime currentDate = DateTime.now();
+
+      for (int i = 0; i < 3; i++) {
+        // Obter próximas luas usando o LunarProvider
+        final tempProvider = LunarProvider();
+        tempProvider.setSelectedDate(currentDate);
+
         if (_fullMoonNotifications) {
-          fullMoons.add(DateTime(now.year, now.month + month, 15));
+          final nextFullMoon = tempProvider.getNextFullMoon();
+          if (nextFullMoon != null && nextFullMoon.isAfter(DateTime.now())) {
+            fullMoons.add(nextFullMoon);
+            currentDate = nextFullMoon.add(const Duration(days: 1));
+          }
         }
+
         if (_newMoonNotifications) {
-          newMoons.add(DateTime(now.year, now.month + month, 1));
+          final nextNewMoon = tempProvider.getNextNewMoon();
+          if (nextNewMoon != null && nextNewMoon.isAfter(DateTime.now())) {
+            newMoons.add(nextNewMoon);
+            // Avançar para depois da lua nova para encontrar a próxima
+            if (currentDate.isBefore(nextNewMoon)) {
+              currentDate = nextNewMoon.add(const Duration(days: 1));
+            }
+          }
         }
       }
     }
