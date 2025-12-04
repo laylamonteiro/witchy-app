@@ -86,18 +86,18 @@ class _GrimoirePageState extends State<GrimoirePage> with SingleTickerProviderSt
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
-            Tab(text: 'Meu Grimório'),
-            Tab(text: 'Grimório Ancestral'),
             Tab(text: 'Ferramentas'),
+            Tab(text: 'Grimório Ancestral'),
+            Tab(text: 'Meu Grimório'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: const [
-          UserSpellsListPage(),
-          AppSpellsListPage(),
           _ToolsTab(),
+          AppSpellsListPage(),
+          UserSpellsListPage(),
         ],
       ),
     );
