@@ -12,6 +12,8 @@ import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../core/database/database_helper.dart';
 import '../../features/auth/auth.dart';
 import 'debug_logs_page.dart';
+import '../services/payment_service.dart';
+import '../config/revenuecat_config.dart';
 
 // Mapa de capitais brasileiras com coordenadas exatas
 const Map<String, Map<String, dynamic>> _brazilianCapitals = {
@@ -110,7 +112,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -596,6 +598,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
             Tab(text: 'Debug'),
+            Tab(text: 'Pagamentos'),
             Tab(text: 'IA Groq'),
             Tab(text: 'Mapa Astral'),
             Tab(text: 'Clima Mágico'),
@@ -629,6 +632,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         controller: _tabController,
         children: [
           _buildDebugSection(),
+          _buildPaymentsDiagnosticSection(),
           _buildTestSection(
             icon: Icons.psychology,
             title: 'IA Groq',
@@ -651,6 +655,446 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         ],
       ),
     );
+  }
+
+  Widget _buildPaymentsDiagnosticSection() {
+    final paymentService = PaymentService();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          MagicalCard(
+            child: Column(
+              children: [
+                const Icon(Icons.payment, size: 64, color: AppColors.lilac),
+                const SizedBox(height: 16),
+                Text(
+                  'Diagnóstico de Pagamentos',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppColors.lilac,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Informações do RevenueCat e status das compras',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.softWhite.withOpacity(0.8),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Status de Inicialização
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      paymentService.isInitialized
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                      color: paymentService.isInitialized
+                          ? AppColors.success
+                          : AppColors.alert,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Status de Inicialização',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.lilac,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildDiagnosticRow(
+                  'RevenueCat SDK',
+                  paymentService.isInitialized ? 'Inicializado ✓' : 'Não inicializado ✗',
+                  paymentService.isInitialized,
+                ),
+                _buildDiagnosticRow(
+                  'Chaves configuradas',
+                  RevenueCatConfig.isConfigured ? 'Sim ✓' : 'Não ✗',
+                  RevenueCatConfig.isConfigured,
+                ),
+                if (RevenueCatConfig.isConfigured) ...[
+                  _buildDiagnosticRow(
+                    'Chave iOS',
+                    RevenueCatConfig.iosApiKey.isEmpty
+                        ? 'Ausente'
+                        : '${RevenueCatConfig.iosApiKey.substring(0, 10)}...',
+                    RevenueCatConfig.iosApiKey.isNotEmpty,
+                  ),
+                  _buildDiagnosticRow(
+                    'Chave Android',
+                    RevenueCatConfig.androidApiKey.isEmpty
+                        ? 'Ausente'
+                        : '${RevenueCatConfig.androidApiKey.substring(0, 10)}...',
+                    RevenueCatConfig.androidApiKey.isNotEmpty,
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Status Premium
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      paymentService.isPro ? Icons.star : Icons.star_border,
+                      color: paymentService.isPro
+                          ? AppColors.starYellow
+                          : AppColors.textSecondary,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Status Premium',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.lilac,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildDiagnosticRow(
+                  'É Premium',
+                  paymentService.isPro ? 'Sim ✓' : 'Não',
+                  paymentService.isPro,
+                ),
+                _buildDiagnosticRow(
+                  'Assinatura ativa',
+                  paymentService.hasActiveSubscription ? 'Sim ✓' : 'Não',
+                  paymentService.hasActiveSubscription,
+                ),
+                if (paymentService.isLifetime)
+                  _buildDiagnosticRow(
+                    'Tipo',
+                    'Vitalício ✓',
+                    true,
+                  ),
+                if (paymentService.subscriptionExpirationDate != null)
+                  _buildDiagnosticRow(
+                    'Expira em',
+                    _formatDate(paymentService.subscriptionExpirationDate!),
+                    true,
+                  ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Ofertas e Produtos
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart,
+                      color: AppColors.mint,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Produtos Disponíveis',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.mint,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildDiagnosticRow(
+                  'Offering carregada',
+                  paymentService.offerings?.current != null ? 'Sim ✓' : 'Não ✗',
+                  paymentService.offerings?.current != null,
+                ),
+                if (paymentService.offerings?.current != null)
+                  _buildDiagnosticRow(
+                    'Offering ID',
+                    paymentService.offerings!.current!.identifier,
+                    true,
+                  ),
+                _buildDiagnosticRow(
+                  'Produtos',
+                  '${paymentService.products.length} disponíveis',
+                  paymentService.products.isNotEmpty,
+                ),
+                const SizedBox(height: 8),
+                if (paymentService.products.isEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.alert.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.alert.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.warning,
+                          color: AppColors.alert,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Nenhum produto carregado. Verifique a configuração no RevenueCat Dashboard.',
+                            style: TextStyle(
+                              color: AppColors.alert,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  const Divider(color: AppColors.surfaceBorder),
+                  const SizedBox(height: 8),
+                  ...paymentService.products.map((product) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: AppColors.mint,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  product.title,
+                                  style: const TextStyle(
+                                    color: AppColors.softWhite,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '${product.identifier} • ${product.priceString}',
+                                  style: TextStyle(
+                                    color: AppColors.softWhite.withOpacity(0.6),
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Botão para copiar logs
+          ElevatedButton.icon(
+            onPressed: () {
+              final diagnosticInfo = _generatePaymentDiagnosticLogs(paymentService);
+              Clipboard.setData(ClipboardData(text: diagnosticInfo));
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Diagnóstico copiado! Cole e envie para análise.'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.copy),
+            label: const Text('Copiar Diagnóstico Completo'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.lilac,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Informações de ajuda
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.lilac.withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: AppColors.lilac,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Como usar',
+                      style: TextStyle(
+                        color: AppColors.lilac,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '1. Clique em "Copiar Diagnóstico Completo"\n'
+                  '2. Cole as informações em uma mensagem\n'
+                  '3. Envie para análise do problema\n\n'
+                  'Essas informações ajudam a identificar problemas de configuração.',
+                  style: TextStyle(
+                    color: AppColors.softWhite.withOpacity(0.8),
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiagnosticRow(String label, String value, bool isOk) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: AppColors.softWhite.withOpacity(0.8),
+              fontSize: 14,
+            ),
+          ),
+          Row(
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  color: isOk ? AppColors.success : AppColors.alert,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _generatePaymentDiagnosticLogs(PaymentService paymentService) {
+    final buffer = StringBuffer();
+    buffer.writeln('═══════════════════════════════════════');
+    buffer.writeln('DIAGNÓSTICO DE PAGAMENTOS - RevenueCat');
+    buffer.writeln('═══════════════════════════════════════');
+    buffer.writeln('Data: ${DateTime.now()}');
+    buffer.writeln();
+
+    buffer.writeln('📱 INICIALIZAÇÃO');
+    buffer.writeln('  • SDK Inicializado: ${paymentService.isInitialized ? "SIM ✓" : "NÃO ✗"}');
+    buffer.writeln('  • Chaves configuradas: ${RevenueCatConfig.isConfigured ? "SIM ✓" : "NÃO ✗"}');
+    buffer.writeln('  • Chave iOS: ${RevenueCatConfig.iosApiKey.isEmpty ? "AUSENTE" : "${RevenueCatConfig.iosApiKey.substring(0, 10)}..."}');
+    buffer.writeln('  • Chave Android: ${RevenueCatConfig.androidApiKey.isEmpty ? "AUSENTE" : "${RevenueCatConfig.androidApiKey.substring(0, 10)}..."}');
+    buffer.writeln();
+
+    buffer.writeln('⭐ STATUS PREMIUM');
+    buffer.writeln('  • É Premium: ${paymentService.isPro ? "SIM ✓" : "NÃO"}');
+    buffer.writeln('  • Assinatura ativa: ${paymentService.hasActiveSubscription ? "SIM ✓" : "NÃO"}');
+    buffer.writeln('  • Tipo: ${paymentService.isLifetime ? "Vitalício" : "Assinatura"}');
+    if (paymentService.subscriptionExpirationDate != null) {
+      buffer.writeln('  • Expira em: ${_formatDate(paymentService.subscriptionExpirationDate!)}');
+    }
+    buffer.writeln();
+
+    buffer.writeln('🛒 PRODUTOS');
+    buffer.writeln('  • Offering carregada: ${paymentService.offerings?.current != null ? "SIM ✓" : "NÃO ✗"}');
+    if (paymentService.offerings?.current != null) {
+      buffer.writeln('  • Offering ID: ${paymentService.offerings!.current!.identifier}');
+    }
+    buffer.writeln('  • Produtos disponíveis: ${paymentService.products.length}');
+    buffer.writeln();
+
+    if (paymentService.products.isEmpty) {
+      buffer.writeln('  ⚠️  ATENÇÃO: Nenhum produto foi carregado!');
+      buffer.writeln('  💡 Verifique:');
+      buffer.writeln('     1. Offering "default" existe no RevenueCat Dashboard');
+      buffer.writeln('     2. Produtos estão associados à offering');
+      buffer.writeln('     3. Produtos foram criados nas lojas (App Store/Google Play)');
+    } else {
+      buffer.writeln('  Produtos encontrados:');
+      for (final product in paymentService.products) {
+        buffer.writeln('    • ${product.title}');
+        buffer.writeln('      ID: ${product.identifier}');
+        buffer.writeln('      Preço: ${product.priceString}');
+        buffer.writeln('      Tipo: ${product.type.name}');
+        buffer.writeln();
+      }
+    }
+
+    buffer.writeln();
+    buffer.writeln('═══════════════════════════════════════');
+    buffer.writeln('💡 PRÓXIMOS PASSOS:');
+    buffer.writeln('═══════════════════════════════════════');
+    buffer.writeln('1. Execute: flutter run --verbose');
+    buffer.writeln('2. Tente fazer uma compra');
+    buffer.writeln('3. Copie TODOS os logs do console');
+    buffer.writeln('4. Envie junto com este diagnóstico');
+    buffer.writeln();
+    buffer.writeln('📚 Consulte: DEVELOPMENT.md seção "Troubleshooting"');
+    buffer.writeln('═══════════════════════════════════════');
+
+    return buffer.toString();
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
   Widget _buildDebugSection() {
