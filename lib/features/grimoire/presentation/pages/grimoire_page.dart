@@ -167,34 +167,6 @@ class _ToolsTab extends StatelessWidget {
           const SizedBox(height: 12),
           _buildToolCard(
             context,
-            icon: 'ᚱ',
-            title: 'Leitura de Runas',
-            description: 'Consulte as antigas runas nórdicas',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const RuneReadingPage(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildToolCard(
-            context,
-            icon: '⟟',
-            title: 'Pêndulo',
-            description: 'Perguntas de sim ou não',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const PendulumPage(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildToolCard(
-            context,
             icon: '🔮',
             title: 'Cartas do Oráculo',
             description: 'Mensagens e orientação do universo',
@@ -216,6 +188,34 @@ class _ToolsTab extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const SigilStep1IntentionPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: 'ᚱ',
+            title: 'Leitura de Runas',
+            description: 'Consulte as antigas runas nórdicas',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const RuneReadingPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildToolCard(
+            context,
+            icon: '⟟',
+            title: 'Pêndulo',
+            description: 'Perguntas de sim ou não',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const PendulumPage(),
                 ),
               );
             },
