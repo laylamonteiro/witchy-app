@@ -306,6 +306,9 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                       moonEmoji: phase.emoji,
                       size: 90,
                       showStars: true,
+                      showName: true,
+                      showDescription: true,
+                      phase: phase,
                     )
                   : MoonPhaseWidget(
                       phase: phase,
