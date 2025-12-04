@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../../features/grimoire/data/models/spell_model.dart';
 
 /// Widget que exibe a lua com animação de "respiração" (pulsação suave)
 class BreathingMoon extends StatefulWidget {
   final String moonEmoji;
   final double size;
   final bool showStars;
+  final bool showName;
+  final bool showDescription;
+  final MoonPhase? phase;
 
   const BreathingMoon({
     super.key,
     required this.moonEmoji,
     this.size = 80,
     this.showStars = true,
+    this.showName = false,
+    this.showDescription = false,
+    this.phase,
   });
 
   @override
@@ -59,49 +66,76 @@ class _BreathingMoonState extends State<BreathingMoon>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      clipBehavior: Clip.none,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Brilho pulsante ao redor da lua
-        AnimatedBuilder(
-          animation: _glowAnimation,
-          builder: (context, child) {
-            return Container(
-              width: widget.size + 30,
-              height: widget.size + 30,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.lilac.withOpacity(_glowAnimation.value),
-                    AppColors.background.withOpacity(0),
+        Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            // Brilho pulsante ao redor da lua
+            AnimatedBuilder(
+              animation: _glowAnimation,
+              builder: (context, child) {
+                return Container(
+                  width: widget.size + 30,
+                  height: widget.size + 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.lilac.withOpacity(_glowAnimation.value),
+                        AppColors.background.withOpacity(0),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Lua com respiração
+            ScaleTransition(
+              scale: _scaleAnimation,
+              child: Text(
+                widget.moonEmoji,
+                style: TextStyle(
+                  fontSize: widget.size,
+                  shadows: [
+                    Shadow(
+                      color: AppColors.lilac.withOpacity(0.5),
+                      blurRadius: 20,
+                    ),
                   ],
                 ),
               ),
-            );
-          },
-        ),
-
-        // Lua com respiração
-        ScaleTransition(
-          scale: _scaleAnimation,
-          child: Text(
-            widget.moonEmoji,
-            style: TextStyle(
-              fontSize: widget.size,
-              shadows: [
-                Shadow(
-                  color: AppColors.lilac.withOpacity(0.5),
-                  blurRadius: 20,
-                ),
-              ],
             ),
-          ),
-        ),
 
-        // Estrelas piscantes ao redor
-        if (widget.showStars) ..._buildStars(),
+            // Estrelas piscantes ao redor
+            if (widget.showStars) ..._buildStars(),
+          ],
+        ),
+        if (widget.showName && widget.phase != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            widget.phase!.displayName,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.lilac,
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+        if (widget.showDescription && widget.phase != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            widget.phase!.description,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ],
     );
   }

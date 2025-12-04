@@ -97,10 +97,21 @@ class PaymentService extends ChangeNotifier {
   ///
   /// Deve ser chamado no início do app, preferencialmente em main.dart
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      debugPrint('ℹ️  RevenueCat já inicializado');
+      return;
+    }
+
+    debugPrint('🔄 Iniciando RevenueCat...');
+    debugPrint('📋 Plataforma: ${Platform.operatingSystem}');
 
     if (!RevenueCatConfig.isConfigured) {
-      debugPrint('RevenueCat não configurado - usando modo demo');
+      debugPrint('⚠️  RevenueCat não configurado - chaves de API ausentes');
+      debugPrint('💡 Dica para desenvolvedores:');
+      debugPrint('   1. Copie .env.example para .env');
+      debugPrint('   2. Adicione suas chaves do RevenueCat');
+      debugPrint('   3. Execute: flutter run --dart-define-from-file=.env');
+      debugPrint('   OU configure os secrets no GitHub Actions');
       _isInitialized = true;
       return;
     }
@@ -108,34 +119,44 @@ class PaymentService extends ChangeNotifier {
     try {
       // Verificar se plataforma é suportada
       if (!Platform.isIOS && !Platform.isAndroid) {
-        debugPrint('Plataforma não suportada para pagamentos');
+        debugPrint('⚠️  Plataforma ${Platform.operatingSystem} não suportada para pagamentos');
         _isInitialized = true;
         return;
       }
 
       // Configurar RevenueCat
+      debugPrint('🔑 Configurando RevenueCat com API key...');
       final configuration = PurchasesConfiguration(RevenueCatConfig.apiKey);
 
       await Purchases.configure(configuration);
+      debugPrint('✅ SDK configurado');
 
       // Habilitar logs em debug
       if (kDebugMode) {
         await Purchases.setLogLevel(LogLevel.debug);
+        debugPrint('🐛 Logs de debug habilitados');
       }
 
       // Listener para mudanças no status do cliente
       Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdated);
+      debugPrint('👂 Listener de CustomerInfo registrado');
 
       // Carregar informações iniciais
+      debugPrint('📥 Carregando informações do cliente...');
       await _loadCustomerInfo();
+
+      debugPrint('🛒 Carregando ofertas...');
       await _loadOfferings();
 
       _isInitialized = true;
       notifyListeners();
 
-      debugPrint('RevenueCat inicializado com sucesso');
+      debugPrint('✅ RevenueCat inicializado com sucesso!');
+      debugPrint('   Status Pro: $_isPro');
+      debugPrint('   Produtos disponíveis: ${_products.length}');
     } catch (e) {
-      debugPrint('Erro ao inicializar RevenueCat: $e');
+      debugPrint('❌ Erro ao inicializar RevenueCat: $e');
+      debugPrint('⚠️  Continuando sem funcionalidade de pagamentos');
       _isInitialized = true; // Continuar sem pagamentos
     }
   }
@@ -180,18 +201,32 @@ class PaymentService extends ChangeNotifier {
   /// Carrega ofertas disponíveis
   Future<void> _loadOfferings() async {
     try {
+      debugPrint('📦 Buscando ofertas no RevenueCat...');
       _offerings = await Purchases.getOfferings();
 
       if (_offerings?.current == null) {
-        debugPrint('Nenhuma oferta disponível');
+        debugPrint('⚠️  Nenhuma oferta disponível no RevenueCat');
+        debugPrint('💡 Verifique se:');
+        debugPrint('   1. A offering "default" existe no dashboard');
+        debugPrint('   2. Os produtos estão associados à offering');
+        debugPrint('   3. Os produtos foram criados nas lojas (App Store/Google Play)');
         return;
       }
+
+      debugPrint('✅ Offering encontrada: ${_offerings!.current!.identifier}');
+      debugPrint('📦 Pacotes disponíveis: ${_offerings!.current!.availablePackages.length}');
 
       _products = [];
 
       for (final package in _offerings!.current!.availablePackages) {
         final product = package.storeProduct;
         SubscriptionType? type;
+
+        debugPrint('   📦 ${package.identifier}:');
+        debugPrint('      - Product ID: ${product.identifier}');
+        debugPrint('      - Título: ${product.title}');
+        debugPrint('      - Preço: ${product.priceString}');
+        debugPrint('      - Tipo: ${package.packageType}');
 
         switch (package.packageType) {
           case PackageType.monthly:
@@ -204,6 +239,7 @@ class PaymentService extends ChangeNotifier {
             type = SubscriptionType.lifetime;
             break;
           default:
+            debugPrint('      ⚠️  Tipo de pacote não reconhecido, pulando...');
             continue;
         }
 
@@ -220,9 +256,15 @@ class PaymentService extends ChangeNotifier {
       }
 
       notifyListeners();
-      debugPrint('Produtos carregados: ${_products.length}');
+      debugPrint('✅ Produtos carregados: ${_products.length}');
+
+      if (_products.isEmpty) {
+        debugPrint('⚠️  ATENÇÃO: Nenhum produto foi carregado!');
+        debugPrint('💡 Verifique a configuração dos produtos no RevenueCat Dashboard');
+      }
     } catch (e) {
-      debugPrint('Erro ao carregar ofertas: $e');
+      debugPrint('❌ Erro ao carregar ofertas: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -243,9 +285,20 @@ class PaymentService extends ChangeNotifier {
     Offering? offering,
     bool displayCloseButton = true,
   }) async {
-    if (!_isInitialized || !RevenueCatConfig.isConfigured) {
+    if (!_isInitialized) {
+      debugPrint('❌ RevenueCat não inicializado');
       return PaywallResult.cancelled;
     }
+
+    if (!RevenueCatConfig.isConfigured) {
+      debugPrint('❌ RevenueCat não configurado - chaves de API não encontradas');
+      debugPrint('💡 Dica: Execute com --dart-define ou configure .env');
+      debugPrint('   iOS Key: ${RevenueCatConfig.iosApiKey.isEmpty ? "FALTANDO" : "OK"}');
+      debugPrint('   Android Key: ${RevenueCatConfig.androidApiKey.isEmpty ? "FALTANDO" : "OK"}');
+      return PaywallResult.cancelled;
+    }
+
+    debugPrint('🚀 Apresentando paywall do RevenueCat...');
 
     try {
       final result = await RevenueCatUI.presentPaywall(
@@ -253,12 +306,14 @@ class PaymentService extends ChangeNotifier {
         displayCloseButton: displayCloseButton,
       );
 
+      debugPrint('✅ Paywall fechado com resultado: $result');
+
       // Recarregar informações após paywall
       await _loadCustomerInfo();
 
       return result;
     } catch (e) {
-      debugPrint('Erro ao apresentar paywall: $e');
+      debugPrint('❌ Erro ao apresentar paywall: $e');
       return PaywallResult.error;
     }
   }
@@ -318,56 +373,91 @@ class PaymentService extends ChangeNotifier {
 
   /// Realiza uma compra de um tipo específico
   Future<PurchaseResult> purchase(SubscriptionType type) async {
+    debugPrint('🛒 Iniciando compra: $type');
+
     if (!RevenueCatConfig.isConfigured) {
+      debugPrint('❌ Compra falhou: RevenueCat não configurado');
       return PurchaseResult.error('Pagamentos não configurados');
     }
 
     _setStatus(PurchaseStatus.loading);
 
     try {
+      debugPrint('📦 Buscando ofertas...');
       final offerings = await Purchases.getOfferings();
 
       if (offerings.current == null) {
+        debugPrint('❌ Nenhuma oferta disponível');
+        debugPrint('💡 Verifique se a offering "default" existe no RevenueCat Dashboard');
         _setStatus(PurchaseStatus.error);
-        return PurchaseResult.error('Nenhuma oferta disponível');
+        return PurchaseResult.error('Nenhuma oferta disponível. Verifique a configuração no RevenueCat Dashboard.');
       }
+
+      debugPrint('✅ Offering encontrada: ${offerings.current!.identifier}');
 
       // Encontrar o pacote correto
       Package? package;
+      String packageName = '';
+
       switch (type) {
         case SubscriptionType.monthly:
           package = offerings.current!.monthly;
+          packageName = 'monthly';
           break;
         case SubscriptionType.yearly:
           package = offerings.current!.annual;
+          packageName = 'annual';
           break;
         case SubscriptionType.lifetime:
           package = offerings.current!.lifetime;
+          packageName = 'lifetime';
           break;
       }
 
       if (package == null) {
+        debugPrint('❌ Pacote $packageName não encontrado na offering');
+        debugPrint('💡 Verifique se o produto está associado à offering no RevenueCat Dashboard');
+        debugPrint('   Pacotes disponíveis: ${offerings.current!.availablePackages.map((p) => p.identifier).join(", ")}');
         _setStatus(PurchaseStatus.error);
-        return PurchaseResult.error('Produto não encontrado');
+        return PurchaseResult.error('Produto "$packageName" não encontrado. Verifique a configuração.');
       }
+
+      debugPrint('✅ Pacote encontrado: ${package.identifier}');
+      debugPrint('   Product ID: ${package.storeProduct.identifier}');
+      debugPrint('   Preço: ${package.storeProduct.priceString}');
+      debugPrint('🚀 Iniciando compra na loja...');
 
       // Realizar compra
       final customerInfo = await Purchases.purchasePackage(package);
+
+      debugPrint('✅ Compra concluída com sucesso!');
+      debugPrint('   Entitlements ativos: ${customerInfo.entitlements.active.keys.join(", ")}');
+
       _onCustomerInfoUpdated(customerInfo);
 
       _setStatus(PurchaseStatus.success);
       return PurchaseResult.success(customerInfo);
     } on PlatformException catch (e) {
+      debugPrint('❌ Erro de plataforma na compra:');
+      debugPrint('   Código: ${e.code}');
+      debugPrint('   Mensagem: ${e.message}');
+      debugPrint('   Detalhes: ${e.details}');
+
       final errorCode = PurchasesErrorHelper.getErrorCode(e);
+      final errorMessage = _getErrorMessage(errorCode);
 
       if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
+        debugPrint('ℹ️  Compra cancelada pelo usuário');
         _setStatus(PurchaseStatus.cancelled);
         return PurchaseResult.cancelled();
       }
 
+      debugPrint('❌ Erro na compra: $errorMessage');
       _setStatus(PurchaseStatus.error);
-      return PurchaseResult.error(_getErrorMessage(errorCode));
+      return PurchaseResult.error(errorMessage);
     } catch (e) {
+      debugPrint('❌ Erro inesperado na compra: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
       _setStatus(PurchaseStatus.error);
       return PurchaseResult.error('Erro inesperado: $e');
     }
@@ -558,27 +648,45 @@ class PaymentService extends ChangeNotifier {
       case PurchasesErrorCode.purchaseCancelledError:
         return 'Compra cancelada';
       case PurchasesErrorCode.storeProblemError:
-        return 'Problema com a loja. Tente novamente mais tarde.';
+        return 'Problema com a loja. Tente novamente mais tarde.\n\n'
+            'Verifique se você está usando uma conta de teste configurada (sandbox).';
       case PurchasesErrorCode.purchaseNotAllowedError:
-        return 'Compras não permitidas neste dispositivo';
+        return 'Compras não permitidas neste dispositivo.\n\n'
+            'Verifique as configurações de Restrições e Compras In-App.';
       case PurchasesErrorCode.purchaseInvalidError:
-        return 'Compra inválida';
+        return 'Compra inválida.\n\n'
+            'Os produtos podem não estar configurados corretamente nas lojas.';
       case PurchasesErrorCode.productNotAvailableForPurchaseError:
-        return 'Produto não disponível para compra';
+        return 'Produto não disponível para compra.\n\n'
+            'Verifique se:\n'
+            '• Os produtos foram criados no App Store Connect / Google Play Console\n'
+            '• Os produtos estão com status "Ready to Submit" ou aprovados\n'
+            '• Os IDs dos produtos correspondem exatamente aos configurados';
       case PurchasesErrorCode.productAlreadyPurchasedError:
-        return 'Produto já comprado';
+        return 'Você já possui este produto.\n\n'
+            'Tente restaurar suas compras.';
       case PurchasesErrorCode.networkError:
-        return 'Erro de conexão. Verifique sua internet.';
+        return 'Erro de conexão. Verifique sua internet e tente novamente.';
       case PurchasesErrorCode.receiptAlreadyInUseError:
-        return 'Este recibo já está em uso por outra conta';
+        return 'Este recibo já está em uso por outra conta.\n\n'
+            'Você pode ter criado uma compra com outra conta anteriormente.';
       case PurchasesErrorCode.invalidReceiptError:
-        return 'Recibo inválido';
+        return 'Recibo inválido.\n\n'
+            'Tente desinstalar e reinstalar o app.';
       case PurchasesErrorCode.missingReceiptFileError:
-        return 'Arquivo de recibo não encontrado';
+        return 'Arquivo de recibo não encontrado.\n\n'
+            'Tente fazer logout e login novamente no App Store / Google Play.';
       case PurchasesErrorCode.paymentPendingError:
-        return 'Pagamento pendente. Aguarde a confirmação.';
+        return 'Pagamento pendente. Aguarde a confirmação da loja.';
+      case PurchasesErrorCode.configurationError:
+        return 'Erro de configuração do RevenueCat.\n\n'
+            'Verifique as API keys e a configuração no dashboard.';
+      case PurchasesErrorCode.invalidCredentialsError:
+        return 'Credenciais inválidas.\n\n'
+            'Verifique se as API keys do RevenueCat estão corretas.';
       default:
-        return 'Erro ao processar compra. Tente novamente.';
+        return 'Erro ao processar compra (código: $errorCode).\n\n'
+            'Verifique os logs do console para mais detalhes.';
     }
   }
 }
