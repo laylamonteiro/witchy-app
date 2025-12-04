@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
