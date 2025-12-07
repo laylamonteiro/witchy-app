@@ -42,64 +42,88 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                 children: [
                   // Carrossel: Ontem - Hoje - Amanhã
                   SizedBox(
-                    height: 300,
-                    child: Column(
+                    height: 380,
+                    child: Stack(
                       children: [
-                        Expanded(
-                          child: PageView(
-                            controller: _pageController,
-                            onPageChanged: (index) {
-                              setState(() {
-                                _currentPage = index;
-                              });
-                            },
-                            children: [
-                              // Ontem
-                              _buildDayCard(
-                                context,
-                                lunarProvider,
-                                'Ontem',
-                                -1,
-                                dateFormat,
+                        // PageView
+                        PageView(
+                          controller: _pageController,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentPage = index;
+                            });
+                          },
+                          children: [
+                            // Ontem
+                            _buildDayCard(
+                              context,
+                              lunarProvider,
+                              'Ontem',
+                              -1,
+                              dateFormat,
+                            ),
+                            // Hoje
+                            _buildDayCard(
+                              context,
+                              lunarProvider,
+                              'Hoje',
+                              0,
+                              dateFormat,
+                            ),
+                            // Amanhã
+                            _buildDayCard(
+                              context,
+                              lunarProvider,
+                              'Amanhã',
+                              1,
+                              dateFormat,
+                            ),
+                          ],
+                        ),
+                        // Seta esquerda
+                        if (_currentPage > 0)
+                          Positioned(
+                            left: 8,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_back_ios_new,
+                                  color: AppColors.lilac,
+                                  size: 28,
+                                ),
+                                onPressed: () {
+                                  _pageController.previousPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
                               ),
-                              // Hoje
-                              _buildDayCard(
-                                context,
-                                lunarProvider,
-                                'Hoje',
-                                0,
-                                dateFormat,
-                              ),
-                              // Amanhã
-                              _buildDayCard(
-                                context,
-                                lunarProvider,
-                                'Amanhã',
-                                1,
-                                dateFormat,
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Indicador de página
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(3, (index) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _currentPage == index
-                                    ? AppColors.lilac
-                                    : AppColors.surfaceBorder,
+                        // Seta direita
+                        if (_currentPage < 2)
+                          Positioned(
+                            right: 8,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: AppColors.lilac,
+                                  size: 28,
+                                ),
+                                onPressed: () {
+                                  _pageController.nextPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
                               ),
-                            );
-                          }),
-                        ),
-                        const SizedBox(height: 8),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -304,7 +328,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               child: phase == MoonPhase.fullMoon
                   ? BreathingMoon(
                       moonEmoji: phase.emoji,
-                      size: 90,
+                      size: 70,
                       showStars: true,
                       showName: true,
                       showDescription: true,
