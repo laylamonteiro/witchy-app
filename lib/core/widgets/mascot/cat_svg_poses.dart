@@ -25,48 +25,54 @@ String getCatSvgForPose(CatPose pose, bool isBlinking) {
   }
 }
 
-// Gatinho sentado fofo com silhueta elegante e nariz de coração
+// Gatinho bruxinha com capa roxa - baseado na imagem de referência
 String _getSittingCat(bool isBlinking) {
   final eyes = isBlinking
     ? '''
-      <!-- Olhos fechados felizes (estilo ^_^) - menores -->
-      <path d="M 22 22 Q 25 19.5 28 22" stroke="#C9A7FF" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <path d="M 36 22 Q 39 19.5 42 22" stroke="#C9A7FF" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <!-- Blush de felicidade -->
-      <ellipse cx="19" cy="27" rx="3.5" ry="2" fill="#FF9EBB" opacity="0.6"/>
-      <ellipse cx="45" cy="27" rx="3.5" ry="2" fill="#FF9EBB" opacity="0.6"/>
+      <!-- Olhos fechados (linha horizontal amarela) -->
+      <path d="M 19 22 L 27 22" stroke="#FFD93D" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M 37 22 L 45 22" stroke="#FFD93D" stroke-width="2.5" fill="none" stroke-linecap="round"/>
     '''
     : '''
-      <!-- Olhos menores e fofos -->
-      <ellipse cx="25" cy="22" rx="4" ry="4.5" fill="#FFFFFF"/>
-      <ellipse cx="39" cy="22" rx="4" ry="4.5" fill="#FFFFFF"/>
-      <!-- Outline dos olhos para mais definição -->
-      <ellipse cx="25" cy="22" rx="4" ry="4.5" fill="none" stroke="#0B0A16" stroke-width="0.5"/>
-      <ellipse cx="39" cy="22" rx="4" ry="4.5" fill="none" stroke="#0B0A16" stroke-width="0.5"/>
-      <!-- Pupilas -->
-      <ellipse cx="25.5" cy="22.5" rx="2.2" ry="2.8" fill="#1A1A2E"/>
-      <ellipse cx="39.5" cy="22.5" rx="2.2" ry="2.8" fill="#1A1A2E"/>
-      <!-- Brilho principal -->
-      <circle cx="24" cy="20.5" r="1.5" fill="#FFFFFF"/>
-      <circle cx="38" cy="20.5" r="1.5" fill="#FFFFFF"/>
-      <!-- Brilho secundário -->
-      <circle cx="26.5" cy="23.5" r="0.8" fill="#FFFFFF" opacity="0.8"/>
-      <circle cx="40.5" cy="23.5" r="0.8" fill="#FFFFFF" opacity="0.8"/>
-      <!-- Blush fofo permanente -->
-      <ellipse cx="19" cy="27" rx="3.5" ry="2" fill="#FF9EBB" opacity="0.5"/>
-      <ellipse cx="45" cy="27" rx="3.5" ry="2" fill="#FF9EBB" opacity="0.5"/>
+      <!-- Olhos amarelos grandes estilo gato -->
+      <ellipse cx="23" cy="22" rx="6" ry="7" fill="#FFD93D"/>
+      <ellipse cx="41" cy="22" rx="6" ry="7" fill="#FFD93D"/>
+      <!-- Contorno dos olhos -->
+      <ellipse cx="23" cy="22" rx="6" ry="7" fill="none" stroke="#E8B92D" stroke-width="0.8"/>
+      <ellipse cx="41" cy="22" rx="6" ry="7" fill="none" stroke="#E8B92D" stroke-width="0.8"/>
+      <!-- Pupilas verticais de gato -->
+      <ellipse cx="23" cy="22" rx="1.5" ry="5" fill="#0B0A16"/>
+      <ellipse cx="41" cy="22" rx="1.5" ry="5" fill="#0B0A16"/>
+      <!-- Brilho nos olhos -->
+      <circle cx="21" cy="19" r="1.8" fill="#FFFFFF"/>
+      <circle cx="39" cy="19" r="1.8" fill="#FFFFFF"/>
+      <!-- Brilho secundário menor -->
+      <circle cx="24.5" cy="24" r="1" fill="#FFFFFF" opacity="0.7"/>
+      <circle cx="42.5" cy="24" r="1" fill="#FFFFFF" opacity="0.7"/>
     ''';
 
   return '''
     <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
       <defs>
+        <!-- Gradiente para a capa roxo-magenta -->
+        <linearGradient id="capeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#8B5CF6"/>
+          <stop offset="50%" stop-color="#A855F7"/>
+          <stop offset="100%" stop-color="#D946EF"/>
+        </linearGradient>
+        <!-- Gradiente para brilho da capa -->
+        <linearGradient id="capeShine" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#C084FC" stop-opacity="0.6"/>
+          <stop offset="50%" stop-color="#E879F9" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#C084FC" stop-opacity="0.6"/>
+        </linearGradient>
         <!-- Gradiente para brilho mágico -->
         <radialGradient id="magicGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#C9A7FF" stop-opacity="0.2"/>
-          <stop offset="100%" stop-color="#C9A7FF" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#A855F7" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#A855F7" stop-opacity="0"/>
         </radialGradient>
         <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="1.5" result="blur"/>
+          <feGaussianBlur stdDeviation="1" result="blur"/>
           <feMerge>
             <feMergeNode in="blur"/>
             <feMergeNode in="SourceGraphic"/>
@@ -75,107 +81,116 @@ String _getSittingCat(bool isBlinking) {
       </defs>
 
       <!-- Aura mágica suave -->
-      <ellipse cx="32" cy="38" rx="26" ry="22" fill="url(#magicGlow)"/>
+      <ellipse cx="32" cy="40" rx="24" ry="20" fill="url(#magicGlow)"/>
 
       <!-- Sombra suave -->
-      <ellipse cx="32" cy="59" rx="18" ry="4" fill="#C9A7FF" opacity="0.2"/>
+      <ellipse cx="32" cy="60" rx="16" ry="3" fill="#A855F7" opacity="0.15"/>
 
-      <!-- === RABO ELEGANTE COM CURVA === -->
-      <path d="M 46 46 Q 54 42 56 32 Q 58 22 54 14 Q 51 10 48 12"
-            stroke="#0B0A16" stroke-width="7" stroke-linecap="round" fill="none"/>
-      <!-- Contorno do rabo -->
-      <path d="M 46 46 Q 54 42 56 32 Q 58 22 54 14 Q 51 10 48 12"
-            stroke="#2D2A3D" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.3"/>
+      <!-- === CAUDA ELEGANTE CURVADA === -->
+      <path d="M 48 50 Q 56 46 58 38 Q 60 28 56 20 Q 54 16 52 18"
+            stroke="#2D2640" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <!-- Highlight da cauda -->
+      <path d="M 48 50 Q 56 46 58 38 Q 60 28 56 20 Q 54 16 52 18"
+            stroke="#3D3555" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.4"/>
 
-      <!-- === CORPO COM SILHUETA DEFINIDA === -->
-      <ellipse cx="32" cy="46" rx="15" ry="13" fill="#0B0A16"/>
-      <!-- Contorno sutil do corpo -->
-      <ellipse cx="32" cy="46" rx="15" ry="13" fill="none" stroke="#1E1B2E" stroke-width="1" opacity="0.5"/>
-      <!-- Peito com pelagem clara -->
-      <ellipse cx="32" cy="48" rx="6" ry="7" fill="#1E1B2E" opacity="0.3"/>
+      <!-- === CAPA ROXA MÁGICA - PARTE DE TRÁS === -->
+      <path d="M 12 36
+               Q 8 44 10 54
+               L 14 58
+               Q 18 56 22 58
+               L 26 56
+               Q 32 58 38 56
+               L 42 58
+               Q 46 56 50 58
+               L 54 54
+               Q 56 44 52 36
+               Q 44 38 32 38
+               Q 20 38 12 36 Z"
+            fill="url(#capeGradient)"/>
+      <!-- Brilho na capa -->
+      <path d="M 14 40
+               Q 10 48 12 56
+               L 16 54
+               Q 18 46 16 40 Z"
+            fill="url(#capeShine)" opacity="0.5"/>
+      <path d="M 50 40
+               Q 54 48 52 56
+               L 48 54
+               Q 46 46 48 40 Z"
+            fill="url(#capeShine)" opacity="0.5"/>
+      <!-- Pontas da capa -->
+      <path d="M 10 54 L 8 60 L 14 58 Z" fill="#7C3AED"/>
+      <path d="M 26 56 L 24 62 L 30 58 Z" fill="#9333EA"/>
+      <path d="M 38 56 L 40 62 L 34 58 Z" fill="#9333EA"/>
+      <path d="M 54 54 L 56 60 L 50 58 Z" fill="#7C3AED"/>
 
-      <!-- === CABEÇA REDONDA COM CONTORNO === -->
-      <circle cx="32" cy="24" r="17" fill="#0B0A16"/>
-      <!-- Contorno da cabeça para mais definição -->
-      <circle cx="32" cy="24" r="17" fill="none" stroke="#1E1B2E" stroke-width="1" opacity="0.4"/>
+      <!-- === CORPO DO GATO === -->
+      <ellipse cx="32" cy="48" rx="12" ry="10" fill="#2D2640"/>
+      <!-- Textura do corpo -->
+      <ellipse cx="32" cy="48" rx="12" ry="10" fill="none" stroke="#3D3555" stroke-width="0.5" opacity="0.5"/>
 
-      <!-- === ORELHAS PONTUDAS ELEGANTES === -->
+      <!-- === CABEÇA DO GATO === -->
+      <ellipse cx="32" cy="24" rx="16" ry="14" fill="#2D2640"/>
+      <!-- Contorno da cabeça -->
+      <ellipse cx="32" cy="24" rx="16" ry="14" fill="none" stroke="#3D3555" stroke-width="0.8" opacity="0.4"/>
+
+      <!-- === ORELHAS PONTUDAS === -->
       <!-- Orelha esquerda -->
-      <path d="M 18 16 L 12 -1 L 27 11 Z" fill="#0B0A16"/>
-      <path d="M 18 16 L 12 -1 L 27 11 Z" fill="none" stroke="#1E1B2E" stroke-width="0.5" opacity="0.5"/>
-      <!-- Interior da orelha esquerda -->
-      <path d="M 19 13 L 15 3 L 25 11 Z" fill="#FF9EBB"/>
+      <path d="M 18 18 L 14 2 L 26 14 Z" fill="#2D2640"/>
+      <path d="M 18 18 L 14 2 L 26 14 Z" fill="none" stroke="#3D3555" stroke-width="0.5" opacity="0.5"/>
+      <!-- Interior rosa da orelha esquerda -->
+      <path d="M 19 15 L 16 5 L 24 13 Z" fill="#F8A5C2"/>
 
       <!-- Orelha direita -->
-      <path d="M 46 16 L 52 -1 L 37 11 Z" fill="#0B0A16"/>
-      <path d="M 46 16 L 52 -1 L 37 11 Z" fill="none" stroke="#1E1B2E" stroke-width="0.5" opacity="0.5"/>
-      <!-- Interior da orelha direita -->
-      <path d="M 45 13 L 49 3 L 39 11 Z" fill="#FF9EBB"/>
+      <path d="M 46 18 L 50 2 L 38 14 Z" fill="#2D2640"/>
+      <path d="M 46 18 L 50 2 L 38 14 Z" fill="none" stroke="#3D3555" stroke-width="0.5" opacity="0.5"/>
+      <!-- Interior rosa da orelha direita -->
+      <path d="M 45 15 L 48 5 L 40 13 Z" fill="#F8A5C2"/>
 
       $eyes
 
-      <!-- === NARIZ DE CORAÇÃO PEQUENO E MAIS ALTO === -->
-      <path d="M 32 27
-               C 30 25.5, 29.5 27, 30 28.5
-               L 32 31
-               L 34 28.5
-               C 34.5 27, 34 25.5, 32 27 Z"
-            fill="#FF6B9D"/>
-      <!-- Brilho no nariz coração -->
-      <ellipse cx="30.8" cy="27" rx="0.8" ry="0.5" fill="#FFFFFF" opacity="0.6"/>
-      <!-- Contorno sutil do nariz -->
-      <path d="M 32 27
-               C 30 25.5, 29.5 27, 30 28.5
-               L 32 31
-               L 34 28.5
-               C 34.5 27, 34 25.5, 32 27 Z"
-            fill="none" stroke="#E85A8A" stroke-width="0.3"/>
+      <!-- === NARIZ ROSA TRIANGULAR === -->
+      <path d="M 32 29 L 30 32 L 34 32 Z" fill="#F8A5C2"/>
+      <!-- Brilho no nariz -->
+      <ellipse cx="31" cy="30" rx="0.8" ry="0.5" fill="#FFFFFF" opacity="0.5"/>
 
-      <!-- === BOQUINHA FOFA LOGO EMBAIXO DO NARIZ === -->
-      <path d="M 29.5 33 Q 30.8 34.5 32 33 Q 33.2 34.5 34.5 33"
-            stroke="#FF6B9D" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <!-- === CAPA ROXA - PARTE DA FRENTE (LAÇO) === -->
+      <!-- Laço central -->
+      <ellipse cx="32" cy="36" rx="4" ry="2.5" fill="#7C3AED"/>
+      <!-- Centro do laço -->
+      <circle cx="32" cy="36" r="2" fill="#6D28D9"/>
+      <!-- Asas do laço -->
+      <path d="M 28 36 Q 22 32 20 36 Q 22 40 28 36" fill="#9333EA"/>
+      <path d="M 36 36 Q 42 32 44 36 Q 42 40 36 36" fill="#9333EA"/>
+      <!-- Brilho no laço -->
+      <ellipse cx="23" cy="35" rx="1.5" ry="1" fill="#C084FC" opacity="0.6"/>
+      <ellipse cx="41" cy="35" rx="1.5" ry="1" fill="#C084FC" opacity="0.6"/>
+      <!-- Pontas do laço caindo -->
+      <path d="M 30 38 Q 28 42 26 46" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M 34 38 Q 36 42 38 46" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" fill="none"/>
 
-      <!-- === BIGODES ELEGANTES === -->
-      <!-- Esquerda -->
-      <line x1="8" y1="24" x2="18" y2="25" stroke="#B7B2D6" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="7" y1="28" x2="18" y2="28" stroke="#B7B2D6" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="9" y1="32" x2="18" y2="31" stroke="#B7B2D6" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
-      <!-- Direita -->
-      <line x1="46" y1="25" x2="56" y2="24" stroke="#B7B2D6" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="46" y1="28" x2="57" y2="28" stroke="#B7B2D6" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="46" y1="31" x2="55" y2="32" stroke="#B7B2D6" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
-
-      <!-- === PATINHAS COM SILHUETA === -->
-      <ellipse cx="24" cy="55" rx="6" ry="5" fill="#0B0A16"/>
-      <ellipse cx="40" cy="55" rx="6" ry="5" fill="#0B0A16"/>
+      <!-- === PATINHAS === -->
+      <ellipse cx="24" cy="56" rx="5" ry="4" fill="#2D2640"/>
+      <ellipse cx="40" cy="56" rx="5" ry="4" fill="#2D2640"/>
       <!-- Contorno das patinhas -->
-      <ellipse cx="24" cy="55" rx="6" ry="5" fill="none" stroke="#1E1B2E" stroke-width="0.5" opacity="0.5"/>
-      <ellipse cx="40" cy="55" rx="6" ry="5" fill="none" stroke="#1E1B2E" stroke-width="0.5" opacity="0.5"/>
+      <ellipse cx="24" cy="56" rx="5" ry="4" fill="none" stroke="#3D3555" stroke-width="0.5" opacity="0.5"/>
+      <ellipse cx="40" cy="56" rx="5" ry="4" fill="none" stroke="#3D3555" stroke-width="0.5" opacity="0.5"/>
 
       <!-- Almofadinhas rosadas -->
-      <ellipse cx="24" cy="56" rx="3" ry="2.2" fill="#FF9EBB"/>
-      <circle cx="22" cy="54" r="1.3" fill="#FF9EBB"/>
-      <circle cx="26" cy="54" r="1.3" fill="#FF9EBB"/>
-      <circle cx="24" cy="52.5" r="1" fill="#FF9EBB" opacity="0.9"/>
+      <ellipse cx="24" cy="57" rx="2.5" ry="1.8" fill="#F8A5C2"/>
+      <circle cx="22.5" cy="55.5" r="1" fill="#F8A5C2"/>
+      <circle cx="25.5" cy="55.5" r="1" fill="#F8A5C2"/>
+      <circle cx="24" cy="54" r="0.8" fill="#F8A5C2"/>
 
-      <ellipse cx="40" cy="56" rx="3" ry="2.2" fill="#FF9EBB"/>
-      <circle cx="38" cy="54" r="1.3" fill="#FF9EBB"/>
-      <circle cx="42" cy="54" r="1.3" fill="#FF9EBB"/>
-      <circle cx="40" cy="52.5" r="1" fill="#FF9EBB" opacity="0.9"/>
-
-      <!-- === COLEIRA MÁGICA === -->
-      <ellipse cx="32" cy="38" rx="11" ry="2" fill="#C9A7FF" filter="url(#softGlow)"/>
-      <!-- Pingente em forma de lua/estrela -->
-      <circle cx="32" cy="40" r="3" fill="#FFE8A3"/>
-      <circle cx="32" cy="40" r="2" fill="#FFF4D1"/>
-      <!-- Estrela no pingente -->
-      <path d="M 32 38.5 L 32.6 39.3 L 33.5 39.3 L 32.8 39.9 L 33.1 40.8 L 32 40.3 L 30.9 40.8 L 31.2 39.9 L 30.5 39.3 L 31.4 39.3 Z"
-            fill="#E8C77A"/>
+      <ellipse cx="40" cy="57" rx="2.5" ry="1.8" fill="#F8A5C2"/>
+      <circle cx="38.5" cy="55.5" r="1" fill="#F8A5C2"/>
+      <circle cx="41.5" cy="55.5" r="1" fill="#F8A5C2"/>
+      <circle cx="40" cy="54" r="0.8" fill="#F8A5C2"/>
 
       <!-- Estrelinhas mágicas decorativas -->
-      <text x="6" y="10" font-size="5" fill="#FFE8A3" opacity="0.7">✦</text>
-      <text x="54" y="6" font-size="4" fill="#C9A7FF" opacity="0.6">✧</text>
-      <text x="58" y="48" font-size="3" fill="#FFE8A3" opacity="0.5">✦</text>
+      <text x="4" y="12" font-size="5" fill="#FFD93D" opacity="0.7">✦</text>
+      <text x="56" y="8" font-size="4" fill="#A855F7" opacity="0.6">✧</text>
+      <text x="58" y="44" font-size="3" fill="#FFD93D" opacity="0.5">✦</text>
     </svg>
   ''';
 }
