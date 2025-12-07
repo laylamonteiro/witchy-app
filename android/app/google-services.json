@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "625869809120-6dsf72i1ilpdevm9k8ptvo0qiofia9v7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.grimoriodebolso.app",
+            "certificate_hash": "8bd7bb97b95c8d5e549d5584a01fe27aec85da98"
+          }
+        },
+        {
           "client_id": "625869809120-vekqjnltlccc7llalu6adgl1js8tngob.apps.googleusercontent.com",
           "client_type": 3
         }
