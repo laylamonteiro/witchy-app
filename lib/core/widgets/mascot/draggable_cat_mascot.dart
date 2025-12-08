@@ -581,6 +581,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
         // Camada de partículas de rastro (na frente do gato)
         ..._buildTrailParticles(),
+
+        // Brilhos mágicos ao redor do mascote
+        ..._buildSparkles(),
       ],
     );
   }
@@ -669,6 +672,68 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
         ),
       );
     }).toList();
+  }
+
+  /// Constrói os brilhos mágicos ao redor do mascote
+  List<Widget> _buildSparkles() {
+    // Posições relativas dos brilhos ao redor do gato
+    final sparklePositions = [
+      const Offset(-15, -10),  // Esquerda superior
+      const Offset(15, -15),   // Direita superior
+      const Offset(-20, 20),   // Esquerda inferior
+      const Offset(20, 15),    // Direita inferior
+      const Offset(0, -20),    // Topo
+    ];
+
+    final sparkleSymbols = ['✦', '✧', '✦', '✧', '⋆'];
+    final sparkleColors = [
+      AppColors.starYellow,
+      AppColors.lilac,
+      AppColors.starYellow,
+      AppColors.lilac,
+      AppColors.starYellow,
+    ];
+
+    return List.generate(sparklePositions.length, (index) {
+      // Cada brilho tem um delay diferente para criar efeito cascata
+      final delay = index * 0.2;
+
+      return AnimatedBuilder(
+        animation: _sparkleController,
+        builder: (context, child) {
+          // Calcular opacidade com base no controller e delay
+          final progress = (_sparkleController.value + delay) % 1.0;
+          final opacity = (math.sin(progress * math.pi * 2) * 0.5 + 0.5) * 0.8;
+          final scale = 0.8 + (math.sin(progress * math.pi * 2) * 0.2);
+
+          return Positioned(
+            left: _x + widget.size / 2 + sparklePositions[index].dx +
+                (_isDragging ? 0 : _floatAnimation.value * 0.3),
+            top: _y + widget.size / 2 + sparklePositions[index].dy +
+                (_isDragging ? 0 : _floatAnimation.value) +
+                _jumpAnimation.value,
+            child: IgnorePointer(
+              child: Transform.scale(
+                scale: scale,
+                child: Text(
+                  sparkleSymbols[index],
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: sparkleColors[index].withValues(alpha: opacity),
+                    shadows: [
+                      Shadow(
+                        color: sparkleColors[index].withValues(alpha: opacity * 0.5),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    });
   }
 }
 
