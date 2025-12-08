@@ -317,16 +317,26 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     // Evitar cliques durante arraste
     if (_isDragging) return;
 
-    // Resetar timer de inatividade
-    _resetIdleTimer();
+    // Se estava dormindo, vai para deitado relaxado primeiro
+    if (_currentPose == MascotPose.sleeping) {
+      setState(() {
+        _currentPose = MascotPose.lyingRelaxed;
+      });
+      _resetIdleTimer();
+      return;
+    }
 
-    // Se estava dormindo ou deitado, acordar e não fazer mais nada
-    if (_currentPose != MascotPose.sitting) {
+    // Se estava deitado, levanta
+    if (_currentPose == MascotPose.lyingRelaxed) {
       setState(() {
         _currentPose = MascotPose.sitting;
       });
+      _resetIdleTimer();
       return;
     }
+
+    // Resetar timer de inatividade
+    _resetIdleTimer();
 
     final now = DateTime.now();
 
@@ -525,6 +535,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                 return Container(
                   width: widget.size,
                   height: widget.size,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle, // Forma circular para brilho redondo
                     // Sombra lilás sempre visível
@@ -535,6 +546,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                         ),
                         blurRadius: _shadowBlurAnimation.value,
                         spreadRadius: 2,
+                        offset: const Offset(0, 5), // Centraliza o brilho abaixo do gato
                       ),
                       // Segunda sombra para efeito de brilho
                       if (_isDragging)
@@ -542,6 +554,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                           color: AppColors.starYellow.withValues(alpha: 0.2),
                           blurRadius: 15,
                           spreadRadius: 3,
+                          offset: const Offset(0, 5),
                         ),
                     ],
                   ),
