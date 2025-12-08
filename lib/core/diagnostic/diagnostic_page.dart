@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
@@ -112,7 +113,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
   }
 
   @override
@@ -599,6 +600,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           tabs: const [
             Tab(text: 'Debug'),
             Tab(text: 'Pagamentos'),
+            Tab(text: 'Login Google'),
             Tab(text: 'IA Groq'),
             Tab(text: 'Mapa Astral'),
             Tab(text: 'Clima Mágico'),
@@ -633,6 +635,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         children: [
           _buildDebugSection(),
           _buildPaymentsDiagnosticSection(),
+          _buildGoogleLoginSection(),
           _buildTestSection(
             icon: Icons.psychology,
             title: 'IA Groq',
@@ -1727,6 +1730,291 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           ],
         ],
       ),
+    );
+  }
+
+  Future<void> _testGoogleLogin() async {
+    setState(() {
+      _isTesting = true;
+      _result = null;
+      _logs.clear();
+    });
+
+    _addLog('🔑 Testando Google Sign-In...');
+
+    try {
+      _addLog('📱 Plataforma: ${kIsWeb ? "WEB" : "MOBILE"}');
+
+      final authProvider = context.read<AuthProvider>();
+      final authRepo = context.read<SupabaseAuthRepository>();
+
+      _addLog('🔍 Verificando estado atual do auth...');
+      _addLog('   Usuário atual: ${authProvider.currentUser.email}');
+      _addLog('   Está autenticado: ${authProvider.isAuthenticated}');
+
+      _addLog('');
+      _addLog('🚀 Iniciando Google Sign-In...');
+
+      final result = await authRepo.signInWithGoogle();
+
+      if (result.isSuccess) {
+        _addLog('✅ SUCESSO no Google Sign-In!');
+        if (result.user != null) {
+          _addLog('   Email: ${result.user!.email}');
+          _addLog('   Nome: ${result.user!.displayName ?? "Não informado"}');
+          _addLog('   ID: ${result.user!.id}');
+        }
+
+        setState(() {
+          _result = 'SUCESSO: Login realizado!';
+          _isTesting = false;
+        });
+      } else {
+        _addLog('❌ ERRO no Google Sign-In');
+        _addLog('   Código: ${result.errorCode?.toString() ?? "Desconhecido"}');
+        _addLog('   Mensagem: ${result.message}');
+
+        setState(() {
+          _result = 'ERRO: ${result.message}';
+          _isTesting = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      _addLog('💥 EXCEÇÃO CAPTURADA!');
+      _addLog('   Tipo: ${e.runtimeType}');
+      _addLog('   Mensagem: $e');
+      _addLog('');
+      _addLog('📋 Stack trace:');
+      final stackLines = stackTrace.toString().split('\n').take(5);
+      for (final line in stackLines) {
+        _addLog('   $line');
+      }
+
+      setState(() {
+        _result = 'ERRO: $e';
+        _isTesting = false;
+      });
+    }
+  }
+
+  Widget _buildGoogleLoginSection() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              MagicalCard(
+                child: Column(
+                  children: [
+                    const Icon(Icons.login, size: 64, color: AppColors.lilac),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Teste de Login Google',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: AppColors.lilac,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Teste o fluxo completo de autenticação com Google',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.softWhite.withOpacity(0.8),
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Status atual
+              MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          authProvider.isAuthenticated
+                              ? Icons.check_circle
+                              : Icons.cancel,
+                          color: authProvider.isAuthenticated
+                              ? AppColors.success
+                              : AppColors.alert,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Status Atual',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppColors.lilac,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDiagnosticRow(
+                      'Autenticado',
+                      authProvider.isAuthenticated ? 'Sim ✓' : 'Não',
+                      authProvider.isAuthenticated,
+                    ),
+                    _buildDiagnosticRow(
+                      'Email',
+                      authProvider.currentUser.email.isEmpty
+                          ? 'Não autenticado'
+                          : authProvider.currentUser.email,
+                      authProvider.currentUser.email.isNotEmpty,
+                    ),
+                    _buildDiagnosticRow(
+                      'Plataforma',
+                      kIsWeb ? 'WEB' : 'MOBILE',
+                      true,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Botão de teste
+              ElevatedButton.icon(
+                onPressed: _isTesting ? null : _testGoogleLogin,
+                icon: _isTesting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkBackground),
+                        ),
+                      )
+                    : const Icon(Icons.play_arrow),
+                label: Text(_isTesting ? 'Testando...' : 'Testar Google Login'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.lilac,
+                  foregroundColor: AppColors.darkBackground,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+
+              if (_result != null) ...[
+                const SizedBox(height: 16),
+                MagicalCard(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _result!.contains('SUCESSO')
+                          ? AppColors.success.withOpacity(0.2)
+                          : AppColors.alert.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _result!,
+                      style: TextStyle(
+                        color: _result!.contains('SUCESSO') ? AppColors.success : AppColors.alert,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+              if (_logs.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Logs de Diagnóstico',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.lilac,
+                          ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy, color: AppColors.lilac),
+                      onPressed: _copyLogs,
+                      tooltip: 'Copiar logs',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                MagicalCard(
+                  child: Container(
+                    constraints: const BoxConstraints(maxHeight: 400),
+                    child: SingleChildScrollView(
+                      child: SelectableText(
+                        _logs.join('\n'),
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: AppColors.softWhite,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
+
+              // Informações de ajuda
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.lilac.withOpacity(0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: AppColors.lilac,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Como usar',
+                          style: TextStyle(
+                            color: AppColors.lilac,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '1. Clique em "Testar Google Login"\n'
+                      '2. Siga o fluxo de autenticação do Google\n'
+                      '3. Copie os logs gerados\n'
+                      '4. Envie para análise em caso de erro\n\n'
+                      'Os logs mostram cada passo do processo de autenticação.',
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.8),
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
