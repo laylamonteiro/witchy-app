@@ -262,11 +262,12 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   }
 
   /// Reseta o timer de inatividade
-  void _resetIdleTimer() {
+  /// [resetPose] - se true, força a pose para sitting (default: false)
+  void _resetIdleTimer({bool resetPose = false}) {
     _idleTimer?.cancel();
 
-    // Se estava dormindo ou deitado, acordar
-    if (_currentPose != MascotPose.sitting) {
+    // Se solicitado, acordar completamente
+    if (resetPose && _currentPose != MascotPose.sitting) {
       setState(() {
         _currentPose = MascotPose.sitting;
       });
@@ -486,8 +487,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
               // Resetar contador de taps
               _rapidTapCount = 0;
 
-              // Resetar timer de inatividade
-              _resetIdleTimer();
+              // Resetar timer de inatividade e acordar o gato
+              _resetIdleTimer(resetPose: true);
 
               // Parar animações em andamento antes de iniciar arraste
               if (_jumpController.isAnimating) {
