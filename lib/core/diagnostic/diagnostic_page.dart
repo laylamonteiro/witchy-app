@@ -1748,19 +1748,22 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       final authProvider = context.read<AuthProvider>();
       final authRepo = context.read<SupabaseAuthRepository>();
 
+      final isAuthenticated = authProvider.currentUser.id != 'local_user' &&
+                             (authProvider.currentUser.email?.isNotEmpty ?? false);
+
       _addLog('🔍 Verificando estado atual do auth...');
-      _addLog('   Usuário atual: ${authProvider.currentUser.email}');
-      _addLog('   Está autenticado: ${authProvider.isAuthenticated}');
+      _addLog('   Usuário atual: ${authProvider.currentUser.email ?? "Não autenticado"}');
+      _addLog('   Está autenticado: $isAuthenticated');
 
       _addLog('');
       _addLog('🚀 Iniciando Google Sign-In...');
 
       final result = await authRepo.signInWithGoogle();
 
-      if (result.isSuccess) {
+      if (result.success) {
         _addLog('✅ SUCESSO no Google Sign-In!');
         if (result.user != null) {
-          _addLog('   Email: ${result.user!.email}');
+          _addLog('   Email: ${result.user!.email ?? "N/A"}');
           _addLog('   Nome: ${result.user!.displayName ?? "Não informado"}');
           _addLog('   ID: ${result.user!.id}');
         }
@@ -1772,10 +1775,10 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       } else {
         _addLog('❌ ERRO no Google Sign-In');
         _addLog('   Código: ${result.errorCode?.toString() ?? "Desconhecido"}');
-        _addLog('   Mensagem: ${result.message}');
+        _addLog('   Mensagem: ${result.errorMessage ?? "Erro desconhecido"}');
 
         setState(() {
-          _result = 'ERRO: ${result.message}';
+          _result = 'ERRO: ${result.errorMessage ?? "Erro desconhecido"}';
           _isTesting = false;
         });
       }
@@ -1838,14 +1841,16 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          authProvider.isAuthenticated
-                              ? Icons.check_circle
-                              : Icons.cancel,
-                          color: authProvider.isAuthenticated
-                              ? AppColors.success
-                              : AppColors.alert,
-                          size: 24,
+                        Builder(
+                          builder: (context) {
+                            final isAuth = authProvider.currentUser.id != 'local_user' &&
+                                          (authProvider.currentUser.email?.isNotEmpty ?? false);
+                            return Icon(
+                              isAuth ? Icons.check_circle : Icons.cancel,
+                              color: isAuth ? AppColors.success : AppColors.alert,
+                              size: 24,
+                            );
+                          },
                         ),
                         const SizedBox(width: 12),
                         Text(
@@ -1857,17 +1862,23 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildDiagnosticRow(
-                      'Autenticado',
-                      authProvider.isAuthenticated ? 'Sim ✓' : 'Não',
-                      authProvider.isAuthenticated,
+                    Builder(
+                      builder: (context) {
+                        final isAuth = authProvider.currentUser.id != 'local_user' &&
+                                      (authProvider.currentUser.email?.isNotEmpty ?? false);
+                        return _buildDiagnosticRow(
+                          'Autenticado',
+                          isAuth ? 'Sim ✓' : 'Não',
+                          isAuth,
+                        );
+                      },
                     ),
                     _buildDiagnosticRow(
                       'Email',
-                      authProvider.currentUser.email.isEmpty
+                      authProvider.currentUser.email?.isEmpty ?? true
                           ? 'Não autenticado'
-                          : authProvider.currentUser.email,
-                      authProvider.currentUser.email.isNotEmpty,
+                          : authProvider.currentUser.email!,
+                      authProvider.currentUser.email?.isNotEmpty ?? false,
                     ),
                     _buildDiagnosticRow(
                       'Plataforma',

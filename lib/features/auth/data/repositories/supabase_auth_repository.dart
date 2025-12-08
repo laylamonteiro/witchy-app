@@ -109,6 +109,8 @@ class SupabaseAuthRepository implements AuthRepository {
   /// Requer: google-services.json (Android) e GoogleService-Info.plist (iOS)
   static final _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
+    // Web Client ID necessário para autenticação com Supabase
+    serverClientId: '625869809120-vekqjnltlccc7llalu6adgl1js8tngob.apps.googleusercontent.com',
   );
 
   @override
