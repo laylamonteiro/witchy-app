@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Importar Firebase Auth
+import 'package:google_sign_in/google_sign_in.dart'; // Importar Google Sign In
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/database/database_helper.dart';
@@ -419,6 +421,68 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = UserModel.defaultUser();
     await _saveUser();
     notifyListeners();
+  }
+
+  /// Realiza o login com o Google
+  Future<UserModel?> signInWithGoogle({Function(String)? onLog}) async {
+    onLog?.call('Iniciando signInWithGoogle...');
+    try {
+      // 1. Iniciar o fluxo de login do Google
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        onLog?.call('Login Google cancelado pelo usuário.');
+        return null; // Usuário cancelou o login
+      }
+
+      onLog?.call('Usuário Google selecionado: ${googleUser.email}');
+
+      // 2. Obter credenciais de autenticação do Google
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      onLog?.call('Credenciais Google obtidas.');
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      onLog?.call('Credencial Firebase criada.');
+
+      // 3. Autenticar com o Firebase
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) {
+        onLog?.call('Falha na autenticação Firebase.');
+        return null;
+      }
+
+      onLog?.call('Autenticação Firebase bem-sucedida. UID: ${firebaseUser.uid}');
+
+      // 4. Criar ou atualizar UserModel
+      _currentUser = _currentUser.copyWith(
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName ?? firebaseUser.email?.split('@').first,
+        // Manter role e plano existentes ou definir como free se for novo login
+        role: _currentUser.role == UserRole.anonymous ? UserRole.free : _currentUser.role,
+        plan: _currentUser.plan == SubscriptionPlan.anonymous ? SubscriptionPlan.free : _currentUser.plan,
+      );
+
+      await _saveUser();
+      notifyListeners();
+      onLog?.call('Usuário atualizado no AuthProvider.');
+
+      // 5. Atualizar status premium (se houver)
+      await refreshPremiumStatus();
+      onLog?.call('Status premium atualizado.');
+
+      return _currentUser;
+    } catch (e, stackTrace) {
+      onLog?.call('ERRO no signInWithGoogle: $e');
+      onLog?.call('Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
+      debugPrint('Erro no signInWithGoogle: $e\n$stackTrace');
+      return null;
+    }
   }
 
   /// Limpa todos os dados (logout)

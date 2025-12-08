@@ -280,56 +280,56 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
   }
 
   Future<void> _testGoogleLogin(AuthProvider authProvider) async {
-    _logService.addLog(DebugLogEntry(
-      tag: 'AUTH',
-      message: '🔑 Iniciando teste de login com Google na DebugLogsPage...',
-    ));
+    _logService.log(
+      'AUTH',
+      '🔑 Iniciando teste de login com Google na DebugLogsPage...',
+    );
     setState(() {}); // Atualiza a UI para mostrar o log
 
     try {
-      _logService.addLog(DebugLogEntry(
-        tag: 'AUTH',
-        message: '📡 Chamando signInWithGoogle...',
-      ));
+      _logService.log(
+        'AUTH',
+        '📡 Chamando signInWithGoogle...',
+      );
       setState(() {});
 
       final user = await authProvider.signInWithGoogle(onLog: (msg) {
-        _logService.addLog(DebugLogEntry(tag: 'AUTH', message: msg));
+        _logService.log('AUTH', msg);
         setState(() {});
       });
 
       if (user != null) {
-        _logService.addLog(DebugLogEntry(
-          tag: 'AUTH',
-          message: '✅ Login Google BEM-SUCEDIDO!',
-        ));
-        _logService.addLog(DebugLogEntry(
-          tag: 'AUTH',
-          message: '   UID: ${user.uid}',
-        ));
-        _logService.addLog(DebugLogEntry(
-          tag: 'AUTH',
-          message: '   Email: ${user.email}',
-        ));
-        _logService.addLog(DebugLogEntry(
-          tag: 'AUTH',
-          message: '   Nome: ${user.displayName}',
-        ));
+        _logService.log(
+          'AUTH',
+          '✅ Login Google BEM-SUCEDIDO!',
+        );
+        _logService.log(
+          'AUTH',
+          '   UID: ${user.uid}',
+        );
+        _logService.log(
+          'AUTH',
+          '   Email: ${user.email}',
+        );
+        _logService.log(
+          'AUTH',
+          '   Nome: ${user.displayName}',
+        );
       } else {
-        _logService.addLog(DebugLogEntry(
-          tag: 'AUTH',
-          message: '❌ Login Google CANCELADO ou FALHOU sem exceção.',
-        ));
+        _logService.log(
+          'AUTH',
+          '❌ Login Google CANCELADO ou FALHOU sem exceção.',
+        );
       }
     } catch (e, stackTrace) {
-      _logService.addLog(DebugLogEntry(
-        tag: 'ERROR',
-        message: '❌ ERRO no Login Google: $e',
-      ));
-      _logService.addLog(DebugLogEntry(
-        tag: 'ERROR',
-        message: '📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}',
-      ));
+      _logService.log(
+        'ERROR',
+        '❌ ERRO no Login Google: $e',
+      );
+      _logService.log(
+        'ERROR',
+        '📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}',
+      );
     } finally {
       setState(() {}); // Atualiza a UI para mostrar todos os logs finais
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent); // Rola para o final
