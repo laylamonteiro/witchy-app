@@ -342,7 +342,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               child: phase == MoonPhase.fullMoon
                   ? BreathingMoon(
                       moonEmoji: phase.emoji,
-                      size: 90,
+                      size: 70,
                       showStars: true,
                       showName: true,
                       showDescription: true,
