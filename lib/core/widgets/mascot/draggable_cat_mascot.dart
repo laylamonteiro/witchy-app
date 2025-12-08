@@ -340,8 +340,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
         y: y + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
         size: random.nextDouble() * 3 + 1.5,
         color: random.nextBool()
-          ? AppColors.lilac.withOpacity(0.7)
-          : AppColors.starYellow.withOpacity(0.7),
+          ? AppColors.lilac.withValues(alpha: 0.7)
+          : AppColors.starYellow.withValues(alpha: 0.7),
         opacity: 1.0,
         rotation: random.nextDouble() * math.pi * 2,
       ));
@@ -424,8 +424,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                     // Sombra lilás sempre visível
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.lilac.withOpacity(
-                          _shadowOpacityAnimation.value
+                        color: AppColors.lilac.withValues(
+                          alpha: _shadowOpacityAnimation.value
                         ),
                         blurRadius: _shadowBlurAnimation.value,
                         spreadRadius: 2,
@@ -433,7 +433,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                       // Segunda sombra para efeito de brilho
                       if (_isDragging)
                         BoxShadow(
-                          color: AppColors.starYellow.withOpacity(0.2),
+                          color: AppColors.starYellow.withValues(alpha: 0.2),
                           blurRadius: 15,
                           spreadRadius: 3,
                         ),
@@ -477,7 +477,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
             '💖',
             style: TextStyle(
               fontSize: particle.size * 1.5,
-              color: Colors.white.withOpacity(particle.opacity),
+              color: Colors.white.withValues(alpha: particle.opacity),
             ),
           ),
         );
@@ -489,7 +489,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
             '✨',
             style: TextStyle(
               fontSize: particle.size * 1.2,
-              color: Colors.white.withOpacity(particle.opacity),
+              color: Colors.white.withValues(alpha: particle.opacity),
             ),
           ),
         );
@@ -500,10 +500,10 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
           height: particle.size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: particle.color.withOpacity(particle.opacity),
+            color: particle.color.withValues(alpha: particle.opacity),
             boxShadow: [
               BoxShadow(
-                color: particle.color.withOpacity(particle.opacity * 0.5),
+                color: particle.color.withValues(alpha: particle.opacity * 0.5),
                 blurRadius: particle.size * 2,
                 spreadRadius: particle.size / 2,
               ),
@@ -534,14 +534,14 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    particle.color.withOpacity(particle.opacity),
-                    particle.color.withOpacity(0),
+                    particle.color.withValues(alpha: particle.opacity),
+                    particle.color.withValues(alpha: 0),
                   ],
                 ),
               ),
               child: CustomPaint(
                 painter: StarPainter(
-                  color: particle.color.withOpacity(particle.opacity),
+                  color: particle.color.withValues(alpha: particle.opacity),
                 ),
               ),
             ),

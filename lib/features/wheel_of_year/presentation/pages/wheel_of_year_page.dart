@@ -23,39 +23,47 @@ class WheelOfYearPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Próximo Sabbat em destaque
+                // Próximo Sabbat em destaque - mesma altura do card lunar (300)
                 if (nextSabbat != null)
-                  MagicalCard(
-                    child: Column(
-                      children: [
-                        Text(
-                          'Próximo Sabbat',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          nextSabbat.emoji,
-                          style: const TextStyle(fontSize: 64),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          nextSabbat.name,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          nextSabbat.type.southernHemisphereDate,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDaysUntilChip(
-                          context,
-                          nextSabbat.daysUntil(DateTime.now()),
-                        ),
-                      ],
+                  SizedBox(
+                    height: 300,
+                    child: MagicalCard(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Próximo Sabbat',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            nextSabbat.emoji,
+                            style: const TextStyle(fontSize: 56),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            nextSabbat.name,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            nextSabbat.type.southernHemisphereDate,
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDaysUntilChip(
+                            context,
+                            nextSabbat.daysUntil(DateTime.now()),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
@@ -142,7 +150,7 @@ class WheelOfYearPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.lilac.withOpacity(0.2),
+        color: AppColors.lilac.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.lilac),
       ),
@@ -174,12 +182,12 @@ class WheelOfYearPage extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isPast
-                ? AppColors.surface.withOpacity(0.5)
+                ? AppColors.surface.withValues(alpha: 0.5)
                 : AppColors.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isPast
-                  ? AppColors.surfaceBorder.withOpacity(0.5)
+                  ? AppColors.surfaceBorder.withValues(alpha: 0.5)
                   : AppColors.surfaceBorder,
             ),
           ),
@@ -189,7 +197,7 @@ class WheelOfYearPage extends StatelessWidget {
                 sabbat.emoji,
                 style: TextStyle(
                   fontSize: 40,
-                  color: isPast ? Colors.white.withOpacity(0.5) : null,
+                  color: isPast ? Colors.white.withValues(alpha: 0.5) : null,
                 ),
               ),
               const SizedBox(width: 16),
@@ -233,7 +241,7 @@ class WheelOfYearPage extends StatelessWidget {
                 Icons.arrow_forward_ios,
                 size: 16,
                 color: isPast
-                    ? AppColors.textSecondary.withOpacity(0.5)
+                    ? AppColors.textSecondary.withValues(alpha: 0.5)
                     : AppColors.textSecondary,
               ),
             ],
@@ -297,9 +305,9 @@ class WheelOfYearPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.lilac.withOpacity(0.1),
+                  color: AppColors.lilac.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,7 +408,7 @@ class WheelOfYearPage extends StatelessWidget {
                 children: sabbat.type.crystals
                     .map((crystal) => Chip(
                           label: Text(crystal),
-                          backgroundColor: AppColors.lilac.withOpacity(0.2),
+                          backgroundColor: AppColors.lilac.withValues(alpha: 0.2),
                           side: const BorderSide(color: AppColors.lilac),
                         ))
                     .toList(),
@@ -417,7 +425,7 @@ class WheelOfYearPage extends StatelessWidget {
                 children: sabbat.type.herbs
                     .map((herb) => Chip(
                           label: Text(herb),
-                          backgroundColor: AppColors.mint.withOpacity(0.2),
+                          backgroundColor: AppColors.mint.withValues(alpha: 0.2),
                           side: const BorderSide(color: AppColors.mint),
                         ))
                     .toList(),
@@ -434,7 +442,7 @@ class WheelOfYearPage extends StatelessWidget {
                 children: sabbat.type.colors
                     .map((color) => Chip(
                           label: Text(color),
-                          backgroundColor: AppColors.starYellow.withOpacity(0.2),
+                          backgroundColor: AppColors.starYellow.withValues(alpha: 0.2),
                           side: const BorderSide(color: AppColors.starYellow),
                         ))
                     .toList(),
