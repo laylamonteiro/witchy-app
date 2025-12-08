@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           DraggableCatMascot(
             initialX: 20,
             initialY: 120,
-            size: 70,
+            size: 100,
             onTap: () {
               // Opcional: adicionar interação ao clicar no mascote
             },
