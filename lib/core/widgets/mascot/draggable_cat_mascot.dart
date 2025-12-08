@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
+import 'dart:async';
 import '../../../core/theme/app_theme.dart';
-import 'cat_svg_poses.dart';
+
+/// Poses do mascote baseadas nos novos SVG assets
+enum MascotPose {
+  sitting,      // Sentado normal (usa tail animations)
+  lyingRelaxed, // Deitado relaxado
+  sleeping,     // Dormindo
+}
 
 /// Widget do mascote gatinho preto arrastável com efeitos mágicos
 ///
@@ -12,6 +19,8 @@ import 'cat_svg_poses.dart';
 /// - Efeitos de partículas ao clicar e arrastar
 /// - Rastro mágico durante o arraste
 /// - Animações de flutuação
+/// - Poses dinâmicas: sentado, deitado, dormindo
+/// - Expressões: bravo (padrão), neutro, feliz
 class DraggableCatMascot extends StatefulWidget {
   final double initialX;
   final double initialY;
@@ -23,7 +32,7 @@ class DraggableCatMascot extends StatefulWidget {
     this.initialX = 50,
     this.initialY = 100,
     this.onTap,
-    this.size = 60,
+    this.size = 85,
   });
 
   @override
@@ -36,6 +45,14 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   late double _y;
   bool _isDragging = false;
   bool _isBlinking = false;
+  bool _isHappy = false; // Expressão feliz quando toca
+
+  // Pose atual do mascote
+  MascotPose _currentPose = MascotPose.sitting;
+
+  // Timer para idle (dormir após inatividade)
+  Timer? _idleTimer;
+  static const Duration _idleTimeout = Duration(seconds: 12);
 
   // Controladores de animação
   late AnimationController _scaleController;
@@ -205,6 +222,64 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     _particleController.repeat();
 
     _startBlinking();
+    _resetIdleTimer();
+  }
+
+  /// Retorna o asset SVG correto baseado no estado atual
+  String get _currentSpriteAsset {
+    // Se dormindo
+    if (_currentPose == MascotPose.sleeping) {
+      return 'assets/icons/cat_sleep.svg';
+    }
+
+    // Se deitado relaxado
+    if (_currentPose == MascotPose.lyingRelaxed) {
+      return 'assets/icons/cat_lie_relaxed.svg';
+    }
+
+    // Sentado - várias expressões
+    if (_isBlinking) {
+      return 'assets/icons/cat_sit_blink.svg';
+    }
+
+    // Feliz quando está sendo arrastado ou após tap
+    if (_isHappy || _isDragging) {
+      return 'assets/icons/cat_sit_happy.svg';
+    }
+
+    // Usar wobble para alternar cauda esquerda/direita quando não está arrastando
+    if (!_isDragging && _wobbleController.isAnimating) {
+      final wobbleValue = _wobbleAnimation.value;
+      if (wobbleValue < -0.02) {
+        return 'assets/icons/cat_sit_tail_left.svg';
+      } else if (wobbleValue > 0.02) {
+        return 'assets/icons/cat_sit_tail_right.svg';
+      }
+    }
+
+    // Expressão padrão: angry (cara de bravo fofo)
+    return 'assets/icons/cat_sit_angry.svg';
+  }
+
+  /// Reseta o timer de inatividade
+  /// [resetPose] - se true, força a pose para sitting (default: false)
+  void _resetIdleTimer({bool resetPose = false}) {
+    _idleTimer?.cancel();
+
+    // Se solicitado, acordar completamente
+    if (resetPose && _currentPose != MascotPose.sitting) {
+      setState(() {
+        _currentPose = MascotPose.sitting;
+      });
+    }
+
+    _idleTimer = Timer(_idleTimeout, () {
+      if (mounted && !_isDragging) {
+        setState(() {
+          _currentPose = MascotPose.sleeping;
+        });
+      }
+    });
   }
 
   void _startBlinking() {
@@ -226,6 +301,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
   @override
   void dispose() {
+    _idleTimer?.cancel();
     _scaleController.dispose();
     _shadowController.dispose();
     _particleController.dispose();
@@ -242,6 +318,27 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     // Evitar cliques durante arraste
     if (_isDragging) return;
 
+    // Se estava dormindo, vai para deitado relaxado primeiro
+    if (_currentPose == MascotPose.sleeping) {
+      setState(() {
+        _currentPose = MascotPose.lyingRelaxed;
+      });
+      _resetIdleTimer();
+      return;
+    }
+
+    // Se estava deitado, levanta
+    if (_currentPose == MascotPose.lyingRelaxed) {
+      setState(() {
+        _currentPose = MascotPose.sitting;
+      });
+      _resetIdleTimer();
+      return;
+    }
+
+    // Resetar timer de inatividade
+    _resetIdleTimer();
+
     final now = DateTime.now();
 
     // Resetar contador se passou mais de 1 segundo desde o último tap
@@ -254,6 +351,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
     _rapidTapCount++;
     _lastTapTime = now;
+
+    // Ativar expressão feliz
+    setState(() => _isHappy = true);
 
     // Criar explosão de partículas (com limite)
     _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
@@ -270,6 +370,10 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
       _jumpController.forward().then((_) {
         if (mounted) {
           _jumpController.reverse().then((_) {
+            // Voltar para expressão normal após animação
+            if (mounted) {
+              setState(() => _isHappy = false);
+            }
             // Resetar contador após animação completa se passou tempo suficiente
             if (mounted && _lastTapTime != null &&
                 DateTime.now().difference(_lastTapTime!).inMilliseconds > 500) {
@@ -282,6 +386,23 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
     // Callback opcional
     widget.onTap?.call();
+  }
+
+  /// Handler para long press - deita o gatinho
+  void _onLongPress() {
+    if (_isDragging) return;
+
+    _resetIdleTimer();
+
+    // Se está sentado, deita relaxado
+    if (_currentPose == MascotPose.sitting) {
+      setState(() {
+        _currentPose = MascotPose.lyingRelaxed;
+      });
+
+      // Criar algumas partículas de conforto
+      _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
+    }
   }
 
   void _createParticleBurst(double x, double y) {
@@ -332,8 +453,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
         y: y + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
         size: random.nextDouble() * 3 + 1.5,
         color: random.nextBool()
-          ? AppColors.lilac.withOpacity(0.7)
-          : AppColors.starYellow.withOpacity(0.7),
+          ? AppColors.lilac.withValues(alpha: 0.7)
+          : AppColors.starYellow.withValues(alpha: 0.7),
         opacity: 1.0,
         rotation: random.nextDouble() * math.pi * 2,
       ));
@@ -361,9 +482,13 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
           ),
           child: GestureDetector(
             onTap: _onTap,
+            onLongPress: _onLongPress,
             onPanStart: (details) {
               // Resetar contador de taps
               _rapidTapCount = 0;
+
+              // Resetar timer de inatividade e acordar o gato
+              _resetIdleTimer(resetPose: true);
 
               // Parar animações em andamento antes de iniciar arraste
               if (_jumpController.isAnimating) {
@@ -411,23 +536,26 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                 return Container(
                   width: widget.size,
                   height: widget.size,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle, // Forma circular para brilho redondo
                     // Sombra lilás sempre visível
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.lilac.withOpacity(
-                          _shadowOpacityAnimation.value
+                        color: AppColors.lilac.withValues(
+                          alpha: _shadowOpacityAnimation.value
                         ),
                         blurRadius: _shadowBlurAnimation.value,
                         spreadRadius: 2,
+                        offset: const Offset(0, 5), // Centraliza o brilho abaixo do gato
                       ),
                       // Segunda sombra para efeito de brilho
                       if (_isDragging)
                         BoxShadow(
-                          color: AppColors.starYellow.withOpacity(0.2),
+                          color: AppColors.starYellow.withValues(alpha: 0.2),
                           blurRadius: 15,
                           spreadRadius: 3,
+                          offset: const Offset(0, 5),
                         ),
                     ],
                   ),
@@ -437,8 +565,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                       angle: _isDragging ? 0 : _wobbleAnimation.value,
                       child: Transform.scale(
                         scale: _scaleAnimation.value * (_isDragging ? 1.0 : _purringAnimation.value),
-                        child: SvgPicture.string(
-                          getCatSvgForPose(CatPose.sitting, _isBlinking),
+                        child: SvgPicture.asset(
+                          _currentSpriteAsset,
                           width: widget.size,
                           height: widget.size,
                         ),
@@ -453,6 +581,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
         // Camada de partículas de rastro (na frente do gato)
         ..._buildTrailParticles(),
+
+        // Brilhos mágicos ao redor do mascote
+        ..._buildSparkles(),
       ],
     );
   }
@@ -469,7 +600,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
             '💖',
             style: TextStyle(
               fontSize: particle.size * 1.5,
-              color: Colors.white.withOpacity(particle.opacity),
+              color: Colors.white.withValues(alpha: particle.opacity),
             ),
           ),
         );
@@ -481,7 +612,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
             '✨',
             style: TextStyle(
               fontSize: particle.size * 1.2,
-              color: Colors.white.withOpacity(particle.opacity),
+              color: Colors.white.withValues(alpha: particle.opacity),
             ),
           ),
         );
@@ -492,10 +623,10 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
           height: particle.size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: particle.color.withOpacity(particle.opacity),
+            color: particle.color.withValues(alpha: particle.opacity),
             boxShadow: [
               BoxShadow(
-                color: particle.color.withOpacity(particle.opacity * 0.5),
+                color: particle.color.withValues(alpha: particle.opacity * 0.5),
                 blurRadius: particle.size * 2,
                 spreadRadius: particle.size / 2,
               ),
@@ -526,14 +657,14 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    particle.color.withOpacity(particle.opacity),
-                    particle.color.withOpacity(0),
+                    particle.color.withValues(alpha: particle.opacity),
+                    particle.color.withValues(alpha: 0),
                   ],
                 ),
               ),
               child: CustomPaint(
                 painter: StarPainter(
-                  color: particle.color.withOpacity(particle.opacity),
+                  color: particle.color.withValues(alpha: particle.opacity),
                 ),
               ),
             ),
@@ -541,6 +672,68 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
         ),
       );
     }).toList();
+  }
+
+  /// Constrói os brilhos mágicos ao redor do mascote
+  List<Widget> _buildSparkles() {
+    // Posições relativas dos brilhos ao redor do gato
+    final sparklePositions = [
+      const Offset(-15, -10),  // Esquerda superior
+      const Offset(15, -15),   // Direita superior
+      const Offset(-20, 20),   // Esquerda inferior
+      const Offset(20, 15),    // Direita inferior
+      const Offset(0, -20),    // Topo
+    ];
+
+    final sparkleSymbols = ['✦', '✧', '✦', '✧', '⋆'];
+    final sparkleColors = [
+      AppColors.starYellow,
+      AppColors.lilac,
+      AppColors.starYellow,
+      AppColors.lilac,
+      AppColors.starYellow,
+    ];
+
+    return List.generate(sparklePositions.length, (index) {
+      // Cada brilho tem um delay diferente para criar efeito cascata
+      final delay = index * 0.2;
+
+      return AnimatedBuilder(
+        animation: _sparkleController,
+        builder: (context, child) {
+          // Calcular opacidade com base no controller e delay
+          final progress = (_sparkleController.value + delay) % 1.0;
+          final opacity = (math.sin(progress * math.pi * 2) * 0.5 + 0.5) * 0.8;
+          final scale = 0.8 + (math.sin(progress * math.pi * 2) * 0.2);
+
+          return Positioned(
+            left: _x + widget.size / 2 + sparklePositions[index].dx +
+                (_isDragging ? 0 : _floatAnimation.value * 0.3),
+            top: _y + widget.size / 2 + sparklePositions[index].dy +
+                (_isDragging ? 0 : _floatAnimation.value) +
+                _jumpAnimation.value,
+            child: IgnorePointer(
+              child: Transform.scale(
+                scale: scale,
+                child: Text(
+                  sparkleSymbols[index],
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: sparkleColors[index].withValues(alpha: opacity),
+                    shadows: [
+                      Shadow(
+                        color: sparkleColors[index].withValues(alpha: opacity * 0.5),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    });
   }
 }
 

@@ -103,6 +103,24 @@ class _ColorsListPageState extends State<ColorsListPage> {
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
                               const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Text(
+                                    '✨',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      colorModel.intentions.take(2).join(', '),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
                               Text(
                                 colorModel.meaning,
                                 maxLines: 2,

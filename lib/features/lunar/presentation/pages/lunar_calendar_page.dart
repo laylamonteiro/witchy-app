@@ -40,12 +40,12 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Carrossel: Ontem - Hoje - Amanhã
+                  // Carrossel: Ontem - Hoje - Amanhã com setas laterais
                   SizedBox(
-                    height: 380,
+                    height: 300,
                     child: Stack(
                       children: [
-                        // PageView
+                        // PageView do carrossel
                         PageView(
                           controller: _pageController,
                           onPageChanged: (index) {
@@ -83,44 +83,58 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                         // Seta esquerda
                         if (_currentPage > 0)
                           Positioned(
-                            left: 8,
+                            left: 4,
                             top: 0,
                             bottom: 0,
                             child: Center(
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.arrow_back_ios_new,
-                                  color: AppColors.lilac,
-                                  size: 28,
-                                ),
-                                onPressed: () {
+                              child: GestureDetector(
+                                onTap: () {
                                   _pageController.previousPage(
                                     duration: const Duration(milliseconds: 300),
                                     curve: Curves.easeInOut,
                                   );
                                 },
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface.withValues(alpha: 0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.chevron_left,
+                                    color: AppColors.lilac,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         // Seta direita
                         if (_currentPage < 2)
                           Positioned(
-                            right: 8,
+                            right: 4,
                             top: 0,
                             bottom: 0,
                             child: Center(
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: AppColors.lilac,
-                                  size: 28,
-                                ),
-                                onPressed: () {
+                              child: GestureDetector(
+                                onTap: () {
                                   _pageController.nextPage(
                                     duration: const Duration(milliseconds: 300),
                                     curve: Curves.easeInOut,
                                   );
                                 },
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface.withValues(alpha: 0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.chevron_right,
+                                    color: AppColors.lilac,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -410,7 +424,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.lilac.withOpacity(0.3),
+          color: AppColors.lilac.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -465,8 +479,8 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isGoodTime
-            ? AppColors.success.withOpacity(0.1)
-            : AppColors.info.withOpacity(0.1),
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.info.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isGoodTime ? AppColors.success : AppColors.info,
