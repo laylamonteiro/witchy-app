@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart'; // Importar Provider
 import '../services/debug_log_service.dart';
 import '../theme/app_theme.dart';
+import '../../features/auth/auth.dart'; // Importar AuthProvider
 
 /// Página para visualizar logs de debug
 class DebugLogsPage extends StatefulWidget {
@@ -48,6 +50,16 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
         title: const Text('Debug Logs'),
         backgroundColor: Colors.transparent,
         actions: [
+          // Botão de Login Google
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              return IconButton(
+                icon: const Icon(Icons.login),
+                tooltip: 'Testar Login Google',
+                onPressed: () => _testGoogleLogin(authProvider),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.copy),
             tooltip: 'Copiar logs',
@@ -264,6 +276,63 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
     if (confirm == true) {
       await _logService.clearLogs();
       setState(() {});
+    }
+  }
+
+  Future<void> _testGoogleLogin(AuthProvider authProvider) async {
+    _logService.addLog(DebugLogEntry(
+      tag: 'AUTH',
+      message: '🔑 Iniciando teste de login com Google na DebugLogsPage...',
+    ));
+    setState(() {}); // Atualiza a UI para mostrar o log
+
+    try {
+      _logService.addLog(DebugLogEntry(
+        tag: 'AUTH',
+        message: '📡 Chamando signInWithGoogle...',
+      ));
+      setState(() {});
+
+      final user = await authProvider.signInWithGoogle(onLog: (msg) {
+        _logService.addLog(DebugLogEntry(tag: 'AUTH', message: msg));
+        setState(() {});
+      });
+
+      if (user != null) {
+        _logService.addLog(DebugLogEntry(
+          tag: 'AUTH',
+          message: '✅ Login Google BEM-SUCEDIDO!',
+        ));
+        _logService.addLog(DebugLogEntry(
+          tag: 'AUTH',
+          message: '   UID: ${user.uid}',
+        ));
+        _logService.addLog(DebugLogEntry(
+          tag: 'AUTH',
+          message: '   Email: ${user.email}',
+        ));
+        _logService.addLog(DebugLogEntry(
+          tag: 'AUTH',
+          message: '   Nome: ${user.displayName}',
+        ));
+      } else {
+        _logService.addLog(DebugLogEntry(
+          tag: 'AUTH',
+          message: '❌ Login Google CANCELADO ou FALHOU sem exceção.',
+        ));
+      }
+    } catch (e, stackTrace) {
+      _logService.addLog(DebugLogEntry(
+        tag: 'ERROR',
+        message: '❌ ERRO no Login Google: $e',
+      ));
+      _logService.addLog(DebugLogEntry(
+        tag: 'ERROR',
+        message: '📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}',
+      ));
+    } finally {
+      setState(() {}); // Atualiza a UI para mostrar todos os logs finais
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent); // Rola para o final
     }
   }
 }
