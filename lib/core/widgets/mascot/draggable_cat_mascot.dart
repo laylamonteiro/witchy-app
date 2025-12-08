@@ -36,6 +36,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   late double _y;
   bool _isDragging = false;
   bool _isBlinking = false;
+  bool _isHappy = false; // Expressão feliz quando toca
 
   // Controladores de animação
   late AnimationController _scaleController;
@@ -255,6 +256,9 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     _rapidTapCount++;
     _lastTapTime = now;
 
+    // Ativar expressão feliz
+    setState(() => _isHappy = true);
+
     // Criar explosão de partículas (com limite)
     _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
 
@@ -270,6 +274,10 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
       _jumpController.forward().then((_) {
         if (mounted) {
           _jumpController.reverse().then((_) {
+            // Voltar para expressão normal após animação
+            if (mounted) {
+              setState(() => _isHappy = false);
+            }
             // Resetar contador após animação completa se passou tempo suficiente
             if (mounted && _lastTapTime != null &&
                 DateTime.now().difference(_lastTapTime!).inMilliseconds > 500) {
@@ -438,7 +446,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                       child: Transform.scale(
                         scale: _scaleAnimation.value * (_isDragging ? 1.0 : _purringAnimation.value),
                         child: SvgPicture.string(
-                          getCatSvgForPose(CatPose.sitting, _isBlinking),
+                          getCatSvgForPose(CatPose.sitting, _isBlinking, isHappy: _isHappy),
                           width: widget.size,
                           height: widget.size,
                         ),
