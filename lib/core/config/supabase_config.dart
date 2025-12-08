@@ -23,10 +23,11 @@ class SupabaseConfig {
   static const String schema = 'public';
 
   /// Deep link scheme para OAuth callbacks
-  static const String deepLinkScheme = 'io.supabase.grimorio';
+  static const String deepLinkScheme = 'io.supabase.grimorio'; // Usado para callbacks nativos em mobile
 
-  /// Redirect URL para OAuth
-  static String get redirectUrl => '$deepLinkScheme://callback';
+  /// Redirect URL para OAuth (deve ser HTTPS para provedores como Google)
+  /// Formato padrão do Supabase: https://<SUA_URL_SUPABASE>/auth/v1/callback
+  static String get redirectUrl => '$url/auth/v1/callback';
 }
 
 /// Tabelas do Supabase
