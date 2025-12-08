@@ -22,14 +22,25 @@ class GoddessDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header card with emoji and basic info
+            // Header card with image and basic info
             MagicalCard(
               child: Column(
                 children: [
-                  Text(
-                    goddess.emoji,
-                    style: const TextStyle(fontSize: 72),
-                  ),
+                  if (goddess.imageUrl != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        goddess.imageUrl!,
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildPlaceholderImage();
+                        },
+                      ),
+                    )
+                  else
+                    _buildPlaceholderImage(),
                   const SizedBox(height: 16),
                   Text(
                     goddess.name,
@@ -314,6 +325,22 @@ class GoddessDetailPage extends StatelessWidget {
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      width: 200,
+      height: 200,
+      decoration: BoxDecoration(
+        color: AppColors.lilac.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        goddess.emoji,
+        style: const TextStyle(fontSize: 100),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }

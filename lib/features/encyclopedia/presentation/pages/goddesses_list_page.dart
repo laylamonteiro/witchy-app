@@ -194,20 +194,46 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
       },
       child: Row(
           children: [
-            // Emoji
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: AppColors.lilac.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  goddess.emoji,
-                  style: const TextStyle(fontSize: 32),
-                ),
-              ),
+            // Image or emoji
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: goddess.imageUrl != null
+                  ? Image.asset(
+                      goddess.imageUrl!,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: AppColors.lilac.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              goddess.emoji,
+                              style: const TextStyle(fontSize: 32),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: AppColors.lilac.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          goddess.emoji,
+                          style: const TextStyle(fontSize: 32),
+                        ),
+                      ),
+                    ),
             ),
             const SizedBox(width: 16),
             // Info

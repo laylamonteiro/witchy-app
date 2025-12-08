@@ -12,6 +12,7 @@ final List<MetalModel> metalsData = [
     element: Element.fire,
     planet: Planet.sun,
     conductsPower: true,
+    imageUrl: 'assets/images/metais/ouro.jpg',
     magicalProperties: [
       'Prosperidade e abundância',
       'Poder pessoal',
@@ -53,6 +54,7 @@ final List<MetalModel> metalsData = [
     element: Element.water,
     planet: Planet.moon,
     conductsPower: true,
+    imageUrl: 'assets/images/metais/prata.jpg',
     magicalProperties: [
       'Proteção psíquica',
       'Intuição e clarividência',
@@ -95,6 +97,7 @@ final List<MetalModel> metalsData = [
     element: Element.water,
     planet: Planet.venus,
     conductsPower: true,
+    imageUrl: 'assets/images/metais/cobre.jpg',
     magicalProperties: [
       'Amor e romance',
       'Beleza e atração',
@@ -139,6 +142,7 @@ final List<MetalModel> metalsData = [
     element: Element.fire,
     planet: Planet.mars,
     conductsPower: false,
+    imageUrl: 'assets/images/metais/ferro.jpg',
     magicalProperties: [
       'Proteção poderosa',
       'Coragem e força',
@@ -183,6 +187,7 @@ final List<MetalModel> metalsData = [
     element: Element.air,
     planet: Planet.jupiter,
     conductsPower: true,
+    imageUrl: 'assets/images/metais/estanho.jpg',
     magicalProperties: [
       'Prosperidade e expansão',
       'Sorte e fortuna',
@@ -225,6 +230,7 @@ final List<MetalModel> metalsData = [
     element: Element.earth,
     planet: Planet.saturn,
     conductsPower: false,
+    imageUrl: 'assets/images/metais/chumbo.jpg',
     magicalProperties: [
       'Banimento poderoso',
       'Proteção pesada',
@@ -271,6 +277,7 @@ final List<MetalModel> metalsData = [
     element: Element.fire,
     planet: Planet.venus,
     conductsPower: true,
+    imageUrl: 'assets/images/metais/bronze.jpg',
     magicalProperties: [
       'Conexão ancestral',
       'Tradição e história',
@@ -313,6 +320,7 @@ final List<MetalModel> metalsData = [
     element: Element.fire,
     planet: Planet.sun,
     conductsPower: true,
+    imageUrl: 'assets/images/metais/latao.jpg',
     magicalProperties: [
       'Purificação',
       'Limpeza energética',
@@ -354,6 +362,7 @@ final List<MetalModel> metalsData = [
     element: Element.air,
     planet: Planet.mercury,
     conductsPower: true,
+    imageUrl: 'assets/images/metais/aluminio.jpg',
     magicalProperties: [
       'Proteção mental',
       'Bloqueio de influências',

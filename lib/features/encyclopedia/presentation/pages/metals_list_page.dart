@@ -82,22 +82,51 @@ class _MetalsListPageState extends State<MetalsListPage> {
                     },
                     child: Row(
                       children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: AppColors.starYellow.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.starYellow.withOpacity(0.5),
-                              width: 2,
-                            ),
-                          ),
-                          child: Icon(
-                            _getMetalIcon(metal.name),
-                            color: AppColors.starYellow,
-                            size: 32,
-                          ),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: metal.imageUrl != null
+                              ? Image.asset(
+                                  metal.imageUrl!,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.starYellow.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppColors.starYellow.withOpacity(0.5),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        _getMetalIcon(metal.name),
+                                        color: AppColors.starYellow,
+                                        size: 32,
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.starYellow.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: AppColors.starYellow.withOpacity(0.5),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    _getMetalIcon(metal.name),
+                                    color: AppColors.starYellow,
+                                    size: 32,
+                                  ),
+                                ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
