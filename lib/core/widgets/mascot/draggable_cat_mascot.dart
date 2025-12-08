@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
+import 'dart:async';
 import '../../../core/theme/app_theme.dart';
-import 'cat_svg_poses.dart';
+
+/// Poses do mascote baseadas nos novos SVG assets
+enum MascotPose {
+  sitting,      // Sentado normal (usa tail animations)
+  lyingRelaxed, // Deitado relaxado
+  sleeping,     // Dormindo
+}
 
 /// Widget do mascote gatinho preto arrastável com efeitos mágicos
 ///
@@ -12,6 +19,8 @@ import 'cat_svg_poses.dart';
 /// - Efeitos de partículas ao clicar e arrastar
 /// - Rastro mágico durante o arraste
 /// - Animações de flutuação
+/// - Poses dinâmicas: sentado, deitado, dormindo
+/// - Expressões: bravo (padrão), neutro, feliz
 class DraggableCatMascot extends StatefulWidget {
   final double initialX;
   final double initialY;
@@ -37,6 +46,13 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   bool _isDragging = false;
   bool _isBlinking = false;
   bool _isHappy = false; // Expressão feliz quando toca
+
+  // Pose atual do mascote
+  MascotPose _currentPose = MascotPose.sitting;
+
+  // Timer para idle (dormir após inatividade)
+  Timer? _idleTimer;
+  static const Duration _idleTimeout = Duration(seconds: 12);
 
   // Controladores de animação
   late AnimationController _scaleController;
@@ -206,6 +222,62 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     _particleController.repeat();
 
     _startBlinking();
+    _resetIdleTimer();
+  }
+
+  /// Retorna o asset SVG correto baseado no estado atual
+  String get _currentSpriteAsset {
+    // Se dormindo
+    if (_currentPose == MascotPose.sleeping) {
+      return 'assets/icons/cat_sleep.svg';
+    }
+
+    // Se deitado relaxado
+    if (_currentPose == MascotPose.lyingRelaxed) {
+      return 'assets/icons/cat_lie_relaxed.svg';
+    }
+
+    // Sentado - várias expressões
+    if (_isBlinking) {
+      return 'assets/icons/cat_sit_blink.svg';
+    }
+
+    if (_isHappy) {
+      return 'assets/icons/cat_sit_happy.svg';
+    }
+
+    // Usar wobble para alternar cauda esquerda/direita quando não está arrastando
+    if (!_isDragging && _wobbleController.isAnimating) {
+      final wobbleValue = _wobbleAnimation.value;
+      if (wobbleValue < -0.02) {
+        return 'assets/icons/cat_sit_tail_left.svg';
+      } else if (wobbleValue > 0.02) {
+        return 'assets/icons/cat_sit_tail_right.svg';
+      }
+    }
+
+    // Expressão padrão: angry (cara de bravo fofo)
+    return 'assets/icons/cat_sit_angry.svg';
+  }
+
+  /// Reseta o timer de inatividade
+  void _resetIdleTimer() {
+    _idleTimer?.cancel();
+
+    // Se estava dormindo ou deitado, acordar
+    if (_currentPose != MascotPose.sitting) {
+      setState(() {
+        _currentPose = MascotPose.sitting;
+      });
+    }
+
+    _idleTimer = Timer(_idleTimeout, () {
+      if (mounted && !_isDragging) {
+        setState(() {
+          _currentPose = MascotPose.sleeping;
+        });
+      }
+    });
   }
 
   void _startBlinking() {
@@ -227,6 +299,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
   @override
   void dispose() {
+    _idleTimer?.cancel();
     _scaleController.dispose();
     _shadowController.dispose();
     _particleController.dispose();
@@ -242,6 +315,17 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   void _onTap() {
     // Evitar cliques durante arraste
     if (_isDragging) return;
+
+    // Resetar timer de inatividade
+    _resetIdleTimer();
+
+    // Se estava dormindo ou deitado, acordar e não fazer mais nada
+    if (_currentPose != MascotPose.sitting) {
+      setState(() {
+        _currentPose = MascotPose.sitting;
+      });
+      return;
+    }
 
     final now = DateTime.now();
 
@@ -290,6 +374,23 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
     // Callback opcional
     widget.onTap?.call();
+  }
+
+  /// Handler para long press - deita o gatinho
+  void _onLongPress() {
+    if (_isDragging) return;
+
+    _resetIdleTimer();
+
+    // Se está sentado, deita relaxado
+    if (_currentPose == MascotPose.sitting) {
+      setState(() {
+        _currentPose = MascotPose.lyingRelaxed;
+      });
+
+      // Criar algumas partículas de conforto
+      _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
+    }
   }
 
   void _createParticleBurst(double x, double y) {
@@ -369,9 +470,13 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
           ),
           child: GestureDetector(
             onTap: _onTap,
+            onLongPress: _onLongPress,
             onPanStart: (details) {
               // Resetar contador de taps
               _rapidTapCount = 0;
+
+              // Resetar timer de inatividade
+              _resetIdleTimer();
 
               // Parar animações em andamento antes de iniciar arraste
               if (_jumpController.isAnimating) {
@@ -445,8 +550,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                       angle: _isDragging ? 0 : _wobbleAnimation.value,
                       child: Transform.scale(
                         scale: _scaleAnimation.value * (_isDragging ? 1.0 : _purringAnimation.value),
-                        child: SvgPicture.string(
-                          getCatSvgForPose(CatPose.sitting, _isBlinking, isHappy: _isHappy),
+                        child: SvgPicture.asset(
+                          _currentSpriteAsset,
                           width: widget.size,
                           height: widget.size,
                         ),
