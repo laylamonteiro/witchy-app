@@ -32,7 +32,7 @@ class DraggableCatMascot extends StatefulWidget {
     this.initialX = 50,
     this.initialY = 100,
     this.onTap,
-    this.size = 60,
+    this.size = 85,
   });
 
   @override
@@ -242,7 +242,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
       return 'assets/icons/cat_sit_blink.svg';
     }
 
-    if (_isHappy) {
+    // Feliz quando está sendo arrastado ou após tap
+    if (_isHappy || _isDragging) {
       return 'assets/icons/cat_sit_happy.svg';
     }
 
