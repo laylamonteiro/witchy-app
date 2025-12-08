@@ -40,66 +40,104 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Carrossel: Ontem - Hoje - Amanhã
+                  // Carrossel: Ontem - Hoje - Amanhã com setas laterais
                   SizedBox(
                     height: 300,
-                    child: Column(
+                    child: Stack(
                       children: [
-                        Expanded(
-                          child: PageView(
-                            controller: _pageController,
-                            onPageChanged: (index) {
-                              setState(() {
-                                _currentPage = index;
-                              });
-                            },
-                            children: [
-                              // Ontem
-                              _buildDayCard(
-                                context,
-                                lunarProvider,
-                                'Ontem',
-                                -1,
-                                dateFormat,
+                        // PageView do carrossel
+                        PageView(
+                          controller: _pageController,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentPage = index;
+                            });
+                          },
+                          children: [
+                            // Ontem
+                            _buildDayCard(
+                              context,
+                              lunarProvider,
+                              'Ontem',
+                              -1,
+                              dateFormat,
+                            ),
+                            // Hoje
+                            _buildDayCard(
+                              context,
+                              lunarProvider,
+                              'Hoje',
+                              0,
+                              dateFormat,
+                            ),
+                            // Amanhã
+                            _buildDayCard(
+                              context,
+                              lunarProvider,
+                              'Amanhã',
+                              1,
+                              dateFormat,
+                            ),
+                          ],
+                        ),
+                        // Seta esquerda
+                        if (_currentPage > 0)
+                          Positioned(
+                            left: 4,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: GestureDetector(
+                                onTap: () {
+                                  _pageController.previousPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface.withValues(alpha: 0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.chevron_left,
+                                    color: AppColors.lilac,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
-                              // Hoje
-                              _buildDayCard(
-                                context,
-                                lunarProvider,
-                                'Hoje',
-                                0,
-                                dateFormat,
-                              ),
-                              // Amanhã
-                              _buildDayCard(
-                                context,
-                                lunarProvider,
-                                'Amanhã',
-                                1,
-                                dateFormat,
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Indicador de página
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(3, (index) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _currentPage == index
-                                    ? AppColors.lilac
-                                    : AppColors.surfaceBorder,
+                        // Seta direita
+                        if (_currentPage < 2)
+                          Positioned(
+                            right: 4,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: GestureDetector(
+                                onTap: () {
+                                  _pageController.nextPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface.withValues(alpha: 0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.chevron_right,
+                                    color: AppColors.lilac,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
-                            );
-                          }),
-                        ),
-                        const SizedBox(height: 8),
+                            ),
+                          ),
                       ],
                     ),
                   ),
