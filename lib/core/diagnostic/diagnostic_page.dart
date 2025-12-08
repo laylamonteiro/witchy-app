@@ -113,7 +113,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this); // Aumentar o número de abas para 7
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -599,7 +599,6 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
             Tab(text: 'Debug'),
-            Tab(text: 'Login Google'), // Nova aba
             Tab(text: 'Pagamentos'),
             Tab(text: 'IA Groq'),
             Tab(text: 'Mapa Astral'),
@@ -634,7 +633,6 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         controller: _tabController,
         children: [
           _buildDebugSection(),
-          _buildGoogleLoginDiagnosticSection(), // Nova seção
           _buildPaymentsDiagnosticSection(),
           _buildTestSection(
             icon: Icons.psychology,
@@ -1098,177 +1096,6 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  }
-
-  Widget _buildGoogleLoginDiagnosticSection() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, _) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              MagicalCard(
-                child: Column(
-                  children: [
-                    const Icon(Icons.login, size: 64, color: AppColors.lilac),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Diagnóstico de Login Google',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.lilac,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Testa o fluxo de login com o Google e registra os logs.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.softWhite.withOpacity(0.8),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _isTesting ? null : () => _testGoogleLogin(authProvider),
-                icon: _isTesting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkBackground),
-                        ),
-                      )
-                    : const Icon(Icons.play_arrow),
-                label: Text(_isTesting ? 'Testando...' : 'Executar Teste de Login Google'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: AppColors.darkBackground,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              if (_result != null) ...[
-                const SizedBox(height: 16),
-                MagicalCard(
-                  child: Row(
-                    children: [
-                      Icon(
-                        _result!.startsWith('SUCESSO')
-                            ? Icons.check_circle
-                            : _result!.startsWith('AVISO')
-                                ? Icons.warning
-                                : Icons.error,
-                        color: _result!.startsWith('SUCESSO')
-                            ? AppColors.success
-                            : _result!.startsWith('AVISO')
-                                ? AppColors.starYellow
-                                : AppColors.alert,
-                        size: 32,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _result!,
-                          style: TextStyle(
-                            color: _result!.startsWith('SUCESSO')
-                                ? AppColors.success
-                                : _result!.startsWith('AVISO')
-                                    ? AppColors.starYellow
-                                    : AppColors.alert,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              if (_logs.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Logs de Diagnóstico',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.lilac,
-                          ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy, color: AppColors.lilac),
-                      onPressed: _copyLogs,
-                      tooltip: 'Copiar logs',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                MagicalCard(
-                  child: Container(
-                    constraints: const BoxConstraints(maxHeight: 400),
-                    child: SingleChildScrollView(
-                      child: SelectableText(
-                        _logs.join('\n'),
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                          color: AppColors.softWhite,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _testGoogleLogin(AuthProvider authProvider) async {
-    setState(() {
-      _isTesting = true;
-      _result = null;
-      _logs.clear();
-    });
-
-    _addLog('🔑 Iniciando teste de login com Google...');
-
-    try {
-      _addLog('📡 Chamando signInWithGoogle...');
-      final user = await authProvider.signInWithGoogle(onLog: _addLog);
-
-      if (user != null) {
-        _addLog('✅ Login Google BEM-SUCEDIDO!');
-        _addLog('   UID: ${user.uid}');
-        _addLog('   Email: ${user.email}');
-        _addLog('   Nome: ${user.displayName}');
-        setState(() {
-          _result = 'SUCESSO: Login Google funcionando!';
-          _isTesting = false;
-        });
-      } else {
-        _addLog('❌ Login Google CANCELADO ou FALHOU sem exceção.');
-        setState(() {
-          _result = 'AVISO: Login Google cancelado ou falhou.';
-          _isTesting = false;
-        });
-      }
-    } catch (e, stackTrace) {
-      _addLog('❌ ERRO no Login Google: $e');
-      _addLog('');
-      _addLog('📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
-      setState(() {
-        _result = 'ERRO: ${e.toString()}';
-        _isTesting = false;
-      });
-    }
   }
 
   Widget _buildDebugSection() {
