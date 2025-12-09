@@ -250,10 +250,8 @@ jobs:
 
         with:
 
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-
+          flutter-version: 'latest' # Usar a versão mais recente do canal stable
           channel: stable
-
           cache: true
 
  
@@ -334,10 +332,8 @@ jobs:
 
         with:
 
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-
+          flutter-version: 'latest' # Usar a versão mais recente do canal stable
           channel: stable
-
           cache: true
 
  
@@ -500,10 +496,8 @@ jobs:
 
         with:
 
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-
+          flutter-version: 'latest' # Usar a versão mais recente do canal stable
           channel: stable
-
           cache: true
 
  
