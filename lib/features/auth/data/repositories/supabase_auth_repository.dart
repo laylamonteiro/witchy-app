@@ -16,7 +16,11 @@ class SupabaseAuthRepository implements AuthRepository {
 
   SupabaseAuthRepository() {
     _supabase = Supabase.instance.client;
-    _googleSignIn = GoogleSignIn(); // Inicializa GoogleSignIn no construtor
+    // Inicializa GoogleSignIn com o Web Client ID (client_type: 3) do google-services.json
+    // Este ID é necessário para autenticação com Supabase
+    _googleSignIn = GoogleSignIn(
+      serverClientId: '625869809120-vekqjnltlccc7llalu6adgl1js8tngob.apps.googleusercontent.com',
+    );
     _setupAuthListener();
   }
 
