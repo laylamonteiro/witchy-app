@@ -1,4 +1,4 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart' hide DayOfWeek; // Adicionado hide DayOfWeek para evitar conflito
 import 'package:timezone/timezone.dart' as tz;
 import '../../features/wheel_of_year/data/models/sabbat_model.dart';
 
@@ -30,6 +30,7 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime, // Removido
     );
   }
 
@@ -56,6 +57,7 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime, // Removido
     );
   }
 
@@ -85,6 +87,7 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime, // Removido
     );
   }
 

@@ -599,6 +599,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
             Tab(text: 'Debug'),
+            Tab(text: 'Login Social'), // Nova aba para login social
             Tab(text: 'Pagamentos'),
             Tab(text: 'IA Groq'),
             Tab(text: 'Mapa Astral'),
@@ -633,6 +634,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         controller: _tabController,
         children: [
           _buildDebugSection(),
+          _buildSocialLoginDiagnosticSection(), // Nova seção para login social
           _buildPaymentsDiagnosticSection(),
           _buildTestSection(
             icon: Icons.psychology,
@@ -1096,6 +1098,123 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  Widget _buildSocialLoginDiagnosticSection() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              MagicalCard(
+                child: Column(
+                  children: [
+                    const Icon(Icons.login, size: 64, color: AppColors.lilac),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Diagnóstico de Login Social',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: AppColors.lilac,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Testa o fluxo de login com provedores sociais como Google.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.softWhite.withOpacity(0.8),
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  // Lógica para iniciar o login do Google
+                  // Isso deve chamar o método signInWithGoogle do SupabaseAuthRepository
+                  // e logar os resultados.
+                  _addLog('Iniciando teste de login com Google...');
+                  final authRepo = SupabaseAuthRepository();
+                  final result = await authRepo.signInWithGoogle();
+
+                  if (result.success) {
+                    _addLog('Login com Google SUCESSO! Usuário: ${result.user?.email}');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Login com Google SUCESSO!'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  } else {
+                    _addLog('Login com Google FALHOU: ${result.errorMessage}');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Login com Google FALHOU: ${result.errorMessage}'),
+                          backgroundColor: AppColors.alert,
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.g_mobiledata),
+                label: const Text('Testar Login com Google'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.lilac,
+                  foregroundColor: AppColors.darkBackground,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Logs de Login Social',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.lilac,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              MagicalCard(
+                child: Container(
+                  constraints: const BoxConstraints(maxHeight: 400),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      _logs.join('\n'),
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        color: AppColors.softWhite,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _copyLogs,
+                icon: const Icon(Icons.copy),
+                label: const Text('Copiar Logs de Login Social'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.lilac,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildDebugSection() {
