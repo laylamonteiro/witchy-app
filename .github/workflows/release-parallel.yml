@@ -42,7 +42,7 @@ on:
 
 env:
 
-  FLUTTER_VERSION: '3.27.0'
+  FLUTTER_VERSION: '3.8.0' # Atualizado para ser compatível com flutter_lints >=6.0.0
 
   JAVA_VERSION: '17'
 
