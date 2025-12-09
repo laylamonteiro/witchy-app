@@ -12,11 +12,9 @@ class SupabaseAuthRepository implements AuthRepository {
   late final SupabaseClient _supabase;
   final _authStateController = StreamController<UserModel?>.broadcast();
   StreamSubscription<AuthState>? _authSubscription;
-  late final GoogleSignIn _googleSignIn; // Variável de instância para GoogleSignIn
 
   SupabaseAuthRepository() {
     _supabase = Supabase.instance.client;
-    _googleSignIn = GoogleSignIn(); // Inicializa GoogleSignIn no construtor
     _setupAuthListener();
   }
 
@@ -107,7 +105,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-
   @override
   Future<AuthResult> signInWithGoogle() async {
     try {
@@ -122,9 +119,13 @@ class SupabaseAuthRepository implements AuthRepository {
         return AuthResult.success(UserModel.defaultUser());
       }
 
+      // TEMPORÁRIO: Google Sign-In desabilitado até resolver issues com v7.x
+      await debugLog('AUTH', 'Google Sign-In mobile temporariamente desabilitado');
+      return AuthResult.error('Login com Google temporariamente indisponível. Use email/senha.');
 
+      /* CÓDIGO ORIGINAL COMENTADO - Descomentar quando resolver v7.x
       // Para mobile, usar Google Sign-In nativo (versão 7.x usa singleton)
-      final googleUser = await _googleSignIn.signIn(); // Usa a variável de instância
+      final googleUser = await GoogleSignIn.instance.signIn();
       if (googleUser == null) {
         await debugLog('AUTH', 'Google Sign-In cancelado pelo usuário');
         return AuthResult.error('Login cancelado');
@@ -160,6 +161,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
       await debugLog('AUTH', 'Google Sign-In: falhou - user é null');
       return AuthResult.error('Erro ao autenticar com Google');
+      */
     } on AuthException catch (e) {
       await debugLog('AUTH', 'Google Sign-In AuthException: ${e.message}');
       return _handleAuthException(e);
