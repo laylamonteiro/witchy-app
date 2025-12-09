@@ -105,13 +105,6 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  /// Google Sign-In configurado
-  /// Requer: google-services.json (Android) e GoogleService-Info.plist (iOS)
-  /// O serverClientId é lido automaticamente do google-services.json
-  static final _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-  );
-
   @override
   Future<AuthResult> signInWithGoogle() async {
     try {
@@ -126,8 +119,8 @@ class SupabaseAuthRepository implements AuthRepository {
         return AuthResult.success(UserModel.defaultUser());
       }
 
-      // Para mobile, usar Google Sign-In nativo
-      final googleUser = await _googleSignIn.signIn();
+      // Para mobile, usar Google Sign-In nativo (versão 7.x usa singleton)
+      final googleUser = await GoogleSignIn.instance.signIn();
       if (googleUser == null) {
         await debugLog('AUTH', 'Google Sign-In cancelado pelo usuário');
         return AuthResult.error('Login cancelado');
