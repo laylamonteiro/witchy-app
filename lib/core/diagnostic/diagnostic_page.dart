@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
@@ -1729,6 +1730,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       ),
     );
   }
+
 
   Widget _buildTestSection({
     required IconData icon,

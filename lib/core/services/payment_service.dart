@@ -428,7 +428,8 @@ class PaymentService extends ChangeNotifier {
       debugPrint('🚀 Iniciando compra na loja...');
 
       // Realizar compra
-      final customerInfo = await Purchases.purchasePackage(package);
+      final purchaseResult = await Purchases.purchasePackage(package);
+      final customerInfo = purchaseResult.customerInfo;
 
       debugPrint('✅ Compra concluída com sucesso!');
       debugPrint('   Entitlements ativos: ${customerInfo.entitlements.active.keys.join(", ")}');
@@ -472,7 +473,8 @@ class PaymentService extends ChangeNotifier {
     _setStatus(PurchaseStatus.loading);
 
     try {
-      final customerInfo = await Purchases.purchasePackage(package);
+      final purchaseResult = await Purchases.purchasePackage(package);
+      final customerInfo = purchaseResult.customerInfo;
       _onCustomerInfoUpdated(customerInfo);
 
       _setStatus(PurchaseStatus.success);

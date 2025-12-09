@@ -23,23 +23,21 @@ class MetalDetailPage extends StatelessWidget {
             MagicalCard(
               child: Column(
                 children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.starYellow.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.starYellow,
-                        width: 3,
+                  if (metal.imageUrl != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        metal.imageUrl!,
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildPlaceholderImage();
+                        },
                       ),
-                    ),
-                    child: Icon(
-                      _getMetalIcon(metal.name),
-                      color: AppColors.starYellow,
-                      size: 60,
-                    ),
-                  ),
+                    )
+                  else
+                    _buildPlaceholderImage(),
                   const SizedBox(height: 16),
                   Text(
                     metal.name,
@@ -273,6 +271,26 @@ class MetalDetailPage extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      width: 200,
+      height: 200,
+      decoration: BoxDecoration(
+        color: AppColors.starYellow.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.starYellow,
+          width: 3,
+        ),
+      ),
+      child: Icon(
+        _getMetalIcon(metal.name),
+        color: AppColors.starYellow,
+        size: 80,
       ),
     );
   }

@@ -18,11 +18,25 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
   List<GoddessModel> _filteredGoddesses = goddessesData;
   GoddessOrigin? _selectedOrigin;
 
+  // Remove acentos para ordenação alfabética correta
+  String _removeAccents(String str) {
+    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
+    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
+
+    String result = str;
+    for (int i = 0; i < withAccents.length; i++) {
+      result = result.replaceAll(withAccents[i], withoutAccents[i]);
+    }
+    return result;
+  }
+
   @override
   void initState() {
     super.initState();
     _filteredGoddesses = List.from(goddessesData)
-      ..sort((a, b) => a.name.compareTo(b.name));
+      ..sort((a, b) =>
+        _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+      );
   }
 
   void _filterGoddesses(String query) {
@@ -36,7 +50,9 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
 
         return matchesSearch && matchesOrigin;
       }).toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+        ..sort((a, b) =>
+          _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+        );
     });
   }
 
@@ -194,20 +210,46 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
       },
       child: Row(
           children: [
-            // Emoji
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: AppColors.lilac.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  goddess.emoji,
-                  style: const TextStyle(fontSize: 32),
-                ),
-              ),
+            // Image or emoji
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: goddess.imageUrl != null
+                  ? Image.asset(
+                      goddess.imageUrl!,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: AppColors.lilac.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              goddess.emoji,
+                              style: const TextStyle(fontSize: 32),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: AppColors.lilac.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          goddess.emoji,
+                          style: const TextStyle(fontSize: 32),
+                        ),
+                      ),
+                    ),
             ),
             const SizedBox(width: 16),
             // Info
@@ -215,21 +257,24 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    goddess.name,
-                    style: GoogleFonts.cinzelDecorative(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lilac,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          goddess.name,
+                          style: GoogleFonts.cinzelDecorative(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.lilac,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Text(
-                        goddess.origin.emoji,
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                      Text(goddess.origin.emoji),
                       const SizedBox(width: 4),
                       Text(
                         goddess.origin.displayName,
@@ -240,29 +285,15 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    children: goddess.aspects.take(3).map((aspect) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${aspect.emoji} ${aspect.displayName}',
-                          style: const TextStyle(
-                            color: AppColors.softWhite,
-                            fontSize: 10,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  const SizedBox(height: 4),
+                  Text(
+                    goddess.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),

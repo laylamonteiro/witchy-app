@@ -176,6 +176,7 @@ class GoddessModel {
   final List<String> invocationTips;
   final String mythology;
   final String emoji;
+  final String? imageUrl;
 
   const GoddessModel({
     required this.name,
@@ -192,5 +193,6 @@ class GoddessModel {
     required this.invocationTips,
     required this.mythology,
     required this.emoji,
+    this.imageUrl,
   });
 }
