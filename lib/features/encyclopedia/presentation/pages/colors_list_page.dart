@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
 import '../../data/models/color_model.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -100,7 +101,11 @@ class _ColorsListPageState extends State<ColorsListPage> {
                             children: [
                               Text(
                                 colorModel.name,
-                                style: Theme.of(context).textTheme.titleLarge,
+                                style: GoogleFonts.cinzelDecorative(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.lilac,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Row(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/herb_model.dart';
 import '../providers/encyclopedia_provider.dart';
 import 'herb_detail_page.dart';
@@ -129,7 +130,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
                               Expanded(
                                 child: Text(
                                   herb.name,
-                                  style: Theme.of(context).textTheme.titleLarge,
+                                  style: GoogleFonts.cinzelDecorative(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.lilac,
+                                  ),
                                 ),
                               ),
                               if (herb.toxic)

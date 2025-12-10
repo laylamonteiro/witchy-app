@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
 import '../../data/models/metal_model.dart';
 import '../../data/models/crystal_model.dart'; // Para ElementExtension
@@ -138,7 +139,11 @@ class _MetalsListPageState extends State<MetalsListPage> {
                                   Expanded(
                                     child: Text(
                                       metal.name,
-                                      style: Theme.of(context).textTheme.titleLarge,
+                                      style: GoogleFonts.cinzelDecorative(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.lilac,
+                                      ),
                                     ),
                                   ),
                                 ],
