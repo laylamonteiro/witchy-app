@@ -323,6 +323,15 @@ jobs:
 
           java-version: ${{ env.JAVA_VERSION }}
 
+      - name: ♻️ Prepare Gradle (cache + distribution)
+
+        uses: gradle/gradle-build-action@v2
+
+        with:
+
+          gradle-version: 8.11.1
+
+          cache-read-only: false
 
 
       - name: 🐦 Setup Flutter
@@ -498,6 +507,15 @@ jobs:
 
           java-version: ${{ env.JAVA_VERSION }}
 
+      - name: ♻️ Prepare Gradle (cache + distribution)
+
+        uses: gradle/gradle-build-action@v2
+
+        with:
+
+          gradle-version: 8.11.1
+
+          cache-read-only: false
 
 
       - name: 🐦 Setup Flutter
