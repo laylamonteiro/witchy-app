@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
 /// Página de gerenciamento de assinatura
 ///
@@ -649,23 +650,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     );
   }
 
-  Future<void> _showPaywall() async {
-    final result = await _paymentService.presentPaywall();
-
-    if (!mounted) return;
-
-    if (result == PaywallResult.purchased ||
-        result == PaywallResult.restored) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Parabéns! Você agora é Premium!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else if (result == PaywallResult.cancelled && !_paymentService.isInitialized) {
-      // Mostrar mensagem informativa sobre configuração
-      _showRevenueCatNotConfiguredDialog();
-    }
+  void _showPaywall() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const PremiumUpgradeSheet(),
+    );
   }
 
   void _showRevenueCatNotConfiguredDialog() {

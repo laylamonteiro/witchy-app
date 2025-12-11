@@ -90,11 +90,20 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
               .order('created_at', ascending: false);
           _addLog('   Total: ${codes.length} códigos');
           if (codes.isNotEmpty) {
-            _addLog('   Últimos 3:');
+            _addLog('   Últimos 3 códigos (todas as colunas):');
             for (var i = 0; i < codes.length && i < 3; i++) {
               final code = codes[i];
-              _addLog('     • ${code['code']} (usado: ${code['is_used']})');
+              _addLog('     ═══════════════════════════════');
+              _addLog('     Código: ${code['code']}');
+              _addLog('     ID: ${code['id']}');
+              _addLog('     Is Used: ${code['is_used']}');
+              _addLog('     Max Uses: ${code['max_uses'] ?? 1}');
+              _addLog('     Current Uses: ${code['current_uses'] ?? 0}');
+              _addLog('     Used By: ${code['used_by'] ?? 'N/A'}');
+              _addLog('     Used At: ${code['used_at'] ?? 'N/A'}');
+              _addLog('     Created At: ${code['created_at']}');
             }
+            _addLog('     ═══════════════════════════════');
           }
         } catch (e) {
           _addLog('   ❌ ERRO ao buscar: $e');
@@ -129,11 +138,20 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
           _addLog('   Total de códigos: $total');
 
           if (total > 0) {
-            final codes = await db.query('beta_codes', limit: 5);
-            _addLog('   Primeiros códigos:');
+            final codes = await db.query('beta_codes', limit: 3);
+            _addLog('   Primeiros 3 códigos (todas as colunas):');
             for (final code in codes) {
-              _addLog('     • ${code['code']} (usado: ${code['is_used']})');
+              _addLog('     ═══════════════════════════════');
+              _addLog('     Código: ${code['code']}');
+              _addLog('     ID: ${code['id']}');
+              _addLog('     Is Used: ${code['is_used']}');
+              _addLog('     Max Uses: ${code['max_uses'] ?? 1}');
+              _addLog('     Current Uses: ${code['current_uses'] ?? 0}');
+              _addLog('     Used By: ${code['used_by'] ?? 'N/A'}');
+              _addLog('     Used At: ${code['used_at'] ?? 'N/A'}');
+              _addLog('     Created At: ${code['created_at']}');
             }
+            _addLog('     ═══════════════════════════════');
           }
         }
       } catch (e) {

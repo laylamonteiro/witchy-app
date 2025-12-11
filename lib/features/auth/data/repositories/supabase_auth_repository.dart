@@ -194,7 +194,13 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<AuthResult> sendPasswordResetEmail(String email) async {
     try {
-      await _supabase.auth.resetPasswordForEmail(email);
+      // Adicionar redirect URL para funcionar corretamente no mobile/web
+      await _supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo: kIsWeb
+            ? '${SupabaseConfig.url}/auth/v1/verify'
+            : '${SupabaseConfig.deepLinkScheme}://reset-password',
+      );
       return AuthResult.success(UserModel.defaultUser());
     } on AuthException catch (e) {
       return _handleAuthException(e);

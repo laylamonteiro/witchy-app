@@ -18,6 +18,7 @@ import '../../../journeys/journeys.dart';
 import '../../../auth/data/repositories/supabase_auth_repository.dart';
 import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
 
@@ -73,14 +74,28 @@ class SettingsPage extends StatelessWidget {
   Widget _buildProfileHeader(BuildContext context, UserModel user, AuthProvider authProvider) {
     return Column(
       children: [
-        // Avatar com foto de perfil
-        ProfileAvatarPicker(
-          currentPhotoUrl: user.photoUrl,
-          size: 100,
-          gradientColors: _getRoleColors(user.role),
-          onPhotoChanged: (photoPath) {
-            authProvider.updateProfile(displayName: user.displayName);
-          },
+        // Avatar com foto de perfil (temporariamente desabilitado)
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: _getRoleColors(user.role),
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              _getInitials(user.displayName ?? user.email),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         // Nome com botão de editar
@@ -477,12 +492,6 @@ class SettingsPage extends StatelessWidget {
           ],
           _buildDivider(),
           _buildOptionTile(
-            icon: Icons.card_membership,
-            title: 'Gerenciar Assinatura',
-            onTap: () => Navigator.pushNamed(context, '/subscription'),
-          ),
-          _buildDivider(),
-          _buildOptionTile(
             icon: Icons.analytics_outlined,
             title: 'Estatísticas Mágicas',
             onTap: () => Navigator.push(
@@ -806,16 +815,21 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showUpgradeSheet(BuildContext context) async {
-    final paymentService = PaymentService();
-    final result = await paymentService.presentPaywall();
+  void _showUpgradeSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const PremiumUpgradeSheet(),
+    );
+  }
 
-    if (!context.mounted) return;
-
-    // Se o resultado foi cancelled e o RevenueCat não está configurado, mostrar aviso
-    if (result == PaywallResult.cancelled && !paymentService.isInitialized) {
-      _showRevenueCatNotConfiguredDialog(context);
+  String _getInitials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
+    return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
   }
 
   void _showRevenueCatNotConfiguredDialog(BuildContext context) {
