@@ -58,6 +58,7 @@ class BetaCodeRepository {
     final cleanCode = code.trim().toUpperCase();
     final now = DateTime.now();
     print('[BetaCodeRepository] createCode - código: $cleanCode');
+    print('[BetaCodeRepository] Supabase configurado: ${SupabaseConfig.isConfigured}');
 
     final codeData = {
       'code': cleanCode,
@@ -69,20 +70,42 @@ class BetaCodeRepository {
     if (supabase != null) {
       try {
         print('[BetaCodeRepository] Inserindo código no Supabase...');
-        await supabase.from(SupabaseTables.betaCodes).insert(codeData);
+        print('[BetaCodeRepository] Dados: $codeData');
+        print('[BetaCodeRepository] Tabela: ${SupabaseTables.betaCodes}');
+
+        final response = await supabase.from(SupabaseTables.betaCodes).insert(codeData).select();
+
+        print('[BetaCodeRepository] ✅ Resposta do Supabase: $response');
         print('[BetaCodeRepository] ✅ Código inserido no Supabase com sucesso');
+
         // Também salvar localmente para cache
         await _saveCodeToLocal(cleanCode, now);
         print('[BetaCodeRepository] ✅ Código salvo localmente para cache');
         return true;
-      } catch (e) {
-        print('[BetaCodeRepository] ❌ Erro ao criar código no Supabase: $e');
+      } catch (e, stackTrace) {
+        print('[BetaCodeRepository] ❌ ERRO DETALHADO ao criar código no Supabase:');
+        print('[BetaCodeRepository] ❌ Erro: $e');
+        print('[BetaCodeRepository] ❌ Tipo: ${e.runtimeType}');
+        print('[BetaCodeRepository] ❌ Stack trace: $stackTrace');
+
+        // Se for erro de RLS/permissão, mostrar claramente
+        if (e.toString().contains('permission') ||
+            e.toString().contains('policy') ||
+            e.toString().contains('RLS') ||
+            e.toString().contains('denied')) {
+          print('[BetaCodeRepository] ⚠️  POSSÍVEL PROBLEMA DE PERMISSÃO/RLS');
+          print('[BetaCodeRepository] ⚠️  Verifique as políticas da tabela beta_codes no Supabase');
+        }
+
         print('[BetaCodeRepository] Tentando fallback para SQLite...');
         // Fallback para SQLite
         return _createCodeLocal(cleanCode, now);
       }
     } else {
-      print('[BetaCodeRepository] Supabase não configurado, usando SQLite');
+      print('[BetaCodeRepository] ⚠️  Supabase NÃO está configurado');
+      print('[BetaCodeRepository] ⚠️  URL vazia: ${SupabaseConfig.url.isEmpty}');
+      print('[BetaCodeRepository] ⚠️  AnonKey vazia: ${SupabaseConfig.anonKey.isEmpty}');
+      print('[BetaCodeRepository] Usando SQLite local apenas');
       return _createCodeLocal(cleanCode, now);
     }
   }
