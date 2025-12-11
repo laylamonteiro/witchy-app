@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/database/database_helper.dart';
 import '../../../auth/data/repositories/beta_code_repository.dart';
 
 /// Página de debug para códigos beta
