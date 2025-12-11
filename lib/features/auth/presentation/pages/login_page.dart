@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/config/supabase_config.dart';
+import '../../../../core/config/admin_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'forgot_password_page.dart';
@@ -146,8 +148,8 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira seu email';
         }
-        // Permitir "admin" como login especial
-        if (value == 'admin') return null;
+        // Permitir login admin especial (chave fixa ou via env)
+        if (value == 'admin' || value == AdminConfig.email) return null;
         if (!value.contains('@') || !value.contains('.')) {
           return 'Por favor, insira um email válido';
         }
@@ -163,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
       style: GoogleFonts.nunito(color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: 'Senha',
-        hintText: '••••••••',
+        hintText: '••••••',
         prefixIcon: const Icon(Icons.lock_outline, color: AppColors.lilac),
         suffixIcon: IconButton(
           icon: Icon(
@@ -181,9 +183,10 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira sua senha';
         }
-        // Permitir senha "admin" para login admin
+        // Permitir atalho admin/admin ou senha de env sem validar tamanho
         final email = _emailController.text.trim();
         if (email == 'admin' && value == 'admin') return null;
+        if (email == AdminConfig.email && value == AdminConfig.password) return null;
         if (value.length < 6) {
           return 'A senha deve ter pelo menos 6 caracteres';
         }
@@ -354,10 +357,13 @@ class _LoginPageState extends State<LoginPage> {
 
       final authProvider = context.read<AuthProvider>();
 
-      // Login de admin especial (para desenvolvimento/teste)
+      // Admin shortcut: permite admin/admin (para testes) em qualquer build
       if (email == 'admin' && password == 'admin') {
         await authProvider.activateAdminMode();
-        await authProvider.updateProfile(email: 'admin@grimorio.app', displayName: 'Administrador');
+        await authProvider.updateProfile(
+          email: 'admin@grimorio.app',
+          displayName: 'Administrador',
+        );
         await authProvider.markOnboardingSeen();
 
         if (mounted) {
@@ -366,14 +372,33 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // Usar Supabase se configurado, senão modo local
-      if (SupabaseConfig.isConfigured) {
-        final authRepo = SupabaseAuthRepository();
-        final result = await authRepo.signInWithEmail(email, password);
+      // Admin em produção: apenas credenciais vindas do ambiente
+      if (AdminConfig.isEnabled &&
+          email == AdminConfig.email &&
+          password == AdminConfig.password) {
+        await authProvider.activateAdminMode();
+        await authProvider.updateProfile(
+          email: AdminConfig.email,
+          displayName: 'Administrador',
+        );
+        await authProvider.markOnboardingSeen();
 
-        if (!result.success) {
-          throw Exception(result.errorMessage ?? 'Erro ao fazer login');
+        if (mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
         }
+        return;
+      }
+
+      // Validação obrigatória com Supabase
+      if (!SupabaseConfig.isConfigured) {
+        throw Exception('Sistema de autenticação não configurado. Entre em contato com o suporte.');
+      }
+
+      final authRepo = SupabaseAuthRepository();
+      final result = await authRepo.signInWithEmail(email, password);
+
+      if (!result.success) {
+        throw Exception(result.errorMessage ?? 'Erro ao fazer login');
       }
 
       // Atualizar estado local
@@ -451,5 +476,4 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
   }
-
 }

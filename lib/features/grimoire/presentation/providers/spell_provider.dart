@@ -10,6 +10,7 @@ class SpellProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   bool _preloadedSpellsInitialized = false;
+  String _currentUserId = 'local_user';
 
   List<SpellModel> get spells => _spells;
   bool get isLoading => _isLoading;
@@ -18,8 +19,16 @@ class SpellProvider with ChangeNotifier {
   // Filtrar feitiços do app (pré-carregados)
   List<SpellModel> get appSpells => _spells.where((s) => s.isPreloaded).toList();
 
-  // Filtrar feitiços do usuário (criados)
+  // Filtrar feitiços do usuário (criados) - já filtrados por userId no repository
   List<SpellModel> get userSpells => _spells.where((s) => !s.isPreloaded).toList();
+
+  /// Define o ID do usuário atual e recarrega os feitiços
+  Future<void> setUserId(String userId) async {
+    if (_currentUserId != userId) {
+      _currentUserId = userId;
+      await loadSpells();
+    }
+  }
 
   Future<void> loadSpells() async {
     _isLoading = true;
@@ -33,7 +42,8 @@ class SpellProvider with ChangeNotifier {
         _preloadedSpellsInitialized = true;
       }
 
-      _spells = await _repository.getAll();
+      // Carregar apenas os feitiços do usuário atual + pré-carregados
+      _spells = await _repository.getForUser(_currentUserId);
       _isLoading = false;
       notifyListeners();
     } catch (e) {

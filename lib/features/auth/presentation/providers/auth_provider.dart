@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
+import '../../data/repositories/beta_code_repository.dart';
 
 /// Provider para gerenciar autenticação e estado do usuário
 class AuthProvider extends ChangeNotifier {
@@ -101,8 +103,52 @@ class AuthProvider extends ChangeNotifier {
       }
     }
 
+    // Registrar callback com PaymentService para sincronizar status Premium
+    _registerPaymentServiceCallback();
+
     _isInitialized = true;
     notifyListeners();
+  }
+
+  /// Registra callback com PaymentService para sincronizar UserRole com status de assinatura
+  void _registerPaymentServiceCallback() {
+    final paymentService = PaymentService();
+    paymentService.setProStatusChangedCallback((isPro) {
+      _onPaymentStatusChanged(isPro);
+    });
+    debugPrint('✅ AuthProvider registrado para receber updates do PaymentService');
+  }
+
+  /// Chamado quando o status Pro muda no PaymentService (ex: cancelamento, reembolso)
+  Future<void> _onPaymentStatusChanged(bool isPro) async {
+    await debugLog('AUTH', 'PaymentService notificou mudança: isPro=$isPro');
+
+    // Não alterar role de admin original (mesmo que perca assinatura)
+    if (_isOriginalAdmin) {
+      await debugLog('AUTH', 'Usuário é admin original - mantendo role');
+      return;
+    }
+
+    // Atualizar role baseado no status da assinatura
+    if (isPro) {
+      await debugLog('AUTH', 'Atualizando para Premium');
+      final paymentService = PaymentService();
+      final isLifetime = paymentService.isLifetime;
+      _currentUser = _currentUser.copyWith(
+        role: UserRole.premium,
+        plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
+      );
+    } else {
+      await debugLog('AUTH', 'Revertendo para Free (assinatura cancelada/reembolsada)');
+      _currentUser = _currentUser.copyWith(
+        role: UserRole.free,
+        plan: SubscriptionPlan.free,
+      );
+    }
+
+    await _saveUser();
+    notifyListeners();
+    await debugLog('AUTH', 'UserRole atualizado com sucesso');
   }
 
   /// Salva o usuário atual
@@ -468,5 +514,72 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = UserModel.defaultUser();
     _isOriginalAdmin = false;
     notifyListeners();
+  }
+
+  // ============================================================
+  // BETA CODES - Sistema de códigos promocionais com sync na nuvem
+  // ============================================================
+
+  final BetaCodeRepository _betaCodeRepo = BetaCodeRepository();
+
+  /// Valida e resgata um código beta
+  /// Funciona entre dispositivos via Supabase
+  Future<Map<String, dynamic>> redeemBetaCode(String code) async {
+    try {
+      await debugLog('BETA_CODE', 'Tentando resgatar código: $code');
+
+      // Usar repositório que sincroniza com Supabase
+      final result = await _betaCodeRepo.redeemCode(code, _currentUser.id);
+
+      if (result['success'] == true) {
+        // Atualizar usuário para Premium vitalício
+        _currentUser = _currentUser.copyWith(
+          role: UserRole.premium,
+          plan: SubscriptionPlan.lifetime,
+        );
+
+        await _saveUser();
+        notifyListeners();
+
+        await debugLog('BETA_CODE', 'Código resgatado com sucesso - usuário agora é Premium vitalício');
+      } else {
+        await debugLog('BETA_CODE', 'Falha ao resgatar: ${result['message']}');
+      }
+
+      return result;
+    } catch (e) {
+      await debugLog('BETA_CODE', 'Erro ao resgatar código: $e');
+      return {
+        'success': false,
+        'message': 'Erro ao processar código: $e',
+      };
+    }
+  }
+
+  /// Cria um novo código beta (apenas para admin)
+  /// Sincroniza com Supabase para funcionar entre dispositivos
+  Future<String?> createBetaCode(String code) async {
+    if (!isAdmin && !_isOriginalAdmin) {
+      await debugLog('BETA_CODE', 'Apenas admins podem criar códigos beta');
+      return null;
+    }
+
+    try {
+      final cleanCode = code.trim().toUpperCase();
+
+      // Usar repositório que sincroniza com Supabase
+      final success = await _betaCodeRepo.createCode(cleanCode);
+
+      if (success) {
+        await debugLog('BETA_CODE', 'Código beta criado: $cleanCode');
+        return cleanCode;
+      } else {
+        await debugLog('BETA_CODE', 'Erro ao criar código beta');
+        return null;
+      }
+    } catch (e) {
+      await debugLog('BETA_CODE', 'Erro ao criar código beta: $e');
+      return null;
+    }
   }
 }

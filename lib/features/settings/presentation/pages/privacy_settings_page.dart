@@ -86,7 +86,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildSwitchTile(
                       icon: Icons.analytics_outlined,
                       title: 'Analytics',
-                      subtitle: 'Ajude a melhorar o app compartilhando dados de uso anonimos',
+                      subtitle: 'Ajude a melhorar o app compartilhando dados de uso anônimos',
                       value: _analyticsEnabled,
                       onChanged: (value) {
                         setState(() => _analyticsEnabled = value);
@@ -96,8 +96,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildDivider(),
                     _buildSwitchTile(
                       icon: Icons.bug_report_outlined,
-                      title: 'Relatorios de Erro',
-                      subtitle: 'Enviar relatorios automaticos quando o app tiver problemas',
+                      title: 'Relatórios de Erro',
+                      subtitle: 'Enviar relatórios automáticos quando o app tiver problemas',
                       value: _crashReportingEnabled,
                       onChanged: (value) {
                         setState(() => _crashReportingEnabled = value);
@@ -107,8 +107,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildDivider(),
                     _buildSwitchTile(
                       icon: Icons.auto_awesome,
-                      title: 'Conteudo Personalizado',
-                      subtitle: 'Receber sugestoes baseadas no seu uso do app',
+                      title: 'Conteúdo Personalizado',
+                      subtitle: 'Receber sugestões baseadas no seu uso do app',
                       value: _personalizedContent,
                       onChanged: (value) {
                         setState(() => _personalizedContent = value);
@@ -120,11 +120,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   const SizedBox(height: 24),
 
                   // Seção: Sincronização e Backup
-                  _buildSectionHeader('Sincronizacao e Backup'),
+                  _buildSectionHeader('Sincronização e Backup'),
                   _buildSettingsCard([
                     _buildSwitchTile(
                       icon: Icons.sync,
-                      title: 'Sincronizacao Automatica',
+                      title: 'Sincronização Automática',
                       subtitle: 'Manter seus dados sincronizados entre dispositivos',
                       value: _syncEnabled,
                       onChanged: (value) {
@@ -136,7 +136,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildSwitchTile(
                       icon: Icons.cloud_upload_outlined,
                       title: 'Backup na Nuvem',
-                      subtitle: 'Salvar uma copia dos seus dados na nuvem',
+                      subtitle: 'Salvar uma cópia dos seus dados na nuvem',
                       value: _backupEnabled,
                       onChanged: (value) {
                         setState(() => _backupEnabled = value);
@@ -148,7 +148,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   const SizedBox(height: 24),
 
                   // Seção: Status de Sincronização
-                  _buildSectionHeader('Status de Sincronizacao'),
+                  _buildSectionHeader('Status de Sincronização'),
                   _buildSyncStatusCard(),
 
                   const SizedBox(height: 24),
@@ -159,7 +159,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildActionTile(
                       icon: Icons.download_outlined,
                       title: 'Exportar Meus Dados',
-                      subtitle: 'Baixar uma copia de todos os seus dados',
+                      subtitle: 'Baixar uma cópia de todos os seus dados',
                       onTap: _exportData,
                     ),
                     _buildDivider(),
@@ -347,7 +347,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Sincronizacao na Nuvem',
+                            'Sincronização na Nuvem',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -369,7 +369,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Mantenha seus dados sincronizados entre todos os seus dispositivos e nunca perca seus feiticos e diarios.',
+                  'Mantenha seus dados sincronizados entre todos os seus dispositivos e nunca perca seus feitiços e diários.',
                   style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
@@ -422,7 +422,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         Row(
                           children: [
                             Text(
-                              isReady ? syncProvider.statusText : 'Nao conectado',
+                              isReady ? syncProvider.statusText : 'Não conectado',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -451,7 +451,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         Text(
                           isReady
                               ? syncProvider.lastSyncText
-                              : 'Faca login para sincronizar',
+                              : 'Faça login para sincronizar',
                           style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 12,
@@ -470,7 +470,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                               content: Text(
                                 result.success
                                     ? 'Sincronizado! ${result.uploaded} enviados, ${result.downloaded} recebidos'
-                                    : result.error ?? 'Erro na sincronizacao',
+                                    : result.error ?? 'Erro na sincronização',
                               ),
                               backgroundColor: result.success ? AppColors.success : AppColors.alert,
                             ),
@@ -599,7 +599,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         backgroundColor: AppColors.surface,
         title: const Text('Baixar Todos os Dados?', style: TextStyle(color: Colors.white)),
         content: const Text(
-          'ATENCAO: Isso substituira todos os seus dados locais pelos dados da nuvem. Dados locais nao sincronizados serao perdidos.',
+          'ATENÇÃO: Isso substituirá todos os seus dados locais pelos dados da nuvem. Dados locais não sincronizados serão perdidos.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -652,8 +652,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Seus dados magicos sao sagrados. Nunca vendemos suas informacoes pessoais '
-            'e voce tem controle total sobre o que e coletado e armazenado.',
+            'Seus dados mágicos são sagrados. Nunca vendemos suas informações pessoais '
+            'e você tem controle total sobre o que é coletado e armazenado.',
             style: TextStyle(
               color: Colors.white70,
               fontSize: 13,
@@ -669,7 +669,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: const Text(
-              'Ler Politica de Privacidade completa',
+              'Ler Política de Privacidade completa',
               style: TextStyle(
                 color: AppColors.lilac,
                 decoration: TextDecoration.underline,
@@ -691,7 +691,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'Seus dados serao exportados em formato JSON. '
+          'Seus dados serão exportados em formato JSON. '
           'Isso pode levar alguns segundos.',
           style: TextStyle(color: Colors.white70),
         ),
@@ -757,7 +757,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       if (mounted) {
         await Share.shareXFiles(
           [XFile(file.path)],
-          subject: 'Backup Grimorio de Bolso',
+          subject: 'Backup Grimório de Bolso',
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -790,7 +790,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
         content: const Text(
           'Isso removera todos os dados salvos neste dispositivo. '
-          'Se voce tem sincronizacao ativada, seus dados na nuvem serao mantidos.',
+          'Se você tem sincronização ativada, seus dados na nuvem serão mantidos.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -871,12 +871,12 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ],
         ),
         content: const Text(
-          'ATENCAO: Esta acao e IRREVERSIVEL!\n\n'
-          'Todos os seus dados serao permanentemente excluidos, incluindo:\n'
-          '- Feiticos e rituais\n'
-          '- Entradas de diario\n'
+          'ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\n'
+          'Todos os seus dados serão permanentemente excluídos, incluindo:\n'
+          '- Feitiços e rituais\n'
+          '- Entradas de diário\n'
           '- Mapa astral\n'
-          '- Configuracoes\n\n'
+          '- Configurações\n\n'
           'Tem certeza absoluta?',
           style: TextStyle(color: Colors.white70),
         ),
@@ -1001,7 +1001,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             const Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                'Politica de Privacidade',
+                'Política de Privacidade',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -1014,46 +1014,46 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                 controller: scrollController,
                 padding: const EdgeInsets.all(16),
                 child: const Text(
-                  '''POLITICA DE PRIVACIDADE - GRIMORIO DE BOLSO
+                  '''POLÍTICA DE PRIVACIDADE - GRIMÓRIO DE BOLSO
 
-Ultima atualizacao: Novembro 2025
+Última atualização: Novembro 2025
 
 1. COLETA DE DADOS
 
-Coletamos apenas os dados necessarios para o funcionamento do app:
-- Email e senha (para autenticacao)
+Coletamos apenas os dados necessários para o funcionamento do app:
+- Email e senha (para autenticação)
 - Dados de perfil (nome, foto - opcionais)
-- Dados de nascimento (para calculo do mapa astral)
-- Conteudo criado por voce (feiticos, diarios, etc.)
+- Dados de nascimento (para cálculo do mapa astral)
+- Conteúdo criado por você (feitiços, diários, etc.)
 
 2. USO DOS DADOS
 
-Seus dados sao utilizados exclusivamente para:
-- Prover os servicos do app
+Seus dados são utilizados exclusivamente para:
+- Prover os serviços do app
 - Sincronizar entre dispositivos
-- Melhorar a experiencia do usuario
+- Melhorar a experiência do usuário
 
 3. COMPARTILHAMENTO
 
-NAO vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto:
+NÃO vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto:
 - Quando exigido por lei
 - Para proteger nossos direitos legais
 
 4. SEGURANCA
 
-Utilizamos criptografia e melhores praticas de seguranca para proteger seus dados.
+Utilizamos criptografia e melhores práticas de segurança para proteger seus dados.
 
 5. SEUS DIREITOS
 
-Voce pode a qualquer momento:
+Você pode a qualquer momento:
 - Acessar seus dados
-- Corrigir informacoes
+- Corrigir informações
 - Exportar seus dados
 - Excluir sua conta
 
 6. CONTATO
 
-Para duvidas sobre privacidade, entre em contato:
+Para dúvidas sobre privacidade, entre em contato:
 privacidade@grimoriodebolso.com.br
 ''',
                   style: TextStyle(

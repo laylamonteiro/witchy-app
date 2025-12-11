@@ -42,7 +42,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
 
       // Carregar contagens de cada entidade
       _userStats = {
-        'spells': await _countRecords(db, 'spells', odUserId),
+        // Para feitiços, excluir os pré-carregados (is_preloaded = 1)
+        'spells': await _countUserSpells(db, odUserId),
         'dreams': await _countRecords(db, 'dreams', odUserId),
         'desires': await _countRecords(db, 'desires', odUserId),
         'gratitudes': await _countRecords(db, 'gratitudes', odUserId),
@@ -75,6 +76,19 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
     try {
       final result = await db.rawQuery(
         'SELECT COUNT(*) as count FROM $table WHERE user_id = ?',
+        [odUserId],
+      );
+      return result.first['count'] as int? ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Conta apenas feitiços criados pelo usuário (excluindo os pré-carregados)
+  Future<int> _countUserSpells(dynamic db, String odUserId) async {
+    try {
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM spells WHERE user_id = ? AND is_preloaded = 0',
         [odUserId],
       );
       return result.first['count'] as int? ?? 0;
@@ -176,7 +190,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text(
-          'Jornadas Magicas',
+          'Jornadas Mágicas',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -195,8 +209,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
           tabs: const [
             Tab(text: 'Todas'),
             Tab(text: 'Iniciante'),
-            Tab(text: 'Diario'),
-            Tab(text: 'Divinacao'),
+            Tab(text: 'Diário'),
+            Tab(text: 'Divinação'),
           ],
         ),
       ),

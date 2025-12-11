@@ -57,20 +57,7 @@ class WelcomePage extends StatelessWidget {
                 const Spacer(flex: 2),
                 // Botões
                 _buildButtons(context),
-                const SizedBox(height: 24),
-                // Link para continuar sem conta
-                TextButton(
-                  onPressed: () => _continueWithoutAccount(context),
-                  child: Text(
-                    'Continuar sem conta',
-                    style: GoogleFonts.nunito(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 48),
               ],
             ),
           ),
@@ -220,11 +207,5 @@ class WelcomePage extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  void _continueWithoutAccount(BuildContext context) {
-    // Navegar para a home sem criar conta
-    // O usuário usará o modo local
-    Navigator.of(context).pushReplacementNamed('/home');
   }
 }

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/magical_card.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/data/models/user_model.dart';
 
 /// Página de gerenciamento de assinatura
 ///
@@ -53,51 +57,70 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: ListenableBuilder(
-        listenable: _paymentService,
-        builder: (context, _) {
-          if (_isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.lilac,
-              ),
-            );
-          }
+      body: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          return ListenableBuilder(
+            listenable: _paymentService,
+            builder: (context, _) {
+              if (_isLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.lilac,
+                  ),
+                );
+              }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Status da assinatura
-                _buildSubscriptionStatus(),
-                const SizedBox(height: 24),
+              // Usuário é Pro se tiver assinatura ativa OU Premium via código beta
+              final isPro = _paymentService.isPro || authProvider.isPremium;
 
-                // Ações principais
-                if (_paymentService.isPro) ...[
-                  _buildProFeatures(),
-                  const SizedBox(height: 24),
-                  _buildManageSubscriptionButton(),
-                ] else ...[
-                  _buildUpgradeSection(),
-                ],
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 540),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Status da assinatura
+                        _buildSubscriptionStatus(authProvider),
+                        const SizedBox(height: 24),
 
-                const SizedBox(height: 24),
+                        // Ações principais
+                        if (isPro) ...[
+                          _buildProFeatures(),
+                          const SizedBox(height: 24),
+                          _buildManageSubscriptionButton(authProvider),
+                        ] else ...[
+                          _buildUpgradeSection(),
+                          const SizedBox(height: 24),
+                          // Card de resgate de código beta
+                          _buildBetaCodeCard(authProvider),
+                        ],
 
-                // Restaurar compras
-                _buildRestoreButton(),
-              ],
-            ),
+                        const SizedBox(height: 24),
+
+                        // Restaurar compras
+                        _buildRestoreButton(),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
     );
   }
 
-  Widget _buildSubscriptionStatus() {
-    final isPro = _paymentService.isPro;
-    final isLifetime = _paymentService.isLifetime;
+  Widget _buildSubscriptionStatus(AuthProvider authProvider) {
+    // Verificar se é premium via RevenueCat OU via código beta/admin
+    final isPro = _paymentService.isPro || authProvider.isPremium;
+    final isLifetime = _paymentService.isLifetime || authProvider.currentUser.plan == SubscriptionPlan.lifetime;
     final expirationDate = _paymentService.subscriptionExpirationDate;
+
+    // Detectar se Premium veio de código beta (sem RevenueCat)
+    final isPremiumFromBetaCode = authProvider.isPremium && !_paymentService.isPro;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -121,7 +144,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       ),
       child: Column(
         children: [
-          // Icone de status
+          // Ícone de status
           Icon(
             isPro ? Icons.star : Icons.star_border,
             size: 48,
@@ -129,9 +152,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           ),
           const SizedBox(height: 12),
 
-          // Titulo
+          // Título
           Text(
-            isPro ? 'Grimorio de Bolso Premium' : 'Plano Gratuito',
+            isPro ? 'Grimório de Bolso Premium' : 'Plano Gratuito',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -140,11 +163,19 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           ),
           const SizedBox(height: 8),
 
-          // Subtitulo
+          // Subtítulo
           if (isPro) ...[
-            if (isLifetime)
+            if (isPremiumFromBetaCode)
               const Text(
-                'Acesso Vitalicio',
+                'Acesso Vitalício (Código Beta)',
+                style: TextStyle(
+                  color: AppColors.starYellow,
+                  fontSize: 14,
+                ),
+              )
+            else if (isLifetime)
+              const Text(
+                'Acesso Vitalício',
                 style: TextStyle(
                   color: AppColors.starYellow,
                   fontSize: 14,
@@ -152,7 +183,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               )
             else if (expirationDate != null)
               Text(
-                'Valido ate ${_formatDate(expirationDate)}',
+                'Válido até ${_formatDate(expirationDate)}',
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
@@ -183,7 +214,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Seus Beneficios Premium',
+            'Seus Benefícios Premium',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -191,15 +222,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildFeatureItem(Icons.auto_awesome, 'Previsoes Magicas ilimitadas'),
-          _buildFeatureItem(Icons.book, 'Grimorio completo'),
-          _buildFeatureItem(Icons.psychology, 'Conselheiro Mistico'),
-          _buildFeatureItem(Icons.account_circle, 'Perfil magico personalizado'),
-          _buildFeatureItem(Icons.stars, 'Sugestoes personalizadas com base nos transitos'),
-          _buildFeatureItem(Icons.wb_sunny, 'Clima magico diario completo'),
-          _buildFeatureItem(Icons.calendar_today, 'Calendario lunar avancado'),
-          _buildFeatureItem(Icons.sync, 'Sincronizacao entre dispositivos'),
-          _buildFeatureItem(Icons.support_agent, 'Suporte prioritario'),
+          _buildFeatureItem(Icons.auto_awesome, 'Previsões Mágicas ilimitadas'),
+          _buildFeatureItem(Icons.book, 'Grimório completo'),
+          _buildFeatureItem(Icons.psychology, 'Conselheiro Místico'),
+          _buildFeatureItem(Icons.account_circle, 'Perfil mágico personalizado'),
+          _buildFeatureItem(Icons.stars, 'Sugestões personalizadas pelos trânsitos'),
+          _buildFeatureItem(Icons.wb_sunny, 'Clima mágico diário completo'),
+          _buildFeatureItem(Icons.calendar_today, 'Calendário lunar avançado'),
+          _buildFeatureItem(Icons.sync, 'Sincronização entre dispositivos'),
+          _buildFeatureItem(Icons.support_agent, 'Suporte prioritário'),
         ],
       ),
     );
@@ -269,7 +300,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'O que voce ganha com o Premium:',
+                'O que você ganha com o Premium:',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -277,14 +308,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildFeatureItem(Icons.auto_awesome, 'Previsoes Magicas ilimitadas'),
-              _buildFeatureItem(Icons.book, 'Acesso ao Grimorio completo'),
-              _buildFeatureItem(Icons.psychology, 'Conselheiro Mistico'),
-              _buildFeatureItem(Icons.account_circle, 'Perfil magico personalizado'),
-              _buildFeatureItem(Icons.stars, 'Sugestoes personalizadas com base nos transitos'),
-              _buildFeatureItem(Icons.wb_sunny, 'Clima magico diario completo'),
-              _buildFeatureItem(Icons.calendar_today, 'Calendario lunar avancado'),
-              _buildFeatureItem(Icons.sync, 'Sincronizacao na nuvem'),
+              _buildFeatureItem(Icons.auto_awesome, 'Previsões Mágicas ilimitadas'),
+              _buildFeatureItem(Icons.book, 'Acesso ao Grimório completo'),
+              _buildFeatureItem(Icons.psychology, 'Conselheiro Místico'),
+              _buildFeatureItem(Icons.account_circle, 'Perfil mágico personalizado'),
+              _buildFeatureItem(Icons.stars, 'Sugestões personalizadas com base nos trânsitos'),
+              _buildFeatureItem(Icons.wb_sunny, 'Clima mágico diário completo'),
+              _buildFeatureItem(Icons.calendar_today, 'Calendário lunar avançado'),
+              _buildFeatureItem(Icons.sync, 'Sincronização na nuvem'),
             ],
           ),
         ),
@@ -292,7 +323,36 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     );
   }
 
-  Widget _buildManageSubscriptionButton() {
+  Widget _buildManageSubscriptionButton(AuthProvider authProvider) {
+    // Só mostrar botão de gerenciar se tiver assinatura via RevenueCat
+    // Usuários com Premium via código beta não podem gerenciar via RevenueCat
+    if (!_paymentService.isPro && authProvider.isPremium) {
+      // Premium via código beta - sem gerenciamento
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline, color: AppColors.lilac, size: 20),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Seu acesso Premium foi concedido via código beta',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
@@ -316,6 +376,137 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       ),
     );
   }
+
+  Widget _buildBetaCodeCard(AuthProvider authProvider) {
+    final TextEditingController codeController = TextEditingController();
+
+    return SizedBox(
+      width: double.infinity,
+      child: MagicalCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  '🎟️',
+                  style: TextStyle(fontSize: 24),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Tem um Código Beta?',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.lilac,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Resgate seu código para obter acesso Premium vitalício!',
+              style: TextStyle(
+                color: AppColors.softWhite.withOpacity(0.7),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: codeController,
+                    decoration: InputDecoration(
+                      hintText: 'Digite seu código',
+                      hintStyle: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.5),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.lilac),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: AppColors.lilac.withOpacity(0.3),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.lilac),
+                      ),
+                    ),
+                    textCapitalization: TextCapitalization.characters,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    final code = codeController.text.trim();
+                    if (code.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Por favor, digite um código'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Mostrar loading
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+
+                    // Resgatar código
+                    final result = await authProvider.redeemBetaCode(code);
+
+                    // Fechar loading
+                    if (context.mounted) Navigator.of(context).pop();
+
+                    // Mostrar resultado
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result['message']),
+                          backgroundColor: result['success']
+                              ? Colors.green
+                              : Colors.red,
+                        ),
+                      );
+
+                      if (result['success']) {
+                        codeController.clear();
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.lilac,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Resgatar'),
+                ),
+            ],
+          ),
+      ],
+    ),
+  ),
+);
+}
 
   Widget _buildRestoreButton() {
     return Center(
@@ -352,7 +543,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         result == PaywallResult.restored) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Parabens! Voce agora e Premium!'),
+          content: Text('Parabéns! Você agora é Premium!'),
           backgroundColor: Colors.green,
         ),
       );

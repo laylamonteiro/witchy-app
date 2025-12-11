@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -247,6 +247,18 @@ class DatabaseHelper {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    // Tabela de Códigos Beta para acesso Premium
+    await db.execute('''
+      CREATE TABLE beta_codes (
+        id TEXT PRIMARY KEY,
+        code TEXT NOT NULL UNIQUE,
+        is_used INTEGER NOT NULL DEFAULT 0,
+        used_by TEXT,
+        used_at INTEGER,
+        created_at INTEGER NOT NULL
       )
     ''');
 
@@ -704,6 +716,27 @@ class DatabaseHelper {
       }
 
       print('Migração v8 concluída - colunas de sincronização adicionadas');
+    }
+
+    // Migração da versão 8 para 9 - Adicionar tabela de códigos beta
+    if (oldVersion < 9) {
+      final betaCodesTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='beta_codes'"
+      );
+
+      if (betaCodesTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE beta_codes (
+            id TEXT PRIMARY KEY,
+            code TEXT NOT NULL UNIQUE,
+            is_used INTEGER NOT NULL DEFAULT 0,
+            used_by TEXT,
+            used_at INTEGER,
+            created_at INTEGER NOT NULL
+          )
+        ''');
+        print('Tabela beta_codes criada');
+      }
     }
   }
 

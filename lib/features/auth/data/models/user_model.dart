@@ -25,6 +25,18 @@ enum SubscriptionPlan {
   lifetime,
 }
 
+/// Método de autenticação utilizado pelo usuário
+enum AuthMethod {
+  /// Email e senha
+  emailPassword,
+
+  /// Google OAuth
+  google,
+
+  /// Usuário local/anônimo (sem autenticação)
+  local,
+}
+
 /// Modelo de usuário do aplicativo
 class UserModel {
   final String id;
@@ -39,6 +51,9 @@ class UserModel {
   final DateTime createdAt;
   final DateTime lastLoginAt;
   final Map<String, dynamic>? settings;
+
+  /// Método de autenticação utilizado
+  final AuthMethod authMethod;
 
   /// Contadores de uso para limites do plano free
   final int spellsCount;
@@ -68,6 +83,7 @@ class UserModel {
     required this.createdAt,
     required this.lastLoginAt,
     this.settings,
+    this.authMethod = AuthMethod.local,
     this.spellsCount = 0,
     this.diaryEntriesThisMonth = 0,
     this.aiConsultationsToday = 0,
@@ -117,6 +133,12 @@ class UserModel {
 
   /// Verifica se é o usuário local padrão (sem conta)
   bool get isLocalUser => id == 'local_user' && email == null;
+
+  /// Verifica se o usuário usa autenticação OAuth (Google, etc)
+  bool get usesOAuth => authMethod == AuthMethod.google;
+
+  /// Verifica se o usuário usa email e senha
+  bool get usesEmailPassword => authMethod == AuthMethod.emailPassword;
 
   /// Limite de feitiços para plano free
   static const int freeSpellsLimit = 10;
@@ -203,6 +225,7 @@ class UserModel {
     DateTime? createdAt,
     DateTime? lastLoginAt,
     Map<String, dynamic>? settings,
+    AuthMethod? authMethod,
     int? spellsCount,
     int? diaryEntriesThisMonth,
     int? aiConsultationsToday,
@@ -226,6 +249,7 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       settings: settings ?? this.settings,
+      authMethod: authMethod ?? this.authMethod,
       spellsCount: spellsCount ?? this.spellsCount,
       diaryEntriesThisMonth: diaryEntriesThisMonth ?? this.diaryEntriesThisMonth,
       aiConsultationsToday: aiConsultationsToday ?? this.aiConsultationsToday,
@@ -252,6 +276,7 @@ class UserModel {
       'createdAt': createdAt.toIso8601String(),
       'lastLoginAt': lastLoginAt.toIso8601String(),
       'settings': settings,
+      'authMethod': authMethod.name,
       'spellsCount': spellsCount,
       'diaryEntriesThisMonth': diaryEntriesThisMonth,
       'aiConsultationsToday': aiConsultationsToday,
@@ -290,6 +315,12 @@ class UserModel {
           ? DateTime.parse(json['lastLoginAt'])
           : DateTime.now(),
       settings: json['settings'],
+      authMethod: json['authMethod'] != null
+          ? AuthMethod.values.firstWhere(
+              (e) => e.name == json['authMethod'],
+              orElse: () => AuthMethod.local,
+            )
+          : AuthMethod.local,
       spellsCount: json['spellsCount'] ?? 0,
       diaryEntriesThisMonth: json['diaryEntriesThisMonth'] ?? 0,
       aiConsultationsToday: json['aiConsultationsToday'] ?? 0,

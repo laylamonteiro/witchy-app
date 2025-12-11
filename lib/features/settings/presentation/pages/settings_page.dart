@@ -19,6 +19,7 @@ import '../../../auth/data/repositories/supabase_auth_repository.dart';
 import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import 'privacy_settings_page.dart';
+import 'beta_codes_management_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -186,6 +187,7 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildPlanCard(BuildContext context, UserModel user, AuthProvider authProvider) {
     final isPremium = user.isPremium;
+    final paymentService = PaymentService();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -205,6 +207,7 @@ class SettingsPage extends StatelessWidget {
         ),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -240,6 +243,47 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          // Informações extras para Premium
+          if (isPremium) ...[
+            const SizedBox(height: 12),
+            if (paymentService.isLifetime)
+              Text(
+                'Assinatura Vitalícia',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 13,
+                ),
+              )
+            else if (paymentService.subscriptionExpirationDate != null)
+              Text(
+                'Renova em: ${_formatDate(paymentService.subscriptionExpirationDate!)}',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 13,
+                ),
+              ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _manageSubscription(context),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                icon: const Icon(Icons.settings, size: 18),
+                label: const Text(
+                  'Gerenciar Assinatura',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+          // Botão de upgrade para Free
           if (!isPremium) ...[
             const SizedBox(height: 16),
             SizedBox(
@@ -271,6 +315,19 @@ class SettingsPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Future<void> _manageSubscription(BuildContext context) async {
+    final paymentService = PaymentService();
+    await paymentService.presentCustomerCenter();
   }
 
   Widget _buildUsageStats(BuildContext context, UserModel user) {
@@ -405,15 +462,19 @@ class SettingsPage extends StatelessWidget {
             title: 'Editar Perfil',
             onTap: () => _showEditProfileDialog(context, authProvider),
           ),
-          _buildDivider(),
-          _buildOptionTile(
-            icon: Icons.lock_outline,
-            title: 'Alterar Senha',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+          // Só mostra "Alterar Senha" para usuários que usam email/senha
+          // Usuários OAuth (Google) não podem alterar senha no app
+          if (authProvider.currentUser.usesEmailPassword) ...[
+            _buildDivider(),
+            _buildOptionTile(
+              icon: Icons.lock_outline,
+              title: 'Alterar Senha',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+              ),
             ),
-          ),
+          ],
           _buildDivider(),
           _buildOptionTile(
             icon: Icons.card_membership,
@@ -423,7 +484,7 @@ class SettingsPage extends StatelessWidget {
           _buildDivider(),
           _buildOptionTile(
             icon: Icons.analytics_outlined,
-            title: 'Estatisticas Magicas',
+            title: 'Estatísticas Mágicas',
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
@@ -432,7 +493,7 @@ class SettingsPage extends StatelessWidget {
           _buildDivider(),
           _buildOptionTile(
             icon: Icons.explore_outlined,
-            title: 'Jornadas Magicas',
+            title: 'Jornadas Mágicas',
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),
@@ -680,6 +741,34 @@ class SettingsPage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const DiagnosticPage(),
+                ),
+              );
+            },
+          ),
+          const Divider(color: Colors.white12),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(
+              Icons.card_giftcard,
+              color: Color(0xFF9C27B0),
+            ),
+            title: const Text(
+              'Gerenciar Códigos Beta',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: const Text(
+              'Criar e invalidar códigos promocionais',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+              ),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BetaCodesManagementPage(),
                 ),
               );
             },
@@ -1074,7 +1163,7 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class _NotificationTile extends StatelessWidget {
+class _NotificationTile extends StatelessWidget{
   final String icon;
   final String title;
   final String subtitle;

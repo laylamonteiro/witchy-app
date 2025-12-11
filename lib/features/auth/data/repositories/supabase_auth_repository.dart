@@ -360,6 +360,17 @@ class SupabaseAuthRepository implements AuthRepository {
       // Perfil pode não existir ainda
     }
 
+    // Detectar método de autenticação
+    AuthMethod authMethod = AuthMethod.emailPassword; // Padrão
+    final appMetadata = supabaseUser.appMetadata ?? {};
+    final provider = appMetadata['provider'] as String?;
+
+    if (provider == 'google') {
+      authMethod = AuthMethod.google;
+    } else if (provider == 'email') {
+      authMethod = AuthMethod.emailPassword;
+    }
+
     return UserModel(
       id: supabaseUser.id,
       email: supabaseUser.email ?? '',
@@ -378,6 +389,7 @@ class SupabaseAuthRepository implements AuthRepository {
         (p) => p.name == (profileData?['plan'] ?? 'free'),
         orElse: () => SubscriptionPlan.free,
       ),
+      authMethod: authMethod,
       createdAt: DateTime.parse(supabaseUser.createdAt),
       lastLoginAt: DateTime.now(),
       spellsCount: profileData?['spells_count'] ?? 0,
