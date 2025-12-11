@@ -54,11 +54,14 @@ class BetaCodeRepository {
   }
 
   /// Cria um novo código beta
-  Future<bool> createCode(String code) async {
+  ///
+  /// [code] - Código a ser criado
+  /// [maxUses] - Número máximo de usos permitidos (padrão: 1)
+  Future<bool> createCode(String code, {int maxUses = 1}) async {
     print('[BetaCodeRepository] ============ CREATE CODE INICIADO ============');
     final cleanCode = code.trim().toUpperCase();
     final now = DateTime.now();
-    print('[BetaCodeRepository] createCode - código: $cleanCode');
+    print('[BetaCodeRepository] createCode - código: $cleanCode, maxUses: $maxUses');
     print('[BetaCodeRepository] Supabase configurado: ${SupabaseConfig.isConfigured}');
     print('[BetaCodeRepository] _supabase is null? ${_supabase == null}');
 
@@ -66,6 +69,8 @@ class BetaCodeRepository {
       'code': cleanCode,
       'is_used': false,
       'created_at': now.toIso8601String(),
+      'max_uses': maxUses,
+      'current_uses': 0,
     };
     print('[BetaCodeRepository] Dados preparados: $codeData');
 
@@ -85,7 +90,7 @@ class BetaCodeRepository {
 
         // Também salvar localmente para cache
         try {
-          await _saveCodeToLocal(cleanCode, now);
+          await _saveCodeToLocal(cleanCode, now, maxUses: maxUses);
           print('[BetaCodeRepository] ✅ Código salvo localmente para cache');
         } catch (localError) {
           // Se falhar ao salvar localmente, apenas logar mas não falhar toda a operação
@@ -110,14 +115,14 @@ class BetaCodeRepository {
 
         print('[BetaCodeRepository] Tentando fallback para SQLite...');
         // Fallback para SQLite
-        return _createCodeLocal(cleanCode, now);
+        return _createCodeLocal(cleanCode, now, maxUses: maxUses);
       }
     } else {
       print('[BetaCodeRepository] ⚠️  Supabase NÃO está configurado');
       print('[BetaCodeRepository] ⚠️  URL vazia: ${SupabaseConfig.url.isEmpty}');
       print('[BetaCodeRepository] ⚠️  AnonKey vazia: ${SupabaseConfig.anonKey.isEmpty}');
       print('[BetaCodeRepository] Usando SQLite local apenas');
-      return _createCodeLocal(cleanCode, now);
+      return _createCodeLocal(cleanCode, now, maxUses: maxUses);
     }
   }
 
@@ -135,20 +140,26 @@ class BetaCodeRepository {
       };
     }
 
-    // Verificar se já foi usado
-    final isUsed = codeData['is_used'] == true || codeData['is_used'] == 1;
-    if (isUsed) {
+    // Verificar disponibilidade (current_uses < max_uses)
+    final currentUses = (codeData['current_uses'] ?? 0) as int;
+    final maxUses = (codeData['max_uses'] ?? 1) as int;
+
+    if (currentUses >= maxUses) {
       return {
         'success': false,
-        'message': 'Este código já foi utilizado',
+        'message': 'Este código já atingiu o limite de usos',
       };
     }
 
-    // Marcar como usado
+    // Incrementar contador de usos
     final now = DateTime.now();
+    final newCurrentUses = currentUses + 1;
+    final isNowUsedUp = newCurrentUses >= maxUses;
+
     final updateData = {
-      'is_used': true,
-      'used_by': userId,
+      'current_uses': newCurrentUses,
+      'is_used': isNowUsedUp, // Marcar como usado se atingiu o limite
+      'used_by': userId, // Último usuário que usou
       'used_at': now.toIso8601String(),
     };
 
@@ -157,19 +168,24 @@ class BetaCodeRepository {
       try {
         await supabase.from(SupabaseTables.betaCodes).update(updateData).eq('code', cleanCode);
         // Também atualizar localmente
-        await _updateCodeLocal(cleanCode, userId, now);
+        await _updateCodeLocal(cleanCode, userId, now, currentUses: newCurrentUses);
       } catch (e) {
         print('Erro ao resgatar código no Supabase: $e');
         // Tentar fallback local
-        await _updateCodeLocal(cleanCode, userId, now);
+        await _updateCodeLocal(cleanCode, userId, now, currentUses: newCurrentUses);
       }
     } else {
-      await _updateCodeLocal(cleanCode, userId, now);
+      await _updateCodeLocal(cleanCode, userId, now, currentUses: newCurrentUses);
     }
+
+    final usesRemaining = maxUses - newCurrentUses;
+    final message = usesRemaining > 0
+        ? 'Código resgatado! Você agora tem acesso Premium vitalício 🎉\n(Restam $usesRemaining uso${usesRemaining > 1 ? 's' : ''} deste código)'
+        : 'Código resgatado! Você agora tem acesso Premium vitalício 🎉';
 
     return {
       'success': true,
-      'message': 'Código resgatado! Você agora tem acesso Premium vitalício 🎉',
+      'message': message,
     };
   }
 
@@ -253,7 +269,7 @@ class BetaCodeRepository {
     }
   }
 
-  Future<bool> _createCodeLocal(String code, DateTime createdAt) async {
+  Future<bool> _createCodeLocal(String code, DateTime createdAt, {int maxUses = 1}) async {
     try {
       final db = await DatabaseHelper.instance.database;
       await db.insert('beta_codes', {
@@ -261,6 +277,8 @@ class BetaCodeRepository {
         'code': code,
         'is_used': 0,
         'created_at': createdAt.millisecondsSinceEpoch,
+        'max_uses': maxUses,
+        'current_uses': 0,
       });
       return true;
     } catch (e) {
@@ -269,26 +287,45 @@ class BetaCodeRepository {
     }
   }
 
-  Future<void> _saveCodeToLocal(String code, DateTime createdAt) async {
+  Future<void> _saveCodeToLocal(String code, DateTime createdAt, {int maxUses = 1}) async {
     try {
       final db = await DatabaseHelper.instance.database;
       // Usar INSERT OR IGNORE para evitar duplicatas
       await db.rawInsert(
-        'INSERT OR IGNORE INTO beta_codes (id, code, is_used, created_at) VALUES (?, ?, ?, ?)',
-        [DateTime.now().millisecondsSinceEpoch.toString(), code, 0, createdAt.millisecondsSinceEpoch],
+        'INSERT OR IGNORE INTO beta_codes (id, code, is_used, created_at, max_uses, current_uses) VALUES (?, ?, ?, ?, ?, ?)',
+        [DateTime.now().millisecondsSinceEpoch.toString(), code, 0, createdAt.millisecondsSinceEpoch, maxUses, 0],
       );
     } catch (e) {
       print('Erro ao salvar código localmente: $e');
     }
   }
 
-  Future<void> _updateCodeLocal(String code, String userId, DateTime usedAt) async {
+  Future<void> _updateCodeLocal(String code, String userId, DateTime usedAt, {int? currentUses}) async {
     try {
       final db = await DatabaseHelper.instance.database;
+
+      // Se currentUses foi fornecido, atualizar; caso contrário, buscar do banco
+      int newCurrentUses = currentUses ?? 1;
+
+      // Se não foi fornecido, buscar do banco e incrementar
+      if (currentUses == null) {
+        final existing = await db.query('beta_codes', where: 'code = ?', whereArgs: [code]);
+        if (existing.isNotEmpty) {
+          final current = (existing.first['current_uses'] ?? 0) as int;
+          newCurrentUses = current + 1;
+        }
+      }
+
+      // Buscar max_uses para determinar is_used
+      final existing = await db.query('beta_codes', where: 'code = ?', whereArgs: [code]);
+      final maxUses = existing.isNotEmpty ? ((existing.first['max_uses'] ?? 1) as int) : 1;
+      final isUsed = newCurrentUses >= maxUses ? 1 : 0;
+
       await db.update(
         'beta_codes',
         {
-          'is_used': 1,
+          'current_uses': newCurrentUses,
+          'is_used': isUsed,
           'used_by': userId,
           'used_at': usedAt.millisecondsSinceEpoch,
         },

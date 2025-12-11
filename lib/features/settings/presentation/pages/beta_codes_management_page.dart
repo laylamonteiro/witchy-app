@@ -18,6 +18,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   List<Map<String, dynamic>> _codes = [];
   bool _isLoading = true;
   final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _maxUsesController = TextEditingController(text: '1');
   final BetaCodeRepository _repository = BetaCodeRepository();
 
   @override
@@ -29,6 +30,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   @override
   void dispose() {
     _codeController.dispose();
+    _maxUsesController.dispose();
     super.dispose();
   }
 
@@ -78,17 +80,30 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       return;
     }
 
-    final result = await authProvider.createBetaCode(code);
+    // Validar max_uses
+    final maxUses = int.tryParse(_maxUsesController.text) ?? 1;
+    if (maxUses < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Número de usos deve ser pelo menos 1'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final result = await authProvider.createBetaCode(code, maxUses: maxUses);
 
     if (mounted) {
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Código "$result" criado com sucesso!'),
+            content: Text('Código "$result" criado com sucesso! (${maxUses} uso${maxUses > 1 ? 's' : ''})'),
             backgroundColor: Colors.green,
           ),
         );
         _codeController.clear();
+        _maxUsesController.text = '1'; // Resetar para 1
         _loadCodes();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -261,13 +276,46 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                           ],
                         ),
                         const SizedBox(height: 16),
+                        // Campo de código
+                        TextField(
+                          controller: _codeController,
+                          decoration: InputDecoration(
+                            labelText: 'Código',
+                            hintText: 'Digite o código (ex: BETA2025)',
+                            hintStyle: TextStyle(
+                              color: AppColors.softWhite.withOpacity(0.5),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.lilac),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: AppColors.lilac.withOpacity(0.3),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.lilac),
+                            ),
+                          ),
+                          textCapitalization: TextCapitalization.characters,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Campo de número de usos
                         Row(
                           children: [
                             Expanded(
                               child: TextField(
-                                controller: _codeController,
+                                controller: _maxUsesController,
                                 decoration: InputDecoration(
-                                  hintText: 'Digite o código (ex: BETA2025)',
+                                  labelText: 'Número de usos',
+                                  hintText: '1',
+                                  suffixText: 'uso(s)',
                                   hintStyle: TextStyle(
                                     color: AppColors.softWhite.withOpacity(0.5),
                                   ),
@@ -286,21 +334,21 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                                     borderSide: const BorderSide(color: AppColors.lilac),
                                   ),
                                 ),
-                                textCapitalization: TextCapitalization.characters,
+                                keyboardType: TextInputType.number,
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
+                                  FilteringTextInputFormatter.digitsOnly,
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             ElevatedButton(
                               onPressed: _createCode,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.lilac,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 16,
+                                  horizontal: 24,
+                                  vertical: 20,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -329,7 +377,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       Expanded(
                         child: _buildStatCard(
                           'Disponíveis',
-                          _codes.where((c) => c['is_used'] == 0).length.toString(),
+                          _codes.where((c) => c['is_used'] == false || c['is_used'] == 0).length.toString(),
                           Colors.green,
                         ),
                       ),
@@ -337,7 +385,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       Expanded(
                         child: _buildStatCard(
                           'Usados',
-                          _codes.where((c) => c['is_used'] == 1).length.toString(),
+                          _codes.where((c) => c['is_used'] == true || c['is_used'] == 1).length.toString(),
                           Colors.orange,
                         ),
                       ),
@@ -408,13 +456,22 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   }
 
   Widget _buildCodeCard(Map<String, dynamic> code) {
-    final isUsed = code['is_used'] == 1;
+    // Normalizar is_used (pode vir como bool do Supabase ou int do SQLite)
+    final isUsed = code['is_used'] == true || code['is_used'] == 1;
     final codeText = code['code'] as String;
-    final createdAt = DateTime.fromMillisecondsSinceEpoch(code['created_at'] as int);
-    final usedAt = code['used_at'] != null
-        ? DateTime.fromMillisecondsSinceEpoch(code['used_at'] as int)
-        : null;
+
+    // Normalizar created_at (pode vir como String ISO8601 do Supabase ou int do SQLite)
+    final createdAt = _parseDateTime(code['created_at']);
+
+    // Normalizar used_at
+    final usedAt = code['used_at'] != null ? _parseDateTime(code['used_at']) : null;
+
     final usedBy = code['used_by'] as String?;
+
+    // Informações de múltiplos usos
+    final currentUses = (code['current_uses'] ?? 0) as int;
+    final maxUses = (code['max_uses'] ?? 1) as int;
+    final usesRemaining = maxUses - currentUses;
 
     return MagicalCard(
       child: Column(
@@ -481,20 +538,50 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               color: AppColors.softWhite.withOpacity(0.6),
             ),
           ),
-          if (isUsed && usedAt != null) ...[
+          const SizedBox(height: 4),
+          // Informação de usos
+          Row(
+            children: [
+              Icon(
+                Icons.people_outline,
+                size: 14,
+                color: AppColors.softWhite.withOpacity(0.6),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Usos: $currentUses/$maxUses',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: usesRemaining > 0 ? Colors.greenAccent : Colors.orangeAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (usesRemaining > 0) ...[
+                const SizedBox(width: 8),
+                Text(
+                  '($usesRemaining restante${usesRemaining > 1 ? 's' : ''})',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.softWhite.withOpacity(0.5),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (usedAt != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Usado em: ${_formatDate(usedAt)}',
+              'Último uso em: ${_formatDate(usedAt)}',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.softWhite.withOpacity(0.6),
               ),
             ),
           ],
-          if (isUsed && usedBy != null) ...[
+          if (usedBy != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Usado por: $usedBy',
+              'Último usuário: $usedBy',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.softWhite.withOpacity(0.6),
@@ -532,5 +619,24 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// Parse DateTime de diferentes formatos (Supabase String ISO8601 ou SQLite int milliseconds)
+  DateTime _parseDateTime(dynamic value) {
+    if (value == null) {
+      return DateTime.now();
+    }
+
+    if (value is int) {
+      // SQLite: milliseconds since epoch
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    } else if (value is String) {
+      // Supabase: ISO8601 string
+      return DateTime.parse(value);
+    } else {
+      // Fallback
+      print('Formato de data desconhecido: $value (${value.runtimeType})');
+      return DateTime.now();
+    }
   }
 }
