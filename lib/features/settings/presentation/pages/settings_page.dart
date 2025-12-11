@@ -19,6 +19,7 @@ import '../../../auth/data/repositories/supabase_auth_repository.dart';
 import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import 'privacy_settings_page.dart';
+import 'beta_codes_management_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -46,12 +47,6 @@ class SettingsPage extends StatelessWidget {
                 // Card de plano atual
                 _buildPlanCard(context, user, authProvider),
                 const SizedBox(height: 20),
-
-                // Código Beta (apenas para usuários free)
-                if (user.isFree) ...[
-                  _buildBetaCodeCard(context, authProvider),
-                  const SizedBox(height: 20),
-                ],
 
                 // Estatísticas de uso (para free)
                 if (user.isFree) ...[
@@ -750,6 +745,34 @@ class SettingsPage extends StatelessWidget {
               );
             },
           ),
+          const Divider(color: Colors.white12),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(
+              Icons.card_giftcard,
+              color: Color(0xFF9C27B0),
+            ),
+            title: const Text(
+              'Gerenciar Códigos Beta',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: const Text(
+              'Criar e invalidar códigos promocionais',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+              ),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BetaCodesManagementPage(),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -1138,138 +1161,9 @@ class SettingsPage extends StatelessWidget {
         return 'GRATUITO';
     }
   }
-
-  /// Card para resgatar código beta
-  static Widget _buildBetaCodeCard(BuildContext context, AuthProvider authProvider) {
-    final TextEditingController codeController = TextEditingController();
-
-    return MagicalCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                '🎟️',
-                style: TextStyle(fontSize: 24),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Código Beta',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.lilac,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tem um código de acesso? Resgate aqui para obter Premium vitalício!',
-            style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.7),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: codeController,
-                  decoration: InputDecoration(
-                    hintText: 'Digite seu código',
-                    hintStyle: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.5),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.lilac),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: AppColors.lilac.withOpacity(0.3),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.lilac),
-                    ),
-                  ),
-                  textCapitalization: TextCapitalization.characters,
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () async {
-                  final code = codeController.text.trim();
-                  if (code.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Por favor, digite um código'),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                    return;
-                  }
-
-                  // Mostrar loading
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-
-                  // Resgatar código
-                  final result = await authProvider.redeemBetaCode(code);
-
-                  // Fechar loading
-                  if (context.mounted) Navigator.of(context).pop();
-
-                  // Mostrar resultado
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(result['message']),
-                        backgroundColor: result['success']
-                            ? Colors.green
-                            : Colors.red,
-                      ),
-                    );
-
-                    if (result['success']) {
-                      codeController.clear();
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('Resgatar'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-class _NotificationTile extends StatelessWidget {
+class _NotificationTile extends StatelessWidget{
   final String icon;
   final String title;
   final String subtitle;
