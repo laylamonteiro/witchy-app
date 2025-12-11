@@ -88,7 +88,7 @@ class SettingsPage extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              _getInitials(user.displayName ?? user.email),
+              _getInitials(user.displayName ?? user.email ?? 'User'),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 36,
