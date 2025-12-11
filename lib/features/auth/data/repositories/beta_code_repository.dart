@@ -13,17 +13,22 @@ class BetaCodeRepository {
 
   /// Lista todos os códigos beta (apenas admin)
   Future<List<Map<String, dynamic>>> getAllCodes() async {
+    print('[BetaCodeRepository] getAllCodes - iniciando...');
     final supabase = _supabase;
     if (supabase != null) {
       try {
+        print('[BetaCodeRepository] Buscando códigos no Supabase...');
         final response = await supabase.from(SupabaseTables.betaCodes).select().order('created_at', ascending: false);
+        print('[BetaCodeRepository] Supabase retornou ${response.length} códigos');
         return List<Map<String, dynamic>>.from(response);
       } catch (e) {
-        print('Erro ao buscar códigos do Supabase: $e');
+        print('[BetaCodeRepository] ❌ Erro ao buscar códigos do Supabase: $e');
+        print('[BetaCodeRepository] Tentando fallback para SQLite...');
         // Fallback para SQLite
         return _getCodesFromLocal();
       }
     } else {
+      print('[BetaCodeRepository] Supabase não configurado, usando SQLite');
       return _getCodesFromLocal();
     }
   }
@@ -52,6 +57,7 @@ class BetaCodeRepository {
   Future<bool> createCode(String code) async {
     final cleanCode = code.trim().toUpperCase();
     final now = DateTime.now();
+    print('[BetaCodeRepository] createCode - código: $cleanCode');
 
     final codeData = {
       'code': cleanCode,
@@ -62,16 +68,21 @@ class BetaCodeRepository {
     final supabase = _supabase;
     if (supabase != null) {
       try {
+        print('[BetaCodeRepository] Inserindo código no Supabase...');
         await supabase.from(SupabaseTables.betaCodes).insert(codeData);
+        print('[BetaCodeRepository] ✅ Código inserido no Supabase com sucesso');
         // Também salvar localmente para cache
         await _saveCodeToLocal(cleanCode, now);
+        print('[BetaCodeRepository] ✅ Código salvo localmente para cache');
         return true;
       } catch (e) {
-        print('Erro ao criar código no Supabase: $e');
+        print('[BetaCodeRepository] ❌ Erro ao criar código no Supabase: $e');
+        print('[BetaCodeRepository] Tentando fallback para SQLite...');
         // Fallback para SQLite
         return _createCodeLocal(cleanCode, now);
       }
     } else {
+      print('[BetaCodeRepository] Supabase não configurado, usando SQLite');
       return _createCodeLocal(cleanCode, now);
     }
   }
@@ -179,14 +190,16 @@ class BetaCodeRepository {
 
   Future<List<Map<String, dynamic>>> _getCodesFromLocal() async {
     try {
+      print('[BetaCodeRepository] Buscando códigos locais no SQLite...');
       final db = await DatabaseHelper.instance.database;
       final result = await db.query(
         'beta_codes',
         orderBy: 'created_at DESC',
       );
+      print('[BetaCodeRepository] SQLite retornou ${result.length} códigos');
       return result;
     } catch (e) {
-      print('Erro ao buscar códigos locais: $e');
+      print('[BetaCodeRepository] ❌ Erro ao buscar códigos locais: $e');
       return [];
     }
   }
