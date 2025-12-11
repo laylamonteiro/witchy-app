@@ -329,7 +329,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       Expanded(
                         child: _buildStatCard(
                           'Disponíveis',
-                          _codes.where((c) => c['is_used'] == 0).length.toString(),
+                          _codes.where((c) => c['is_used'] == false || c['is_used'] == 0).length.toString(),
                           Colors.green,
                         ),
                       ),
@@ -337,7 +337,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       Expanded(
                         child: _buildStatCard(
                           'Usados',
-                          _codes.where((c) => c['is_used'] == 1).length.toString(),
+                          _codes.where((c) => c['is_used'] == true || c['is_used'] == 1).length.toString(),
                           Colors.orange,
                         ),
                       ),
@@ -408,12 +408,16 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   }
 
   Widget _buildCodeCard(Map<String, dynamic> code) {
-    final isUsed = code['is_used'] == 1;
+    // Normalizar is_used (pode vir como bool do Supabase ou int do SQLite)
+    final isUsed = code['is_used'] == true || code['is_used'] == 1;
     final codeText = code['code'] as String;
-    final createdAt = DateTime.fromMillisecondsSinceEpoch(code['created_at'] as int);
-    final usedAt = code['used_at'] != null
-        ? DateTime.fromMillisecondsSinceEpoch(code['used_at'] as int)
-        : null;
+
+    // Normalizar created_at (pode vir como String ISO8601 do Supabase ou int do SQLite)
+    final createdAt = _parseDateTime(code['created_at']);
+
+    // Normalizar used_at
+    final usedAt = code['used_at'] != null ? _parseDateTime(code['used_at']) : null;
+
     final usedBy = code['used_by'] as String?;
 
     return MagicalCard(
@@ -532,5 +536,24 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// Parse DateTime de diferentes formatos (Supabase String ISO8601 ou SQLite int milliseconds)
+  DateTime _parseDateTime(dynamic value) {
+    if (value == null) {
+      return DateTime.now();
+    }
+
+    if (value is int) {
+      // SQLite: milliseconds since epoch
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    } else if (value is String) {
+      // Supabase: ISO8601 string
+      return DateTime.parse(value);
+    } else {
+      // Fallback
+      print('Formato de data desconhecido: $value (${value.runtimeType})');
+      return DateTime.now();
+    }
   }
 }
