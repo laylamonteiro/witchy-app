@@ -7,16 +7,16 @@ import '../../../../core/database/database_helper.dart';
 /// Usa Supabase quando configurado para sincronização entre dispositivos.
 /// Fallback para SQLite local quando Supabase não estáconfigurado.
 class BetaCodeRepository {
-  final _supabase = Supabase.instance.client;
+  /// Cliente só é inicializado se o Supabase estiver configurado
+  final SupabaseClient? _supabase =
+      SupabaseConfig.isConfigured ? Supabase.instance.client : null;
 
   /// Lista todos os códigos beta (apenas admin)
   Future<List<Map<String, dynamic>>> getAllCodes() async {
-    if (SupabaseConfig.isConfigured) {
+    final supabase = _supabase;
+    if (supabase != null) {
       try {
-        final response = await _supabase
-            .from(SupabaseTables.betaCodes)
-            .select()
-            .order('created_at', ascending: false);
+        final response = await supabase.from(SupabaseTables.betaCodes).select().order('created_at', ascending: false);
         return List<Map<String, dynamic>>.from(response);
       } catch (e) {
         print('Erro ao buscar códigos do Supabase: $e');
@@ -32,13 +32,11 @@ class BetaCodeRepository {
   Future<Map<String, dynamic>?> getCode(String code) async {
     final cleanCode = code.trim().toUpperCase();
 
-    if (SupabaseConfig.isConfigured) {
+    final supabase = _supabase;
+    if (supabase != null) {
       try {
-        final response = await _supabase
-            .from(SupabaseTables.betaCodes)
-            .select()
-            .eq('code', cleanCode)
-            .maybeSingle();
+        final response =
+            await supabase.from(SupabaseTables.betaCodes).select().eq('code', cleanCode).maybeSingle();
         return response;
       } catch (e) {
         print('Erro ao buscar código do Supabase: $e');
@@ -61,9 +59,10 @@ class BetaCodeRepository {
       'created_at': now.toIso8601String(),
     };
 
-    if (SupabaseConfig.isConfigured) {
+    final supabase = _supabase;
+    if (supabase != null) {
       try {
-        await _supabase.from(SupabaseTables.betaCodes).insert(codeData);
+        await supabase.from(SupabaseTables.betaCodes).insert(codeData);
         // Também salvar localmente para cache
         await _saveCodeToLocal(cleanCode, now);
         return true;
@@ -108,12 +107,10 @@ class BetaCodeRepository {
       'used_at': now.toIso8601String(),
     };
 
-    if (SupabaseConfig.isConfigured) {
+    final supabase = _supabase;
+    if (supabase != null) {
       try {
-        await _supabase
-            .from(SupabaseTables.betaCodes)
-            .update(updateData)
-            .eq('code', cleanCode);
+        await supabase.from(SupabaseTables.betaCodes).update(updateData).eq('code', cleanCode);
         // Também atualizar localmente
         await _updateCodeLocal(cleanCode, userId, now);
       } catch (e) {
@@ -142,12 +139,10 @@ class BetaCodeRepository {
       'used_at': now.toIso8601String(),
     };
 
-    if (SupabaseConfig.isConfigured) {
+    final supabase = _supabase;
+    if (supabase != null) {
       try {
-        await _supabase
-            .from(SupabaseTables.betaCodes)
-            .update(updateData)
-            .eq('code', cleanCode);
+        await supabase.from(SupabaseTables.betaCodes).update(updateData).eq('code', cleanCode);
         await _updateCodeLocal(cleanCode, 'admin', now);
         return true;
       } catch (e) {
@@ -163,12 +158,10 @@ class BetaCodeRepository {
   Future<bool> deleteCode(String code) async {
     final cleanCode = code.trim().toUpperCase();
 
-    if (SupabaseConfig.isConfigured) {
+    final supabase = _supabase;
+    if (supabase != null) {
       try {
-        await _supabase
-            .from(SupabaseTables.betaCodes)
-            .delete()
-            .eq('code', cleanCode);
+        await supabase.from(SupabaseTables.betaCodes).delete().eq('code', cleanCode);
         await _deleteCodeLocal(cleanCode);
         return true;
       } catch (e) {

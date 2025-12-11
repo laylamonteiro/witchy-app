@@ -137,8 +137,8 @@ class AvailableJourneys {
         ),
         JourneyStep(
           id: 'ini_01_03',
-          title: 'Pratique gratidao',
-          description: 'Escreva sua primeira entrada de gratidao',
+          title: 'Pratique gratidão',
+          description: 'Escreva sua primeira entrada de gratidão',
           type: StepType.create,
           targetEntity: 'gratitudes',
           xpReward: 30,
@@ -166,7 +166,7 @@ class AvailableJourneys {
     JourneyModel(
       id: 'grimorio_01',
       title: 'Mestre do Grimorio',
-      description: 'Construa um grimorio poderoso com seus feiticos',
+      description: 'Construa um grimorio poderoso com seus feitiços',
       icon: Icons.auto_fix_high,
       color: Color(0xFF673AB7),
       category: JourneyCategory.grimorio,
@@ -175,7 +175,7 @@ class AvailableJourneys {
         JourneyStep(
           id: 'grim_01_01',
           title: 'Aprendiz',
-          description: 'Crie 5 feiticos',
+          description: 'Crie 5 feitiços',
           type: StepType.create,
           targetEntity: 'spells',
           requiredCount: 5,
@@ -184,7 +184,7 @@ class AvailableJourneys {
         JourneyStep(
           id: 'grim_01_02',
           title: 'Praticante',
-          description: 'Crie 10 feiticos',
+          description: 'Crie 10 feitiços',
           type: StepType.create,
           targetEntity: 'spells',
           requiredCount: 10,
@@ -193,7 +193,7 @@ class AvailableJourneys {
         JourneyStep(
           id: 'grim_01_03',
           title: 'Mestre',
-          description: 'Crie 25 feiticos',
+          description: 'Crie 25 feitiços',
           type: StepType.create,
           targetEntity: 'spells',
           requiredCount: 25,
@@ -202,7 +202,7 @@ class AvailableJourneys {
         JourneyStep(
           id: 'grim_01_04',
           title: 'Arquimago',
-          description: 'Crie 50 feiticos',
+          description: 'Crie 50 feitiços',
           type: StepType.create,
           targetEntity: 'spells',
           requiredCount: 50,
@@ -215,7 +215,7 @@ class AvailableJourneys {
     JourneyModel(
       id: 'gratidao_01',
       title: 'Coracao Grato',
-      description: 'Cultive a gratidao em sua vida diaria',
+      description: 'Cultive a gratidão em sua vida diaria',
       icon: Icons.favorite,
       color: Color(0xFFE91E63),
       category: JourneyCategory.diario,
@@ -224,7 +224,7 @@ class AvailableJourneys {
         JourneyStep(
           id: 'grat_01_01',
           title: 'Despertar',
-          description: 'Pratique gratidao por 3 dias seguidos',
+          description: 'Pratique gratidão por 3 dias seguidos',
           type: StepType.streak,
           targetEntity: 'gratitudes',
           requiredCount: 3,
@@ -233,7 +233,7 @@ class AvailableJourneys {
         JourneyStep(
           id: 'grat_01_02',
           title: 'Habito',
-          description: 'Pratique gratidao por 7 dias seguidos',
+          description: 'Pratique gratidão por 7 dias seguidos',
           type: StepType.streak,
           targetEntity: 'gratitudes',
           requiredCount: 7,
@@ -242,7 +242,7 @@ class AvailableJourneys {
         JourneyStep(
           id: 'grat_01_03',
           title: 'Devocao',
-          description: 'Pratique gratidao por 21 dias seguidos',
+          description: 'Pratique gratidão por 21 dias seguidos',
           type: StepType.streak,
           targetEntity: 'gratitudes',
           requiredCount: 21,
@@ -251,7 +251,7 @@ class AvailableJourneys {
         JourneyStep(
           id: 'grat_01_04',
           title: 'Iluminacao',
-          description: 'Pratique gratidao por 30 dias seguidos',
+          description: 'Pratique gratidão por 30 dias seguidos',
           type: StepType.streak,
           targetEntity: 'gratitudes',
           requiredCount: 30,
@@ -298,7 +298,7 @@ class AvailableJourneys {
         ),
         JourneyStep(
           id: 'son_01_04',
-          title: 'Oraculo Onirico',
+          title: 'Oráculo Onírico',
           description: 'Registre 50 sonhos',
           type: StepType.create,
           targetEntity: 'dreams',
@@ -312,7 +312,7 @@ class AvailableJourneys {
     JourneyModel(
       id: 'divinacao_01',
       title: 'Vidente',
-      description: 'Domine as artes divinatorias',
+      description: 'Domine as artes divinatórias',
       icon: Icons.visibility,
       color: Color(0xFF00BCD4),
       category: JourneyCategory.divinacao,
@@ -329,8 +329,8 @@ class AvailableJourneys {
         ),
         JourneyStep(
           id: 'div_01_02',
-          title: 'Leitor de Oraculo',
-          description: 'Faca 5 leituras do oraculo',
+          title: 'Leitor de Oráculo',
+          description: 'Faca 5 leituras do oráculo',
           type: StepType.complete,
           targetEntity: 'oracle_readings',
           requiredCount: 5,
@@ -338,8 +338,8 @@ class AvailableJourneys {
         ),
         JourneyStep(
           id: 'div_01_03',
-          title: 'Mestre do Pendulo',
-          description: 'Faca 10 consultas ao pendulo',
+          title: 'Mestre do Pêndulo',
+          description: 'Faca 10 consultas ao pêndulo',
           type: StepType.complete,
           targetEntity: 'pendulum_consultations',
           requiredCount: 10,
@@ -347,7 +347,7 @@ class AvailableJourneys {
         ),
         JourneyStep(
           id: 'div_01_04',
-          title: 'Oraculo Completo',
+          title: 'Oráculo Completo',
           description: 'Faca 25 leituras no total',
           type: StepType.complete,
           targetEntity: 'all_readings',

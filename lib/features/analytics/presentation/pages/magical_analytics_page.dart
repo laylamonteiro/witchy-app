@@ -257,7 +257,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text(
-          'Estatisticas Magicas',
+          'Estatísticas Mágicas',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -347,7 +347,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             ),
           ),
           const Text(
-            'Praticas Magicas',
+            'Praticas Mágicas',
             style: TextStyle(
               color: Colors.white70,
               fontSize: 16,
@@ -423,7 +423,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             children: [
               Expanded(
                 child: _buildStreakItem(
-                  'Gratidao',
+                  'Gratidão',
                   gratitudeStreak,
                   Colors.orange,
                   Icons.favorite,
@@ -446,10 +446,10 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                   Expanded(
                     child: Text(
                       gratitudeStreak >= 30
-                          ? 'Incrivel! 30 dias de gratidao!'
+                          ? 'Incrivel! 30 dias de gratidão!'
                           : gratitudeStreak >= 7
-                              ? 'Otimo! 1 semana de gratidao!'
-                              : 'Continue assim! $gratitudeStreak dias de gratidao!',
+                              ? 'Otimo! 1 semana de gratidão!'
+                              : 'Continue assim! $gratitudeStreak dias de gratidão!',
                       style: const TextStyle(
                         color: Colors.orange,
                         fontSize: 13,
@@ -530,7 +530,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           childAspectRatio: 1,
           children: [
             _buildCategoryCard(
-              'Feiticos',
+              'Feitiços',
               _stats['spells'] ?? 0,
               Icons.auto_fix_high,
               Colors.purple,
@@ -550,7 +550,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               ),
             ),
             _buildCategoryCard(
-              'Gratidao',
+              'Gratidão',
               _stats['gratitudes'] ?? 0,
               Icons.favorite,
               Colors.pink,
@@ -590,7 +590,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               ),
             ),
             _buildCategoryCard(
-              'Oraculo',
+              'Oráculo',
               _stats['oracleReadings'] ?? 0,
               Icons.style,
               Colors.cyan,
@@ -600,7 +600,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               ),
             ),
             _buildCategoryCard(
-              'Pendulo',
+              'Pêndulo',
               _stats['pendulum'] ?? 0,
               Icons.radio_button_checked,
               Colors.green,
@@ -780,7 +780,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               Icon(Icons.auto_fix_high, color: Colors.purple, size: 24),
               SizedBox(width: 8),
               Text(
-                'Feiticos por Tipo',
+                'Feitiços por Tipo',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,

@@ -190,7 +190,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text(
-          'Jornadas Magicas',
+          'Jornadas Mágicas',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -209,8 +209,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
           tabs: const [
             Tab(text: 'Todas'),
             Tab(text: 'Iniciante'),
-            Tab(text: 'Diario'),
-            Tab(text: 'Divinacao'),
+            Tab(text: 'Diário'),
+            Tab(text: 'Divinação'),
           ],
         ),
       ),

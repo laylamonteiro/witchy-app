@@ -427,7 +427,7 @@ class ProfilePage extends StatelessWidget {
           // Estatísticas mágicas
           _buildOptionTile(
             icon: Icons.analytics_outlined,
-            title: 'Estatisticas Magicas',
+            title: 'Estatísticas Mágicas',
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
@@ -437,7 +437,7 @@ class ProfilePage extends StatelessWidget {
           // Jornadas gamificadas
           _buildOptionTile(
             icon: Icons.explore_outlined,
-            title: 'Jornadas Magicas',
+            title: 'Jornadas Mágicas',
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),

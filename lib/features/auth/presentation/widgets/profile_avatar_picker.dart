@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../../../core/theme/app_theme.dart';
 
 /// Widget para selecionar e exibir foto de perfil
@@ -283,8 +284,11 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
       final croppedFile = await _cropImage(pickedFile.path);
 
       if (croppedFile != null) {
+        // Comprimir imagem para evitar crashes por arquivos grandes
+        final compressedFile = await _compressImage(croppedFile.path);
+
         // Salvar no diretório do app
-        final savedPath = await _saveImage(croppedFile);
+        final savedPath = await _saveImage(compressedFile);
 
         setState(() {
           _currentPhotoPath = savedPath;
@@ -338,15 +342,31 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
     );
   }
 
-  Future<String> _saveImage(CroppedFile croppedFile) async {
+  Future<File> _compressImage(String sourcePath) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath = '${tempDir.path}/profile_compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    final XFile? compressed = await FlutterImageCompress.compressAndGetFile(
+      sourcePath,
+      targetPath,
+      quality: 75,
+      minWidth: 800,
+      minHeight: 800,
+      format: CompressFormat.jpeg,
+    );
+
+    return File(compressed?.path ?? sourcePath);
+  }
+
+  Future<String> _saveImage(File file) async {
     final appDir = await getApplicationDocumentsDirectory();
     final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
     final savedPath = '${appDir.path}/$fileName';
 
     // Copiar arquivo para o diretório do app
-    final bytes = await croppedFile.readAsBytes();
-    final file = File(savedPath);
-    await file.writeAsBytes(bytes);
+    final bytes = await file.readAsBytes();
+    final savedFile = File(savedPath);
+    await savedFile.writeAsBytes(bytes);
 
     // Remover foto antiga se existir
     if (_currentPhotoPath != null &&
