@@ -55,19 +55,24 @@ class BetaCodeRepository {
 
   /// Cria um novo código beta
   Future<bool> createCode(String code) async {
+    print('[BetaCodeRepository] ============ CREATE CODE INICIADO ============');
     final cleanCode = code.trim().toUpperCase();
     final now = DateTime.now();
     print('[BetaCodeRepository] createCode - código: $cleanCode');
     print('[BetaCodeRepository] Supabase configurado: ${SupabaseConfig.isConfigured}');
+    print('[BetaCodeRepository] _supabase is null? ${_supabase == null}');
 
     final codeData = {
       'code': cleanCode,
       'is_used': false,
       'created_at': now.toIso8601String(),
     };
+    print('[BetaCodeRepository] Dados preparados: $codeData');
 
     final supabase = _supabase;
+    print('[BetaCodeRepository] supabase local is null? ${supabase == null}');
     if (supabase != null) {
+      print('[BetaCodeRepository] Entrando no bloco Supabase...');
       try {
         print('[BetaCodeRepository] Inserindo código no Supabase...');
         print('[BetaCodeRepository] Dados: $codeData');

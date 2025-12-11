@@ -102,21 +102,41 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
         _addLog('   ⏭️  Pulado (Supabase não configurado)');
       }
 
-      // 4. Verificar códigos no SQLite
+      // 4. Verificar tabela beta_codes no SQLite
       _addLog('');
-      _addLog('4️⃣ CÓDIGOS NO SQLITE LOCAL:');
+      _addLog('4️⃣ TABELA SQLITE (beta_codes):');
       try {
-        final localCodes = await _repository.getAllCodes();
-        _addLog('   Total: ${localCodes.length} códigos');
-        if (localCodes.isNotEmpty) {
-          _addLog('   Últimos 3:');
-          for (var i = 0; i < localCodes.length && i < 3; i++) {
-            final code = localCodes[i];
-            _addLog('     • ${code['code']} (usado: ${code['is_used'] == 1})');
+        final db = await DatabaseHelper.instance.database;
+
+        // Verificar se tabela existe
+        final tableExists = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='beta_codes'"
+        );
+
+        if (tableExists.isEmpty) {
+          _addLog('   ❌ TABELA NÃO EXISTE!');
+        } else {
+          _addLog('   ✅ Tabela existe');
+
+          // Verificar schema
+          final schema = await db.rawQuery("PRAGMA table_info(beta_codes)");
+          _addLog('   Colunas: ${schema.map((col) => col['name']).join(', ')}');
+
+          // Contar códigos
+          final count = await db.rawQuery("SELECT COUNT(*) as count FROM beta_codes");
+          final total = count.first['count'] as int;
+          _addLog('   Total de códigos: $total');
+
+          if (total > 0) {
+            final codes = await db.query('beta_codes', limit: 5);
+            _addLog('   Primeiros códigos:');
+            for (final code in codes) {
+              _addLog('     • ${code['code']} (usado: ${code['is_used']})');
+            }
           }
         }
       } catch (e) {
-        _addLog('   ❌ ERRO ao buscar: $e');
+        _addLog('   ❌ ERRO: $e');
       }
 
       _addLog('');
