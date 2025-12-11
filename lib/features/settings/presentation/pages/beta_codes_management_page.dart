@@ -5,6 +5,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/repositories/beta_code_repository.dart';
+import 'beta_codes_debug_page.dart';
 
 class BetaCodesManagementPage extends StatefulWidget {
   const BetaCodesManagementPage({super.key});
@@ -218,6 +219,20 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
         title: const Text('Gerenciar Códigos Beta'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report, color: AppColors.lilac),
+            tooltip: 'Debug',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BetaCodesDebugPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
