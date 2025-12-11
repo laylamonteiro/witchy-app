@@ -359,14 +359,31 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Atualiza o role do usuário (para testes/admin)
+  ///
+  /// Comportamento de planos:
+  /// - Free: plano free
+  /// - Premium (admin testando): monthly (simula assinatura RevenueCat)
+  /// - Premium (código beta): lifetime (preservado)
+  /// - Admin: lifetime (acesso total)
   Future<void> setUserRole(UserRole role) async {
     SubscriptionPlan plan;
     switch (role) {
       case UserRole.admin:
+        // Admin sempre tem lifetime
         plan = SubscriptionPlan.lifetime;
         break;
       case UserRole.premium:
-        plan = SubscriptionPlan.monthly;
+        // Se é admin original testando Premium → monthly (simula assinatura)
+        // Se é usuário com código beta → preserva lifetime
+        if (_isOriginalAdmin) {
+          // Admin testando como Premium: simular assinatura via RevenueCat
+          plan = SubscriptionPlan.monthly;
+        } else {
+          // Usuário normal: preservar lifetime se já existir (código beta)
+          plan = _currentUser.plan == SubscriptionPlan.lifetime
+              ? SubscriptionPlan.lifetime
+              : SubscriptionPlan.monthly;
+        }
         break;
       case UserRole.free:
         plan = SubscriptionPlan.free;

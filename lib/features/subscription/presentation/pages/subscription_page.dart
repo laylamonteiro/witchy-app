@@ -114,13 +114,53 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Widget _buildSubscriptionStatus(AuthProvider authProvider) {
-    // Verificar se é premium via RevenueCat OU via código beta/admin
+    final currentUser = authProvider.currentUser;
     final isPro = _paymentService.isPro || authProvider.isPremium;
-    final isLifetime = _paymentService.isLifetime || authProvider.currentUser.plan == SubscriptionPlan.lifetime;
+
+    // Determinar tipo de Premium
+    final hasRevenueCat = _paymentService.isPro;
+    final isLifetimeSubscription = _paymentService.isLifetime;
+    final isPremiumWithMonthlyPlan = currentUser.isPremium &&
+        (currentUser.plan == SubscriptionPlan.monthly ||
+         currentUser.plan == SubscriptionPlan.yearly);
+    final isPremiumWithLifetime = currentUser.isPremium &&
+        currentUser.plan == SubscriptionPlan.lifetime;
+
+    // Data de expiração (apenas para assinaturas via RevenueCat)
     final expirationDate = _paymentService.subscriptionExpirationDate;
 
-    // Detectar se Premium veio de código beta (sem RevenueCat)
-    final isPremiumFromBetaCode = authProvider.isPremium && !_paymentService.isPro;
+    // Labels baseados no tipo de Premium
+    String subscriptionLabel;
+    Color labelColor;
+
+    if (!isPro) {
+      subscriptionLabel = 'Desbloqueie todos os recursos';
+      labelColor = Colors.white54;
+    } else if (hasRevenueCat) {
+      // Premium via RevenueCat
+      if (isLifetimeSubscription) {
+        subscriptionLabel = 'Acesso Vitalício';
+        labelColor = AppColors.starYellow;
+      } else if (expirationDate != null) {
+        subscriptionLabel = 'Válido até ${_formatDate(expirationDate)}';
+        labelColor = Colors.white70;
+      } else {
+        subscriptionLabel = 'Assinatura Ativa';
+        labelColor = AppColors.starYellow;
+      }
+    } else if (isPremiumWithLifetime) {
+      // Premium vitalício (código beta ou admin)
+      subscriptionLabel = 'Acesso Vitalício (Código Beta)';
+      labelColor = AppColors.starYellow;
+    } else if (isPremiumWithMonthlyPlan) {
+      // Admin simulando assinatura (sem RevenueCat)
+      final planName = currentUser.plan == SubscriptionPlan.monthly ? 'Mensal' : 'Anual';
+      subscriptionLabel = 'Plano $planName (Simulação)';
+      labelColor = Colors.white70;
+    } else {
+      subscriptionLabel = 'Premium Ativo';
+      labelColor = AppColors.starYellow;
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -164,40 +204,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           const SizedBox(height: 8),
 
           // Subtítulo
-          if (isPro) ...[
-            if (isPremiumFromBetaCode)
-              const Text(
-                'Acesso Vitalício (Código Beta)',
-                style: TextStyle(
-                  color: AppColors.starYellow,
-                  fontSize: 14,
-                ),
-              )
-            else if (isLifetime)
-              const Text(
-                'Acesso Vitalício',
-                style: TextStyle(
-                  color: AppColors.starYellow,
-                  fontSize: 14,
-                ),
-              )
-            else if (expirationDate != null)
-              Text(
-                'Válido até ${_formatDate(expirationDate)}',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
-          ] else ...[
-            const Text(
-              'Desbloqueie todos os recursos',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 14,
-              ),
+          Text(
+            subscriptionLabel,
+            style: TextStyle(
+              color: labelColor,
+              fontSize: 14,
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -324,10 +337,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Widget _buildManageSubscriptionButton(AuthProvider authProvider) {
-    // Só mostrar botão de gerenciar se tiver assinatura via RevenueCat
-    // Usuários com Premium via código beta não podem gerenciar via RevenueCat
-    if (!_paymentService.isPro && authProvider.isPremium) {
-      // Premium via código beta - sem gerenciamento
+    final currentUser = authProvider.currentUser;
+    final hasRevenueCat = _paymentService.isPro;
+    final isPremiumWithLifetime = currentUser.isPremium &&
+        currentUser.plan == SubscriptionPlan.lifetime;
+    final isPremiumWithMonthlyPlan = currentUser.isPremium &&
+        (currentUser.plan == SubscriptionPlan.monthly ||
+         currentUser.plan == SubscriptionPlan.yearly);
+
+    // Premium vitalício (código beta) - apenas informativo
+    if (isPremiumWithLifetime && !hasRevenueCat) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -341,7 +360,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Seu acesso Premium foi concedido via código beta',
+                'Seu acesso Premium foi concedido via código beta e não expira',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
@@ -353,6 +372,102 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       );
     }
 
+    // Premium com plano mensal/anual (simulando assinatura)
+    if (isPremiumWithMonthlyPlan && !hasRevenueCat) {
+      return Column(
+        children: [
+          // Info do plano
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, color: AppColors.lilac, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Plano ${currentUser.plan == SubscriptionPlan.monthly ? "Mensal" : "Anual"}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Modo de simulação: Em produção, este seria um plano ativo via Play Store com renovação automática.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Botão simulado de cancelar
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: AppColors.surface,
+                    title: const Text(
+                      'Cancelar Assinatura',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    content: const Text(
+                      'Em produção, este botão direcionaria para o Google Play para gerenciar a assinatura.\n\n'
+                      'Você está em modo de simulação como admin.',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          'Entendi',
+                          style: TextStyle(color: AppColors.lilac),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white54),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.settings),
+                  SizedBox(width: 8),
+                  Text('Gerenciar Assinatura'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Premium via RevenueCat - botão real
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(

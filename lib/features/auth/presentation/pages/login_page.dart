@@ -148,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira seu email';
         }
-        // Permitir login admin especial (chave fixa ou via env)
+        // Permitir login admin (debug local ou env)
         if (value == 'admin' || value == AdminConfig.email) return null;
         if (!value.contains('@') || !value.contains('.')) {
           return 'Por favor, insira um email válido';
@@ -183,7 +183,7 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira sua senha';
         }
-        // Permitir atalho admin/admin ou senha de env sem validar tamanho
+        // Permitir bypass admin/admin (debug local) ou senha de env
         final email = _emailController.text.trim();
         if (email == 'admin' && value == 'admin') return null;
         if (email == AdminConfig.email && value == AdminConfig.password) return null;
@@ -357,7 +357,7 @@ class _LoginPageState extends State<LoginPage> {
 
       final authProvider = context.read<AuthProvider>();
 
-      // Admin shortcut: permite admin/admin (para testes) em qualquer build
+      // Admin bypass: admin/admin (apenas para debug local)
       if (email == 'admin' && password == 'admin') {
         await authProvider.activateAdminMode();
         await authProvider.updateProfile(
@@ -372,7 +372,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // Admin em produção: apenas credenciais vindas do ambiente
+      // Admin produção: credenciais vindas do ambiente (.env)
       if (AdminConfig.isEnabled &&
           email == AdminConfig.email &&
           password == AdminConfig.password) {

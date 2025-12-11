@@ -66,7 +66,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       iconColor: AppColors.lilac,
       title: 'Pronta para Começar?',
       description:
-          'Crie sua conta para sincronizar seus dados em todos os dispositivos, ou continue no modo local.',
+          'Crie sua conta para sincronizar seus dados em todos os dispositivos e ter acesso completo às funcionalidades.',
       gradient: [
         const Color(0xFF1A1033),
         const Color(0xFF2D1B4E),
@@ -261,24 +261,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
             const SizedBox(height: 12),
-            // Botão de continuar sem conta
+            // Botão de login
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => _finishOnboarding(createAccount: false),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.lilac,
-                  side: const BorderSide(color: AppColors.lilac, width: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
                 child: Text(
-                  'Continuar sem Conta',
+                  'Já tenho uma conta',
                   style: GoogleFonts.nunito(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.lilac,
                   ),
                 ),
               ),
