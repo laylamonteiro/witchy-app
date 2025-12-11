@@ -416,18 +416,9 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             icon: Icons.card_membership,
             title: 'Gerenciar Assinatura',
-            onTap: () => Navigator.pushNamed(context, '/subscription'),
+            onTap: () => _handleManageSubscription(context, paymentService),
           ),
           _buildDivider(),
-          // Customer Center para assinantes
-          if (paymentService.isPro) ...[
-            _buildOptionTile(
-              icon: Icons.support_agent,
-              title: 'Central do Assinante',
-              onTap: () => paymentService.presentCustomerCenter(),
-            ),
-            _buildDivider(),
-          ],
           // Estatísticas mágicas
           _buildOptionTile(
             icon: Icons.analytics_outlined,
@@ -892,6 +883,16 @@ class ProfilePage extends StatelessWidget {
     final uri = Uri.parse('https://grimoriodebolso.com/privacidade');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _handleManageSubscription(BuildContext context, PaymentService paymentService) {
+    // Se tem assinatura via RevenueCat, abrir Customer Center diretamente
+    if (paymentService.isPro) {
+      paymentService.presentCustomerCenter();
+    } else {
+      // Caso contrário, navegar para página de assinatura
+      Navigator.pushNamed(context, '/subscription');
     }
   }
 
