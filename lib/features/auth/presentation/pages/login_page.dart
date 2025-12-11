@@ -355,7 +355,7 @@ class _LoginPageState extends State<LoginPage> {
       final authProvider = context.read<AuthProvider>();
 
       // Login de admin especial (para desenvolvimento/teste)
-      if (email == 'admin' && password == 'admin') {
+      if (email == 'admin' && password == '5295236') {
         await authProvider.activateAdminMode();
         await authProvider.updateProfile(email: 'admin@grimorio.app', displayName: 'Administrador');
         await authProvider.markOnboardingSeen();
@@ -366,14 +366,16 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // Usar Supabase se configurado, senão modo local
-      if (SupabaseConfig.isConfigured) {
-        final authRepo = SupabaseAuthRepository();
-        final result = await authRepo.signInWithEmail(email, password);
+      // Validação obrigatória com Supabase
+      if (!SupabaseConfig.isConfigured) {
+        throw Exception('Sistema de autenticação não configurado. Entre em contato com o suporte.');
+      }
 
-        if (!result.success) {
-          throw Exception(result.errorMessage ?? 'Erro ao fazer login');
-        }
+      final authRepo = SupabaseAuthRepository();
+      final result = await authRepo.signInWithEmail(email, password);
+
+      if (!result.success) {
+        throw Exception(result.errorMessage ?? 'Erro ao fazer login');
       }
 
       // Atualizar estado local
