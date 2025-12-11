@@ -100,6 +100,11 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
+# Dependency overrides para resolver problemas de build
+dependency_overrides:
+  # Força versão específica do sqlite3 para evitar hash mismatch
+  sqlite3: ^2.4.6
+
 flutter:
   uses-material-design: true
 
