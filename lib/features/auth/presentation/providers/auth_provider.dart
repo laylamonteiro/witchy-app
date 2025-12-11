@@ -7,6 +7,7 @@ import '../../../../core/services/payment_service.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
+import '../../data/repositories/beta_code_repository.dart';
 
 /// Provider para gerenciar autenticação e estado do usuário
 class AuthProvider extends ChangeNotifier {
@@ -516,71 +517,36 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // BETA CODES - Sistema simples de códigos promocionais
+  // BETA CODES - Sistema de códigos promocionais com sync na nuvem
   // ============================================================
 
+  final BetaCodeRepository _betaCodeRepo = BetaCodeRepository();
+
   /// Valida e resgata um código beta
-  /// Retorna true se o código foi resgatado com sucesso
+  /// Funciona entre dispositivos via Supabase
   Future<Map<String, dynamic>> redeemBetaCode(String code) async {
     try {
-      final db = await DatabaseHelper.instance.database;
-      final cleanCode = code.trim().toUpperCase();
+      await debugLog('BETA_CODE', 'Tentando resgatar código: $code');
 
-      await debugLog('BETA_CODE', 'Tentando resgatar código: $cleanCode');
+      // Usar repositório que sincroniza com Supabase
+      final result = await _betaCodeRepo.redeemCode(code, _currentUser.id);
 
-      // Buscar código no banco
-      final result = await db.query(
-        'beta_codes',
-        where: 'code = ?',
-        whereArgs: [cleanCode],
-      );
+      if (result['success'] == true) {
+        // Atualizar usuário para Premium vitalício
+        _currentUser = _currentUser.copyWith(
+          role: UserRole.premium,
+          plan: SubscriptionPlan.lifetime,
+        );
 
-      if (result.isEmpty) {
-        await debugLog('BETA_CODE', 'Código não encontrado');
-        return {
-          'success': false,
-          'message': 'Código inválido',
-        };
+        await _saveUser();
+        notifyListeners();
+
+        await debugLog('BETA_CODE', 'Código resgatado com sucesso - usuário agora é Premium vitalício');
+      } else {
+        await debugLog('BETA_CODE', 'Falha ao resgatar: ${result['message']}');
       }
 
-      final codeData = result.first;
-      final isUsed = codeData['is_used'] == 1;
-
-      if (isUsed) {
-        await debugLog('BETA_CODE', 'Código já foi usado');
-        return {
-          'success': false,
-          'message': 'Este código já foi utilizado',
-        };
-      }
-
-      // Marcar código como usado
-      await db.update(
-        'beta_codes',
-        {
-          'is_used': 1,
-          'used_by': _currentUser.id,
-          'used_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'code = ?',
-        whereArgs: [cleanCode],
-      );
-
-      // Atualizar usuário para Premium vitalício
-      _currentUser = _currentUser.copyWith(
-        role: UserRole.premium,
-        plan: SubscriptionPlan.lifetime,
-      );
-
-      await _saveUser();
-      notifyListeners();
-
-      await debugLog('BETA_CODE', 'Código resgatado com sucesso - usuário agora é Premium vitalício');
-
-      return {
-        'success': true,
-        'message': 'Código resgatado! Você agora tem acesso Premium vitalício 🎉',
-      };
+      return result;
     } catch (e) {
       await debugLog('BETA_CODE', 'Erro ao resgatar código: $e');
       return {
@@ -591,6 +557,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Cria um novo código beta (apenas para admin)
+  /// Sincroniza com Supabase para funcionar entre dispositivos
   Future<String?> createBetaCode(String code) async {
     if (!isAdmin && !_isOriginalAdmin) {
       await debugLog('BETA_CODE', 'Apenas admins podem criar códigos beta');
@@ -598,18 +565,18 @@ class AuthProvider extends ChangeNotifier {
     }
 
     try {
-      final db = await DatabaseHelper.instance.database;
       final cleanCode = code.trim().toUpperCase();
 
-      await db.insert('beta_codes', {
-        'id': const Uuid().v4(),
-        'code': cleanCode,
-        'is_used': 0,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      });
+      // Usar repositório que sincroniza com Supabase
+      final success = await _betaCodeRepo.createCode(cleanCode);
 
-      await debugLog('BETA_CODE', 'Código beta criado: $cleanCode');
-      return cleanCode;
+      if (success) {
+        await debugLog('BETA_CODE', 'Código beta criado: $cleanCode');
+        return cleanCode;
+      } else {
+        await debugLog('BETA_CODE', 'Erro ao criar código beta');
+        return null;
+      }
     } catch (e) {
       await debugLog('BETA_CODE', 'Erro ao criar código beta: $e');
       return null;

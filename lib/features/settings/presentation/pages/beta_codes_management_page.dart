@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/data/repositories/beta_code_repository.dart';
 
 class BetaCodesManagementPage extends StatefulWidget {
   const BetaCodesManagementPage({super.key});
@@ -17,6 +17,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   List<Map<String, dynamic>> _codes = [];
   bool _isLoading = true;
   final TextEditingController _codeController = TextEditingController();
+  final BetaCodeRepository _repository = BetaCodeRepository();
 
   @override
   void initState() {
@@ -33,13 +34,9 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   Future<void> _loadCodes() async {
     setState(() => _isLoading = true);
     try {
-      final db = await DatabaseHelper.instance.database;
-      final result = await db.query(
-        'beta_codes',
-        orderBy: 'created_at DESC',
-      );
+      final codes = await _repository.getAllCodes();
       setState(() {
-        _codes = result;
+        _codes = codes;
         _isLoading = false;
       });
     } catch (e) {
@@ -126,26 +123,25 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     if (confirmed != true) return;
 
     try {
-      final db = await DatabaseHelper.instance.database;
-      await db.update(
-        'beta_codes',
-        {
-          'is_used': 1,
-          'used_by': 'admin',
-          'used_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [codeId],
-      );
+      final success = await _repository.invalidateCode(code);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Código "$code" invalidado'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _loadCodes();
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Código "$code" invalidado'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadCodes();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erro ao invalidar código'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -182,21 +178,25 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     if (confirmed != true) return;
 
     try {
-      final db = await DatabaseHelper.instance.database;
-      await db.delete(
-        'beta_codes',
-        where: 'id = ?',
-        whereArgs: [codeId],
-      );
+      final success = await _repository.deleteCode(code);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Código "$code" excluído'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _loadCodes();
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Código "$code" excluído'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadCodes();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erro ao excluir código'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
