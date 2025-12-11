@@ -83,6 +83,25 @@ class LocalAuthRepository implements AuthRepository {
   }) async {
     await Future.delayed(const Duration(milliseconds: 500));
 
+    // Verificar se email já existe
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString(_userKey);
+
+    if (userJson != null) {
+      try {
+        final existingUser = UserModel.fromJson(jsonDecode(userJson));
+        if (existingUser.email != null &&
+            existingUser.email!.toLowerCase() == email.toLowerCase()) {
+          return AuthResult.error(
+            'Este email já está em uso',
+            AuthErrorCode.emailAlreadyInUse,
+          );
+        }
+      } catch (e) {
+        // Ignorar erros de parse
+      }
+    }
+
     final newUser = UserModel(
       id: const Uuid().v4(),
       email: email,
@@ -96,7 +115,6 @@ class LocalAuthRepository implements AuthRepository {
     _currentUser = newUser;
     await _saveUser(newUser);
 
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isAuthenticatedKey, true);
     _authStateController.add(_currentUser);
 

@@ -106,6 +106,9 @@ class AuthProvider extends ChangeNotifier {
     // Registrar callback com PaymentService para sincronizar status Premium
     _registerPaymentServiceCallback();
 
+    // Verificar se assinatura expirou (exceto para códigos beta lifetime e admin)
+    await _checkSubscriptionExpiration();
+
     _isInitialized = true;
     notifyListeners();
   }
@@ -434,6 +437,37 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Verifica se a assinatura expirou e faz downgrade se necessário
+  Future<void> _checkSubscriptionExpiration() async {
+    // Não verificar para admin ou usuários free
+    if (_isOriginalAdmin || _currentUser.role == UserRole.free) {
+      return;
+    }
+
+    // Não verificar para códigos beta (lifetime)
+    if (_currentUser.plan == SubscriptionPlan.lifetime) {
+      await debugLog('AUTH', 'Usuário tem acesso lifetime (código beta) - não verifica expiração');
+      return;
+    }
+
+    // Para assinaturas monthly/yearly, verificar com PaymentService
+    final paymentService = PaymentService();
+    if (!paymentService.isInitialized) {
+      await paymentService.initialize();
+    }
+
+    // Se PaymentService diz que não é Pro, fazer downgrade
+    if (!paymentService.isPro && _currentUser.role == UserRole.premium) {
+      await debugLog('AUTH', 'Assinatura expirou - fazendo downgrade para Free');
+      _currentUser = _currentUser.copyWith(
+        role: UserRole.free,
+        plan: SubscriptionPlan.free,
+      );
+      await _saveUser();
+      notifyListeners();
+    }
+  }
+
   /// Atualiza o status premium baseado no PaymentService (RevenueCat)
   Future<void> refreshPremiumStatus() async {
     final paymentService = PaymentService();
@@ -448,6 +482,15 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = _currentUser.copyWith(
         role: UserRole.premium,
         plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
+      );
+      await _saveUser();
+      notifyListeners();
+    } else if (!_isOriginalAdmin && _currentUser.plan != SubscriptionPlan.lifetime) {
+      // Se não é mais Pro, não é admin e não tem lifetime (código beta), fazer downgrade
+      await debugLog('AUTH', 'Assinatura não está mais ativa - fazendo downgrade para Free');
+      _currentUser = _currentUser.copyWith(
+        role: UserRole.free,
+        plan: SubscriptionPlan.free,
       );
       await _saveUser();
       notifyListeners();

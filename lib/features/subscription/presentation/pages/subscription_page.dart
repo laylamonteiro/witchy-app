@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
 /// Página de gerenciamento de assinatura
 ///
@@ -153,9 +154,11 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       subscriptionLabel = 'Acesso Vitalício (Código Beta)';
       labelColor = AppColors.starYellow;
     } else if (isPremiumWithMonthlyPlan) {
-      // Admin simulando assinatura (sem RevenueCat)
+      // Assinatura mensal/anual (sem RevenueCat ativo no momento)
       final planName = currentUser.plan == SubscriptionPlan.monthly ? 'Mensal' : 'Anual';
-      subscriptionLabel = 'Plano $planName (Simulação)';
+      subscriptionLabel = currentUser.isAdmin
+          ? 'Plano $planName (Simulação)'
+          : 'Plano $planName';
       labelColor = Colors.white70;
     } else {
       subscriptionLabel = 'Premium Ativo';
@@ -403,14 +406,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Modo de simulação: Em produção, este seria um plano ativo via Play Store com renovação automática.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
+                if (currentUser.isAdmin) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Modo de simulação: Em produção, este seria um plano ativo via Play Store com renovação automática.',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -425,13 +430,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   builder: (context) => AlertDialog(
                     backgroundColor: AppColors.surface,
                     title: const Text(
-                      'Cancelar Assinatura',
+                      'Gerenciar Assinatura',
                       style: TextStyle(color: Colors.white),
                     ),
-                    content: const Text(
-                      'Em produção, este botão direcionaria para o Google Play para gerenciar a assinatura.\n\n'
-                      'Você está em modo de simulação como admin.',
-                      style: TextStyle(color: Colors.white70),
+                    content: Text(
+                      currentUser.isAdmin
+                          ? 'Em produção, este botão direcionaria para o Google Play para gerenciar a assinatura.\n\n'
+                            'Você está em modo de simulação como admin.'
+                          : 'Para gerenciar sua assinatura, acesse as configurações da Google Play Store ou App Store.',
+                      style: const TextStyle(color: Colors.white70),
                     ),
                     actions: [
                       TextButton(
@@ -649,23 +656,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     );
   }
 
-  Future<void> _showPaywall() async {
-    final result = await _paymentService.presentPaywall();
-
-    if (!mounted) return;
-
-    if (result == PaywallResult.purchased ||
-        result == PaywallResult.restored) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Parabéns! Você agora é Premium!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else if (result == PaywallResult.cancelled && !_paymentService.isInitialized) {
-      // Mostrar mensagem informativa sobre configuração
-      _showRevenueCatNotConfiguredDialog();
-    }
+  void _showPaywall() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const PremiumUpgradeSheet(),
+    );
   }
 
   void _showRevenueCatNotConfiguredDialog() {

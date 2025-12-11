@@ -14,6 +14,7 @@ import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/premium_blur_widget.dart';
 import '../widgets/profile_avatar_picker.dart';
+import 'edit_profile_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -405,25 +406,19 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             icon: Icons.person_outline,
             title: 'Editar Perfil',
-            onTap: () => _showEditProfileDialog(context, authProvider),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const EditProfilePage()),
+            ),
           ),
           _buildDivider(),
           // Opção de gerenciar assinatura
           _buildOptionTile(
             icon: Icons.card_membership,
             title: 'Gerenciar Assinatura',
-            onTap: () => Navigator.pushNamed(context, '/subscription'),
+            onTap: () => _handleManageSubscription(context, paymentService),
           ),
           _buildDivider(),
-          // Customer Center para assinantes
-          if (paymentService.isPro) ...[
-            _buildOptionTile(
-              icon: Icons.support_agent,
-              title: 'Central do Assinante',
-              onTap: () => paymentService.presentCustomerCenter(),
-            ),
-            _buildDivider(),
-          ],
           // Estatísticas mágicas
           _buildOptionTile(
             icon: Icons.analytics_outlined,
@@ -448,15 +443,6 @@ class ProfilePage extends StatelessWidget {
             icon: Icons.notifications_outlined,
             title: 'Notificações',
             onTap: () => _showNotificationsDialog(context),
-          ),
-          _buildDivider(),
-          _buildOptionTile(
-            icon: Icons.privacy_tip_outlined,
-            title: 'Privacidade',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrivacySettingsPage()),
-            ),
           ),
           _buildDivider(),
           _buildOptionTile(
@@ -716,56 +702,6 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, AuthProvider authProvider) {
-    final nameController =
-        TextEditingController(text: authProvider.currentUser.displayName);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
-          'Editar Perfil',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          controller: nameController,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            labelText: 'Nome',
-            labelStyle: const TextStyle(color: Colors.white54),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Color(0xFF9C27B0)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              authProvider.updateProfile(displayName: nameController.text);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9C27B0),
-            ),
-            child: const Text(
-              'Salvar',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   List<Color> _getRoleColors(UserRole role) {
     switch (role) {
@@ -947,6 +883,16 @@ class ProfilePage extends StatelessWidget {
     final uri = Uri.parse('https://grimoriodebolso.com/privacidade');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _handleManageSubscription(BuildContext context, PaymentService paymentService) {
+    // Se tem assinatura via RevenueCat, abrir Customer Center diretamente
+    if (paymentService.isPro) {
+      paymentService.presentCustomerCenter();
+    } else {
+      // Caso contrário, navegar para página de assinatura
+      Navigator.pushNamed(context, '/subscription');
     }
   }
 
