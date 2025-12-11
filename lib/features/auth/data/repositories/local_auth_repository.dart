@@ -90,7 +90,8 @@ class LocalAuthRepository implements AuthRepository {
     if (userJson != null) {
       try {
         final existingUser = UserModel.fromJson(jsonDecode(userJson));
-        if (existingUser.email.toLowerCase() == email.toLowerCase()) {
+        if (existingUser.email != null &&
+            existingUser.email!.toLowerCase() == email.toLowerCase()) {
           return AuthResult.error(
             'Este email já está em uso',
             AuthErrorCode.emailAlreadyInUse,

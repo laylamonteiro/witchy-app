@@ -264,10 +264,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  bool _isOAuthUser(String email) {
+  bool _isOAuthUser(String? email) {
     // Se o usuário logou com OAuth (Google), não mostrar opção de senha
     // Por enquanto, assumimos que emails que não foram criados localmente são OAuth
     // Você pode adicionar um campo no UserModel para rastrear isso melhor
+    if (email == null) return false;
     return false; // Por padrão, assume que todos podem trocar senha
   }
 
@@ -333,7 +334,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildInfoTile({
     required IconData icon,
     required String title,
-    required String value,
+    required String? value,
   }) {
     return ListTile(
       leading: Container(
@@ -352,7 +353,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ),
       subtitle: Text(
-        value,
+        value ?? 'Não informado',
         style: GoogleFonts.nunito(
           color: Colors.white,
           fontWeight: FontWeight.w600,
