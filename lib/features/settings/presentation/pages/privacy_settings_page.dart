@@ -39,12 +39,16 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    final authProvider = context.read<AuthProvider>();
+    final isPremium = authProvider.isPremium;
+
     setState(() {
       _analyticsEnabled = prefs.getBool('privacy_analytics') ?? true;
       _crashReportingEnabled = prefs.getBool('privacy_crash_reporting') ?? true;
       _personalizedContent = prefs.getBool('privacy_personalized') ?? true;
-      _syncEnabled = prefs.getBool('privacy_sync') ?? true;
-      _backupEnabled = prefs.getBool('privacy_backup') ?? true;
+      // Sincronização: desabilitada por padrão para free, habilitada para premium
+      _syncEnabled = prefs.getBool('privacy_sync') ?? isPremium;
+      _backupEnabled = prefs.getBool('privacy_backup') ?? isPremium;
       _isLoading = false;
     });
   }
@@ -121,29 +125,46 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
                   // Seção: Sincronização e Backup
                   _buildSectionHeader('Sincronização e Backup'),
-                  _buildSettingsCard([
-                    _buildSwitchTile(
-                      icon: Icons.sync,
-                      title: 'Sincronização Automática',
-                      subtitle: 'Manter seus dados sincronizados entre dispositivos',
-                      value: _syncEnabled,
-                      onChanged: (value) {
-                        setState(() => _syncEnabled = value);
-                        _saveSetting('privacy_sync', value);
-                      },
-                    ),
-                    _buildDivider(),
-                    _buildSwitchTile(
-                      icon: Icons.cloud_upload_outlined,
-                      title: 'Backup na Nuvem',
-                      subtitle: 'Salvar uma cópia dos seus dados na nuvem',
-                      value: _backupEnabled,
-                      onChanged: (value) {
-                        setState(() => _backupEnabled = value);
-                        _saveSetting('privacy_backup', value);
-                      },
-                    ),
-                  ]),
+                  Consumer<AuthProvider>(
+                    builder: (context, authProvider, _) {
+                      final isPremium = authProvider.isPremium;
+                      return _buildSettingsCard([
+                        _buildSwitchTile(
+                          icon: Icons.sync,
+                          title: 'Sincronização Automática',
+                          subtitle: isPremium
+                              ? 'Manter seus dados sincronizados entre dispositivos'
+                              : 'Recurso exclusivo Premium',
+                          value: _syncEnabled,
+                          onChanged: (value) {
+                            if (!isPremium && value) {
+                              _showUpgradeDialog();
+                            } else {
+                              setState(() => _syncEnabled = value);
+                              _saveSetting('privacy_sync', value);
+                            }
+                          },
+                        ),
+                        _buildDivider(),
+                        _buildSwitchTile(
+                          icon: Icons.cloud_upload_outlined,
+                          title: 'Backup na Nuvem',
+                          subtitle: isPremium
+                              ? 'Salvar uma cópia dos seus dados na nuvem'
+                              : 'Recurso exclusivo Premium',
+                          value: _backupEnabled,
+                          onChanged: (value) {
+                            if (!isPremium && value) {
+                              _showUpgradeDialog();
+                            } else {
+                              setState(() => _backupEnabled = value);
+                              _saveSetting('privacy_backup', value);
+                            }
+                          },
+                        ),
+                      ]);
+                    },
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -972,6 +993,52 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         );
       }
     }
+  }
+
+  void _showUpgradeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
+            SizedBox(width: 8),
+            Text(
+              'Recurso Premium',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: const Text(
+          'A sincronização de dados na nuvem é um recurso exclusivo para usuários Premium.\n\n'
+          'Com o Premium, seus dados ficam sempre seguros e sincronizados entre todos os seus dispositivos.',
+          style: TextStyle(color: Colors.white70, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Agora Não',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/subscription');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF9C27B0),
+            ),
+            child: const Text(
+              'Fazer Upgrade',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showPrivacyPolicy() {

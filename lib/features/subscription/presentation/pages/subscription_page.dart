@@ -277,7 +277,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           child: ElevatedButton(
             onPressed: _showPaywall,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: const Color(0xFF9C27B0), // Cor consistente com outros botões Premium
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(

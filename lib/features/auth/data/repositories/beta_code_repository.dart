@@ -55,19 +55,24 @@ class BetaCodeRepository {
 
   /// Cria um novo código beta
   Future<bool> createCode(String code) async {
+    print('[BetaCodeRepository] ============ CREATE CODE INICIADO ============');
     final cleanCode = code.trim().toUpperCase();
     final now = DateTime.now();
     print('[BetaCodeRepository] createCode - código: $cleanCode');
     print('[BetaCodeRepository] Supabase configurado: ${SupabaseConfig.isConfigured}');
+    print('[BetaCodeRepository] _supabase is null? ${_supabase == null}');
 
     final codeData = {
       'code': cleanCode,
       'is_used': false,
       'created_at': now.toIso8601String(),
     };
+    print('[BetaCodeRepository] Dados preparados: $codeData');
 
     final supabase = _supabase;
+    print('[BetaCodeRepository] supabase local is null? ${supabase == null}');
     if (supabase != null) {
+      print('[BetaCodeRepository] Entrando no bloco Supabase...');
       try {
         print('[BetaCodeRepository] Inserindo código no Supabase...');
         print('[BetaCodeRepository] Dados: $codeData');
@@ -79,8 +84,14 @@ class BetaCodeRepository {
         print('[BetaCodeRepository] ✅ Código inserido no Supabase com sucesso');
 
         // Também salvar localmente para cache
-        await _saveCodeToLocal(cleanCode, now);
-        print('[BetaCodeRepository] ✅ Código salvo localmente para cache');
+        try {
+          await _saveCodeToLocal(cleanCode, now);
+          print('[BetaCodeRepository] ✅ Código salvo localmente para cache');
+        } catch (localError) {
+          // Se falhar ao salvar localmente, apenas logar mas não falhar toda a operação
+          print('[BetaCodeRepository] ⚠️  Erro ao salvar localmente (não crítico): $localError');
+        }
+
         return true;
       } catch (e, stackTrace) {
         print('[BetaCodeRepository] ❌ ERRO DETALHADO ao criar código no Supabase:');
