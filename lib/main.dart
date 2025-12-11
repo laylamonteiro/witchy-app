@@ -169,7 +169,14 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider.value(value: PaymentService()),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
-        ChangeNotifierProvider(create: (_) => SpellProvider()),
+        // SpellProvider agora depende de AuthProvider para filtrar por usuário
+        ChangeNotifierProxyProvider<AuthProvider, SpellProvider>(
+          create: (context) => SpellProvider(),
+          update: (context, authProvider, spellProvider) {
+            spellProvider!.setUserId(authProvider.currentUser.id);
+            return spellProvider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => DreamProvider()),
         ChangeNotifierProvider(create: (_) => DesireProvider()),
         ChangeNotifierProvider(create: (_) => GratitudeProvider()),

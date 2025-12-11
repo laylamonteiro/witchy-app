@@ -7,10 +7,23 @@ class SpellRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final DataSyncService _syncService = DataSyncService();
 
+  /// Retorna todos os feitiços (sem filtro de usuário) - usado apenas para admin/debug
   Future<List<SpellModel>> getAll() async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'spells',
+      orderBy: 'created_at DESC',
+    );
+    return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
+  }
+
+  /// Retorna feitiços do usuário + pré-carregados (excluindo feitiços de outros usuários)
+  Future<List<SpellModel>> getForUser(String userId) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'spells',
+      where: 'user_id = ? OR is_preloaded = 1',
+      whereArgs: [userId],
       orderBy: 'created_at DESC',
     );
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));

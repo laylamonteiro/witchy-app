@@ -86,6 +86,9 @@ class PaymentService extends ChangeNotifier {
   CustomerInfo? _customerInfo;
   Offerings? _offerings;
 
+  /// Callback chamado quando o status Pro muda (para sincronizar com AuthProvider)
+  Function(bool isPro)? _onProStatusChanged;
+
   bool get isInitialized => _isInitialized;
   bool get isPro => _isPro;
   PurchaseStatus get status => _status;
@@ -161,10 +164,26 @@ class PaymentService extends ChangeNotifier {
     }
   }
 
+  /// Registra callback para ser notificado quando o status Pro mudar
+  ///
+  /// Usado pelo AuthProvider para sincronizar UserRole com assinatura
+  void setProStatusChangedCallback(Function(bool isPro)? callback) {
+    _onProStatusChanged = callback;
+  }
+
   /// Callback quando CustomerInfo é atualizado
   void _onCustomerInfoUpdated(CustomerInfo info) {
+    final oldIsPro = _isPro;
     _customerInfo = info;
     _updateProStatus();
+
+    // Notificar AuthProvider se o status Pro mudou
+    if (oldIsPro != _isPro && _onProStatusChanged != null) {
+      debugPrint('🔄 Status Pro mudou: $oldIsPro → $_isPro');
+      debugPrint('   Notificando AuthProvider para sincronizar UserRole...');
+      _onProStatusChanged!(_isPro);
+    }
+
     notifyListeners();
   }
 

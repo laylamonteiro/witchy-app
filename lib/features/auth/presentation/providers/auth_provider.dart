@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/database/database_helper.dart';
@@ -101,8 +102,52 @@ class AuthProvider extends ChangeNotifier {
       }
     }
 
+    // Registrar callback com PaymentService para sincronizar status Premium
+    _registerPaymentServiceCallback();
+
     _isInitialized = true;
     notifyListeners();
+  }
+
+  /// Registra callback com PaymentService para sincronizar UserRole com status de assinatura
+  void _registerPaymentServiceCallback() {
+    final paymentService = PaymentService();
+    paymentService.setProStatusChangedCallback((isPro) {
+      _onPaymentStatusChanged(isPro);
+    });
+    debugPrint('✅ AuthProvider registrado para receber updates do PaymentService');
+  }
+
+  /// Chamado quando o status Pro muda no PaymentService (ex: cancelamento, reembolso)
+  Future<void> _onPaymentStatusChanged(bool isPro) async {
+    await debugLog('AUTH', 'PaymentService notificou mudança: isPro=$isPro');
+
+    // Não alterar role de admin original (mesmo que perca assinatura)
+    if (_isOriginalAdmin) {
+      await debugLog('AUTH', 'Usuário é admin original - mantendo role');
+      return;
+    }
+
+    // Atualizar role baseado no status da assinatura
+    if (isPro) {
+      await debugLog('AUTH', 'Atualizando para Premium');
+      final paymentService = PaymentService();
+      final isLifetime = paymentService.isLifetime;
+      _currentUser = _currentUser.copyWith(
+        role: UserRole.premium,
+        plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
+      );
+    } else {
+      await debugLog('AUTH', 'Revertendo para Free (assinatura cancelada/reembolsada)');
+      _currentUser = _currentUser.copyWith(
+        role: UserRole.free,
+        plan: SubscriptionPlan.free,
+      );
+    }
+
+    await _saveUser();
+    notifyListeners();
+    await debugLog('AUTH', 'UserRole atualizado com sucesso');
   }
 
   /// Salva o usuário atual
@@ -468,5 +513,106 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = UserModel.defaultUser();
     _isOriginalAdmin = false;
     notifyListeners();
+  }
+
+  // ============================================================
+  // BETA CODES - Sistema simples de códigos promocionais
+  // ============================================================
+
+  /// Valida e resgata um código beta
+  /// Retorna true se o código foi resgatado com sucesso
+  Future<Map<String, dynamic>> redeemBetaCode(String code) async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final cleanCode = code.trim().toUpperCase();
+
+      await debugLog('BETA_CODE', 'Tentando resgatar código: $cleanCode');
+
+      // Buscar código no banco
+      final result = await db.query(
+        'beta_codes',
+        where: 'code = ?',
+        whereArgs: [cleanCode],
+      );
+
+      if (result.isEmpty) {
+        await debugLog('BETA_CODE', 'Código não encontrado');
+        return {
+          'success': false,
+          'message': 'Código inválido',
+        };
+      }
+
+      final codeData = result.first;
+      final isUsed = codeData['is_used'] == 1;
+
+      if (isUsed) {
+        await debugLog('BETA_CODE', 'Código já foi usado');
+        return {
+          'success': false,
+          'message': 'Este código já foi utilizado',
+        };
+      }
+
+      // Marcar código como usado
+      await db.update(
+        'beta_codes',
+        {
+          'is_used': 1,
+          'used_by': _currentUser.id,
+          'used_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'code = ?',
+        whereArgs: [cleanCode],
+      );
+
+      // Atualizar usuário para Premium vitalício
+      _currentUser = _currentUser.copyWith(
+        role: UserRole.premium,
+        plan: SubscriptionPlan.lifetime,
+      );
+
+      await _saveUser();
+      notifyListeners();
+
+      await debugLog('BETA_CODE', 'Código resgatado com sucesso - usuário agora é Premium vitalício');
+
+      return {
+        'success': true,
+        'message': 'Código resgatado! Você agora tem acesso Premium vitalício 🎉',
+      };
+    } catch (e) {
+      await debugLog('BETA_CODE', 'Erro ao resgatar código: $e');
+      return {
+        'success': false,
+        'message': 'Erro ao processar código: $e',
+      };
+    }
+  }
+
+  /// Cria um novo código beta (apenas para admin)
+  Future<String?> createBetaCode(String code) async {
+    if (!isAdmin && !_isOriginalAdmin) {
+      await debugLog('BETA_CODE', 'Apenas admins podem criar códigos beta');
+      return null;
+    }
+
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final cleanCode = code.trim().toUpperCase();
+
+      await db.insert('beta_codes', {
+        'id': const Uuid().v4(),
+        'code': cleanCode,
+        'is_used': 0,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      });
+
+      await debugLog('BETA_CODE', 'Código beta criado: $cleanCode');
+      return cleanCode;
+    } catch (e) {
+      await debugLog('BETA_CODE', 'Erro ao criar código beta: $e');
+      return null;
+    }
   }
 }
