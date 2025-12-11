@@ -11,6 +11,12 @@ ALTER TABLE beta_codes ENABLE ROW LEVEL SECURITY;
 -- 2. REMOVER política temporária permissiva
 DROP POLICY IF EXISTS "temp_allow_all" ON beta_codes;
 
+-- 2.1 Remover políticas antigas (idempotência)
+DROP POLICY IF EXISTS "Admins podem criar códigos" ON beta_codes;
+DROP POLICY IF EXISTS "Usuários podem ler códigos" ON beta_codes;
+DROP POLICY IF EXISTS "Usuários podem resgatar códigos disponíveis" ON beta_codes;
+DROP POLICY IF EXISTS "Admins podem deletar códigos" ON beta_codes;
+
 -- ============================================================
 -- POLÍTICAS DE SEGURANÇA
 -- ============================================================
@@ -30,7 +36,7 @@ WITH CHECK (
 
 -- POLÍTICA 2: Usuários autenticados podem LER todos os códigos
 -- Necessário para verificar se código existe e está disponível
-CREATE POLICY "Usuários podem ler códigos"
+CREATE POLICY "Usuarios podem ler codigos"
 ON beta_codes
 FOR SELECT
 TO authenticated
@@ -38,7 +44,7 @@ USING (true);
 
 -- POLÍTICA 3: Usuários podem ATUALIZAR códigos ao resgatar
 -- Permite marcar código como usado apenas se ainda não foi usado
-CREATE POLICY "Usuários podem resgatar códigos disponíveis"
+CREATE POLICY "Usuarios podem resgatar codigos disponiveis"
 ON beta_codes
 FOR UPDATE
 TO authenticated
@@ -54,7 +60,7 @@ WITH CHECK (
 
 -- POLÍTICA 4: Admins podem DELETAR códigos
 -- Permite remover códigos inválidos ou expirados
-CREATE POLICY "Admins podem deletar códigos"
+CREATE POLICY "Admins podem deletar codigos"
 ON beta_codes
 FOR DELETE
 TO authenticated
