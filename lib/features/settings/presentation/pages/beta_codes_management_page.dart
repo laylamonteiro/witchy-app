@@ -18,6 +18,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   List<Map<String, dynamic>> _codes = [];
   bool _isLoading = true;
   final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _maxUsesController = TextEditingController(text: '1');
   final BetaCodeRepository _repository = BetaCodeRepository();
 
   @override
@@ -29,6 +30,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   @override
   void dispose() {
     _codeController.dispose();
+    _maxUsesController.dispose();
     super.dispose();
   }
 
@@ -78,17 +80,30 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       return;
     }
 
-    final result = await authProvider.createBetaCode(code);
+    // Validar max_uses
+    final maxUses = int.tryParse(_maxUsesController.text) ?? 1;
+    if (maxUses < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Número de usos deve ser pelo menos 1'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final result = await authProvider.createBetaCode(code, maxUses: maxUses);
 
     if (mounted) {
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Código "$result" criado com sucesso!'),
+            content: Text('Código "$result" criado com sucesso! (${maxUses} uso${maxUses > 1 ? 's' : ''})'),
             backgroundColor: Colors.green,
           ),
         );
         _codeController.clear();
+        _maxUsesController.text = '1'; // Resetar para 1
         _loadCodes();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -261,13 +276,46 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                           ],
                         ),
                         const SizedBox(height: 16),
+                        // Campo de código
+                        TextField(
+                          controller: _codeController,
+                          decoration: InputDecoration(
+                            labelText: 'Código',
+                            hintText: 'Digite o código (ex: BETA2025)',
+                            hintStyle: TextStyle(
+                              color: AppColors.softWhite.withOpacity(0.5),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.lilac),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: AppColors.lilac.withOpacity(0.3),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.lilac),
+                            ),
+                          ),
+                          textCapitalization: TextCapitalization.characters,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Campo de número de usos
                         Row(
                           children: [
                             Expanded(
                               child: TextField(
-                                controller: _codeController,
+                                controller: _maxUsesController,
                                 decoration: InputDecoration(
-                                  hintText: 'Digite o código (ex: BETA2025)',
+                                  labelText: 'Número de usos',
+                                  hintText: '1',
+                                  suffixText: 'uso(s)',
                                   hintStyle: TextStyle(
                                     color: AppColors.softWhite.withOpacity(0.5),
                                   ),
@@ -286,21 +334,21 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                                     borderSide: const BorderSide(color: AppColors.lilac),
                                   ),
                                 ),
-                                textCapitalization: TextCapitalization.characters,
+                                keyboardType: TextInputType.number,
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
+                                  FilteringTextInputFormatter.digitsOnly,
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             ElevatedButton(
                               onPressed: _createCode,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.lilac,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 16,
+                                  horizontal: 24,
+                                  vertical: 20,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -420,6 +468,11 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
 
     final usedBy = code['used_by'] as String?;
 
+    // Informações de múltiplos usos
+    final currentUses = (code['current_uses'] ?? 0) as int;
+    final maxUses = (code['max_uses'] ?? 1) as int;
+    final usesRemaining = maxUses - currentUses;
+
     return MagicalCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,20 +538,50 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               color: AppColors.softWhite.withOpacity(0.6),
             ),
           ),
-          if (isUsed && usedAt != null) ...[
+          const SizedBox(height: 4),
+          // Informação de usos
+          Row(
+            children: [
+              Icon(
+                Icons.people_outline,
+                size: 14,
+                color: AppColors.softWhite.withOpacity(0.6),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Usos: $currentUses/$maxUses',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: usesRemaining > 0 ? Colors.greenAccent : Colors.orangeAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (usesRemaining > 0) ...[
+                const SizedBox(width: 8),
+                Text(
+                  '($usesRemaining restante${usesRemaining > 1 ? 's' : ''})',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.softWhite.withOpacity(0.5),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (usedAt != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Usado em: ${_formatDate(usedAt)}',
+              'Último uso em: ${_formatDate(usedAt)}',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.softWhite.withOpacity(0.6),
               ),
             ),
           ],
-          if (isUsed && usedBy != null) ...[
+          if (usedBy != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Usado por: $usedBy',
+              'Último usuário: $usedBy',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.softWhite.withOpacity(0.6),

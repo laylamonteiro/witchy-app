@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -258,7 +258,9 @@ class DatabaseHelper {
         is_used INTEGER NOT NULL DEFAULT 0,
         used_by TEXT,
         used_at INTEGER,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        max_uses INTEGER NOT NULL DEFAULT 1,
+        current_uses INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -737,6 +739,41 @@ class DatabaseHelper {
         ''');
         print('Tabela beta_codes criada');
       }
+    }
+
+    // Migração da versão 9 para 10 - Adicionar suporte a múltiplos usos nos códigos beta
+    if (oldVersion < 10) {
+      print('Iniciando migração v9 -> v10: Adicionando suporte a múltiplos usos em beta_codes');
+
+      // Verificar se as colunas já existem
+      final tableInfo = await db.rawQuery('PRAGMA table_info(beta_codes)');
+      final columnNames = tableInfo.map((col) => col['name'] as String).toList();
+
+      if (!columnNames.contains('max_uses')) {
+        await db.execute('ALTER TABLE beta_codes ADD COLUMN max_uses INTEGER NOT NULL DEFAULT 1');
+        print('Coluna max_uses adicionada');
+      }
+
+      if (!columnNames.contains('current_uses')) {
+        await db.execute('ALTER TABLE beta_codes ADD COLUMN current_uses INTEGER NOT NULL DEFAULT 0');
+        print('Coluna current_uses adicionada');
+      }
+
+      // Migrar dados existentes: códigos já usados devem ter current_uses = 1
+      await db.execute('''
+        UPDATE beta_codes
+        SET current_uses = 1, max_uses = 1
+        WHERE is_used = 1 AND current_uses = 0
+      ''');
+
+      // Códigos não usados mantêm max_uses = 1 e current_uses = 0
+      await db.execute('''
+        UPDATE beta_codes
+        SET max_uses = 1, current_uses = 0
+        WHERE is_used = 0 AND current_uses = 0
+      ''');
+
+      print('Migração v10 concluída - suporte a múltiplos usos adicionado');
     }
   }
 

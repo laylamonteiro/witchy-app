@@ -575,7 +575,10 @@ class AuthProvider extends ChangeNotifier {
 
   /// Cria um novo código beta (apenas para admin)
   /// Sincroniza com Supabase para funcionar entre dispositivos
-  Future<String?> createBetaCode(String code) async {
+  ///
+  /// [code] - Código a ser criado
+  /// [maxUses] - Número máximo de usos permitidos (padrão: 1)
+  Future<String?> createBetaCode(String code, {int maxUses = 1}) async {
     if (!isAdmin && !_isOriginalAdmin) {
       await debugLog('BETA_CODE', 'Apenas admins podem criar códigos beta');
       return null;
@@ -585,12 +588,12 @@ class AuthProvider extends ChangeNotifier {
       final cleanCode = code.trim().toUpperCase();
 
       // Usar repositório que sincroniza com Supabase
-      final success = await _betaCodeRepo.createCode(cleanCode);
+      final success = await _betaCodeRepo.createCode(cleanCode, maxUses: maxUses);
 
       if (success) {
-        await debugLog('BETA_CODE', 'Código beta criado: $cleanCode');
+        await debugLog('BETA_CODE', 'Código beta criado: $cleanCode (max_uses: $maxUses)');
         return cleanCode;
-      } else {
+      } else{
         await debugLog('BETA_CODE', 'Erro ao criar código beta');
         return null;
       }
