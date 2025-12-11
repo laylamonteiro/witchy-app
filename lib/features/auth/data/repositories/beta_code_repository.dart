@@ -84,8 +84,14 @@ class BetaCodeRepository {
         print('[BetaCodeRepository] ✅ Código inserido no Supabase com sucesso');
 
         // Também salvar localmente para cache
-        await _saveCodeToLocal(cleanCode, now);
-        print('[BetaCodeRepository] ✅ Código salvo localmente para cache');
+        try {
+          await _saveCodeToLocal(cleanCode, now);
+          print('[BetaCodeRepository] ✅ Código salvo localmente para cache');
+        } catch (localError) {
+          // Se falhar ao salvar localmente, apenas logar mas não falhar toda a operação
+          print('[BetaCodeRepository] ⚠️  Erro ao salvar localmente (não crítico): $localError');
+        }
+
         return true;
       } catch (e, stackTrace) {
         print('[BetaCodeRepository] ❌ ERRO DETALHADO ao criar código no Supabase:');
