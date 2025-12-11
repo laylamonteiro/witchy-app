@@ -227,7 +227,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                     icon: const Icon(Icons.add),
                     label: const Text('Testar Criação'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.purple,
+                      backgroundColor: AppColors.pink,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
