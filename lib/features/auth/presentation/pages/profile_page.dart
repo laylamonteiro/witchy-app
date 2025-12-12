@@ -40,10 +40,27 @@ class ProfilePage extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Card de plano atual (para free OU admin simulando free)
+                // DEBUG: Card baseado em PLAN não ROLE
                 if (user.plan == SubscriptionPlan.free) ...[
                   _buildPlanCard(context, user, authProvider),
                   const SizedBox(height: 20),
                 ],
+
+                // DEBUG: Marcador visual para confirmar build novo
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.2),
+                    border: Border.all(color: Colors.red, width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'DEBUG: Build ${DateTime.now().millisecondsSinceEpoch} - Plan: ${user.plan.toString().split('.').last}',
+                    style: const TextStyle(color: Colors.red, fontSize: 10),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
 
                 // Estatísticas de uso (para free OU admin simulando free)
                 if (user.plan == SubscriptionPlan.free) ...[
