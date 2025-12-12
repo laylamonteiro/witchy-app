@@ -49,8 +49,8 @@ class SettingsPage extends StatelessWidget {
                 _buildPlanCard(context, user, authProvider),
                 const SizedBox(height: 20),
 
-                // Estatísticas de uso (para free)
-                if (user.isFree) ...[
+                // Estatísticas de uso (para free OU admin simulando free)
+                if (user.plan == SubscriptionPlan.free) ...[
                   _buildUsageStats(context, user),
                   const SizedBox(height: 20),
                 ],
@@ -201,24 +201,25 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildPlanCard(BuildContext context, UserModel user, AuthProvider authProvider) {
-    final isPremium = user.isPremium;
+    // Usar plan ao invés de role para admin poder simular
+    final isFree = user.plan == SubscriptionPlan.free;
     final paymentService = PaymentService();
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isPremium
-              ? [const Color(0xFF9C27B0), const Color(0xFFE91E63)]
-              : [const Color(0xFF2D2D44), const Color(0xFF1A1A2E)],
+          colors: isFree
+              ? [const Color(0xFF2D2D44), const Color(0xFF1A1A2E)]
+              : [const Color(0xFF9C27B0), const Color(0xFFE91E63)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isPremium
-              ? Colors.white.withValues(alpha: 0.2)
-              : const Color(0xFF9C27B0).withValues(alpha: 0.3),
+          color: isFree
+              ? const Color(0xFF9C27B0).withValues(alpha: 0.3)
+              : Colors.white.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -227,7 +228,7 @@ class SettingsPage extends StatelessWidget {
           Row(
             children: [
               Icon(
-                isPremium ? Icons.star : Icons.workspace_premium_outlined,
+                isFree ? Icons.workspace_premium_outlined : Icons.star,
                 color: Colors.white,
                 size: 32,
               ),
@@ -237,7 +238,7 @@ class SettingsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isPremium ? 'Plano Premium' : 'Plano Gratuito',
+                      isFree ? 'Plano Gratuito' : 'Plano Premium',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -245,9 +246,9 @@ class SettingsPage extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      isPremium
-                          ? 'Acesso completo a todas as funcionalidades'
-                          : 'Algumas funcionalidades são limitadas',
+                      isFree
+                          ? 'Algumas funcionalidades são limitadas'
+                          : 'Acesso completo a todas as funcionalidades',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 12,
@@ -259,7 +260,7 @@ class SettingsPage extends StatelessWidget {
             ],
           ),
           // Informações extras para Premium
-          if (isPremium) ...[
+          if (!isFree) ...[
             const SizedBox(height: 12),
             if (paymentService.isLifetime)
               Text(
@@ -299,7 +300,7 @@ class SettingsPage extends StatelessWidget {
             ),
           ],
           // Botão de upgrade para Free
-          if (!isPremium) ...[
+          if (isFree) ...[
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
