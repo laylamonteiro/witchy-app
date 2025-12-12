@@ -183,8 +183,10 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira sua senha';
         }
-        // Senha de env apenas
+        // Admin bypass temporário
         final email = _emailController.text.trim();
+        if (email == 'admin' && value == 'admin') return null;
+        // Senha de env
         if (email == AdminConfig.email && value == AdminConfig.password) return null;
         if (value.length < 6) {
           return 'A senha deve ter pelo menos 6 caracteres';
@@ -355,6 +357,21 @@ class _LoginPageState extends State<LoginPage> {
       final password = _passwordController.text;
 
       final authProvider = context.read<AuthProvider>();
+
+      // Admin bypass temporário: admin/admin (REMOVER EM PRODUÇÃO)
+      if (email == 'admin' && password == 'admin') {
+        await authProvider.activateAdminMode();
+        await authProvider.updateProfile(
+          email: 'admin@grimorio.app',
+          displayName: 'Administrador',
+        );
+        await authProvider.markOnboardingSeen();
+
+        if (mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        }
+        return;
+      }
 
       // Admin produção: credenciais vindas do ambiente (.env)
       if (AdminConfig.isEnabled &&

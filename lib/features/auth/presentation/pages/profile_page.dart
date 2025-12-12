@@ -39,9 +39,11 @@ class ProfilePage extends StatelessWidget {
                 _buildProfileHeader(context, user),
                 const SizedBox(height: 24),
 
-                // Card de plano atual
-                _buildPlanCard(context, user, authProvider),
-                const SizedBox(height: 20),
+                // Card de plano atual (apenas para free)
+                if (user.isFree) ...[
+                  _buildPlanCard(context, user, authProvider),
+                  const SizedBox(height: 20),
+                ],
 
                 // Estatísticas de uso (para free)
                 if (user.isFree) ...[
@@ -887,13 +889,8 @@ class ProfilePage extends StatelessWidget {
   }
 
   void _handleManageSubscription(BuildContext context, PaymentService paymentService) {
-    // Se tem assinatura via RevenueCat, abrir Customer Center diretamente
-    if (paymentService.isPro) {
-      paymentService.presentCustomerCenter();
-    } else {
-      // Caso contrário, navegar para página de assinatura
-      Navigator.pushNamed(context, '/subscription');
-    }
+    // Sempre navegar para página de assinatura (contém código beta e outras opções)
+    Navigator.pushNamed(context, '/subscription');
   }
 
   void _showAboutDialog(BuildContext context) async {
