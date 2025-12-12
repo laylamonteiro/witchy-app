@@ -77,6 +77,9 @@ class SupabaseAuthRepository implements AuthRepository {
         email: email,
         password: password,
         data: {'display_name': displayName},
+        emailRedirectTo: kIsWeb
+            ? '${SupabaseConfig.url}/auth/v1/verify'
+            : '${SupabaseConfig.deepLinkScheme}://email-confirm',
       );
 
       if (response.user != null) {
