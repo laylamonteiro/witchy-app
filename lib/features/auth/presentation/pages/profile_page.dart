@@ -24,13 +24,23 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const Text('Meu Perfil'),
+        title: const Text('Meu Perfil v2'), // DEBUG: confirmar build novo
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           final user = authProvider.currentUser;
+
+          // DEBUG: Verificar estado do usuário
+          debugPrint('=== PROFILE DEBUG ===');
+          debugPrint('Role: ${user.role}');
+          debugPrint('Plan: ${user.plan}');
+          debugPrint('isAdmin: ${user.isAdmin}');
+          debugPrint('isPremium: ${user.isPremium}');
+          debugPrint('isFree: ${user.isFree}');
+          debugPrint('====================');
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
