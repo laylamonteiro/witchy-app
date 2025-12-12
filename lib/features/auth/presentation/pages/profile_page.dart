@@ -24,8 +24,8 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const Text('Meu Perfil'),
-        backgroundColor: Colors.transparent,
+        title: const Text('🔴 PERFIL ATUALIZADO V3'),
+        backgroundColor: Colors.red, // Vermelho para ser óbvio
         elevation: 0,
       ),
       body: Consumer<AuthProvider>(
