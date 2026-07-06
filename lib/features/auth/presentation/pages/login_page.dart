@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart' show kReleaseMode;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/config/admin_config.dart';
@@ -148,8 +147,8 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira seu email';
         }
-        // Permitir login admin (debug local ou env)
-        if (value == 'admin' || value == AdminConfig.email) return null;
+        // Permitir login admin (env-configured only)
+        if (AdminConfig.isEnabled && value == AdminConfig.email) return null;
         if (!value.contains('@') || !value.contains('.')) {
           return 'Por favor, insira um email válido';
         }
@@ -183,11 +182,9 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira sua senha';
         }
-        // Admin bypass temporário
+        // Admin via env-configured credentials only
         final email = _emailController.text.trim();
-        if (email == 'admin' && value == 'admin') return null;
-        // Senha de env
-        if (email == AdminConfig.email && value == AdminConfig.password) return null;
+        if (AdminConfig.isEnabled && email == AdminConfig.email && value == AdminConfig.password) return null;
         if (value.length < 6) {
           return 'A senha deve ter pelo menos 6 caracteres';
         }
@@ -358,22 +355,7 @@ class _LoginPageState extends State<LoginPage> {
 
       final authProvider = context.read<AuthProvider>();
 
-      // Admin bypass temporário: admin/admin (REMOVER EM PRODUÇÃO)
-      if (email == 'admin' && password == 'admin') {
-        await authProvider.activateAdminMode();
-        await authProvider.updateProfile(
-          email: 'admin@grimorio.app',
-          displayName: 'Administrador',
-        );
-        await authProvider.markOnboardingSeen();
-
-        if (mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
-        }
-        return;
-      }
-
-      // Admin produção: credenciais vindas do ambiente (.env)
+      // Admin: credentials must come from environment (.env / --dart-define)
       if (AdminConfig.isEnabled &&
           email == AdminConfig.email &&
           password == AdminConfig.password) {

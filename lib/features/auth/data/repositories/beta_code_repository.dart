@@ -118,10 +118,7 @@ class BetaCodeRepository {
         return _createCodeLocal(cleanCode, now, maxUses: maxUses);
       }
     } else {
-      print('[BetaCodeRepository] ⚠️  Supabase NÃO está configurado');
-      print('[BetaCodeRepository] ⚠️  URL vazia: ${SupabaseConfig.url.isEmpty}');
-      print('[BetaCodeRepository] ⚠️  AnonKey vazia: ${SupabaseConfig.anonKey.isEmpty}');
-      print('[BetaCodeRepository] Usando SQLite local apenas');
+      print('[BetaCodeRepository] Supabase not configured, using SQLite');
       return _createCodeLocal(cleanCode, now, maxUses: maxUses);
     }
   }

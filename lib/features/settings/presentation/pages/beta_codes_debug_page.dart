@@ -47,7 +47,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
       _addLog('1️⃣ CONFIGURAÇÃO SUPABASE:');
       _addLog('   Configurado: ${SupabaseConfig.isConfigured}');
       _addLog('   URL: ${SupabaseConfig.url.isEmpty ? "❌ VAZIO" : "✅ ${SupabaseConfig.url}"}');
-      _addLog('   AnonKey: ${SupabaseConfig.anonKey.isEmpty ? "❌ VAZIO" : "✅ ${SupabaseConfig.anonKey.substring(0, 20)}..."}');
+      _addLog('   AnonKey: ${SupabaseConfig.anonKey.isEmpty ? "❌ VAZIO" : "✅ Configurada (${SupabaseConfig.anonKey.length} chars)"}');
 
       // 2. Testar conexão com Supabase
       if (SupabaseConfig.isConfigured) {

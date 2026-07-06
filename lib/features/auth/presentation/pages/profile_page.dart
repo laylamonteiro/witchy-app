@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -54,8 +55,8 @@ class ProfilePage extends StatelessWidget {
                 // Opções de conta
                 _buildAccountOptions(context, authProvider),
 
-                // Admin options (apenas para admin)
-                if (user.isAdmin) ...[
+                // Admin options (apenas para admin, somente em debug)
+                if (kDebugMode && user.isAdmin) ...[
                   const SizedBox(height: 20),
                   _buildAdminOptions(context, authProvider),
                 ],

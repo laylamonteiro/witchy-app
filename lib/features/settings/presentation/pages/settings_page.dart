@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -58,8 +59,8 @@ class SettingsPage extends StatelessWidget {
                 // Opções de conta
                 _buildAccountOptions(context, authProvider),
 
-                // Admin options (apenas para admin)
-                if (authProvider.isOriginalAdmin) ...[
+                // Admin options (apenas para admin, somente em debug)
+                if (kDebugMode && authProvider.isOriginalAdmin) ...[
                   const SizedBox(height: 20),
                   _buildAdminCard(context, authProvider),
                 ],

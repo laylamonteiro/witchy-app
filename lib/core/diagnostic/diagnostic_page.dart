@@ -386,7 +386,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         return;
       }
 
-      _addLog('✅ API Key: ${apiKey.substring(0, 10)}...');
+      _addLog('✅ API Key: configurada (${apiKey.length} chars)');
       _addLog('📡 Testando geração de feitiço...');
       _addLog('💭 Intenção: "Atrair prosperidade"');
 
@@ -735,14 +735,14 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                     'Chave iOS',
                     RevenueCatConfig.iosApiKey.isEmpty
                         ? 'Ausente'
-                        : '${RevenueCatConfig.iosApiKey.substring(0, 10)}...',
+                        : 'Configurada (${RevenueCatConfig.iosApiKey.length} chars)',
                     RevenueCatConfig.iosApiKey.isNotEmpty,
                   ),
                   _buildDiagnosticRow(
                     'Chave Android',
                     RevenueCatConfig.androidApiKey.isEmpty
                         ? 'Ausente'
-                        : '${RevenueCatConfig.androidApiKey.substring(0, 10)}...',
+                        : 'Configurada (${RevenueCatConfig.androidApiKey.length} chars)',
                     RevenueCatConfig.androidApiKey.isNotEmpty,
                   ),
                 ],
@@ -1043,8 +1043,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     buffer.writeln('📱 INICIALIZAÇÃO');
     buffer.writeln('  • SDK Inicializado: ${paymentService.isInitialized ? "SIM ✓" : "NÃO ✗"}');
     buffer.writeln('  • Chaves configuradas: ${RevenueCatConfig.isConfigured ? "SIM ✓" : "NÃO ✗"}');
-    buffer.writeln('  • Chave iOS: ${RevenueCatConfig.iosApiKey.isEmpty ? "AUSENTE" : "${RevenueCatConfig.iosApiKey.substring(0, 10)}..."}');
-    buffer.writeln('  • Chave Android: ${RevenueCatConfig.androidApiKey.isEmpty ? "AUSENTE" : "${RevenueCatConfig.androidApiKey.substring(0, 10)}..."}');
+    buffer.writeln('  • Chave iOS: ${RevenueCatConfig.iosApiKey.isEmpty ? "AUSENTE" : "Configurada (${RevenueCatConfig.iosApiKey.length} chars)"}');
+    buffer.writeln('  • Chave Android: ${RevenueCatConfig.androidApiKey.isEmpty ? "AUSENTE" : "Configurada (${RevenueCatConfig.androidApiKey.length} chars)"}');
     buffer.writeln();
 
     buffer.writeln('⭐ STATUS PREMIUM');
