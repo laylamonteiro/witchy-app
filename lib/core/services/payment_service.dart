@@ -372,10 +372,12 @@ class PaymentService extends ChangeNotifier {
   /// - Cancelar assinatura
   /// - Solicitar reembolso
   /// - Acessar suporte
+  ///
+  /// Throws if the Customer Center cannot be presented.
   Future<void> presentCustomerCenter() async {
     if (!_isInitialized || !RevenueCatConfig.isConfigured) {
-      debugPrint('RevenueCat não inicializado');
-      return;
+      debugPrint('RevenueCat não inicializado - não é possível abrir Customer Center');
+      throw StateError('RevenueCat não inicializado');
     }
 
     try {
@@ -383,6 +385,7 @@ class PaymentService extends ChangeNotifier {
       await _loadCustomerInfo();
     } catch (e) {
       debugPrint('Erro ao apresentar Customer Center: $e');
+      rethrow;
     }
   }
 
@@ -549,7 +552,8 @@ class PaymentService extends ChangeNotifier {
 
   /// Associa usuário (ex: do Supabase) ao RevenueCat
   ///
-  /// Isso permite sincronizar compras entre dispositivos
+  /// Isso permite sincronizar compras entre dispositivos.
+  /// Throws on failure so the caller can handle the error.
   Future<void> logIn(String userId) async {
     if (!RevenueCatConfig.isConfigured) return;
 
@@ -559,10 +563,12 @@ class PaymentService extends ChangeNotifier {
       debugPrint('Usuário logado no RevenueCat: $userId');
     } catch (e) {
       debugPrint('Erro ao fazer login no RevenueCat: $e');
+      rethrow;
     }
   }
 
-  /// Remove associação do usuário
+  /// Remove associação do usuário.
+  /// Throws on failure so the caller can handle the error.
   Future<void> logOut() async {
     if (!RevenueCatConfig.isConfigured) return;
 
@@ -572,10 +578,12 @@ class PaymentService extends ChangeNotifier {
       debugPrint('Usuário deslogado do RevenueCat');
     } catch (e) {
       debugPrint('Erro ao fazer logout do RevenueCat: $e');
+      rethrow;
     }
   }
 
-  /// Define atributos do usuário para analytics
+  /// Define atributos do usuário para analytics.
+  /// Errors are logged but not thrown since attributes are non-critical.
   Future<void> setUserAttributes({
     String? email,
     String? displayName,
@@ -596,7 +604,7 @@ class PaymentService extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Erro ao definir atributos do usuário: $e');
+      debugPrint('Erro ao definir atributos do usuário (não-crítico): $e');
     }
   }
 

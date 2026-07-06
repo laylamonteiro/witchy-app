@@ -109,8 +109,7 @@ class SupabaseAuthRepository implements AuthRepository {
         'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      // Log error but don't fail registration
-      print('Erro ao criar perfil: $e');
+      await debugLog('AUTH', 'Erro ao criar/atualizar perfil no Supabase (registro não impedido): $e');
     }
   }
 
@@ -324,7 +323,6 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   Future<void> _deleteUserData(String userId) async {
-    // Deletar dados de todas as tabelas do usuário
     final tables = [
       SupabaseTables.spells,
       SupabaseTables.dreams,
@@ -343,12 +341,18 @@ class SupabaseAuthRepository implements AuthRepository {
       SupabaseTables.profiles,
     ];
 
+    final failedTables = <String>[];
     for (final table in tables) {
       try {
         await _supabase.from(table).delete().eq('user_id', userId);
       } catch (e) {
-        // Ignorar erros - tabela pode não existir
+        failedTables.add(table);
+        await debugLog('AUTH', 'Erro ao deletar dados do usuário na tabela $table: $e');
       }
+    }
+
+    if (failedTables.isNotEmpty) {
+      await debugLog('AUTH', 'Aviso: falha ao limpar ${failedTables.length} tabela(s) durante exclusão de conta: ${failedTables.join(", ")}');
     }
   }
 
@@ -366,7 +370,7 @@ class SupabaseAuthRepository implements AuthRepository {
           .maybeSingle();
       profileData = response;
     } catch (e) {
-      // Perfil pode não existir ainda
+      await debugLog('AUTH', 'Aviso: não foi possível buscar perfil do usuário ${supabaseUser.id}: $e');
     }
 
     // Detectar método de autenticação

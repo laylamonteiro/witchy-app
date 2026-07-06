@@ -485,6 +485,7 @@ class DataSyncService {
         whereArgs: [0, currentUserId],
       );
     } catch (e) {
+      debugPrint('Aviso: coluna synced não encontrada na tabela $table, buscando todos os dados do usuário: $e');
       return await db.query(
         table,
         where: 'user_id = ?',
@@ -515,7 +516,7 @@ class DataSyncService {
         whereArgs: [id],
       );
     } catch (e) {
-      // Ignorar se não existir coluna synced
+      debugPrint('Aviso: coluna synced não encontrada na tabela $table: $e');
     }
   }
 
@@ -571,31 +572,39 @@ class DataSyncService {
 
   /// Sincroniza um item específico após criação/atualização
   /// NOTA: Só funciona para usuários Premium
-  Future<void> syncItem(SyncEntity entity, Map<String, dynamic> item) async {
-    // Verifica se é premium antes de sincronizar
-    if (!PaymentService().isPro) return;
-    if (!isReady) return;
+  ///
+  /// Returns true if sync succeeded, false otherwise.
+  /// Errors are logged but not thrown to avoid disrupting local operations.
+  Future<bool> syncItem(SyncEntity entity, Map<String, dynamic> item) async {
+    if (!PaymentService().isPro) return false;
+    if (!isReady) return false;
 
     try {
       final tableName = _getTableName(entity);
       await _uploadItem(tableName, item);
+      return true;
     } catch (e) {
-      debugPrint('Erro ao sincronizar item: $e');
+      debugPrint('Erro ao sincronizar item ${entity.name} (id=${item['id']}): $e');
+      return false;
     }
   }
 
   /// Deleta um item do Supabase
   /// NOTA: Só funciona para usuários Premium
-  Future<void> deleteItem(SyncEntity entity, dynamic id) async {
-    // Verifica se é premium antes de deletar do cloud
-    if (!PaymentService().isPro) return;
-    if (!isReady) return;
+  ///
+  /// Returns true if deletion succeeded, false otherwise.
+  /// Errors are logged but not thrown to avoid disrupting local operations.
+  Future<bool> deleteItem(SyncEntity entity, dynamic id) async {
+    if (!PaymentService().isPro) return false;
+    if (!isReady) return false;
 
     try {
       final tableName = _getTableName(entity);
       await _supabase!.from(tableName).delete().eq('id', id);
+      return true;
     } catch (e) {
-      debugPrint('Erro ao deletar item do Supabase: $e');
+      debugPrint('Erro ao deletar item ${entity.name} (id=$id) do Supabase: $e');
+      return false;
     }
   }
 

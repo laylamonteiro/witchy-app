@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -405,7 +405,7 @@ class DatabaseHelper {
           await db.execute('ALTER TABLE spells ADD COLUMN is_preloaded INTEGER NOT NULL DEFAULT 0');
         }
       } catch (e) {
-        print('Erro ao adicionar colunas: $e');
+        debugPrint('Migração v2→v3: erro ao adicionar colunas em spells: $e');
       }
     }
 
@@ -593,10 +593,10 @@ class DatabaseHelper {
             await db.execute(
               "ALTER TABLE $table ADD COLUMN user_id TEXT NOT NULL DEFAULT 'local_user'"
             );
-            print('Adicionado user_id na tabela $table');
+            debugPrint('Migração v6→v7: adicionado user_id na tabela $table');
           }
         } catch (e) {
-          print('Erro ao adicionar user_id na tabela $table: $e');
+          debugPrint('Migração v6→v7: erro ao adicionar user_id na tabela $table: $e');
         }
       }
 
@@ -622,17 +622,8 @@ class DatabaseHelper {
         try {
           await db.execute(query);
         } catch (e) {
-          print('Erro ao criar índice: $e');
+          debugPrint('Migração v6→v7: erro ao criar índice: $e');
         }
-      }
-
-      // Remover UNIQUE constraint da tabela daily_magical_weather se existir
-      // (agora cada usuário pode ter seu próprio clima para cada data)
-      try {
-        // Não é possível remover constraints em SQLite diretamente,
-        // mas o índice de user_id vai ajudar nas queries
-      } catch (e) {
-        print('Erro na migração da tabela weather: $e');
       }
     }
 
@@ -667,27 +658,24 @@ class DatabaseHelper {
             await db.execute(
               'ALTER TABLE $table ADD COLUMN synced INTEGER NOT NULL DEFAULT 0'
             );
-            print('Adicionado synced na tabela $table');
+            debugPrint('Migração v7→v8: adicionado synced na tabela $table');
           }
 
           if (!hasUpdatedAt) {
-            // Usar created_at como valor inicial para updated_at, ou timestamp atual
             await db.execute(
               'ALTER TABLE $table ADD COLUMN updated_at INTEGER NOT NULL DEFAULT ${DateTime.now().millisecondsSinceEpoch}'
             );
-            // Atualizar updated_at com created_at onde existir
             try {
               await db.execute(
                 'UPDATE $table SET updated_at = created_at WHERE created_at IS NOT NULL'
               );
             } catch (e) {
-              // Algumas tabelas podem não ter created_at
-              print('Tabela $table não tem created_at: $e');
+              debugPrint('Migração v7→v8: tabela $table não tem created_at (esperado para algumas tabelas): $e');
             }
-            print('Adicionado updated_at na tabela $table');
+            debugPrint('Migração v7→v8: adicionado updated_at na tabela $table');
           }
         } catch (e) {
-          print('Erro ao adicionar colunas de sync na tabela $table: $e');
+          debugPrint('Migração v7→v8: erro ao adicionar colunas de sync na tabela $table: $e');
         }
       }
 
@@ -713,11 +701,11 @@ class DatabaseHelper {
         try {
           await db.execute(query);
         } catch (e) {
-          print('Erro ao criar índice de sync: $e');
+          debugPrint('Migração v7→v8: erro ao criar índice de sync: $e');
         }
       }
 
-      print('Migração v8 concluída - colunas de sincronização adicionadas');
+      debugPrint('Migração v7→v8 concluída - colunas de sincronização adicionadas');
     }
 
     // Migração da versão 8 para 9 - Adicionar tabela de códigos beta
@@ -737,43 +725,40 @@ class DatabaseHelper {
             created_at INTEGER NOT NULL
           )
         ''');
-        print('Tabela beta_codes criada');
+        debugPrint('Migração v8→v9: tabela beta_codes criada');
       }
     }
 
     // Migração da versão 9 para 10 - Adicionar suporte a múltiplos usos nos códigos beta
     if (oldVersion < 10) {
-      print('Iniciando migração v9 -> v10: Adicionando suporte a múltiplos usos em beta_codes');
+      debugPrint('Migração v9→v10: adicionando suporte a múltiplos usos em beta_codes');
 
-      // Verificar se as colunas já existem
       final tableInfo = await db.rawQuery('PRAGMA table_info(beta_codes)');
       final columnNames = tableInfo.map((col) => col['name'] as String).toList();
 
       if (!columnNames.contains('max_uses')) {
         await db.execute('ALTER TABLE beta_codes ADD COLUMN max_uses INTEGER NOT NULL DEFAULT 1');
-        print('Coluna max_uses adicionada');
+        debugPrint('Migração v9→v10: coluna max_uses adicionada');
       }
 
       if (!columnNames.contains('current_uses')) {
         await db.execute('ALTER TABLE beta_codes ADD COLUMN current_uses INTEGER NOT NULL DEFAULT 0');
-        print('Coluna current_uses adicionada');
+        debugPrint('Migração v9→v10: coluna current_uses adicionada');
       }
 
-      // Migrar dados existentes: códigos já usados devem ter current_uses = 1
       await db.execute('''
         UPDATE beta_codes
         SET current_uses = 1, max_uses = 1
         WHERE is_used = 1 AND current_uses = 0
       ''');
 
-      // Códigos não usados mantêm max_uses = 1 e current_uses = 0
       await db.execute('''
         UPDATE beta_codes
         SET max_uses = 1, current_uses = 0
         WHERE is_used = 0 AND current_uses = 0
       ''');
 
-      print('Migração v10 concluída - suporte a múltiplos usos adicionado');
+      debugPrint('Migração v9→v10 concluída');
     }
   }
 
@@ -813,7 +798,7 @@ class DatabaseHelper {
       try {
         await db.delete(table);
       } catch (e) {
-        // Ignorar erros de tabelas que não existem
+        debugPrint('clearAllTables: tabela $table não encontrada ou erro ao limpar: $e');
       }
     }
   }

@@ -92,10 +92,14 @@ class NotificationProvider with ChangeNotifier {
 
     final sabbats = _sabbatNotifications ? wheelProvider.getAllSabbats() : <Sabbat>[];
 
-    await _notificationService.scheduleMonthlyNotifications(
-      fullMoonDates: fullMoons,
-      newMoonDates: newMoons,
-      sabbats: sabbats,
-    );
+    try {
+      await _notificationService.scheduleMonthlyNotifications(
+        fullMoonDates: fullMoons,
+        newMoonDates: newMoons,
+        sabbats: sabbats,
+      );
+    } catch (e) {
+      debugPrint('Erro ao agendar notificações mensais: $e');
+    }
   }
 }

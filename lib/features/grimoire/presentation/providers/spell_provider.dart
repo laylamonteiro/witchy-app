@@ -67,7 +67,7 @@ class SpellProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      // Erro silencioso - feitiços pré-carregados são opcionais
+      debugPrint('Aviso: falha ao carregar feitiços pré-carregados (não-crítico): $e');
     }
   }
 

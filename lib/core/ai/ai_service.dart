@@ -151,43 +151,39 @@ class AIService {
     required BirthChartModel birthChart,
     required MagicalProfile profile,
   }) async {
-    try {
-      final chartSummary = _buildChartSummary(birthChart, profile);
+    final chartSummary = _buildChartSummary(birthChart, profile);
 
-      final requestData = {
-        'model': 'llama-3.3-70b-versatile',
-        'messages': [
-          {
-            'role': 'system',
-            'content': _buildMagicalProfileSystemPrompt(),
-          },
-          {
-            'role': 'user',
-            'content': chartSummary,
-          },
-        ],
-        'temperature': 0.7,
-        'max_tokens': 2048,
-      };
+    final requestData = {
+      'model': 'llama-3.3-70b-versatile',
+      'messages': [
+        {
+          'role': 'system',
+          'content': _buildMagicalProfileSystemPrompt(),
+        },
+        {
+          'role': 'user',
+          'content': chartSummary,
+        },
+      ],
+      'temperature': 0.7,
+      'max_tokens': 2048,
+    };
 
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 60),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
-      );
+    final response = await _dio.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+          'Content-Type': 'application/json',
+        },
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 30),
+      ),
+      data: requestData,
+    );
 
-      final content = response.data['choices'][0]['message']['content'];
-      return content;
-    } catch (e) {
-      rethrow;
-    }
+    final content = response.data['choices'][0]['message']['content'];
+    return content;
   }
 
   /// Gerar texto do Clima Mágico Diário com IA
