@@ -1,63 +1,23 @@
-import 'package:sqflite/sqflite.dart';
-import '../../../../core/database/database_helper.dart';
+import '../../../../core/database/base_repository.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../models/gratitude_model.dart';
 
-class GratitudeRepository {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  final DataSyncService _syncService = DataSyncService();
+class GratitudeRepository extends BaseSyncRepository<GratitudeModel> {
+  @override
+  String get tableName => 'gratitudes';
 
-  Future<List<GratitudeModel>> getAll() async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'gratitudes',
-      orderBy: 'date DESC',
-    );
-    return List.generate(maps.length, (i) => GratitudeModel.fromMap(maps[i]));
-  }
+  @override
+  SyncEntity get syncEntity => SyncEntity.gratitudes;
 
-  Future<GratitudeModel?> getById(String id) async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'gratitudes',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (maps.isEmpty) return null;
-    return GratitudeModel.fromMap(maps.first);
-  }
+  @override
+  String get defaultOrderBy => 'date DESC';
 
-  Future<int> insert(GratitudeModel gratitude) async {
-    final db = await _dbHelper.database;
-    final result = await db.insert(
-      'gratitudes',
-      gratitude.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    _syncService.syncItem(SyncEntity.gratitudes, gratitude.toMap());
-    return result;
-  }
+  @override
+  GratitudeModel fromMap(Map<String, dynamic> map) => GratitudeModel.fromMap(map);
 
-  Future<int> update(GratitudeModel gratitude) async {
-    final db = await _dbHelper.database;
-    final result = await db.update(
-      'gratitudes',
-      gratitude.toMap(),
-      where: 'id = ?',
-      whereArgs: [gratitude.id],
-    );
-    _syncService.syncItem(SyncEntity.gratitudes, gratitude.toMap());
-    return result;
-  }
+  @override
+  Map<String, dynamic> toMap(GratitudeModel item) => item.toMap();
 
-  Future<int> delete(String id) async {
-    final db = await _dbHelper.database;
-    final result = await db.delete(
-      'gratitudes',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    _syncService.deleteItem(SyncEntity.gratitudes, id);
-    return result;
-  }
+  @override
+  String idOf(GratitudeModel item) => item.id;
 }
