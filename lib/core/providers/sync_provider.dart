@@ -2,13 +2,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../services/data_sync_service.dart';
 import '../services/debug_log_service.dart';
-import '../services/payment_service.dart';
+import '../services/premium_access.dart';
 
 /// Provider que gerencia o estado de sincronização e expõe para a UI
 /// NOTA: Sincronização é uma funcionalidade PREMIUM
 class SyncProvider extends ChangeNotifier {
   final DataSyncService _syncService = DataSyncService();
-  final PaymentService _paymentService = PaymentService();
 
   SyncStatus _status = SyncStatus.idle;
   List<SyncConflict> _conflicts = [];
@@ -47,8 +46,8 @@ class SyncProvider extends ChangeNotifier {
   int get pendingSyncCount => _pendingSyncCount;
   bool get isSyncing => _status == SyncStatus.syncing;
   bool get hasConflicts => _conflicts.isNotEmpty;
-  bool get isReady => _syncService.isReady && _paymentService.isPro;
-  bool get isPremium => _paymentService.isPro;
+  bool get isReady => _syncService.isReady && PremiumAccess.instance.isPremium;
+  bool get isPremium => PremiumAccess.instance.isPremium;
 
   /// Status formatado para exibição
   String get statusText {
@@ -79,7 +78,7 @@ class SyncProvider extends ChangeNotifier {
 
   /// Inicia sincronização manual
   Future<SyncResult> sync() async {
-    if (!_paymentService.isPro) {
+    if (!PremiumAccess.instance.isPremium) {
       _lastError = 'Sincronização é uma funcionalidade Premium';
       notifyListeners();
       return SyncResult.error(_lastError!);
@@ -107,7 +106,7 @@ class SyncProvider extends ChangeNotifier {
 
   /// Upload completo (enviar tudo para nuvem)
   Future<SyncResult> fullUpload() async {
-    if (!_paymentService.isPro) {
+    if (!PremiumAccess.instance.isPremium) {
       return SyncResult.error('Sincronização é uma funcionalidade Premium');
     }
 
@@ -128,7 +127,7 @@ class SyncProvider extends ChangeNotifier {
 
   /// Download completo (baixar tudo da nuvem)
   Future<SyncResult> fullDownload() async {
-    if (!_paymentService.isPro) {
+    if (!PremiumAccess.instance.isPremium) {
       return SyncResult.error('Sincronização é uma funcionalidade Premium');
     }
 

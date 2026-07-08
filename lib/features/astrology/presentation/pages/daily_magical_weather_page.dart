@@ -353,7 +353,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
   Widget _buildAIInterpretationSection() {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
-        final isFree = authProvider.isFree;
+        final isFree = !authProvider.isPremiumEffective;
 
         return MagicalCard(
           child: Column(
@@ -386,9 +386,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               const SizedBox(height: 8),
               const Divider(color: AppColors.lilac),
               const SizedBox(height: 12),
-              // Conteúdo com blur para free (títulos visíveis)
+              // FAIL-CLOSED: para free, o texto premium real NUNCA é
+              // renderizado (nem com blur) — mostra placeholder desfocado.
               if (isFree) ...[
-                _buildMarkdownWithBlurredContent(_weatherCache!.aiGeneratedText),
+                _buildBlurredPlaceholder(),
                 const SizedBox(height: 16),
                 Center(
                   child: ElevatedButton.icon(
@@ -425,55 +426,20 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     );
   }
 
-  /// Renderiza markdown com blur apenas no conteúdo, mantendo títulos visíveis
-  Widget _buildMarkdownWithBlurredContent(String markdownText) {
-    final lines = markdownText.split('\n');
-    final List<Widget> widgets = [];
-    final StringBuffer contentBuffer = StringBuffer();
-
-    void flushContent() {
-      if (contentBuffer.isNotEmpty) {
-        final content = contentBuffer.toString().trim();
-        if (content.isNotEmpty) {
-          widgets.add(
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
-                child: MarkdownBody(
-                  data: content,
-                  styleSheet: _getMarkdownStyleSheet(),
-                ),
-              ),
-            ),
-          );
-        }
-        contentBuffer.clear();
-      }
-    }
-
-    for (final line in lines) {
-      // Detecta linhas que são títulos (começam com #)
-      if (line.trimLeft().startsWith('#')) {
-        flushContent();
-        // Renderiza o título sem blur
-        widgets.add(
-          MarkdownBody(
-            data: line,
+  /// Placeholder desfocado exibido para usuários free no lugar da previsão
+  /// real (fail-closed: o texto premium não entra na árvore de widgets).
+  Widget _buildBlurredPlaceholder() {
+    return ExcludeSemantics(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+          child: MarkdownBody(
+            data: kPremiumPlaceholderText,
             styleSheet: _getMarkdownStyleSheet(),
           ),
-        );
-      } else {
-        contentBuffer.writeln(line);
-      }
-    }
-
-    // Flush conteúdo restante
-    flushContent();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
+        ),
+      ),
     );
   }
 

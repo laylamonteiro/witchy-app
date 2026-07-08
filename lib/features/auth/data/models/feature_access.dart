@@ -265,10 +265,15 @@ class FeatureAccess {
           message: 'Mapa astral completo e perfil mágico são exclusivos Premium',
         );
 
-      // Runas leituras - preview
+      // Runas leituras - free com limite diário
+      // (regra única: mesma usada pela página de leitura via canUseRunes)
       case AppFeature.runesReadings:
-        return AccessResult.preview(
-          message: 'Leituras de runas são exclusivas para assinantes',
+        return AccessResult.limited(
+          remaining: user.remainingRuneReadings,
+          limit: UserModel.freeRuneReadingsLimit,
+          message: user.canUseRunes
+              ? '${user.remainingRuneReadings} leitura(s) gratuita(s) hoje'
+              : 'Limite diário atingido. Assine para leituras ilimitadas!',
         );
 
       // Sigilos - preview
@@ -278,11 +283,24 @@ class FeatureAccess {
           message: 'Criação de sigilos é uma funcionalidade Premium',
         );
 
-      // Adivinhação - preview
+      // Pêndulo - free com limite diário (mesma regra de canUsePendulum)
       case AppFeature.divinationPendulum:
+        return AccessResult.limited(
+          remaining: user.remainingPendulumUses,
+          limit: UserModel.dailyPendulumLimit,
+          message: user.canUsePendulum
+              ? '${user.remainingPendulumUses} consulta(s) gratuita(s) hoje'
+              : 'Limite diário atingido. Assine para consultas ilimitadas!',
+        );
+
+      // Oráculo - free com limite diário (mesma regra de canUseOracle)
       case AppFeature.divinationOracle:
-        return AccessResult.preview(
-          message: 'Ferramentas de adivinhação são exclusivas Premium',
+        return AccessResult.limited(
+          remaining: user.remainingOracleReadings,
+          limit: UserModel.freeOracleReadingsLimit,
+          message: user.canUseOracle
+              ? '${user.remainingOracleReadings} leitura(s) gratuita(s) hoje'
+              : 'Limite diário atingido. Assine para leituras ilimitadas!',
         );
 
       // === BLOQUEADO PARA FREE (IA) ===

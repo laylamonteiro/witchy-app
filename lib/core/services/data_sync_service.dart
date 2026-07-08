@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
-import 'payment_service.dart';
+import 'premium_access.dart';
 
 /// Tipos de entidades sincronizáveis
 enum SyncEntity {
@@ -572,8 +572,9 @@ class DataSyncService {
   /// Sincroniza um item específico após criação/atualização
   /// NOTA: Só funciona para usuários Premium
   Future<void> syncItem(SyncEntity entity, Map<String, dynamic> item) async {
-    // Verifica se é premium antes de sincronizar
-    if (!PaymentService().isPro) return;
+    // Verifica se é premium antes de sincronizar (fonte única: RevenueCat OU
+    // premium local via código beta/admin)
+    if (!PremiumAccess.instance.isPremium) return;
     if (!isReady) return;
 
     try {
@@ -588,7 +589,7 @@ class DataSyncService {
   /// NOTA: Só funciona para usuários Premium
   Future<void> deleteItem(SyncEntity entity, dynamic id) async {
     // Verifica se é premium antes de deletar do cloud
-    if (!PaymentService().isPro) return;
+    if (!PremiumAccess.instance.isPremium) return;
     if (!isReady) return;
 
     try {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/payment_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../pages/paywall_page.dart';
 
 /// Widget que protege funcionalidades Pro
@@ -38,9 +39,11 @@ class ProFeatureGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PaymentService>(
-      builder: (context, paymentService, _) {
-        if (paymentService.isPro) {
+    return Consumer2<PaymentService, AuthProvider>(
+      builder: (context, paymentService, authProvider, _) {
+        // Fonte única de premium: RevenueCat OU premium local (código beta,
+        // simulação de plano pelo admin).
+        if (paymentService.isPro || authProvider.isPremiumEffective) {
           return child;
         }
 
@@ -95,9 +98,11 @@ class ProBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PaymentService>(
-      builder: (context, paymentService, _) {
-        if (!paymentService.isPro) return const SizedBox.shrink();
+    return Consumer2<PaymentService, AuthProvider>(
+      builder: (context, paymentService, authProvider, _) {
+        if (!paymentService.isPro && !authProvider.isPremiumEffective) {
+          return const SizedBox.shrink();
+        }
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -123,10 +128,14 @@ class ProBadge extends StatelessWidget {
 
 /// Extensão para verificar status Pro facilmente
 extension ProStatusExtension on BuildContext {
-  /// Retorna true se o usuário for Pro
+  /// Retorna true se o usuário tem acesso Premium por qualquer caminho
+  /// (RevenueCat, código beta lifetime ou simulação de plano pelo admin)
   bool get isPro {
     try {
-      return Provider.of<PaymentService>(this, listen: false).isPro;
+      if (Provider.of<PaymentService>(this, listen: false).isPro) return true;
+    } catch (_) {}
+    try {
+      return Provider.of<AuthProvider>(this, listen: false).isPremiumEffective;
     } catch (_) {
       return false;
     }
@@ -136,7 +145,7 @@ extension ProStatusExtension on BuildContext {
   Future<bool> requirePro() async {
     if (isPro) return true;
 
-    final result = await PaywallPage.present(this);
-    return Provider.of<PaymentService>(this, listen: false).isPro;
+    await PaywallPage.present(this);
+    return isPro;
   }
 }

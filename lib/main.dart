@@ -16,6 +16,7 @@ import 'core/providers/notification_provider.dart';
 import 'core/providers/sync_provider.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/payment_service.dart';
+import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
 import 'features/home/presentation/pages/home_page.dart';
@@ -148,9 +149,9 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
 
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
-    final paymentService = PaymentService();
-    // Sincronização é exclusiva para usuários Premium
-    if (syncService.isReady && paymentService.isPro) {
+    // Sincronização é exclusiva para usuários Premium (fonte única:
+    // RevenueCat OU premium local via código beta/admin)
+    if (syncService.isReady && PremiumAccess.instance.isPremium) {
       await debugLog('SYNC', 'App resumido - iniciando sync em background (Premium)');
       syncService.syncAll().then((result) {
         if (result.success) {

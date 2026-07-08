@@ -49,7 +49,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final authProvider = context.read<AuthProvider>();
-    final isPremium = authProvider.isPremium;
+    final isPremium = authProvider.isPremiumEffective;
 
     setState(() {
       _nameController.text = authProvider.currentUser.displayName ?? '';
@@ -184,7 +184,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   _buildSectionHeader('Sincronização e Backup'),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
-                      final isPremium = authProvider.isPremium;
+                      final isPremium = authProvider.isPremiumEffective;
                       return _buildSettingsCard([
                         _buildSwitchTile(
                           icon: Icons.sync,

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
+import '../../../../core/services/premium_access.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
@@ -49,6 +50,31 @@ class AuthProvider extends ChangeNotifier {
   bool get isAdmin => _currentUser.isAdmin;
   bool get isPremium => _currentUser.isPremium;
   bool get isFree => _currentUser.isFree;
+
+  /// Fonte ÚNICA de verdade para acesso Premium efetivo.
+  ///
+  /// Combina todos os caminhos que concedem Premium:
+  /// - Assinatura ativa no RevenueCat (`PaymentService.isPro`)
+  /// - Role premium/admin no usuário local (inclui simulação de plano pelo admin)
+  /// - Plano lifetime (concedido por código beta)
+  ///
+  /// TODOS os gates de conteúdo/funcionalidade Premium devem usar este getter
+  /// (ou `PremiumAccess.isPremium(context)`), nunca `PaymentService.isPro` ou
+  /// `isPremium` isoladamente.
+  bool get isPremiumEffective =>
+      PaymentService().isPro ||
+      _currentUser.isPremium ||
+      _currentUser.plan == SubscriptionPlan.lifetime;
+
+  @override
+  void notifyListeners() {
+    // Mantém o singleton PremiumAccess (usado por serviços sem BuildContext,
+    // como o sync) sempre alinhado ao estado do usuário.
+    PremiumAccess.instance.updateLocalPremium(
+      _currentUser.isPremium || _currentUser.plan == SubscriptionPlan.lifetime,
+    );
+    super.notifyListeners();
+  }
 
   /// Inicializa o provider carregando dados salvos
   Future<void> initialize() async {
@@ -142,6 +168,13 @@ class AuthProvider extends ChangeNotifier {
         plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
       );
     } else {
+      // Não fazer downgrade de usuários com acesso lifetime (código beta):
+      // o RevenueCat não conhece esse plano, então isPro=false é esperado.
+      // Mesma regra de _checkSubscriptionExpiration e refreshPremiumStatus.
+      if (_currentUser.plan == SubscriptionPlan.lifetime) {
+        await debugLog('AUTH', 'Usuário lifetime (código beta) - ignorando downgrade do RevenueCat');
+        return;
+      }
       await debugLog('AUTH', 'Revertendo para Free (assinatura cancelada/reembolsada)');
       _currentUser = _currentUser.copyWith(
         role: UserRole.free,
