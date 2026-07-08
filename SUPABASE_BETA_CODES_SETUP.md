@@ -1,5 +1,18 @@
 # 🔧 Configuração dos Códigos Beta no Supabase
 
+> ⚠️ **ATUALIZAÇÃO (jul/2026):** o projeto Supabase original expirou. Para
+> restaurar o ambiente use o script único **`supabase/restore_database.sql`**
+> seguindo o guia **`docs/SUPABASE_RESTORE.md`** — ele já inclui a tabela
+> `beta_codes` na versão final (multi-uso), as políticas RLS anônimas E a
+> RPC atômica `redeem_beta_code`. Os scripts avulsos citados abaixo
+> (`supabase_rls_policies_beta_codes.sql`, `supabase_beta_codes_schema.sql`,
+> `supabase_beta_codes_migration_multi_use.sql`) foram consolidados nele e
+> permanecem apenas como histórico.
+>
+> Além disso, o comportamento do app mudou: com o Supabase configurado,
+> falhas de escrita agora aparecem como ERRO na UI (antes o app gravava só
+> no SQLite e dizia "sucesso" — era exatamente o bug investigado aqui).
+
 ## 📋 Problema Identificado
 
 Os códigos beta não estão sendo salvos nem consultados no Supabase porque:
@@ -68,20 +81,25 @@ WHERE tablename = 'beta_codes';
 
 ## 📊 Estrutura da Tabela
 
-A tabela `beta_codes` deve ter esta estrutura:
+A tabela `beta_codes` deve ter esta estrutura (versão atual, multi-uso —
+o código Dart SEMPRE envia `max_uses`/`current_uses`; sem essas colunas o
+INSERT falha e o código não é criado no Supabase):
 
 ```sql
 CREATE TABLE beta_codes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code TEXT NOT NULL UNIQUE,
   is_used BOOLEAN NOT NULL DEFAULT false,
   used_by TEXT,
   used_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  max_uses INTEGER NOT NULL DEFAULT 1,
+  current_uses INTEGER NOT NULL DEFAULT 0
 );
 ```
 
-**NOTA:** Se a tabela não existir ou estiver diferente, execute também o arquivo `supabase_beta_codes_schema.sql` ANTES das políticas RLS.
+**NOTA:** Não crie a tabela manualmente — execute `supabase/restore_database.sql`,
+que cria/migra a tabela, as políticas e a RPC `redeem_beta_code` de uma vez.
 
 ## 🔒 Notas de Segurança
 
