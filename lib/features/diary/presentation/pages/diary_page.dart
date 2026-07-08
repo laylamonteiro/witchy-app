@@ -6,9 +6,14 @@ import 'dreams_list_page.dart';
 import 'desires_list_page.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../../core/navigation/section_reset_notifier.dart';
 
 class DiaryPage extends StatefulWidget {
-  const DiaryPage({super.key});
+  /// Notificador da HomePage: re-toque na aba "Diários" volta para a
+  /// primeira aba interna.
+  final SectionResetNotifier? resetNotifier;
+
+  const DiaryPage({super.key, this.resetNotifier});
 
   @override
   State<DiaryPage> createState() => _DiaryPageState();
@@ -26,14 +31,22 @@ class _DiaryPageState extends State<DiaryPage> with SingleTickerProviderStateMix
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_onTabChanged);
+    widget.resetNotifier?.addListener(_onResetRequested);
     _loadLastTab();
   }
 
   @override
   void dispose() {
+    widget.resetNotifier?.removeListener(_onResetRequested);
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onResetRequested() {
+    if (mounted && _tabController.index != 0) {
+      _tabController.animateTo(0);
+    }
   }
 
   void _onTabChanged() {
@@ -64,8 +77,8 @@ class _DiaryPageState extends State<DiaryPage> with SingleTickerProviderStateMix
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.push(
-              context,
+            // rootNavigator: Configurações cobre a bottom bar (tela cheia)
+            onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
             tooltip: 'Configurações',
