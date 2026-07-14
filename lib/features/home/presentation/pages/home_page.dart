@@ -6,6 +6,7 @@ import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
 
 class HomePage extends StatefulWidget {
@@ -142,6 +143,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 // Opcional: adicionar interação ao clicar no mascote
               },
             ),
+            // Balão de conversa diário (1x/dia) — irmão do mascote, não o
+            // modifica nem interfere nas suas interações
+            const CatChatBubble(),
           ],
         ),
         bottomNavigationBar: Container(
