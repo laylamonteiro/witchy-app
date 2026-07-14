@@ -40,7 +40,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final authProvider = context.read<AuthProvider>();
-    final isPremium = authProvider.isPremium;
+    final isPremium = authProvider.isPremiumEffective;
 
     setState(() {
       _analyticsEnabled = prefs.getBool('privacy_analytics') ?? true;
@@ -127,7 +127,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   _buildSectionHeader('Sincronização e Backup'),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
-                      final isPremium = authProvider.isPremium;
+                      final isPremium = authProvider.isPremiumEffective;
                       return _buildSettingsCard([
                         _buildSwitchTile(
                           icon: Icons.sync,

@@ -168,7 +168,7 @@ class _PersonalizedSuggestionsPageState
 
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
-        final isFree = authProvider.isFree;
+        final isFree = !authProvider.isPremiumEffective;
 
         return Scaffold(
           appBar: AppBar(
@@ -502,20 +502,14 @@ class _PersonalizedSuggestionsPageState
                     ),
                   ),
                   const SizedBox(height: 2),
-                  // Conteúdo com blur para free
+                  // FAIL-CLOSED: para free, mostra placeholder desfocado — o
+                  // conteúdo real não entra na árvore de widgets.
                   if (isFree)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                        child: Text(
-                          info['effects']!,
-                          style: TextStyle(
-                            color: AppColors.softWhite.withOpacity(0.8),
-                            fontSize: 12,
-                            height: 1.4,
-                          ),
-                        ),
+                    _blurredPlaceholder(
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.8),
+                        fontSize: 12,
+                        height: 1.4,
                       ),
                     )
                   else
@@ -539,19 +533,12 @@ class _PersonalizedSuggestionsPageState
                   ),
                   const SizedBox(height: 2),
                   if (isFree)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                        child: Text(
-                          info['tips']!,
-                          style: TextStyle(
-                            color: AppColors.softWhite.withOpacity(0.6),
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                            height: 1.4,
-                          ),
-                        ),
+                    _blurredPlaceholder(
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.6),
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        height: 1.4,
                       ),
                     )
                   else
@@ -588,14 +575,15 @@ class _PersonalizedSuggestionsPageState
       EnergyLevel.harmonious: Colors.green,
     };
 
-    // Widget para aplicar blur apenas no texto de conteúdo
+    // FAIL-CLOSED: para free, o conteúdo real é substituído por um
+    // placeholder desfocado (nunca renderizado, nem atrás de blur).
     Widget blurIfFree(Widget child) {
       if (isFree) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-            child: child,
+        return _blurredPlaceholder(
+          style: const TextStyle(
+            color: AppColors.softWhite,
+            fontSize: 12,
+            height: 1.4,
           ),
         );
       }
@@ -741,6 +729,25 @@ class _PersonalizedSuggestionsPageState
             }),
           ],
         ],
+      ),
+    );
+  }
+
+  /// Placeholder desfocado exibido para free no lugar do conteúdo premium
+  /// (fail-closed: o texto real não entra na árvore de widgets).
+  Widget _blurredPlaceholder({TextStyle? style, int maxLines = 2}) {
+    return ExcludeSemantics(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+          child: Text(
+            kPremiumPlaceholderText,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
       ),
     );
   }

@@ -11,10 +11,15 @@ import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
 import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class EncyclopediaPage extends StatefulWidget {
-  const EncyclopediaPage({super.key});
+  /// Notificador da HomePage: re-toque na aba "Enciclopédia" volta para a
+  /// primeira aba interna.
+  final SectionResetNotifier? resetNotifier;
+
+  const EncyclopediaPage({super.key, this.resetNotifier});
 
   @override
   State<EncyclopediaPage> createState() => _EncyclopediaPageState();
@@ -32,14 +37,22 @@ class _EncyclopediaPageState extends State<EncyclopediaPage> with SingleTickerPr
     super.initState();
     _tabController = TabController(length: 10, vsync: this);
     _tabController.addListener(_onTabChanged);
+    widget.resetNotifier?.addListener(_onResetRequested);
     _loadLastTab();
   }
 
   @override
   void dispose() {
+    widget.resetNotifier?.removeListener(_onResetRequested);
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onResetRequested() {
+    if (mounted && _tabController.index != 0) {
+      _tabController.animateTo(0);
+    }
   }
 
   void _onTabChanged() {
@@ -70,8 +83,8 @@ class _EncyclopediaPageState extends State<EncyclopediaPage> with SingleTickerPr
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.push(
-              context,
+            // rootNavigator: Configurações cobre a bottom bar (tela cheia)
+            onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
             tooltip: 'Configurações',

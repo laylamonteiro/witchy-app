@@ -71,8 +71,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 );
               }
 
-              // Usuário é Pro se tiver assinatura ativa OU Premium via código beta
-              final isPro = _paymentService.isPro || authProvider.isPremium;
+              // Fonte única de premium (RevenueCat, código beta ou admin)
+              final isPro = authProvider.isPremiumEffective;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -116,7 +116,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
   Widget _buildSubscriptionStatus(AuthProvider authProvider) {
     final currentUser = authProvider.currentUser;
-    final isPro = _paymentService.isPro || authProvider.isPremium;
+    final isPro = authProvider.isPremiumEffective;
 
     // Determinar tipo de Premium
     final hasRevenueCat = _paymentService.isPro;

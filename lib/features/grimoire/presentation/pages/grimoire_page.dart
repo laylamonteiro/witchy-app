@@ -11,9 +11,14 @@ import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../../core/navigation/section_reset_notifier.dart';
 
 class GrimoirePage extends StatefulWidget {
-  const GrimoirePage({super.key});
+  /// Notificador da HomePage: re-toque na aba "Grimório" volta para a
+  /// primeira aba interna.
+  final SectionResetNotifier? resetNotifier;
+
+  const GrimoirePage({super.key, this.resetNotifier});
 
   @override
   State<GrimoirePage> createState() => _GrimoirePageState();
@@ -31,14 +36,22 @@ class _GrimoirePageState extends State<GrimoirePage> with SingleTickerProviderSt
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
+    widget.resetNotifier?.addListener(_onResetRequested);
     _loadLastTab();
   }
 
   @override
   void dispose() {
+    widget.resetNotifier?.removeListener(_onResetRequested);
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onResetRequested() {
+    if (mounted && _tabController.index != 0) {
+      _tabController.animateTo(0);
+    }
   }
 
   void _onTabChanged() {
@@ -69,8 +82,8 @@ class _GrimoirePageState extends State<GrimoirePage> with SingleTickerProviderSt
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.push(
-              context,
+            // rootNavigator: Configurações cobre a bottom bar (tela cheia)
+            onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
             tooltip: 'Configurações',

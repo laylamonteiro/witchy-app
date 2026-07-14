@@ -108,8 +108,13 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erro ao criar código (código já existe?)'),
+            content: Text(
+              'Erro ao criar código no servidor. O código NÃO foi criado. '
+              'Verifique se ele já existe e se o Supabase está acessível '
+              '(veja Debug Logs).',
+            ),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
           ),
         );
       }

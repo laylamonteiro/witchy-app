@@ -5,16 +5,76 @@ import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
 import '../../../../core/services/payment_service.dart';
 
-/// Widget que aplica blur em conteúdo premium para usuários free
-/// Mostra o conteúdo com blur simples, sem overlay nem botões
-class PremiumBlurWidget extends StatelessWidget {
-  /// O conteúdo que será mostrado (com blur se não tiver acesso)
-  final Widget child;
+/// Texto placeholder exibido (com blur) no lugar do conteúdo Premium real.
+///
+/// IMPORTANTE (fail-closed): o conteúdo Premium verdadeiro NUNCA deve ser
+/// renderizado para usuários sem acesso — nem mesmo atrás de blur. Blur é
+/// apenas cosmético: o texto continuaria na árvore de semântica (leitores de
+/// tela leem tudo) e parcialmente legível. Por isso os widgets abaixo
+/// renderizam este placeholder no lugar do conteúdo real.
+const String kPremiumPlaceholderText =
+    'As energias deste conteúdo estão veladas aos olhos comuns. '
+    'Os astros sussurram segredos que apenas os iniciados podem ouvir. '
+    'A lua guarda mistérios, os cristais vibram em silêncio e as ervas '
+    'aguardam o momento de revelar seus poderes. Desperte seu potencial '
+    'místico e descubra tudo o que o universo preparou para você. '
+    'A magia completa espera por quem atravessa o véu.';
 
-  /// A feature necessária para ver sem blur
+/// Bloco de texto placeholder desfocado, usado internamente pelos gates.
+class _BlurredPlaceholder extends StatelessWidget {
+  final double blurIntensity;
+  final TextStyle? style;
+  final int? maxLines;
+  final TextAlign? textAlign;
+
+  const _BlurredPlaceholder({
+    required this.blurIntensity,
+    this.style,
+    this.maxLines,
+    this.textAlign,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // ExcludeSemantics: nem o placeholder precisa poluir a acessibilidade.
+    return ExcludeSemantics(
+      child: ClipRRect(
+        child: ImageFiltered(
+          imageFilter: ImageFilter.blur(
+            sigmaX: blurIntensity,
+            sigmaY: blurIntensity,
+          ),
+          child: Text(
+            kPremiumPlaceholderText,
+            style: style ?? const TextStyle(fontSize: 14, height: 1.5),
+            maxLines: maxLines,
+            overflow: maxLines != null ? TextOverflow.ellipsis : null,
+            textAlign: textAlign,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget que protege conteúdo premium para usuários free (FAIL-CLOSED).
+///
+/// Com acesso: constrói e mostra o conteúdo real (via [builder], preferido,
+/// ou [child]). Sem acesso: mostra um placeholder desfocado — o conteúdo real
+/// NÃO entra na árvore de widgets.
+class PremiumBlurWidget extends StatelessWidget {
+  /// Construtor do conteúdo real — só é chamado quando o usuário TEM acesso.
+  /// Prefira este parâmetro a [child] para conteúdo sensível.
+  final WidgetBuilder? builder;
+
+  /// O conteúdo real (alternativa a [builder]). Só é inserido na árvore
+  /// quando o usuário tem acesso.
+  final Widget? child;
+
+  /// A feature necessária para ver o conteúdo
   final AppFeature feature;
 
-  /// Intensidade do blur (0-20)
+  /// Intensidade do blur do placeholder (0-20)
   final double blurIntensity;
 
   /// Mensagem customizada (não usada mais, mantido para compatibilidade)
@@ -28,13 +88,15 @@ class PremiumBlurWidget extends StatelessWidget {
 
   const PremiumBlurWidget({
     super.key,
-    required this.child,
+    this.builder,
+    this.child,
     required this.feature,
     this.blurIntensity = 6.0,
     this.customMessage,
     this.showUpgradeButton = false,
     this.onUpgradePressed,
-  });
+  }) : assert(builder != null || child != null,
+            'Forneça builder ou child ao PremiumBlurWidget');
 
   @override
   Widget build(BuildContext context) {
@@ -43,37 +105,34 @@ class PremiumBlurWidget extends StatelessWidget {
         final access = authProvider.checkFeatureAccess(feature);
 
         if (access.hasFullAccess) {
-          return child;
+          return builder != null ? builder!(context) : child!;
         }
 
-        // Blur simples, sem overlay nem botões
-        return ClipRRect(
-          child: ImageFiltered(
-            imageFilter: ImageFilter.blur(
-              sigmaX: blurIntensity,
-              sigmaY: blurIntensity,
-            ),
-            child: child,
-          ),
-        );
+        // Sem acesso: placeholder desfocado, nunca o conteúdo real.
+        return _BlurredPlaceholder(blurIntensity: blurIntensity);
       },
     );
   }
 }
 
-/// Widget que mostra conteúdo premium com título visível, conteúdo com blur e botão premium
-/// Ideal para seções onde queremos que o usuário veja o título mas não o conteúdo
+/// Widget que mostra conteúdo premium com título visível e botão premium
+/// (FAIL-CLOSED: sem acesso, o conteúdo real não entra na árvore — um
+/// placeholder desfocado é mostrado no lugar).
 class PremiumContentSection extends StatelessWidget {
   /// Título da seção (sempre visível, sem blur)
   final Widget title;
 
-  /// Conteúdo que terá blur se não tiver acesso
-  final Widget content;
+  /// Conteúdo real (alternativa a [contentBuilder]). Só entra na árvore com acesso.
+  final Widget? content;
+
+  /// Construtor do conteúdo real — só é chamado quando o usuário TEM acesso.
+  /// Prefira este parâmetro a [content] para conteúdo sensível.
+  final WidgetBuilder? contentBuilder;
 
   /// Feature necessária para acesso completo
   final AppFeature feature;
 
-  /// Intensidade do blur
+  /// Intensidade do blur do placeholder
   final double blurIntensity;
 
   /// Se deve mostrar o botão de upgrade
@@ -82,11 +141,13 @@ class PremiumContentSection extends StatelessWidget {
   const PremiumContentSection({
     super.key,
     required this.title,
-    required this.content,
+    this.content,
+    this.contentBuilder,
     required this.feature,
     this.blurIntensity = 6.0,
     this.showUpgradeButton = true,
-  });
+  }) : assert(content != null || contentBuilder != null,
+            'Forneça content ou contentBuilder ao PremiumContentSection');
 
   @override
   Widget build(BuildContext context) {
@@ -99,27 +160,19 @@ class PremiumContentSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               title,
-              content,
+              contentBuilder != null ? contentBuilder!(context) : content!,
             ],
           );
         }
 
-        // Título sem blur + conteúdo com blur + botão premium
+        // Título sem blur + placeholder desfocado + botão premium.
+        // O conteúdo real NÃO é renderizado.
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Título sempre visível
             title,
-            // Conteúdo com blur
-            ClipRRect(
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(
-                  sigmaX: blurIntensity,
-                  sigmaY: blurIntensity,
-                ),
-                child: content,
-              ),
-            ),
+            _BlurredPlaceholder(blurIntensity: blurIntensity),
             // Botão premium
             if (showUpgradeButton) ...[
               const SizedBox(height: 16),
@@ -157,7 +210,8 @@ class PremiumContentSection extends StatelessWidget {
   }
 }
 
-/// Widget para blur apenas em texto
+/// Widget para texto premium (FAIL-CLOSED: sem acesso, mostra placeholder
+/// desfocado — o texto real não entra na árvore).
 class PremiumBlurText extends StatelessWidget {
   final String text;
   final TextStyle? style;
@@ -191,21 +245,12 @@ class PremiumBlurText extends StatelessWidget {
           );
         }
 
-        return Stack(
-          children: [
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(
-                sigmaX: blurIntensity,
-                sigmaY: blurIntensity,
-              ),
-              child: Text(
-                text,
-                style: style,
-                maxLines: maxLines,
-                textAlign: textAlign,
-              ),
-            ),
-          ],
+        // Sem acesso: placeholder desfocado no lugar do texto real.
+        return _BlurredPlaceholder(
+          blurIntensity: blurIntensity,
+          style: style,
+          maxLines: maxLines,
+          textAlign: textAlign,
         );
       },
     );

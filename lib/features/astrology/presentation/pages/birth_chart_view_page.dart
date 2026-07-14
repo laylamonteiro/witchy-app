@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/data/models/feature_access.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../providers/astrology_provider.dart';
 import 'magical_profile_page.dart';
 
@@ -279,8 +282,12 @@ class BirthChartViewPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
-                                  aspect.interpretation,
+                                // Interpretação é conteúdo Premium
+                                // (fail-closed: free vê placeholder desfocado)
+                                PremiumBlurText(
+                                  text: aspect.interpretation,
+                                  feature: AppFeature.astrologyBirthChart,
+                                  maxLines: 3,
                                   style: TextStyle(
                                     color: AppColors.softWhite.withOpacity(0.7),
                                     fontSize: 12,
@@ -296,6 +303,41 @@ class BirthChartViewPage extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 24),
+
+                // Banner premium para usuários free (interpretações completas)
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, _) {
+                    if (authProvider.isPremiumEffective) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Center(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => const PremiumUpgradeSheet(),
+                            );
+                          },
+                          icon: const Icon(Icons.star, size: 18),
+                          label: const Text('Desbloquear interpretações completas'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF9C27B0),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
 
                 // Botão para ver perfil mágico
                 ElevatedButton(
