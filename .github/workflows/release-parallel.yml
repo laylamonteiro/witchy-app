@@ -295,6 +295,20 @@ jobs:
 
 
 
+    env:
+
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+
+      ANDROID_KEYSTORE_TYPE: ${{ secrets.ANDROID_KEYSTORE_TYPE || 'JKS' }}
+
+
+
     steps:
 
       - name: 📥 Checkout repository
@@ -413,6 +427,61 @@ jobs:
 
 
 
+      - name: 🔑 Prepare Android signing keystore
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
+          if echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH" 2>/dev/null; then
+            echo "✅ Keystore decoded from base64"
+          else
+            echo "⚠️ Base64 decode failed, writing secret as-is"
+            printf "%s" "$ANDROID_KEYSTORE_BASE64" > "$KEYSTORE_PATH"
+          fi
+          echo "ANDROID_KEYSTORE_FILE=$KEYSTORE_PATH" >> $GITHUB_ENV
+          echo "Keystore saved to $KEYSTORE_PATH"
+
+
+
+      - name: 🔑 Create key.properties
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          {
+            echo "storeFile=${ANDROID_KEYSTORE_FILE}"
+            echo "storePassword=${ANDROID_STORE_PASSWORD}"
+            echo "keyAlias=${ANDROID_KEY_ALIAS}"
+            echo "keyPassword=${ANDROID_KEY_PASSWORD}"
+            echo "storeType=${ANDROID_KEYSTORE_TYPE}"
+          } > android/key.properties
+          echo "✅ key.properties created"
+
+
+
+      - name: ✅ Validate keystore
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          echo "🔍 Validating keystore access..."
+          if keytool -list \
+            -keystore "${ANDROID_KEYSTORE_FILE}" \
+            -storepass "${ANDROID_STORE_PASSWORD}" \
+            -alias "${ANDROID_KEY_ALIAS}" \
+            > /dev/null 2>&1; then
+            echo "✅ Keystore validated successfully!"
+          else
+            echo "❌ Failed to access keystore"
+            exit 1
+          fi
+
+
+
+      - name: ⚠️ Warn if APK will be debug-signed
+        if: env.ANDROID_KEYSTORE_BASE64 == ''
+        run: |
+          echo "::warning::ANDROID_KEYSTORE_BASE64 ausente — o APK será assinado em DEBUG."
+          echo "::warning::O login com Google (google_sign_in) FALHARÁ com ApiException: 10."
+          echo "::warning::Configure os secrets ANDROID_KEYSTORE_BASE64/ALIAS/PASSWORD no repositório."
+
+
+
       - name: 📱 Build APK
         run: |
           flutter build apk --release \
@@ -421,7 +490,31 @@ jobs:
             --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }}
 
- 
+
+
+      - name: 🔎 Print APK signing SHA-1 (para configurar Google Sign-In)
+        run: |
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+          echo "════════════════════════════════════════════════════════════"
+          echo " SHA-1 da assinatura do APK — registre no Google Cloud Console"
+          echo " (APIs & Services → Credentials → OAuth client ID Android)"
+          echo " Package: com.grimoriodebolso.app"
+          echo "════════════════════════════════════════════════════════════"
+          # apksigner é o método mais confiável (v2/v3); keytool como fallback (v1)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -n "$APKSIGNER" ]; then
+            "$APKSIGNER" verify --print-certs "$APK" | grep -i "SHA-1\|SHA-256" || true
+          else
+            keytool -printcert -jarfile "$APK" | grep -i "SHA1\|SHA256" || \
+              echo "⚠️ Não foi possível extrair o SHA-1 (APK sem assinatura v1?). Use o keystore localmente."
+          fi
+          echo "════════════════════════════════════════════════════════════"
+          echo " Esperado (já registrado no google-services.json):"
+          echo "   8B:D7:BB:97:B9:5C:8D:5E:54:9D:55:84:A0:1F:E2:7A:EC:85:DA:98"
+          echo " Se o valor acima for DIFERENTE, registre-o no Google Cloud."
+          echo "════════════════════════════════════════════════════════════"
+
+
 
       - name: 📝 Rename APK
         run: |
