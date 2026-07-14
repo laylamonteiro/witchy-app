@@ -7,6 +7,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:grimorio_de_bolso/core/config/supabase_config.dart';
+import 'package:grimorio_de_bolso/core/widgets/mascot/cat_chat_bubble.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/feature_access.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/sigils/data/models/sigil_model.dart';
@@ -189,6 +190,49 @@ void main() {
             .hasFullAccess,
         isFalse,
       );
+    });
+  });
+
+  group('CatBubbleMessages - balão diário do mascote', () {
+    test('messageForDate sempre retorna uma das mensagens', () {
+      for (var day = 1; day <= 366; day++) {
+        final date = DateTime(2026, 1, 1).add(Duration(days: day - 1));
+        expect(
+          CatBubbleMessages.messages,
+          contains(CatBubbleMessages.messageForDate(date)),
+        );
+      }
+    });
+
+    test('mensagens rotacionam em dias consecutivos e são determinísticas',
+        () {
+      final day1 = DateTime(2026, 7, 14);
+      final day2 = DateTime(2026, 7, 15);
+
+      // Determinístico: mesma data → mesma mensagem
+      expect(
+        CatBubbleMessages.messageForDate(day1),
+        CatBubbleMessages.messageForDate(day1),
+      );
+      // Rotativo: dias consecutivos → mensagens diferentes
+      expect(
+        CatBubbleMessages.messageForDate(day1),
+        isNot(CatBubbleMessages.messageForDate(day2)),
+      );
+      // Ciclo completo: volta à mesma mensagem após messages.length dias
+      final cycled = day1.add(
+        Duration(days: CatBubbleMessages.messages.length),
+      );
+      expect(
+        CatBubbleMessages.messageForDate(day1),
+        CatBubbleMessages.messageForDate(cycled),
+      );
+    });
+
+    test('dateKey formata yyyy-MM-dd com zero à esquerda', () {
+      expect(CatBubbleMessages.dateKey(DateTime(2026, 7, 14)), '2026-07-14');
+      expect(CatBubbleMessages.dateKey(DateTime(2026, 1, 5)), '2026-01-05');
+      expect(CatBubbleMessages.dateKey(DateTime(2026, 12, 31)), '2026-12-31');
     });
   });
 }

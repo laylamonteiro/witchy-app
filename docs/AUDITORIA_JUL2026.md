@@ -104,41 +104,41 @@ foram todos resolvidos ou supersedidos pelo redesign de 3 abas.
 
 ---
 
-## 5. 🐱 Próxima release — Balão de conversa do gatinho (PLANEJAMENTO, sem código)
+## 5. 🐱 Balão de conversa do gatinho — ✅ IMPLEMENTADO
 
 **Requisito**: 1x por dia, no primeiro open do app, um chat bubble aparece
 acima do gatinho com mensagem rotativa; X fecha; tap leva ao Clima Mágico
-Diário. **O comportamento atual do mascote é congelado — zero alterações.**
+Diário. **O comportamento do mascote permanece congelado —
+`draggable_cat_mascot.dart` NÃO foi tocado (zero alterações).**
 
-### Arquitetura proposta
+### Implementação (conforme arquitetura aprovada)
 
-- **Novo widget** `lib/core/widgets/mascot/cat_chat_bubble.dart`
-  (StatefulWidget independente):
-  - montado no `Stack` da `HomePage` como IRMÃO do `DraggableCatMascot`
-    (acima dele na pilha), posicionado sobre a âncora inicial do gato
-    (x=20, y=120 — no primeiro open do dia o gato ainda está na posição
-    inicial, então o balão "aparece acima do gatinho" sem precisar rastrear
-    drags);
-  - hit-test limitado à área do balão (o resto é `IgnorePointer`) → drag,
-    tap, partículas e poses do gato continuam intocados;
-  - anima entrada/saída com fade+scale próprios (nenhum controller do gato).
-- **Controle diário**: SharedPreferences, chave `cat_bubble_last_shown_date`
-  (formato `yyyy-MM-dd`). Mostra somente se `!= hoje`; fechar no X ou tocar
-  no balão grava a data. Segue o padrão de persistência já usado no app
-  (`last_selected_tab`, `encyclopedia_last_tab`).
-- **Mensagens rotativas**: lista constante no próprio widget; índice =
-  `dayOfYear % mensagens.length` (determinístico, muda a cada dia):
+- **Novo widget** `lib/core/widgets/mascot/cat_chat_bubble.dart`:
+  - `CatBubbleMessages` — lógica pura (mensagens, rotação por
+    `dayOfYear % length`, chave de data `yyyy-MM-dd`), coberta por testes
+    em `test/widget_test.dart`;
+  - `CatChatBubble` — StatefulWidget montado no `Stack` da `HomePage` como
+    IRMÃO do `DraggableCatMascot`, `Positioned(left: 12, top: 36)` sobre a
+    âncora inicial do gato (x=20, y=120 — no primeiro open do dia o gato
+    ainda está na posição inicial); animação própria de fade+scale; hit-test
+    restrito à área do balão (drag, tap, partículas e poses do gato
+    intocados).
+- **Controle diário**: SharedPreferences `cat_bubble_last_shown_date`
+  (`yyyy-MM-dd`). Mostra somente se `!= hoje`; fechar no X ou tocar no balão
+  grava a data. Mesmo padrão de persistência do app (`last_selected_tab`,
+  `encyclopedia_last_tab`).
+- **Mensagens rotativas** (determinísticas, mudam a cada dia):
   1. "Que tal olhar o clima mágico do seu dia?"
   2. "Seu clima mágico já foi revelado hoje?"
   3. "Os astros prepararam algo interessante para você."
   4. "Descubra a energia mágica deste dia."
 - **Ação do tap**: `Navigator.of(context, rootNavigator: true).push(...)` →
-  `DailyMagicalWeatherPage` (`lib/features/astrology/presentation/pages/daily_magical_weather_page.dart`).
-- **Arquivos afetados na futura release**: `cat_chat_bubble.dart` (novo) e
-  ~5 linhas no `Stack` de `home_page.dart`. **`draggable_cat_mascot.dart`
-  não é tocado.** Se um dia o balão precisar seguir o gato durante o drag, a
-  única mudança aceitável seria expor um `ValueListenable<Offset>` opcional
-  no mascote (aditivo, sem efeito comportamental) — decidir na release.
+  `DailyMagicalWeatherPage` (tela cheia, acima dos Navigators aninhados).
+- **Arquivos alterados**: `cat_chat_bubble.dart` (novo) + 3 linhas em
+  `home_page.dart` (import e montagem no Stack). Evolução futura opcional:
+  se o balão precisar seguir o gato durante o drag, expor um
+  `ValueListenable<Offset>` opcional no mascote (mudança aditiva, sem efeito
+  comportamental).
 
 ---
 
