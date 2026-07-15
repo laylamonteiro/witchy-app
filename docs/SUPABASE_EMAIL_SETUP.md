@@ -19,40 +19,51 @@ destino claro ao usuário depois do clique (em vez de `localhost:3000/?code=...`
 > Os outros templates (Reset password, Magic link, Change email) podem ser
 > adaptados do mesmo HTML trocando título/texto/botão.
 
-## 2. Página pós-confirmação (5 min)
+## 2. Destino após o clique — abrir o app via deep link (2 min, SEM hospedagem)
 
-Hoje, após clicar no link, o usuário cai em `localhost:3000/?code=...` (o
-**Site URL** padrão do Supabase). A confirmação até funciona no banco, mas a
-tela é confusa. A solução: hospedar a página pronta
-[`docs/email-confirmado.html`](email-confirmado.html) e apontar o Supabase para ela.
+Ao clicar no link, o Supabase confirma o email no banco e depois **redireciona**
+para uma URL. Por padrão essa URL é o **Site URL** (que estava apontando para
+uma página não publicada → erro **404**).
 
-### 2a. Hospedar via GitHub Pages (se ainda não estiver ativo)
+O app **já está pronto** para receber o retorno por **deep link** — não precisa
+hospedar nada nem expor nenhum site:
+- `AndroidManifest.xml` tem o intent-filter do esquema `io.supabase.grimorio`;
+- o cadastro já pede retorno em `io.supabase.grimorio://email-confirm`
+  (`supabase_auth_repository.dart`);
+- o `supabase_flutter` processa esse link automaticamente ao abrir o app.
 
-1. GitHub → repositório `witchy-app` → **Settings → Pages**.
-2. **Source**: *Deploy from a branch* → Branch **main** → pasta **/docs** → Save.
-3. Em ~2 min a página fica em:
-   `https://laylamonteiro.github.io/witchy-app/email-confirmado.html`
-   (abra no navegador para confirmar).
-
-### 2b. Apontar o Supabase para a página
+Basta **autorizar esse deep link** no Supabase para ele ser usado no lugar do
+Site URL:
 
 Painel do Supabase → **Authentication → URL Configuration**:
 
 | Campo | Valor |
 |---|---|
-| **Site URL** | `https://laylamonteiro.github.io/witchy-app/email-confirmado.html` |
-| **Redirect URLs** (adicionar) | `https://laylamonteiro.github.io/witchy-app/email-confirmado.html` |
+| **Redirect URLs** (clique em *Add URL* e adicione os dois) | `io.supabase.grimorio://email-confirm` e `io.supabase.grimorio://reset-password` |
+| **Site URL** | troque a URL do GitHub por `io.supabase.grimorio://email-confirm` (evita qualquer 404 no fallback) |
 
-Pronto: clique no email → Supabase confirma → usuário cai na página bonita
-"Email confirmado! Volte ao app" com o visual do Grimório.
+**Save.** Agora: clicar no email → Supabase confirma → **o app abre
+automaticamente** já com a conta confirmada (e, na maioria dos casos, já
+logado). Nenhuma página web, nenhum link do GitHub.
+
+> **Por que estava dando 404**: o deep link não estava na allowlist de
+> *Redirect URLs*, então o Supabase ignorava o `emailRedirectTo` do app e caía
+> no *Site URL* (a página do GitHub Pages, que não está publicada).
+
+> A página `docs/email-confirmado.html` fica guardada para o futuro: se um dia
+> você tiver um domínio próprio (ex.: `grimoriodebolso.app`), dá para hospedá-la
+> lá e usar como destino web. Por enquanto o deep link resolve sem hospedagem.
 
 ## 3. Testar
 
-1. Crie uma conta nova no app com um email real.
+1. Crie uma conta nova no app (no **celular**) com um email real.
 2. Verifique a caixa de entrada: o email deve chegar com o visual roxo/lilás
    do app (verifique também o spam na primeira vez).
-3. Clique em **Confirmar meu email** → deve abrir a página "Email confirmado!".
-4. Volte ao app e faça login normalmente.
+3. Abra o email **no celular** e toque em **Confirmar meu email**.
+4. O aparelho deve abrir o **app Grimório de Bolso** (pode aparecer um "Abrir
+   com Grimório de Bolso?" — confirme). A conta já está confirmada.
+5. Se o app não logar sozinho, é só entrar com email e senha — a confirmação
+   já foi feita no passo 3.
 
 ## Observações
 

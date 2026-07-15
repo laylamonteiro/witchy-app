@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <!-- ============================================================
-  GRIMÓRIO DE BOLSO — Página pós-confirmação de email
+  GRIMÓRIO DE BOLSO — Página pós-confirmação de email (OPCIONAL / FUTURO)
 
-  Esta página é o destino do redirect após o usuário clicar em
-  "Confirmar meu email". Configure no Supabase:
-    Authentication → URL Configuration →
-      Site URL:      https://SEU-DOMINIO/email-confirmado.html
-      Redirect URLs: https://SEU-DOMINIO/email-confirmado.html
+  O fluxo ATUAL de confirmação usa deep link direto para o app
+  (io.supabase.grimorio://email-confirm) — não precisa desta página.
+  Veja docs/SUPABASE_EMAIL_SETUP.md.
 
-  Hospedagem sugerida: GitHub Pages servindo a pasta /docs
-  (Settings → Pages → Deploy from a branch → main → /docs),
-  ficando em https://laylamonteiro.github.io/witchy-app/email-confirmado.html
+  Esta página fica guardada para quando houver um DOMÍNIO PRÓPRIO
+  (ex.: grimoriodebolso.app): hospede o arquivo lá e use como
+  Site URL / Redirect URL de destino web da confirmação.
 ============================================================ -->
 <html lang="pt-BR">
 <head>
