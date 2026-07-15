@@ -7,10 +7,12 @@ class DesireRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final DataSyncService _syncService = DataSyncService();
 
-  Future<List<DesireModel>> getAll() async {
+  Future<List<DesireModel>> getAll(String userId) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'desires',
+      where: 'user_id = ?',
+      whereArgs: [userId],
       orderBy: 'created_at DESC',
     );
     return List.generate(maps.length, (i) => DesireModel.fromMap(maps[i]));

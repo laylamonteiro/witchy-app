@@ -60,9 +60,10 @@ class BirthChartViewPage extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         chart.birthPlace,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: AppColors.lilac,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  color: AppColors.lilac,
+                                ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
@@ -75,9 +76,10 @@ class BirthChartViewPage extends StatelessWidget {
                       if (!chart.unknownBirthTime)
                         Text(
                           chart.birthTime.format(context),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: AppColors.softWhite,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: AppColors.softWhite,
+                                  ),
                         ),
                     ],
                   ),
@@ -176,7 +178,8 @@ class BirthChartViewPage extends StatelessWidget {
                                   Text(
                                     'Casa ${planet.houseNumber}',
                                     style: TextStyle(
-                                      color: AppColors.softWhite.withOpacity(0.6),
+                                      color:
+                                          AppColors.softWhite.withOpacity(0.6),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -202,14 +205,16 @@ class BirthChartViewPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ...chart.houses.map((house) {
-                          final planetsInHouse = chart.getPlanetsInHouse(house.number);
+                          final planetsInHouse =
+                              chart.getPlanetsInHouse(house.number);
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       'Casa ${house.number}',
@@ -232,7 +237,8 @@ class BirthChartViewPage extends StatelessWidget {
                                     child: Text(
                                       'Planetas: ${planetsInHouse.map((p) => p.planet.symbol).join(' ')}',
                                       style: TextStyle(
-                                        color: AppColors.softWhite.withOpacity(0.6),
+                                        color: AppColors.softWhite
+                                            .withOpacity(0.6),
                                         fontSize: 12,
                                       ),
                                     ),
@@ -323,7 +329,8 @@ class BirthChartViewPage extends StatelessWidget {
                             );
                           },
                           icon: const Icon(Icons.star, size: 18),
-                          label: const Text('Desbloquear interpretações completas'),
+                          label: const Text(
+                              'Desbloquear interpretações completas'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF9C27B0),
                             foregroundColor: Colors.white,
@@ -416,7 +423,8 @@ class BirthChartViewPage extends StatelessWidget {
     );
   }
 
-  void _showExplanationDialog(BuildContext context, String title, Widget content) {
+  void _showExplanationDialog(
+      BuildContext context, String title, Widget content) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -523,25 +531,25 @@ class _TrioPrincipalExplanation extends StatelessWidget {
         _buildSection(
           '☉ O Sol - Sua Essência',
           'O Sol representa quem você realmente é no seu núcleo mais profundo. É a sua identidade '
-          'fundamental, seus objetivos de vida e como você brilha no mundo.\n\n'
-          'Na bruxaria, o Sol representa sua força vital, sua energia criativa e seu propósito mágico. '
-          'O signo solar indica que tipo de magia você naturalmente expressa.',
+              'fundamental, seus objetivos de vida e como você brilha no mundo.\n\n'
+              'Na bruxaria, o Sol representa sua força vital, sua energia criativa e seu propósito mágico. '
+              'O signo solar indica que tipo de magia você naturalmente expressa.',
         ),
         const SizedBox(height: 16),
         _buildSection(
           '☽ A Lua - Suas Emoções',
           'A Lua governa suas emoções, intuição e mundo interior. Ela revela como você processa '
-          'sentimentos, o que precisa para se sentir seguro(a) e suas reações instintivas.\n\n'
-          'Para praticantes de magia, a Lua é extremamente importante. Ela indica seus dons intuitivos, '
-          'sua conexão com o inconsciente e como você se relaciona com os ciclos lunares.',
+              'sentimentos, o que precisa para se sentir seguro(a) e suas reações instintivas.\n\n'
+              'Para praticantes de magia, a Lua é extremamente importante. Ela indica seus dons intuitivos, '
+              'sua conexão com o inconsciente e como você se relaciona com os ciclos lunares.',
         ),
         const SizedBox(height: 16),
         _buildSection(
           '⬆ O Ascendente - Sua Máscara',
           'O Ascendente (ou signo nascente) é como você se apresenta ao mundo e as primeiras '
-          'impressões que causa. É sua "máscara social" e aparência externa.\n\n'
-          'Na prática mágica, o Ascendente influencia como sua energia é percebida pelos outros '
-          'e pode indicar que tipo de trabalho mágico você atrai naturalmente.',
+              'impressões que causa. É sua "máscara social" e aparência externa.\n\n'
+              'Na prática mágica, o Ascendente influencia como sua energia é percebida pelos outros '
+              'e pode indicar que tipo de trabalho mágico você atrai naturalmente.',
         ),
         const SizedBox(height: 16),
         Container(
@@ -597,22 +605,22 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
         _buildSection(
           '☿ Mercúrio - Comunicação',
           'Mercúrio governa como você pensa, se comunica e processa informações. '
-          'Influencia sua forma de aprender, falar e escrever.\n\n'
-          'Na magia: Indica como você lança encantamentos, escreve feitiços e se comunica com o divino.',
+              'Influencia sua forma de aprender, falar e escrever.\n\n'
+              'Na magia: Indica como você lança encantamentos, escreve feitiços e se comunica com o divino.',
         ),
         const SizedBox(height: 16),
         _buildSection(
           '♀ Vênus - Amor e Beleza',
           'Vênus rege o amor, relacionamentos, beleza e prazer. Mostra o que você valoriza, '
-          'como se relaciona romanticamente e seu senso estético.\n\n'
-          'Na magia: Influencia trabalhos de amor (sempre éticos!), prosperidade e beleza do altar.',
+              'como se relaciona romanticamente e seu senso estético.\n\n'
+              'Na magia: Influencia trabalhos de amor (sempre éticos!), prosperidade e beleza do altar.',
         ),
         const SizedBox(height: 16),
         _buildSection(
           '♂ Marte - Ação e Energia',
           'Marte representa sua energia de ação, como você luta pelo que quer, sua coragem '
-          'e também raiva. É o planeta da iniciativa e determinação.\n\n'
-          'Na magia: Indica sua energia protetora, capacidade de banimento e força de vontade mágica.',
+              'e também raiva. É o planeta da iniciativa e determinação.\n\n'
+              'Na magia: Indica sua energia protetora, capacidade de banimento e força de vontade mágica.',
         ),
         const SizedBox(height: 16),
         Container(
@@ -739,18 +747,24 @@ class _CasasExplanation extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        _buildHouseRow('Casa 1', 'Identidade, aparência física, como você inicia coisas'),
-        _buildHouseRow('Casa 2', 'Recursos, dinheiro, valores pessoais, autoestima'),
+        _buildHouseRow(
+            'Casa 1', 'Identidade, aparência física, como você inicia coisas'),
+        _buildHouseRow(
+            'Casa 2', 'Recursos, dinheiro, valores pessoais, autoestima'),
         _buildHouseRow('Casa 3', 'Comunicação, irmãos, vizinhos, pensamento'),
         _buildHouseRow('Casa 4', 'Lar, família, raízes, vida privada'),
         _buildHouseRow('Casa 5', 'Criatividade, romance, filhos, diversão'),
         _buildHouseRow('Casa 6', 'Saúde, rotina, trabalho diário, serviço'),
         _buildHouseRow('Casa 7', 'Parcerias, casamento, contratos, o outro'),
-        _buildHouseRow('Casa 8', 'Transformação, sexualidade, morte/renascimento, magia'),
-        _buildHouseRow('Casa 9', 'Filosofia, viagens, ensino superior, expansão'),
-        _buildHouseRow('Casa 10', 'Carreira, reputação, status, missão de vida'),
+        _buildHouseRow(
+            'Casa 8', 'Transformação, sexualidade, morte/renascimento, magia'),
+        _buildHouseRow(
+            'Casa 9', 'Filosofia, viagens, ensino superior, expansão'),
+        _buildHouseRow(
+            'Casa 10', 'Carreira, reputação, status, missão de vida'),
         _buildHouseRow('Casa 11', 'Amizades, grupos, sonhos, causas sociais'),
-        _buildHouseRow('Casa 12', 'Inconsciente, espiritualidade, karma, retiros'),
+        _buildHouseRow(
+            'Casa 12', 'Inconsciente, espiritualidade, karma, retiros'),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(12),

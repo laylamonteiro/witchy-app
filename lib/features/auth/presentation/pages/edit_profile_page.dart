@@ -30,8 +30,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _analyticsEnabled = true;
   bool _crashReportingEnabled = true;
   bool _personalizedContent = true;
-  bool _syncEnabled = true;
-  bool _backupEnabled = true;
+  bool _cloudSyncEnabled = true;
   bool _isLoading = true;
 
   @override
@@ -56,8 +55,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       _analyticsEnabled = prefs.getBool('privacy_analytics') ?? true;
       _crashReportingEnabled = prefs.getBool('privacy_crash_reporting') ?? true;
       _personalizedContent = prefs.getBool('privacy_personalized') ?? true;
-      _syncEnabled = prefs.getBool('privacy_sync') ?? isPremium;
-      _backupEnabled = prefs.getBool('privacy_backup') ?? isPremium;
+      _cloudSyncEnabled =
+          prefs.getBool(DataSyncService.cloudSyncPreferenceKey) ??
+              ((prefs.getBool('privacy_sync') ?? isPremium) &&
+                  (prefs.getBool('privacy_backup') ?? isPremium));
       _isLoading = false;
     });
   }
@@ -90,7 +91,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.lilac))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.lilac))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -147,7 +149,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     _buildSwitchTile(
                       icon: Icons.analytics_outlined,
                       title: 'Analytics',
-                      subtitle: 'Ajude a melhorar o app compartilhando dados de uso anônimos',
+                      subtitle:
+                          'Ajude a melhorar o app compartilhando dados de uso anônimos',
                       value: _analyticsEnabled,
                       onChanged: (value) {
                         setState(() => _analyticsEnabled = value);
@@ -158,7 +161,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     _buildSwitchTile(
                       icon: Icons.bug_report_outlined,
                       title: 'Relatórios de Erro',
-                      subtitle: 'Enviar relatórios automáticos quando o app tiver problemas',
+                      subtitle:
+                          'Enviar relatórios automáticos quando o app tiver problemas',
                       value: _crashReportingEnabled,
                       onChanged: (value) {
                         setState(() => _crashReportingEnabled = value);
@@ -188,34 +192,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       return _buildSettingsCard([
                         _buildSwitchTile(
                           icon: Icons.sync,
-                          title: 'Sincronização Automática',
+                          title: 'Sincronização e Backup na Nuvem',
                           subtitle: isPremium
-                              ? 'Manter seus dados sincronizados entre dispositivos'
+                              ? 'Manter seus dados protegidos e sincronizados entre dispositivos'
                               : 'Recurso exclusivo Premium',
-                          value: _syncEnabled,
+                          value: _cloudSyncEnabled,
                           onChanged: (value) {
                             if (!isPremium && value) {
                               _showUpgradeDialog();
                             } else {
-                              setState(() => _syncEnabled = value);
-                              _saveSetting('privacy_sync', value);
-                            }
-                          },
-                        ),
-                        _buildDivider(),
-                        _buildSwitchTile(
-                          icon: Icons.cloud_upload_outlined,
-                          title: 'Backup na Nuvem',
-                          subtitle: isPremium
-                              ? 'Salvar uma cópia dos seus dados na nuvem'
-                              : 'Recurso exclusivo Premium',
-                          value: _backupEnabled,
-                          onChanged: (value) {
-                            if (!isPremium && value) {
-                              _showUpgradeDialog();
-                            } else {
-                              setState(() => _backupEnabled = value);
-                              _saveSetting('privacy_backup', value);
+                              setState(() => _cloudSyncEnabled = value);
+                              _saveSetting(
+                                DataSyncService.cloudSyncPreferenceKey,
+                                value,
+                              );
                             }
                           },
                         ),
@@ -432,7 +422,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       subtitle: Text(
         subtitle,
         style: GoogleFonts.nunito(
-          color: isDestructive ? Colors.red.withValues(alpha: 0.7) : Colors.white54,
+          color: isDestructive
+              ? Colors.red.withValues(alpha: 0.7)
+              : Colors.white54,
           fontSize: 12,
         ),
       ),
@@ -462,7 +454,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.shield_outlined, color: AppColors.lilac, size: 20),
+              const Icon(Icons.shield_outlined,
+                  color: AppColors.lilac, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Sua Privacidade Importa',
@@ -512,7 +505,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 labelText: 'Senha Atual',
                 labelStyle: GoogleFonts.nunito(color: Colors.white54),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  borderSide:
+                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -530,7 +524,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 labelText: 'Nova Senha',
                 labelStyle: GoogleFonts.nunito(color: Colors.white54),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  borderSide:
+                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -548,7 +543,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 labelText: 'Confirmar Nova Senha',
                 labelStyle: GoogleFonts.nunito(color: Colors.white54),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  borderSide:
+                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -566,7 +562,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (newPasswordController.text != confirmPasswordController.text) {
+              if (newPasswordController.text !=
+                  confirmPasswordController.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('As senhas não coincidem'),
@@ -579,7 +576,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               if (newPasswordController.text.length < 6) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('A nova senha deve ter pelo menos 6 caracteres'),
+                    content:
+                        Text('A nova senha deve ter pelo menos 6 caracteres'),
                     backgroundColor: AppColors.alert,
                   ),
                 );
@@ -603,7 +601,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         content: Text(result.success
                             ? 'Senha alterada com sucesso!'
                             : result.errorMessage ?? 'Erro ao alterar senha'),
-                        backgroundColor: result.success ? AppColors.success : AppColors.alert,
+                        backgroundColor: result.success
+                            ? AppColors.success
+                            : AppColors.alert,
                       ),
                     );
                   }
@@ -669,7 +669,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.lilac,
             ),
-            child: Text('Exportar', style: GoogleFonts.nunito(color: Colors.white)),
+            child: Text('Exportar',
+                style: GoogleFonts.nunito(color: Colors.white)),
           ),
         ],
       ),
@@ -690,10 +691,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       // Tabelas para exportar
       final tables = [
-        'spells', 'dreams', 'desires', 'gratitudes', 'affirmations',
-        'daily_rituals', 'ritual_logs', 'sigils', 'birth_charts',
-        'magical_profiles', 'rune_readings', 'pendulum_consultations',
-        'oracle_readings', 'daily_magical_weather'
+        'spells',
+        'dreams',
+        'desires',
+        'gratitudes',
+        'affirmations',
+        'daily_rituals',
+        'ritual_logs',
+        'sigils',
+        'birth_charts',
+        'magical_profiles',
+        'rune_readings',
+        'pendulum_consultations',
+        'oracle_readings',
+        'daily_magical_weather'
       ];
 
       for (final table in tables) {
@@ -711,7 +722,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
 
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+      final fileName =
+          'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
@@ -764,7 +776,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
             ),
-            child: Text('Limpar', style: GoogleFonts.nunito(color: Colors.white)),
+            child:
+                Text('Limpar', style: GoogleFonts.nunito(color: Colors.white)),
           ),
         ],
       ),
@@ -776,9 +789,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         // Tabelas para limpar (exceto dados pré-carregados)
         final tables = [
-          'spells', 'dreams', 'desires', 'gratitudes', 'daily_rituals',
-          'ritual_logs', 'sigils', 'birth_charts', 'magical_profiles',
-          'rune_readings', 'pendulum_consultations', 'oracle_readings',
+          'spells',
+          'dreams',
+          'desires',
+          'gratitudes',
+          'daily_rituals',
+          'ritual_logs',
+          'sigils',
+          'birth_charts',
+          'magical_profiles',
+          'rune_readings',
+          'pendulum_consultations',
+          'oracle_readings',
           'daily_magical_weather'
         ];
 
@@ -917,7 +939,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
 
         // Redirecionar para tela inicial
-        Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/welcome', (route) => false);
       } catch (e) {
         if (!mounted) return;
 

@@ -49,7 +49,8 @@ class _PersonalizedSuggestionsPageState
   }
 
   Future<void> _loadNatalChart() async {
-    print('🔮 PersonalizedSuggestionsPage: Iniciando carregamento mapa natal...');
+    print(
+        '🔮 PersonalizedSuggestionsPage: Iniciando carregamento mapa natal...');
     setState(() => _isLoading = true);
 
     try {
@@ -57,6 +58,8 @@ class _PersonalizedSuggestionsPageState
       final db = await DatabaseHelper.instance.database;
       final charts = await db.query(
         'birth_charts',
+        where: 'user_id = ?',
+        whereArgs: [context.read<AuthProvider>().currentUser.id],
         orderBy: 'calculated_at DESC',
         limit: 1,
       );
@@ -70,7 +73,8 @@ class _PersonalizedSuggestionsPageState
           _natalChart = chart;
           _hasNatalChart = true;
         });
-        print('📊 PersonalizedSuggestionsPage: Estado atualizado, carregando sugestões...');
+        print(
+            '📊 PersonalizedSuggestionsPage: Estado atualizado, carregando sugestões...');
 
         await _loadSuggestions();
       } else {
@@ -87,7 +91,8 @@ class _PersonalizedSuggestionsPageState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erro ao carregar mapa astral. Por favor, crie seu mapa astral primeiro.'),
+            content: Text(
+                'Erro ao carregar mapa astral. Por favor, crie seu mapa astral primeiro.'),
             backgroundColor: AppColors.alert,
           ),
         );
@@ -97,7 +102,8 @@ class _PersonalizedSuggestionsPageState
 
   Future<void> _loadSuggestions() async {
     if (_natalChart == null) {
-      print('⚠️ PersonalizedSuggestionsPage: Não pode gerar sugestões: mapa natal não encontrado');
+      print(
+          '⚠️ PersonalizedSuggestionsPage: Não pode gerar sugestões: mapa natal não encontrado');
       return;
     }
 
@@ -105,7 +111,8 @@ class _PersonalizedSuggestionsPageState
     setState(() => _isLoading = true);
 
     try {
-      print('📊 PersonalizedSuggestionsPage: Chamando generatePersonalizedSuggestions...');
+      print(
+          '📊 PersonalizedSuggestionsPage: Chamando generatePersonalizedSuggestions...');
 
       // Carregar sugestões e planetas retrógrados em paralelo
       final calculator = TransitCalculator();
@@ -119,11 +126,14 @@ class _PersonalizedSuggestionsPageState
         _natalChart!,
       );
 
-      print('✅ PersonalizedSuggestionsPage: ${suggestions.length} sugestões geradas');
-      print('🔄 PersonalizedSuggestionsPage: ${retrograde.length} planetas retrógrados');
+      print(
+          '✅ PersonalizedSuggestionsPage: ${suggestions.length} sugestões geradas');
+      print(
+          '🔄 PersonalizedSuggestionsPage: ${retrograde.length} planetas retrógrados');
 
       if (!mounted) {
-        print('⚠️ PersonalizedSuggestionsPage: Widget não está montado, abortando');
+        print(
+            '⚠️ PersonalizedSuggestionsPage: Widget não está montado, abortando');
         return;
       }
 
@@ -132,7 +142,8 @@ class _PersonalizedSuggestionsPageState
         _retrogradePlanets = retrograde;
         _isLoading = false;
       });
-      print('✅ PersonalizedSuggestionsPage: Estado atualizado! _suggestions.length=${_suggestions?.length}');
+      print(
+          '✅ PersonalizedSuggestionsPage: Estado atualizado! _suggestions.length=${_suggestions?.length}');
     } catch (e, stackTrace) {
       print('❌ PersonalizedSuggestionsPage: ERRO ao gerar sugestões: $e');
       print('📋 Stack trace: $stackTrace');
@@ -164,7 +175,8 @@ class _PersonalizedSuggestionsPageState
 
   @override
   Widget build(BuildContext context) {
-    print('🎨 PersonalizedSuggestionsPage.build: _isLoading=$_isLoading, _hasNatalChart=$_hasNatalChart, _suggestions?.length=${_suggestions?.length}');
+    print(
+        '🎨 PersonalizedSuggestionsPage.build: _isLoading=$_isLoading, _hasNatalChart=$_hasNatalChart, _suggestions?.length=${_suggestions?.length}');
 
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
@@ -196,14 +208,17 @@ class _PersonalizedSuggestionsPageState
                             _buildPremiumBanner(context),
                             const SizedBox(height: 16),
                           ],
-                          if (_retrogradePlanets != null && _retrogradePlanets!.isNotEmpty)
+                          if (_retrogradePlanets != null &&
+                              _retrogradePlanets!.isNotEmpty)
                             _buildRetrogradeCard(isFree: isFree),
-                          if (_retrogradePlanets != null && _retrogradePlanets!.isNotEmpty)
+                          if (_retrogradePlanets != null &&
+                              _retrogradePlanets!.isNotEmpty)
                             const SizedBox(height: 16),
                           if (_suggestions != null && _suggestions!.isNotEmpty)
                             ..._suggestions!.map((s) => Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
-                                  child: _buildSuggestionCard(s, isFree: isFree),
+                                  child:
+                                      _buildSuggestionCard(s, isFree: isFree),
                                 )),
                           if (_suggestions != null && _suggestions!.isEmpty)
                             _buildNoSuggestionsCard(),
@@ -375,31 +390,37 @@ class _PersonalizedSuggestionsPageState
       Planet.mercury: {
         'icon': '☿️',
         'title': 'Mercúrio Retrógrado',
-        'effects': 'Comunicação confusa, atrasos em viagens, problemas tecnológicos',
-        'tips': 'Revise contratos, evite iniciar projetos novos, faça backup de dados',
+        'effects':
+            'Comunicação confusa, atrasos em viagens, problemas tecnológicos',
+        'tips':
+            'Revise contratos, evite iniciar projetos novos, faça backup de dados',
       },
       Planet.venus: {
         'icon': '♀️',
         'title': 'Vênus Retrógrada',
         'effects': 'Questões de relacionamento, gastos impulsivos, autoestima',
-        'tips': 'Reavalie relacionamentos, evite cirurgias estéticas, reflita sobre valores',
+        'tips':
+            'Reavalie relacionamentos, evite cirurgias estéticas, reflita sobre valores',
       },
       Planet.mars: {
         'icon': '♂️',
         'title': 'Marte Retrógrado',
         'effects': 'Energia baixa, frustrações, agressividade reprimida',
-        'tips': 'Evite conflitos, não inicie batalhas legais, pratique paciência',
+        'tips':
+            'Evite conflitos, não inicie batalhas legais, pratique paciência',
       },
       Planet.jupiter: {
         'icon': '♃',
         'title': 'Júpiter Retrógrado',
         'effects': 'Expansão interior, reavaliação de crenças e filosofias',
-        'tips': 'Momento de introspecção espiritual, revise metas de longo prazo',
+        'tips':
+            'Momento de introspecção espiritual, revise metas de longo prazo',
       },
       Planet.saturn: {
         'icon': '♄',
         'title': 'Saturno Retrógrado',
-        'effects': 'Responsabilidades passadas retornam, karma sendo trabalhado',
+        'effects':
+            'Responsabilidades passadas retornam, karma sendo trabalhado',
         'tips': 'Resolva assuntos pendentes, trabalhe disciplina interior',
       },
       Planet.uranus: {
@@ -423,7 +444,8 @@ class _PersonalizedSuggestionsPageState
     };
 
     // Verificar se Mercúrio está retrógrado (destaque especial)
-    final mercuryRetrograde = _retrogradePlanets!.any((p) => p.planet == Planet.mercury);
+    final mercuryRetrograde =
+        _retrogradePlanets!.any((p) => p.planet == Planet.mercury);
 
     return MagicalCard(
       child: Column(
@@ -445,7 +467,8 @@ class _PersonalizedSuggestionsPageState
                           ? 'Mercúrio Retrógrado Ativo!'
                           : 'Planetas Retrógrados',
                       style: TextStyle(
-                        color: mercuryRetrograde ? Colors.orange : AppColors.lilac,
+                        color:
+                            mercuryRetrograde ? Colors.orange : AppColors.lilac,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -560,7 +583,8 @@ class _PersonalizedSuggestionsPageState
     );
   }
 
-  Widget _buildSuggestionCard(PersonalizedSuggestion suggestion, {bool isFree = false}) {
+  Widget _buildSuggestionCard(PersonalizedSuggestion suggestion,
+      {bool isFree = false}) {
     final categoryIcons = {
       'ritual': '🕯️',
       'spell': '✨',

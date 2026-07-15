@@ -69,7 +69,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, UserModel user, AuthProvider authProvider) {
+  Widget _buildProfileHeader(
+      BuildContext context, UserModel user, AuthProvider authProvider) {
     return Column(
       children: [
         // Avatar com foto de perfil (temporariamente desabilitado)
@@ -162,7 +163,8 @@ class SettingsPage extends StatelessWidget {
             hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: const Color(0xFF9C27B0).withOpacity(0.5)),
+              borderSide:
+                  BorderSide(color: const Color(0xFF9C27B0).withOpacity(0.5)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -198,7 +200,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlanCard(BuildContext context, UserModel user, AuthProvider authProvider) {
+  Widget _buildPlanCard(
+      BuildContext context, UserModel user, AuthProvider authProvider) {
     // Usar plan ao invés de role para admin poder simular
     final isFree = user.plan == SubscriptionPlan.free;
     final paymentService = PaymentService();
@@ -333,8 +336,18 @@ class SettingsPage extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez'
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -606,7 +619,8 @@ class SettingsPage extends StatelessWidget {
                         subtitle: 'Lembrete 1 dia antes da Lua Cheia',
                         value: notificationProvider.fullMoonNotifications,
                         onChanged: (value) async {
-                          await notificationProvider.setFullMoonNotifications(value);
+                          await notificationProvider
+                              .setFullMoonNotifications(value);
                           if (context.mounted) {
                             _scheduleNotifications(context);
                           }
@@ -619,7 +633,8 @@ class SettingsPage extends StatelessWidget {
                         subtitle: 'Lembrete 1 dia antes da Lua Nova',
                         value: notificationProvider.newMoonNotifications,
                         onChanged: (value) async {
-                          await notificationProvider.setNewMoonNotifications(value);
+                          await notificationProvider
+                              .setNewMoonNotifications(value);
                           if (context.mounted) {
                             _scheduleNotifications(context);
                           }
@@ -632,7 +647,8 @@ class SettingsPage extends StatelessWidget {
                         subtitle: 'Lembrete 3 dias antes de cada Sabbat',
                         value: notificationProvider.sabbatNotifications,
                         onChanged: (value) async {
-                          await notificationProvider.setSabbatNotifications(value);
+                          await notificationProvider
+                              .setSabbatNotifications(value);
                           if (context.mounted) {
                             _scheduleNotifications(context);
                           }
@@ -648,7 +664,8 @@ class SettingsPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF2196F3).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
+                  border: Border.all(
+                      color: const Color(0xFF2196F3).withOpacity(0.3)),
                 ),
                 child: const Row(
                   children: [
@@ -682,17 +699,22 @@ class SettingsPage extends StatelessWidget {
     final lunarProvider = context.read<LunarProvider>();
     final wheelProvider = context.read<WheelOfYearProvider>();
 
-    await notificationProvider.scheduleNotifications(
+    final result = await notificationProvider.scheduleNotifications(
       lunarProvider: lunarProvider,
       wheelProvider: wheelProvider,
     );
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notificações atualizadas!'),
+        SnackBar(
+          content: Text(
+            result.success
+                ? 'Notificações atualizadas: ${result.scheduledCount} agendadas'
+                : result.error ?? 'Não foi possível atualizar as notificações',
+          ),
           duration: Duration(seconds: 2),
-          backgroundColor: Color(0xFF4CAF50),
+          backgroundColor:
+              result.success ? const Color(0xFF4CAF50) : AppColors.alert,
         ),
       );
     }
@@ -883,7 +905,8 @@ class SettingsPage extends StatelessWidget {
             labelText: 'Nome',
             labelStyle: const TextStyle(color: Colors.white54),
             enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+              borderSide:
+                  BorderSide(color: Colors.white.withValues(alpha: 0.3)),
               borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
@@ -895,7 +918,8 @@ class SettingsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.white54)),
+            child:
+                const Text('Cancelar', style: TextStyle(color: Colors.white54)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1157,7 +1181,7 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class _NotificationTile extends StatelessWidget{
+class _NotificationTile extends StatelessWidget {
   final String icon;
   final String title;
   final String subtitle;

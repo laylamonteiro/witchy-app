@@ -1,29 +1,34 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../models/rune_spread_model.dart';
 
 class RuneReadingRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   // Salvar leitura
-  Future<void> saveReading(RuneReading reading) async {
+  final DataSyncService _syncService = DataSyncService();
+
+  Future<void> saveReading(RuneReading reading, String userId) async {
     final db = await _dbHelper.database;
 
+    final data = {
+      'id': reading.id,
+      'user_id': userId,
+      'question': reading.question,
+      'spread_type': reading.spreadType.name,
+      'reading_data': reading.toJsonString(),
+      'date': reading.date.millisecondsSinceEpoch,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+      'synced': 0,
+    };
     await db.insert(
       'rune_readings',
-      {
-        'id': reading.id,
-        'user_id': 'local_user',
-        'question': reading.question,
-        'spread_type': reading.spreadType.name,
-        'reading_data': reading.toJsonString(),
-        'date': reading.date.millisecondsSinceEpoch,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-        'synced': 0,
-      },
+      data,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    await _syncService.syncItem(SyncEntity.runeReadings, data);
   }
 
   // Buscar todas as leituras

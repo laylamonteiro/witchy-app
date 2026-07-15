@@ -7,16 +7,19 @@ class AffirmationRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final DataSyncService _syncService = DataSyncService();
 
-  Future<List<AffirmationModel>> getAll() async {
+  Future<List<AffirmationModel>> getAll(String userId) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'affirmations',
+      where: 'user_id = ? OR is_preloaded = 1',
+      whereArgs: [userId],
       orderBy: 'created_at DESC',
     );
     return List.generate(maps.length, (i) => AffirmationModel.fromMap(maps[i]));
   }
 
-  Future<List<AffirmationModel>> getByCategory(AffirmationCategory category) async {
+  Future<List<AffirmationModel>> getByCategory(
+      AffirmationCategory category) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'affirmations',

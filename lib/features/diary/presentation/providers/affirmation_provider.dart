@@ -9,6 +9,7 @@ class AffirmationProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   AffirmationCategory? _selectedCategory;
+  String _currentUserId = 'local_user';
 
   List<AffirmationModel> get affirmations => _selectedCategory == null
       ? _affirmations
@@ -17,6 +18,12 @@ class AffirmationProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   AffirmationCategory? get selectedCategory => _selectedCategory;
+
+  Future<void> setUserId(String userId) async {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    await loadAffirmations();
+  }
 
   Future<void> loadAffirmations() async {
     _isLoading = true;
@@ -29,10 +36,11 @@ class AffirmationProvider with ChangeNotifier {
 
       // Se não existirem, carregar as afirmações padrão
       if (!hasPreloaded) {
-        await _repository.insertAll(AffirmationModel.getPreloadedAffirmations());
+        await _repository
+            .insertAll(AffirmationModel.getPreloadedAffirmations());
       }
 
-      _affirmations = await _repository.getAll();
+      _affirmations = await _repository.getAll(_currentUserId);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -49,7 +57,9 @@ class AffirmationProvider with ChangeNotifier {
 
   Future<void> addAffirmation(AffirmationModel affirmation) async {
     try {
-      await _repository.insert(affirmation);
+      await _repository.insert(
+        affirmation.copyWith(userId: _currentUserId),
+      );
       await loadAffirmations();
     } catch (e) {
       _error = e.toString();
@@ -60,7 +70,7 @@ class AffirmationProvider with ChangeNotifier {
   Future<void> toggleFavorite(AffirmationModel affirmation) async {
     try {
       final updated = affirmation.copyWith(isFavorite: !affirmation.isFavorite);
-      await _repository.update(updated);
+      await _repository.update(updated.copyWith(userId: _currentUserId));
       await loadAffirmations();
     } catch (e) {
       _error = e.toString();

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:uuid/uuid.dart';
 import '../models/enums.dart';
 import '../models/transit_model.dart';
@@ -10,26 +9,43 @@ class TransitInterpreter {
   final TransitCalculator _calculator = TransitCalculator();
 
   /// Gera o clima mágico diário
-  Future<DailyMagicalWeather> getDailyMagicalWeather(DateTime date) async {
+  Future<DailyMagicalWeather> getDailyMagicalWeather(
+    DateTime date, {
+    BirthChartModel? natalChart,
+  }) async {
     try {
       final transits = await _calculator.calculateTransits(date);
 
-      print('🌟 TransitInterpreter: ${transits.length} trânsitos calculados inicialmente');
+      print(
+          '🌟 TransitInterpreter: ${transits.length} trânsitos calculados inicialmente');
 
       // Garantir que temos pelo menos Sol e Lua (CRÍTICO!)
       _ensureEssentialTransits(transits, date);
 
-      print('✅ TransitInterpreter: ${transits.length} trânsitos após garantir essenciais');
+      print(
+          '✅ TransitInterpreter: ${transits.length} trânsitos após garantir essenciais');
 
       // Agora podemos assumir que a Lua está presente
       final moonTransit = transits.firstWhere((t) => t.planet == Planet.moon);
       final moonPhase = _calculateMoonPhase(date);
 
       // Analisar aspectos entre planetas em trânsito
-      final significantAspects = _getSignificantTransitAspects(transits);
+      final transitAspects = _getSignificantTransitAspects(transits);
+      final personalizedAspects = natalChart == null
+          ? <TransitAspect>[]
+          : (await _calculator.calculateTransitAspects(transits, natalChart))
+              .where((aspect) => aspect.orb <= 5)
+              .take(5)
+              .toList();
+      final significantAspects = [...transitAspects, ...personalizedAspects]
+        ..sort((a, b) => a.orb.compareTo(b.orb));
+      if (significantAspects.length > 5) {
+        significantAspects.removeRange(5, significantAspects.length);
+      }
 
       // Determinar energia geral do dia
-      final overallEnergy = _determineOverallEnergy(transits, significantAspects);
+      final overallEnergy =
+          _determineOverallEnergy(transits, significantAspects);
 
       // Gerar interpretação geral
       final interpretation = _generateGeneralInterpretation(
@@ -79,12 +95,14 @@ class TransitInterpreter {
     final suggestions = <PersonalizedSuggestion>[];
     final transits = await _calculator.calculateTransits(date);
 
-    print('🌟 PersonalizedSuggestions: ${transits.length} trânsitos calculados');
+    print(
+        '🌟 PersonalizedSuggestions: ${transits.length} trânsitos calculados');
 
     // Garantir que temos pelo menos Sol e Lua (CRÍTICO!)
     _ensureEssentialTransits(transits, date);
 
-    print('✅ PersonalizedSuggestions: ${transits.length} trânsitos após garantir essenciais');
+    print(
+        '✅ PersonalizedSuggestions: ${transits.length} trânsitos após garantir essenciais');
 
     final aspects =
         await _calculator.calculateTransitAspects(transits, natalChart);
@@ -95,10 +113,11 @@ class TransitInterpreter {
     // Agrupar por tipo de energia
     final conjunctions =
         importantAspects.where((a) => a.aspectType == AspectType.conjunction);
-    final harmonious = importantAspects.where(
-        (a) => a.aspectType == AspectType.trine || a.aspectType == AspectType.sextile);
-    final challenging = importantAspects.where(
-        (a) => a.aspectType == AspectType.square || a.aspectType == AspectType.opposition);
+    final harmonious = importantAspects.where((a) =>
+        a.aspectType == AspectType.trine || a.aspectType == AspectType.sextile);
+    final challenging = importantAspects.where((a) =>
+        a.aspectType == AspectType.square ||
+        a.aspectType == AspectType.opposition);
 
     // Gerar sugestões para conjunções (muito importantes)
     for (final aspect in conjunctions.take(2)) {
@@ -197,7 +216,8 @@ class TransitInterpreter {
                 natalPlanet: t2.planet,
                 aspectType: aspectType,
                 orb: orb,
-                interpretation: _interpretTransitAspect(t1.planet, t2.planet, aspectType),
+                interpretation:
+                    _interpretTransitAspect(t1.planet, t2.planet, aspectType),
                 energyLevel: _getAspectEnergyLevel(aspectType),
               ));
             }
@@ -218,18 +238,29 @@ class TransitInterpreter {
       List<Transit> transits, List<TransitAspect> aspects) {
     var intensityScore = 0;
 
-    // Aspectos tensos aumentam intensidade
+    // Aspectos tensos aumentam a pontuação; aspectos harmoniosos a reduzem.
     for (final aspect in aspects) {
-      if (aspect.energyLevel == EnergyLevel.intense) intensityScore += 3;
-      if (aspect.energyLevel == EnergyLevel.challenging) intensityScore += 2;
-      if (aspect.energyLevel == EnergyLevel.harmonious) intensityScore += 1;
+      switch (aspect.aspectType) {
+        case AspectType.conjunction:
+          intensityScore += 3;
+        case AspectType.opposition:
+        case AspectType.square:
+          intensityScore += 2;
+        case AspectType.trine:
+        case AspectType.sextile:
+          intensityScore -= 1;
+      }
     }
 
     if (intensityScore >= 8) return EnergyLevel.intense;
-    if (intensityScore >= 5) return EnergyLevel.challenging;
-    if (intensityScore >= 3) return EnergyLevel.moderate;
+    if (intensityScore >= 4) return EnergyLevel.challenging;
+    if (intensityScore >= 1) return EnergyLevel.moderate;
     return EnergyLevel.harmonious;
   }
+
+  /// Expõe a classificação determinística para testes de regressão.
+  EnergyLevel determineOverallEnergyForTest(List<TransitAspect> aspects) =>
+      _determineOverallEnergy(const [], aspects);
 
   /// Gera interpretação geral do dia
   String _generateGeneralInterpretation(
@@ -252,8 +283,8 @@ class TransitInterpreter {
       'Lua Minguante': 'Introspecção e banimento são favorecidos',
     };
 
-    parts.add(phaseInterpretations[moonPhase] ??
-        'A lua guia suas práticas mágicas');
+    parts.add(
+        phaseInterpretations[moonPhase] ?? 'A lua guia suas práticas mágicas');
 
     // Lua no signo
     parts.add(
@@ -284,8 +315,10 @@ class TransitInterpreter {
 
     // Práticas baseadas na fase lunar
     final phasePractices = {
-      'Lua Nova': 'Definir intenções, plantar sementes mágicas, trabalho de manifestação',
-      'Lua Crescente': 'Feitiços de atração, crescimento de projetos, magia verde',
+      'Lua Nova':
+          'Definir intenções, plantar sementes mágicas, trabalho de manifestação',
+      'Lua Crescente':
+          'Feitiços de atração, crescimento de projetos, magia verde',
       'Quarto Crescente': 'Rituais de coragem, ação mágica, trabalho com fogo',
       'Lua Gibosa Crescente': 'Ajuste de feitiços, refinamento de práticas',
       'Lua Cheia': 'Rituais poderosos, carregamento de ferramentas, água lunar',
@@ -303,11 +336,10 @@ class TransitInterpreter {
 
     // Práticas baseadas na energia
     if (energy == EnergyLevel.intense) {
-      practices.add(
-          'Aterramento e proteção são essenciais hoje');
+      practices.add('Aterramento e proteção são essenciais hoje');
     } else if (energy == EnergyLevel.harmonious) {
-      practices.add(
-          'Excelente momento para feitiços complexos e trabalho em grupo');
+      practices
+          .add('Excelente momento para feitiços complexos e trabalho em grupo');
     }
 
     return practices.take(4).toList();
@@ -351,8 +383,7 @@ class TransitInterpreter {
   }
 
   /// Interpreta um aspecto entre dois planetas em trânsito
-  String _interpretTransitAspect(
-      Planet p1, Planet p2, AspectType aspect) {
+  String _interpretTransitAspect(Planet p1, Planet p2, AspectType aspect) {
     return '${p1.displayName} ${aspect.symbol} ${p2.displayName}: energia ${aspect.description}';
   }
 
@@ -378,7 +409,8 @@ class TransitInterpreter {
       return PersonalizedSuggestion(
         id: uuid.v4(),
         date: date,
-        title: 'Conjunção ${aspect.transitPlanet.displayName}-${aspect.natalPlanet.displayName}',
+        title:
+            'Conjunção ${aspect.transitPlanet.displayName}-${aspect.natalPlanet.displayName}',
         description:
             'Este aspecto poderoso une as energias de ${aspect.transitPlanet.displayName} e seu ${aspect.natalPlanet.displayName} natal. É momento de integração profunda.',
         practices: [

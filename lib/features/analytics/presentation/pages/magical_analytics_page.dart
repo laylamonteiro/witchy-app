@@ -35,9 +35,9 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     setState(() => _isLoading = true);
 
     try {
-      final db = await DatabaseHelper.instance.database;
       final authProvider = context.read<AuthProvider>();
       final userId = authProvider.currentUser.id;
+      final db = await DatabaseHelper.instance.database;
 
       // Contadores gerais
       final spellsCount = await _countRecords(db, 'spells', userId);
@@ -46,18 +46,24 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       final gratitudesCount = await _countRecords(db, 'gratitudes', userId);
       final affirmationsCount = await _countRecords(db, 'affirmations', userId);
       final sigilsCount = await _countRecords(db, 'sigils', userId);
-      final runeReadingsCount = await _countRecords(db, 'rune_readings', userId);
-      final oracleReadingsCount = await _countRecords(db, 'oracle_readings', userId);
-      final pendulumCount = await _countRecords(db, 'pendulum_consultations', userId);
+      final runeReadingsCount =
+          await _countRecords(db, 'rune_readings', userId);
+      final oracleReadingsCount =
+          await _countRecords(db, 'oracle_readings', userId);
+      final pendulumCount =
+          await _countRecords(db, 'pendulum_consultations', userId);
 
       // Estatísticas por período
-      final spellsThisMonth = await _countRecordsThisMonth(db, 'spells', userId);
+      final spellsThisMonth =
+          await _countRecordsThisMonth(db, 'spells', userId);
       final dreamsThisWeek = await _countRecordsThisWeek(db, 'dreams', userId);
-      final gratitudesToday = await _countRecordsToday(db, 'gratitudes', userId);
+      final gratitudesToday =
+          await _countRecordsToday(db, 'gratitudes', userId);
 
       // Desejos por status
-      final desiresPending = await _countDesiresByStatus(db, userId, 'pending');
-      final desiresManifested = await _countDesiresByStatus(db, userId, 'manifested');
+      final desiresPending = await _countDesiresByStatus(db, userId, 'open');
+      final desiresManifested =
+          await _countDesiresByStatus(db, userId, 'manifested');
 
       // Feitiços por tipo
       final spellsByType = await _getSpellsByType(db, userId);
@@ -65,6 +71,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       // Streak de gratidão
       final gratitudeStreak = await _calculateGratitudeStreak(db, userId);
 
+      if (!mounted) return;
       setState(() {
         _stats = {
           // Totais
@@ -89,16 +96,28 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           // Streaks
           'gratitudeStreak': gratitudeStreak,
           // Total de práticas
-          'totalPractices': spellsCount + dreamsCount + gratitudesCount +
-                           affirmationsCount + runeReadingsCount +
-                           oracleReadingsCount + pendulumCount,
+          'totalPractices': spellsCount +
+              dreamsCount +
+              gratitudesCount +
+              affirmationsCount +
+              runeReadingsCount +
+              oracleReadingsCount +
+              pendulumCount,
         };
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       debugPrint('Erro ao carregar estatísticas: $e');
     }
+  }
+
+  Future<void> _openAndReload(Widget page) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
+    if (mounted) await _loadStats();
   }
 
   Future<int> _countRecords(dynamic db, String table, String userId) async {
@@ -106,7 +125,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       // Para spells e affirmations, contar apenas os criados pelo usuário (is_preloaded = 0)
       String query;
       if (table == 'spells' || table == 'affirmations') {
-        query = 'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND is_preloaded = 0';
+        query =
+            'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND is_preloaded = 0';
       } else {
         query = 'SELECT COUNT(*) as count FROM $table WHERE user_id = ?';
       }
@@ -118,7 +138,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     }
   }
 
-  Future<int> _countRecordsThisMonth(dynamic db, String table, String userId) async {
+  Future<int> _countRecordsThisMonth(
+      dynamic db, String table, String userId) async {
     try {
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
@@ -126,14 +147,16 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       // Para spells e affirmations, contar apenas os criados pelo usuário (is_preloaded = 0)
       String query;
       if (table == 'spells' || table == 'affirmations') {
-        query = 'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ? AND is_preloaded = 0';
+        query =
+            'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ? AND is_preloaded = 0';
       } else {
-        query = 'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?';
+        query =
+            'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?';
       }
 
       final result = await db.rawQuery(
         query,
-        [userId, startOfMonth.toIso8601String()],
+        [userId, startOfMonth.millisecondsSinceEpoch],
       );
       return result.first['count'] as int? ?? 0;
     } catch (e) {
@@ -141,13 +164,18 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     }
   }
 
-  Future<int> _countRecordsThisWeek(dynamic db, String table, String userId) async {
+  Future<int> _countRecordsThisWeek(
+      dynamic db, String table, String userId) async {
     try {
       final now = DateTime.now();
       final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
       final result = await db.rawQuery(
         'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?',
-        [userId, DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day).toIso8601String()],
+        [
+          userId,
+          DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day)
+              .millisecondsSinceEpoch
+        ],
       );
       return result.first['count'] as int? ?? 0;
     } catch (e) {
@@ -155,13 +183,14 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     }
   }
 
-  Future<int> _countRecordsToday(dynamic db, String table, String userId) async {
+  Future<int> _countRecordsToday(
+      dynamic db, String table, String userId) async {
     try {
       final now = DateTime.now();
       final startOfDay = DateTime(now.year, now.month, now.day);
       final result = await db.rawQuery(
         'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?',
-        [userId, startOfDay.toIso8601String()],
+        [userId, startOfDay.millisecondsSinceEpoch],
       );
       return result.first['count'] as int? ?? 0;
     } catch (e) {
@@ -169,7 +198,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     }
   }
 
-  Future<int> _countDesiresByStatus(dynamic db, String userId, String status) async {
+  Future<int> _countDesiresByStatus(
+      dynamic db, String userId, String status) async {
     try {
       final result = await db.rawQuery(
         'SELECT COUNT(*) as count FROM desires WHERE user_id = ? AND status = ?',
@@ -202,7 +232,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
   Future<int> _calculateGratitudeStreak(dynamic db, String userId) async {
     try {
       final result = await db.rawQuery(
-        '''SELECT DISTINCT date(created_at) as day
+        '''SELECT DISTINCT date(created_at / 1000, 'unixepoch', 'localtime') as day
            FROM gratitudes
            WHERE user_id = ?
            ORDER BY day DESC''',
@@ -275,7 +305,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.lilac))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.lilac))
           : RefreshIndicator(
               onRefresh: _loadStats,
               color: AppColors.lilac,
@@ -357,9 +388,12 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildMiniStat('Este mes', '${_stats['spellsThisMonth'] ?? 0}', Icons.calendar_month),
-              _buildMiniStat('Esta semana', '${_stats['dreamsThisWeek'] ?? 0}', Icons.date_range),
-              _buildMiniStat('Hoje', '${_stats['gratitudesToday'] ?? 0}', Icons.today),
+              _buildMiniStat('Este mes', '${_stats['spellsThisMonth'] ?? 0}',
+                  Icons.calendar_month),
+              _buildMiniStat('Esta semana', '${_stats['dreamsThisWeek'] ?? 0}',
+                  Icons.date_range),
+              _buildMiniStat(
+                  'Hoje', '${_stats['gratitudesToday'] ?? 0}', Icons.today),
             ],
           ),
         ],
@@ -441,7 +475,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.emoji_events, color: Colors.orange, size: 20),
+                  const Icon(Icons.emoji_events,
+                      color: Colors.orange, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -534,90 +569,63 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               _stats['spells'] ?? 0,
               Icons.auto_fix_high,
               Colors.purple,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const UserSpellsListPage()),
-              ),
+              onTap: () => _openAndReload(const UserSpellsListPage()),
             ),
             _buildCategoryCard(
               'Sonhos',
               _stats['dreams'] ?? 0,
               Icons.nights_stay,
               Colors.indigo,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DreamsListPage()),
-              ),
+              onTap: () => _openAndReload(const DreamsListPage()),
             ),
             _buildCategoryCard(
               'Gratidão',
               _stats['gratitudes'] ?? 0,
               Icons.favorite,
               Colors.pink,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const GratitudesListPage()),
-              ),
+              onTap: () => _openAndReload(const GratitudesListPage()),
             ),
             _buildCategoryCard(
               'Afirmacoes',
               _stats['affirmations'] ?? 0,
               Icons.format_quote,
               Colors.teal,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AffirmationsListPage()),
-              ),
+              onTap: () => _openAndReload(const AffirmationsListPage()),
             ),
             _buildCategoryCard(
               'Sigilos',
               _stats['sigils'] ?? 0,
               Icons.gesture,
               Colors.amber,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SigilStep1IntentionPage()),
-              ),
+              onTap: () => _openAndReload(const SigilStep1IntentionPage()),
             ),
             _buildCategoryCard(
               'Runas',
               _stats['runeReadings'] ?? 0,
               Icons.casino,
               Colors.red,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const RuneReadingPage()),
-              ),
+              onTap: () => _openAndReload(const RuneReadingPage()),
             ),
             _buildCategoryCard(
               'Oráculo',
               _stats['oracleReadings'] ?? 0,
               Icons.style,
               Colors.cyan,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const OracleCardsPage()),
-              ),
+              onTap: () => _openAndReload(const OracleCardsPage()),
             ),
             _buildCategoryCard(
               'Pêndulo',
               _stats['pendulum'] ?? 0,
               Icons.radio_button_checked,
               Colors.green,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PendulumPage()),
-              ),
+              onTap: () => _openAndReload(const PendulumPage()),
             ),
             _buildCategoryCard(
               'Desejos',
               _stats['desires'] ?? 0,
               Icons.star,
               Colors.orange,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DesiresListPage()),
-              ),
+              onTap: () => _openAndReload(const DesiresListPage()),
             ),
           ],
         ),
@@ -625,7 +633,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     );
   }
 
-  Widget _buildCategoryCard(String label, int count, IconData icon, Color color, {VoidCallback? onTap}) {
+  Widget _buildCategoryCard(String label, int count, IconData icon, Color color,
+      {VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -702,7 +711,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildDesiresStat('Manifestados', manifested, Colors.green),
+                child:
+                    _buildDesiresStat('Manifestados', manifested, Colors.green),
               ),
             ],
           ),
@@ -791,43 +801,45 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           ),
           const SizedBox(height: 16),
           ...spellsByType.entries.map((entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    entry.key,
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: spellsByType.values.isNotEmpty
-                          ? entry.value / spellsByType.values.reduce((a, b) => a > b ? a : b)
-                          : 0,
-                      backgroundColor: Colors.white10,
-                      valueColor: AlwaysStoppedAnimation(
-                        _getTypeColor(entry.key),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        entry.key,
+                        style: const TextStyle(color: Colors.white70),
                       ),
-                      minHeight: 8,
                     ),
-                  ),
+                    Expanded(
+                      flex: 3,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: spellsByType.values.isNotEmpty
+                              ? entry.value /
+                                  spellsByType.values
+                                      .reduce((a, b) => a > b ? a : b)
+                              : 0,
+                          backgroundColor: Colors.white10,
+                          valueColor: AlwaysStoppedAnimation(
+                            _getTypeColor(entry.key),
+                          ),
+                          minHeight: 8,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${entry.value}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  '${entry.value}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );

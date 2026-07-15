@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -28,7 +29,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -246,7 +247,8 @@ class DatabaseHelper {
         weather_data TEXT NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
-        synced INTEGER NOT NULL DEFAULT 0
+        synced INTEGER NOT NULL DEFAULT 0,
+        UNIQUE(user_id, date)
       )
     ''');
 
@@ -775,6 +777,121 @@ class DatabaseHelper {
 
       print('Migração v10 concluída - suporte a múltiplos usos adicionado');
     }
+
+    // Migração v11: cache diário único por usuário, preservando os dados.
+    if (oldVersion < 11) {
+      await db.transaction((txn) async {
+        await txn.execute('''
+          CREATE TABLE daily_magical_weather_v11 (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL DEFAULT 'local_user',
+            date TEXT NOT NULL,
+            ai_generated_text TEXT NOT NULL,
+            weather_data TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            synced INTEGER NOT NULL DEFAULT 0,
+            UNIQUE(user_id, date)
+          )
+        ''');
+        await txn.execute('''
+          INSERT OR REPLACE INTO daily_magical_weather_v11
+            (id, user_id, date, ai_generated_text, weather_data,
+             created_at, updated_at, synced)
+          SELECT id, COALESCE(user_id, 'local_user'), date,
+                 ai_generated_text, weather_data, created_at,
+                 COALESCE(updated_at, created_at), COALESCE(synced, 0)
+          FROM daily_magical_weather
+        ''');
+        await txn.execute('DROP TABLE daily_magical_weather');
+        await txn.execute(
+          'ALTER TABLE daily_magical_weather_v11 RENAME TO daily_magical_weather',
+        );
+        await txn.execute(
+          'CREATE INDEX idx_weather_user_id ON daily_magical_weather(user_id)',
+        );
+        await txn.execute(
+          'CREATE INDEX idx_weather_synced ON daily_magical_weather(synced)',
+        );
+      });
+    }
+  }
+
+  /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
+  /// Registros já pertencentes a UUIDs reais nunca são alterados.
+  Future<void> claimLegacyData(String userId) async {
+    if (userId == 'local_user' || userId == 'current_user') return;
+
+    final db = await database;
+    const tables = [
+      'spells',
+      'dreams',
+      'desires',
+      'gratitudes',
+      'affirmations',
+      'daily_rituals',
+      'ritual_logs',
+      'sigils',
+      'birth_charts',
+      'magical_profiles',
+      'rune_readings',
+      'pendulum_consultations',
+      'oracle_readings',
+      'daily_magical_weather',
+    ];
+
+    await db.transaction((txn) async {
+      for (final table in tables) {
+        await txn.update(
+          table,
+          {'user_id': userId, 'synced': 0},
+          where: "user_id IN ('local_user', 'current_user')",
+        );
+      }
+
+      final charts = await txn.query(
+        'birth_charts',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+      for (final row in charts) {
+        try {
+          final data =
+              jsonDecode(row['chart_data'] as String) as Map<String, dynamic>;
+          if (data['userId'] == 'local_user' ||
+              data['userId'] == 'current_user') {
+            data['userId'] = userId;
+            await txn.update(
+              'birth_charts',
+              {'chart_data': jsonEncode(data), 'synced': 0},
+              where: 'id = ?',
+              whereArgs: [row['id']],
+            );
+          }
+        } catch (_) {}
+      }
+
+      final profiles = await txn.query(
+        'magical_profiles',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+      for (final row in profiles) {
+        final birthChartId = row['birth_chart_id'] as String;
+        var profileData = row['profile_data'] as String;
+        try {
+          final data = jsonDecode(profileData) as Map<String, dynamic>;
+          data['userId'] = userId;
+          profileData = jsonEncode(data);
+        } catch (_) {}
+        await txn.update(
+          'magical_profiles',
+          {'id': birthChartId, 'profile_data': profileData, 'synced': 0},
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        );
+      }
+    });
   }
 
   /// Limpa todos os dados de todas as tabelas

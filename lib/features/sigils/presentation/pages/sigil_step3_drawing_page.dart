@@ -1,4 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
@@ -6,6 +11,7 @@ import '../../data/models/sigil_model.dart';
 import '../../data/models/sigil_wheel_model.dart';
 import '../widgets/witch_wheel_painter.dart';
 import '../widgets/sigil_drawing_painter.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Etapa 3: Mostrar desenho do sigilo com a Roda das Bruxas
 class SigilStep3DrawingPage extends StatefulWidget {
@@ -25,6 +31,39 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
   bool _showStartEnd = true;
   bool _isShuffled = false;
   Map<String, WheelPosition>? _shuffledPositions;
+  bool _isSaving = false;
+
+  Future<void> _saveAndFinish() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final data = <String, dynamic>{
+        'id': const Uuid().v4(),
+        'user_id': context.read<AuthProvider>().currentUser.id,
+        'intention': widget.sigil.intention,
+        'image_path': jsonEncode({
+          'letters': widget.sigil.processedLetters,
+          'points': widget.sigil.points
+              .map((point) => {'x': point.dx, 'y': point.dy})
+              .toList(),
+        }),
+        'created_at': now,
+        'updated_at': now,
+        'synced': 0,
+      };
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('sigils', data);
+      await DataSyncService().syncItem(SyncEntity.sigils, data);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Não foi possível salvar o sigilo: $e')),
+      );
+    }
+  }
 
   /// Embaralha as posições das letras na roda (como no "Sigilo Nada" do livro)
   void _shuffleLetters() {
@@ -88,7 +127,9 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       painter: _showWheel
                           ? WitchWheelPainter(
                               showLetters: true,
-                              highlightedLetters: widget.sigil.processedLetters.split('').toSet(),
+                              highlightedLetters: widget.sigil.processedLetters
+                                  .split('')
+                                  .toSet(),
                               customPositions: _shuffledPositions,
                             )
                           : null,
@@ -125,9 +166,13 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              _showWheel ? Icons.visibility : Icons.visibility_off,
+                              _showWheel
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                               size: 16,
-                              color: _showWheel ? AppColors.lilac : AppColors.textSecondary,
+                              color: _showWheel
+                                  ? AppColors.lilac
+                                  : AppColors.textSecondary,
                             ),
                             const SizedBox(width: 4),
                             const Text('Roda'),
@@ -142,11 +187,14 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         selectedColor: AppColors.lilac.withOpacity(0.2),
                         backgroundColor: AppColors.surface,
                         labelStyle: TextStyle(
-                          color: _showWheel ? AppColors.lilac : AppColors.textSecondary,
+                          color: _showWheel
+                              ? AppColors.lilac
+                              : AppColors.textSecondary,
                           fontSize: 12,
                         ),
                         side: BorderSide(
-                          color: _showWheel ? AppColors.lilac : Colors.transparent,
+                          color:
+                              _showWheel ? AppColors.lilac : Colors.transparent,
                         ),
                         showCheckmark: false,
                       ),
@@ -156,9 +204,13 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              _showStartEnd ? Icons.visibility : Icons.visibility_off,
+                              _showStartEnd
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                               size: 16,
-                              color: _showStartEnd ? AppColors.starYellow : AppColors.textSecondary,
+                              color: _showStartEnd
+                                  ? AppColors.starYellow
+                                  : AppColors.textSecondary,
                             ),
                             const SizedBox(width: 4),
                             const Text('Pontos'),
@@ -173,11 +225,15 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         selectedColor: AppColors.starYellow.withOpacity(0.2),
                         backgroundColor: AppColors.surface,
                         labelStyle: TextStyle(
-                          color: _showStartEnd ? AppColors.starYellow : AppColors.textSecondary,
+                          color: _showStartEnd
+                              ? AppColors.starYellow
+                              : AppColors.textSecondary,
                           fontSize: 12,
                         ),
                         side: BorderSide(
-                          color: _showStartEnd ? AppColors.starYellow : Colors.transparent,
+                          color: _showStartEnd
+                              ? AppColors.starYellow
+                              : Colors.transparent,
                         ),
                         showCheckmark: false,
                       ),
@@ -190,7 +246,9 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                           backgroundColor: _isShuffled
                               ? AppColors.mint.withOpacity(0.3)
                               : AppColors.surface,
-                          foregroundColor: _isShuffled ? AppColors.mint : AppColors.textSecondary,
+                          foregroundColor: _isShuffled
+                              ? AppColors.mint
+                              : AppColors.textSecondary,
                         ),
                       ),
                       if (_isShuffled) ...[
@@ -258,13 +316,11 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                           child: Text(
                             'Lembre-se: a magia está na sua intenção e no ato de criar, '
                             'não apenas no desenho final.',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontStyle: FontStyle.italic,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontStyle: FontStyle.italic,
+                                    ),
                           ),
                         ),
                       ],
@@ -277,11 +333,8 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
 
             // Botão finalizar
             MagicalButton(
-              text: 'Finalizar',
-              onPressed: () {
-                // Voltar para o início
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
+              text: _isSaving ? 'Salvando...' : 'Finalizar',
+              onPressed: _saveAndFinish,
             ),
             const SizedBox(height: 16),
           ],

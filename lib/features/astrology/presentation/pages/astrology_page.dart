@@ -23,7 +23,7 @@ class _AstrologyPageState extends State<AstrologyPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<AstrologyProvider>();
-      provider.loadBirthChart('current_user');
+      provider.loadBirthChart();
     });
   }
 
@@ -58,7 +58,10 @@ class _AstrologyPageState extends State<AstrologyPage> {
                       const SizedBox(height: 16),
                       Text(
                         'Astrologia Mágica',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                               color: AppColors.lilac,
                             ),
                       ),
@@ -81,7 +84,8 @@ class _AstrologyPageState extends State<AstrologyPage> {
                   context,
                   icon: '',
                   title: 'Signos do Zodíaco',
-                  description: 'Conheça os 12 signos e seus significados mágicos',
+                  description:
+                      'Conheça os 12 signos e seus significados mágicos',
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -203,7 +207,10 @@ class _AstrologyPageState extends State<AstrologyPage> {
                           const SizedBox(width: 8),
                           Text(
                             'Sobre a Astrologia',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   color: AppColors.lilac,
                                 ),
                           ),

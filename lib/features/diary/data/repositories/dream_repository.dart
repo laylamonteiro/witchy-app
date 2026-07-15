@@ -7,10 +7,12 @@ class DreamRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final DataSyncService _syncService = DataSyncService();
 
-  Future<List<DreamModel>> getAll() async {
+  Future<List<DreamModel>> getAll(String userId) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'dreams',
+      where: 'user_id = ?',
+      whereArgs: [userId],
       orderBy: 'date DESC',
     );
     return List.generate(maps.length, (i) => DreamModel.fromMap(maps[i]));

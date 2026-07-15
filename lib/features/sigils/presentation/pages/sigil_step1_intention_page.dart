@@ -34,23 +34,22 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
     setState(() {
       // Validar se é uma única palavra (sem espaços) e tem pelo menos 3 letras
       final text = _intentionController.text.trim();
-      _canContinue = text.isNotEmpty &&
-                     !text.contains(' ') &&
-                     text.length >= 3;
+      _canContinue = text.isNotEmpty && !text.contains(' ') && text.length >= 3;
     });
   }
 
-  void _continue() {
+  Future<void> _continue() async {
     if (!_canContinue) return;
 
     final sigil = Sigil.fromIntention(_intentionController.text.trim());
 
-    Navigator.push(
+    final completed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => SigilStep2LettersPage(sigil: sigil),
       ),
     );
+    if (completed == true && mounted) Navigator.pop(context, true);
   }
 
   @override

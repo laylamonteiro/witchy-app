@@ -11,6 +11,7 @@ import '../../data/models/enums.dart';
 import '../../data/repositories/daily_weather_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../providers/astrology_provider.dart';
 
 class DailyMagicalWeatherPage extends StatefulWidget {
   const DailyMagicalWeatherPage({super.key});
@@ -42,7 +43,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
 
     try {
       print('📡 DailyMagicalWeatherPage: Chamando getDailyWeather...');
-      final cache = await _repository.getDailyWeather(_selectedDate);
+      final cache = await _repository.getDailyWeather(
+        _selectedDate,
+        userId: context.read<AuthProvider>().currentUser.id,
+        natalChart: context.read<AstrologyProvider>().birthChart,
+      );
       print('✅ DailyMagicalWeatherPage: Recebeu weather cache');
 
       if (!mounted) {
@@ -69,7 +74,8 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Erro ao calcular clima mágico. Por favor, tente novamente.'),
+          content: Text(
+              'Erro ao calcular clima mágico. Por favor, tente novamente.'),
           backgroundColor: AppColors.alert,
         ),
       );
@@ -406,7 +412,8 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9C27B0),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),

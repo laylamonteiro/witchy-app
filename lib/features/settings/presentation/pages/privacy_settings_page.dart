@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/providers/sync_provider.dart';
@@ -27,8 +26,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   bool _analyticsEnabled = true;
   bool _crashReportingEnabled = true;
   bool _personalizedContent = true;
-  bool _syncEnabled = true;
-  bool _backupEnabled = true;
+  bool _cloudSyncEnabled = true;
   bool _isLoading = true;
 
   @override
@@ -47,10 +45,20 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       _crashReportingEnabled = prefs.getBool('privacy_crash_reporting') ?? true;
       _personalizedContent = prefs.getBool('privacy_personalized') ?? true;
       // Sincronização: desabilitada por padrão para free, habilitada para premium
-      _syncEnabled = prefs.getBool('privacy_sync') ?? isPremium;
-      _backupEnabled = prefs.getBool('privacy_backup') ?? isPremium;
+      final migratedCloudSetting =
+          (prefs.getBool('privacy_sync') ?? isPremium) &&
+              (prefs.getBool('privacy_backup') ?? isPremium);
+      _cloudSyncEnabled =
+          prefs.getBool(DataSyncService.cloudSyncPreferenceKey) ??
+              migratedCloudSetting;
       _isLoading = false;
     });
+    if (!prefs.containsKey(DataSyncService.cloudSyncPreferenceKey)) {
+      await prefs.setBool(
+        DataSyncService.cloudSyncPreferenceKey,
+        _cloudSyncEnabled,
+      );
+    }
   }
 
   Future<void> _saveSetting(String key, bool value) async {
@@ -78,7 +86,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.lilac))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.lilac))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -90,7 +99,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildSwitchTile(
                       icon: Icons.analytics_outlined,
                       title: 'Analytics',
-                      subtitle: 'Ajude a melhorar o app compartilhando dados de uso anônimos',
+                      subtitle:
+                          'Ajude a melhorar o app compartilhando dados de uso anônimos',
                       value: _analyticsEnabled,
                       onChanged: (value) {
                         setState(() => _analyticsEnabled = value);
@@ -101,7 +111,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildSwitchTile(
                       icon: Icons.bug_report_outlined,
                       title: 'Relatórios de Erro',
-                      subtitle: 'Enviar relatórios automáticos quando o app tiver problemas',
+                      subtitle:
+                          'Enviar relatórios automáticos quando o app tiver problemas',
                       value: _crashReportingEnabled,
                       onChanged: (value) {
                         setState(() => _crashReportingEnabled = value);
@@ -131,34 +142,20 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       return _buildSettingsCard([
                         _buildSwitchTile(
                           icon: Icons.sync,
-                          title: 'Sincronização Automática',
+                          title: 'Sincronização e Backup na Nuvem',
                           subtitle: isPremium
-                              ? 'Manter seus dados sincronizados entre dispositivos'
+                              ? 'Manter seus dados protegidos e sincronizados entre dispositivos'
                               : 'Recurso exclusivo Premium',
-                          value: _syncEnabled,
+                          value: _cloudSyncEnabled,
                           onChanged: (value) {
                             if (!isPremium && value) {
                               _showUpgradeDialog();
                             } else {
-                              setState(() => _syncEnabled = value);
-                              _saveSetting('privacy_sync', value);
-                            }
-                          },
-                        ),
-                        _buildDivider(),
-                        _buildSwitchTile(
-                          icon: Icons.cloud_upload_outlined,
-                          title: 'Backup na Nuvem',
-                          subtitle: isPremium
-                              ? 'Salvar uma cópia dos seus dados na nuvem'
-                              : 'Recurso exclusivo Premium',
-                          value: _backupEnabled,
-                          onChanged: (value) {
-                            if (!isPremium && value) {
-                              _showUpgradeDialog();
-                            } else {
-                              setState(() => _backupEnabled = value);
-                              _saveSetting('privacy_backup', value);
+                              setState(() => _cloudSyncEnabled = value);
+                              _saveSetting(
+                                DataSyncService.cloudSyncPreferenceKey,
+                                value,
+                              );
                             }
                           },
                         ),
@@ -309,7 +306,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       subtitle: Text(
         subtitle,
         style: TextStyle(
-          color: isDestructive ? Colors.red.withValues(alpha: 0.7) : Colors.white54,
+          color: isDestructive
+              ? Colors.red.withValues(alpha: 0.7)
+              : Colors.white54,
           fontSize: 12,
         ),
       ),
@@ -330,7 +329,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     return Consumer<SyncProvider>(
       builder: (context, syncProvider, _) {
         final isPremium = syncProvider.isPremium;
-        final isReady = syncProvider.isReady;
+        final isReady = syncProvider.isReady && _cloudSyncEnabled;
         final status = syncProvider.status;
         final isSyncing = syncProvider.isSyncing;
 
@@ -360,7 +359,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         color: AppColors.gold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.workspace_premium, color: AppColors.gold, size: 28),
+                      child: const Icon(Icons.workspace_premium,
+                          color: AppColors.gold, size: 28),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
@@ -397,7 +397,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, '/subscription'),
+                    onPressed: () =>
+                        Navigator.pushNamed(context, '/subscription'),
                     icon: const Icon(Icons.star, size: 18),
                     label: const Text('Seja Premium'),
                     style: ElevatedButton.styleFrom(
@@ -443,7 +444,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         Row(
                           children: [
                             Text(
-                              isReady ? syncProvider.statusText : 'Não conectado',
+                              !_cloudSyncEnabled
+                                  ? 'Sincronização desativada'
+                                  : isReady
+                                      ? syncProvider.statusText
+                                      : 'Não conectado',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -452,7 +457,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: AppColors.gold.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
@@ -470,9 +476,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          isReady
-                              ? syncProvider.lastSyncText
-                              : 'Faça login para sincronizar',
+                          !_cloudSyncEnabled
+                              ? 'Ative a sincronização na nuvem'
+                              : isReady
+                                  ? syncProvider.lastSyncText
+                                  : 'Faça login para sincronizar',
                           style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 12,
@@ -493,7 +501,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                                     ? 'Sincronizado! ${result.uploaded} enviados, ${result.downloaded} recebidos'
                                     : result.error ?? 'Erro na sincronização',
                               ),
-                              backgroundColor: result.success ? AppColors.success : AppColors.alert,
+                              backgroundColor: result.success
+                                  ? AppColors.success
+                                  : AppColors.alert,
                             ),
                           );
                         }
@@ -507,7 +517,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.lilac),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.lilac),
                       ),
                     ),
                 ],
@@ -518,7 +529,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: isSyncing ? null : () => _fullUpload(syncProvider),
+                        onPressed:
+                            isSyncing ? null : () => _fullUpload(syncProvider),
                         icon: const Icon(Icons.cloud_upload_outlined, size: 18),
                         label: const Text('Enviar Tudo'),
                         style: OutlinedButton.styleFrom(
@@ -530,8 +542,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: isSyncing ? null : () => _fullDownload(syncProvider),
-                        icon: const Icon(Icons.cloud_download_outlined, size: 18),
+                        onPressed: isSyncing
+                            ? null
+                            : () => _fullDownload(syncProvider),
+                        icon:
+                            const Icon(Icons.cloud_download_outlined, size: 18),
                         label: const Text('Baixar Tudo'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.mint,
@@ -584,13 +599,16 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Enviar Todos os Dados?', style: TextStyle(color: Colors.white)),
+        title: const Text('Enviar Todos os Dados?',
+            style: TextStyle(color: Colors.white)),
         content: const Text(
           'Isso enviara todos os seus dados locais para a nuvem, substituindo qualquer dado existente no servidor.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.lilac),
@@ -605,8 +623,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.success ? '${result.uploaded} itens enviados!' : result.error ?? 'Erro'),
-            backgroundColor: result.success ? AppColors.success : AppColors.alert,
+            content: Text(result.success
+                ? '${result.uploaded} itens enviados!'
+                : result.error ?? 'Erro'),
+            backgroundColor:
+                result.success ? AppColors.success : AppColors.alert,
           ),
         );
       }
@@ -618,13 +639,16 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Baixar Todos os Dados?', style: TextStyle(color: Colors.white)),
+        title: const Text('Baixar Todos os Dados?',
+            style: TextStyle(color: Colors.white)),
         content: const Text(
           'ATENÇÃO: Isso substituirá todos os seus dados locais pelos dados da nuvem. Dados locais não sincronizados serão perdidos.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.mint),
@@ -639,8 +663,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.success ? '${result.downloaded} itens baixados!' : result.error ?? 'Erro'),
-            backgroundColor: result.success ? AppColors.success : AppColors.alert,
+            content: Text(result.success
+                ? '${result.downloaded} itens baixados!'
+                : result.error ?? 'Erro'),
+            backgroundColor:
+                result.success ? AppColors.success : AppColors.alert,
           ),
         );
       }
@@ -729,7 +756,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.lilac,
             ),
-            child: const Text('Exportar', style: TextStyle(color: Colors.white)),
+            child:
+                const Text('Exportar', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -750,10 +778,20 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
       // Tabelas para exportar
       final tables = [
-        'spells', 'dreams', 'desires', 'gratitudes', 'affirmations',
-        'daily_rituals', 'ritual_logs', 'sigils', 'birth_charts',
-        'magical_profiles', 'rune_readings', 'pendulum_consultations',
-        'oracle_readings', 'daily_magical_weather'
+        'spells',
+        'dreams',
+        'desires',
+        'gratitudes',
+        'affirmations',
+        'daily_rituals',
+        'ritual_logs',
+        'sigils',
+        'birth_charts',
+        'magical_profiles',
+        'rune_readings',
+        'pendulum_consultations',
+        'oracle_readings',
+        'daily_magical_weather'
       ];
 
       for (final table in tables) {
@@ -771,7 +809,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
 
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+      final fileName =
+          'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
@@ -836,9 +875,18 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
         // Tabelas para limpar (exceto dados pré-carregados)
         final tables = [
-          'spells', 'dreams', 'desires', 'gratitudes', 'daily_rituals',
-          'ritual_logs', 'sigils', 'birth_charts', 'magical_profiles',
-          'rune_readings', 'pendulum_consultations', 'oracle_readings',
+          'spells',
+          'dreams',
+          'desires',
+          'gratitudes',
+          'daily_rituals',
+          'ritual_logs',
+          'sigils',
+          'birth_charts',
+          'magical_profiles',
+          'rune_readings',
+          'pendulum_consultations',
+          'oracle_readings',
           'daily_magical_weather'
         ];
 
@@ -977,7 +1025,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         );
 
         // Redirecionar para tela inicial
-        Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/welcome', (route) => false);
       } catch (e) {
         if (!mounted) return;
 
