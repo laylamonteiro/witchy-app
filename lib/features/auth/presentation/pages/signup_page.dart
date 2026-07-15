@@ -466,6 +466,7 @@ class _SignupPageState extends State<SignupPage> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       final displayName = _nameController.text.trim();
+      UserModel? authenticatedUser;
 
       // Usar Supabase se configurado
       if (SupabaseConfig.isConfigured) {
@@ -479,15 +480,20 @@ class _SignupPageState extends State<SignupPage> {
         if (!result.success) {
           throw Exception(result.errorMessage ?? 'Erro ao criar conta');
         }
+        authenticatedUser = result.user;
       }
 
+      if (!mounted) return;
       final authProvider = context.read<AuthProvider>();
 
-      // Atualizar perfil local também
-      await authProvider.updateProfile(
-        displayName: displayName,
-        email: email,
-      );
+      if (authenticatedUser != null) {
+        await authProvider.syncAuthenticatedUser(authenticatedUser);
+      } else {
+        await authProvider.updateProfile(
+          displayName: displayName,
+          email: email,
+        );
+      }
 
       // Marcar onboarding como visto (nova conta não precisa ver)
       await authProvider.markOnboardingSeen();
@@ -561,14 +567,11 @@ class _SignupPageState extends State<SignupPage> {
       if (!mounted) return;
 
       if (result.success && result.user != null) {
-        // Atualizar AuthProvider com os dados do usuário
         final authProvider = context.read<AuthProvider>();
-        await authProvider.updateProfile(
-          email: result.user!.email,
-          displayName: result.user!.displayName,
-        );
+        await authProvider.syncAuthenticatedUser(result.user!);
         await authProvider.markOnboardingSeen();
 
+        if (!mounted) return;
         // Navegar para home
         Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
       } else {

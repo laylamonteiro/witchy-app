@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
@@ -36,13 +37,15 @@ class CatBubbleMessages {
 /// - "X" fecha; tocar no corpo abre o Clima Mágico Diário. Ambos gravam a
 ///   data para não reaparecer no mesmo dia.
 ///
-/// IMPORTANTE: este widget é um IRMÃO do `DraggableCatMascot` no Stack da
-/// HomePage e NÃO altera nada no mascote (comportamento do gatinho é
-/// congelado). Ele ancora na posição INICIAL do gato (x=20, y=120) — no
-/// primeiro open do dia o gato ainda não foi arrastado. Fora da área do
-/// balão não há hit-test, então drag/tap do gato seguem intocados.
+/// Este widget é um irmão do `DraggableCatMascot` no Stack da HomePage e
+/// acompanha a posição publicada pelo mascote.
 class CatChatBubble extends StatefulWidget {
-  const CatChatBubble({super.key});
+  final ValueListenable<Offset> mascotPosition;
+
+  const CatChatBubble({
+    super.key,
+    required this.mascotPosition,
+  });
 
   static const String _lastShownKey = 'cat_bubble_last_shown_date';
 
@@ -126,10 +129,21 @@ class _CatChatBubbleState extends State<CatChatBubble>
   Widget build(BuildContext context) {
     if (!_visible) return const SizedBox.shrink();
 
-    return Positioned(
-      // Logo acima da âncora inicial do mascote (x=20, y=120)
-      left: 12,
-      top: 36,
+    return ValueListenableBuilder<Offset>(
+      valueListenable: widget.mascotPosition,
+      builder: (context, position, child) {
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final maxLeft = screenWidth > 266 ? screenWidth - 258 : 8.0;
+        final left = (position.dx - 8).clamp(8.0, maxLeft).toDouble();
+        final top =
+            (position.dy - 86).clamp(8.0, double.infinity).toDouble();
+
+        return Positioned(
+          left: left,
+          top: top,
+          child: child!,
+        );
+      },
       child: FadeTransition(
         opacity: _fade,
         child: ScaleTransition(
@@ -149,10 +163,10 @@ class _CatChatBubbleState extends State<CatChatBubble>
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.lilac.withOpacity(0.5),
+                          color: AppColors.lilac.withValues(alpha: 0.8),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -173,7 +187,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
                                 CatBubbleMessages.messageForDate(
                                     DateTime.now()),
                                 style: const TextStyle(
-                                  color: AppColors.textPrimary,
+                                  color: Color(0xFF211A2E),
                                   fontSize: 13,
                                   height: 1.35,
                                 ),
@@ -190,7 +204,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
                               child: Icon(
                                 Icons.close,
                                 size: 16,
-                                color: AppColors.textSecondary,
+                                color: Colors.black54,
                               ),
                             ),
                           ),
@@ -220,9 +234,9 @@ class _CatChatBubbleState extends State<CatChatBubble>
 class _BubbleTailPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final fill = Paint()..color = AppColors.surface;
+    final fill = Paint()..color = Colors.white;
     final stroke = Paint()
-      ..color = AppColors.lilac.withOpacity(0.5)
+      ..color = AppColors.lilac.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 

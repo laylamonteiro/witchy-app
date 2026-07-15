@@ -7,7 +7,6 @@ import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/diagnostic/diagnostic_page.dart';
-import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
@@ -15,7 +14,6 @@ import '../../../auth/auth.dart';
 import '../../../subscription/subscription.dart';
 import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
-import '../../../auth/data/repositories/supabase_auth_repository.dart';
 import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -917,10 +915,11 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showLogoutConfirmation(BuildContext context, AuthProvider authProvider) {
+  void _showLogoutConfirmation(
+      BuildContext pageContext, AuthProvider authProvider) {
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: pageContext,
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: const Text(
           'Sair da Conta',
@@ -932,7 +931,7 @@ class SettingsPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text(
               'Cancelar',
               style: TextStyle(color: Colors.white70),
@@ -940,8 +939,12 @@ class SettingsPage extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
-              await _handleLogout(context, authProvider);
+              Navigator.pop(dialogContext);
+              await authProvider.signOut();
+              if (pageContext.mounted) {
+                Navigator.of(pageContext, rootNavigator: true)
+                    .pushNamedAndRemoveUntil('/welcome', (route) => false);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF44336),
@@ -954,30 +957,6 @@ class SettingsPage extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _handleLogout(BuildContext context, AuthProvider authProvider) async {
-    try {
-      if (SupabaseConfig.isConfigured) {
-        final authRepo = SupabaseAuthRepository();
-        await authRepo.signOut();
-      }
-
-      await authProvider.signOut();
-
-      if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao sair: $e'),
-            backgroundColor: const Color(0xFFF44336),
-          ),
-        );
-      }
-    }
   }
 
   void _showHelpDialog(BuildContext context) {

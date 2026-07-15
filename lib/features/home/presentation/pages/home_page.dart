@@ -19,6 +19,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _selectedIndex = 0;
   static const String _lastTabKey = 'last_selected_tab';
+  final ValueNotifier<Offset> _mascotPosition =
+      ValueNotifier(const Offset(20, 120));
 
   /// Um Navigator aninhado por aba: as páginas de conteúdo (detalhes de
   /// cristais, feitiços, sigilos etc.) são empilhadas DENTRO da aba, mantendo
@@ -55,6 +57,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     for (final notifier in _resetNotifiers) {
       notifier.dispose();
     }
+    _mascotPosition.dispose();
     super.dispose();
   }
 
@@ -139,13 +142,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               initialX: 20,
               initialY: 120,
               size: 100,
+              positionNotifier: _mascotPosition,
               onTap: () {
                 // Opcional: adicionar interação ao clicar no mascote
               },
             ),
-            // Balão de conversa diário (1x/dia) — irmão do mascote, não o
-            // modifica nem interfere nas suas interações
-            const CatChatBubble(),
+            CatChatBubble(mascotPosition: _mascotPosition),
           ],
         ),
         bottomNavigationBar: Container(

@@ -103,9 +103,6 @@ class SupabaseAuthRepository implements AuthRepository {
         'id': supabaseUser.id,
         'email': supabaseUser.email,
         'display_name': displayName,
-        'role': 'free',
-        'plan': 'free',
-        'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -190,8 +187,28 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
+    Object? supabaseError;
+    try {
+      await debugLog('AUTH', 'Encerrando sessão do Supabase');
+      await _supabase.auth.signOut();
+    } catch (e) {
+      supabaseError = e;
+      await debugLog('AUTH', 'Erro ao encerrar sessão do Supabase: $e');
+    }
+
+    try {
+      if (await _googleSignIn.isSignedIn()) {
+        await debugLog('AUTH', 'Encerrando sessão do Google');
+        await _googleSignIn.signOut();
+      }
+    } catch (e) {
+      await debugLog('AUTH', 'Erro ao encerrar sessão do Google: $e');
+    }
+
     _authStateController.add(null);
+    if (supabaseError != null) {
+      throw supabaseError;
+    }
   }
 
   @override
@@ -415,8 +432,13 @@ class SupabaseAuthRepository implements AuthRepository {
   AuthResult _handleAuthException(AuthException e) {
     AuthErrorCode? code;
     String message = e.message;
+    final normalizedMessage = message.toLowerCase().replaceAll('_', ' ');
 
-    if (message.contains('Invalid login credentials')) {
+    if (normalizedMessage.contains('email not confirmed') ||
+        normalizedMessage.contains('email is not confirmed')) {
+      message =
+          'Confirme seu email antes de entrar. Verifique sua caixa de entrada.';
+    } else if (message.contains('Invalid login credentials')) {
       code = AuthErrorCode.invalidPassword;
       message = 'Email ou senha incorretos';
     } else if (message.contains('User not found')) {

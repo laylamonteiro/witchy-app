@@ -564,6 +564,10 @@ class PaymentService extends ChangeNotifier {
 
   /// Remove associação do usuário
   Future<void> logOut() async {
+    _customerInfo = null;
+    _isPro = false;
+    notifyListeners();
+
     if (!RevenueCatConfig.isConfigured) return;
 
     try {
@@ -572,6 +576,10 @@ class PaymentService extends ChangeNotifier {
       debugPrint('Usuário deslogado do RevenueCat');
     } catch (e) {
       debugPrint('Erro ao fazer logout do RevenueCat: $e');
+    } finally {
+      _customerInfo = null;
+      _isPro = false;
+      notifyListeners();
     }
   }
 
