@@ -54,29 +54,61 @@ class CatChatBubble extends StatefulWidget {
 }
 
 class _CatChatBubbleState extends State<CatChatBubble>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _visible = false;
   bool _dismissed = false;
 
-  late final AnimationController _controller;
+  /// Mensagem do dia (fixada no initState para dimensionar o typewriter).
+  late final String _message = CatBubbleMessages.messageForDate(DateTime.now());
+
+  /// Pop de entrada: escala elástica (o balão "estoura" na tela, como uma
+  /// fala surgindo) + fade rápido no início.
+  late final AnimationController _popController;
   late final Animation<double> _scale;
   late final Animation<double> _fade;
+
+  /// Typewriter: revela o texto letra a letra, como se o gatinho estivesse
+  /// falando naquele momento.
+  late final AnimationController _typeController;
+  late final Animation<int> _typedChars;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 350),
+    _popController = AnimationController(
+      duration: const Duration(milliseconds: 550),
+      reverseDuration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _scale = CurvedAnimation(
+      parent: _popController,
+      curve: Curves.elasticOut,
+      reverseCurve: Curves.easeIn,
+    );
+    _fade = CurvedAnimation(
+      parent: _popController,
+      // Opacidade completa logo no início do pop, para o overshoot elástico
+      // acontecer com o balão já visível
+      curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
+      reverseCurve: Curves.easeIn,
+    );
+
+    _typeController = AnimationController(
+      // ~35ms por letra, com piso para mensagens curtas
+      duration: Duration(milliseconds: (_message.length * 35).clamp(600, 3000)),
+      vsync: this,
+    );
+    _typedChars = StepTween(begin: 0, end: _message.length).animate(
+      CurvedAnimation(parent: _typeController, curve: Curves.linear),
+    );
+
     _checkAndShow();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _popController.dispose();
+    _typeController.dispose();
     super.dispose();
   }
 
@@ -92,7 +124,11 @@ class _CatChatBubbleState extends State<CatChatBubble>
     if (!mounted || _dismissed) return;
 
     setState(() => _visible = true);
-    _controller.forward();
+    // Pop primeiro; o gatinho "começa a falar" (typewriter) assim que o
+    // balão termina de estourar na tela
+    await _popController.forward();
+    if (!mounted || _dismissed) return;
+    await _typeController.forward();
   }
 
   Future<void> _markShownToday() async {
@@ -105,9 +141,10 @@ class _CatChatBubbleState extends State<CatChatBubble>
 
   Future<void> _close() async {
     _dismissed = true;
+    _typeController.stop();
     await _markShownToday();
     if (!mounted) return;
-    await _controller.reverse();
+    await _popController.reverse();
     if (mounted) {
       setState(() => _visible = false);
     }
@@ -115,6 +152,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
 
   Future<void> _openMagicalWeather() async {
     _dismissed = true;
+    _typeController.stop();
     await _markShownToday();
     if (!mounted) return;
     setState(() => _visible = false);
@@ -122,6 +160,54 @@ class _CatChatBubbleState extends State<CatChatBubble>
     // aninhados das abas
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(builder: (_) => const DailyMagicalWeatherPage()),
+    );
+  }
+
+  static const TextStyle _messageStyle = TextStyle(
+    color: Color(0xFF211A2E),
+    fontSize: 13,
+    height: 1.35,
+  );
+
+  /// Texto com efeito typewriter (letras aparecendo uma a uma) e um cursor
+  /// "▌" enquanto o gatinho ainda está "falando".
+  ///
+  /// O texto completo fica invisível por baixo para reservar o espaço final —
+  /// o balão nasce já no tamanho certo e não fica pulando durante a digitação.
+  Widget _buildTypewriterText() {
+    return AnimatedBuilder(
+      animation: _typedChars,
+      builder: (context, _) {
+        final count = _typedChars.value;
+        final isTyping = count < _message.length;
+        final visibleText = _message.substring(0, count);
+
+        return Stack(
+          children: [
+            // Reserva o layout com o texto completo (invisível)
+            Opacity(
+              opacity: 0,
+              child: Text(_message, style: _messageStyle),
+            ),
+            // Texto revelado progressivamente + cursor de "fala"
+            Text.rich(
+              TextSpan(
+                text: visibleText,
+                children: [
+                  if (isTyping)
+                    TextSpan(
+                      text: '▌',
+                      style: TextStyle(
+                        color: AppColors.lilac.withValues(alpha: 0.9),
+                      ),
+                    ),
+                ],
+              ),
+              style: _messageStyle,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -183,15 +269,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
                           Flexible(
                             child: Padding(
                               padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                CatBubbleMessages.messageForDate(
-                                    DateTime.now()),
-                                style: const TextStyle(
-                                  color: Color(0xFF211A2E),
-                                  fontSize: 13,
-                                  height: 1.35,
-                                ),
-                              ),
+                              child: _buildTypewriterText(),
                             ),
                           ),
                           const SizedBox(width: 4),
