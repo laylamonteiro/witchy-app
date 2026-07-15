@@ -22,6 +22,7 @@ class ElementsPage extends StatelessWidget {
           children: [
             // Introdução
             MagicalCard(
+              margin: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -29,9 +30,11 @@ class ElementsPage extends StatelessWidget {
                     children: [
                       const Text('∞', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
-                      Text(
-                        'Sobre os 4 Elementos',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      Expanded(
+                        child: Text(
+                          'Sobre os 4 Elementos',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
                     ],
                   ),

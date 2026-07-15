@@ -25,6 +25,7 @@ class RunesListPage extends StatelessWidget {
           children: [
             // Introdução
             MagicalCard(
+              margin: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -32,9 +33,11 @@ class RunesListPage extends StatelessWidget {
                     children: [
                       const Text('ᚠ', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
-                      Text(
-                        'Sobre as Runas',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      Expanded(
+                        child: Text(
+                          'Sobre as Runas',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
                     ],
                   ),
@@ -105,6 +108,7 @@ class RunesListPage extends StatelessWidget {
         );
       },
       child: MagicalCard(
+        margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           child: Column(

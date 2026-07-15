@@ -23,6 +23,7 @@ class AltarPage extends StatelessWidget {
           children: [
             // Introdução
             MagicalCard(
+              margin: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -30,9 +31,11 @@ class AltarPage extends StatelessWidget {
                     children: [
                       const Text('🛐', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
-                      Text(
-                        'Sobre o Altar',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      Expanded(
+                        child: Text(
+                          'Sobre o Altar',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
                     ],
                   ),
@@ -378,6 +381,7 @@ class AltarPage extends StatelessWidget {
 
   Widget _buildPassoAPasso(BuildContext context) {
     return MagicalCard(
+      margin: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
