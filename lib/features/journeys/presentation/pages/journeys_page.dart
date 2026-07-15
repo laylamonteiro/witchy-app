@@ -13,7 +13,8 @@ class JourneysPage extends StatefulWidget {
   State<JourneysPage> createState() => _JourneysPageState();
 }
 
-class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderStateMixin {
+class _JourneysPageState extends State<JourneysPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   Map<String, int> _userStats = {};
@@ -51,9 +52,11 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
         'sigils': await _countRecords(db, 'sigils', odUserId),
         'rune_readings': await _countRecords(db, 'rune_readings', odUserId),
         'oracle_readings': await _countRecords(db, 'oracle_readings', odUserId),
-        'pendulum_consultations': await _countRecords(db, 'pendulum_consultations', odUserId),
+        'pendulum_consultations':
+            await _countRecords(db, 'pendulum_consultations', odUserId),
         'birth_charts': await _countRecords(db, 'birth_charts', odUserId),
-        'desires_manifested': await _countDesiresByStatus(db, odUserId, 'manifested'),
+        'desires_manifested':
+            await _countDesiresByStatus(db, odUserId, 'manifested'),
         'gratitude_streak': await _calculateStreak(db, 'gratitudes', odUserId),
       };
 
@@ -97,7 +100,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
     }
   }
 
-  Future<int> _countDesiresByStatus(dynamic db, String odUserId, String status) async {
+  Future<int> _countDesiresByStatus(
+      dynamic db, String odUserId, String status) async {
     try {
       final result = await db.rawQuery(
         'SELECT COUNT(*) as count FROM desires WHERE user_id = ? AND status = ?',
@@ -109,7 +113,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
     }
   }
 
-  Future<int> _calculateStreak(dynamic db, String table, String odUserId) async {
+  Future<int> _calculateStreak(
+      dynamic db, String table, String odUserId) async {
     try {
       final result = await db.rawQuery(
         '''SELECT DISTINCT date(created_at / 1000, 'unixepoch', 'localtime') as day
@@ -189,7 +194,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: const ResponsiveAppBarTitle(
           'Jornadas Mágicas',
           style: TextStyle(
             color: Colors.white,
@@ -215,7 +220,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.lilac))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.lilac))
           : Column(
               children: [
                 // XP Header
@@ -227,14 +233,18 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                     controller: _tabController,
                     children: [
                       _buildJourneysList(AvailableJourneys.all),
-                      _buildJourneysList(AvailableJourneys.byCategory(JourneyCategory.iniciante)),
+                      _buildJourneysList(AvailableJourneys.byCategory(
+                          JourneyCategory.iniciante)),
                       _buildJourneysList([
                         ...AvailableJourneys.byCategory(JourneyCategory.diario),
-                        ...AvailableJourneys.byCategory(JourneyCategory.grimorio),
+                        ...AvailableJourneys.byCategory(
+                            JourneyCategory.grimorio),
                       ]),
                       _buildJourneysList([
-                        ...AvailableJourneys.byCategory(JourneyCategory.divinacao),
-                        ...AvailableJourneys.byCategory(JourneyCategory.astrologia),
+                        ...AvailableJourneys.byCategory(
+                            JourneyCategory.divinacao),
+                        ...AvailableJourneys.byCategory(
+                            JourneyCategory.astrologia),
                       ]),
                     ],
                   ),
@@ -311,7 +321,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                   child: LinearProgressIndicator(
                     value: xpInLevel / xpForNextLevel,
                     backgroundColor: Colors.white24,
-                    valueColor: const AlwaysStoppedAnimation(AppColors.starYellow),
+                    valueColor:
+                        const AlwaysStoppedAnimation(AppColors.starYellow),
                     minHeight: 6,
                   ),
                 ),
@@ -376,7 +387,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
     }
 
     final isCompleted = completedSteps == journey.totalSteps;
-    final progress = journey.totalSteps > 0 ? completedSteps / journey.totalSteps : 0.0;
+    final progress =
+        journey.totalSteps > 0 ? completedSteps / journey.totalSteps : 0.0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -477,7 +489,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                     ),
                     const SizedBox(width: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: AppColors.starYellow.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -485,7 +498,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star, color: AppColors.starYellow, size: 14),
+                          const Icon(Icons.star,
+                              color: AppColors.starYellow, size: 14),
                           const SizedBox(width: 4),
                           Text(
                             '$earnedXp/${journey.xpReward} XP',
@@ -548,7 +562,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                             color: journey.color.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Icon(journey.icon, color: journey.color, size: 40),
+                          child: Icon(journey.icon,
+                              color: journey.color, size: 40),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -623,7 +638,8 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                               ),
                               child: Center(
                                 child: isCompleted
-                                    ? const Icon(Icons.check, color: Colors.white, size: 18)
+                                    ? const Icon(Icons.check,
+                                        color: Colors.white, size: 18)
                                     : Text(
                                         '${index + 1}',
                                         style: TextStyle(
@@ -641,7 +657,9 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                                   Text(
                                     step.title,
                                     style: TextStyle(
-                                      color: isCompleted ? Colors.green : Colors.white,
+                                      color: isCompleted
+                                          ? Colors.green
+                                          : Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -658,12 +676,15 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                                     children: [
                                       Expanded(
                                         child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(2),
+                                          borderRadius:
+                                              BorderRadius.circular(2),
                                           child: LinearProgressIndicator(
                                             value: progressPercent,
                                             backgroundColor: Colors.white10,
                                             valueColor: AlwaysStoppedAnimation(
-                                              isCompleted ? Colors.green : journey.color,
+                                              isCompleted
+                                                  ? Colors.green
+                                                  : journey.color,
                                             ),
                                             minHeight: 4,
                                           ),
@@ -673,7 +694,9 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                                       Text(
                                         '$progress/${step.requiredCount}',
                                         style: TextStyle(
-                                          color: isCompleted ? Colors.green : Colors.white54,
+                                          color: isCompleted
+                                              ? Colors.green
+                                              : Colors.white54,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -684,9 +707,11 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.starYellow.withValues(alpha: 0.2),
+                                color:
+                                    AppColors.starYellow.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(

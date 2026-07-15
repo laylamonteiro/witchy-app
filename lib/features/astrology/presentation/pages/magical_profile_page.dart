@@ -23,7 +23,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil Mágico'),
+        title: const ResponsiveAppBarTitle('Perfil Mágico'),
         backgroundColor: AppColors.darkBackground,
         actions: [
           Consumer<AstrologyProvider>(
@@ -69,7 +69,10 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       const SizedBox(height: 16),
                       Text(
                         'Seu Perfil Mágico',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                               color: AppColors.lilac,
                             ),
                       ),
@@ -137,7 +140,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                             children: [
                               Text(
                                 '${entry.key.symbol} ${entry.key.displayName}',
-                                style: const TextStyle(color: AppColors.softWhite),
+                                style:
+                                    const TextStyle(color: AppColors.softWhite),
                               ),
                               Text(
                                 '${entry.value} planeta(s)',
@@ -319,7 +323,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           // Botão para ver todos os planetas
           Center(
             child: TextButton.icon(
-              onPressed: () => _showAllPlanetsDialog(context, birthChart.planets),
+              onPressed: () =>
+                  _showAllPlanetsDialog(context, birthChart.planets),
               icon: const Icon(Icons.expand_more, color: AppColors.lilac),
               label: const Text(
                 'Ver todos os planetas',
@@ -579,7 +584,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9C27B0),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
 import '../../../settings/settings.dart';
@@ -22,7 +23,7 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const Text('Meu Perfil'),
+        title: const ResponsiveAppBarTitle('Meu Perfil'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -76,8 +77,8 @@ class ProfilePage extends StatelessWidget {
           onPhotoChanged: (photoPath) {
             // Atualizar foto do perfil
             context.read<AuthProvider>().updateProfile(
-              displayName: user.displayName,
-            );
+                  displayName: user.displayName,
+                );
           },
         ),
         const SizedBox(height: 16),
@@ -148,7 +149,8 @@ class ProfilePage extends StatelessWidget {
             hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: const Color(0xFF9C27B0).withOpacity(0.5)),
+              borderSide:
+                  BorderSide(color: const Color(0xFF9C27B0).withOpacity(0.5)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -681,7 +683,6 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-
   List<Color> _getRoleColors(UserRole role) {
     switch (role) {
       case UserRole.admin:
@@ -865,7 +866,8 @@ class ProfilePage extends StatelessWidget {
     }
   }
 
-  void _handleManageSubscription(BuildContext context, PaymentService paymentService) {
+  void _handleManageSubscription(
+      BuildContext context, PaymentService paymentService) {
     // Sempre navegar para página de assinatura (contém código beta e outras opções)
     Navigator.pushNamed(context, '/subscription');
   }

@@ -31,12 +31,35 @@ class NotificationProvider with ChangeNotifier {
   bool? get permissionGranted => _permissionGranted;
   int get scheduledCount => _scheduledCount;
   String? get lastError => _lastError;
+  bool get isInitialized => _initialized;
 
-  Future<void> initialize(
-    LunarProvider lunarProvider,
-    WheelOfYearProvider wheelProvider,
-  ) async {
-    if (_initialized || kIsWeb) return;
+  Future<List<PendingNotificationRequest>> pendingNotifications() =>
+      _notificationService.pendingNotifications();
+
+  Future<bool?> areNotificationsEnabled() =>
+      _notificationService.areNotificationsEnabled();
+
+  Future<NotificationScheduleResult> sendDebugNotification() async {
+    final result = await _notificationService.showDebugNotification();
+    _permissionGranted = result.permissionGranted;
+    _lastError = result.error;
+    notifyListeners();
+    return result;
+  }
+
+  /// Solicita permissão e agenda apenas depois que o login foi concluído.
+  Future<void> updateSession({
+    required bool isAuthenticated,
+    required LunarProvider lunarProvider,
+    required WheelOfYearProvider wheelProvider,
+  }) async {
+    if (kIsWeb) return;
+    if (!isAuthenticated) {
+      _initialized = false;
+      return;
+    }
+    if (_initialized) return;
+
     _initialized = true;
     await scheduleNotifications(
       lunarProvider: lunarProvider,
@@ -68,7 +91,6 @@ class NotificationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Agendar notificações com base nas configurações atuais
   Future<NotificationScheduleResult> scheduleNotifications({
     required LunarProvider lunarProvider,
     required WheelOfYearProvider wheelProvider,
@@ -76,13 +98,9 @@ class NotificationProvider with ChangeNotifier {
     final List<DateTime> fullMoons = [];
     final List<DateTime> newMoons = [];
 
-    // Coletar próximas 3 luas cheias e novas usando cálculos precisos
     if (_fullMoonNotifications || _newMoonNotifications) {
-      // Criar uma cópia do provider para não afetar o estado atual
       DateTime currentDate = DateTime.now();
-
       for (int i = 0; i < 3; i++) {
-        // Obter próximas luas usando o LunarProvider
         final tempProvider = LunarProvider();
         tempProvider.setSelectedDate(currentDate);
 
@@ -98,7 +116,6 @@ class NotificationProvider with ChangeNotifier {
           final nextNewMoon = tempProvider.getNextNewMoon();
           if (nextNewMoon != null && nextNewMoon.isAfter(DateTime.now())) {
             newMoons.add(nextNewMoon);
-            // Avançar para depois da lua nova para encontrar a próxima
             if (currentDate.isBefore(nextNewMoon)) {
               currentDate = nextNewMoon.add(const Duration(days: 1));
             }

@@ -44,7 +44,9 @@ class _DesireFormPageState extends State<DesireFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.desire == null ? 'Novo Desejo' : 'Editar Desejo'),
+        title: ResponsiveAppBarTitle(
+          widget.desire == null ? 'Novo Desejo' : 'Editar Desejo',
+        ),
         actions: widget.desire != null
             ? [
                 IconButton(
@@ -133,7 +135,9 @@ class _DesireFormPageState extends State<DesireFormPage> {
     }
 
     final desire = widget.desire?.copyWith(
-          title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          title: _titleController.text.isEmpty
+              ? 'Sem título'
+              : _titleController.text,
           description: _descriptionController.text,
           status: _selectedStatus,
           evolution: _evolutionController.text.isEmpty
@@ -141,7 +145,9 @@ class _DesireFormPageState extends State<DesireFormPage> {
               : _evolutionController.text,
         ) ??
         DesireModel(
-          title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          title: _titleController.text.isEmpty
+              ? 'Sem título'
+              : _titleController.text,
           description: _descriptionController.text,
           status: _selectedStatus,
           evolution: _evolutionController.text.isEmpty

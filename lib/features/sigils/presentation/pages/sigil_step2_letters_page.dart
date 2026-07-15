@@ -19,7 +19,7 @@ class SigilStep2LettersPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Letras Mágicas'),
+        title: const ResponsiveAppBarTitle('Letras Mágicas'),
         backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(

@@ -19,7 +19,8 @@ class DiaryPage extends StatefulWidget {
   State<DiaryPage> createState() => _DiaryPageState();
 }
 
-class _DiaryPageState extends State<DiaryPage> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _DiaryPageState extends State<DiaryPage>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   static const String _lastTabKey = 'diary_last_tab';
 
@@ -73,7 +74,7 @@ class _DiaryPageState extends State<DiaryPage> with SingleTickerProviderStateMix
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Diários'),
+        title: const ResponsiveAppBarTitle('Diários'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),

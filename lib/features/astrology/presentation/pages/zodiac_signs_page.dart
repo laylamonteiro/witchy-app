@@ -114,8 +114,7 @@ final List<ZodiacSignData> zodiacSignsData = [
         'Cancerianos têm conexão natural com a Lua e seus ciclos. Possuem forte '
         'intuição psíquica, dom para magia emocional e habilidade natural para '
         'proteção do lar. São excelentes em trabalhos com água e magia lunar.',
-    bestPractices:
-        'Magia lunar em todas as fases, proteção do lar e família, '
+    bestPractices: 'Magia lunar em todas as fases, proteção do lar e família, '
         'rituais com água (banhos, poções, espelhos), trabalho com ancestrais, '
         'magia de cura emocional, adivinhação por sonhos.',
     crystals: 'Pedra da Lua, Pérola, Selenita, Opala, Quartzo Leitoso',
@@ -158,8 +157,7 @@ final List<ZodiacSignData> zodiacSignsData = [
         'Virginianos têm talento especial para herbologia e magia curativa. '
         'São excelentes em preparar poções, tinturas e remédios mágicos. '
         'Sua atenção aos detalhes torna seus rituais precisos e eficazes.',
-    bestPractices:
-        'Herbologia e preparo de poções, magia de cura e saúde, '
+    bestPractices: 'Herbologia e preparo de poções, magia de cura e saúde, '
         'rituais de purificação, organização de altares, '
         'magia prática do dia-a-dia, criação de talismãs e amuletos.',
     crystals: 'Amazonita, Peridoto, Jaspe, Cornalina, Safira',
@@ -246,8 +244,7 @@ final List<ZodiacSignData> zodiacSignsData = [
         'Capricornianos têm maestria em magia de manifestação a longo prazo. '
         'São excelentes em rituais de estrutura, proteção e trabalho com ancestrais. '
         'Sua disciplina permite práticas mágicas consistentes e poderosas.',
-    bestPractices:
-        'Magia de carreira e sucesso material, rituais saturninos, '
+    bestPractices: 'Magia de carreira e sucesso material, rituais saturninos, '
         'trabalho com ancestrais e tradições antigas, feitiços de proteção, '
         'magia de compromisso e contratos, rituais de Yule.',
     crystals: 'Ônix, Turmalina Negra, Obsidiana, Garnet, Jet',
@@ -307,7 +304,7 @@ class ZodiacSignsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Signos do Zodíaco'),
+        title: const ResponsiveAppBarTitle('Signos do Zodíaco'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,
@@ -392,11 +389,15 @@ class ZodiacSignsPage extends StatelessWidget {
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    '${data.sign.element.displayName} | ${data.sign.modality.displayName}',
-                    style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.6),
-                      fontSize: 12,
+                  Expanded(
+                    child: Text(
+                      '${data.sign.element.displayName} | ${data.sign.modality.displayName}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -446,15 +447,20 @@ class ZodiacSignsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(String title, String content, {bool isHighlight = false}) {
+  Widget _buildSection(
+    String title,
+    String content, {
+    bool isHighlight = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (title.isNotEmpty) ...[
             Text(
               title,
+              textAlign: TextAlign.start,
               style: TextStyle(
                 color: AppColors.lilac,
                 fontWeight: FontWeight.bold,
@@ -464,7 +470,9 @@ class ZodiacSignsPage extends StatelessWidget {
             const SizedBox(height: 4),
           ],
           Text(
-            content,
+            content.trim(),
+            textAlign: TextAlign.start,
+            textWidthBasis: TextWidthBasis.parent,
             style: TextStyle(
               color: isHighlight
                   ? AppColors.starYellow

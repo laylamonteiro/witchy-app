@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/services/premium_access.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
@@ -506,6 +508,24 @@ class AuthProvider extends ChangeNotifier {
       'AUTH',
       'Usuário sincronizado do servidor: id=${user.id}, role=${user.role.name}, plan=${user.plan.name}',
     );
+
+    // Auto-sincronização pós-login: cobre o cenário reinstalar → abrir →
+    // logar, restaurando os dados da nuvem sem o usuário precisar acessar a
+    // tela de Sincronização. Só para Premium com sync habilitado.
+    unawaited(_autoSyncAfterLogin());
+  }
+
+  /// Dispara uma sincronização completa (upload+download) logo após o login,
+  /// se o usuário for Premium e a sincronização estiver habilitada.
+  Future<void> _autoSyncAfterLogin() async {
+    if (!PremiumAccess.instance.isPremium) return;
+    final sync = DataSyncService();
+    if (!await sync.cloudSyncEnabled) return;
+    if (!sync.isReady) return;
+    await debugLog('SYNC', 'Auto-sync pós-login iniciado');
+    final result = await sync.syncAll();
+    await debugLog('SYNC',
+        'Auto-sync pós-login: ${result.success ? "ok" : "falha: ${result.error}"}');
   }
 
   /// Atualiza apenas o nome do usuário

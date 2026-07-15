@@ -18,6 +18,11 @@ class NotificationScheduleResult {
 }
 
 class NotificationService {
+  static const int debugNotificationId = 990001;
+  static const String debugNotificationTitle = '🔮 Mensagem do Grimório';
+  static const String debugNotificationBody =
+      'Seu Grimório está pronto para acompanhar sua jornada mágica.';
+
   final FlutterLocalNotificationsPlugin _notifications;
 
   NotificationService(this._notifications);
@@ -58,6 +63,55 @@ class NotificationService {
       description: 'Lembretes de celebrações da Roda do Ano',
       importance: Importance.high,
     ));
+    await android.createNotificationChannel(const AndroidNotificationChannel(
+      'debug_notifications',
+      'Testes de notificação',
+      description: 'Notificações enviadas pelo diagnóstico do aplicativo',
+      importance: Importance.high,
+    ));
+  }
+
+  Future<NotificationScheduleResult> showDebugNotification() async {
+    try {
+      final granted = await requestPermissions();
+      if (!granted) {
+        return const NotificationScheduleResult(
+          permissionGranted: false,
+          error: 'Permissão de notificações não concedida',
+        );
+      }
+      await createChannels();
+      await _notifications.show(
+        debugNotificationId,
+        debugNotificationTitle,
+        debugNotificationBody,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'debug_notifications',
+            'Testes de notificação',
+            channelDescription:
+                'Notificações enviadas pelo diagnóstico do aplicativo',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+      );
+      return const NotificationScheduleResult(
+        permissionGranted: true,
+        scheduledCount: 1,
+      );
+    } catch (e) {
+      return NotificationScheduleResult(
+        permissionGranted: true,
+        error: 'Falha ao enviar notificação de teste: $e',
+      );
+    }
   }
 
   @visibleForTesting
@@ -161,6 +215,17 @@ class NotificationService {
       );
 
   Future<void> cancelAllNotifications() => _notifications.cancelAll();
+
+  Future<List<PendingNotificationRequest>> pendingNotifications() =>
+      _notifications.pendingNotificationRequests();
+
+  Future<bool?> areNotificationsEnabled() async {
+    if (kIsWeb) return false;
+    final android = _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) return android.areNotificationsEnabled();
+    return null;
+  }
 
   Future<NotificationScheduleResult> scheduleNotifications({
     required List<DateTime> fullMoonDates,

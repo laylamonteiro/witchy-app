@@ -48,7 +48,7 @@ void main() async {
     databaseFactory = databaseFactoryFfiWeb;
   }
 
-  // Initialize timezone
+  // Necessário para os agendamentos locais de Lua e Sabbats.
   tz.initializeTimeZones();
 
   // Initialize date formatting for Portuguese locale
@@ -117,6 +117,11 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkSplashDisplay();
+    // Restaura os dados automaticamente quando o app inicia com uma sessão
+    // Premium já ativa. O próprio método valida preferência e disponibilidade.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(seconds: 2), _triggerBackgroundSync);
+    });
   }
 
   @override
@@ -155,10 +160,13 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
     // Sincronização é exclusiva para usuários Premium (fonte única:
-    // RevenueCat OU premium local via código beta/admin)
-    if (syncService.isReady && PremiumAccess.instance.isPremium) {
-      await debugLog(
-          'SYNC', 'App resumido - iniciando sync em background (Premium)');
+    // RevenueCat OU premium local via código beta/admin) E precisa estar
+    // habilitada nas configurações de Privacidade.
+    final syncEnabled = await syncService.cloudSyncEnabled;
+    if (syncEnabled &&
+        syncService.isReady &&
+        PremiumAccess.instance.isPremium) {
+      await debugLog('SYNC', 'Auto-sync (Premium) iniciado em background');
       syncService.syncAll().then((result) {
         if (result.success) {
           debugLog('SYNC',
@@ -223,14 +231,21 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             return provider;
           },
         ),
-        ChangeNotifierProxyProvider2<LunarProvider, WheelOfYearProvider,
-            NotificationProvider>(
+        ChangeNotifierProxyProvider3<AuthProvider, LunarProvider,
+            WheelOfYearProvider, NotificationProvider>(
+          // O provider acompanha o login desde o startup, mas só solicita a
+          // permissão depois que existe um usuário autenticado.
+          lazy: false,
           create: (_) => NotificationProvider(
             flutterLocalNotificationsPlugin,
             widget.prefs,
           ),
-          update: (_, lunar, wheel, provider) {
-            provider!.initialize(lunar, wheel);
+          update: (_, auth, lunar, wheel, provider) {
+            provider!.updateSession(
+              isAuthenticated: auth.currentUser.isAuthenticated,
+              lunarProvider: lunar,
+              wheelProvider: wheel,
+            );
             return provider;
           },
         ),

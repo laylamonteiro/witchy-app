@@ -12,6 +12,34 @@ import '../../data/repositories/daily_weather_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../providers/astrology_provider.dart';
+import 'personalized_suggestions_page.dart';
+
+/// Extrai somente a estrutura editorial da previsão. O texto Premium não é
+/// exposto ao usuário Free, mas os assuntos continuam legíveis.
+class DailyForecastPreview {
+  static const fallbackHeadings = <String>[
+    'Energia do Dia',
+    'A Lua Hoje',
+    'Oportunidades Mágicas',
+    'Cuidados do Dia',
+    'Ritual Sugerido',
+    'Cristais e Aliados',
+    'Mensagem das Estrelas',
+  ];
+
+  static List<String> headingsFromMarkdown(String markdown) {
+    final heading = RegExp(r'^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$');
+    final result = <String>[];
+    for (final line in markdown.split('\n')) {
+      final match = heading.firstMatch(line);
+      final value = match?.group(1)?.trim();
+      if (value != null && value.isNotEmpty && !result.contains(value)) {
+        result.add(value);
+      }
+    }
+    return result.isEmpty ? fallbackHeadings : result;
+  }
+}
 
 class DailyMagicalWeatherPage extends StatefulWidget {
   const DailyMagicalWeatherPage({super.key});
@@ -86,7 +114,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Clima Mágico Diário'),
+        title: const ResponsiveAppBarTitle(
+          'Clima Mágico Diário',
+          style: TextStyle(fontSize: 18),
+        ),
         backgroundColor: AppColors.darkBackground,
         actions: [
           if (_weatherCache != null)
@@ -175,9 +206,9 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         children: [
           _buildDateSection(),
           const SizedBox(height: 16),
-          _buildMoonSection(weather),
+          _buildPersonalizedSuggestionsButton(),
           const SizedBox(height: 16),
-          _buildEnergySection(weather),
+          _buildMoonSection(weather),
           const SizedBox(height: 16),
           _buildKeywordsSection(weather),
           const SizedBox(height: 24),
@@ -266,47 +297,75 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     );
   }
 
-  Widget _buildEnergySection(DailyMagicalWeather weather) {
-    final energyIcons = {
-      EnergyLevel.intense: '⚡',
-      EnergyLevel.challenging: '🔥',
-      EnergyLevel.moderate: '💫',
-      EnergyLevel.harmonious: '✨',
-    };
-
-    final energyColors = {
-      EnergyLevel.intense: Colors.purple,
-      EnergyLevel.challenging: Colors.orange,
-      EnergyLevel.moderate: Colors.blue,
-      EnergyLevel.harmonious: Colors.green,
-    };
-
-    return MagicalCard(
-      child: Column(
-        children: [
-          Text(
-            energyIcons[weather.overallEnergy] ?? '✨',
-            style: const TextStyle(fontSize: 48),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Energia do Dia',
-            style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.7),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+  Widget _buildPersonalizedSuggestionsButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Semantics(
+        button: true,
+        label: 'Abrir Sugestões Personalizadas',
+        child: ElevatedButton(
+          key: const Key('daily-personalized-suggestions-button'),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const PersonalizedSuggestionsPage(),
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.surface,
+            foregroundColor: AppColors.softWhite,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(
+                color: AppColors.lilac.withValues(alpha: 0.55),
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            weather.overallEnergy.displayName,
-            style: TextStyle(
-              color: energyColors[weather.overallEnergy],
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          child: const Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Color(0x332196F3),
+                  shape: BoxShape.circle,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(11),
+                  child: Text('🔮', style: TextStyle(fontSize: 25)),
+                ),
+              ),
+              SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sugestões Personalizadas',
+                      style: TextStyle(
+                        color: AppColors.lilac,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Orientações diárias baseadas no seu mapa astral',
+                      style: TextStyle(
+                        color: AppColors.softWhite,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 8),
+              Icon(Icons.arrow_forward_ios, color: AppColors.lilac, size: 18),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -395,7 +454,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               // FAIL-CLOSED: para free, o texto premium real NUNCA é
               // renderizado (nem com blur) — mostra placeholder desfocado.
               if (isFree) ...[
-                _buildBlurredPlaceholder(),
+                _buildFreeForecastPreview(),
                 const SizedBox(height: 16),
                 Center(
                   child: ElevatedButton.icon(
@@ -433,17 +492,47 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     );
   }
 
-  /// Placeholder desfocado exibido para usuários free no lugar da previsão
-  /// real (fail-closed: o texto premium não entra na árvore de widgets).
-  Widget _buildBlurredPlaceholder() {
+  Widget _buildFreeForecastPreview() {
+    final headings = DailyForecastPreview.headingsFromMarkdown(
+      _weatherCache!.aiGeneratedText,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var index = 0; index < headings.length; index++) ...[
+          Text(
+            headings[index],
+            style: GoogleFonts.cinzelDecorative(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.lilac,
+            ),
+          ),
+          const SizedBox(height: 7),
+          _buildBlurredForecastContent(),
+          if (index < headings.length - 1) const SizedBox(height: 18),
+        ],
+      ],
+    );
+  }
+
+  /// Apenas o corpo fica oculto. O placeholder evita expor o texto Premium
+  /// real na semântica ou na árvore de widgets.
+  Widget _buildBlurredForecastContent() {
     return ExcludeSemantics(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
-          child: MarkdownBody(
-            data: kPremiumPlaceholderText,
-            styleSheet: _getMarkdownStyleSheet(),
+          imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: const Text(
+            'As influências do dia revelam orientações e práticas mágicas personalizadas para este momento.',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: AppColors.softWhite,
+              height: 1.55,
+              fontSize: 15,
+            ),
           ),
         ),
       ),

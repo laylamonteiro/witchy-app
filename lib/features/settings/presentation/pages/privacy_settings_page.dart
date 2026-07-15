@@ -36,34 +36,33 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
     final authProvider = context.read<AuthProvider>();
+    final prefs = await SharedPreferences.getInstance();
     final isPremium = authProvider.isPremiumEffective;
+    final cloudSyncEnabled = await DataSyncService.ensureCloudSyncPreference(
+      prefs,
+      isPremium: isPremium,
+    );
 
+    if (!mounted) return;
     setState(() {
       _analyticsEnabled = prefs.getBool('privacy_analytics') ?? true;
       _crashReportingEnabled = prefs.getBool('privacy_crash_reporting') ?? true;
       _personalizedContent = prefs.getBool('privacy_personalized') ?? true;
-      // Sincronização: desabilitada por padrão para free, habilitada para premium
-      final migratedCloudSetting =
-          (prefs.getBool('privacy_sync') ?? isPremium) &&
-              (prefs.getBool('privacy_backup') ?? isPremium);
-      _cloudSyncEnabled =
-          prefs.getBool(DataSyncService.cloudSyncPreferenceKey) ??
-              migratedCloudSetting;
+      _cloudSyncEnabled = cloudSyncEnabled;
       _isLoading = false;
     });
-    if (!prefs.containsKey(DataSyncService.cloudSyncPreferenceKey)) {
-      await prefs.setBool(
-        DataSyncService.cloudSyncPreferenceKey,
-        _cloudSyncEnabled,
-      );
-    }
   }
 
   Future<void> _saveSetting(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
+    if (key == DataSyncService.cloudSyncPreferenceKey) {
+      await prefs.setBool(
+        DataSyncService.cloudSyncUserConfiguredKey,
+        true,
+      );
+    }
   }
 
   @override
@@ -73,7 +72,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: const ResponsiveAppBarTitle(
           'Privacidade',
           style: TextStyle(
             color: Colors.white,

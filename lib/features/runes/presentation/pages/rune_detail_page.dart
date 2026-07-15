@@ -17,7 +17,7 @@ class RuneDetailPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(rune.name),
+        title: ResponsiveAppBarTitle(rune.name),
         backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(
@@ -74,7 +74,6 @@ class RuneDetailPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,

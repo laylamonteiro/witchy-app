@@ -48,7 +48,9 @@ class _DreamFormPageState extends State<DreamFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.dream == null ? 'Novo Sonho' : 'Editar Sonho'),
+        title: ResponsiveAppBarTitle(
+          widget.dream == null ? 'Novo Sonho' : 'Editar Sonho',
+        ),
         actions: widget.dream != null
             ? [
                 IconButton(
@@ -149,21 +151,23 @@ class _DreamFormPageState extends State<DreamFormPage> {
         .toList();
 
     final dream = widget.dream?.copyWith(
-          title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          title: _titleController.text.isEmpty
+              ? 'Sem título'
+              : _titleController.text,
           content: _contentController.text,
           tags: tags,
-          feeling: _feelingController.text.isEmpty
-              ? null
-              : _feelingController.text,
+          feeling:
+              _feelingController.text.isEmpty ? null : _feelingController.text,
           date: _selectedDate,
         ) ??
         DreamModel(
-          title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          title: _titleController.text.isEmpty
+              ? 'Sem título'
+              : _titleController.text,
           content: _contentController.text,
           tags: tags,
-          feeling: _feelingController.text.isEmpty
-              ? null
-              : _feelingController.text,
+          feeling:
+              _feelingController.text.isEmpty ? null : _feelingController.text,
           date: _selectedDate,
         );
 

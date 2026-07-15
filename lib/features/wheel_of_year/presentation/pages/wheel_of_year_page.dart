@@ -14,116 +14,116 @@ class WheelOfYearPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = Consumer<WheelOfYearProvider>(
-        builder: (context, provider, _) {
-          final sabbats = provider.getAllSabbats();
-          final nextSabbat = provider.getNextSabbat();
-          final dateFormat = DateFormat('dd/MM/yyyy');
+      builder: (context, provider, _) {
+        final sabbats = provider.getAllSabbats();
+        final nextSabbat = provider.getNextSabbat();
+        final dateFormat = DateFormat('dd/MM/yyyy');
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Próximo Sabbat em destaque - mesma altura do card lunar (300)
-                if (nextSabbat != null)
-                  SizedBox(
-                    height: 300,
-                    child: MagicalCard(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Próximo Sabbat',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            nextSabbat.emoji,
-                            style: const TextStyle(fontSize: 56),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            nextSabbat.name,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            nextSabbat.type.southernHemisphereDate,
-                            style:
-                                Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          _buildDaysUntilChip(
-                            context,
-                            nextSabbat.daysUntil(DateTime.now()),
-                          ),
-                        ],
-                      ),
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Próximo Sabbat em destaque - mesma altura do card lunar (300)
+              if (nextSabbat != null)
+                SizedBox(
+                  height: 300,
+                  child: MagicalCard(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Próximo Sabbat',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          nextSabbat.emoji,
+                          style: const TextStyle(fontSize: 56),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          nextSabbat.name,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          nextSabbat.type.southernHemisphereDate,
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildDaysUntilChip(
+                          context,
+                          nextSabbat.daysUntil(DateTime.now()),
+                        ),
+                      ],
                     ),
                   ),
-
-                // Lista de todos os Sabbats
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Calendário dos Sabbats',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      ...sabbats.map((sabbat) => _buildSabbatItem(
-                            context,
-                            sabbat,
-                            dateFormat,
-                          )),
-                    ],
-                  ),
                 ),
 
-                // Informação sobre a Roda do Ano
-                MagicalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.info_outline,
-                            color: AppColors.info,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Sobre a Roda do Ano',
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'A Roda do Ano representa o ciclo anual de celebrações da natureza. São 8 sabbats que marcam mudanças sazonais: 4 festivais solares (solstícios e equinócios) e 4 festivais de fogo (datas fixas).',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Estas datas foram adaptadas para o hemisfério sul, seguindo o ciclo natural das estações.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                      ),
-                    ],
-                  ),
+              // Lista de todos os Sabbats
+              MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Calendário dos Sabbats',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    ...sabbats.map((sabbat) => _buildSabbatItem(
+                          context,
+                          sabbat,
+                          dateFormat,
+                        )),
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
-      );
+              ),
+
+              // Informação sobre a Roda do Ano
+              MagicalCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: AppColors.info,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Sobre a Roda do Ano',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'A Roda do Ano representa o ciclo anual de celebrações da natureza. São 8 sabbats que marcam mudanças sazonais: 4 festivais solares (solstícios e equinócios) e 4 festivais de fogo (datas fixas).',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Estas datas foram adaptadas para o hemisfério sul, seguindo o ciclo natural das estações.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
 
     if (embedded) {
       return content;
@@ -131,7 +131,7 @@ class WheelOfYearPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Roda do Ano'),
+        title: const ResponsiveAppBarTitle('Roda do Ano'),
       ),
       body: content,
     );
@@ -307,7 +307,8 @@ class WheelOfYearPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.lilac.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+                  border:
+                      Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,8 +338,7 @@ class WheelOfYearPage extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 sabbat.type.southernHemisphereDate,
-                                style:
-                                    Theme.of(context).textTheme.bodyLarge,
+                                style: Theme.of(context).textTheme.bodyLarge,
                               ),
                             ],
                           ),
@@ -408,7 +408,8 @@ class WheelOfYearPage extends StatelessWidget {
                 children: sabbat.type.crystals
                     .map((crystal) => Chip(
                           label: Text(crystal),
-                          backgroundColor: AppColors.lilac.withValues(alpha: 0.2),
+                          backgroundColor:
+                              AppColors.lilac.withValues(alpha: 0.2),
                           side: const BorderSide(color: AppColors.lilac),
                         ))
                     .toList(),
@@ -425,7 +426,8 @@ class WheelOfYearPage extends StatelessWidget {
                 children: sabbat.type.herbs
                     .map((herb) => Chip(
                           label: Text(herb),
-                          backgroundColor: AppColors.mint.withValues(alpha: 0.2),
+                          backgroundColor:
+                              AppColors.mint.withValues(alpha: 0.2),
                           side: const BorderSide(color: AppColors.mint),
                         ))
                     .toList(),
@@ -442,7 +444,8 @@ class WheelOfYearPage extends StatelessWidget {
                 children: sabbat.type.colors
                     .map((color) => Chip(
                           label: Text(color),
-                          backgroundColor: AppColors.starYellow.withValues(alpha: 0.2),
+                          backgroundColor:
+                              AppColors.starYellow.withValues(alpha: 0.2),
                           side: const BorderSide(color: AppColors.starYellow),
                         ))
                     .toList(),

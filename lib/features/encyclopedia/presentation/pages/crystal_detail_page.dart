@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../data/models/crystal_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -14,7 +13,7 @@ class CrystalDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(crystal.name),
+        title: ResponsiveAppBarTitle(crystal.name),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -47,7 +46,8 @@ class CrystalDetailPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(crystal.element.emoji, style: const TextStyle(fontSize: 24)),
+                      Text(crystal.element.emoji,
+                          style: const TextStyle(fontSize: 24)),
                       const SizedBox(width: 8),
                       Text(
                         crystal.element.displayName,
@@ -87,7 +87,10 @@ class CrystalDetailPage extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             'Avisos de Segurança',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
                                   color: AppColors.alert,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -109,7 +112,10 @@ class CrystalDetailPage extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   warning,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
                                         fontWeight: FontWeight.w600,
                                       ),
                                 ),
@@ -166,15 +172,22 @@ class CrystalDetailPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Icon(
-                                methodObj.isSafe ? Icons.water_drop : Icons.dangerous,
+                                methodObj.isSafe
+                                    ? Icons.water_drop
+                                    : Icons.dangerous,
                                 size: 16,
-                                color: methodObj.isSafe ? AppColors.info : AppColors.alert,
+                                color: methodObj.isSafe
+                                    ? AppColors.info
+                                    : AppColors.alert,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   methodObj.method,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
                                         decoration: methodObj.isSafe
                                             ? null
                                             : TextDecoration.lineThrough,
@@ -191,7 +204,10 @@ class CrystalDetailPage extends StatelessWidget {
                               padding: const EdgeInsets.only(left: 24, top: 4),
                               child: Text(
                                 '⚠️ ${methodObj.warning}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: AppColors.alert,
                                       fontStyle: FontStyle.italic,
                                     ),
@@ -226,13 +242,18 @@ class CrystalDetailPage extends StatelessWidget {
                               Icon(
                                 methodObj.isSafe ? Icons.bolt : Icons.dangerous,
                                 size: 16,
-                                color: methodObj.isSafe ? AppColors.starYellow : AppColors.alert,
+                                color: methodObj.isSafe
+                                    ? AppColors.starYellow
+                                    : AppColors.alert,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   methodObj.method,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
                                         decoration: methodObj.isSafe
                                             ? null
                                             : TextDecoration.lineThrough,
@@ -249,7 +270,10 @@ class CrystalDetailPage extends StatelessWidget {
                               padding: const EdgeInsets.only(left: 24, top: 4),
                               child: Text(
                                 '⚠️ ${methodObj.warning}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: AppColors.alert,
                                       fontStyle: FontStyle.italic,
                                     ),
@@ -270,6 +294,8 @@ class CrystalDetailPage extends StatelessWidget {
                   'Como Usar na Magia',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
+                subtitle:
+                    'Sugestões de uso energético e ritual para este cristal.',
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

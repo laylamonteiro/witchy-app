@@ -31,253 +31,255 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
   @override
   Widget build(BuildContext context) {
     final content = Consumer<LunarProvider>(
-        builder: (context, lunarProvider, _) {
-          try {
-            final currentPhase = lunarProvider.getCurrentMoonPhase();
-            final dateFormat = DateFormat('dd/MM/yyyy');
+      builder: (context, lunarProvider, _) {
+        try {
+          final currentPhase = lunarProvider.getCurrentMoonPhase();
+          final dateFormat = DateFormat('dd/MM/yyyy');
 
-            return SingleChildScrollView(
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Carrossel: Ontem - Hoje - Amanhã com setas laterais
+                SizedBox(
+                  height: 300,
+                  child: Stack(
+                    children: [
+                      // PageView do carrossel
+                      PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _currentPage = index;
+                          });
+                        },
+                        children: [
+                          // Ontem
+                          _buildDayCard(
+                            context,
+                            lunarProvider,
+                            'Ontem',
+                            -1,
+                            dateFormat,
+                          ),
+                          // Hoje
+                          _buildDayCard(
+                            context,
+                            lunarProvider,
+                            'Hoje',
+                            0,
+                            dateFormat,
+                          ),
+                          // Amanhã
+                          _buildDayCard(
+                            context,
+                            lunarProvider,
+                            'Amanhã',
+                            1,
+                            dateFormat,
+                          ),
+                        ],
+                      ),
+                      // Seta esquerda
+                      if (_currentPage > 0)
+                        Positioned(
+                          left: 4,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                _pageController.previousPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.surface.withValues(alpha: 0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.chevron_left,
+                                  color: AppColors.lilac,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Seta direita
+                      if (_currentPage < 2)
+                        Positioned(
+                          right: 4,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.surface.withValues(alpha: 0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.chevron_right,
+                                  color: AppColors.lilac,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Próximas fases importantes
+                MagicalCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Próximas Fases Lunares',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Acompanhe as próximas mudanças da lua',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      ..._buildAllNextPhases(context, lunarProvider),
+                    ],
+                  ),
+                ),
+
+                // Recomendações para feitiços
+                MagicalCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.lightbulb_outline,
+                            color: AppColors.starYellow,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Recomendações',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSpellRecommendation(
+                        context,
+                        lunarProvider,
+                        SpellType.attraction,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildSpellRecommendation(
+                        context,
+                        lunarProvider,
+                        SpellType.banishment,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Significado das fases
+                MagicalCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Fases da Lua',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      ...MoonPhase.values.map((phase) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  phase.emoji,
+                                  style: const TextStyle(fontSize: 24),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        phase.displayName,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall,
+                                      ),
+                                      Text(
+                                        phase.description,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        } catch (e) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Carrossel: Ontem - Hoje - Amanhã com setas laterais
-                  SizedBox(
-                    height: 300,
-                    child: Stack(
-                      children: [
-                        // PageView do carrossel
-                        PageView(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _currentPage = index;
-                            });
-                          },
-                          children: [
-                            // Ontem
-                            _buildDayCard(
-                              context,
-                              lunarProvider,
-                              'Ontem',
-                              -1,
-                              dateFormat,
-                            ),
-                            // Hoje
-                            _buildDayCard(
-                              context,
-                              lunarProvider,
-                              'Hoje',
-                              0,
-                              dateFormat,
-                            ),
-                            // Amanhã
-                            _buildDayCard(
-                              context,
-                              lunarProvider,
-                              'Amanhã',
-                              1,
-                              dateFormat,
-                            ),
-                          ],
-                        ),
-                        // Seta esquerda
-                        if (_currentPage > 0)
-                          Positioned(
-                            left: 4,
-                            top: 0,
-                            bottom: 0,
-                            child: Center(
-                              child: GestureDetector(
-                                onTap: () {
-                                  _pageController.previousPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface.withValues(alpha: 0.8),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.chevron_left,
-                                    color: AppColors.lilac,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Seta direita
-                        if (_currentPage < 2)
-                          Positioned(
-                            right: 4,
-                            top: 0,
-                            bottom: 0,
-                            child: Center(
-                              child: GestureDetector(
-                                onTap: () {
-                                  _pageController.nextPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface.withValues(alpha: 0.8),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.chevron_right,
-                                    color: AppColors.lilac,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: AppColors.alert,
                   ),
-
-                  // Próximas fases importantes
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Próximas Fases Lunares',
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Acompanhe as próximas mudanças da lua',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ..._buildAllNextPhases(context, lunarProvider),
-                      ],
-                    ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Erro ao carregar calendário lunar',
+                    style: Theme.of(context).textTheme.titleLarge,
+                    textAlign: TextAlign.center,
                   ),
-
-                  // Recomendações para feitiços
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.lightbulb_outline,
-                              color: AppColors.starYellow,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Recomendações',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _buildSpellRecommendation(
-                          context,
-                          lunarProvider,
-                          SpellType.attraction,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSpellRecommendation(
-                          context,
-                          lunarProvider,
-                          SpellType.banishment,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Significado das fases
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Fases da Lua',
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 16),
-                        ...MoonPhase.values.map((phase) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    phase.emoji,
-                                    style: const TextStyle(fontSize: 24),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          phase.displayName,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall,
-                                        ),
-                                        Text(
-                                          phase.description,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )),
-                      ],
-                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    e.toString(),
+                    style: Theme.of(context).textTheme.bodySmall,
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
-            );
-          } catch (e) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: AppColors.alert,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Erro ao carregar calendário lunar',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      e.toString(),
-                      style: Theme.of(context).textTheme.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-        },
-      );
+            ),
+          );
+        }
+      },
+    );
 
     if (widget.embedded) {
       return content;
@@ -285,7 +287,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calendário Lunar'),
+        title: const ResponsiveAppBarTitle('Calendário Lunar'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -333,8 +335,8 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
             Text(
               dateFormat.format(date),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+                    color: AppColors.textSecondary,
+                  ),
             ),
             const SizedBox(height: 12),
             // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases
@@ -441,8 +443,8 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                 Text(
                   phaseName,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(

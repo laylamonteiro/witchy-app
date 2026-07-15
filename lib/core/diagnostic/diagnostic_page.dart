@@ -14,7 +14,12 @@ import '../../core/database/database_helper.dart';
 import '../../features/auth/auth.dart';
 import 'debug_logs_page.dart';
 import '../services/payment_service.dart';
+import '../services/notification_service.dart';
 import '../config/revenuecat_config.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../providers/notification_provider.dart';
+import '../../features/lunar/presentation/providers/lunar_provider.dart';
+import '../../features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 
 // Mapa de capitais brasileiras com coordenadas exatas
 const Map<String, Map<String, dynamic>> _brazilianCapitals = {
@@ -89,15 +94,16 @@ class DiagnosticPage extends StatefulWidget {
   State<DiagnosticPage> createState() => _DiagnosticPageState();
 }
 
-class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProviderStateMixin {
+class _DiagnosticPageState extends State<DiagnosticPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final List<String> _logs = [];
   bool _isTesting = false;
   String? _result;
 
   // Controllers para input manual do mapa astral
-  final _dateController = TextEditingController(text: '31/03/1994');
-  final _timeController = TextEditingController(text: '19:39');
+  final _dateController = TextEditingController(text: 'dd/mm/aaaa');
+  final _timeController = TextEditingController(text: 'HH:MM');
   final _birthPlaceController = TextEditingController();
   final FocusNode _birthPlaceFocusNode = FocusNode();
 
@@ -113,7 +119,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
   }
 
   @override
@@ -201,8 +207,9 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
             if (placemark.isNotEmpty) {
               // Evitar duplicar capital se já está nos resultados
               final isDuplicate = results.any((existing) {
-                final distance = (existing.key.latitude - location.latitude).abs() +
-                    (existing.key.longitude - location.longitude).abs();
+                final distance =
+                    (existing.key.latitude - location.latitude).abs() +
+                        (existing.key.longitude - location.longitude).abs();
                 return distance < 0.1; // ~10km de tolerância
               });
 
@@ -240,14 +247,18 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         if (!aLocalityMatch && bLocalityMatch) return 1;
 
         // Prioridade 2: subAdministrativeArea exatamente igual
-        final aSubMatch = normalize(aPlace.subAdministrativeArea) == normalizedQuery;
-        final bSubMatch = normalize(bPlace.subAdministrativeArea) == normalizedQuery;
+        final aSubMatch =
+            normalize(aPlace.subAdministrativeArea) == normalizedQuery;
+        final bSubMatch =
+            normalize(bPlace.subAdministrativeArea) == normalizedQuery;
         if (aSubMatch && !bSubMatch) return -1;
         if (!aSubMatch && bSubMatch) return 1;
 
         // Prioridade 3: locality contém o termo
-        final aLocalityContains = normalize(aPlace.locality).contains(normalizedQuery);
-        final bLocalityContains = normalize(bPlace.locality).contains(normalizedQuery);
+        final aLocalityContains =
+            normalize(aPlace.locality).contains(normalizedQuery);
+        final bLocalityContains =
+            normalize(bPlace.locality).contains(normalizedQuery);
         if (aLocalityContains && !bLocalityContains) return -1;
         if (!aLocalityContains && bLocalityContains) return 1;
 
@@ -311,7 +322,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
   void _addLog(String message) {
     setState(() {
-      _logs.add('${DateTime.now().toIso8601String().split('T')[1].substring(0, 8)} - $message');
+      _logs.add(
+          '${DateTime.now().toIso8601String().split('T')[1].substring(0, 8)} - $message');
     });
   }
 
@@ -322,7 +334,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
     // Print de CADA linha individual
     for (int i = 0; i < _logs.length; i++) {
-      print('📋 Linha $i: ${_logs[i].substring(0, _logs[i].length > 60 ? 60 : _logs[i].length)}...');
+      print(
+          '📋 Linha $i: ${_logs[i].substring(0, _logs[i].length > 60 ? 60 : _logs[i].length)}...');
     }
 
     print('📋 Primeiras 3: ${_logs.take(3).join(" | ")}');
@@ -334,10 +347,12 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
     print('📋 Texto total: ${logsText.length} caracteres');
     print('📋 Quebras de linha: ${'\n'.allMatches(logsText).length}');
-    print('📋 Primeiros 200 chars: ${logsText.substring(0, logsText.length > 200 ? 200 : logsText.length)}');
+    print(
+        '📋 Primeiros 200 chars: ${logsText.substring(0, logsText.length > 200 ? 200 : logsText.length)}');
 
     if (logsText.length > 200) {
-      print('📋 Últimos 200 chars: ${logsText.substring(logsText.length - 200)}');
+      print(
+          '📋 Últimos 200 chars: ${logsText.substring(logsText.length - 200)}');
     }
 
     Clipboard.setData(ClipboardData(text: logsText)).then((_) {
@@ -390,7 +405,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       _addLog('📡 Testando geração de feitiço...');
       _addLog('💭 Intenção: "Atrair prosperidade"');
 
-      final spell = await AIService.instance.generateSpell('Atrair prosperidade');
+      final spell =
+          await AIService.instance.generateSpell('Atrair prosperidade');
 
       _addLog('✅ FEITIÇO GERADO!');
       _addLog('   Nome: ${spell.name}');
@@ -404,7 +420,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     } catch (e, stackTrace) {
       _addLog('❌ ERRO: $e');
       _addLog('');
-      _addLog('📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
+      _addLog(
+          '📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
 
       setState(() {
         _result = 'ERRO: ${e.toString()}';
@@ -424,7 +441,9 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
     try {
       // Validar se local foi selecionado
-      if (_selectedLatitude == null || _selectedLongitude == null || _birthPlace == null) {
+      if (_selectedLatitude == null ||
+          _selectedLongitude == null ||
+          _birthPlace == null) {
         _addLog('❌ Selecione um local de nascimento');
         setState(() {
           _result = 'ERRO: Local não selecionado';
@@ -445,7 +464,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
       _addLog('📅 Data teste: ${_dateController.text} ${_timeController.text}');
       _addLog('📍 Local: $_birthPlace');
-      _addLog('🗺️ Coordenadas: (${_selectedLatitude!.toStringAsFixed(4)}, ${_selectedLongitude!.toStringAsFixed(4)})');
+      _addLog(
+          '🗺️ Coordenadas: (${_selectedLatitude!.toStringAsFixed(4)}, ${_selectedLongitude!.toStringAsFixed(4)})');
 
       final calculator = ChartCalculator.instance;
       final chart = await calculator.calculateBirthChart(
@@ -464,11 +484,13 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       _addLog('   Aspectos: ${chart.aspects.length}');
 
       if (chart.planets.isNotEmpty) {
-        final sun = chart.planets.firstWhere((p) => p.planet.toString().contains('sun'));
+        final sun = chart.planets
+            .firstWhere((p) => p.planet.toString().contains('sun'));
         _addLog('   Sol: ${sun.sign.name} ${sun.degree}°${sun.minute}\'');
       }
       if (chart.ascendant != null) {
-        _addLog('   ASC: ${chart.ascendant!.sign.name} ${chart.ascendant!.degree}°');
+        _addLog(
+            '   ASC: ${chart.ascendant!.sign.name} ${chart.ascendant!.degree}°');
       }
 
       setState(() {
@@ -478,7 +500,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     } catch (e, stackTrace) {
       _addLog('❌ ERRO: $e');
       _addLog('');
-      _addLog('📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
+      _addLog(
+          '📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
 
       setState(() {
         _result = 'ERRO: ${e.toString()}';
@@ -497,7 +520,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     _addLog('🌙 Testando Clima Mágico Diário...');
 
     try {
-      _addLog('📅 Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}');
+      _addLog(
+          '📅 Data: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}');
 
       final interpreter = TransitInterpreter();
       final weather = await interpreter.getDailyMagicalWeather(DateTime.now());
@@ -515,7 +539,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     } catch (e, stackTrace) {
       _addLog('❌ ERRO: $e');
       _addLog('');
-      _addLog('📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
+      _addLog(
+          '📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
 
       setState(() {
         _result = 'ERRO: ${e.toString()}';
@@ -574,7 +599,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     } catch (e, stackTrace) {
       _addLog('❌ ERRO: $e');
       _addLog('');
-      _addLog('📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
+      _addLog(
+          '📋 Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
 
       setState(() {
         _result = 'ERRO: ${e.toString()}';
@@ -587,7 +613,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Diagnóstico Completo'),
+        title: const ResponsiveAppBarTitle('Diagnóstico Completo'),
         backgroundColor: AppColors.darkBackground,
         bottom: TabBar(
           controller: _tabController,
@@ -600,6 +626,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
             Tab(text: 'Debug'),
+            Tab(text: 'Notificações'),
             Tab(text: 'Login Social'), // Nova aba para login social
             Tab(text: 'Pagamentos'),
             Tab(text: 'IA Groq'),
@@ -635,6 +662,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         controller: _tabController,
         children: [
           _buildDebugSection(),
+          _buildNotificationsDiagnosticSection(),
           _buildSocialLoginDiagnosticSection(), // Nova seção para login social
           _buildPaymentsDiagnosticSection(),
           _buildTestSection(
@@ -655,6 +683,333 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
             title: 'Sugestões',
             description: 'Testa sugestões personalizadas',
             onTest: _testSuggestions,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // SEÇÃO DE DIAGNÓSTICO DE NOTIFICAÇÕES
+  // ============================================================
+  Widget _buildNotificationsDiagnosticSection() {
+    final provider = context.watch<NotificationProvider>();
+
+    Widget kv(String label, String value, {Color? color}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 150,
+                child: Text(label,
+                    style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.7),
+                        fontSize: 13)),
+              ),
+              Expanded(
+                child: Text(value,
+                    style: TextStyle(
+                        color: color ?? AppColors.softWhite,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              children: [
+                const Icon(Icons.notifications_active,
+                    size: 64, color: AppColors.lilac),
+                const SizedBox(height: 16),
+                Text('Diagnóstico de Notificações',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(color: AppColors.lilac)),
+                const SizedBox(height: 8),
+                Text(
+                  'Permissões, agendamento e notificações pendentes',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: AppColors.softWhite.withOpacity(0.8)),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Estado geral
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Estado',
+                    style: TextStyle(
+                        color: AppColors.lilac,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                kv(
+                  'Inicializado',
+                  provider.isInitialized ? 'Sim ✓' : 'Não',
+                  color: provider.isInitialized
+                      ? const Color(0xFF4CAF50)
+                      : AppColors.alert,
+                ),
+                kv(
+                  'Permissão (agendamento)',
+                  provider.permissionGranted == null
+                      ? 'Desconhecida'
+                      : (provider.permissionGranted!
+                          ? 'Concedida ✓'
+                          : 'Negada'),
+                  color: provider.permissionGranted == true
+                      ? const Color(0xFF4CAF50)
+                      : (provider.permissionGranted == false
+                          ? AppColors.alert
+                          : AppColors.softWhite),
+                ),
+                FutureBuilder<bool?>(
+                  future: provider.areNotificationsEnabled(),
+                  builder: (context, snap) => kv(
+                    'Habilitadas no SO',
+                    snap.connectionState != ConnectionState.done
+                        ? '...'
+                        : (snap.data == null
+                            ? 'N/D'
+                            : (snap.data! ? 'Sim ✓' : 'Não')),
+                    color: snap.data == true
+                        ? const Color(0xFF4CAF50)
+                        : (snap.data == false
+                            ? AppColors.alert
+                            : AppColors.softWhite),
+                  ),
+                ),
+                kv('Agendadas (contador)', '${provider.scheduledCount}'),
+                kv('Lua cheia', provider.fullMoonNotifications ? 'On' : 'Off'),
+                kv('Lua nova', provider.newMoonNotifications ? 'On' : 'Off'),
+                kv('Sabbats', provider.sabbatNotifications ? 'On' : 'Off'),
+                kv(
+                  'Último erro',
+                  provider.lastError ?? 'Nenhum',
+                  color: provider.lastError != null
+                      ? AppColors.alert
+                      : const Color(0xFF4CAF50),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Prévia para o usuário',
+                    style: TextStyle(
+                        color: AppColors.lilac,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                Text(
+                  'Este é o conteúdo exato enviado pelo botão de teste:',
+                  style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.7),
+                      fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.softWhite.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(14),
+                    border:
+                        Border.all(color: AppColors.lilac.withOpacity(0.35)),
+                  ),
+                  child: const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppColors.lilac,
+                        child: Icon(Icons.auto_stories,
+                            size: 19, color: Color(0xFF2B2143)),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text('Grimório de Bolso',
+                                      style: TextStyle(
+                                          color: AppColors.softWhite,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600)),
+                                ),
+                                Text('agora',
+                                    style: TextStyle(
+                                        color: AppColors.softWhite,
+                                        fontSize: 10)),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Text(NotificationService.debugNotificationTitle,
+                                style: TextStyle(
+                                    color: AppColors.softWhite,
+                                    fontWeight: FontWeight.bold)),
+                            SizedBox(height: 2),
+                            Text(NotificationService.debugNotificationBody,
+                                style: TextStyle(
+                                    color: AppColors.softWhite,
+                                    fontSize: 12,
+                                    height: 1.25)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await provider.sendDebugNotification();
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result.success
+                              ? 'Notificação enviada ao dispositivo.'
+                              : result.error ??
+                                  'Não foi possível enviar a notificação.'),
+                          backgroundColor:
+                              result.success ? null : AppColors.alert,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.send_to_mobile, size: 18),
+                    label: const Text('Enviar notificação de teste'),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.lilac,
+                        foregroundColor: const Color(0xFF2B2143)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'A aparência final pode variar conforme Android/iOS e as configurações do aparelho.',
+                  style: TextStyle(
+                      color: AppColors.softWhite.withOpacity(0.6),
+                      fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Notificações pendentes (próximas agendadas)
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Notificações agendadas',
+                    style: TextStyle(
+                        color: AppColors.lilac,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                FutureBuilder<List<PendingNotificationRequest>>(
+                  future: provider.pendingNotifications(),
+                  builder: (context, snap) {
+                    if (snap.connectionState != ConnectionState.done) {
+                      return const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Center(
+                            child: CircularProgressIndicator(
+                                color: AppColors.lilac)),
+                      );
+                    }
+                    if (snap.hasError) {
+                      return kv('Erro', '${snap.error}',
+                          color: AppColors.alert);
+                    }
+                    final items = snap.data ?? [];
+                    if (items.isEmpty) {
+                      return Text('Nenhuma notificação agendada.',
+                          style: TextStyle(
+                              color: AppColors.softWhite.withOpacity(0.7)));
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: items.map((n) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('#${n.id}  ${n.title ?? "(sem título)"}',
+                                  style: const TextStyle(
+                                      color: AppColors.softWhite,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13)),
+                              if (n.body != null && n.body!.isNotEmpty)
+                                Text(n.body!,
+                                    style: TextStyle(
+                                        color: AppColors.softWhite
+                                            .withOpacity(0.7),
+                                        fontSize: 12)),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Ações
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final lunar = context.read<LunarProvider>();
+                    final wheel = context.read<WheelOfYearProvider>();
+                    await provider.scheduleNotifications(
+                        lunarProvider: lunar, wheelProvider: wheel);
+                    if (mounted) setState(() {});
+                  },
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text('Reagendar'),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.lilac,
+                      foregroundColor: const Color(0xFF2B2143)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async => setState(() {}),
+                  icon: const Icon(Icons.sync, size: 18),
+                  label: const Text('Atualizar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -723,7 +1078,9 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                 const SizedBox(height: 16),
                 _buildDiagnosticRow(
                   'RevenueCat SDK',
-                  paymentService.isInitialized ? 'Inicializado ✓' : 'Não inicializado ✗',
+                  paymentService.isInitialized
+                      ? 'Inicializado ✓'
+                      : 'Não inicializado ✗',
                   paymentService.isInitialized,
                 ),
                 _buildDiagnosticRow(
@@ -927,12 +1284,14 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           // Botão para copiar logs
           ElevatedButton.icon(
             onPressed: () {
-              final diagnosticInfo = _generatePaymentDiagnosticLogs(paymentService);
+              final diagnosticInfo =
+                  _generatePaymentDiagnosticLogs(paymentService);
               Clipboard.setData(ClipboardData(text: diagnosticInfo));
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Diagnóstico copiado! Cole e envie para análise.'),
+                    content:
+                        Text('Diagnóstico copiado! Cole e envie para análise.'),
                     backgroundColor: AppColors.success,
                   ),
                 );
@@ -1042,35 +1401,47 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     buffer.writeln();
 
     buffer.writeln('📱 INICIALIZAÇÃO');
-    buffer.writeln('  • SDK Inicializado: ${paymentService.isInitialized ? "SIM ✓" : "NÃO ✗"}');
-    buffer.writeln('  • Chaves configuradas: ${RevenueCatConfig.isConfigured ? "SIM ✓" : "NÃO ✗"}');
-    buffer.writeln('  • Chave iOS: ${RevenueCatConfig.iosApiKey.isEmpty ? "AUSENTE" : "${RevenueCatConfig.iosApiKey.substring(0, 10)}..."}');
-    buffer.writeln('  • Chave Android: ${RevenueCatConfig.androidApiKey.isEmpty ? "AUSENTE" : "${RevenueCatConfig.androidApiKey.substring(0, 10)}..."}');
+    buffer.writeln(
+        '  • SDK Inicializado: ${paymentService.isInitialized ? "SIM ✓" : "NÃO ✗"}');
+    buffer.writeln(
+        '  • Chaves configuradas: ${RevenueCatConfig.isConfigured ? "SIM ✓" : "NÃO ✗"}');
+    buffer.writeln(
+        '  • Chave iOS: ${RevenueCatConfig.iosApiKey.isEmpty ? "AUSENTE" : "${RevenueCatConfig.iosApiKey.substring(0, 10)}..."}');
+    buffer.writeln(
+        '  • Chave Android: ${RevenueCatConfig.androidApiKey.isEmpty ? "AUSENTE" : "${RevenueCatConfig.androidApiKey.substring(0, 10)}..."}');
     buffer.writeln();
 
     buffer.writeln('⭐ STATUS PREMIUM');
     buffer.writeln('  • É Premium: ${paymentService.isPro ? "SIM ✓" : "NÃO"}');
-    buffer.writeln('  • Assinatura ativa: ${paymentService.hasActiveSubscription ? "SIM ✓" : "NÃO"}');
-    buffer.writeln('  • Tipo: ${paymentService.isLifetime ? "Vitalício" : "Assinatura"}');
+    buffer.writeln(
+        '  • Assinatura ativa: ${paymentService.hasActiveSubscription ? "SIM ✓" : "NÃO"}');
+    buffer.writeln(
+        '  • Tipo: ${paymentService.isLifetime ? "Vitalício" : "Assinatura"}');
     if (paymentService.subscriptionExpirationDate != null) {
-      buffer.writeln('  • Expira em: ${_formatDate(paymentService.subscriptionExpirationDate!)}');
+      buffer.writeln(
+          '  • Expira em: ${_formatDate(paymentService.subscriptionExpirationDate!)}');
     }
     buffer.writeln();
 
     buffer.writeln('🛒 PRODUTOS');
-    buffer.writeln('  • Offering carregada: ${paymentService.offerings?.current != null ? "SIM ✓" : "NÃO ✗"}');
+    buffer.writeln(
+        '  • Offering carregada: ${paymentService.offerings?.current != null ? "SIM ✓" : "NÃO ✗"}');
     if (paymentService.offerings?.current != null) {
-      buffer.writeln('  • Offering ID: ${paymentService.offerings!.current!.identifier}');
+      buffer.writeln(
+          '  • Offering ID: ${paymentService.offerings!.current!.identifier}');
     }
-    buffer.writeln('  • Produtos disponíveis: ${paymentService.products.length}');
+    buffer
+        .writeln('  • Produtos disponíveis: ${paymentService.products.length}');
     buffer.writeln();
 
     if (paymentService.products.isEmpty) {
       buffer.writeln('  ⚠️  ATENÇÃO: Nenhum produto foi carregado!');
       buffer.writeln('  💡 Verifique:');
-      buffer.writeln('     1. Offering "default" existe no RevenueCat Dashboard');
+      buffer
+          .writeln('     1. Offering "default" existe no RevenueCat Dashboard');
       buffer.writeln('     2. Produtos estão associados à offering');
-      buffer.writeln('     3. Produtos foram criados nas lojas (App Store/Google Play)');
+      buffer.writeln(
+          '     3. Produtos foram criados nas lojas (App Store/Google Play)');
     } else {
       buffer.writeln('  Produtos encontrados:');
       for (final product in paymentService.products) {
@@ -1116,9 +1487,10 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                     const SizedBox(height: 16),
                     Text(
                       'Diagnóstico de Login Social',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.lilac,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                color: AppColors.lilac,
+                              ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -1142,7 +1514,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                   final result = await authRepo.signInWithGoogle();
 
                   if (result.success) {
-                    _addLog('Login com Google SUCESSO! Usuário: ${result.user?.email}');
+                    _addLog(
+                        'Login com Google SUCESSO! Usuário: ${result.user?.email}');
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -1156,7 +1529,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Login com Google FALHOU: ${result.errorMessage}'),
+                          content: Text(
+                              'Login com Google FALHOU: ${result.errorMessage}'),
                           backgroundColor: AppColors.alert,
                         ),
                       );
@@ -1246,13 +1620,19 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                             children: [
                               Text(
                                 'Role Atual',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: AppColors.textSecondary,
                                     ),
                               ),
                               Text(
                                 _getRoleLabel(user.role),
-                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
+                                    ?.copyWith(
                                       color: _getRoleColor(user.role),
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1261,7 +1641,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: _getRoleColor(user.role).withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
@@ -1298,9 +1679,10 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                         const SizedBox(width: 12),
                         Text(
                           'Simular Plano',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: AppColors.lilac,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: AppColors.lilac,
+                                  ),
                         ),
                       ],
                     ),
@@ -1314,11 +1696,14 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        _buildRoleButton(context, 'Free', UserRole.free, authProvider),
+                        _buildRoleButton(
+                            context, 'Free', UserRole.free, authProvider),
                         const SizedBox(width: 8),
-                        _buildRoleButton(context, 'Premium', UserRole.premium, authProvider),
+                        _buildRoleButton(
+                            context, 'Premium', UserRole.premium, authProvider),
                         const SizedBox(width: 8),
-                        _buildRoleButton(context, 'Admin', UserRole.admin, authProvider),
+                        _buildRoleButton(
+                            context, 'Admin', UserRole.admin, authProvider),
                       ],
                     ),
                   ],
@@ -1342,17 +1727,22 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                         const SizedBox(width: 12),
                         Text(
                           'Estatísticas de Uso',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: AppColors.mint,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: AppColors.mint,
+                                  ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildStatRow('Feitiços salvos', '${user.spellsCount}/${UserModel.freeSpellsLimit}'),
-                    _buildStatRow('Diários este mês', '${user.diaryEntriesThisMonth}/${UserModel.freeDiaryEntriesLimit}'),
-                    _buildStatRow('Consultas IA hoje', '${user.aiConsultationsToday}/${UserModel.freeAiConsultationsLimit}'),
-                    _buildStatRow('Pêndulo hoje', '${user.pendulumUsesToday}/${UserModel.dailyPendulumLimit}'),
+                    _buildStatRow('Feitiços salvos',
+                        '${user.spellsCount}/${UserModel.freeSpellsLimit}'),
+                    _buildStatRow('Diários este mês',
+                        '${user.diaryEntriesThisMonth}/${UserModel.freeDiaryEntriesLimit}'),
+                    _buildStatRow('Consultas IA hoje',
+                        '${user.aiConsultationsToday}/${UserModel.freeAiConsultationsLimit}'),
+                    _buildStatRow('Pêndulo hoje',
+                        '${user.pendulumUsesToday}/${UserModel.dailyPendulumLimit}'),
                   ],
                 ),
               ),
@@ -1374,9 +1764,10 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                         const SizedBox(width: 12),
                         Text(
                           'Ações de Reset',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: AppColors.alert,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: AppColors.alert,
+                                  ),
                         ),
                       ],
                     ),
@@ -1425,9 +1816,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
       child: ElevatedButton(
         onPressed: () => authProvider.setUserRole(role),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected
-              ? _getRoleColor(role)
-              : Colors.white.withOpacity(0.1),
+          backgroundColor:
+              isSelected ? _getRoleColor(role) : Colors.white.withOpacity(0.1),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
@@ -1558,7 +1948,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                           hintText: 'DD/MM/AAAA',
                           labelStyle: TextStyle(color: AppColors.lilac),
                           enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                            borderSide:
+                                BorderSide(color: AppColors.surfaceBorder),
                           ),
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: AppColors.lilac),
@@ -1576,7 +1967,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                           hintText: 'HH:MM',
                           labelStyle: TextStyle(color: AppColors.lilac),
                           enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.surfaceBorder),
+                            borderSide:
+                                BorderSide(color: AppColors.surfaceBorder),
                           ),
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: AppColors.lilac),
@@ -1622,7 +2014,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                               ),
                             ),
                           )
-                        : (_selectedLatitude != null && _selectedLongitude != null)
+                        : (_selectedLatitude != null &&
+                                _selectedLongitude != null)
                             ? const Icon(
                                 Icons.check_circle,
                                 color: AppColors.success,
@@ -1726,7 +2119,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                     ),
                   ),
                 ],
-                if (_selectedLatitude != null && _selectedLongitude != null) ...[
+                if (_selectedLatitude != null &&
+                    _selectedLongitude != null) ...[
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -1774,7 +2168,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkBackground),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.darkBackground),
                     ),
                   )
                 : const Icon(Icons.play_arrow),
@@ -1803,7 +2198,9 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                 child: Text(
                   _result!,
                   style: TextStyle(
-                    color: _result!.contains('SUCESSO') ? AppColors.success : AppColors.alert,
+                    color: _result!.contains('SUCESSO')
+                        ? AppColors.success
+                        : AppColors.alert,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -1851,7 +2248,6 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
     );
   }
 
-
   Widget _buildTestSection({
     required IconData icon,
     required String title,
@@ -1885,9 +2281,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           ElevatedButton.icon(
             onPressed: _isTesting ? null : onTest,
             icon: _isTesting
@@ -1896,7 +2290,8 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkBackground),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.darkBackground),
                     ),
                   )
                 : const Icon(Icons.play_arrow),
@@ -1908,7 +2303,6 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
               disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
             ),
           ),
-
           if (_result != null) ...[
             const SizedBox(height: 16),
             MagicalCard(
@@ -1945,7 +2339,6 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
               ),
             ),
           ],
-
           if (_logs.isNotEmpty) ...[
             const SizedBox(height: 24),
             Text(

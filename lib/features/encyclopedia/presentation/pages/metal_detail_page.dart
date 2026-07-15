@@ -4,6 +4,7 @@ import '../../data/models/crystal_model.dart'; // Para ElementExtension
 import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/auth.dart';
 
 class MetalDetailPage extends StatelessWidget {
   final MetalModel metal;
@@ -14,7 +15,7 @@ class MetalDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(metal.name),
+        title: ResponsiveAppBarTitle(metal.name),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -47,14 +48,16 @@ class MetalDetailPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(metal.planet.emoji, style: const TextStyle(fontSize: 24)),
+                      Text(metal.planet.emoji,
+                          style: const TextStyle(fontSize: 24)),
                       const SizedBox(width: 8),
                       Text(
                         metal.planet.displayName,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(width: 16),
-                      Text(metal.element.emoji, style: const TextStyle(fontSize: 24)),
+                      Text(metal.element.emoji,
+                          style: const TextStyle(fontSize: 24)),
                       const SizedBox(width: 8),
                       Text(
                         metal.element.displayName,
@@ -64,20 +67,27 @@ class MetalDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: metal.conductsPower
                           ? AppColors.success.withOpacity(0.2)
                           : AppColors.info.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: metal.conductsPower ? AppColors.success : AppColors.info,
+                        color: metal.conductsPower
+                            ? AppColors.success
+                            : AppColors.info,
                       ),
                     ),
                     child: Text(
-                      metal.conductsPower ? '⚡ Conduz energia mágica' : '🛡️ Protetor',
+                      metal.conductsPower
+                          ? '⚡ Conduz energia mágica'
+                          : '🛡️ Protetor',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: metal.conductsPower ? AppColors.success : AppColors.info,
+                            color: metal.conductsPower
+                                ? AppColors.success
+                                : AppColors.info,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -114,7 +124,10 @@ class MetalDetailPage extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             'Avisos de Segurança',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
                                   color: AppColors.alert,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -136,7 +149,10 @@ class MetalDetailPage extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   warning,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
                                         fontWeight: FontWeight.w600,
                                       ),
                                 ),
@@ -173,37 +189,42 @@ class MetalDetailPage extends StatelessWidget {
               ),
             ),
             MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Usos Rituais',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  ...metal.ritualUses.map(
-                    (use) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: AppColors.starYellow,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              use,
-                              style: Theme.of(context).textTheme.bodyMedium,
+              child: PremiumContentSection(
+                feature: AppFeature.encyclopediaMetalsDetails,
+                title: Text(
+                  'Usos Rituais',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                subtitle:
+                    'Aplicações deste metal em rituais, proteção e condução de energia.',
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    ...metal.ritualUses.map(
+                      (use) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: AppColors.starYellow,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                use,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             MagicalCard(
