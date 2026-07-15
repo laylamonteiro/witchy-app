@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  GRIMÓRIO DE BOLSO — Página pós-confirmação de email
+
+  Esta página é o destino do redirect após o usuário clicar em
+  "Confirmar meu email". Configure no Supabase:
+    Authentication → URL Configuration →
+      Site URL:      https://SEU-DOMINIO/email-confirmado.html
+      Redirect URLs: https://SEU-DOMINIO/email-confirmado.html
+
+  Hospedagem sugerida: GitHub Pages servindo a pasta /docs
+  (Settings → Pages → Deploy from a branch → main → /docs),
+  ficando em https://laylamonteiro.github.io/witchy-app/email-confirmado.html
+============================================================ -->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Email confirmado — Grimório de Bolso</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0B0A16;
+      color: #F6F4FF;
+      font-family: 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #171425;
+      border: 1px solid #26213A;
+      border-radius: 20px;
+      max-width: 420px;
+      width: 100%;
+      padding: 44px 32px 36px;
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(201, 167, 255, 0.15);
+    }
+    .icon { font-size: 56px; }
+    .sparkles { color: #FFE8A3; letter-spacing: 6px; margin-top: 10px; font-size: 14px; }
+    h1 {
+      color: #C9A7FF;
+      font-size: 24px;
+      margin-top: 18px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    p { color: #B7B2D6; font-size: 15px; line-height: 1.65; margin-top: 14px; }
+    strong { color: #F6F4FF; }
+    .steps {
+      background: #0B0A16;
+      border: 1px solid #26213A;
+      border-radius: 14px;
+      text-align: left;
+      padding: 18px 20px;
+      margin-top: 24px;
+      font-size: 14px;
+      color: #B7B2D6;
+      line-height: 2;
+    }
+    .footer { margin-top: 26px; font-size: 12px; color: #7A749B; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon">🔮</div>
+    <div class="sparkles">✦ ✧ ✦</div>
+    <h1>Email confirmado!</h1>
+    <p>
+      Sua conta no <strong>Grimório de Bolso</strong> está ativa.
+      A magia já pode começar ✨
+    </p>
+    <div class="steps">
+      <span>🐈‍⬛ &nbsp;Volte para o aplicativo no seu celular</span><br>
+      <span>🔑 &nbsp;Entre com o seu email e senha</span><br>
+      <span>🌙 &nbsp;Explore seu grimório, diários e o clima mágico</span>
+    </div>
+    <p class="footer">Você já pode fechar esta página.</p>
+  </main>
+</body>
+</html>

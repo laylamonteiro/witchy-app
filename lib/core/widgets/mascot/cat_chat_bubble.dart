@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 import '../../../features/astrology/presentation/pages/daily_magical_weather_page.dart';
+import '../../../features/auth/presentation/providers/auth_provider.dart';
 
 /// Mensagens do balão diário do mascote (lógica pura, testável).
 class CatBubbleMessages {
@@ -112,9 +114,18 @@ class _CatChatBubbleState extends State<CatChatBubble>
     super.dispose();
   }
 
+  /// Chave escopada por CONTA: cada usuário vê o balão 1x por dia.
+  /// (Com chave global, logar com outra conta no mesmo dia não mostrava o
+  /// balão — bug reportado.)
+  String _prefsKey() {
+    final userId = context.read<AuthProvider>().currentUser.id;
+    return '${CatChatBubble._lastShownKey}_$userId';
+  }
+
   Future<void> _checkAndShow() async {
+    final key = _prefsKey(); // lê o contexto ANTES de qualquer await
     final prefs = await SharedPreferences.getInstance();
-    final lastShown = prefs.getString(CatChatBubble._lastShownKey);
+    final lastShown = prefs.getString(key);
     final today = CatBubbleMessages.dateKey(DateTime.now());
 
     if (lastShown == today) return; // já apareceu hoje
@@ -132,11 +143,9 @@ class _CatChatBubbleState extends State<CatChatBubble>
   }
 
   Future<void> _markShownToday() async {
+    final key = _prefsKey();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      CatChatBubble._lastShownKey,
-      CatBubbleMessages.dateKey(DateTime.now()),
-    );
+    await prefs.setString(key, CatBubbleMessages.dateKey(DateTime.now()));
   }
 
   Future<void> _close() async {
@@ -237,69 +246,48 @@ class _CatChatBubbleState extends State<CatChatBubble>
           alignment: Alignment.bottomLeft,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 250),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _openMagicalWeather,
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.lilac.withValues(alpha: 0.8),
+            // Balão em formato de NUVEM (delicado, sem setinha — a seta
+            // parava de apontar para o gato quando ele era arrastado)
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _openMagicalWeather,
+                borderRadius: BorderRadius.circular(28),
+                child: CustomPaint(
+                  painter: _CloudPainter(),
+                  child: Padding(
+                    // Margens generosas para o texto ficar dentro do "miolo"
+                    // da nuvem (as ondulações ficam nas bordas)
+                    padding: const EdgeInsets.fromLTRB(20, 16, 12, 18),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: _buildTypewriterText(),
+                          ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.lilac.withOpacity(0.25),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: _buildTypewriterText(),
+                        const SizedBox(width: 4),
+                        // Botão fechar (X)
+                        InkWell(
+                          onTap: _close,
+                          borderRadius: BorderRadius.circular(16),
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.black54,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          // Botão fechar (X)
-                          InkWell(
-                            onTap: _close,
-                            borderRadius: BorderRadius.circular(16),
-                            child: const Padding(
-                              padding: EdgeInsets.all(6),
-                              child: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                // Rabinho do balão apontando para o gatinho (abaixo)
-                Padding(
-                  padding: const EdgeInsets.only(left: 26),
-                  child: CustomPaint(
-                    size: const Size(16, 9),
-                    painter: _BubbleTailPainter(),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -308,28 +296,69 @@ class _CatChatBubbleState extends State<CatChatBubble>
   }
 }
 
-/// Triângulo do rabinho do balão, na mesma cor/borda do container.
-class _BubbleTailPainter extends CustomPainter {
+/// Nuvem desenhada como a UNIÃO de um corpo arredondado com "bolhas" nas
+/// bordas — o contorno resultante é ondulado como o desenho de uma nuvem.
+/// Fundo branco, contorno lilás e sombra suave, no visual do app.
+class _CloudPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final fill = Paint()..color = Colors.white;
-    final stroke = Paint()
-      ..color = AppColors.lilac.withValues(alpha: 0.8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+    final w = size.width;
+    final h = size.height;
 
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width / 2, size.height)
-      ..close();
+    Path bump(double cx, double cy, double rx, double ry) => Path()
+      ..addOval(Rect.fromCenter(
+        center: Offset(cx * w, cy * h),
+        width: rx * 2 * w,
+        height: ry * 2 * h,
+      ));
 
-    canvas.drawPath(path, fill);
-    // Só as laterais do triângulo (o topo encosta no balão)
-    canvas.drawLine(Offset.zero,
-        Offset(size.width / 2, size.height), stroke);
-    canvas.drawLine(Offset(size.width, 0),
-        Offset(size.width / 2, size.height), stroke);
+    // Corpo central da nuvem
+    var cloud = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(w * 0.06, h * 0.22, w * 0.88, h * 0.62),
+        Radius.circular(h * 0.31),
+      ));
+
+    // Bolhas do topo, laterais e base (frações da largura/altura)
+    const bumps = [
+      [0.22, 0.26, 0.13, 0.24], // topo esquerdo
+      [0.42, 0.16, 0.14, 0.26], // topo centro-esquerdo (mais alto)
+      [0.62, 0.20, 0.13, 0.25], // topo centro-direito
+      [0.80, 0.30, 0.11, 0.21], // topo direito
+      [0.08, 0.52, 0.09, 0.20], // lateral esquerda
+      [0.92, 0.55, 0.09, 0.20], // lateral direita
+      [0.28, 0.86, 0.13, 0.15], // base esquerda
+      [0.55, 0.90, 0.14, 0.13], // base centro
+      [0.78, 0.85, 0.11, 0.14], // base direita
+    ];
+    for (final b in bumps) {
+      cloud = Path.combine(
+        PathOperation.union,
+        cloud,
+        bump(b[0], b[1], b[2], b[3]),
+      );
+    }
+
+    // Sombra suave lilás (deslocada para baixo)
+    canvas.save();
+    canvas.translate(0, 4);
+    canvas.drawPath(
+      cloud,
+      Paint()
+        ..color = AppColors.lilac.withValues(alpha: 0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+    canvas.restore();
+
+    // Preenchimento branco + contorno lilás delicado
+    canvas.drawPath(cloud, Paint()..color = Colors.white);
+    canvas.drawPath(
+      cloud,
+      Paint()
+        ..color = AppColors.lilac.withValues(alpha: 0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
   }
 
   @override

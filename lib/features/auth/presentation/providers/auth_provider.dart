@@ -210,57 +210,70 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Chave de prefs ESCOPADA POR USUÁRIO.
+  ///
+  /// Controles de "1x por dia" (resets de contadores, balão do mascote)
+  /// precisam ser por conta: com chave global, deslogar da conta X e logar
+  /// na conta Y no mesmo dia fazia a conta Y herdar o estado do dia da
+  /// conta X (bug reportado no balão do gatinho).
+  String _scopedKey(String base) => '${base}_${_currentUser.id}';
+
   /// Verifica e reseta contadores diários/mensais se necessário
   Future<void> _checkAndResetCounters() async {
     final now = DateTime.now();
     final prefs = await SharedPreferences.getInstance();
     bool needsSave = false;
 
+    final aiKey = _scopedKey(_lastAiResetKey);
+    final diaryKey = _scopedKey(_lastDiaryResetKey);
+    final pendulumKey = _scopedKey(_lastPendulumResetKey);
+    final dailyLimitsKey = _scopedKey(_lastDailyLimitsResetKey);
+
     // Reset diário de IA
-    final lastAiReset = prefs.getString(_lastAiResetKey);
+    final lastAiReset = prefs.getString(aiKey);
     if (lastAiReset != null) {
       final lastDate = DateTime.parse(lastAiReset);
       if (now.day != lastDate.day ||
           now.month != lastDate.month ||
           now.year != lastDate.year) {
         _currentUser = _currentUser.copyWith(aiConsultationsToday: 0);
-        await prefs.setString(_lastAiResetKey, now.toIso8601String());
+        await prefs.setString(aiKey, now.toIso8601String());
         needsSave = true;
       }
     } else {
-      await prefs.setString(_lastAiResetKey, now.toIso8601String());
+      await prefs.setString(aiKey, now.toIso8601String());
     }
 
     // Reset mensal de diários
-    final lastDiaryReset = prefs.getString(_lastDiaryResetKey);
+    final lastDiaryReset = prefs.getString(diaryKey);
     if (lastDiaryReset != null) {
       final lastDate = DateTime.parse(lastDiaryReset);
       if (now.month != lastDate.month || now.year != lastDate.year) {
         _currentUser = _currentUser.copyWith(diaryEntriesThisMonth: 0);
-        await prefs.setString(_lastDiaryResetKey, now.toIso8601String());
+        await prefs.setString(diaryKey, now.toIso8601String());
         needsSave = true;
       }
     } else {
-      await prefs.setString(_lastDiaryResetKey, now.toIso8601String());
+      await prefs.setString(diaryKey, now.toIso8601String());
     }
 
     // Reset diário do pêndulo (para TODOS os usuários)
-    final lastPendulumReset = prefs.getString(_lastPendulumResetKey);
+    final lastPendulumReset = prefs.getString(pendulumKey);
     if (lastPendulumReset != null) {
       final lastDate = DateTime.parse(lastPendulumReset);
       if (now.day != lastDate.day ||
           now.month != lastDate.month ||
           now.year != lastDate.year) {
         _currentUser = _currentUser.copyWith(pendulumUsesToday: 0);
-        await prefs.setString(_lastPendulumResetKey, now.toIso8601String());
+        await prefs.setString(pendulumKey, now.toIso8601String());
         needsSave = true;
       }
     } else {
-      await prefs.setString(_lastPendulumResetKey, now.toIso8601String());
+      await prefs.setString(pendulumKey, now.toIso8601String());
     }
 
     // Reset diário dos novos limites (afirmações, runas, oracle)
-    final lastDailyLimitsReset = prefs.getString(_lastDailyLimitsResetKey);
+    final lastDailyLimitsReset = prefs.getString(dailyLimitsKey);
     if (lastDailyLimitsReset != null) {
       final lastDate = DateTime.parse(lastDailyLimitsReset);
       if (now.day != lastDate.day ||
@@ -271,11 +284,11 @@ class AuthProvider extends ChangeNotifier {
           runeReadingsToday: 0,
           oracleReadingsToday: 0,
         );
-        await prefs.setString(_lastDailyLimitsResetKey, now.toIso8601String());
+        await prefs.setString(dailyLimitsKey, now.toIso8601String());
         needsSave = true;
       }
     } else {
-      await prefs.setString(_lastDailyLimitsResetKey, now.toIso8601String());
+      await prefs.setString(dailyLimitsKey, now.toIso8601String());
     }
 
     if (needsSave) {
@@ -467,6 +480,10 @@ class AuthProvider extends ChangeNotifier {
     _isSigningOut = false;
     _currentUser = user;
     _isOriginalAdmin = user.isAdmin;
+
+    // Contadores diários são por conta (chaves escopadas por usuário):
+    // garante que o dia "vire" corretamente para ESTA conta ao logar
+    await _checkAndResetCounters();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isOriginalAdminKey, _isOriginalAdmin);
