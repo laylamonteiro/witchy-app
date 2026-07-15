@@ -491,13 +491,14 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   if (isReady && !isSyncing)
                     IconButton(
                       onPressed: () async {
+                        // Botão de atualizar executa uma sincronização completa
                         final result = await syncProvider.sync();
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
                                 result.success
-                                    ? 'Sincronizado! ${result.uploaded} enviados, ${result.downloaded} recebidos'
+                                    ? 'Sincronizado com sucesso.'
                                     : result.error ?? 'Erro na sincronização',
                               ),
                               backgroundColor: result.success
@@ -507,7 +508,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                           );
                         }
                       },
-                      icon: const Icon(Icons.sync, color: AppColors.lilac),
+                      icon: const Icon(Icons.refresh, color: AppColors.lilac),
                       tooltip: 'Sincronizar agora',
                     ),
                   if (isSyncing)
@@ -522,40 +523,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     ),
                 ],
               ),
-              if (isReady) ...[
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed:
-                            isSyncing ? null : () => _fullUpload(syncProvider),
-                        icon: const Icon(Icons.cloud_upload_outlined, size: 18),
-                        label: const Text('Enviar Tudo'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.lilac,
-                          side: const BorderSide(color: AppColors.lilac),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: isSyncing
-                            ? null
-                            : () => _fullDownload(syncProvider),
-                        icon:
-                            const Icon(Icons.cloud_download_outlined, size: 18),
-                        label: const Text('Baixar Tudo'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.mint,
-                          side: const BorderSide(color: AppColors.mint),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              // Botões "Enviar Tudo"/"Baixar Tudo" removidos — o botão de
+              // atualizar (refresh) acima já executa uma sincronização
+              // completa (upload + download).
             ],
           ),
         );
@@ -590,86 +560,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         return Icons.cloud_off_outlined;
       case SyncStatus.conflict:
         return Icons.warning_amber_outlined;
-    }
-  }
-
-  Future<void> _fullUpload(SyncProvider syncProvider) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Enviar Todos os Dados?',
-            style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Isso enviara todos os seus dados locais para a nuvem, substituindo qualquer dado existente no servidor.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.lilac),
-            child: const Text('Enviar', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      final result = await syncProvider.fullUpload();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.success
-                ? '${result.uploaded} itens enviados!'
-                : result.error ?? 'Erro'),
-            backgroundColor:
-                result.success ? AppColors.success : AppColors.alert,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _fullDownload(SyncProvider syncProvider) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Baixar Todos os Dados?',
-            style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'ATENÇÃO: Isso substituirá todos os seus dados locais pelos dados da nuvem. Dados locais não sincronizados serão perdidos.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.mint),
-            child: const Text('Baixar', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      final result = await syncProvider.fullDownload();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.success
-                ? '${result.downloaded} itens baixados!'
-                : result.error ?? 'Erro'),
-            backgroundColor:
-                result.success ? AppColors.success : AppColors.alert,
-          ),
-        );
-      }
     }
   }
 

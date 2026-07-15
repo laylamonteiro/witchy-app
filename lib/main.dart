@@ -169,10 +169,9 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       await debugLog('SYNC', 'Auto-sync (Premium) iniciado em background');
       syncService.syncAll().then((result) {
         if (result.success) {
-          debugLog('SYNC',
-              'Sync em background concluído: ${result.uploaded} enviados, ${result.downloaded} recebidos');
+          debugLog('SYNC', 'Auto-sync concluído com sucesso');
         } else {
-          debugLog('SYNC', 'Sync em background falhou: ${result.error}');
+          debugLog('SYNC', 'Auto-sync falhou: ${result.error}');
         }
       });
     }

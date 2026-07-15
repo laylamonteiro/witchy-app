@@ -35,7 +35,7 @@ class CatBubbleMessages {
 /// Balão de conversa diário exibido ACIMA do gatinho mascote.
 ///
 /// - Aparece apenas no primeiro open do app em cada dia
-///   (SharedPreferences `cat_bubble_last_shown_date`).
+///   (SharedPreferences `cat_bubble_last_shown_date`, escopado por conta).
 /// - "X" fecha; tocar no corpo abre o Clima Mágico Diário. Ambos gravam a
 ///   data para não reaparecer no mesmo dia.
 /// - Formato orgânico com poucos lóbulos amplos e uma pequena cauda
@@ -77,14 +77,12 @@ class _CatChatBubbleState extends State<CatChatBubble>
   late final String _message =
       widget.message ?? CatBubbleMessages.messageForDate(DateTime.now());
 
-  /// Pop de entrada: escala elástica (o balão "estoura" na tela, como uma
-  /// fala surgindo) + fade rápido no início.
+  /// Pop de entrada: escala elástica (o balão "estoura" na tela).
   late final AnimationController _popController;
   late final Animation<double> _scale;
   late final Animation<double> _fade;
 
-  /// Typewriter: revela o texto letra a letra, como se o gatinho estivesse
-  /// falando naquele momento.
+  /// Typewriter: revela o texto letra a letra.
   late final AnimationController _typeController;
   late final Animation<int> _typedChars;
 
@@ -92,8 +90,8 @@ class _CatChatBubbleState extends State<CatChatBubble>
   void initState() {
     super.initState();
     _popController = AnimationController(
-      duration: const Duration(milliseconds: 550),
-      reverseDuration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 520),
+      reverseDuration: const Duration(milliseconds: 190),
       vsync: this,
     );
     _scale = CurvedAnimation(
@@ -103,15 +101,12 @@ class _CatChatBubbleState extends State<CatChatBubble>
     );
     _fade = CurvedAnimation(
       parent: _popController,
-      // Opacidade completa logo no início do pop, para o overshoot elástico
-      // acontecer com o balão já visível
       curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
       reverseCurve: Curves.easeIn,
     );
 
     _typeController = AnimationController(
-      // ~35ms por letra, com piso para mensagens curtas
-      duration: Duration(milliseconds: (_message.length * 35).clamp(600, 3000)),
+      duration: Duration(milliseconds: (_message.length * 32).clamp(600, 2600)),
       vsync: this,
     );
     _typedChars = StepTween(begin: 0, end: _message.length).animate(
@@ -129,8 +124,6 @@ class _CatChatBubbleState extends State<CatChatBubble>
   }
 
   /// Chave escopada por CONTA: cada usuário vê o balão 1x por dia.
-  /// (Com chave global, logar com outra conta no mesmo dia não mostrava o
-  /// balão — bug reportado.)
   String _prefsKey() {
     final userId = context.read<AuthProvider>().currentUser.id;
     return '${CatChatBubble._lastShownKey}_$userId';
@@ -144,13 +137,10 @@ class _CatChatBubbleState extends State<CatChatBubble>
 
     if (lastShown == today) return; // já apareceu hoje
 
-    // Pequena espera para a home assentar antes do balão surgir
     await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted || _dismissed) return;
 
     setState(() => _visible = true);
-    // Pop primeiro; o gatinho "começa a falar" (typewriter) assim que o
-    // balão termina de estourar na tela
     await _popController.forward();
     if (!mounted || _dismissed) return;
     await _typeController.forward();
@@ -168,9 +158,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
     await _markShownToday();
     if (!mounted) return;
     await _popController.reverse();
-    if (mounted) {
-      setState(() => _visible = false);
-    }
+    if (mounted) setState(() => _visible = false);
   }
 
   Future<void> _openMagicalWeather() async {
@@ -179,8 +167,6 @@ class _CatChatBubbleState extends State<CatChatBubble>
     await _markShownToday();
     if (!mounted) return;
     setState(() => _visible = false);
-    // rootNavigator: a página abre em tela cheia, acima dos Navigators
-    // aninhados das abas
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(builder: (_) => const DailyMagicalWeatherPage()),
     );
@@ -248,8 +234,6 @@ class _CatChatBubbleState extends State<CatChatBubble>
           child: SizedBox(
             key: const Key('cat-bubble-size'),
             width: bubbleWidth,
-            // Balão em formato de NUVEM (delicado, sem setinha — a seta
-            // parava de apontar para o gato quando ele era arrastado)
             child: Material(
               color: Colors.transparent,
               child: InkWell(
@@ -267,6 +251,8 @@ class _CatChatBubbleState extends State<CatChatBubble>
                           child: _buildTypewriterText(),
                         ),
                       ),
+                      // Botão fechar: chip lilás sólido (sempre visível,
+                      // independente do fundo) sobre o corpo branco da nuvem.
                       Positioned(
                         top: 6,
                         right: 7,
