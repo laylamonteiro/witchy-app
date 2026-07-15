@@ -8,10 +8,17 @@ class DreamProvider with ChangeNotifier {
   List<DreamModel> _dreams = [];
   bool _isLoading = false;
   String? _error;
+  String _currentUserId = 'local_user';
 
   List<DreamModel> get dreams => _dreams;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  Future<void> setUserId(String userId) async {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    await loadDreams();
+  }
 
   Future<void> loadDreams() async {
     _isLoading = true;
@@ -19,7 +26,7 @@ class DreamProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _dreams = await _repository.getAll();
+      _dreams = await _repository.getAll(_currentUserId);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -31,7 +38,7 @@ class DreamProvider with ChangeNotifier {
 
   Future<void> addDream(DreamModel dream) async {
     try {
-      await _repository.insert(dream);
+      await _repository.insert(dream.copyWith(userId: _currentUserId));
       await loadDreams();
     } catch (e) {
       _error = e.toString();
@@ -41,7 +48,7 @@ class DreamProvider with ChangeNotifier {
 
   Future<void> updateDream(DreamModel dream) async {
     try {
-      await _repository.update(dream);
+      await _repository.update(dream.copyWith(userId: _currentUserId));
       await loadDreams();
     } catch (e) {
       _error = e.toString();

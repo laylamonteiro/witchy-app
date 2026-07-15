@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
@@ -20,6 +22,7 @@ enum SyncEntity {
   runeReadings,
   pendulumConsultations,
   oracleReadings,
+  dailyMagicalWeather,
 }
 
 /// Status de sincronização
@@ -97,6 +100,7 @@ class SyncResult {
   final int conflictsResolved;
   final List<SyncConflict> unresolvedConflicts;
   final String? error;
+  final Map<String, String> entityErrors;
 
   SyncResult({
     required this.success,
@@ -105,6 +109,7 @@ class SyncResult {
     this.conflictsResolved = 0,
     this.unresolvedConflicts = const [],
     this.error,
+    this.entityErrors = const {},
   });
 
   factory SyncResult.success({
@@ -120,8 +125,19 @@ class SyncResult {
     );
   }
 
-  factory SyncResult.error(String message) {
-    return SyncResult(success: false, error: message);
+  factory SyncResult.error(
+    String message, {
+    int uploaded = 0,
+    int downloaded = 0,
+    Map<String, String> entityErrors = const {},
+  }) {
+    return SyncResult(
+      success: false,
+      error: message,
+      uploaded: uploaded,
+      downloaded: downloaded,
+      entityErrors: entityErrors,
+    );
   }
 
   factory SyncResult.withConflicts(List<SyncConflict> conflicts) {
@@ -142,6 +158,7 @@ class DataSyncService {
 
   SupabaseClient? _supabase;
   final _db = DatabaseHelper.instance;
+  static const cloudSyncPreferenceKey = 'privacy_cloud_sync';
 
   SyncStatus _status = SyncStatus.idle;
   final _statusController = StreamController<SyncStatus>.broadcast();
@@ -156,7 +173,8 @@ class DataSyncService {
   Stream<SyncStatus> get statusStream => _statusController.stream;
   Stream<List<SyncConflict>> get conflictsStream => _conflictsController.stream;
   SyncStatus get status => _status;
-  List<SyncConflict> get pendingConflicts => List.unmodifiable(_pendingConflicts);
+  List<SyncConflict> get pendingConflicts =>
+      List.unmodifiable(_pendingConflicts);
 
   /// Define a estratégia padrão de resolução
   set defaultResolution(ConflictResolution resolution) {
@@ -176,12 +194,26 @@ class DataSyncService {
   /// ID do usuário atual
   String? get currentUserId => _supabase?.auth.currentUser?.id;
 
+  Future<bool> get cloudSyncEnabled async {
+    final prefs = await SharedPreferences.getInstance();
+    final configured = prefs.getBool(cloudSyncPreferenceKey);
+    if (configured != null) return configured;
+    return (prefs.getBool('privacy_sync') ?? true) &&
+        (prefs.getBool('privacy_backup') ?? true);
+  }
+
   /// Sincroniza todos os dados com tratamento de conflitos
   Future<SyncResult> syncAll({
     ConflictResolution? resolution,
   }) async {
+    if (!PremiumAccess.instance.isPremium) {
+      return SyncResult.error('Sincronização é uma funcionalidade Premium');
+    }
     if (!isReady) {
       return SyncResult.error('Usuário não autenticado');
+    }
+    if (!await cloudSyncEnabled) {
+      return SyncResult.error('Sincronização na nuvem desativada');
     }
 
     final useResolution = resolution ?? _defaultResolution;
@@ -192,15 +224,29 @@ class DataSyncService {
       int totalUploaded = 0;
       int totalDownloaded = 0;
       int totalConflictsResolved = 0;
+      final entityErrors = <String, String>{};
 
       for (final entity in SyncEntity.values) {
         final result = await _syncEntity(entity, useResolution);
+        totalUploaded += result.uploaded;
+        totalDownloaded += result.downloaded;
         if (result.success) {
-          totalUploaded += result.uploaded;
-          totalDownloaded += result.downloaded;
           totalConflictsResolved += result.conflictsResolved;
         }
+        if (!result.success && result.unresolvedConflicts.isEmpty) {
+          entityErrors[entity.name] = result.error ?? 'Erro desconhecido';
+        }
         _pendingConflicts.addAll(result.unresolvedConflicts);
+      }
+
+      if (entityErrors.isNotEmpty) {
+        _setStatus(SyncStatus.error);
+        return SyncResult.error(
+          'Falha ao sincronizar: ${entityErrors.keys.join(', ')}',
+          uploaded: totalUploaded,
+          downloaded: totalDownloaded,
+          entityErrors: entityErrors,
+        );
       }
 
       if (_pendingConflicts.isNotEmpty) {
@@ -226,20 +272,22 @@ class DataSyncService {
     SyncEntity entity,
     ConflictResolution resolution,
   ) async {
+    var uploaded = 0;
+    var downloaded = 0;
+    var conflictsResolved = 0;
     try {
       final tableName = _getTableName(entity);
       final localTable = _getLocalTableName(entity);
 
-      int uploaded = 0;
-      int downloaded = 0;
-      int conflictsResolved = 0;
       final conflicts = <SyncConflict>[];
 
       // 1. Buscar dados locais modificados
       final localData = await _getModifiedLocalData(localTable);
 
       // 2. Buscar dados remotos
-      final remoteData = await _getRemoteData(tableName);
+      final remoteData = (await _getRemoteData(tableName))
+          .map((item) => _toLocal(tableName, item))
+          .toList();
       final remoteMap = {for (var item in remoteData) item['id']: item};
 
       // 3. Processar dados locais
@@ -316,7 +364,11 @@ class DataSyncService {
       );
     } catch (e) {
       debugPrint('Erro ao sincronizar ${entity.name}: $e');
-      return SyncResult.error(e.toString());
+      return SyncResult.error(
+        e.toString(),
+        uploaded: uploaded,
+        downloaded: downloaded,
+      );
     }
   }
 
@@ -405,7 +457,9 @@ class DataSyncService {
   DateTime _parseDateTime(dynamic value) {
     if (value == null) return DateTime.fromMillisecondsSinceEpoch(0);
     if (value is DateTime) return value;
-    if (value is String) return DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+    if (value is String) {
+      return DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+    }
     if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
     return DateTime.fromMillisecondsSinceEpoch(0);
   }
@@ -439,6 +493,8 @@ class DataSyncService {
         return SupabaseTables.pendulumConsultations;
       case SyncEntity.oracleReadings:
         return SupabaseTables.oracleReadings;
+      case SyncEntity.dailyMagicalWeather:
+        return SupabaseTables.dailyMagicalWeather;
     }
   }
 
@@ -471,6 +527,8 @@ class DataSyncService {
         return 'pendulum_consultations';
       case SyncEntity.oracleReadings:
         return 'oracle_readings';
+      case SyncEntity.dailyMagicalWeather:
+        return 'daily_magical_weather';
     }
   }
 
@@ -479,28 +537,147 @@ class DataSyncService {
     final db = await _db.database;
 
     try {
-      return await db.query(
+      final result = await db.query(
         table,
         where: '(synced = ? OR synced IS NULL) AND user_id = ?',
         whereArgs: [0, currentUserId],
       );
+      return result.where((item) => _isSyncableItem(table, item)).toList();
     } catch (e) {
-      return await db.query(
+      final result = await db.query(
         table,
         where: 'user_id = ?',
         whereArgs: [currentUserId],
       );
+      return result.where((item) => _isSyncableItem(table, item)).toList();
     }
   }
 
   /// Envia item para o Supabase
   Future<void> _uploadItem(String table, Map<String, dynamic> item) async {
-    final data = Map<String, dynamic>.from(item);
-    data.remove('synced');
-    data['user_id'] = currentUserId;
-    data['updated_at'] = DateTime.now().toIso8601String();
+    final remoteItem = _toRemote(table, item);
+    if (table == 'daily_magical_weather') {
+      await _supabase!
+          .from(table)
+          .upsert(remoteItem, onConflict: 'user_id,date');
+      return;
+    }
+    await _supabase!.from(table).upsert(remoteItem);
+  }
 
-    await _supabase!.from(table).upsert(data);
+  bool _isSyncableItem(String table, Map<String, dynamic> item) {
+    if ((table == 'spells' || table == 'affirmations') &&
+        item['is_preloaded'] == 1) {
+      return false;
+    }
+    return true;
+  }
+
+  static const _booleanFields = {
+    'spells': {'is_preloaded'},
+    'affirmations': {'is_preloaded', 'is_favorite'},
+    'daily_rituals': {'is_active'},
+    'birth_charts': {'unknown_birth_time'},
+  };
+
+  static const _jsonFields = {
+    'birth_charts': {'chart_data'},
+    'magical_profiles': {'profile_data'},
+    'rune_readings': {'reading_data'},
+    'oracle_readings': {'reading_data'},
+    'daily_magical_weather': {'weather_data'},
+  };
+
+  static const _dateFields = {
+    'spells': {'created_at', 'updated_at'},
+    'dreams': {'date', 'created_at', 'updated_at'},
+    'desires': {'created_at', 'updated_at'},
+    'gratitudes': {'date', 'created_at', 'updated_at'},
+    'affirmations': {'created_at', 'updated_at'},
+    'daily_rituals': {'created_at', 'updated_at'},
+    'ritual_logs': {'completed_at', 'updated_at'},
+    'sigils': {'created_at', 'updated_at'},
+    'birth_charts': {'birth_date', 'calculated_at', 'updated_at'},
+    'magical_profiles': {'generated_at', 'updated_at'},
+    'rune_readings': {'date', 'created_at', 'updated_at'},
+    'pendulum_consultations': {'date', 'created_at', 'updated_at'},
+    'oracle_readings': {'date', 'created_at', 'updated_at'},
+    'daily_magical_weather': {'created_at', 'updated_at'},
+  };
+
+  @visibleForTesting
+  Map<String, dynamic> toRemoteForTest(
+    String table,
+    Map<String, dynamic> item,
+    String userId,
+  ) =>
+      _toRemote(table, item, userIdOverride: userId);
+
+  @visibleForTesting
+  Map<String, dynamic> toLocalForTest(
+    String table,
+    Map<String, dynamic> item,
+  ) =>
+      _toLocal(table, item);
+
+  Map<String, dynamic> _toRemote(
+    String table,
+    Map<String, dynamic> item, {
+    String? userIdOverride,
+  }) {
+    final data = Map<String, dynamic>.from(item)..remove('synced');
+    data['user_id'] = userIdOverride ?? currentUserId;
+
+    for (final field in _booleanFields[table] ?? const <String>{}) {
+      final value = data[field];
+      if (value is int) data[field] = value == 1;
+    }
+    for (final field in _jsonFields[table] ?? const <String>{}) {
+      final value = data[field];
+      if (value is String) {
+        try {
+          data[field] = jsonDecode(value);
+        } catch (_) {}
+      }
+    }
+    for (final field in _dateFields[table] ?? const <String>{}) {
+      final value = data[field];
+      if (value is int) {
+        data[field] = DateTime.fromMillisecondsSinceEpoch(value)
+            .toUtc()
+            .toIso8601String();
+      } else if (value is DateTime) {
+        data[field] = value.toUtc().toIso8601String();
+      }
+    }
+    data['updated_at'] ??= DateTime.now().toUtc().toIso8601String();
+    return data;
+  }
+
+  Map<String, dynamic> _toLocal(
+    String table,
+    Map<String, dynamic> item,
+  ) {
+    final data = Map<String, dynamic>.from(item);
+    for (final field in _booleanFields[table] ?? const <String>{}) {
+      final value = data[field];
+      if (value is bool) data[field] = value ? 1 : 0;
+    }
+    for (final field in _jsonFields[table] ?? const <String>{}) {
+      final value = data[field];
+      if (value is Map || value is List) data[field] = jsonEncode(value);
+    }
+    for (final field in _dateFields[table] ?? const <String>{}) {
+      final value = data[field];
+      if (value is String) {
+        final parsed = DateTime.tryParse(value);
+        if (parsed != null) data[field] = parsed.millisecondsSinceEpoch;
+      } else if (value is DateTime) {
+        data[field] = value.millisecondsSinceEpoch;
+      }
+    }
+    data['synced'] = 1;
+    return data;
   }
 
   /// Marca item como sincronizado localmente
@@ -535,10 +712,8 @@ class DataSyncService {
 
   /// Busca dados do Supabase
   Future<List<Map<String, dynamic>>> _getRemoteData(String table) async {
-    final response = await _supabase!
-        .from(table)
-        .select()
-        .eq('user_id', currentUserId!);
+    final response =
+        await _supabase!.from(table).select().eq('user_id', currentUserId!);
 
     return List<Map<String, dynamic>>.from(response);
   }
@@ -576,10 +751,14 @@ class DataSyncService {
     // premium local via código beta/admin)
     if (!PremiumAccess.instance.isPremium) return;
     if (!isReady) return;
+    if (!await cloudSyncEnabled) return;
 
     try {
       final tableName = _getTableName(entity);
+      final localTable = _getLocalTableName(entity);
+      if (!_isSyncableItem(localTable, item)) return;
       await _uploadItem(tableName, item);
+      await _markAsSynced(localTable, item['id']);
     } catch (e) {
       debugPrint('Erro ao sincronizar item: $e');
     }
@@ -591,10 +770,15 @@ class DataSyncService {
     // Verifica se é premium antes de deletar do cloud
     if (!PremiumAccess.instance.isPremium) return;
     if (!isReady) return;
+    if (!await cloudSyncEnabled) return;
 
     try {
       final tableName = _getTableName(entity);
-      await _supabase!.from(tableName).delete().eq('id', id);
+      await _supabase!
+          .from(tableName)
+          .delete()
+          .eq('id', id)
+          .eq('user_id', currentUserId!);
     } catch (e) {
       debugPrint('Erro ao deletar item do Supabase: $e');
     }
@@ -602,32 +786,55 @@ class DataSyncService {
 
   /// Limpa dados locais e baixa tudo do servidor
   Future<SyncResult> fullDownload() async {
+    if (!PremiumAccess.instance.isPremium) {
+      return SyncResult.error('Sincronização é uma funcionalidade Premium');
+    }
     if (!isReady) {
       return SyncResult.error('Usuário não autenticado');
+    }
+    if (!await cloudSyncEnabled) {
+      return SyncResult.error('Sincronização na nuvem desativada');
     }
 
     _setStatus(SyncStatus.syncing);
 
     try {
-      int totalDownloaded = 0;
-
+      final downloadedByTable = <String, List<Map<String, dynamic>>>{};
+      final entityErrors = <String, String>{};
       for (final entity in SyncEntity.values) {
-        final tableName = _getTableName(entity);
-        final localTable = _getLocalTableName(entity);
-
-        final db = await _db.database;
-        await db.delete(
-          localTable,
-          where: 'user_id = ?',
-          whereArgs: [currentUserId],
-        );
-
-        final remoteData = await _getRemoteData(tableName);
-        for (final item in remoteData) {
-          await _insertLocally(localTable, item);
-          totalDownloaded++;
+        try {
+          final tableName = _getTableName(entity);
+          final localTable = _getLocalTableName(entity);
+          final remoteData = await _getRemoteData(tableName);
+          downloadedByTable[localTable] =
+              remoteData.map((item) => _toLocal(tableName, item)).toList();
+        } catch (e) {
+          entityErrors[entity.name] = e.toString();
         }
       }
+      if (entityErrors.isNotEmpty) {
+        _setStatus(SyncStatus.error);
+        return SyncResult.error(
+          'Falha ao baixar: ${entityErrors.keys.join(', ')}',
+          entityErrors: entityErrors,
+        );
+      }
+
+      final db = await _db.database;
+      await db.transaction((txn) async {
+        for (final entry in downloadedByTable.entries) {
+          await txn.delete(
+            entry.key,
+            where: 'user_id = ?',
+            whereArgs: [currentUserId],
+          );
+          for (final item in entry.value) {
+            await txn.insert(entry.key, item);
+          }
+        }
+      });
+      final totalDownloaded = downloadedByTable.values
+          .fold<int>(0, (total, items) => total + items.length);
 
       _setStatus(SyncStatus.success);
       return SyncResult.success(downloaded: totalDownloaded);
@@ -639,31 +846,53 @@ class DataSyncService {
 
   /// Envia todos os dados locais para o servidor
   Future<SyncResult> fullUpload() async {
+    if (!PremiumAccess.instance.isPremium) {
+      return SyncResult.error('Sincronização é uma funcionalidade Premium');
+    }
     if (!isReady) {
       return SyncResult.error('Usuário não autenticado');
+    }
+    if (!await cloudSyncEnabled) {
+      return SyncResult.error('Sincronização na nuvem desativada');
     }
 
     _setStatus(SyncStatus.syncing);
 
     try {
       int totalUploaded = 0;
+      final entityErrors = <String, String>{};
 
       for (final entity in SyncEntity.values) {
-        final tableName = _getTableName(entity);
-        final localTable = _getLocalTableName(entity);
+        try {
+          final tableName = _getTableName(entity);
+          final localTable = _getLocalTableName(entity);
 
-        final db = await _db.database;
-        final localData = await db.query(
-          localTable,
-          where: 'user_id = ?',
-          whereArgs: [currentUserId],
-        );
+          final db = await _db.database;
+          final localData = await db.query(
+            localTable,
+            where: 'user_id = ?',
+            whereArgs: [currentUserId],
+          );
 
-        for (final item in localData) {
-          await _uploadItem(tableName, item);
-          await _markAsSynced(localTable, item['id']);
-          totalUploaded++;
+          for (final item in localData.where(
+            (item) => _isSyncableItem(localTable, item),
+          )) {
+            await _uploadItem(tableName, item);
+            await _markAsSynced(localTable, item['id']);
+            totalUploaded++;
+          }
+        } catch (e) {
+          entityErrors[entity.name] = e.toString();
         }
+      }
+
+      if (entityErrors.isNotEmpty) {
+        _setStatus(SyncStatus.error);
+        return SyncResult.error(
+          'Falha ao enviar: ${entityErrors.keys.join(', ')}',
+          uploaded: totalUploaded,
+          entityErrors: entityErrors,
+        );
       }
 
       _setStatus(SyncStatus.success);

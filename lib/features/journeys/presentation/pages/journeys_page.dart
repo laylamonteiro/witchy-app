@@ -36,9 +36,9 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
     setState(() => _isLoading = true);
 
     try {
-      final db = await DatabaseHelper.instance.database;
       final authProvider = context.read<AuthProvider>();
       final odUserId = authProvider.currentUser.id;
+      final db = await DatabaseHelper.instance.database;
 
       // Carregar contagens de cada entidade
       _userStats = {
@@ -65,9 +65,9 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
       // Calcular XP total baseado no progresso
       _totalXp = _calculateTotalXp();
 
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       debugPrint('Erro ao carregar stats: $e');
     }
   }
@@ -112,7 +112,7 @@ class _JourneysPageState extends State<JourneysPage> with SingleTickerProviderSt
   Future<int> _calculateStreak(dynamic db, String table, String odUserId) async {
     try {
       final result = await db.rawQuery(
-        '''SELECT DISTINCT date(created_at) as day
+        '''SELECT DISTINCT date(created_at / 1000, 'unixepoch', 'localtime') as day
            FROM $table
            WHERE user_id = ?
            ORDER BY day DESC''',

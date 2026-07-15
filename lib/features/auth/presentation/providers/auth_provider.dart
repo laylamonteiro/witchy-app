@@ -39,7 +39,8 @@ class AuthProvider extends ChangeNotifier {
   UserModel _currentUser = UserModel.defaultUser();
   bool _isInitialized = false;
   bool _hasSeenOnboarding = false;
-  bool _isOriginalAdmin = false; // Mantém acesso ao painel admin ao simular outros roles
+  bool _isOriginalAdmin =
+      false; // Mantém acesso ao painel admin ao simular outros roles
   bool _isSigningOut = false;
 
   UserModel get currentUser => _currentUser;
@@ -88,12 +89,15 @@ class AuthProvider extends ChangeNotifier {
     // Verificar versão do fluxo de autenticação
     // Se a versão mudou, resetar o estado de onboarding e usuário
     final savedAuthVersion = prefs.getInt(_authVersionKey) ?? 0;
-    await debugLog('AUTH', 'savedVersion=$savedAuthVersion, currentVersion=$_currentAuthVersion');
+    await debugLog('AUTH',
+        'savedVersion=$savedAuthVersion, currentVersion=$_currentAuthVersion');
 
     if (savedAuthVersion < _currentAuthVersion) {
       // ⚠️ Auth version mudou - resetar credenciais mas PRESERVAR banco de dados
-      await debugLog('AUTH', 'AUTH VERSION UPDATE - resetting credentials but preserving database');
-      await debugLog('AUTH', 'Old version: $savedAuthVersion, New version: $_currentAuthVersion');
+      await debugLog('AUTH',
+          'AUTH VERSION UPDATE - resetting credentials but preserving database');
+      await debugLog('AUTH',
+          'Old version: $savedAuthVersion, New version: $_currentAuthVersion');
 
       // Remove apenas credenciais de autenticação (SharedPreferences)
       // ✅ BANCO DE DADOS É PRESERVADO - dados não são perdidos!
@@ -107,8 +111,10 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = UserModel.defaultUser();
       _isInitialized = true;
 
-      await debugLog('AUTH', 'RESET COMPLETE - User credentials cleared, database preserved');
-      await debugLog('AUTH', 'User is now anonymous - authenticated users must login again to access their data');
+      await debugLog('AUTH',
+          'RESET COMPLETE - User credentials cleared, database preserved');
+      await debugLog('AUTH',
+          'User is now anonymous - authenticated users must login again to access their data');
       notifyListeners();
       return;
     }
@@ -148,7 +154,8 @@ class AuthProvider extends ChangeNotifier {
     paymentService.setProStatusChangedCallback((isPro) {
       _onPaymentStatusChanged(isPro);
     });
-    debugPrint('✅ AuthProvider registrado para receber updates do PaymentService');
+    debugPrint(
+        '✅ AuthProvider registrado para receber updates do PaymentService');
   }
 
   /// Chamado quando o status Pro muda no PaymentService (ex: cancelamento, reembolso)
@@ -181,10 +188,12 @@ class AuthProvider extends ChangeNotifier {
       // o RevenueCat não conhece esse plano, então isPro=false é esperado.
       // Mesma regra de _checkSubscriptionExpiration e refreshPremiumStatus.
       if (_currentUser.plan == SubscriptionPlan.lifetime) {
-        await debugLog('AUTH', 'Usuário lifetime (código beta) - ignorando downgrade do RevenueCat');
+        await debugLog('AUTH',
+            'Usuário lifetime (código beta) - ignorando downgrade do RevenueCat');
         return;
       }
-      await debugLog('AUTH', 'Revertendo para Free (assinatura cancelada/reembolsada)');
+      await debugLog(
+          'AUTH', 'Revertendo para Free (assinatura cancelada/reembolsada)');
       _currentUser = _currentUser.copyWith(
         role: UserRole.free,
         plan: SubscriptionPlan.free,
@@ -478,6 +487,7 @@ class AuthProvider extends ChangeNotifier {
   /// Substitui o estado local pelos dados autenticados vindos do servidor.
   Future<void> syncAuthenticatedUser(UserModel user) async {
     _isSigningOut = false;
+    await DatabaseHelper.instance.claimLegacyData(user.id);
     _currentUser = user;
     _isOriginalAdmin = user.isAdmin;
 
@@ -524,7 +534,8 @@ class AuthProvider extends ChangeNotifier {
 
     // Não verificar para códigos beta (lifetime)
     if (_currentUser.plan == SubscriptionPlan.lifetime) {
-      await debugLog('AUTH', 'Usuário tem acesso lifetime (código beta) - não verifica expiração');
+      await debugLog('AUTH',
+          'Usuário tem acesso lifetime (código beta) - não verifica expiração');
       return;
     }
 
@@ -536,7 +547,8 @@ class AuthProvider extends ChangeNotifier {
 
     // Se PaymentService diz que não é Pro, fazer downgrade
     if (!paymentService.isPro && _currentUser.role == UserRole.premium) {
-      await debugLog('AUTH', 'Assinatura expirou - fazendo downgrade para Free');
+      await debugLog(
+          'AUTH', 'Assinatura expirou - fazendo downgrade para Free');
       _currentUser = _currentUser.copyWith(
         role: UserRole.free,
         plan: SubscriptionPlan.free,
@@ -568,9 +580,11 @@ class AuthProvider extends ChangeNotifier {
       );
       await _saveUser();
       notifyListeners();
-    } else if (!_isOriginalAdmin && _currentUser.plan != SubscriptionPlan.lifetime) {
+    } else if (!_isOriginalAdmin &&
+        _currentUser.plan != SubscriptionPlan.lifetime) {
       // Se não é mais Pro, não é admin e não tem lifetime (código beta), fazer downgrade
-      await debugLog('AUTH', 'Assinatura não está mais ativa - fazendo downgrade para Free');
+      await debugLog('AUTH',
+          'Assinatura não está mais ativa - fazendo downgrade para Free');
       _currentUser = _currentUser.copyWith(
         role: UserRole.free,
         plan: SubscriptionPlan.free,
@@ -639,7 +653,8 @@ class AuthProvider extends ChangeNotifier {
     final hasCloudSync = _currentUser.email != null && _currentUser.isPremium;
     final isAnonymous = _currentUser.id == 'local_user';
 
-    await debugLog('AUTH', 'signOut - userId=${_currentUser.id}, hasCloudSync=$hasCloudSync, isAnonymous=$isAnonymous');
+    await debugLog('AUTH',
+        'signOut - userId=${_currentUser.id}, hasCloudSync=$hasCloudSync, isAnonymous=$isAnonymous');
 
     if (SupabaseConfig.isConfigured) {
       final authRepository = SupabaseAuthRepository();
@@ -662,7 +677,8 @@ class AuthProvider extends ChangeNotifier {
     final shouldClearData = isAnonymous || !hasCloudSync;
 
     if (shouldClearData) {
-      await debugLog('AUTH', 'Clearing database - reason: ${isAnonymous ? "anonymous user" : "no cloud sync"}');
+      await debugLog('AUTH',
+          'Clearing database - reason: ${isAnonymous ? "anonymous user" : "no cloud sync"}');
       try {
         await DatabaseHelper.instance.clearAllTables();
         await debugLog('AUTH', 'Database cleared successfully');
@@ -712,7 +728,8 @@ class AuthProvider extends ChangeNotifier {
         await _saveUser();
         notifyListeners();
 
-        await debugLog('BETA_CODE', 'Código resgatado com sucesso - usuário agora é Premium vitalício');
+        await debugLog('BETA_CODE',
+            'Código resgatado com sucesso - usuário agora é Premium vitalício');
       } else {
         await debugLog('BETA_CODE', 'Falha ao resgatar: ${result['message']}');
       }
@@ -742,12 +759,14 @@ class AuthProvider extends ChangeNotifier {
       final cleanCode = code.trim().toUpperCase();
 
       // Usar repositório que sincroniza com Supabase
-      final success = await _betaCodeRepo.createCode(cleanCode, maxUses: maxUses);
+      final success =
+          await _betaCodeRepo.createCode(cleanCode, maxUses: maxUses);
 
       if (success) {
-        await debugLog('BETA_CODE', 'Código beta criado: $cleanCode (max_uses: $maxUses)');
+        await debugLog(
+            'BETA_CODE', 'Código beta criado: $cleanCode (max_uses: $maxUses)');
         return cleanCode;
-      } else{
+      } else {
         await debugLog('BETA_CODE', 'Erro ao criar código beta');
         return null;
       }

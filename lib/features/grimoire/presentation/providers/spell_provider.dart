@@ -17,10 +17,12 @@ class SpellProvider with ChangeNotifier {
   String? get error => _error;
 
   // Filtrar feitiços do app (pré-carregados)
-  List<SpellModel> get appSpells => _spells.where((s) => s.isPreloaded).toList();
+  List<SpellModel> get appSpells =>
+      _spells.where((s) => s.isPreloaded).toList();
 
   // Filtrar feitiços do usuário (criados) - já filtrados por userId no repository
-  List<SpellModel> get userSpells => _spells.where((s) => !s.isPreloaded).toList();
+  List<SpellModel> get userSpells =>
+      _spells.where((s) => !s.isPreloaded).toList();
 
   /// Define o ID do usuário atual e recarrega os feitiços
   Future<void> setUserId(String userId) async {
@@ -73,7 +75,9 @@ class SpellProvider with ChangeNotifier {
 
   Future<void> addSpell(SpellModel spell) async {
     try {
-      await _repository.insert(spell);
+      await _repository.insert(
+        spell.isPreloaded ? spell : spell.copyWith(userId: _currentUserId),
+      );
       await loadSpells();
     } catch (e) {
       _error = e.toString();
@@ -83,7 +87,7 @@ class SpellProvider with ChangeNotifier {
 
   Future<void> updateSpell(SpellModel spell) async {
     try {
-      await _repository.update(spell);
+      await _repository.update(spell.copyWith(userId: _currentUserId));
       await loadSpells();
     } catch (e) {
       _error = e.toString();

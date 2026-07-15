@@ -151,7 +151,8 @@ class SigilStep2LettersPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildStep('1. Acentos foram normalizados'),
                   _buildStep('2. Espaços e símbolos foram removidos'),
-                  _buildStep('3. Letras duplicadas foram eliminadas (mantém apenas a primeira ocorrência)'),
+                  _buildStep(
+                      '3. Letras duplicadas foram eliminadas (mantém apenas a primeira ocorrência)'),
                   const SizedBox(height: 12),
                   Text(
                     'Esta sequência simplificada será conectada na Roda das Bruxas '
@@ -169,13 +170,16 @@ class SigilStep2LettersPage extends StatelessWidget {
             // Botão continuar
             MagicalButton(
               text: 'Ver Desenho do Sigilo',
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final completed = await Navigator.push<bool>(
                   context,
                   MaterialPageRoute(
                     builder: (context) => SigilStep3DrawingPage(sigil: sigil),
                   ),
                 );
+                if (completed == true && context.mounted) {
+                  Navigator.pop(context, true);
+                }
               },
             ),
             const SizedBox(height: 16),

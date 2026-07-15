@@ -449,6 +449,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
 
       final calculator = ChartCalculator.instance;
       final chart = await calculator.calculateBirthChart(
+        userId: 'diagnostic_user',
         birthDate: DateTime(year, month, day),
         birthTime: TimeOfDay(hour: hour, minute: minute),
         birthPlace: _birthPlace!,

@@ -19,6 +19,7 @@ class AstrologyProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _isGeneratingAI = false;
   String? _error;
+  String _currentUserId = 'local_user';
 
   BirthChartModel? get birthChart => _birthChart;
   MagicalProfile? get magicalProfile => _magicalProfile;
@@ -29,18 +30,25 @@ class AstrologyProvider with ChangeNotifier {
   bool get hasMagicalProfile => _magicalProfile != null;
   bool get hasAIGeneratedProfile => _magicalProfile?.aiGeneratedText != null;
 
+  Future<void> setUserId(String userId) async {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    await loadBirthChart();
+  }
+
   /// Carrega o mapa natal do usuário (se existir)
-  Future<void> loadBirthChart(String userId) async {
+  Future<void> loadBirthChart([String? userId]) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _birthChart = await _repository.getBirthChart(userId);
+      final effectiveUserId = userId ?? _currentUserId;
+      _birthChart = await _repository.getBirthChart(effectiveUserId);
 
       if (_birthChart != null) {
         // Carregar perfil mágico também
-        _magicalProfile = await _repository.getMagicalProfile(userId);
+        _magicalProfile = await _repository.getMagicalProfile(effectiveUserId);
       }
     } catch (e) {
       _error = 'Erro ao carregar mapa natal: $e';
@@ -58,7 +66,6 @@ class AstrologyProvider with ChangeNotifier {
     required double latitude,
     required double longitude,
     bool unknownBirthTime = false,
-    String userId = 'current_user',
   }) async {
     _isLoading = true;
     _error = null;
@@ -67,6 +74,7 @@ class AstrologyProvider with ChangeNotifier {
     try {
       // Calcular mapa natal
       final chart = await _calculator.calculateBirthChart(
+        userId: _currentUserId,
         birthDate: birthDate,
         birthTime: birthTime,
         birthPlace: birthPlace,
@@ -182,7 +190,8 @@ class AstrologyProvider with ChangeNotifier {
 
   /// Gera hash único do mapa astral para comparação
   String _generateChartHash(BirthChartModel chart) {
-    final data = '${chart.birthDate.toIso8601String()}_${chart.birthTime.hour}_${chart.birthTime.minute}_${chart.latitude}_${chart.longitude}';
+    final data =
+        '${chart.birthDate.toIso8601String()}_${chart.birthTime.hour}_${chart.birthTime.minute}_${chart.latitude}_${chart.longitude}';
     return md5.convert(utf8.encode(data)).toString();
   }
 

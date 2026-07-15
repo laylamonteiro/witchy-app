@@ -80,7 +80,11 @@ void main() async {
   if (!kIsWeb) {
     const initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initializationSettingsIOS = DarwinInitializationSettings();
+    const initializationSettingsIOS = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     const initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
@@ -141,7 +145,8 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // Atualizar timestamp quando o app volta do background
-      widget.prefs.setInt(_lastOpenedKey, DateTime.now().millisecondsSinceEpoch);
+      widget.prefs
+          .setInt(_lastOpenedKey, DateTime.now().millisecondsSinceEpoch);
       // Trigger sync when app resumes (if user is authenticated)
       _triggerBackgroundSync();
     }
@@ -152,10 +157,12 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     // Sincronização é exclusiva para usuários Premium (fonte única:
     // RevenueCat OU premium local via código beta/admin)
     if (syncService.isReady && PremiumAccess.instance.isPremium) {
-      await debugLog('SYNC', 'App resumido - iniciando sync em background (Premium)');
+      await debugLog(
+          'SYNC', 'App resumido - iniciando sync em background (Premium)');
       syncService.syncAll().then((result) {
         if (result.success) {
-          debugLog('SYNC', 'Sync em background concluído: ${result.uploaded} enviados, ${result.downloaded} recebidos');
+          debugLog('SYNC',
+              'Sync em background concluído: ${result.uploaded} enviados, ${result.downloaded} recebidos');
         } else {
           debugLog('SYNC', 'Sync em background falhou: ${result.error}');
         }
@@ -178,19 +185,54 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             return spellProvider;
           },
         ),
-        ChangeNotifierProvider(create: (_) => DreamProvider()),
-        ChangeNotifierProvider(create: (_) => DesireProvider()),
-        ChangeNotifierProvider(create: (_) => GratitudeProvider()),
-        ChangeNotifierProvider(create: (_) => AffirmationProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, DreamProvider>(
+          create: (_) => DreamProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, DesireProvider>(
+          create: (_) => DesireProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, GratitudeProvider>(
+          create: (_) => GratitudeProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, AffirmationProvider>(
+          create: (_) => AffirmationProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => EncyclopediaProvider()),
         ChangeNotifierProvider(create: (_) => LunarProvider()),
         ChangeNotifierProvider(create: (_) => WheelOfYearProvider()),
-        ChangeNotifierProvider(create: (_) => AstrologyProvider()),
-        ChangeNotifierProvider(
+        ChangeNotifierProxyProvider<AuthProvider, AstrologyProvider>(
+          create: (_) => AstrologyProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider2<LunarProvider, WheelOfYearProvider,
+            NotificationProvider>(
           create: (_) => NotificationProvider(
             flutterLocalNotificationsPlugin,
             widget.prefs,
           ),
+          update: (_, lunar, wheel, provider) {
+            provider!.initialize(lunar, wheel);
+            return provider;
+          },
         ),
       ],
       child: MaterialApp(

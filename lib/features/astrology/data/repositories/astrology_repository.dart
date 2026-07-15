@@ -1,35 +1,39 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../models/birth_chart_model.dart';
 import '../models/magical_profile_model.dart';
 
 class AstrologyRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final DataSyncService _syncService = DataSyncService();
 
   // Salvar Mapa Astral
   Future<void> saveBirthChart(BirthChartModel chart) async {
     final db = await _dbHelper.database;
     final now = DateTime.now().millisecondsSinceEpoch;
 
+    final data = {
+      'id': chart.id,
+      'user_id': chart.userId,
+      'birth_date': chart.birthDate.millisecondsSinceEpoch,
+      'birth_time_hour': chart.birthTime.hour,
+      'birth_time_minute': chart.birthTime.minute,
+      'birth_place': chart.birthPlace,
+      'latitude': chart.latitude,
+      'longitude': chart.longitude,
+      'timezone': chart.timezone,
+      'unknown_birth_time': chart.unknownBirthTime ? 1 : 0,
+      'chart_data': chart.toJsonString(),
+      'calculated_at': chart.calculatedAt.millisecondsSinceEpoch,
+      'updated_at': now,
+    };
     await db.insert(
       'birth_charts',
-      {
-        'id': chart.id,
-        'user_id': chart.userId,
-        'birth_date': chart.birthDate.millisecondsSinceEpoch,
-        'birth_time_hour': chart.birthTime.hour,
-        'birth_time_minute': chart.birthTime.minute,
-        'birth_place': chart.birthPlace,
-        'latitude': chart.latitude,
-        'longitude': chart.longitude,
-        'timezone': chart.timezone,
-        'unknown_birth_time': chart.unknownBirthTime ? 1 : 0,
-        'chart_data': chart.toJsonString(),
-        'calculated_at': chart.calculatedAt.millisecondsSinceEpoch,
-        'updated_at': now,
-      },
+      data,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    await _syncService.syncItem(SyncEntity.birthCharts, data);
   }
 
   // Buscar Mapa Astral do usuário
@@ -89,6 +93,15 @@ class AstrologyRepository {
       where: 'id = ?',
       whereArgs: [chart.id],
     );
+    final rows = await db.query(
+      'birth_charts',
+      where: 'id = ?',
+      whereArgs: [chart.id],
+      limit: 1,
+    );
+    if (rows.isNotEmpty) {
+      await _syncService.syncItem(SyncEntity.birthCharts, rows.first);
+    }
   }
 
   // Deletar Mapa Astral
@@ -100,6 +113,7 @@ class AstrologyRepository {
       where: 'id = ?',
       whereArgs: [chartId],
     );
+    await _syncService.deleteItem(SyncEntity.birthCharts, chartId);
   }
 
   // Salvar Perfil Mágico
@@ -107,18 +121,20 @@ class AstrologyRepository {
     final db = await _dbHelper.database;
     final now = DateTime.now().millisecondsSinceEpoch;
 
+    final data = {
+      'id': profile.birthChartId,
+      'user_id': profile.userId,
+      'birth_chart_id': profile.birthChartId,
+      'profile_data': profile.toJsonString(),
+      'generated_at': profile.generatedAt.millisecondsSinceEpoch,
+      'updated_at': now,
+    };
     await db.insert(
       'magical_profiles',
-      {
-        'id': '${profile.userId}_${profile.birthChartId}',
-        'user_id': profile.userId,
-        'birth_chart_id': profile.birthChartId,
-        'profile_data': profile.toJsonString(),
-        'generated_at': profile.generatedAt.millisecondsSinceEpoch,
-        'updated_at': now,
-      },
+      data,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    await _syncService.syncItem(SyncEntity.magicalProfiles, data);
   }
 
   // Buscar Perfil Mágico

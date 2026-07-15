@@ -19,8 +19,7 @@ class CatBubbleMessages {
 
   /// Mensagem determinística do dia: rotaciona pelo dia do ano.
   static String messageForDate(DateTime date) {
-    final dayOfYear =
-        date.difference(DateTime(date.year, 1, 1)).inDays + 1;
+    final dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays + 1;
     return messages[dayOfYear % messages.length];
   }
 
@@ -43,10 +42,12 @@ class CatBubbleMessages {
 /// acompanha a posição publicada pelo mascote.
 class CatChatBubble extends StatefulWidget {
   final ValueListenable<Offset> mascotPosition;
+  final String? message;
 
   const CatChatBubble({
     super.key,
     required this.mascotPosition,
+    this.message,
   });
 
   static const String _lastShownKey = 'cat_bubble_last_shown_date';
@@ -61,7 +62,8 @@ class _CatChatBubbleState extends State<CatChatBubble>
   bool _dismissed = false;
 
   /// Mensagem do dia (fixada no initState para dimensionar o typewriter).
-  late final String _message = CatBubbleMessages.messageForDate(DateTime.now());
+  late final String _message =
+      widget.message ?? CatBubbleMessages.messageForDate(DateTime.now());
 
   /// Pop de entrada: escala elástica (o balão "estoura" na tela, como uma
   /// fala surgindo) + fade rápido no início.
@@ -196,7 +198,11 @@ class _CatChatBubbleState extends State<CatChatBubble>
             // Reserva o layout com o texto completo (invisível)
             Opacity(
               opacity: 0,
-              child: Text(_message, style: _messageStyle),
+              child: Text(
+                _message,
+                style: _messageStyle,
+                softWrap: true,
+              ),
             ),
             // Texto revelado progressivamente + cursor de "fala"
             Text.rich(
@@ -213,6 +219,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
                 ],
               ),
               style: _messageStyle,
+              softWrap: true,
             ),
           ],
         );
@@ -224,14 +231,24 @@ class _CatChatBubbleState extends State<CatChatBubble>
   Widget build(BuildContext context) {
     if (!_visible) return const SizedBox.shrink();
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final availableWidth = (screenWidth - 16).clamp(0.0, 210.0);
+    final textPainter = TextPainter(
+      text: TextSpan(text: _message, style: _messageStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final minWidth = availableWidth < 100 ? availableWidth : 100.0;
+    final bubbleWidth =
+        (textPainter.width + 32).clamp(minWidth, availableWidth);
+
     return ValueListenableBuilder<Offset>(
       valueListenable: widget.mascotPosition,
       builder: (context, position, child) {
-        final screenWidth = MediaQuery.sizeOf(context).width;
-        final maxLeft = screenWidth > 266 ? screenWidth - 258 : 8.0;
+        final maxLeft = screenWidth - bubbleWidth - 8;
         final left = (position.dx - 8).clamp(8.0, maxLeft).toDouble();
-        final top =
-            (position.dy - 86).clamp(8.0, double.infinity).toDouble();
+        final top = (position.dy - 86).clamp(8.0, double.infinity).toDouble();
 
         return Positioned(
           left: left,
@@ -244,8 +261,9 @@ class _CatChatBubbleState extends State<CatChatBubble>
         child: ScaleTransition(
           scale: _scale,
           alignment: Alignment.bottomLeft,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 250),
+          child: SizedBox(
+            key: const Key('cat-bubble-size'),
+            width: bubbleWidth,
             // Balão em formato de NUVEM (delicado, sem setinha — a seta
             // parava de apontar para o gato quando ele era arrastado)
             child: Material(
@@ -255,36 +273,30 @@ class _CatChatBubbleState extends State<CatChatBubble>
                 borderRadius: BorderRadius.circular(28),
                 child: CustomPaint(
                   painter: _CloudPainter(),
-                  child: Padding(
-                    // Margens generosas para o texto ficar dentro do "miolo"
-                    // da nuvem (as ondulações ficam nas bordas)
-                    padding: const EdgeInsets.fromLTRB(20, 16, 12, 18),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: _buildTypewriterText(),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        // Botão fechar (X)
-                        InkWell(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
+                        child: _buildTypewriterText(),
+                      ),
+                      Positioned(
+                        top: -5,
+                        right: -5,
+                        child: InkWell(
                           onTap: _close,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                           child: const Padding(
-                            padding: EdgeInsets.all(6),
+                            padding: EdgeInsets.all(4),
                             child: Icon(
                               Icons.close,
-                              size: 16,
+                              size: 14,
                               color: Colors.black54,
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

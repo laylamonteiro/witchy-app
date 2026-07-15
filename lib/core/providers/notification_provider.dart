@@ -13,6 +13,10 @@ class NotificationProvider with ChangeNotifier {
   bool _fullMoonNotifications = true;
   bool _newMoonNotifications = true;
   bool _sabbatNotifications = true;
+  bool _initialized = false;
+  bool? _permissionGranted;
+  int _scheduledCount = 0;
+  String? _lastError;
 
   NotificationProvider(
     FlutterLocalNotificationsPlugin notificationsPlugin,
@@ -24,6 +28,21 @@ class NotificationProvider with ChangeNotifier {
   bool get fullMoonNotifications => _fullMoonNotifications;
   bool get newMoonNotifications => _newMoonNotifications;
   bool get sabbatNotifications => _sabbatNotifications;
+  bool? get permissionGranted => _permissionGranted;
+  int get scheduledCount => _scheduledCount;
+  String? get lastError => _lastError;
+
+  Future<void> initialize(
+    LunarProvider lunarProvider,
+    WheelOfYearProvider wheelProvider,
+  ) async {
+    if (_initialized || kIsWeb) return;
+    _initialized = true;
+    await scheduleNotifications(
+      lunarProvider: lunarProvider,
+      wheelProvider: wheelProvider,
+    );
+  }
 
   void _loadPreferences() {
     _fullMoonNotifications = _prefs.getBool('fullMoonNotifications') ?? true;
@@ -50,12 +69,10 @@ class NotificationProvider with ChangeNotifier {
   }
 
   /// Agendar notificações com base nas configurações atuais
-  Future<void> scheduleNotifications({
+  Future<NotificationScheduleResult> scheduleNotifications({
     required LunarProvider lunarProvider,
     required WheelOfYearProvider wheelProvider,
   }) async {
-    await _notificationService.cancelAllNotifications();
-
     final List<DateTime> fullMoons = [];
     final List<DateTime> newMoons = [];
 
@@ -90,12 +107,29 @@ class NotificationProvider with ChangeNotifier {
       }
     }
 
-    final sabbats = _sabbatNotifications ? wheelProvider.getAllSabbats() : <Sabbat>[];
+    final sabbats =
+        _sabbatNotifications ? wheelProvider.getAllSabbats() : <Sabbat>[];
 
-    await _notificationService.scheduleMonthlyNotifications(
+    if (!_fullMoonNotifications &&
+        !_newMoonNotifications &&
+        !_sabbatNotifications) {
+      await _notificationService.cancelAllNotifications();
+      _permissionGranted = true;
+      _scheduledCount = 0;
+      _lastError = null;
+      notifyListeners();
+      return const NotificationScheduleResult(permissionGranted: true);
+    }
+
+    final result = await _notificationService.scheduleNotifications(
       fullMoonDates: fullMoons,
       newMoonDates: newMoons,
       sabbats: sabbats,
     );
+    _permissionGranted = result.permissionGranted;
+    _scheduledCount = result.scheduledCount;
+    _lastError = result.error;
+    notifyListeners();
+    return result;
   }
 }

@@ -5,6 +5,7 @@ import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../../../auth/auth.dart';
 import '../../data/models/pendulum_model.dart';
 
@@ -112,19 +113,22 @@ class _PendulumPageState extends State<PendulumPage>
       date: DateTime.now(),
     );
 
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final data = {
+      'id': consultation.id,
+      'user_id': context.read<AuthProvider>().currentUser.id,
+      'question': consultation.question,
+      'answer': consultation.answer.name,
+      'date': consultation.date.millisecondsSinceEpoch,
+      'created_at': now,
+      'updated_at': now,
+      'synced': 0,
+    };
     await db.insert(
       'pendulum_consultations',
-      {
-        'id': consultation.id,
-        'user_id': 'local_user',
-        'question': consultation.question,
-        'answer': consultation.answer.name,
-        'date': consultation.date.millisecondsSinceEpoch,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-        'synced': 0,
-      },
+      data,
     );
+    await DataSyncService().syncItem(SyncEntity.pendulumConsultations, data);
 
     // Contador já foi incrementado em _askPendulum() antes da animação
     // para prevenir múltiplas consultas simultâneas
@@ -193,7 +197,9 @@ class _PendulumPageState extends State<PendulumPage>
                             Icon(
                               isUnlimited
                                   ? Icons.all_inclusive
-                                  : (hasRemaining ? Icons.check_circle : Icons.timer),
+                                  : (hasRemaining
+                                      ? Icons.check_circle
+                                      : Icons.timer),
                               size: 16,
                               color: hasRemaining
                                   ? AppColors.success
@@ -335,10 +341,11 @@ class _PendulumPageState extends State<PendulumPage>
                     const SizedBox(height: 16),
                     Text(
                       _answer!.displayName,
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: AppColors.lilac,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: AppColors.lilac,
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -351,9 +358,7 @@ class _PendulumPageState extends State<PendulumPage>
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
-
               OutlinedButton.icon(
                 onPressed: () {
                   setState(() {
@@ -466,13 +471,8 @@ class PendulumPainter extends CustomPainter {
   }
 
   void _drawAnswerText(
-    Canvas canvas,
-    Size size,
-    String text,
-    Offset position,
-    Color color,
-    {bool isSelected = false}
-  ) {
+      Canvas canvas, Size size, String text, Offset position, Color color,
+      {bool isSelected = false}) {
     final textPainter = TextPainter(
       text: TextSpan(
         text: text,

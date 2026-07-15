@@ -109,7 +109,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
 
   Future<void> _loadPreviousData() async {
     final provider = context.read<AstrologyProvider>();
-    await provider.loadBirthChart('current_user');
+    await provider.loadBirthChart();
 
     if (provider.birthChart != null && mounted) {
       final chart = provider.birthChart!;
@@ -249,8 +249,9 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
             if (placemark.isNotEmpty) {
               // Evitar duplicar capital se já está nos resultados
               final isDuplicate = results.any((existing) {
-                final distance = (existing.key.latitude - location.latitude).abs() +
-                    (existing.key.longitude - location.longitude).abs();
+                final distance =
+                    (existing.key.latitude - location.latitude).abs() +
+                        (existing.key.longitude - location.longitude).abs();
                 return distance < 0.1; // ~10km de tolerância
               });
 
@@ -288,14 +289,18 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
         if (!aLocalityMatch && bLocalityMatch) return 1;
 
         // Prioridade 2: subAdministrativeArea exatamente igual
-        final aSubMatch = normalize(aPlace.subAdministrativeArea) == normalizedQuery;
-        final bSubMatch = normalize(bPlace.subAdministrativeArea) == normalizedQuery;
+        final aSubMatch =
+            normalize(aPlace.subAdministrativeArea) == normalizedQuery;
+        final bSubMatch =
+            normalize(bPlace.subAdministrativeArea) == normalizedQuery;
         if (aSubMatch && !bSubMatch) return -1;
         if (!aSubMatch && bSubMatch) return 1;
 
         // Prioridade 3: locality contém o termo
-        final aLocalityContains = normalize(aPlace.locality).contains(normalizedQuery);
-        final bLocalityContains = normalize(bPlace.locality).contains(normalizedQuery);
+        final aLocalityContains =
+            normalize(aPlace.locality).contains(normalizedQuery);
+        final bLocalityContains =
+            normalize(bPlace.locality).contains(normalizedQuery);
         if (aLocalityContains && !bLocalityContains) return -1;
         if (!aLocalityContains && bLocalityContains) return 1;
 
@@ -356,7 +361,6 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
 
     _birthPlaceFocusNode.unfocus();
   }
-
 
   bool _canCalculate() {
     return _birthDate != null &&
@@ -462,9 +466,10 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     const SizedBox(height: 16),
                     Text(
                       'Seu Mapa Astral',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppColors.softWhite,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: AppColors.softWhite,
+                              ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -688,7 +693,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                   ),
                                 ),
                               )
-                            : (_selectedLatitude != null && _selectedLongitude != null)
+                            : (_selectedLatitude != null &&
+                                    _selectedLongitude != null)
                                 ? const Icon(
                                     Icons.check_circle,
                                     color: AppColors.success,
@@ -710,7 +716,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                         _searchLocation(value);
                       },
                     ),
-                    if (_showSuggestions && _locationSuggestions.isNotEmpty) ...[
+                    if (_showSuggestions &&
+                        _locationSuggestions.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
@@ -729,13 +736,15 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                             height: 1,
                           ),
                           itemBuilder: (context, index) {
-                            final placemark = _placemarkSuggestions.length > index
-                                ? _placemarkSuggestions[index]
-                                : null;
+                            final placemark =
+                                _placemarkSuggestions.length > index
+                                    ? _placemarkSuggestions[index]
+                                    : null;
 
                             final loc = _locationSuggestions[index];
                             String displayText;
-                            String coordsText = 'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
+                            String coordsText =
+                                'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
 
                             if (placemark != null) {
                               final parts = <String>[];
@@ -744,7 +753,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                               if (placemark.locality != null &&
                                   placemark.locality!.isNotEmpty) {
                                 parts.add(placemark.locality!);
-                              } else if (placemark.subAdministrativeArea != null &&
+                              } else if (placemark.subAdministrativeArea !=
+                                      null &&
                                   placemark.subAdministrativeArea!.isNotEmpty) {
                                 parts.add(placemark.subAdministrativeArea!);
                               }
@@ -791,7 +801,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                         ),
                       ),
                     ],
-                    if (_selectedLatitude != null && _selectedLongitude != null) ...[
+                    if (_selectedLatitude != null &&
+                        _selectedLongitude != null) ...[
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -833,7 +844,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
 
               // Botão calcular
               ElevatedButton(
-                onPressed: _isCalculating || !_canCalculate() ? null : _calculateChart,
+                onPressed:
+                    _isCalculating || !_canCalculate() ? null : _calculateChart,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.lilac,
                   foregroundColor: AppColors.darkBackground,
@@ -873,9 +885,10 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       Expanded(
                         child: Text(
                           'Sem a hora exata, usaremos meio-dia (12:00) e o sistema de casas iguais.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.softWhite.withOpacity(0.8),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.softWhite.withOpacity(0.8),
+                                  ),
                         ),
                       ),
                     ],

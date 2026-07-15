@@ -1,126 +1,201 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart' hide DayOfWeek; // Adicionado hide DayOfWeek para evitar conflito
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../../features/wheel_of_year/data/models/sabbat_model.dart';
+
+class NotificationScheduleResult {
+  final bool permissionGranted;
+  final int scheduledCount;
+  final String? error;
+
+  const NotificationScheduleResult({
+    required this.permissionGranted,
+    this.scheduledCount = 0,
+    this.error,
+  });
+
+  bool get success => permissionGranted && error == null;
+}
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications;
 
   NotificationService(this._notifications);
 
-  /// Agendar notificação para Lua Cheia (1 dia antes)
-  Future<void> scheduleFullMoonNotification(DateTime fullMoonDate) async {
-    final scheduledDate = fullMoonDate.subtract(const Duration(days: 1));
+  Future<bool> requestPermissions() async {
+    if (kIsWeb) return false;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return await _notifications
+                .resolvePlatformSpecificImplementation<
+                    AndroidFlutterLocalNotificationsPlugin>()
+                ?.requestNotificationsPermission() ??
+            true;
+      case TargetPlatform.iOS:
+        return await _notifications
+                .resolvePlatformSpecificImplementation<
+                    IOSFlutterLocalNotificationsPlugin>()
+                ?.requestPermissions(alert: true, badge: true, sound: true) ??
+            false;
+      default:
+        return true;
+    }
+  }
 
-    if (scheduledDate.isBefore(DateTime.now())) return;
+  Future<void> createChannels() async {
+    final android = _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+    await android.createNotificationChannel(const AndroidNotificationChannel(
+      'moon_notifications',
+      'Fases da Lua',
+      description: 'Notificações sobre fases lunares importantes',
+      importance: Importance.high,
+    ));
+    await android.createNotificationChannel(const AndroidNotificationChannel(
+      'sabbat_notifications',
+      'Sabbats',
+      description: 'Lembretes de celebrações da Roda do Ano',
+      importance: Importance.high,
+    ));
+  }
 
-    await _notifications.zonedSchedule(
-      1, // ID único para lua cheia
-      '🌕 Lua Cheia se aproxima!',
-      'Amanhã é Lua Cheia! Prepare-se para rituais de manifestação e gratidão.',
-      tz.TZDateTime.from(scheduledDate, tz.local).add(const Duration(hours: 20)),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'moon_notifications',
-          'Fases da Lua',
-          channelDescription: 'Notificações sobre fases lunares importantes',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime, // Removido
+  @visibleForTesting
+  static int notificationId(String type, DateTime eventDate) {
+    final datePart =
+        (eventDate.year * 10000) + (eventDate.month * 100) + eventDate.day;
+    final prefix = switch (type) {
+      'full_moon' => 10,
+      'new_moon' => 20,
+      _ => 30,
+    };
+    return (prefix * 10000000) + datePart;
+  }
+
+  @visibleForTesting
+  static DateTime reminderDate(
+    DateTime eventDate, {
+    required int daysBefore,
+    required int hour,
+  }) {
+    return DateTime(
+      eventDate.year,
+      eventDate.month,
+      eventDate.day - daysBefore,
+      hour,
     );
   }
 
-  /// Agendar notificação para Lua Nova (1 dia antes)
-  Future<void> scheduleNewMoonNotification(DateTime newMoonDate) async {
-    final scheduledDate = newMoonDate.subtract(const Duration(days: 1));
-
-    if (scheduledDate.isBefore(DateTime.now())) return;
-
-    await _notifications.zonedSchedule(
-      2, // ID único para lua nova
-      '🌑 Lua Nova se aproxima!',
-      'Amanhã é Lua Nova! Momento perfeito para definir intenções e novos começos.',
-      tz.TZDateTime.from(scheduledDate, tz.local).add(const Duration(hours: 20)),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'moon_notifications',
-          'Fases da Lua',
-          channelDescription: 'Notificações sobre fases lunares importantes',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime, // Removido
-    );
-  }
-
-  /// Agendar notificação para Sabbat (3 dias antes)
-  Future<void> scheduleSabbatNotification(Sabbat sabbat) async {
-    final scheduledDate = sabbat.date.subtract(const Duration(days: 3));
-
-    if (scheduledDate.isBefore(DateTime.now())) return;
-
-    // ID baseado no hash do nome do sabbat para evitar duplicatas
-    final id = sabbat.name.hashCode % 10000 + 100; // IDs 100+
-
+  Future<void> _schedule({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime localDate,
+    required NotificationDetails details,
+  }) async {
+    if (!localDate.isAfter(DateTime.now())) return;
     await _notifications.zonedSchedule(
       id,
-      '${sabbat.emoji} ${sabbat.name} se aproxima!',
-      'Em 3 dias celebramos ${sabbat.name}. Prepare seus rituais!',
-      tz.TZDateTime.from(scheduledDate, tz.local).add(const Duration(hours: 9)),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'sabbat_notifications',
-          'Sabbats',
-          channelDescription: 'Lembretes de celebrações da Roda do Ano',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime, // Removido
+      title,
+      body,
+      tz.TZDateTime.from(localDate.toUtc(), tz.UTC),
+      details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }
 
-  /// Cancelar todas as notificações
-  Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
-  }
+  Future<void> scheduleFullMoonNotification(DateTime eventDate) => _schedule(
+        id: notificationId('full_moon', eventDate),
+        title: '🌕 Lua Cheia se aproxima!',
+        body:
+            'Amanhã é Lua Cheia! Prepare-se para rituais de manifestação e gratidão.',
+        localDate: reminderDate(eventDate, daysBefore: 1, hour: 20),
+        details: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'moon_notifications',
+            'Fases da Lua',
+            channelDescription: 'Notificações sobre fases lunares importantes',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+      );
 
-  /// Cancelar notificação específica
-  Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
-  }
+  Future<void> scheduleNewMoonNotification(DateTime eventDate) => _schedule(
+        id: notificationId('new_moon', eventDate),
+        title: '🌑 Lua Nova se aproxima!',
+        body:
+            'Amanhã é Lua Nova! Momento perfeito para definir intenções e novos começos.',
+        localDate: reminderDate(eventDate, daysBefore: 1, hour: 20),
+        details: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'moon_notifications',
+            'Fases da Lua',
+            channelDescription: 'Notificações sobre fases lunares importantes',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+      );
 
-  /// Agendar todas as notificações do mês
-  Future<void> scheduleMonthlyNotifications({
+  Future<void> scheduleSabbatNotification(Sabbat sabbat) => _schedule(
+        id: notificationId('sabbat', sabbat.date),
+        title: '${sabbat.emoji} ${sabbat.name} se aproxima!',
+        body: 'Em 3 dias celebramos ${sabbat.name}. Prepare seus rituais!',
+        localDate: reminderDate(sabbat.date, daysBefore: 3, hour: 9),
+        details: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'sabbat_notifications',
+            'Sabbats',
+            channelDescription: 'Lembretes de celebrações da Roda do Ano',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+      );
+
+  Future<void> cancelAllNotifications() => _notifications.cancelAll();
+
+  Future<NotificationScheduleResult> scheduleNotifications({
     required List<DateTime> fullMoonDates,
     required List<DateTime> newMoonDates,
     required List<Sabbat> sabbats,
   }) async {
-    // Cancelar notificações antigas primeiro
-    await cancelAllNotifications();
-
-    // Agendar notificações de Luas
-    for (final date in fullMoonDates) {
-      await scheduleFullMoonNotification(date);
-    }
-    for (final date in newMoonDates) {
-      await scheduleNewMoonNotification(date);
-    }
-
-    // Agendar notificações de Sabbats
-    for (final sabbat in sabbats) {
-      await scheduleSabbatNotification(sabbat);
+    try {
+      final granted = await requestPermissions();
+      if (!granted) {
+        return const NotificationScheduleResult(
+          permissionGranted: false,
+          error: 'Permissão de notificações não concedida',
+        );
+      }
+      await createChannels();
+      await cancelAllNotifications();
+      for (final date in fullMoonDates) {
+        await scheduleFullMoonNotification(date);
+      }
+      for (final date in newMoonDates) {
+        await scheduleNewMoonNotification(date);
+      }
+      for (final sabbat in sabbats) {
+        await scheduleSabbatNotification(sabbat);
+      }
+      final pending = await _notifications.pendingNotificationRequests();
+      return NotificationScheduleResult(
+        permissionGranted: true,
+        scheduledCount: pending.length,
+      );
+    } catch (e) {
+      return NotificationScheduleResult(
+        permissionGranted: true,
+        error: 'Falha ao agendar notificações: $e',
+      );
     }
   }
 }

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../data/models/rune_model.dart';
 import '../../data/models/rune_spread_model.dart';
 import '../../data/data_sources/runes_data.dart';
 import '../../data/repositories/rune_reading_repository.dart';
@@ -52,7 +51,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     if (!authProvider.canUseRunes) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
+          content: Text(
+              'Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
           backgroundColor: AppColors.alert,
           duration: Duration(seconds: 4),
         ),
@@ -117,7 +117,10 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       date: DateTime.now(),
     );
 
-    await _repository.saveReading(reading);
+    await _repository.saveReading(
+      reading,
+      context.read<AuthProvider>().currentUser.id,
+    );
   }
 
   @override
@@ -141,9 +144,10 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     const SizedBox(height: 16),
                     Text(
                       'Leitura de Runas',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppColors.lilac,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: AppColors.lilac,
+                              ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -271,7 +275,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               Consumer<AuthProvider>(
                 builder: (context, authProvider, _) {
                   if (authProvider.isPremium) return const SizedBox.shrink();
-                  final remaining = authProvider.currentUser.remainingRuneReadings;
+                  final remaining =
+                      authProvider.currentUser.remainingRuneReadings;
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
@@ -292,9 +297,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
             // Resultado
             if (_drawnRunes != null) ...[
               _buildReadingResult(_drawnRunes!),
-
               const SizedBox(height: 16),
-
               OutlinedButton.icon(
                 onPressed: () {
                   setState(() {
@@ -516,7 +519,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        position.isReversed && position.rune.reversedMeaning != null
+                        position.isReversed &&
+                                position.rune.reversedMeaning != null
                             ? position.rune.reversedMeaning!
                             : position.rune.divination,
                         style: const TextStyle(

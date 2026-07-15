@@ -8,10 +8,17 @@ class GratitudeProvider with ChangeNotifier {
   List<GratitudeModel> _gratitudes = [];
   bool _isLoading = false;
   String? _error;
+  String _currentUserId = 'local_user';
 
   List<GratitudeModel> get gratitudes => _gratitudes;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  Future<void> setUserId(String userId) async {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    await loadGratitudes();
+  }
 
   Future<void> loadGratitudes() async {
     _isLoading = true;
@@ -19,7 +26,7 @@ class GratitudeProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _gratitudes = await _repository.getAll();
+      _gratitudes = await _repository.getAll(_currentUserId);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -31,7 +38,7 @@ class GratitudeProvider with ChangeNotifier {
 
   Future<void> addGratitude(GratitudeModel gratitude) async {
     try {
-      await _repository.insert(gratitude);
+      await _repository.insert(gratitude.copyWith(userId: _currentUserId));
       await loadGratitudes();
     } catch (e) {
       _error = e.toString();
@@ -41,7 +48,7 @@ class GratitudeProvider with ChangeNotifier {
 
   Future<void> updateGratitude(GratitudeModel gratitude) async {
     try {
-      await _repository.update(gratitude);
+      await _repository.update(gratitude.copyWith(userId: _currentUserId));
       await loadGratitudes();
     } catch (e) {
       _error = e.toString();
@@ -68,6 +75,8 @@ class GratitudeProvider with ChangeNotifier {
   }
 
   List<GratitudeModel> getGratitudesByTag(String tag) {
-    return _gratitudes.where((gratitude) => gratitude.tags.contains(tag)).toList();
+    return _gratitudes
+        .where((gratitude) => gratitude.tags.contains(tag))
+        .toList();
   }
 }

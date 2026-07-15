@@ -7,10 +7,12 @@ class GratitudeRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final DataSyncService _syncService = DataSyncService();
 
-  Future<List<GratitudeModel>> getAll() async {
+  Future<List<GratitudeModel>> getAll(String userId) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'gratitudes',
+      where: 'user_id = ?',
+      whereArgs: [userId],
       orderBy: 'date DESC',
     );
     return List.generate(maps.length, (i) => GratitudeModel.fromMap(maps[i]));

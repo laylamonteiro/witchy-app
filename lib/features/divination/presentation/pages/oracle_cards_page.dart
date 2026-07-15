@@ -5,6 +5,7 @@ import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../../data/models/oracle_card_model.dart';
 import '../../data/data_sources/oracle_cards_data.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -46,7 +47,8 @@ class _OracleCardsPageState extends State<OracleCardsPage>
     if (!authProvider.canUseOracle) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
+          content: Text(
+              'Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
           backgroundColor: AppColors.alert,
           duration: Duration(seconds: 4),
         ),
@@ -104,16 +106,22 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       date: DateTime.now(),
     );
 
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final data = {
+      'id': reading.id,
+      'user_id': context.read<AuthProvider>().currentUser.id,
+      'spread_type': reading.spreadType.name,
+      'reading_data': reading.toJsonString(),
+      'date': reading.date.millisecondsSinceEpoch,
+      'created_at': now,
+      'updated_at': now,
+      'synced': 0,
+    };
     await db.insert(
       'oracle_readings',
-      {
-        'id': reading.id,
-        'spread_type': reading.spreadType.name,
-        'reading_data': reading.toJsonString(),
-        'date': reading.date.millisecondsSinceEpoch,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      data,
     );
+    await DataSyncService().syncItem(SyncEntity.oracleReadings, data);
   }
 
   @override
@@ -137,9 +145,10 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                     const SizedBox(height: 16),
                     Text(
                       'Cartas do Oráculo',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppColors.lilac,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: AppColors.lilac,
+                              ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -193,7 +202,8 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               Consumer<AuthProvider>(
                 builder: (context, authProvider, _) {
                   if (authProvider.isPremium) return const SizedBox.shrink();
-                  final remaining = authProvider.currentUser.remainingOracleReadings;
+                  final remaining =
+                      authProvider.currentUser.remainingOracleReadings;
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
@@ -210,12 +220,9 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                 },
               ),
             ],
-
             if (_drawnCards != null) ...[
               _buildReadingResult(_drawnCards!),
-
               const SizedBox(height: 16),
-
               OutlinedButton.icon(
                 onPressed: () {
                   setState(() {
@@ -320,9 +327,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
             ],
           ),
         ),
-
         const SizedBox(height: 16),
-
         ...positions.map((position) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),

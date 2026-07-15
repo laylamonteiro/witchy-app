@@ -97,7 +97,8 @@ class SyncProvider extends ChangeNotifier {
       _lastError = result.error;
       await debugLog('SYNC', 'Erro: ${result.error}');
     } else {
-      await debugLog('SYNC', 'Sucesso: ${result.uploaded} enviados, ${result.downloaded} recebidos');
+      await debugLog('SYNC',
+          'Sucesso: ${result.uploaded} enviados, ${result.downloaded} recebidos');
     }
 
     notifyListeners();
@@ -147,7 +148,8 @@ class SyncProvider extends ChangeNotifier {
   }
 
   /// Resolve um conflito específico
-  Future<void> resolveConflict(SyncConflict conflict, ConflictResolution resolution) async {
+  Future<void> resolveConflict(
+      SyncConflict conflict, ConflictResolution resolution) async {
     await _syncService.resolveConflictManually(conflict, resolution);
     _conflicts = _syncService.pendingConflicts;
     notifyListeners();

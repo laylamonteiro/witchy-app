@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS dreams (
   tags TEXT,
   feeling TEXT,
   date TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de desejos
@@ -76,7 +77,8 @@ CREATE TABLE IF NOT EXISTS gratitudes (
   content TEXT NOT NULL,
   tags TEXT,
   date TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de afirmações
@@ -87,7 +89,8 @@ CREATE TABLE IF NOT EXISTS affirmations (
   category TEXT NOT NULL,
   is_preloaded BOOLEAN DEFAULT FALSE,
   is_favorite BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de rituais diários
@@ -98,7 +101,8 @@ CREATE TABLE IF NOT EXISTS daily_rituals (
   description TEXT,
   time TEXT NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de logs de rituais
@@ -107,7 +111,8 @@ CREATE TABLE IF NOT EXISTS ritual_logs (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   ritual_id UUID REFERENCES daily_rituals(id) ON DELETE CASCADE NOT NULL,
   notes TEXT,
-  completed_at TIMESTAMPTZ NOT NULL
+  completed_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de sigilos
@@ -116,7 +121,8 @@ CREATE TABLE IF NOT EXISTS sigils (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   intention TEXT NOT NULL,
   image_path TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de mapas astrais
@@ -132,7 +138,8 @@ CREATE TABLE IF NOT EXISTS birth_charts (
   timezone TEXT NOT NULL,
   unknown_birth_time BOOLEAN DEFAULT FALSE,
   chart_data JSONB NOT NULL,
-  calculated_at TIMESTAMPTZ DEFAULT NOW()
+  calculated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de perfis mágicos
@@ -141,7 +148,8 @@ CREATE TABLE IF NOT EXISTS magical_profiles (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   birth_chart_id UUID REFERENCES birth_charts(id) ON DELETE CASCADE NOT NULL,
   profile_data JSONB NOT NULL,
-  generated_at TIMESTAMPTZ DEFAULT NOW()
+  generated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de leituras de runas
@@ -152,7 +160,8 @@ CREATE TABLE IF NOT EXISTS rune_readings (
   spread_type TEXT NOT NULL,
   reading_data JSONB NOT NULL,
   date TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de consultas ao pêndulo
@@ -162,7 +171,8 @@ CREATE TABLE IF NOT EXISTS pendulum_consultations (
   question TEXT NOT NULL,
   answer TEXT NOT NULL,
   date TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de leituras de oracle
@@ -172,7 +182,8 @@ CREATE TABLE IF NOT EXISTS oracle_readings (
   spread_type TEXT NOT NULL,
   reading_data JSONB NOT NULL,
   date TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Tabela de clima mágico diário
@@ -183,6 +194,7 @@ CREATE TABLE IF NOT EXISTS daily_magical_weather (
   ai_generated_text TEXT NOT NULL,
   weather_data JSONB NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, date)
 );
 

@@ -34,6 +34,7 @@ class ChartCalculator {
 
   /// Calcula o mapa natal completo
   Future<BirthChartModel> calculateBirthChart({
+    required String userId,
     required DateTime birthDate,
     required TimeOfDay birthTime,
     required String birthPlace,
@@ -53,6 +54,7 @@ class ChartCalculator {
 
       return await _calculateWithLocalMethod(
         birthDate: birthDate,
+        userId: userId,
         birthTime: birthTime,
         birthPlace: birthPlace,
         latitude: latitude,
@@ -67,6 +69,7 @@ class ChartCalculator {
 
   /// Calcula usando método local (VSOP87)
   Future<BirthChartModel> _calculateWithLocalMethod({
+    required String userId,
     required DateTime birthDate,
     required TimeOfDay birthTime,
     required String birthPlace,
@@ -148,7 +151,7 @@ class ChartCalculator {
 
     return BirthChartModel(
       id: const Uuid().v4(),
-      userId: 'current_user',
+      userId: userId,
       birthDate: birthDate,
       birthTime: birthTime,
       birthPlace: birthPlace,
@@ -227,7 +230,9 @@ class ChartCalculator {
 
     // IMPORTANTE: Converter hora local para UTC
     // Se timezone fornecido, usa ele; senão, detecta automaticamente
-    final timezoneOffset = (timezoneOffsetHours ?? _detectBrazilianTimezone(date, latitude)).round();
+    final timezoneOffset =
+        (timezoneOffsetHours ?? _detectBrazilianTimezone(date, latitude))
+            .round();
 
     // Converter hora local para UTC
     final hourLocal = time.hour + time.minute / 60.0;
@@ -259,7 +264,8 @@ class ChartCalculator {
     final jdDouble = jd.toDouble() + (hourUTC - 12) / 24.0;
 
     _log('   🕐 Hora local: ${time.hour}:${time.minute}');
-    _log('   🌍 Timezone: UTC${timezoneOffset >= 0 ? "+" : ""}$timezoneOffset ${timezoneOffsetHours == null ? "(detectado automaticamente)" : "(manual)"}');
+    _log(
+        '   🌍 Timezone: UTC${timezoneOffset >= 0 ? "+" : ""}$timezoneOffset ${timezoneOffsetHours == null ? "(detectado automaticamente)" : "(manual)"}');
     _log('   ⏰ Hora UTC: ${hourUTC.toStringAsFixed(2)}');
     _log('   📅 Julian Day: ${jdDouble.toStringAsFixed(5)}');
 
@@ -440,7 +446,8 @@ class ChartCalculator {
     while (lst >= 24) lst -= 24;
 
     _log('   ⏰ GMST: ${gmst.toStringAsFixed(6)} horas');
-    _log('   🌍 LST: ${lst.toStringAsFixed(6)} horas (${(lst * 15).toStringAsFixed(2)}°)');
+    _log(
+        '   🌍 LST: ${lst.toStringAsFixed(6)} horas (${(lst * 15).toStringAsFixed(2)}°)');
 
     // RAMC em graus (0-360)
     final ramc = (lst * 15.0) % 360;
@@ -452,16 +459,17 @@ class ChartCalculator {
     final oblRad = obliquity * math.pi / 180;
     final ramcRad = ramc * math.pi / 180;
 
-    var mc = math.atan2(
-      math.sin(ramcRad),
-      math.cos(ramcRad) * math.cos(oblRad)
-    ) * 180 / math.pi;
+    var mc =
+        math.atan2(math.sin(ramcRad), math.cos(ramcRad) * math.cos(oblRad)) *
+            180 /
+            math.pi;
 
     // Normalizar para 0-360
     mc = mc % 360;
     if (mc < 0) mc += 360;
 
-    _log('   🌟 MC (Meio do Céu): ${mc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(mc).displayName})');
+    _log(
+        '   🌟 MC (Meio do Céu): ${mc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(mc).displayName})');
 
     // IC (Imum Coeli) - oposto ao MC
     final ic = (mc + 180) % 360;
@@ -480,7 +488,8 @@ class ChartCalculator {
 
     // Casas 2-3 (divisão igual entre ASC e IC)
     for (int i = 2; i <= 3; i++) {
-      final cuspLongitude = (asc + ((ic - asc + 360) % 360) * (i - 1) / 3) % 360;
+      final cuspLongitude =
+          (asc + ((ic - asc + 360) % 360) * (i - 1) / 3) % 360;
       houses.add(_createHouse(i, cuspLongitude));
     }
 
@@ -498,7 +507,8 @@ class ChartCalculator {
 
     // Casas 8-9 (divisão igual entre DSC e MC)
     for (int i = 8; i <= 9; i++) {
-      final cuspLongitude = (dsc + ((mc - dsc + 360) % 360) * (i - 7) / 3) % 360;
+      final cuspLongitude =
+          (dsc + ((mc - dsc + 360) % 360) * (i - 7) / 3) % 360;
       houses.add(_createHouse(i, cuspLongitude));
     }
 
@@ -507,7 +517,8 @@ class ChartCalculator {
 
     // Casas 11-12 (divisão igual entre MC e ASC)
     for (int i = 11; i <= 12; i++) {
-      final cuspLongitude = (mc + ((asc - mc + 360) % 360) * (i - 10) / 3) % 360;
+      final cuspLongitude =
+          (mc + ((asc - mc + 360) % 360) * (i - 10) / 3) % 360;
       houses.add(_createHouse(i, cuspLongitude));
     }
 
@@ -517,7 +528,8 @@ class ChartCalculator {
     // Log detalhado de todas as casas
     _log('   🏠 CASAS ASTROLÓGICAS (${houses.length} casas):');
     for (final house in houses) {
-      _log('      Casa ${house.number.toString().padLeft(2)}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°${house.minute}\')');
+      _log(
+          '      Casa ${house.number.toString().padLeft(2)}: ${house.cuspLongitude.toStringAsFixed(2)}° (${house.sign.displayName} ${house.degree}°${house.minute}\')');
     }
 
     return houses;
@@ -535,7 +547,8 @@ class ChartCalculator {
     // tan(ASC) = cos(RAMC) / -(sin(ε) * tan(lat) + cos(ε) * sin(RAMC))
 
     final numerator = math.cos(ramcRad);
-    final denominator = -(math.sin(oblRad) * math.tan(latRad) + math.cos(oblRad) * math.sin(ramcRad));
+    final denominator = -(math.sin(oblRad) * math.tan(latRad) +
+        math.cos(oblRad) * math.sin(ramcRad));
 
     var asc = math.atan2(numerator, denominator) * 180 / math.pi;
 
@@ -545,7 +558,8 @@ class ChartCalculator {
 
     _log('   🔮 RAMC: ${ramc.toStringAsFixed(2)}°');
     _log('   📍 Latitude: ${latitude.toStringAsFixed(2)}°');
-    _log('   ♈ Ascendente: ${asc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(asc).displayName})');
+    _log(
+        '   ♈ Ascendente: ${asc.toStringAsFixed(2)}° (${ZodiacSign.fromLongitude(asc).displayName})');
 
     return asc;
   }
