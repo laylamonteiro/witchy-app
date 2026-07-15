@@ -31,19 +31,22 @@ token ser emitido. Ou seja: **não é senha nem rede — é assinatura/registro.
    campo **Authorized Client IDs** recebeu `com.grimoriodebolso.app`. Ali vai o
    **Web client ID**, não o package. (Detalhes na Etapa 3.)
 
-### O SHA-1 que o projeto já espera
+### ⚡ DIAGNÓSTICO CONFIRMADO (logs da Action de 15/07/2026, run v46)
 
-O `google-services.json` do repositório já tem um Android client registrado
-para o package `com.grimoriodebolso.app` com este SHA-1 (do **keystore de
-release**):
+O passo "🔎 Print APK signing SHA-1" revelou que existem **dois certificados
+diferentes** em jogo:
 
-```
-8B:D7:BB:97:B9:5C:8D:5E:54:9D:55:84:A0:1F:E2:7A:EC:85:DA:98
-```
+| Origem | SHA-1 |
+|---|---|
+| **APK real** (keystore dos GitHub Secrets `ANDROID_KEYSTORE_*`) | **`54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60`** |
+| Registro antigo no Google Cloud (`google-services.json`) | `8B:D7:BB:97:B9:5C:8D:5E:54:9D:55:84:A0:1F:E2:7A:EC:85:DA:98` |
 
-> **Meta**: garantir que o APK seja assinado com esse keystore. Se o SHA-1 do
-> seu keystore for igual ao de cima, **não precisa mexer no Google Cloud** —
-> só corrigir o Supabase (Etapa 3). Se for diferente, registre o novo (Etapa 2).
+O keystore cadastrado nos Secrets **não é** o que gerou o registro antigo —
+por isso o `ApiException: 10` persiste mesmo com o APK assinado em release.
+
+> **✅ AÇÃO NECESSÁRIA**: registrar o SHA-1 do APK real
+> (`54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60`) como um novo
+> OAuth client Android no Google Cloud (Etapa 2 abaixo). Nada muda no app.
 
 ---
 

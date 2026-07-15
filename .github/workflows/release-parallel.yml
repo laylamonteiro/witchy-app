@@ -509,9 +509,12 @@ jobs:
               echo "⚠️ Não foi possível extrair o SHA-1 (APK sem assinatura v1?). Use o keystore localmente."
           fi
           echo "════════════════════════════════════════════════════════════"
-          echo " Esperado (já registrado no google-services.json):"
-          echo "   8B:D7:BB:97:B9:5C:8D:5E:54:9D:55:84:A0:1F:E2:7A:EC:85:DA:98"
-          echo " Se o valor acima for DIFERENTE, registre-o no Google Cloud."
+          echo " O SHA-1 acima PRECISA estar registrado como OAuth client"
+          echo " Android no Google Cloud (projeto grimorio-de-bolso), senão o"
+          echo " login Google falha com ApiException: 10."
+          echo " Keystore atual dos Secrets (registrado em 07/2026):"
+          echo "   54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60"
+          echo " Guia completo: docs/GOOGLE_SIGNIN_SETUP.md"
           echo "════════════════════════════════════════════════════════════"
 
 
