@@ -394,7 +394,6 @@ CREATE OR REPLACE FUNCTION public.redeem_beta_code(p_code TEXT, p_user_id TEXT)
 RETURNS JSONB AS $$
 DECLARE
   v_row beta_codes%ROWTYPE;
-  v_remaining INTEGER;
 BEGIN
   UPDATE beta_codes
      SET current_uses = current_uses + 1,
@@ -432,17 +431,11 @@ BEGIN
      WHERE id = p_user_id::uuid;
   END IF;
 
-  v_remaining := v_row.max_uses - v_row.current_uses;
+  -- Não expor usos restantes na mensagem: evita que o usuário repasse o
+  -- código sabendo que outras pessoas ainda podem usá-lo.
   RETURN jsonb_build_object(
     'success', true,
-    'message', CASE
-      WHEN v_remaining > 0 THEN
-        'Código resgatado! Você agora tem acesso Premium vitalício 🎉' ||
-        E'\n(Restam ' || v_remaining || ' uso' ||
-        CASE WHEN v_remaining > 1 THEN 's' ELSE '' END || ' deste código)'
-      ELSE
-        'Código resgatado! Você agora tem acesso Premium vitalício 🎉'
-    END,
+    'message', 'Código resgatado! Você agora tem acesso Premium vitalício 🎉',
     'current_uses', v_row.current_uses,
     'max_uses', v_row.max_uses
   );

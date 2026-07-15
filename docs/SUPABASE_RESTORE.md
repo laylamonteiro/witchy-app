@@ -56,9 +56,11 @@ O script cria:
 
 1. **Authentication → Providers → Email**: deixe habilitado.
    - Para beta fechado, você pode desativar "Confirm email" e reativar depois.
-   - Se a confirmação estiver ativa, abra **Authentication → Email Templates →
-     Confirm signup** e traduza assunto e conteúdo para PT-BR, usando o branding
-     **Grimório de Bolso**.
+   - Com confirmação ativa, siga **[docs/SUPABASE_EMAIL_SETUP.md](SUPABASE_EMAIL_SETUP.md)**:
+     template HTML pronto com o visual do app
+     (`docs/email_templates/confirm_signup.html`) e página pós-confirmação
+     (`docs/email-confirmado.html`) para substituir o redirect padrão
+     `localhost:3000`.
 2. **Google (opcional)** — necessário para o botão "Entrar com Google":
    - **Authentication → Providers → Google** → habilite;
    - preencha Client ID/Secret do console Google Cloud;

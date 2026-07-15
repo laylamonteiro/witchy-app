@@ -209,7 +209,7 @@ class BetaCodeRepository {
       await _persistPremiumProfile(supabase, userId, now);
 
       await _mirrorRedeemLocally(cleanCode, userId);
-      return _successMessage(maxUses - newCurrentUses);
+      return _successMessage();
     } catch (e) {
       await debugLog('BETA_CODE', 'Erro ao resgatar código no Supabase: $e');
       // Fonte da verdade é o Supabase: NÃO conceder premium a partir do
@@ -265,7 +265,7 @@ class BetaCodeRepository {
 
     await _updateCodeLocal(cleanCode, userId, DateTime.now(),
         currentUses: newCurrentUses);
-    return _successMessage(maxUses - newCurrentUses);
+    return _successMessage();
   }
 
   /// Validações comuns de resgate. Retorna um mapa de erro ou null se válido.
@@ -293,11 +293,13 @@ class BetaCodeRepository {
     return null;
   }
 
-  Map<String, dynamic> _successMessage(int usesRemaining) {
-    final message = usesRemaining > 0
-        ? 'Código resgatado! Você agora tem acesso Premium vitalício 🎉\n(Restam $usesRemaining uso${usesRemaining > 1 ? 's' : ''} deste código)'
-        : 'Código resgatado! Você agora tem acesso Premium vitalício 🎉';
-    return {'success': true, 'message': message};
+  /// Não expor quantos usos restam: evita que o usuário repasse o código
+  /// sabendo que outras pessoas ainda podem usá-lo.
+  Map<String, dynamic> _successMessage() {
+    return {
+      'success': true,
+      'message': 'Código resgatado! Você agora tem acesso Premium vitalício 🎉',
+    };
   }
 
   /// Espelha um resgate feito no Supabase para o cache local (não crítico).
