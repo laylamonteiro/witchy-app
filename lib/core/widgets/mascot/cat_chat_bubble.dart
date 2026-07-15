@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -34,12 +35,15 @@ class CatBubbleMessages {
 /// Balão de conversa diário exibido ACIMA do gatinho mascote.
 ///
 /// - Aparece apenas no primeiro open do app em cada dia
-///   (SharedPreferences `cat_bubble_last_shown_date`).
+///   (SharedPreferences `cat_bubble_last_shown_date`, escopado por conta).
 /// - "X" fecha; tocar no corpo abre o Clima Mágico Diário. Ambos gravam a
 ///   data para não reaparecer no mesmo dia.
 ///
-/// Este widget é um irmão do `DraggableCatMascot` no Stack da HomePage e
-/// acompanha a posição publicada pelo mascote.
+/// Formato de NUVEM: o corpo é um retângulo arredondado (área de texto
+/// previsível → quebra automática confiável) e as ondulações da nuvem são
+/// decorativas nas bordas. Tamanho é DINÂMICO conforme o conteúdo (mensagens
+/// curtas geram um balão estreito; longas quebram em várias linhas até um
+/// limite). Sem setinha (deixava de apontar para o gato ao arrastar).
 class CatChatBubble extends StatefulWidget {
   final ValueListenable<Offset> mascotPosition;
   final String? message;
@@ -61,18 +65,28 @@ class _CatChatBubbleState extends State<CatChatBubble>
   bool _visible = false;
   bool _dismissed = false;
 
-  /// Mensagem do dia (fixada no initState para dimensionar o typewriter).
+  // Dimensões compactas
+  static const double _maxBubbleWidth = 180;
+  static const double _minTextWidth = 70;
+  static const EdgeInsets _contentPadding = EdgeInsets.fromLTRB(14, 11, 22, 12);
+
+  static const TextStyle _messageStyle = TextStyle(
+    color: Color(0xFF2B2143),
+    fontSize: 12,
+    height: 1.3,
+    fontWeight: FontWeight.w500,
+  );
+
+  /// Mensagem do dia (fixada no initState).
   late final String _message =
       widget.message ?? CatBubbleMessages.messageForDate(DateTime.now());
 
-  /// Pop de entrada: escala elástica (o balão "estoura" na tela, como uma
-  /// fala surgindo) + fade rápido no início.
+  /// Pop de entrada: escala elástica (o balão "estoura" na tela).
   late final AnimationController _popController;
   late final Animation<double> _scale;
   late final Animation<double> _fade;
 
-  /// Typewriter: revela o texto letra a letra, como se o gatinho estivesse
-  /// falando naquele momento.
+  /// Typewriter: revela o texto letra a letra.
   late final AnimationController _typeController;
   late final Animation<int> _typedChars;
 
@@ -80,8 +94,8 @@ class _CatChatBubbleState extends State<CatChatBubble>
   void initState() {
     super.initState();
     _popController = AnimationController(
-      duration: const Duration(milliseconds: 550),
-      reverseDuration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 520),
+      reverseDuration: const Duration(milliseconds: 190),
       vsync: this,
     );
     _scale = CurvedAnimation(
@@ -91,15 +105,12 @@ class _CatChatBubbleState extends State<CatChatBubble>
     );
     _fade = CurvedAnimation(
       parent: _popController,
-      // Opacidade completa logo no início do pop, para o overshoot elástico
-      // acontecer com o balão já visível
       curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
       reverseCurve: Curves.easeIn,
     );
 
     _typeController = AnimationController(
-      // ~35ms por letra, com piso para mensagens curtas
-      duration: Duration(milliseconds: (_message.length * 35).clamp(600, 3000)),
+      duration: Duration(milliseconds: (_message.length * 32).clamp(600, 2600)),
       vsync: this,
     );
     _typedChars = StepTween(begin: 0, end: _message.length).animate(
@@ -117,8 +128,6 @@ class _CatChatBubbleState extends State<CatChatBubble>
   }
 
   /// Chave escopada por CONTA: cada usuário vê o balão 1x por dia.
-  /// (Com chave global, logar com outra conta no mesmo dia não mostrava o
-  /// balão — bug reportado.)
   String _prefsKey() {
     final userId = context.read<AuthProvider>().currentUser.id;
     return '${CatChatBubble._lastShownKey}_$userId';
@@ -132,13 +141,10 @@ class _CatChatBubbleState extends State<CatChatBubble>
 
     if (lastShown == today) return; // já apareceu hoje
 
-    // Pequena espera para a home assentar antes do balão surgir
     await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted || _dismissed) return;
 
     setState(() => _visible = true);
-    // Pop primeiro; o gatinho "começa a falar" (typewriter) assim que o
-    // balão termina de estourar na tela
     await _popController.forward();
     if (!mounted || _dismissed) return;
     await _typeController.forward();
@@ -156,9 +162,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
     await _markShownToday();
     if (!mounted) return;
     await _popController.reverse();
-    if (mounted) {
-      setState(() => _visible = false);
-    }
+    if (mounted) setState(() => _visible = false);
   }
 
   Future<void> _openMagicalWeather() async {
@@ -167,24 +171,14 @@ class _CatChatBubbleState extends State<CatChatBubble>
     await _markShownToday();
     if (!mounted) return;
     setState(() => _visible = false);
-    // rootNavigator: a página abre em tela cheia, acima dos Navigators
-    // aninhados das abas
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(builder: (_) => const DailyMagicalWeatherPage()),
     );
   }
 
-  static const TextStyle _messageStyle = TextStyle(
-    color: Color(0xFF211A2E),
-    fontSize: 13,
-    height: 1.35,
-  );
-
-  /// Texto com efeito typewriter (letras aparecendo uma a uma) e um cursor
-  /// "▌" enquanto o gatinho ainda está "falando".
-  ///
-  /// O texto completo fica invisível por baixo para reservar o espaço final —
-  /// o balão nasce já no tamanho certo e não fica pulando durante a digitação.
+  /// Texto com efeito typewriter. O texto completo fica invisível por baixo
+  /// para reservar o layout (largura + altura das linhas), então o balão
+  /// nasce no tamanho final e não pula durante a digitação.
   Widget _buildTypewriterText() {
     return AnimatedBuilder(
       animation: _typedChars,
@@ -195,16 +189,10 @@ class _CatChatBubbleState extends State<CatChatBubble>
 
         return Stack(
           children: [
-            // Reserva o layout com o texto completo (invisível)
             Opacity(
               opacity: 0,
-              child: Text(
-                _message,
-                style: _messageStyle,
-                softWrap: true,
-              ),
+              child: Text(_message, style: _messageStyle),
             ),
-            // Texto revelado progressivamente + cursor de "fala"
             Text.rich(
               TextSpan(
                 text: visibleText,
@@ -214,12 +202,12 @@ class _CatChatBubbleState extends State<CatChatBubble>
                       text: '▌',
                       style: TextStyle(
                         color: AppColors.lilac.withValues(alpha: 0.9),
+                        fontSize: 12,
                       ),
                     ),
                 ],
               ),
               style: _messageStyle,
-              softWrap: true,
             ),
           ],
         );
@@ -232,29 +220,34 @@ class _CatChatBubbleState extends State<CatChatBubble>
     if (!_visible) return const SizedBox.shrink();
 
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final availableWidth = (screenWidth - 16).clamp(0.0, 210.0);
-    final textPainter = TextPainter(
+    final scaler = MediaQuery.textScalerOf(context);
+
+    // Largura máxima do balão respeitando a tela
+    final maxBubble = math.min(_maxBubbleWidth, screenWidth - 24).toDouble();
+    final horizontalPad = _contentPadding.horizontal;
+    final maxTextWidth = maxBubble - horizontalPad;
+
+    // Mede o texto permitindo quebra em várias linhas até maxTextWidth.
+    // A largura resultante (linha mais longa) define um balão dinâmico:
+    // curto → estreito; longo → quebra até o limite.
+    final tp = TextPainter(
       text: TextSpan(text: _message, style: _messageStyle),
       textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: 1,
-    )..layout();
-    final minWidth = availableWidth < 100 ? availableWidth : 100.0;
-    final bubbleWidth =
-        (textPainter.width + 32).clamp(minWidth, availableWidth);
+      textScaler: scaler,
+    )..layout(maxWidth: maxTextWidth);
+
+    // Em telas muito estreitas o mínimo não pode exceder o máximo
+    final minText = math.min(_minTextWidth, maxTextWidth);
+    final textWidth = tp.width.clamp(minText, maxTextWidth);
+    final bubbleWidth = textWidth + horizontalPad;
 
     return ValueListenableBuilder<Offset>(
       valueListenable: widget.mascotPosition,
       builder: (context, position, child) {
-        final maxLeft = screenWidth - bubbleWidth - 8;
+        final maxLeft = (screenWidth - bubbleWidth - 8).clamp(8.0, screenWidth);
         final left = (position.dx - 8).clamp(8.0, maxLeft).toDouble();
-        final top = (position.dy - 86).clamp(8.0, double.infinity).toDouble();
-
-        return Positioned(
-          left: left,
-          top: top,
-          child: child!,
-        );
+        final top = (position.dy - 92).clamp(8.0, double.infinity).toDouble();
+        return Positioned(left: left, top: top, child: child!);
       },
       child: FadeTransition(
         opacity: _fade,
@@ -264,34 +257,48 @@ class _CatChatBubbleState extends State<CatChatBubble>
           child: SizedBox(
             key: const Key('cat-bubble-size'),
             width: bubbleWidth,
-            // Balão em formato de NUVEM (delicado, sem setinha — a seta
-            // parava de apontar para o gato quando ele era arrastado)
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: _openMagicalWeather,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(20),
                 child: CustomPaint(
                   painter: _CloudPainter(),
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
-                        child: _buildTypewriterText(),
+                        padding: _contentPadding,
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: _buildTypewriterText(),
+                        ),
                       ),
+                      // Botão fechar: chip lilás sólido (sempre visível,
+                      // independente do fundo) sobre o corpo branco da nuvem.
                       Positioned(
-                        top: -5,
-                        right: -5,
-                        child: InkWell(
+                        top: 3,
+                        right: 4,
+                        child: GestureDetector(
                           onTap: _close,
-                          borderRadius: BorderRadius.circular(14),
-                          child: const Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: AppColors.lilac,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
                               Icons.close,
-                              size: 14,
-                              color: Colors.black54,
+                              size: 12,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -308,68 +315,67 @@ class _CatChatBubbleState extends State<CatChatBubble>
   }
 }
 
-/// Nuvem desenhada como a UNIÃO de um corpo arredondado com "bolhas" nas
-/// bordas — o contorno resultante é ondulado como o desenho de uma nuvem.
-/// Fundo branco, contorno lilás e sombra suave, no visual do app.
+/// Nuvem delicada: corpo arredondado (área de texto previsível) com bolhas
+/// decorativas suaves nas bordas superior e inferior. Escala com o tamanho
+/// do balão. Fundo branco, contorno lilás fino e sombra suave.
 class _CloudPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
-    Path bump(double cx, double cy, double rx, double ry) => Path()
-      ..addOval(Rect.fromCenter(
-        center: Offset(cx * w, cy * h),
-        width: rx * 2 * w,
-        height: ry * 2 * h,
-      ));
+    // Raio das bolhas proporcional à altura, com teto para não exagerar
+    final bump = math.min(h * 0.26, 11.0);
 
-    // Corpo central da nuvem
+    Path circle(double cx, double cy, double r) => Path()
+      ..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r));
+
+    // Corpo: retângulo arredondado inset para as bolhas ficarem nas bordas
     var cloud = Path()
       ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(w * 0.06, h * 0.22, w * 0.88, h * 0.62),
-        Radius.circular(h * 0.31),
+        Rect.fromLTWH(bump * 0.6, bump * 0.7, w - bump * 1.2, h - bump * 1.4),
+        Radius.circular(h * 0.38),
       ));
 
-    // Bolhas do topo, laterais e base (frações da largura/altura)
-    const bumps = [
-      [0.22, 0.26, 0.13, 0.24], // topo esquerdo
-      [0.42, 0.16, 0.14, 0.26], // topo centro-esquerdo (mais alto)
-      [0.62, 0.20, 0.13, 0.25], // topo centro-direito
-      [0.80, 0.30, 0.11, 0.21], // topo direito
-      [0.08, 0.52, 0.09, 0.20], // lateral esquerda
-      [0.92, 0.55, 0.09, 0.20], // lateral direita
-      [0.28, 0.86, 0.13, 0.15], // base esquerda
-      [0.55, 0.90, 0.14, 0.13], // base centro
-      [0.78, 0.85, 0.11, 0.14], // base direita
-    ];
-    for (final b in bumps) {
-      cloud = Path.combine(
-        PathOperation.union,
-        cloud,
-        bump(b[0], b[1], b[2], b[3]),
-      );
+    // Bolhas ao longo do topo e da base, distribuídas pela largura
+    final topY = bump * 0.85;
+    final botY = h - bump * 0.85;
+    final usable = w - bump * 1.4;
+    final count = math.max(2, (usable / (bump * 1.7)).floor());
+    for (int i = 0; i < count; i++) {
+      final t = count == 1 ? 0.5 : i / (count - 1);
+      final cx = bump * 0.7 + t * usable;
+      // alterna o tamanho para dar naturalidade
+      final rTop = bump * (i.isEven ? 1.0 : 0.82);
+      final rBot = bump * (i.isEven ? 0.85 : 1.0);
+      cloud = Path.combine(PathOperation.union, cloud, circle(cx, topY, rTop));
+      cloud = Path.combine(PathOperation.union, cloud, circle(cx, botY, rBot));
     }
+    // Bolhas laterais suaves
+    cloud = Path.combine(
+        PathOperation.union, cloud, circle(bump * 0.6, h * 0.5, bump * 0.8));
+    cloud = Path.combine(
+        PathOperation.union, cloud, circle(w - bump * 0.6, h * 0.5, bump * 0.8));
 
-    // Sombra suave lilás (deslocada para baixo)
+    // Sombra suave
     canvas.save();
-    canvas.translate(0, 4);
+    canvas.translate(0, 3);
     canvas.drawPath(
       cloud,
       Paint()
-        ..color = AppColors.lilac.withValues(alpha: 0.25)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+        ..color = AppColors.lilac.withValues(alpha: 0.22)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
     canvas.restore();
 
-    // Preenchimento branco + contorno lilás delicado
+    // Preenchimento branco + contorno lilás
     canvas.drawPath(cloud, Paint()..color = Colors.white);
     canvas.drawPath(
       cloud,
       Paint()
-        ..color = AppColors.lilac.withValues(alpha: 0.8)
+        ..color = AppColors.lilac.withValues(alpha: 0.75)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2,
+        ..strokeWidth = 1.1,
     );
   }
 

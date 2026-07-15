@@ -32,6 +32,17 @@ class NotificationProvider with ChangeNotifier {
   int get scheduledCount => _scheduledCount;
   String? get lastError => _lastError;
 
+  /// Se a inicialização (agendamento no boot) já ocorreu — para diagnóstico.
+  bool get isInitialized => _initialized;
+
+  /// Notificações atualmente agendadas no SO — para diagnóstico.
+  Future<List<PendingNotificationRequest>> pendingNotifications() =>
+      _notificationService.pendingNotifications();
+
+  /// Notificações habilitadas no SO (sem solicitar permissão) — diagnóstico.
+  Future<bool?> areNotificationsEnabled() =>
+      _notificationService.areNotificationsEnabled();
+
   Future<void> initialize(
     LunarProvider lunarProvider,
     WheelOfYearProvider wheelProvider,
