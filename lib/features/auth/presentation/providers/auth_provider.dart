@@ -6,9 +6,11 @@ import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/services/premium_access.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 import '../../data/repositories/beta_code_repository.dart';
+import '../../data/repositories/supabase_auth_repository.dart';
 
 /// Provider para gerenciar autenticação e estado do usuário
 class AuthProvider extends ChangeNotifier {
@@ -38,6 +40,7 @@ class AuthProvider extends ChangeNotifier {
   bool _isInitialized = false;
   bool _hasSeenOnboarding = false;
   bool _isOriginalAdmin = false; // Mantém acesso ao painel admin ao simular outros roles
+  bool _isSigningOut = false;
 
   UserModel get currentUser => _currentUser;
   bool get isInitialized => _isInitialized;
@@ -152,8 +155,14 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _onPaymentStatusChanged(bool isPro) async {
     await debugLog('AUTH', 'PaymentService notificou mudança: isPro=$isPro');
 
+    if (_isSigningOut) {
+      await debugLog(
+          'AUTH', 'Update do PaymentService ignorado durante logout');
+      return;
+    }
+
     // Não alterar role de admin original (mesmo que perca assinatura)
-    if (_isOriginalAdmin) {
+    if (_isOriginalAdmin || _currentUser.isAdmin) {
       await debugLog('AUTH', 'Usuário é admin original - mantendo role');
       return;
     }
@@ -453,6 +462,25 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Substitui o estado local pelos dados autenticados vindos do servidor.
+  Future<void> syncAuthenticatedUser(UserModel user) async {
+    _isSigningOut = false;
+    _currentUser = user;
+    _isOriginalAdmin = user.isAdmin;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isOriginalAdminKey, _isOriginalAdmin);
+    await _saveUser();
+    _registerPaymentServiceCallback();
+    notifyListeners();
+
+    await PaymentService().logIn(user.id);
+    await debugLog(
+      'AUTH',
+      'Usuário sincronizado do servidor: id=${user.id}, role=${user.role.name}, plan=${user.plan.name}',
+    );
+  }
+
   /// Atualiza apenas o nome do usuário
   Future<void> updateDisplayName(String name) async {
     _currentUser = _currentUser.copyWith(displayName: name);
@@ -503,6 +531,11 @@ class AuthProvider extends ChangeNotifier {
 
   /// Atualiza o status premium baseado no PaymentService (RevenueCat)
   Future<void> refreshPremiumStatus() async {
+    if (_isSigningOut) {
+      await debugLog('AUTH', 'refreshPremiumStatus ignorado durante logout');
+      return;
+    }
+
     final paymentService = PaymentService();
 
     if (!paymentService.isInitialized) {
@@ -572,6 +605,16 @@ class AuthProvider extends ChangeNotifier {
 
   /// Faz logout do usuário (mantém preferências locais)
   Future<void> signOut() async {
+    if (_isSigningOut) return;
+
+    _isSigningOut = true;
+    // Após o logout, o callback fica anulado e PaymentService.logOut() zera
+    // isPro — a fonte única (isPremiumEffective) volta a false naturalmente,
+    // sem precisar de flag paralela.
+    PaymentService().setProStatusChangedCallback(null);
+    PremiumAccess.instance.updateLocalPremium(false);
+    final paymentLogout = PaymentService().logOut();
+
     final prefs = await SharedPreferences.getInstance();
 
     // Verificar se o usuário tem sincronização na nuvem
@@ -580,6 +623,20 @@ class AuthProvider extends ChangeNotifier {
     final isAnonymous = _currentUser.id == 'local_user';
 
     await debugLog('AUTH', 'signOut - userId=${_currentUser.id}, hasCloudSync=$hasCloudSync, isAnonymous=$isAnonymous');
+
+    if (SupabaseConfig.isConfigured) {
+      final authRepository = SupabaseAuthRepository();
+      try {
+        await authRepository.signOut();
+      } catch (e) {
+        await debugLog(
+            'AUTH', 'Logout remoto falhou; continuando limpeza local: $e');
+      } finally {
+        authRepository.dispose();
+      }
+    }
+
+    await paymentLogout;
 
     // Regras de limpeza de dados:
     // 1. Usuário anônimo (local_user): SEMPRE limpar (evita que próximo usuário anônimo veja os dados)
@@ -603,10 +660,14 @@ class AuthProvider extends ChangeNotifier {
     // Limpa apenas dados do usuário
     await prefs.remove(_userKey);
     await prefs.remove(_isOriginalAdminKey);
+    await prefs.remove('is_authenticated');
+    await prefs.remove('profile_photo_path');
 
     _currentUser = UserModel.defaultUser();
     _isOriginalAdmin = false;
     notifyListeners();
+    _isSigningOut = false;
+    await debugLog('AUTH', 'Logout concluído; estado local resetado');
   }
 
   // ============================================================

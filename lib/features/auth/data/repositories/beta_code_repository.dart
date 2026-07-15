@@ -203,6 +203,11 @@ class BetaCodeRepository {
         };
       }
 
+      // Persistir o premium no perfil (best-effort): o código JÁ foi
+      // consumido acima — uma falha aqui (usuário anônimo sem UUID, RLS,
+      // rede) não pode transformar o resgate em erro.
+      await _persistPremiumProfile(supabase, userId, now);
+
       await _mirrorRedeemLocally(cleanCode, userId);
       return _successMessage(maxUses - newCurrentUses);
     } catch (e) {
@@ -213,6 +218,38 @@ class BetaCodeRepository {
         'success': false,
         'message': 'Erro ao validar o código. Verifique sua conexão.',
       };
+    }
+  }
+
+  /// UUID v4-like (contas Supabase). Usuários locais usam ids como
+  /// 'local_user', que não existem em `profiles`.
+  static final RegExp _uuidRegExp = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  );
+
+  /// Grava role=premium/plan=lifetime em `profiles` após um resgate
+  /// (best-effort). Só tenta para ids que são UUID de conta Supabase e nunca
+  /// propaga erro — o resgate em si já foi concluído.
+  Future<void> _persistPremiumProfile(
+    SupabaseClient supabase,
+    String userId,
+    DateTime now,
+  ) async {
+    if (!_uuidRegExp.hasMatch(userId)) {
+      await debugLog('BETA_CODE',
+          'Usuário local ($userId) — premium não persistido em profiles');
+      return;
+    }
+    try {
+      await supabase.from(SupabaseTables.profiles).update({
+        'role': 'premium',
+        'plan': 'lifetime',
+        'updated_at': now.toIso8601String(),
+      }).eq('id', userId);
+    } catch (e) {
+      await debugLog(
+          'BETA_CODE', 'Falha ao persistir premium em profiles: $e');
     }
   }
 

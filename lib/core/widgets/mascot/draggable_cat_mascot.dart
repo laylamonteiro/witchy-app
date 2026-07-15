@@ -26,6 +26,7 @@ class DraggableCatMascot extends StatefulWidget {
   final double initialY;
   final VoidCallback? onTap;
   final double size;
+  final ValueNotifier<Offset>? positionNotifier;
 
   const DraggableCatMascot({
     super.key,
@@ -33,6 +34,7 @@ class DraggableCatMascot extends StatefulWidget {
     this.initialY = 100,
     this.onTap,
     this.size = 85,
+    this.positionNotifier,
   });
 
   @override
@@ -93,6 +95,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     super.initState();
     _x = widget.initialX;
     _y = widget.initialY;
+    widget.positionNotifier?.value = Offset(_x, _y);
 
     // Controlador de escala
     _scaleController = AnimationController(
@@ -514,6 +517,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                 // Criar partículas de rastro
                 _createTrailParticle(_x, _y);
               });
+              widget.positionNotifier?.value = Offset(_x, _y);
             },
             onPanEnd: (details) {
               setState(() {

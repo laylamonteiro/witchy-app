@@ -32,6 +32,15 @@ app usa SQLite local como fonte primária; o Supabase é a camada de conta
 4. O script é idempotente — se algo falhar no meio, corrija e rode de novo
    sem medo de duplicar.
 
+> Sempre que `supabase/restore_database.sql` mudar, execute o arquivo completo
+> novamente no SQL Editor do projeto. As funções usam `CREATE OR REPLACE`, então
+> a reaplicação é idempotente. Isso inclui a RPC `redeem_beta_code`, que também
+> persiste `role = premium` e `plan = lifetime` em `public.profiles` — apenas
+> para usuários AUTENTICADOS (id UUID de conta Supabase); resgates de usuários
+> anônimos/locais continuam funcionando, mas o premium deles fica só no
+> aparelho (SharedPreferences) e não sobrevive a reinstalação. Para persistir,
+> o usuário deve estar logado ao resgatar o código.
+
 O script cria:
 - as 15 tabelas de dados + `profiles` (com RLS por usuário);
 - a coluna `updated_at` em todas as tabelas de sync (**correção** de uma
@@ -47,6 +56,9 @@ O script cria:
 
 1. **Authentication → Providers → Email**: deixe habilitado.
    - Para beta fechado, você pode desativar "Confirm email" e reativar depois.
+   - Se a confirmação estiver ativa, abra **Authentication → Email Templates →
+     Confirm signup** e traduza assunto e conteúdo para PT-BR, usando o branding
+     **Grimório de Bolso**.
 2. **Google (opcional)** — necessário para o botão "Entrar com Google":
    - **Authentication → Providers → Google** → habilite;
    - preencha Client ID/Secret do console Google Cloud;
