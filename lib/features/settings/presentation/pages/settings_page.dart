@@ -704,17 +704,17 @@ class SettingsPage extends StatelessWidget {
       wheelProvider: wheelProvider,
     );
 
-    if (context.mounted) {
+    // Não exibimos aviso de SUCESSO ao (re)agendar notificações — o usuário
+    // não precisa de feedback toda vez que elas são reagendadas. Apenas
+    // falhas são sinalizadas.
+    if (context.mounted && !result.success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            result.success
-                ? 'Notificações atualizadas: ${result.scheduledCount} agendadas'
-                : result.error ?? 'Não foi possível atualizar as notificações',
+            result.error ?? 'Não foi possível atualizar as notificações',
           ),
-          duration: Duration(seconds: 2),
-          backgroundColor:
-              result.success ? const Color(0xFF4CAF50) : AppColors.alert,
+          duration: const Duration(seconds: 2),
+          backgroundColor: AppColors.alert,
         ),
       );
     }

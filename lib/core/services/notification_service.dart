@@ -162,6 +162,19 @@ class NotificationService {
 
   Future<void> cancelAllNotifications() => _notifications.cancelAll();
 
+  /// Notificações atualmente agendadas (para diagnóstico).
+  Future<List<PendingNotificationRequest>> pendingNotifications() =>
+      _notifications.pendingNotificationRequests();
+
+  /// Verifica se as notificações estão habilitadas no SO (sem solicitar).
+  Future<bool?> areNotificationsEnabled() async {
+    if (kIsWeb) return false;
+    final android = _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) return android.areNotificationsEnabled();
+    return null; // iOS: sem consulta síncrona simples aqui
+  }
+
   Future<NotificationScheduleResult> scheduleNotifications({
     required List<DateTime> fullMoonDates,
     required List<DateTime> newMoonDates,

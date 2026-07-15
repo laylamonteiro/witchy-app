@@ -15,6 +15,10 @@ import '../../features/auth/auth.dart';
 import 'debug_logs_page.dart';
 import '../services/payment_service.dart';
 import '../config/revenuecat_config.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../providers/notification_provider.dart';
+import '../../features/lunar/presentation/providers/lunar_provider.dart';
+import '../../features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 
 // Mapa de capitais brasileiras com coordenadas exatas
 const Map<String, Map<String, dynamic>> _brazilianCapitals = {
@@ -113,7 +117,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
   }
 
   @override
@@ -600,6 +604,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
             Tab(text: 'Debug'),
+            Tab(text: 'Notificações'),
             Tab(text: 'Login Social'), // Nova aba para login social
             Tab(text: 'Pagamentos'),
             Tab(text: 'IA Groq'),
@@ -635,6 +640,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
         controller: _tabController,
         children: [
           _buildDebugSection(),
+          _buildNotificationsDiagnosticSection(),
           _buildSocialLoginDiagnosticSection(), // Nova seção para login social
           _buildPaymentsDiagnosticSection(),
           _buildTestSection(
@@ -655,6 +661,223 @@ class _DiagnosticPageState extends State<DiagnosticPage> with SingleTickerProvid
             title: 'Sugestões',
             description: 'Testa sugestões personalizadas',
             onTest: _testSuggestions,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // SEÇÃO DE DIAGNÓSTICO DE NOTIFICAÇÕES
+  // ============================================================
+  Widget _buildNotificationsDiagnosticSection() {
+    final provider = context.watch<NotificationProvider>();
+
+    Widget kv(String label, String value, {Color? color}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 150,
+                child: Text(label,
+                    style: TextStyle(
+                        color: AppColors.softWhite.withOpacity(0.7),
+                        fontSize: 13)),
+              ),
+              Expanded(
+                child: Text(value,
+                    style: TextStyle(
+                        color: color ?? AppColors.softWhite,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              children: [
+                const Icon(Icons.notifications_active,
+                    size: 64, color: AppColors.lilac),
+                const SizedBox(height: 16),
+                Text('Diagnóstico de Notificações',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(color: AppColors.lilac)),
+                const SizedBox(height: 8),
+                Text(
+                  'Permissões, agendamento e notificações pendentes',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.softWhite.withOpacity(0.8)),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Estado geral
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Estado',
+                    style: TextStyle(
+                        color: AppColors.lilac,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                kv(
+                  'Inicializado',
+                  provider.isInitialized ? 'Sim ✓' : 'Não',
+                  color: provider.isInitialized
+                      ? const Color(0xFF4CAF50)
+                      : AppColors.alert,
+                ),
+                kv(
+                  'Permissão (agendamento)',
+                  provider.permissionGranted == null
+                      ? 'Desconhecida'
+                      : (provider.permissionGranted!
+                          ? 'Concedida ✓'
+                          : 'Negada'),
+                  color: provider.permissionGranted == true
+                      ? const Color(0xFF4CAF50)
+                      : (provider.permissionGranted == false
+                          ? AppColors.alert
+                          : AppColors.softWhite),
+                ),
+                FutureBuilder<bool?>(
+                  future: provider.areNotificationsEnabled(),
+                  builder: (context, snap) => kv(
+                    'Habilitadas no SO',
+                    snap.connectionState != ConnectionState.done
+                        ? '...'
+                        : (snap.data == null
+                            ? 'N/D'
+                            : (snap.data! ? 'Sim ✓' : 'Não')),
+                    color: snap.data == true
+                        ? const Color(0xFF4CAF50)
+                        : (snap.data == false
+                            ? AppColors.alert
+                            : AppColors.softWhite),
+                  ),
+                ),
+                kv('Agendadas (contador)', '${provider.scheduledCount}'),
+                kv('Lua cheia', provider.fullMoonNotifications ? 'On' : 'Off'),
+                kv('Lua nova', provider.newMoonNotifications ? 'On' : 'Off'),
+                kv('Sabbats', provider.sabbatNotifications ? 'On' : 'Off'),
+                kv(
+                  'Último erro',
+                  provider.lastError ?? 'Nenhum',
+                  color: provider.lastError != null
+                      ? AppColors.alert
+                      : const Color(0xFF4CAF50),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Notificações pendentes (próximas agendadas)
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Notificações agendadas',
+                    style: TextStyle(
+                        color: AppColors.lilac,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                FutureBuilder<List<PendingNotificationRequest>>(
+                  future: provider.pendingNotifications(),
+                  builder: (context, snap) {
+                    if (snap.connectionState != ConnectionState.done) {
+                      return const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Center(
+                            child: CircularProgressIndicator(
+                                color: AppColors.lilac)),
+                      );
+                    }
+                    if (snap.hasError) {
+                      return kv('Erro', '${snap.error}',
+                          color: AppColors.alert);
+                    }
+                    final items = snap.data ?? [];
+                    if (items.isEmpty) {
+                      return Text('Nenhuma notificação agendada.',
+                          style: TextStyle(
+                              color: AppColors.softWhite.withOpacity(0.7)));
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: items.map((n) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('#${n.id}  ${n.title ?? "(sem título)"}',
+                                  style: const TextStyle(
+                                      color: AppColors.softWhite,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13)),
+                              if (n.body != null && n.body!.isNotEmpty)
+                                Text(n.body!,
+                                    style: TextStyle(
+                                        color:
+                                            AppColors.softWhite.withOpacity(0.7),
+                                        fontSize: 12)),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Ações
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final lunar = context.read<LunarProvider>();
+                    final wheel = context.read<WheelOfYearProvider>();
+                    await provider.scheduleNotifications(
+                        lunarProvider: lunar, wheelProvider: wheel);
+                    if (mounted) setState(() {});
+                  },
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text('Reagendar'),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.lilac,
+                      foregroundColor: const Color(0xFF2B2143)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async => setState(() {}),
+                  icon: const Icon(Icons.sync, size: 18),
+                  label: const Text('Atualizar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

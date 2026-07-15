@@ -117,6 +117,13 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkSplashDisplay();
+    // Auto-sincronização no primeiro open (cold start): se já houver uma
+    // sessão Premium ativa, restaura/baixa os dados automaticamente sem o
+    // usuário precisar abrir a tela de Sincronização. O guard em
+    // _triggerBackgroundSync ignora quando não está pronto/não é premium.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(seconds: 2), _triggerBackgroundSync);
+    });
   }
 
   @override
@@ -155,16 +162,18 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
     // Sincronização é exclusiva para usuários Premium (fonte única:
-    // RevenueCat OU premium local via código beta/admin)
-    if (syncService.isReady && PremiumAccess.instance.isPremium) {
-      await debugLog(
-          'SYNC', 'App resumido - iniciando sync em background (Premium)');
+    // RevenueCat OU premium local via código beta/admin) E precisa estar
+    // habilitada nas configurações de Privacidade.
+    final syncEnabled = widget.prefs.getBool('privacy_sync') ?? true;
+    if (syncEnabled &&
+        syncService.isReady &&
+        PremiumAccess.instance.isPremium) {
+      await debugLog('SYNC', 'Auto-sync (Premium) iniciado em background');
       syncService.syncAll().then((result) {
         if (result.success) {
-          debugLog('SYNC',
-              'Sync em background concluído: ${result.uploaded} enviados, ${result.downloaded} recebidos');
+          debugLog('SYNC', 'Auto-sync concluído com sucesso');
         } else {
-          debugLog('SYNC', 'Sync em background falhou: ${result.error}');
+          debugLog('SYNC', 'Auto-sync falhou: ${result.error}');
         }
       });
     }
