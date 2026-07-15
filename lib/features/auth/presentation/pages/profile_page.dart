@@ -3,14 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
-import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
 import '../../../settings/settings.dart';
 import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../data/models/user_model.dart';
-import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/premium_blur_widget.dart';
 import '../widgets/profile_avatar_picker.dart';
@@ -471,10 +469,11 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  void _showLogoutConfirmation(BuildContext context, AuthProvider authProvider) {
+  void _showLogoutConfirmation(
+      BuildContext pageContext, AuthProvider authProvider) {
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: pageContext,
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: const Text(
           'Sair da Conta',
@@ -486,7 +485,7 @@ class ProfilePage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text(
               'Cancelar',
               style: TextStyle(color: Colors.white70),
@@ -494,8 +493,12 @@ class ProfilePage extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
-              await _handleLogout(context, authProvider);
+              Navigator.pop(dialogContext);
+              await authProvider.signOut();
+              if (pageContext.mounted) {
+                Navigator.of(pageContext, rootNavigator: true)
+                    .pushNamedAndRemoveUntil('/welcome', (route) => false);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF44336),
@@ -508,33 +511,6 @@ class ProfilePage extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _handleLogout(BuildContext context, AuthProvider authProvider) async {
-    try {
-      // Logout do Supabase se configurado
-      if (SupabaseConfig.isConfigured) {
-        final authRepo = SupabaseAuthRepository();
-        await authRepo.signOut();
-      }
-
-      // Limpar estado local
-      await authProvider.signOut();
-
-      // Navegar para tela de welcome
-      if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao sair: $e'),
-            backgroundColor: const Color(0xFFF44336),
-          ),
-        );
-      }
-    }
   }
 
   Widget _buildAdminOptions(BuildContext context, AuthProvider authProvider) {

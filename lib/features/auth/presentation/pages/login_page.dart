@@ -402,8 +402,7 @@ class _LoginPageState extends State<LoginPage> {
         throw Exception(result.errorMessage ?? 'Erro ao fazer login');
       }
 
-      // Atualizar estado local
-      await authProvider.updateProfile(email: email);
+      await authProvider.syncAuthenticatedUser(result.user!);
       await authProvider.markOnboardingSeen();
 
       if (mounted) {
@@ -444,14 +443,11 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (result.success && result.user != null) {
-        // Atualizar AuthProvider com os dados do usuário
         final authProvider = context.read<AuthProvider>();
-        await authProvider.updateProfile(
-          email: result.user!.email,
-          displayName: result.user!.displayName,
-        );
+        await authProvider.syncAuthenticatedUser(result.user!);
         await authProvider.markOnboardingSeen();
 
+        if (!mounted) return;
         // Navegar para home
         Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
       } else {

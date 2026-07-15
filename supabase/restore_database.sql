@@ -420,6 +420,12 @@ BEGIN
     );
   END IF;
 
+  UPDATE public.profiles
+     SET role       = 'premium',
+         plan       = 'lifetime',
+         updated_at = NOW()
+   WHERE id = p_user_id::uuid;
+
   v_remaining := v_row.max_uses - v_row.current_uses;
   RETURN jsonb_build_object(
     'success', true,
@@ -438,6 +444,8 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- O app chama a RPC com a anon key
+-- Reexecute este script no Supabase após alterações nesta função.
+-- CREATE OR REPLACE torna a atualização idempotente.
 GRANT EXECUTE ON FUNCTION public.redeem_beta_code(TEXT, TEXT) TO anon, authenticated;
 
 -- ----------------------------------------------------------------------------

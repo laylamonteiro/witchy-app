@@ -203,6 +203,15 @@ class BetaCodeRepository {
         };
       }
 
+      await supabase
+          .from(SupabaseTables.profiles)
+          .update({
+            'role': 'premium',
+            'plan': 'lifetime',
+            'updated_at': now.toIso8601String(),
+          })
+          .eq('id', userId);
+
       await _mirrorRedeemLocally(cleanCode, userId);
       return _successMessage(maxUses - newCurrentUses);
     } catch (e) {
