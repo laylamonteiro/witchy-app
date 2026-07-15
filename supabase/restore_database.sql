@@ -420,11 +420,17 @@ BEGIN
     );
   END IF;
 
-  UPDATE public.profiles
-     SET role       = 'premium',
-         plan       = 'lifetime',
-         updated_at = NOW()
-   WHERE id = p_user_id::uuid;
+  -- Persiste o premium no perfil do usuário, MAS somente quando p_user_id é
+  -- um UUID de conta Supabase. Usuários anônimos/locais (ex.: 'local_user')
+  -- também podem resgatar códigos — sem este guard, o cast ::uuid lançaria
+  -- exceção e reverteria a transação inteira, quebrando o resgate anônimo.
+  IF p_user_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+    UPDATE public.profiles
+       SET role       = 'premium',
+           plan       = 'lifetime',
+           updated_at = NOW()
+     WHERE id = p_user_id::uuid;
+  END IF;
 
   v_remaining := v_row.max_uses - v_row.current_uses;
   RETURN jsonb_build_object(

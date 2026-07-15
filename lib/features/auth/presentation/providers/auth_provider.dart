@@ -41,7 +41,6 @@ class AuthProvider extends ChangeNotifier {
   bool _hasSeenOnboarding = false;
   bool _isOriginalAdmin = false; // Mantém acesso ao painel admin ao simular outros roles
   bool _isSigningOut = false;
-  bool _premiumUpdatesEnabled = true;
 
   UserModel get currentUser => _currentUser;
   bool get isInitialized => _isInitialized;
@@ -66,10 +65,9 @@ class AuthProvider extends ChangeNotifier {
   /// (ou `PremiumAccess.isPremium(context)`), nunca `PaymentService.isPro` ou
   /// `isPremium` isoladamente.
   bool get isPremiumEffective =>
-      _premiumUpdatesEnabled &&
-      (PaymentService().isPro ||
-          _currentUser.isPremium ||
-          _currentUser.plan == SubscriptionPlan.lifetime);
+      PaymentService().isPro ||
+      _currentUser.isPremium ||
+      _currentUser.plan == SubscriptionPlan.lifetime;
 
   @override
   void notifyListeners() {
@@ -157,9 +155,9 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _onPaymentStatusChanged(bool isPro) async {
     await debugLog('AUTH', 'PaymentService notificou mudança: isPro=$isPro');
 
-    if (_isSigningOut || !_premiumUpdatesEnabled) {
+    if (_isSigningOut) {
       await debugLog(
-          'AUTH', 'Update do PaymentService ignorado durante/após logout');
+          'AUTH', 'Update do PaymentService ignorado durante logout');
       return;
     }
 
@@ -206,7 +204,6 @@ class AuthProvider extends ChangeNotifier {
 
   /// Marca que o onboarding foi visto
   Future<void> markOnboardingSeen() async {
-    _premiumUpdatesEnabled = true;
     _hasSeenOnboarding = true;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_hasSeenOnboardingKey, true);
@@ -468,7 +465,6 @@ class AuthProvider extends ChangeNotifier {
   /// Substitui o estado local pelos dados autenticados vindos do servidor.
   Future<void> syncAuthenticatedUser(UserModel user) async {
     _isSigningOut = false;
-    _premiumUpdatesEnabled = true;
     _currentUser = user;
     _isOriginalAdmin = user.isAdmin;
 
@@ -535,9 +531,8 @@ class AuthProvider extends ChangeNotifier {
 
   /// Atualiza o status premium baseado no PaymentService (RevenueCat)
   Future<void> refreshPremiumStatus() async {
-    if (_isSigningOut || !_premiumUpdatesEnabled) {
-      await debugLog(
-          'AUTH', 'refreshPremiumStatus ignorado durante/após logout');
+    if (_isSigningOut) {
+      await debugLog('AUTH', 'refreshPremiumStatus ignorado durante logout');
       return;
     }
 
@@ -580,7 +575,6 @@ class AuthProvider extends ChangeNotifier {
 
   /// Ativa modo admin (para desenvolvimento)
   Future<void> activateAdminMode() async {
-    _premiumUpdatesEnabled = true;
     _isOriginalAdmin = true;
     _currentUser = _currentUser.copyWith(
       role: UserRole.admin,
@@ -614,7 +608,9 @@ class AuthProvider extends ChangeNotifier {
     if (_isSigningOut) return;
 
     _isSigningOut = true;
-    _premiumUpdatesEnabled = false;
+    // Após o logout, o callback fica anulado e PaymentService.logOut() zera
+    // isPro — a fonte única (isPremiumEffective) volta a false naturalmente,
+    // sem precisar de flag paralela.
     PaymentService().setProStatusChangedCallback(null);
     PremiumAccess.instance.updateLocalPremium(false);
     final paymentLogout = PaymentService().logOut();

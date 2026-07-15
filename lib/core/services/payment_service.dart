@@ -564,6 +564,8 @@ class PaymentService extends ChangeNotifier {
 
   /// Remove associação do usuário
   Future<void> logOut() async {
+    // Zera o estado local imediatamente: a fonte única de premium
+    // (isPremiumEffective/PremiumAccess) depende de isPro=false após logout.
     _customerInfo = null;
     _isPro = false;
     notifyListeners();
@@ -571,15 +573,10 @@ class PaymentService extends ChangeNotifier {
     if (!RevenueCatConfig.isConfigured) return;
 
     try {
-      final customerInfo = await Purchases.logOut();
-      _onCustomerInfoUpdated(customerInfo);
+      await Purchases.logOut();
       debugPrint('Usuário deslogado do RevenueCat');
     } catch (e) {
       debugPrint('Erro ao fazer logout do RevenueCat: $e');
-    } finally {
-      _customerInfo = null;
-      _isPro = false;
-      notifyListeners();
     }
   }
 
