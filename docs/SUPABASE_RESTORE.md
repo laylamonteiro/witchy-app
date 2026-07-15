@@ -35,7 +35,11 @@ app usa SQLite local como fonte primária; o Supabase é a camada de conta
 > Sempre que `supabase/restore_database.sql` mudar, execute o arquivo completo
 > novamente no SQL Editor do projeto. As funções usam `CREATE OR REPLACE`, então
 > a reaplicação é idempotente. Isso inclui a RPC `redeem_beta_code`, que também
-> persiste `role = premium` e `plan = lifetime` em `public.profiles`.
+> persiste `role = premium` e `plan = lifetime` em `public.profiles` — apenas
+> para usuários AUTENTICADOS (id UUID de conta Supabase); resgates de usuários
+> anônimos/locais continuam funcionando, mas o premium deles fica só no
+> aparelho (SharedPreferences) e não sobrevive a reinstalação. Para persistir,
+> o usuário deve estar logado ao resgatar o código.
 
 O script cria:
 - as 15 tabelas de dados + `profiles` (com RLS por usuário);
