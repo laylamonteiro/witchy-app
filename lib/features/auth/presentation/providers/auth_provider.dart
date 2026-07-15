@@ -519,11 +519,8 @@ class AuthProvider extends ChangeNotifier {
   /// se o usuário for Premium e a sincronização estiver habilitada.
   Future<void> _autoSyncAfterLogin() async {
     if (!PremiumAccess.instance.isPremium) return;
-    final prefs = await SharedPreferences.getInstance();
-    final syncEnabled = prefs.getBool('privacy_sync') ?? true;
-    if (!syncEnabled) return;
-
     final sync = DataSyncService();
+    if (!await sync.cloudSyncEnabled) return;
     if (!sync.isReady) return;
     await debugLog('SYNC', 'Auto-sync pós-login iniciado');
     final result = await sync.syncAll();

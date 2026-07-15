@@ -86,7 +86,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Seu Sigilo'),
+        title: const ResponsiveAppBarTitle('Seu Sigilo'),
         backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(

@@ -15,7 +15,7 @@ class RunesListPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Runas'),
+        title: const ResponsiveAppBarTitle('Runas'),
         backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(
@@ -78,7 +78,8 @@ class RunesListPage extends StatelessWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.0, // Aumentado de 1.2 para 1.0 para dar mais altura
+                childAspectRatio:
+                    1.0, // Aumentado de 1.2 para 1.0 para dar mais altura
               ),
               itemCount: runes.length,
               itemBuilder: (context, index) {

@@ -286,7 +286,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: const ResponsiveAppBarTitle(
           'Estatísticas Mágicas',
           style: TextStyle(
             color: Colors.white,

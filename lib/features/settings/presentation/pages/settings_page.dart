@@ -28,7 +28,7 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const Text('Configurações'),
+        title: const ResponsiveAppBarTitle('Configurações'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -101,20 +101,36 @@ class SettingsPage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              user.displayName ?? 'Bruxa Anônima',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+            // Compensa à esquerda o espaço ocupado pelo botão à direita para
+            // manter o texto exatamente no eixo central do avatar.
+            const SizedBox(width: 28),
+            Flexible(
+              fit: FlexFit.loose,
+              child: Text(
+                user.displayName ?? 'Bruxa Anônima',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.edit, color: Color(0xFF9C27B0), size: 20),
-              onPressed: () => _showEditNameDialog(context, authProvider),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+            SizedBox(
+              width: 20,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.edit,
+                  color: Color(0xFF9C27B0),
+                  size: 20,
+                ),
+                onPressed: () => _showEditNameDialog(context, authProvider),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
             ),
           ],
         ),

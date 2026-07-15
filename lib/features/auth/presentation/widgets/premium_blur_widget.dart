@@ -122,6 +122,9 @@ class PremiumContentSection extends StatelessWidget {
   /// Título da seção (sempre visível, sem blur)
   final Widget title;
 
+  /// Explica o assunto da seção e permanece sempre legível.
+  final String? subtitle;
+
   /// Conteúdo real (alternativa a [contentBuilder]). Só entra na árvore com acesso.
   final Widget? content;
 
@@ -141,6 +144,7 @@ class PremiumContentSection extends StatelessWidget {
   const PremiumContentSection({
     super.key,
     required this.title,
+    this.subtitle,
     this.content,
     this.contentBuilder,
     required this.feature,
@@ -160,6 +164,10 @@ class PremiumContentSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               title,
+              if (subtitle != null) ...[
+                const SizedBox(height: 4),
+                _VisiblePremiumSubtitle(subtitle!),
+              ],
               contentBuilder != null ? contentBuilder!(context) : content!,
             ],
           );
@@ -172,6 +180,11 @@ class PremiumContentSection extends StatelessWidget {
           children: [
             // Título sempre visível
             title,
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              _VisiblePremiumSubtitle(subtitle!),
+              const SizedBox(height: 12),
+            ],
             _BlurredPlaceholder(blurIntensity: blurIntensity),
             // Botão premium
             if (showUpgradeButton) ...[
@@ -206,6 +219,24 @@ class PremiumContentSection extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _VisiblePremiumSubtitle extends StatelessWidget {
+  final String text;
+
+  const _VisiblePremiumSubtitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+            height: 1.35,
+          ),
     );
   }
 }
@@ -266,7 +297,8 @@ class PremiumUpgradeSheet extends StatefulWidget {
 }
 
 class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
-  SubscriptionType _selectedPlan = SubscriptionType.yearly; // Anual por padrão (popular)
+  SubscriptionType _selectedPlan =
+      SubscriptionType.yearly; // Anual por padrão (popular)
   bool _isLoading = false;
 
   @override
@@ -372,7 +404,8 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
-                disabledBackgroundColor: const Color(0xFF9C27B0).withValues(alpha: 0.5),
+                disabledBackgroundColor:
+                    const Color(0xFF9C27B0).withValues(alpha: 0.5),
               ),
               child: _isLoading
                   ? const SizedBox(
@@ -461,7 +494,11 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                 : isPopular
                     ? const Color(0xFF9C27B0).withValues(alpha: 0.5)
                     : Colors.white.withValues(alpha: 0.1),
-            width: isSelected ? 3 : isPopular ? 2 : 1,
+            width: isSelected
+                ? 3
+                : isPopular
+                    ? 2
+                    : 1,
           ),
         ),
         child: Column(
@@ -629,7 +666,8 @@ class PremiumPreviewWrapper extends StatelessWidget {
               // Banner de preview
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [

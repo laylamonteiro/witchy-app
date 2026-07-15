@@ -13,6 +13,7 @@ import '../../data/models/planet_position_model.dart';
 import '../../data/models/enums.dart';
 import '../../data/services/transit_interpreter.dart';
 import '../../data/services/transit_calculator.dart';
+import 'birth_chart_input_page.dart';
 
 class PersonalizedSuggestionsPage extends StatefulWidget {
   const PersonalizedSuggestionsPage({super.key});
@@ -184,7 +185,10 @@ class _PersonalizedSuggestionsPageState
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Sugestões Personalizadas'),
+            title: const ResponsiveAppBarTitle(
+              'Sugestões Personalizadas',
+              style: TextStyle(fontSize: 18),
+            ),
             backgroundColor: AppColors.darkBackground,
           ),
           backgroundColor: AppColors.darkBackground,
@@ -319,11 +323,17 @@ class _PersonalizedSuggestionsPageState
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const BirthChartInputPage(),
+                    ),
+                  );
+                  if (!mounted) return;
+                  await _loadNatalChart();
                 },
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Voltar para Astrologia'),
+                icon: const Icon(Icons.assignment_ind_outlined),
+                label: const Text('Preencher Mapa Astral'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.lilac,
                   foregroundColor: AppColors.darkBackground,

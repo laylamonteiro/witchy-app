@@ -14,7 +14,7 @@ class DivinationHubPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Divinação'),
+        title: const ResponsiveAppBarTitle('Divinação'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,
@@ -45,9 +45,7 @@ class DivinationHubPage extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
             _buildDivinationOption(
               context,
               icon: 'ᚱᚢᚾᚨ',
@@ -62,9 +60,7 @@ class DivinationHubPage extends StatelessWidget {
                 );
               },
             ),
-
             const SizedBox(height: 12),
-
             _buildDivinationOption(
               context,
               icon: '⟟',
@@ -79,9 +75,7 @@ class DivinationHubPage extends StatelessWidget {
                 );
               },
             ),
-
             const SizedBox(height: 12),
-
             _buildDivinationOption(
               context,
               icon: '🔮',
@@ -135,7 +129,10 @@ class DivinationHubPage extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   color: AppColors.softWhite,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -149,7 +146,10 @@ class DivinationHubPage extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF9C27B0), Color(0xFFE91E63)],
+                                  colors: [
+                                    Color(0xFF9C27B0),
+                                    Color(0xFFE91E63)
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -177,7 +177,9 @@ class DivinationHubPage extends StatelessWidget {
                 ),
                 Icon(
                   access.hasFullAccess ? Icons.arrow_forward_ios : Icons.lock,
-                  color: access.hasFullAccess ? AppColors.lilac : const Color(0xFF9C27B0),
+                  color: access.hasFullAccess
+                      ? AppColors.lilac
+                      : const Color(0xFF9C27B0),
                   size: 16,
                 ),
               ],

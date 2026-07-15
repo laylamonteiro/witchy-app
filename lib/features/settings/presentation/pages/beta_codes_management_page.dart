@@ -11,14 +11,16 @@ class BetaCodesManagementPage extends StatefulWidget {
   const BetaCodesManagementPage({super.key});
 
   @override
-  State<BetaCodesManagementPage> createState() => _BetaCodesManagementPageState();
+  State<BetaCodesManagementPage> createState() =>
+      _BetaCodesManagementPageState();
 }
 
 class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   List<Map<String, dynamic>> _codes = [];
   bool _isLoading = true;
   final TextEditingController _codeController = TextEditingController();
-  final TextEditingController _maxUsesController = TextEditingController(text: '1');
+  final TextEditingController _maxUsesController =
+      TextEditingController(text: '1');
   final BetaCodeRepository _repository = BetaCodeRepository();
 
   @override
@@ -98,7 +100,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Código "$result" criado com sucesso! (${maxUses} uso${maxUses > 1 ? 's' : ''})'),
+            content: Text(
+                'Código "$result" criado com sucesso! (${maxUses} uso${maxUses > 1 ? 's' : ''})'),
             backgroundColor: Colors.green,
           ),
         );
@@ -181,7 +184,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Excluir Código'),
-        content: Text('Tem certeza que deseja excluir permanentemente o código "$code"?'),
+        content: Text(
+            'Tem certeza que deseja excluir permanentemente o código "$code"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -236,7 +240,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const Text('Gerenciar Códigos Beta'),
+        title: const ResponsiveAppBarTitle('Gerenciar Códigos Beta'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -292,7 +296,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.lilac),
+                              borderSide:
+                                  const BorderSide(color: AppColors.lilac),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -302,12 +307,14 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.lilac),
+                              borderSide:
+                                  const BorderSide(color: AppColors.lilac),
                             ),
                           ),
                           textCapitalization: TextCapitalization.characters,
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'[A-Z0-9]')),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -326,7 +333,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                                   ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: AppColors.lilac),
+                                    borderSide: const BorderSide(
+                                        color: AppColors.lilac),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -336,7 +344,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: AppColors.lilac),
+                                    borderSide: const BorderSide(
+                                        color: AppColors.lilac),
                                   ),
                                 ),
                                 keyboardType: TextInputType.number,
@@ -382,7 +391,11 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       Expanded(
                         child: _buildStatCard(
                           'Disponíveis',
-                          _codes.where((c) => c['is_used'] == false || c['is_used'] == 0).length.toString(),
+                          _codes
+                              .where((c) =>
+                                  c['is_used'] == false || c['is_used'] == 0)
+                              .length
+                              .toString(),
                           Colors.green,
                         ),
                       ),
@@ -390,7 +403,11 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       Expanded(
                         child: _buildStatCard(
                           'Usados',
-                          _codes.where((c) => c['is_used'] == true || c['is_used'] == 1).length.toString(),
+                          _codes
+                              .where((c) =>
+                                  c['is_used'] == true || c['is_used'] == 1)
+                              .length
+                              .toString(),
                           Colors.orange,
                         ),
                       ),
@@ -469,7 +486,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     final createdAt = _parseDateTime(code['created_at']);
 
     // Normalizar used_at
-    final usedAt = code['used_at'] != null ? _parseDateTime(code['used_at']) : null;
+    final usedAt =
+        code['used_at'] != null ? _parseDateTime(code['used_at']) : null;
 
     final usedBy = code['used_by'] as String?;
 
@@ -557,7 +575,9 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                 'Usos: $currentUses/$maxUses',
                 style: TextStyle(
                   fontSize: 12,
-                  color: usesRemaining > 0 ? Colors.greenAccent : Colors.orangeAccent,
+                  color: usesRemaining > 0
+                      ? Colors.greenAccent
+                      : Colors.orangeAccent,
                   fontWeight: FontWeight.bold,
                 ),
               ),

@@ -48,7 +48,7 @@ void main() async {
     databaseFactory = databaseFactoryFfiWeb;
   }
 
-  // Initialize timezone
+  // Necessário para os agendamentos locais de Lua e Sabbats.
   tz.initializeTimeZones();
 
   // Initialize date formatting for Portuguese locale
@@ -117,10 +117,8 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkSplashDisplay();
-    // Auto-sincronização no primeiro open (cold start): se já houver uma
-    // sessão Premium ativa, restaura/baixa os dados automaticamente sem o
-    // usuário precisar abrir a tela de Sincronização. O guard em
-    // _triggerBackgroundSync ignora quando não está pronto/não é premium.
+    // Restaura os dados automaticamente quando o app inicia com uma sessão
+    // Premium já ativa. O próprio método valida preferência e disponibilidade.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(seconds: 2), _triggerBackgroundSync);
     });
@@ -164,7 +162,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     // Sincronização é exclusiva para usuários Premium (fonte única:
     // RevenueCat OU premium local via código beta/admin) E precisa estar
     // habilitada nas configurações de Privacidade.
-    final syncEnabled = widget.prefs.getBool('privacy_sync') ?? true;
+    final syncEnabled = await syncService.cloudSyncEnabled;
     if (syncEnabled &&
         syncService.isReady &&
         PremiumAccess.instance.isPremium) {
@@ -232,14 +230,21 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             return provider;
           },
         ),
-        ChangeNotifierProxyProvider2<LunarProvider, WheelOfYearProvider,
-            NotificationProvider>(
+        ChangeNotifierProxyProvider3<AuthProvider, LunarProvider,
+            WheelOfYearProvider, NotificationProvider>(
+          // O provider acompanha o login desde o startup, mas só solicita a
+          // permissão depois que existe um usuário autenticado.
+          lazy: false,
           create: (_) => NotificationProvider(
             flutterLocalNotificationsPlugin,
             widget.prefs,
           ),
-          update: (_, lunar, wheel, provider) {
-            provider!.initialize(lunar, wheel);
+          update: (_, auth, lunar, wheel, provider) {
+            provider!.updateSession(
+              isAuthenticated: auth.currentUser.isAuthenticated,
+              lunarProvider: lunar,
+              wheelProvider: wheel,
+            );
             return provider;
           },
         ),

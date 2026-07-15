@@ -8,7 +8,10 @@ import 'package:grimorio_de_bolso/core/widgets/mascot/cat_chat_bubble.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/enums.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/transit_model.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/services/transit_interpreter.dart';
+import 'package:grimorio_de_bolso/features/astrology/presentation/pages/daily_magical_weather_page.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
+import 'package:grimorio_de_bolso/features/auth/presentation/widgets/premium_blur_widget.dart';
+import 'package:grimorio_de_bolso/features/auth/data/models/feature_access.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +75,52 @@ void main() {
     });
   });
 
+  group('Cloud sync defaults', () {
+    test('Premium inicia com sincronização ligada', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        await DataSyncService.ensureCloudSyncPreference(
+          prefs,
+          isPremium: true,
+        ),
+        isTrue,
+      );
+      expect(
+        prefs.getBool(DataSyncService.cloudSyncPreferenceKey),
+        isTrue,
+      );
+    });
+
+    test('Free inicia desligado e escolha explícita continua respeitada',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        DataSyncService.cloudSyncPreferenceKey: false,
+        DataSyncService.cloudSyncUserConfiguredKey: true,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        DataSyncService.resolveCloudSyncPreference(prefs, isPremium: false),
+        isFalse,
+      );
+      expect(
+        DataSyncService.resolveCloudSyncPreference(prefs, isPremium: true),
+        isFalse,
+      );
+    });
+
+    test('migra o false automático de Free ao virar Premium', () async {
+      SharedPreferences.setMockInitialValues({
+        DataSyncService.cloudSyncPreferenceKey: false,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        DataSyncService.resolveCloudSyncPreference(prefs, isPremium: true),
+        isTrue,
+      );
+    });
+  });
+
   group('Notification scheduling helpers', () {
     test('gera IDs estáveis e diferentes por evento', () {
       final date = DateTime(2026, 8, 28);
@@ -83,18 +132,22 @@ void main() {
 
     test('cria lembretes em horário local fixo', () {
       final event = DateTime(2026, 3, 1, 14, 30);
-      final moon = NotificationService.reminderDate(
-        event,
-        daysBefore: 1,
-        hour: 20,
+      expect(
+        NotificationService.reminderDate(
+          event,
+          daysBefore: 1,
+          hour: 20,
+        ),
+        DateTime(2026, 2, 28, 20),
       );
-      final sabbat = NotificationService.reminderDate(
-        event,
-        daysBefore: 3,
-        hour: 9,
+      expect(
+        NotificationService.reminderDate(
+          event,
+          daysBefore: 3,
+          hour: 9,
+        ),
+        DateTime(2026, 2, 26, 9),
       );
-      expect(moon, DateTime(2026, 2, 28, 20));
-      expect(sabbat, DateTime(2026, 2, 26, 9));
     });
   });
 
@@ -155,6 +208,47 @@ void main() {
     });
   });
 
+  group('Preview Free', () {
+    test('extrai os títulos da previsão sem expor os parágrafos', () {
+      const markdown = '''## Energia do Dia
+Conteúdo secreto.
+
+## Ritual Sugerido
+Outro conteúdo secreto.''';
+      expect(
+        DailyForecastPreview.headingsFromMarkdown(markdown),
+        ['Energia do Dia', 'Ritual Sugerido'],
+      );
+    });
+
+    testWidgets('mantém título e subtítulo fora do blur', (tester) async {
+      final auth = AuthProvider();
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AuthProvider>.value(
+          value: auth,
+          child: MaterialApp(
+            home: Scaffold(
+              body: PremiumContentSection(
+                feature: AppFeature.encyclopediaHerbsDetails,
+                title: const Text('Usos Rituais'),
+                subtitle: 'Práticas e intenções desta erva.',
+                content: const Text(
+                  'Conteúdo Premium real',
+                  key: Key('premium-real-content'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Usos Rituais'), findsOneWidget);
+      expect(find.text('Práticas e intenções desta erva.'), findsOneWidget);
+      expect(find.byKey(const Key('premium-real-content')), findsNothing);
+      expect(find.byType(ImageFiltered), findsOneWidget);
+    });
+  });
+
   group('Cat bubble layout', () {
     Future<Size> pumpBubble(
       WidgetTester tester,
@@ -204,7 +298,8 @@ void main() {
         'Uma mensagem longa precisa quebrar linhas automaticamente sem deixar espaços vazios excessivos.',
       );
       expect(short.width, lessThan(long.width));
-      expect(long.width, lessThanOrEqualTo(210));
+      expect(long.width, lessThanOrEqualTo(176));
+      expect(long.height, greaterThanOrEqualTo(64));
     });
 
     testWidgets('não estoura em tela estreita com fonte ampliada',
@@ -226,6 +321,21 @@ void main() {
         width: 180,
       );
       expect(size.width, lessThanOrEqualTo(164));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('mantém a parte digitada no layout do texto completo',
+        (tester) async {
+      const message = 'Que tal olhar o clima mágico do seu dia?';
+      await pumpBubble(tester, message);
+
+      final richText = tester.widget<Text>(
+        find.byKey(const Key('cat-bubble-typewriter')),
+      );
+      final root = richText.textSpan! as TextSpan;
+      final spans = root.children!.cast<TextSpan>();
+      expect('${spans[0].text}${spans[1].text}', message);
+      expect(spans[1].style?.color, Colors.transparent);
       expect(tester.takeException(), isNull);
     });
   });

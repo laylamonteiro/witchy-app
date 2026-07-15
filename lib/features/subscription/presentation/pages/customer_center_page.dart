@@ -44,7 +44,7 @@ class _CustomerCenterPageState extends State<CustomerCenterPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: const ResponsiveAppBarTitle(
           'Central do Assinante',
           style: TextStyle(
             color: Colors.white,

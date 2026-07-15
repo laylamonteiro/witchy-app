@@ -17,7 +17,7 @@ class BirthChartViewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Seu Mapa Astral'),
+        title: const ResponsiveAppBarTitle('Seu Mapa Astral'),
         backgroundColor: AppColors.darkBackground,
         actions: [
           IconButton(

@@ -24,7 +24,8 @@ class GrimoirePage extends StatefulWidget {
   State<GrimoirePage> createState() => _GrimoirePageState();
 }
 
-class _GrimoirePageState extends State<GrimoirePage> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _GrimoirePageState extends State<GrimoirePage>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   static const String _lastTabKey = 'grimoire_last_tab';
 
@@ -78,7 +79,7 @@ class _GrimoirePageState extends State<GrimoirePage> with SingleTickerProviderSt
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grimório Digital'),
+        title: const ResponsiveAppBarTitle('Grimório Digital'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -168,7 +169,8 @@ class _ToolsTab extends StatelessWidget {
             context,
             icon: '✨',
             title: 'Conselheiro Místico',
-            description: 'Manifeste feitiços personalizados com sabedoria arcana',
+            description:
+                'Manifeste feitiços personalizados com sabedoria arcana',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(

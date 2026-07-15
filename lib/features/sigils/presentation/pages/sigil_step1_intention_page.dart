@@ -57,7 +57,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Criar Sigilo'),
+        title: const ResponsiveAppBarTitle('Criar Sigilo'),
         backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(
