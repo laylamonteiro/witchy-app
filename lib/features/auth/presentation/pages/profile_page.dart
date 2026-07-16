@@ -868,7 +868,7 @@ class ProfilePage extends StatelessWidget {
 
   void _handleManageSubscription(
       BuildContext context, PaymentService paymentService) {
-    // Sempre navegar para página de assinatura (contém código beta e outras opções)
+    // Sempre navegar para página de assinatura (contém Código Premium e outras opções)
     Navigator.pushNamed(context, '/subscription');
   }
 

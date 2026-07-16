@@ -14,6 +14,7 @@ class SyncProvider extends ChangeNotifier {
   String? _lastError;
   DateTime? _lastSyncTime;
   int _pendingSyncCount = 0;
+  bool _disposed = false;
 
   StreamSubscription<SyncStatus>? _statusSubscription;
   StreamSubscription<List<SyncConflict>>? _conflictsSubscription;
@@ -23,6 +24,9 @@ class SyncProvider extends ChangeNotifier {
   }
 
   void _init() {
+    // O stream é broadcast e não repete o último evento. Leia o estado atual
+    // antes de assinar para não perder um sync concluído em background.
+    _status = _syncService.status;
     _statusSubscription = _syncService.statusStream.listen((status) {
       _status = status;
       if (status == SyncStatus.success) {
@@ -36,6 +40,23 @@ class SyncProvider extends ChangeNotifier {
       _conflicts = conflicts;
       notifyListeners();
     });
+
+    unawaited(refreshState());
+  }
+
+  /// Recarrega o singleton e o horário persistido da conta atual.
+  Future<void> refreshState() async {
+    final persistedLastSync = await _syncService.lastSuccessfulSyncTime;
+    if (_disposed) return;
+
+    _status = _syncService.status;
+    _lastSyncTime = persistedLastSync;
+
+    // Cobre o caso em que o provider nasceu depois do evento de sucesso.
+    if (_status == SyncStatus.success && _lastSyncTime == null) {
+      _lastSyncTime = DateTime.now();
+    }
+    notifyListeners();
   }
 
   // Getters
@@ -53,7 +74,7 @@ class SyncProvider extends ChangeNotifier {
   String get statusText {
     switch (_status) {
       case SyncStatus.idle:
-        return 'Sincronização desativada';
+        return 'Sincronização ativa';
       case SyncStatus.syncing:
         return 'Sincronizando...';
       case SyncStatus.success:
@@ -169,6 +190,7 @@ class SyncProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _statusSubscription?.cancel();
     _conflictsSubscription?.cancel();
     super.dispose();

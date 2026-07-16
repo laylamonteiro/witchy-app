@@ -150,7 +150,6 @@ class _ToolsTab extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
           _buildToolCard(
             context,
             icon: '🌟',
@@ -164,7 +163,6 @@ class _ToolsTab extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
           _buildToolCard(
             context,
             icon: '✨',
@@ -179,7 +177,6 @@ class _ToolsTab extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
           _buildToolCard(
             context,
             icon: '🔮',
@@ -193,7 +190,6 @@ class _ToolsTab extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
           _buildToolCard(
             context,
             icon: '⛤',
@@ -207,7 +203,6 @@ class _ToolsTab extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
           _buildToolCard(
             context,
             icon: 'ᚱ',
@@ -221,7 +216,6 @@ class _ToolsTab extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
           _buildToolCard(
             context,
             icon: '⟟',

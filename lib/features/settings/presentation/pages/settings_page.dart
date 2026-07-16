@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -11,7 +10,6 @@ import '../../../../core/services/payment_service.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import '../../../auth/auth.dart';
-import '../../../subscription/subscription.dart';
 import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
@@ -369,8 +367,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _manageSubscription(BuildContext context) async {
-    final paymentService = PaymentService();
-    await paymentService.presentCustomerCenter();
+    await Navigator.pushNamed(context, '/subscription');
   }
 
   Widget _buildUsageStats(BuildContext context, UserModel user) {
@@ -799,7 +796,7 @@ class SettingsPage extends StatelessWidget {
               color: Color(0xFF9C27B0),
             ),
             title: const Text(
-              'Gerenciar Códigos Beta',
+              'Gerenciar Códigos Premium',
               style: TextStyle(color: Colors.white),
             ),
             subtitle: const Text(
@@ -853,12 +850,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showUpgradeSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremiumUpgradeSheet(),
-    );
+    Navigator.pushNamed(context, '/subscription');
   }
 
   String _getInitials(String name) {

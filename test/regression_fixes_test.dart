@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:grimorio_de_bolso/core/services/data_sync_service.dart';
+import 'package:grimorio_de_bolso/core/providers/sync_provider.dart';
+import 'package:grimorio_de_bolso/core/utils/app_session_policy.dart';
 import 'package:grimorio_de_bolso/core/services/notification_service.dart';
 import 'package:grimorio_de_bolso/core/widgets/mascot/cat_chat_bubble.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/enums.dart';
@@ -116,6 +118,48 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(
         DataSyncService.resolveCloudSyncPreference(prefs, isPremium: true),
+        isTrue,
+      );
+    });
+  });
+
+  group('Status de sincronização', () {
+    test('idle representa sync ativo e recupera o último sucesso persistido',
+        () async {
+      final lastSync = DateTime(2026, 7, 16, 10, 30);
+      SharedPreferences.setMockInitialValues({
+        DataSyncService.lastSuccessfulSyncKey(null):
+            lastSync.millisecondsSinceEpoch,
+      });
+
+      final provider = SyncProvider();
+      await provider.refreshState();
+
+      expect(provider.statusText, 'Sincronização ativa');
+      expect(provider.lastSyncTime, lastSync);
+      provider.dispose();
+    });
+  });
+
+  group('Ciclo de sessão do app', () {
+    final now = DateTime(2026, 7, 16, 9);
+
+    test('retomada rápida preserva a sessão atual', () {
+      expect(
+        AppSessionPolicy.shouldStartNewSession(
+          backgroundedAt: now.subtract(const Duration(minutes: 4)),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+
+    test('inatividade prolongada inicia uma nova sessão', () {
+      expect(
+        AppSessionPolicy.shouldStartNewSession(
+          backgroundedAt: now.subtract(const Duration(minutes: 5)),
+          now: now,
+        ),
         isTrue,
       );
     });

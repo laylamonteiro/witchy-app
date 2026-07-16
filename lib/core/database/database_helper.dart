@@ -252,7 +252,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Tabela de Códigos Beta para acesso Premium
+    // Tabela de Códigos Premium para acesso Premium
     await db.execute('''
       CREATE TABLE beta_codes (
         id TEXT PRIMARY KEY,
@@ -270,17 +270,27 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
     await db.execute('CREATE INDEX idx_dreams_user_id ON dreams(user_id)');
     await db.execute('CREATE INDEX idx_desires_user_id ON desires(user_id)');
-    await db.execute('CREATE INDEX idx_daily_rituals_user_id ON daily_rituals(user_id)');
-    await db.execute('CREATE INDEX idx_ritual_logs_user_id ON ritual_logs(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_daily_rituals_user_id ON daily_rituals(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_ritual_logs_user_id ON ritual_logs(user_id)');
     await db.execute('CREATE INDEX idx_sigils_user_id ON sigils(user_id)');
-    await db.execute('CREATE INDEX idx_gratitudes_user_id ON gratitudes(user_id)');
-    await db.execute('CREATE INDEX idx_affirmations_user_id ON affirmations(user_id)');
-    await db.execute('CREATE INDEX idx_birth_charts_user_id ON birth_charts(user_id)');
-    await db.execute('CREATE INDEX idx_magical_profiles_user_id ON magical_profiles(user_id)');
-    await db.execute('CREATE INDEX idx_rune_readings_user_id ON rune_readings(user_id)');
-    await db.execute('CREATE INDEX idx_pendulum_user_id ON pendulum_consultations(user_id)');
-    await db.execute('CREATE INDEX idx_oracle_readings_user_id ON oracle_readings(user_id)');
-    await db.execute('CREATE INDEX idx_weather_user_id ON daily_magical_weather(user_id)');
+    await db
+        .execute('CREATE INDEX idx_gratitudes_user_id ON gratitudes(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_affirmations_user_id ON affirmations(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_birth_charts_user_id ON birth_charts(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_magical_profiles_user_id ON magical_profiles(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_rune_readings_user_id ON rune_readings(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_pendulum_user_id ON pendulum_consultations(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_oracle_readings_user_id ON oracle_readings(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_weather_user_id ON daily_magical_weather(user_id)');
   }
 
   /// Migra o banco de dados de uma versão antiga para a nova
@@ -303,8 +313,7 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       // Verificar se a tabela dreams existe, se não, criar
       final tables = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='dreams'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='dreams'");
 
       if (tables.isEmpty) {
         await db.execute('''
@@ -322,8 +331,7 @@ class DatabaseHelper {
 
       // Verificar se a tabela desires existe, se não, criar
       final desiresTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='desires'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='desires'");
 
       if (desiresTable.isEmpty) {
         await db.execute('''
@@ -341,8 +349,7 @@ class DatabaseHelper {
 
       // Verificar se a tabela daily_rituals existe, se não, criar
       final ritualsTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='daily_rituals'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='daily_rituals'");
 
       if (ritualsTable.isEmpty) {
         await db.execute('''
@@ -359,8 +366,7 @@ class DatabaseHelper {
 
       // Verificar se a tabela ritual_logs existe, se não, criar
       final logsTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='ritual_logs'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='ritual_logs'");
 
       if (logsTable.isEmpty) {
         await db.execute('''
@@ -376,8 +382,7 @@ class DatabaseHelper {
 
       // Verificar se a tabela sigils existe, se não, criar
       final sigilsTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='sigils'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='sigils'");
 
       if (sigilsTable.isEmpty) {
         await db.execute('''
@@ -398,13 +403,16 @@ class DatabaseHelper {
         // Verifica se a coluna já existe
         final columns = await db.rawQuery('PRAGMA table_info(spells)');
         final categoryExists = columns.any((col) => col['name'] == 'category');
-        final isPreloadedExists = columns.any((col) => col['name'] == 'is_preloaded');
+        final isPreloadedExists =
+            columns.any((col) => col['name'] == 'is_preloaded');
 
         if (!categoryExists) {
-          await db.execute('ALTER TABLE spells ADD COLUMN category TEXT NOT NULL DEFAULT "other"');
+          await db.execute(
+              'ALTER TABLE spells ADD COLUMN category TEXT NOT NULL DEFAULT "other"');
         }
         if (!isPreloadedExists) {
-          await db.execute('ALTER TABLE spells ADD COLUMN is_preloaded INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+              'ALTER TABLE spells ADD COLUMN is_preloaded INTEGER NOT NULL DEFAULT 0');
         }
       } catch (e) {
         print('Erro ao adicionar colunas: $e');
@@ -415,8 +423,7 @@ class DatabaseHelper {
     if (oldVersion < 4) {
       // Verificar se a tabela gratitudes existe, se não, criar
       final gratitudesTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='gratitudes'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='gratitudes'");
 
       if (gratitudesTable.isEmpty) {
         await db.execute('''
@@ -433,8 +440,7 @@ class DatabaseHelper {
 
       // Verificar se a tabela affirmations existe, se não, criar
       final affirmationsTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='affirmations'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='affirmations'");
 
       if (affirmationsTable.isEmpty) {
         await db.execute('''
@@ -454,8 +460,7 @@ class DatabaseHelper {
     if (oldVersion < 5) {
       // Verificar e criar tabela birth_charts
       final birthChartsTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='birth_charts'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='birth_charts'");
 
       if (birthChartsTable.isEmpty) {
         await db.execute('''
@@ -478,8 +483,7 @@ class DatabaseHelper {
 
       // Verificar e criar tabela magical_profiles
       final magicalProfilesTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='magical_profiles'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='magical_profiles'");
 
       if (magicalProfilesTable.isEmpty) {
         await db.execute('''
@@ -496,8 +500,7 @@ class DatabaseHelper {
 
       // Verificar e criar tabela rune_readings
       final runeReadingsTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='rune_readings'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='rune_readings'");
 
       if (runeReadingsTable.isEmpty) {
         await db.execute('''
@@ -514,8 +517,7 @@ class DatabaseHelper {
 
       // Verificar e criar tabela pendulum_consultations
       final pendulumTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='pendulum_consultations'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='pendulum_consultations'");
 
       if (pendulumTable.isEmpty) {
         await db.execute('''
@@ -531,8 +533,7 @@ class DatabaseHelper {
 
       // Verificar e criar tabela oracle_readings
       final oracleTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='oracle_readings'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='oracle_readings'");
 
       if (oracleTable.isEmpty) {
         await db.execute('''
@@ -551,8 +552,7 @@ class DatabaseHelper {
     if (oldVersion < 6) {
       // Verificar e criar tabela daily_magical_weather
       final weatherTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='daily_magical_weather'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='daily_magical_weather'");
 
       if (weatherTable.isEmpty) {
         await db.execute('''
@@ -593,8 +593,7 @@ class DatabaseHelper {
 
           if (!hasUserId) {
             await db.execute(
-              "ALTER TABLE $table ADD COLUMN user_id TEXT NOT NULL DEFAULT 'local_user'"
-            );
+                "ALTER TABLE $table ADD COLUMN user_id TEXT NOT NULL DEFAULT 'local_user'");
             print('Adicionado user_id na tabela $table');
           }
         } catch (e) {
@@ -663,25 +662,23 @@ class DatabaseHelper {
           // Verifica quais colunas existem
           final columns = await db.rawQuery('PRAGMA table_info($table)');
           final hasSynced = columns.any((col) => col['name'] == 'synced');
-          final hasUpdatedAt = columns.any((col) => col['name'] == 'updated_at');
+          final hasUpdatedAt =
+              columns.any((col) => col['name'] == 'updated_at');
 
           if (!hasSynced) {
             await db.execute(
-              'ALTER TABLE $table ADD COLUMN synced INTEGER NOT NULL DEFAULT 0'
-            );
+                'ALTER TABLE $table ADD COLUMN synced INTEGER NOT NULL DEFAULT 0');
             print('Adicionado synced na tabela $table');
           }
 
           if (!hasUpdatedAt) {
             // Usar created_at como valor inicial para updated_at, ou timestamp atual
             await db.execute(
-              'ALTER TABLE $table ADD COLUMN updated_at INTEGER NOT NULL DEFAULT ${DateTime.now().millisecondsSinceEpoch}'
-            );
+                'ALTER TABLE $table ADD COLUMN updated_at INTEGER NOT NULL DEFAULT ${DateTime.now().millisecondsSinceEpoch}');
             // Atualizar updated_at com created_at onde existir
             try {
               await db.execute(
-                'UPDATE $table SET updated_at = created_at WHERE created_at IS NOT NULL'
-              );
+                  'UPDATE $table SET updated_at = created_at WHERE created_at IS NOT NULL');
             } catch (e) {
               // Algumas tabelas podem não ter created_at
               print('Tabela $table não tem created_at: $e');
@@ -722,11 +719,10 @@ class DatabaseHelper {
       print('Migração v8 concluída - colunas de sincronização adicionadas');
     }
 
-    // Migração da versão 8 para 9 - Adicionar tabela de códigos beta
+    // Migração da versão 8 para 9 - Adicionar tabela de Códigos Premium
     if (oldVersion < 9) {
       final betaCodesTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='beta_codes'"
-      );
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='beta_codes'");
 
       if (betaCodesTable.isEmpty) {
         await db.execute('''
@@ -743,21 +739,25 @@ class DatabaseHelper {
       }
     }
 
-    // Migração da versão 9 para 10 - Adicionar suporte a múltiplos usos nos códigos beta
+    // Migração da versão 9 para 10 - Adicionar suporte a múltiplos usos nos Códigos Premium
     if (oldVersion < 10) {
-      print('Iniciando migração v9 -> v10: Adicionando suporte a múltiplos usos em beta_codes');
+      print(
+          'Iniciando migração v9 -> v10: Adicionando suporte a múltiplos usos em beta_codes');
 
       // Verificar se as colunas já existem
       final tableInfo = await db.rawQuery('PRAGMA table_info(beta_codes)');
-      final columnNames = tableInfo.map((col) => col['name'] as String).toList();
+      final columnNames =
+          tableInfo.map((col) => col['name'] as String).toList();
 
       if (!columnNames.contains('max_uses')) {
-        await db.execute('ALTER TABLE beta_codes ADD COLUMN max_uses INTEGER NOT NULL DEFAULT 1');
+        await db.execute(
+            'ALTER TABLE beta_codes ADD COLUMN max_uses INTEGER NOT NULL DEFAULT 1');
         print('Coluna max_uses adicionada');
       }
 
       if (!columnNames.contains('current_uses')) {
-        await db.execute('ALTER TABLE beta_codes ADD COLUMN current_uses INTEGER NOT NULL DEFAULT 0');
+        await db.execute(
+            'ALTER TABLE beta_codes ADD COLUMN current_uses INTEGER NOT NULL DEFAULT 0');
         print('Coluna current_uses adicionada');
       }
 

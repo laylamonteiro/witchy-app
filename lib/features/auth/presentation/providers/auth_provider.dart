@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,7 +61,7 @@ class AuthProvider extends ChangeNotifier {
   /// Combina todos os caminhos que concedem Premium:
   /// - Assinatura ativa no RevenueCat (`PaymentService.isPro`)
   /// - Role premium/admin no usuário local (inclui simulação de plano pelo admin)
-  /// - Plano lifetime (concedido por código beta)
+  /// - Plano lifetime (concedido por Código Premium)
   ///
   /// TODOS os gates de conteúdo/funcionalidade Premium devem usar este getter
   /// (ou `PremiumAccess.isPremium(context)`), nunca `PaymentService.isPro` ou
@@ -143,7 +142,7 @@ class AuthProvider extends ChangeNotifier {
     // Registrar callback com PaymentService para sincronizar status Premium
     _registerPaymentServiceCallback();
 
-    // Verificar se assinatura expirou (exceto para códigos beta lifetime e admin)
+    // Verificar se assinatura expirou (exceto para Códigos Premium lifetime e admin)
     await _checkSubscriptionExpiration();
 
     _isInitialized = true;
@@ -186,12 +185,12 @@ class AuthProvider extends ChangeNotifier {
         plan: isLifetime ? SubscriptionPlan.lifetime : SubscriptionPlan.monthly,
       );
     } else {
-      // Não fazer downgrade de usuários com acesso lifetime (código beta):
+      // Não fazer downgrade de usuários com acesso lifetime (Código Premium):
       // o RevenueCat não conhece esse plano, então isPro=false é esperado.
       // Mesma regra de _checkSubscriptionExpiration e refreshPremiumStatus.
       if (_currentUser.plan == SubscriptionPlan.lifetime) {
         await debugLog('AUTH',
-            'Usuário lifetime (código beta) - ignorando downgrade do RevenueCat');
+            'Usuário lifetime (Código Premium) - ignorando downgrade do RevenueCat');
         return;
       }
       await debugLog(
@@ -432,7 +431,7 @@ class AuthProvider extends ChangeNotifier {
   /// Comportamento de planos:
   /// - Free: plano free
   /// - Premium (admin testando): monthly (simula assinatura RevenueCat)
-  /// - Premium (código beta): lifetime (preservado)
+  /// - Premium (Código Premium): lifetime (preservado)
   /// - Admin: lifetime (acesso total)
   Future<void> setUserRole(UserRole role) async {
     SubscriptionPlan plan;
@@ -443,12 +442,12 @@ class AuthProvider extends ChangeNotifier {
         break;
       case UserRole.premium:
         // Se é admin original testando Premium → monthly (simula assinatura)
-        // Se é usuário com código beta → preserva lifetime
+        // Se é usuário com Código Premium → preserva lifetime
         if (_isOriginalAdmin) {
           // Admin testando como Premium: simular assinatura via RevenueCat
           plan = SubscriptionPlan.monthly;
         } else {
-          // Usuário normal: preservar lifetime se já existir (código beta)
+          // Usuário normal: preservar lifetime se já existir (Código Premium)
           plan = _currentUser.plan == SubscriptionPlan.lifetime
               ? SubscriptionPlan.lifetime
               : SubscriptionPlan.monthly;
@@ -501,7 +500,12 @@ class AuthProvider extends ChangeNotifier {
     await prefs.setBool(_isOriginalAdminKey, _isOriginalAdmin);
     await _saveUser();
     _registerPaymentServiceCallback();
-    notifyListeners();
+
+    // O sync precisa reconhecer Premium antes de o novo usuário ser
+    // publicado aos providers da interface.
+    PremiumAccess.instance.updateLocalPremium(
+      _currentUser.isPremium || _currentUser.plan == SubscriptionPlan.lifetime,
+    );
 
     await PaymentService().logIn(user.id);
     await debugLog(
@@ -509,23 +513,29 @@ class AuthProvider extends ChangeNotifier {
       'Usuário sincronizado do servidor: id=${user.id}, role=${user.role.name}, plan=${user.plan.name}',
     );
 
-    // Auto-sincronização pós-login: cobre o cenário reinstalar → abrir →
-    // logar, restaurando os dados da nuvem sem o usuário precisar acessar a
-    // tela de Sincronização. Só para Premium com sync habilitado.
-    unawaited(_autoSyncAfterLogin());
+    // Só libera a Home depois de o SQLite receber os dados remotos. Assim, os
+    // providers fazem a primeira leitura já sobre a base sincronizada.
+    await _autoSyncAfterLogin();
+    notifyListeners();
   }
 
   /// Dispara uma sincronização completa (upload+download) logo após o login,
   /// se o usuário for Premium e a sincronização estiver habilitada.
   Future<void> _autoSyncAfterLogin() async {
-    if (!PremiumAccess.instance.isPremium) return;
-    final sync = DataSyncService();
-    if (!await sync.cloudSyncEnabled) return;
-    if (!sync.isReady) return;
-    await debugLog('SYNC', 'Auto-sync pós-login iniciado');
-    final result = await sync.syncAll();
-    await debugLog('SYNC',
-        'Auto-sync pós-login: ${result.success ? "ok" : "falha: ${result.error}"}');
+    try {
+      if (!PremiumAccess.instance.isPremium) return;
+      final sync = DataSyncService();
+      final syncEnabled = await sync.cloudSyncEnabled;
+      if (!syncEnabled || !sync.isReady) return;
+
+      await debugLog('SYNC', 'Auto-sync pós-login iniciado');
+      final result = await sync.syncAll();
+      await debugLog('SYNC',
+          'Auto-sync pós-login: ${result.success ? "ok" : "falha: ${result.error}"}');
+    } catch (error) {
+      // Falha de nuvem não deve impedir o login nem o acesso aos dados locais.
+      await debugLog('SYNC', 'Auto-sync pós-login falhou: $error');
+    }
   }
 
   /// Atualiza apenas o nome do usuário
@@ -552,10 +562,10 @@ class AuthProvider extends ChangeNotifier {
       return;
     }
 
-    // Não verificar para códigos beta (lifetime)
+    // Não verificar para Códigos Premium (lifetime)
     if (_currentUser.plan == SubscriptionPlan.lifetime) {
       await debugLog('AUTH',
-          'Usuário tem acesso lifetime (código beta) - não verifica expiração');
+          'Usuário tem acesso lifetime (Código Premium) - não verifica expiração');
       return;
     }
 
@@ -602,7 +612,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } else if (!_isOriginalAdmin &&
         _currentUser.plan != SubscriptionPlan.lifetime) {
-      // Se não é mais Pro, não é admin e não tem lifetime (código beta), fazer downgrade
+      // Se não é mais Pro, não é admin e não tem lifetime (Código Premium), fazer downgrade
       await debugLog('AUTH',
           'Assinatura não está mais ativa - fazendo downgrade para Free');
       _currentUser = _currentUser.copyWith(
@@ -729,7 +739,7 @@ class AuthProvider extends ChangeNotifier {
 
   final BetaCodeRepository _betaCodeRepo = BetaCodeRepository();
 
-  /// Valida e resgata um código beta
+  /// Valida e resgata um Código Premium
   /// Funciona entre dispositivos via Supabase
   Future<Map<String, dynamic>> redeemBetaCode(String code) async {
     try {
@@ -764,14 +774,14 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Cria um novo código beta (apenas para admin)
+  /// Cria um novo Código Premium (apenas para admin)
   /// Sincroniza com Supabase para funcionar entre dispositivos
   ///
   /// [code] - Código a ser criado
   /// [maxUses] - Número máximo de usos permitidos (padrão: 1)
   Future<String?> createBetaCode(String code, {int maxUses = 1}) async {
     if (!isAdmin && !_isOriginalAdmin) {
-      await debugLog('BETA_CODE', 'Apenas admins podem criar códigos beta');
+      await debugLog('BETA_CODE', 'Apenas admins podem criar Códigos Premium');
       return null;
     }
 
@@ -783,15 +793,15 @@ class AuthProvider extends ChangeNotifier {
           await _betaCodeRepo.createCode(cleanCode, maxUses: maxUses);
 
       if (success) {
-        await debugLog(
-            'BETA_CODE', 'Código beta criado: $cleanCode (max_uses: $maxUses)');
+        await debugLog('BETA_CODE',
+            'Código Premium criado: $cleanCode (max_uses: $maxUses)');
         return cleanCode;
       } else {
-        await debugLog('BETA_CODE', 'Erro ao criar código beta');
+        await debugLog('BETA_CODE', 'Erro ao criar Código Premium');
         return null;
       }
     } catch (e) {
-      await debugLog('BETA_CODE', 'Erro ao criar código beta: $e');
+      await debugLog('BETA_CODE', 'Erro ao criar Código Premium: $e');
       return null;
     }
   }

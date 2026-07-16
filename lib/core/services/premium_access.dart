@@ -5,7 +5,7 @@ import 'payment_service.dart';
 ///
 /// Combina os dois caminhos que concedem Premium no app:
 /// - Assinatura ativa no RevenueCat (`PaymentService.isPro`)
-/// - Premium local: role premium/admin ou plano lifetime (código beta,
+/// - Premium local: role premium/admin ou plano lifetime (Código Premium,
 ///   simulação de plano pelo admin)
 ///
 /// O estado local é mantido atualizado pelo `AuthProvider` a cada mudança de

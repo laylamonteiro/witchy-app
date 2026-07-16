@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -19,6 +20,7 @@ import 'core/services/payment_service.dart';
 import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
+import 'core/utils/app_session_policy.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/presentation/pages/auth_wrapper.dart';
@@ -110,7 +112,10 @@ class GrimorioDeBolsoApp extends StatefulWidget {
 class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     with WidgetsBindingObserver {
   static const String _lastOpenedKey = 'last_opened_timestamp';
+  static const String _backgroundedAtKey = 'backgrounded_at_timestamp';
   bool _showSplash = true;
+  final GlobalKey<NavigatorState> _rootNavigatorKey =
+      GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -148,32 +153,63 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Atualizar timestamp quando o app volta do background
-      widget.prefs
-          .setInt(_lastOpenedKey, DateTime.now().millisecondsSinceEpoch);
-      // Trigger sync when app resumes (if user is authenticated)
-      _triggerBackgroundSync();
+    if (state == AppLifecycleState.paused) {
+      widget.prefs.setInt(
+        _backgroundedAtKey,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+      return;
     }
+
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_handleAppResumed());
+    }
+  }
+
+  Future<void> _handleAppResumed() async {
+    final now = DateTime.now();
+    final backgroundedTimestamp = widget.prefs.getInt(_backgroundedAtKey);
+    final backgroundedAt = backgroundedTimestamp == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(backgroundedTimestamp);
+    final shouldStartNewSession = AppSessionPolicy.shouldStartNewSession(
+      backgroundedAt: backgroundedAt,
+      now: now,
+    );
+
+    await widget.prefs.remove(_backgroundedAtKey);
+    await widget.prefs.setInt(_lastOpenedKey, now.millisecondsSinceEpoch);
+
+    if (shouldStartNewSession && mounted) {
+      // Recria toda a navegação, como em uma abertura real: páginas internas
+      // são descartadas, o splash reaparece e a bubble verifica o novo dia.
+      _rootNavigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const AuthWrapper(showSplash: true),
+        ),
+        (_) => false,
+      );
+    }
+
+    await _triggerBackgroundSync();
   }
 
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
     // Sincronização é exclusiva para usuários Premium (fonte única:
-    // RevenueCat OU premium local via código beta/admin) E precisa estar
+    // RevenueCat OU premium local via Código Premium/admin) E precisa estar
     // habilitada nas configurações de Privacidade.
     final syncEnabled = await syncService.cloudSyncEnabled;
     if (syncEnabled &&
         syncService.isReady &&
         PremiumAccess.instance.isPremium) {
       await debugLog('SYNC', 'Auto-sync (Premium) iniciado em background');
-      syncService.syncAll().then((result) {
-        if (result.success) {
-          debugLog('SYNC', 'Auto-sync concluído com sucesso');
-        } else {
-          debugLog('SYNC', 'Auto-sync falhou: ${result.error}');
-        }
-      });
+      final result = await syncService.syncAll();
+      if (result.success) {
+        await debugLog('SYNC', 'Auto-sync concluído com sucesso');
+      } else {
+        await debugLog('SYNC', 'Auto-sync falhou: ${result.error}');
+      }
     }
   }
 
@@ -250,6 +286,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
         ),
       ],
       child: MaterialApp(
+        navigatorKey: _rootNavigatorKey,
         title: 'Grimório de Bolso',
         theme: AppTheme.darkTheme,
         home: AuthWrapper(showSplash: _showSplash),

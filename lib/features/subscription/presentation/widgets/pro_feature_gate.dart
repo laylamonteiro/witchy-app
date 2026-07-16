@@ -41,7 +41,7 @@ class ProFeatureGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<PaymentService, AuthProvider>(
       builder: (context, paymentService, authProvider, _) {
-        // Fonte única de premium: RevenueCat OU premium local (código beta,
+        // Fonte única de premium: RevenueCat OU premium local (Código Premium,
         // simulação de plano pelo admin).
         if (paymentService.isPro || authProvider.isPremiumEffective) {
           return child;
@@ -129,7 +129,7 @@ class ProBadge extends StatelessWidget {
 /// Extensão para verificar status Pro facilmente
 extension ProStatusExtension on BuildContext {
   /// Retorna true se o usuário tem acesso Premium por qualquer caminho
-  /// (RevenueCat, código beta lifetime ou simulação de plano pelo admin)
+  /// (RevenueCat, Código Premium lifetime ou simulação de plano pelo admin)
   bool get isPro {
     try {
       if (Provider.of<PaymentService>(this, listen: false).isPro) return true;
