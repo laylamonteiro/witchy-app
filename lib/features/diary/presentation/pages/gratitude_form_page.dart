@@ -28,8 +28,8 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
         TextEditingController(text: widget.gratitude?.title ?? '');
     _contentController =
         TextEditingController(text: widget.gratitude?.content ?? '');
-    _tagsController = TextEditingController(
-        text: widget.gratitude?.tags.join(', ') ?? '');
+    _tagsController =
+        TextEditingController(text: widget.gratitude?.tags.join(', ') ?? '');
     _selectedDate = widget.gratitude?.date ?? DateTime.now();
   }
 
@@ -45,7 +45,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: ResponsiveAppBarTitle(
             widget.gratitude == null ? 'Nova Gratidão' : 'Editar Gratidão'),
         actions: widget.gratitude != null
             ? [
@@ -140,7 +140,8 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
 
     final gratitude = GratitudeModel(
       id: widget.gratitude?.id,
-      title: _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+      title:
+          _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
       content: _contentController.text,
       tags: tags,
       date: _selectedDate,

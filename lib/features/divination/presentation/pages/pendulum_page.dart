@@ -138,7 +138,7 @@ class _PendulumPageState extends State<PendulumPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pêndulo'),
+        title: const ResponsiveAppBarTitle('Pêndulo'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,

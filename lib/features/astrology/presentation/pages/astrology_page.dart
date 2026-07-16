@@ -31,7 +31,7 @@ class _AstrologyPageState extends State<AstrologyPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Astrologia'),
+        title: const ResponsiveAppBarTitle('Astrologia'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,

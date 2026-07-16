@@ -31,8 +31,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     _textController =
         TextEditingController(text: widget.affirmation?.text ?? '');
     _contextController = TextEditingController();
-    _selectedCategory = widget.affirmation?.category ??
-        AffirmationCategory.manifestation;
+    _selectedCategory =
+        widget.affirmation?.category ?? AffirmationCategory.manifestation;
   }
 
   @override
@@ -49,9 +49,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.affirmation == null
-            ? 'Nova Afirmação'
-            : 'Editar Afirmação'),
+        title: ResponsiveAppBarTitle(
+            widget.affirmation == null ? 'Nova Afirmação' : 'Editar Afirmação'),
         actions: widget.affirmation != null && !isPreloaded
             ? [
                 IconButton(
@@ -133,7 +132,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                       decoration: const InputDecoration(
                         labelText: 'Contexto (opcional)',
                         hintText: 'Ex: Estou começando um novo emprego...',
-                        helperText: 'Descreva sua situação para uma afirmação personalizada',
+                        helperText:
+                            'Descreva sua situação para uma afirmação personalizada',
                       ),
                       maxLines: 2,
                     ),
@@ -152,7 +152,9 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                                 ),
                               )
                             : const Icon(Icons.auto_awesome),
-                        label: Text(_isGenerating ? 'Consultando...' : 'Gerar Afirmação'),
+                        label: Text(_isGenerating
+                            ? 'Consultando...'
+                            : 'Gerar Afirmação'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.lilac,
                           foregroundColor: AppColors.darkBackground,
@@ -227,7 +229,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
               Consumer<AuthProvider>(
                 builder: (context, authProvider, _) {
                   if (authProvider.isPremium) return const SizedBox.shrink();
-                  final remaining = authProvider.currentUser.remainingAffirmations;
+                  final remaining =
+                      authProvider.currentUser.remainingAffirmations;
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
@@ -257,7 +260,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     try {
       final affirmationText = await AIService.instance.generateAffirmation(
         category: _selectedCategory.displayName,
-        userContext: _contextController.text.isEmpty ? null : _contextController.text,
+        userContext:
+            _contextController.text.isEmpty ? null : _contextController.text,
       );
 
       if (mounted) {
@@ -303,10 +307,12 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
 
     // Verificar limite diário para novas afirmações (usuários free)
     final authProvider = context.read<AuthProvider>();
-    if (widget.affirmation == null && !authProvider.currentUser.canUseAffirmations) {
+    if (widget.affirmation == null &&
+        !authProvider.currentUser.canUseAffirmations) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Você atingiu o limite diário de afirmações. Volte amanhã ou seja Premium!'),
+          content: Text(
+              'Você atingiu o limite diário de afirmações. Volte amanhã ou seja Premium!'),
           backgroundColor: AppColors.alert,
           duration: Duration(seconds: 4),
         ),
@@ -343,8 +349,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Excluir Afirmação'),
-        content:
-            const Text('Tem certeza que deseja excluir esta afirmação?'),
+        content: const Text('Tem certeza que deseja excluir esta afirmação?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

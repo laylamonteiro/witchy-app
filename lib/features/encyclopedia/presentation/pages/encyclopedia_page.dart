@@ -25,7 +25,8 @@ class EncyclopediaPage extends StatefulWidget {
   State<EncyclopediaPage> createState() => _EncyclopediaPageState();
 }
 
-class _EncyclopediaPageState extends State<EncyclopediaPage> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _EncyclopediaPageState extends State<EncyclopediaPage>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   static const String _lastTabKey = 'encyclopedia_last_tab';
 
@@ -79,7 +80,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage> with SingleTickerPr
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Enciclopédia Mágica'),
+        title: const ResponsiveAppBarTitle('Enciclopédia Mágica'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),

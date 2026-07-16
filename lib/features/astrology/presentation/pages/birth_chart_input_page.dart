@@ -447,7 +447,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Criar Mapa Astral'),
+        title: const ResponsiveAppBarTitle('Criar Mapa Astral'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,
@@ -515,7 +515,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       ],
                       onChanged: _onDateChanged,
                       decoration: InputDecoration(
-                        hintText: '31/03/1994',
+                        hintText: 'dd/mm/aaaa',
                         hintStyle: TextStyle(
                           color: AppColors.softWhite.withOpacity(0.4),
                         ),
@@ -585,7 +585,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       ],
                       onChanged: _onTimeChanged,
                       decoration: InputDecoration(
-                        hintText: '19:39',
+                        hintText: 'HH:MM',
                         hintStyle: TextStyle(
                           color: AppColors.softWhite.withOpacity(0.4),
                         ),

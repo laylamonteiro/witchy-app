@@ -159,6 +159,13 @@ class DataSyncService {
   SupabaseClient? _supabase;
   final _db = DatabaseHelper.instance;
   static const cloudSyncPreferenceKey = 'privacy_cloud_sync';
+  static const cloudSyncUserConfiguredKey =
+      'privacy_cloud_sync_user_configured';
+  static const lastSuccessfulSyncPreferenceKey =
+      'last_successful_cloud_sync_at';
+
+  static String lastSuccessfulSyncKey(String? userId) =>
+      '${lastSuccessfulSyncPreferenceKey}_${userId ?? 'local_user'}';
 
   SyncStatus _status = SyncStatus.idle;
   final _statusController = StreamController<SyncStatus>.broadcast();
@@ -194,12 +201,66 @@ class DataSyncService {
   /// ID do usuário atual
   String? get currentUserId => _supabase?.auth.currentUser?.id;
 
-  Future<bool> get cloudSyncEnabled async {
-    final prefs = await SharedPreferences.getInstance();
+  @visibleForTesting
+  static bool resolveCloudSyncPreference(
+    SharedPreferences prefs, {
+    required bool isPremium,
+  }) {
     final configured = prefs.getBool(cloudSyncPreferenceKey);
+    final userConfigured = prefs.getBool(cloudSyncUserConfiguredKey) ?? false;
+    final hasLegacyPreference = prefs.containsKey('privacy_sync') ||
+        prefs.containsKey('privacy_backup');
+
+    // Versões anteriores chegaram a persistir `false` automaticamente para
+    // usuários Free. Ao se tornarem Premium, esse valor não representa uma
+    // escolha do usuário e deve assumir o default Premium ligado.
+    if (isPremium &&
+        configured == false &&
+        !userConfigured &&
+        !hasLegacyPreference) {
+      return true;
+    }
     if (configured != null) return configured;
+
+    if (!isPremium) return false;
     return (prefs.getBool('privacy_sync') ?? true) &&
         (prefs.getBool('privacy_backup') ?? true);
+  }
+
+  static Future<bool> ensureCloudSyncPreference(
+    SharedPreferences prefs, {
+    required bool isPremium,
+  }) async {
+    final enabled = resolveCloudSyncPreference(prefs, isPremium: isPremium);
+    if (prefs.getBool(cloudSyncPreferenceKey) != enabled) {
+      await prefs.setBool(cloudSyncPreferenceKey, enabled);
+    }
+    return enabled;
+  }
+
+  Future<bool> get cloudSyncEnabled async {
+    final prefs = await SharedPreferences.getInstance();
+    return ensureCloudSyncPreference(
+      prefs,
+      isPremium: PremiumAccess.instance.isPremium,
+    );
+  }
+
+  /// Última sincronização concluída para a conta atual.
+  Future<DateTime?> get lastSuccessfulSyncTime async {
+    final prefs = await SharedPreferences.getInstance();
+    final timestamp = prefs.getInt(lastSuccessfulSyncKey(currentUserId));
+    return timestamp == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(timestamp);
+  }
+
+  Future<void> _persistSuccessfulSyncTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+      lastSuccessfulSyncKey(currentUserId),
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   /// Sincroniza todos os dados com tratamento de conflitos
@@ -742,13 +803,16 @@ class DataSyncService {
   void _setStatus(SyncStatus newStatus) {
     _status = newStatus;
     _statusController.add(newStatus);
+    if (newStatus == SyncStatus.success) {
+      unawaited(_persistSuccessfulSyncTime());
+    }
   }
 
   /// Sincroniza um item específico após criação/atualização
   /// NOTA: Só funciona para usuários Premium
   Future<void> syncItem(SyncEntity entity, Map<String, dynamic> item) async {
     // Verifica se é premium antes de sincronizar (fonte única: RevenueCat OU
-    // premium local via código beta/admin)
+    // premium local via Código Premium/admin)
     if (!PremiumAccess.instance.isPremium) return;
     if (!isReady) return;
     if (!await cloudSyncEnabled) return;

@@ -56,7 +56,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     if (!authProvider.currentUser.canUseAi) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Você atingiu o limite diário de consultas. Volte amanhã ou seja Premium!'),
+          content: Text(
+              'Você atingiu o limite diário de consultas. Volte amanhã ou seja Premium!'),
           backgroundColor: AppColors.alert,
           duration: Duration(seconds: 4),
         ),
@@ -90,19 +91,30 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
         _generatedSpell = spell;
       });
     } catch (e, stackTrace) {
-
       if (!mounted) return;
 
-      String errorMessage = 'O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.';
+      String errorMessage =
+          'O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.';
 
-      if (e.toString().contains('limit') || e.toString().contains('quota') || e.toString().contains('usage') || e.toString().contains('429')) {
-        errorMessage = 'O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos.';
-      } else if (e.toString().contains('autenticação') || e.toString().contains('authentication') || e.toString().contains('401')) {
-        errorMessage = 'Erro temporário no serviço místico. Tente novamente em instantes.';
-      } else if (e.toString().contains('network') || e.toString().contains('connection') || e.toString().contains('timeout')) {
-        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+      if (e.toString().contains('limit') ||
+          e.toString().contains('quota') ||
+          e.toString().contains('usage') ||
+          e.toString().contains('429')) {
+        errorMessage =
+            'O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos.';
+      } else if (e.toString().contains('autenticação') ||
+          e.toString().contains('authentication') ||
+          e.toString().contains('401')) {
+        errorMessage =
+            'Erro temporário no serviço místico. Tente novamente em instantes.';
+      } else if (e.toString().contains('network') ||
+          e.toString().contains('connection') ||
+          e.toString().contains('timeout')) {
+        errorMessage =
+            'Erro de conexão. Verifique sua internet e tente novamente.';
       } else if (e.toString().contains('503')) {
-        errorMessage = 'O portal místico está temporariamente fechado. Tente novamente em alguns minutos.';
+        errorMessage =
+            'O portal místico está temporariamente fechado. Tente novamente em alguns minutos.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -143,7 +155,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Conselheiro Místico'),
+        title: const ResponsiveAppBarTitle('Conselheiro Místico'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,
@@ -211,9 +223,10 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
             const SizedBox(height: 16),
 
             ElevatedButton.icon(
-              onPressed: _isGenerating || _intentionController.text.trim().isEmpty
-                  ? null
-                  : _generateSpell,
+              onPressed:
+                  _isGenerating || _intentionController.text.trim().isEmpty
+                      ? null
+                      : _generateSpell,
               icon: _isGenerating
                   ? const SizedBox(
                       width: 20,
@@ -226,7 +239,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                       ),
                     )
                   : const Icon(Icons.auto_awesome),
-              label: Text(_isGenerating ? 'Manifestando...' : 'Manifestar Feitiço ✨'),
+              label: Text(
+                  _isGenerating ? 'Manifestando...' : 'Manifestar Feitiço ✨'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.lilac,
                 foregroundColor: AppColors.darkBackground,
@@ -242,7 +256,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
             Consumer<AuthProvider>(
               builder: (context, authProvider, _) {
                 if (authProvider.isPremium) return const SizedBox.shrink();
-                final remaining = authProvider.currentUser.remainingAiConsultations;
+                final remaining =
+                    authProvider.currentUser.remainingAiConsultations;
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
@@ -316,9 +331,10 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                           child: Text(
                             _generatedSpell!.type.displayName,
                             style: TextStyle(
-                              color: _generatedSpell!.type == SpellType.attraction
-                                  ? AppColors.success
-                                  : AppColors.alert,
+                              color:
+                                  _generatedSpell!.type == SpellType.attraction
+                                      ? AppColors.success
+                                      : AppColors.alert,
                               fontSize: 12,
                             ),
                           ),
@@ -351,7 +367,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.lilac,
                           foregroundColor: AppColors.darkBackground,
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 14),
                         ),
                       ),
                     ),

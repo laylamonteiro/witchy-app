@@ -7,7 +7,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/data/repositories/beta_code_repository.dart';
 
-/// Página de debug para códigos beta
+/// Página de debug para Códigos Premium
 /// Mostra informações detalhadas sobre Supabase e SQLite
 class BetaCodesDebugPage extends StatefulWidget {
   const BetaCodesDebugPage({super.key});
@@ -29,7 +29,8 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
 
   void _addLog(String message) {
     setState(() {
-      _logs.add('[${DateTime.now().toIso8601String().substring(11, 19)}] $message');
+      _logs.add(
+          '[${DateTime.now().toIso8601String().substring(11, 19)}] $message');
     });
   }
 
@@ -46,8 +47,10 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
       _addLog('');
       _addLog('1️⃣ CONFIGURAÇÃO SUPABASE:');
       _addLog('   Configurado: ${SupabaseConfig.isConfigured}');
-      _addLog('   URL: ${SupabaseConfig.url.isEmpty ? "❌ VAZIO" : "✅ ${SupabaseConfig.url}"}');
-      _addLog('   AnonKey: ${SupabaseConfig.anonKey.isEmpty ? "❌ VAZIO" : "✅ ${SupabaseConfig.anonKey.substring(0, 20)}..."}');
+      _addLog(
+          '   URL: ${SupabaseConfig.url.isEmpty ? "❌ VAZIO" : "✅ ${SupabaseConfig.url}"}');
+      _addLog(
+          '   AnonKey: ${SupabaseConfig.anonKey.isEmpty ? "❌ VAZIO" : "✅ ${SupabaseConfig.anonKey.substring(0, 20)}..."}');
 
       // 2. Testar conexão com Supabase
       if (SupabaseConfig.isConfigured) {
@@ -59,11 +62,10 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
 
           // Tentar fazer um select simples
           _addLog('   Testando SELECT na tabela beta_codes...');
-          final response = await supabase
-              .from(SupabaseTables.betaCodes)
-              .select()
-              .limit(1);
-          _addLog('   SELECT: ✅ Sucesso (retornou ${response.length} registros)');
+          final response =
+              await supabase.from(SupabaseTables.betaCodes).select().limit(1);
+          _addLog(
+              '   SELECT: ✅ Sucesso (retornou ${response.length} registros)');
         } catch (e) {
           _addLog('   SELECT: ❌ ERRO: $e');
 
@@ -120,8 +122,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
 
         // Verificar se tabela existe
         final tableExists = await db.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name='beta_codes'"
-        );
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='beta_codes'");
 
         if (tableExists.isEmpty) {
           _addLog('   ❌ TABELA NÃO EXISTE!');
@@ -133,7 +134,8 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
           _addLog('   Colunas: ${schema.map((col) => col['name']).join(', ')}');
 
           // Contar códigos
-          final count = await db.rawQuery("SELECT COUNT(*) as count FROM beta_codes");
+          final count =
+              await db.rawQuery("SELECT COUNT(*) as count FROM beta_codes");
           final total = count.first['count'] as int;
           _addLog('   Total de códigos: $total');
 
@@ -230,7 +232,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('🔧 Debug - Códigos Beta'),
+        title: const ResponsiveAppBarTitle('🔧 Debug - Códigos Premium'),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
@@ -318,9 +320,9 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                             } else if (log.contains('===')) {
                               textColor = AppColors.lilac;
                             } else if (log.contains('1️⃣') ||
-                                       log.contains('2️⃣') ||
-                                       log.contains('3️⃣') ||
-                                       log.contains('4️⃣')) {
+                                log.contains('2️⃣') ||
+                                log.contains('3️⃣') ||
+                                log.contains('4️⃣')) {
                               textColor = Colors.cyanAccent;
                             }
 
@@ -359,10 +361,14 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildTip('Se "Supabase configurado: false", as credenciais não foram injetadas no build'),
-                  _buildTip('Se aparecer erro de RLS/permission, é problema nas políticas da tabela'),
-                  _buildTip('Se códigos aparecem apenas no SQLite, o Supabase não está funcionando'),
-                  _buildTip('Toque no ícone de copiar (topo direito) para copiar todos os logs'),
+                  _buildTip(
+                      'Se "Supabase configurado: false", as credenciais não foram injetadas no build'),
+                  _buildTip(
+                      'Se aparecer erro de RLS/permission, é problema nas políticas da tabela'),
+                  _buildTip(
+                      'Se códigos aparecem apenas no SQLite, o Supabase não está funcionando'),
+                  _buildTip(
+                      'Toque no ícone de copiar (topo direito) para copiar todos os logs'),
                 ],
               ),
             ),

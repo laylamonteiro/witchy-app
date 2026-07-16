@@ -33,11 +33,11 @@ class _SpellFormPageState extends State<SpellFormPage> {
     _nameController = TextEditingController(text: widget.spell?.name ?? '');
     _purposeController =
         TextEditingController(text: widget.spell?.purpose ?? '');
-    _ingredientsController = TextEditingController(
-        text: widget.spell?.ingredients.join('\n') ?? '');
+    _ingredientsController =
+        TextEditingController(text: widget.spell?.ingredients.join('\n') ?? '');
     _stepsController = TextEditingController(text: widget.spell?.steps ?? '');
-    _durationController = TextEditingController(
-        text: widget.spell?.duration?.toString() ?? '');
+    _durationController =
+        TextEditingController(text: widget.spell?.duration?.toString() ?? '');
     _observationsController =
         TextEditingController(text: widget.spell?.observations ?? '');
 
@@ -63,9 +63,8 @@ class _SpellFormPageState extends State<SpellFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.spell == null
-            ? 'Novo Feitiço'
-            : 'Editar Feitiço'),
+        title: ResponsiveAppBarTitle(
+            widget.spell == null ? 'Novo Feitiço' : 'Editar Feitiço'),
       ),
       body: Form(
         key: _formKey,

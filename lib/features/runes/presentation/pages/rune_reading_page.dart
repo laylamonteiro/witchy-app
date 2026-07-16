@@ -127,7 +127,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Leitura de Runas'),
+        title: const ResponsiveAppBarTitle('Leitura de Runas'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,

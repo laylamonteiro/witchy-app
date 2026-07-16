@@ -13,7 +13,7 @@ class AltarPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('O Altar Mágico'),
+        title: const ResponsiveAppBarTitle('O Altar Mágico'),
         backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(
@@ -23,6 +23,7 @@ class AltarPage extends StatelessWidget {
           children: [
             // Introdução
             MagicalCard(
+              margin: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -30,9 +31,11 @@ class AltarPage extends StatelessWidget {
                     children: [
                       const Text('🛐', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
-                      Text(
-                        'Sobre o Altar',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      Expanded(
+                        child: Text(
+                          'Sobre o Altar',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
                     ],
                   ),
@@ -75,36 +78,36 @@ class AltarPage extends StatelessWidget {
                     context,
                     '1. Escolha o local',
                     'Selecione um espaço tranquilo onde você possa ter privacidade. '
-                    'Pode ser uma mesa, prateleira, cômoda ou até um canto do seu quarto. '
-                    'Evite banheiros e lavanderias (pontos de saída de energia).',
+                        'Pode ser uma mesa, prateleira, cômoda ou até um canto do seu quarto. '
+                        'Evite banheiros e lavanderias (pontos de saída de energia).',
                   ),
                   _buildStep(
                     context,
                     '2. Limpe o espaço',
                     'Limpe fisicamente a superfície e energeticamente com fumaça de ervas '
-                    '(alecrim, arruda, sálvia) ou borrife água com sal.',
+                        '(alecrim, arruda, sálvia) ou borrife água com sal.',
                   ),
                   _buildStep(
                     context,
                     '3. Use uma toalha ou tecido',
                     'Opcional, mas recomendado. Use cores que ressoem com você: '
-                    'preto (proteção), branco (pureza), roxo (espiritualidade), verde (cura).',
+                        'preto (proteção), branco (pureza), roxo (espiritualidade), verde (cura).',
                   ),
                   _buildStep(
                     context,
                     '4. Represente os 4 elementos',
                     'Cada elemento traz uma energia essencial para o altar:\n\n'
-                    '🌍 Terra (Norte): Cristais, sal, pedras, plantas, pentáculo\n'
-                    '💧 Água (Oeste): Taça com água, conchas, água lunar\n'
-                    '🔥 Fogo (Sul): Vela, caldeirão, athame\n'
-                    '💨 Ar (Leste): Incenso, penas, sinos, varinha\n\n'
-                    '💡 Dica: Posicione cada elemento na direção cardeal correspondente quando possível.',
+                        '🌍 Terra (Norte): Cristais, sal, pedras, plantas, pentáculo\n'
+                        '💧 Água (Oeste): Taça com água, conchas, água lunar\n'
+                        '🔥 Fogo (Sul): Vela, caldeirão, athame\n'
+                        '💨 Ar (Leste): Incenso, penas, sinos, varinha\n\n'
+                        '💡 Dica: Posicione cada elemento na direção cardeal correspondente quando possível.',
                   ),
                   _buildStep(
                     context,
                     '5. Adicione itens pessoais',
                     'Imagens de divindades, fotos de ancestrais, símbolos que fazem sentido para você, '
-                    'ferramentas mágicas (athame, caldeirão, varinha), livro de sombras.',
+                        'ferramentas mágicas (athame, caldeirão, varinha), livro de sombras.',
                   ),
                 ],
               ),
@@ -118,23 +121,34 @@ class AltarPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildItem(context, '🕯️ Velas', 'Representam o elemento Fogo e a luz divina. Use cores correspondentes às suas intenções.'),
-                  _buildItem(context, '💎 Cristais', 'Amplificam energia e trazem propriedades específicas (quartzo rosa para amor, ametista para espiritualidade).'),
-                  _buildItem(context, '🌿 Ervas', 'Secas ou frescas, cada erva tem correspondências mágicas únicas.'),
-                  _buildItem(context, '🔮 Objetos simbólicos', 'Pentáculo, símbolos lunares, runas, tarot, estatuetas de divindades.'),
-                  _buildItem(context, '💧 Taça com água', 'Elemento Água, pode ser trocada regularmente ou usada em rituais.'),
-                  _buildItem(context, '🧂 Sal', 'Purificação e proteção, representa a Terra.'),
-                  _buildItem(context, '📿 Incenso', 'Elemento Ar, limpa energia e eleva vibrações.'),
-                  _buildItem(context, '📖 Grimório', 'Seu livro de sombras ou diário de práticas.'),
-                  _buildItem(context, '🌙 Itens lunares', 'Representações da lua, água lunar, calendário lunar.'),
-                  _buildItem(context, '🪶 Penas', 'Elemento Ar, conexão com o divino.'),
+                  _buildItem(context, '🕯️ Velas',
+                      'Representam o elemento Fogo e a luz divina. Use cores correspondentes às suas intenções.'),
+                  _buildItem(context, '💎 Cristais',
+                      'Amplificam energia e trazem propriedades específicas (quartzo rosa para amor, ametista para espiritualidade).'),
+                  _buildItem(context, '🌿 Ervas',
+                      'Secas ou frescas, cada erva tem correspondências mágicas únicas.'),
+                  _buildItem(context, '🔮 Objetos simbólicos',
+                      'Pentáculo, símbolos lunares, runas, tarot, estatuetas de divindades.'),
+                  _buildItem(context, '💧 Taça com água',
+                      'Elemento Água, pode ser trocada regularmente ou usada em rituais.'),
+                  _buildItem(context, '🧂 Sal',
+                      'Purificação e proteção, representa a Terra.'),
+                  _buildItem(context, '📿 Incenso',
+                      'Elemento Ar, limpa energia e eleva vibrações.'),
+                  _buildItem(context, '📖 Grimório',
+                      'Seu livro de sombras ou diário de práticas.'),
+                  _buildItem(context, '🌙 Itens lunares',
+                      'Representações da lua, água lunar, calendário lunar.'),
+                  _buildItem(context, '🪶 Penas',
+                      'Elemento Ar, conexão com o divino.'),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.lilac.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+                      border:
+                          Border.all(color: AppColors.lilac.withOpacity(0.3)),
                     ),
                     child: Text(
                       '💡 Lembre-se: Não existe lista obrigatória. Use o que ressoa com você e sua prática.',
@@ -156,19 +170,26 @@ class AltarPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildWarning(context, 'Itens de energia negativa', 'Objetos que tragam memórias ruins ou sensações desconfortáveis.'),
-                  _buildWarning(context, 'Excesso de objetos', 'Um altar lotado dispersa a energia. Mantenha organizado e intencional.'),
-                  _buildWarning(context, 'Itens emprestados sem permissão', 'Cada objeto carrega a energia de seu dono.'),
-                  _buildWarning(context, 'Lixo ou sujeira', 'Mantenha seu altar limpo fisicamente e energeticamente.'),
-                  _buildWarning(context, 'Objetos alheios à sua prática', 'Não coloque símbolos de tradições que você não pratica por modismo.'),
-                  _buildWarning(context, 'Plantas mortas', 'Retire folhas secas e plantas mortas regularmente.'),
+                  _buildWarning(context, 'Itens de energia negativa',
+                      'Objetos que tragam memórias ruins ou sensações desconfortáveis.'),
+                  _buildWarning(context, 'Excesso de objetos',
+                      'Um altar lotado dispersa a energia. Mantenha organizado e intencional.'),
+                  _buildWarning(context, 'Itens emprestados sem permissão',
+                      'Cada objeto carrega a energia de seu dono.'),
+                  _buildWarning(context, 'Lixo ou sujeira',
+                      'Mantenha seu altar limpo fisicamente e energeticamente.'),
+                  _buildWarning(context, 'Objetos alheios à sua prática',
+                      'Não coloque símbolos de tradições que você não pratica por modismo.'),
+                  _buildWarning(context, 'Plantas mortas',
+                      'Retire folhas secas e plantas mortas regularmente.'),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.alert.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.alert.withOpacity(0.3)),
+                      border:
+                          Border.all(color: AppColors.alert.withOpacity(0.3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +199,10 @@ class AltarPage extends StatelessWidget {
                         Expanded(
                           child: Text(
                             'SEGURANÇA: Nunca deixe velas acesas sem supervisão. Mantenha materiais inflamáveis longe das chamas.',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -205,18 +229,24 @@ class AltarPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  _buildMethod(context, '🔥 Defumação', 'Use alecrim, arruda, sálvia, ou pau santo. Passe a fumaça por todo o altar e objetos com intenção de limpeza.'),
-                  _buildMethod(context, '💧 Água e sal', 'Borrife água com sal grosso (ou água lunar) pelo espaço. Cuidado com objetos que não podem molhar.'),
-                  _buildMethod(context, '🔔 Som', 'Use sinos, tigelas tibetanas ou palmas para quebrar energia estagnada.'),
-                  _buildMethod(context, '🌙 Luz da lua', 'Deixe objetos sob a luz da lua cheia para limpeza energética profunda.'),
-                  _buildMethod(context, '🧘 Visualização', 'Visualize luz branca ou dourada preenchendo o altar e dissolvendo energias densas.'),
+                  _buildMethod(context, '🔥 Defumação',
+                      'Use alecrim, arruda, sálvia, ou pau santo. Passe a fumaça por todo o altar e objetos com intenção de limpeza.'),
+                  _buildMethod(context, '💧 Água e sal',
+                      'Borrife água com sal grosso (ou água lunar) pelo espaço. Cuidado com objetos que não podem molhar.'),
+                  _buildMethod(context, '🔔 Som',
+                      'Use sinos, tigelas tibetanas ou palmas para quebrar energia estagnada.'),
+                  _buildMethod(context, '🌙 Luz da lua',
+                      'Deixe objetos sob a luz da lua cheia para limpeza energética profunda.'),
+                  _buildMethod(context, '🧘 Visualização',
+                      'Visualize luz branca ou dourada preenchendo o altar e dissolvendo energias densas.'),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.info.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.info.withOpacity(0.3)),
+                      border:
+                          Border.all(color: AppColors.info.withOpacity(0.3)),
                     ),
                     child: Text(
                       '🌙 Frequência recomendada: A cada lua nova ou cheia, ou quando sentir a energia pesada.',
@@ -238,13 +268,20 @@ class AltarPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildMaintenance(context, 'Limpeza física regular', 'Tire poeira, limpe superfícies, organize objetos. Idealmente na lua minguante.'),
-                  _buildMaintenance(context, 'Troque oferendas', 'Se você deixa oferendas (flores, alimentos, água), troque antes que estraguem.'),
-                  _buildMaintenance(context, 'Recarregue cristais', 'Limpe e recarregue cristais regularmente (lua, sol, terra, fumaça).'),
-                  _buildMaintenance(context, 'Atualize conforme as estações', 'Adapte decorações e elementos sazonais (Sabbats, solstícios, equinócios).'),
-                  _buildMaintenance(context, 'Visite diariamente', 'Mesmo que brevemente. Acenda uma vela, agradeça, medite. Mantenha a energia viva.'),
-                  _buildMaintenance(context, 'Reorganize quando necessário', 'Seu altar pode evoluir com você. Remova o que não ressoa mais, adicione o novo.'),
-                  _buildMaintenance(context, 'Proteja energeticamente', 'Renove proteções regularmente com sal ao redor, visualizações ou sigilos.'),
+                  _buildMaintenance(context, 'Limpeza física regular',
+                      'Tire poeira, limpe superfícies, organize objetos. Idealmente na lua minguante.'),
+                  _buildMaintenance(context, 'Troque oferendas',
+                      'Se você deixa oferendas (flores, alimentos, água), troque antes que estraguem.'),
+                  _buildMaintenance(context, 'Recarregue cristais',
+                      'Limpe e recarregue cristais regularmente (lua, sol, terra, fumaça).'),
+                  _buildMaintenance(context, 'Atualize conforme as estações',
+                      'Adapte decorações e elementos sazonais (Sabbats, solstícios, equinócios).'),
+                  _buildMaintenance(context, 'Visite diariamente',
+                      'Mesmo que brevemente. Acenda uma vela, agradeça, medite. Mantenha a energia viva.'),
+                  _buildMaintenance(context, 'Reorganize quando necessário',
+                      'Seu altar pode evoluir com você. Remova o que não ressoa mais, adicione o novo.'),
+                  _buildMaintenance(context, 'Proteja energeticamente',
+                      'Renove proteções regularmente com sal ao redor, visualizações ou sigilos.'),
                 ],
               ),
             ),
@@ -257,38 +294,48 @@ class AltarPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildUsage(context, 'Meditação e conexão', 'Sente-se em frente ao altar para meditar, centrar-se e conectar-se com o divino.'),
-                  _buildUsage(context, 'Feitiços e rituais', 'Use como espaço de trabalho mágico. Acenda velas, prepare poções, consagre ferramentas.'),
-                  _buildUsage(context, 'Oferendas e agradecimentos', 'Deixe oferendas para divindades, ancestrais ou espíritos que você honra.'),
-                  _buildUsage(context, 'Celebrações sazonais', 'Decore e celebre Sabbats, luas cheias, equinócios no altar.'),
-                  _buildUsage(context, 'Carregamento de objetos', 'Deixe itens (talismãs, joias, cristais) no altar para carregar com energia.'),
-                  _buildUsage(context, 'Divinação', 'Pratique tarot, runas, pêndulo ou outras formas de divinação no altar.'),
-                  _buildUsage(context, 'Ponto focal diário', 'Comece ou termine o dia no altar, definindo intenções ou refletindo.'),
+                  _buildUsage(context, 'Meditação e conexão',
+                      'Sente-se em frente ao altar para meditar, centrar-se e conectar-se com o divino.'),
+                  _buildUsage(context, 'Feitiços e rituais',
+                      'Use como espaço de trabalho mágico. Acenda velas, prepare poções, consagre ferramentas.'),
+                  _buildUsage(context, 'Oferendas e agradecimentos',
+                      'Deixe oferendas para divindades, ancestrais ou espíritos que você honra.'),
+                  _buildUsage(context, 'Celebrações sazonais',
+                      'Decore e celebre Sabbats, luas cheias, equinócios no altar.'),
+                  _buildUsage(context, 'Carregamento de objetos',
+                      'Deixe itens (talismãs, joias, cristais) no altar para carregar com energia.'),
+                  _buildUsage(context, 'Divinação',
+                      'Pratique tarot, runas, pêndulo ou outras formas de divinação no altar.'),
+                  _buildUsage(context, 'Ponto focal diário',
+                      'Comece ou termine o dia no altar, definindo intenções ou refletindo.'),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.mint.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.mint.withOpacity(0.3)),
+                      border:
+                          Border.all(color: AppColors.mint.withOpacity(0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '💚 Sugestão de rotina diária:',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                color: AppColors.mint,
-                              ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(color: AppColors.mint),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           '• Manhã: Acenda uma vela, defina intenção do dia\n'
                           '• Tarde: Momento de gratidão ou reflexão breve\n'
                           '• Noite: Agradeça pelo dia, apague a vela com reverência',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                       ],
                     ),
@@ -334,6 +381,7 @@ class AltarPage extends StatelessWidget {
 
   Widget _buildPassoAPasso(BuildContext context) {
     return MagicalCard(
+      margin: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -393,23 +441,33 @@ class AltarPage extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Passos numerados
-          _buildPassoNumerado('1', 'Escolha o Local',
+          _buildPassoNumerado(
+              '1',
+              'Escolha o Local',
               'Um cantinho onde você não será perturbado(a). Pode ser uma mesinha, prateleira, ou até uma caixa que você abre quando for praticar.',
               'Não precisa ser grande! Um espaço de 30x30cm já é suficiente.'),
 
-          _buildPassoNumerado('2', 'Limpe o Espaço',
+          _buildPassoNumerado(
+              '2',
+              'Limpe o Espaço',
               'Limpe fisicamente com um pano, depois passe fumaça de incenso ou visualize uma luz branca purificando.',
               'Diga: "Que este espaço seja purificado e abençoado."'),
 
-          _buildPassoNumerado('3', 'Adicione uma Vela',
+          _buildPassoNumerado(
+              '3',
+              'Adicione uma Vela',
               'A vela é o coração do altar - representa o fogo e a luz divina. Uma única vela branca já é suficiente.',
               'Velas brancas são universais e podem substituir qualquer cor.'),
 
-          _buildPassoNumerado('4', 'Adicione Itens Significativos',
+          _buildPassoNumerado(
+              '4',
+              'Adicione Itens Significativos',
               'Coloque o que tem significado para você: foto de ancestrais, cristal que ganhou, flores, uma concha da praia.',
               'Comece com 3-5 itens e vá adicionando com o tempo.'),
 
-          _buildPassoNumerado('5', 'Consagre seu Altar',
+          _buildPassoNumerado(
+              '5',
+              'Consagre seu Altar',
               'Acenda a vela, respire fundo e diga: "Consagro este altar como meu espaço sagrado. Que ele seja um portal de conexão."',
               'Use suas próprias palavras! O importante é a intenção.'),
 
@@ -435,12 +493,18 @@ class AltarPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildListaSimples('1. Acenda a vela com intenção, observe a chama'),
-                _buildListaSimples('2. Faça 3 respirações profundas para se centrar'),
-                _buildListaSimples('3. Agradeça pelo dia, pela vida, por algo bom'),
-                _buildListaSimples('4. Defina uma intenção: "Hoje eu peço/agradeço..."'),
-                _buildListaSimples('5. Fique alguns minutos em silêncio ou converse'),
-                _buildListaSimples('6. Feche: "Agradeço pela conexão. Que assim seja."'),
+                _buildListaSimples(
+                    '1. Acenda a vela com intenção, observe a chama'),
+                _buildListaSimples(
+                    '2. Faça 3 respirações profundas para se centrar'),
+                _buildListaSimples(
+                    '3. Agradeça pelo dia, pela vida, por algo bom'),
+                _buildListaSimples(
+                    '4. Defina uma intenção: "Hoje eu peço/agradeço..."'),
+                _buildListaSimples(
+                    '5. Fique alguns minutos em silêncio ou converse'),
+                _buildListaSimples(
+                    '6. Feche: "Agradeço pela conexão. Que assim seja."'),
               ],
             ),
           ),
@@ -526,7 +590,8 @@ class AltarPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPassoNumerado(String numero, String titulo, String descricao, String dica) {
+  Widget _buildPassoNumerado(
+      String numero, String titulo, String descricao, String dica) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -698,7 +763,8 @@ class AltarPage extends StatelessWidget {
     );
   }
 
-  Widget _buildItem(BuildContext context, String iconTitle, String description) {
+  Widget _buildItem(
+      BuildContext context, String iconTitle, String description) {
     final emoji = iconTitle.substring(0, iconTitle.indexOf(' ') + 1);
     final title = iconTitle.substring(iconTitle.indexOf(' ') + 1);
 
@@ -790,7 +856,8 @@ class AltarPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMaintenance(BuildContext context, String title, String description) {
+  Widget _buildMaintenance(
+      BuildContext context, String title, String description) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(

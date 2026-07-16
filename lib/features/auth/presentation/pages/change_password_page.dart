@@ -40,7 +40,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           icon: const Icon(Icons.arrow_back, color: AppColors.lilac),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: ResponsiveAppBarTitle(
           'Alterar Senha',
           style: GoogleFonts.cinzelDecorative(
             fontSize: 18,

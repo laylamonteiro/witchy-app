@@ -12,7 +12,7 @@ class ElementsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Os Quatro Elementos'),
+        title: const ResponsiveAppBarTitle('Os Quatro Elementos'),
         backgroundColor: AppColors.surface,
       ),
       body: SingleChildScrollView(
@@ -22,6 +22,7 @@ class ElementsPage extends StatelessWidget {
           children: [
             // Introdução
             MagicalCard(
+              margin: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -29,9 +30,11 @@ class ElementsPage extends StatelessWidget {
                     children: [
                       const Text('∞', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
-                      Text(
-                        'Sobre os 4 Elementos',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      Expanded(
+                        child: Text(
+                          'Sobre os 4 Elementos',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
                     ],
                   ),
@@ -68,8 +71,8 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Essência',
                     'A Terra representa estabilidade, solidez, crescimento e manifestação física. '
-                    'É o elemento da matéria, do corpo, da abundância material e da conexão com o mundo natural. '
-                    'Terra é onde as ideias se tornam realidade.',
+                        'É o elemento da matéria, do corpo, da abundância material e da conexão com o mundo natural. '
+                        'Terra é onde as ideias se tornam realidade.',
                   ),
                   _buildSubsection(
                     context,
@@ -110,20 +113,20 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Correspondências',
                     '• Cristais: Quartzo fumê, turmalina negra, jaspe, ágata, hematita\n'
-                    '• Ervas: Alecrim, cedro, patchouli, vetiver, raízes\n'
-                    '• Animais: Urso, veado, touro, coelho, cobra\n'
-                    '• Zodíaco: Touro, Virgem, Capricórnio',
+                        '• Ervas: Alecrim, cedro, patchouli, vetiver, raízes\n'
+                        '• Animais: Urso, veado, touro, coelho, cobra\n'
+                        '• Zodíaco: Touro, Virgem, Capricórnio',
                   ),
                   _buildSubsection(
                     context,
                     'Quando Trabalhar com Terra',
                     '• Manifestação de objetivos materiais\n'
-                    '• Prosperidade e abundância\n'
-                    '• Enraizamento e centralização\n'
-                    '• Cura física\n'
-                    '• Conexão com a natureza\n'
-                    '• Estabilidade e segurança\n'
-                    '• Crescimento e fertilidade',
+                        '• Prosperidade e abundância\n'
+                        '• Enraizamento e centralização\n'
+                        '• Cura física\n'
+                        '• Conexão com a natureza\n'
+                        '• Estabilidade e segurança\n'
+                        '• Crescimento e fertilidade',
                   ),
                 ],
               ),
@@ -140,8 +143,8 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Essência',
                     'A Água representa emoções, intuição, cura e purificação. '
-                    'É o elemento dos sentimentos profundos, do subconsciente, dos sonhos e da psique. '
-                    'Água flui, adapta-se e reflete a verdade interior.',
+                        'É o elemento dos sentimentos profundos, do subconsciente, dos sonhos e da psique. '
+                        'Água flui, adapta-se e reflete a verdade interior.',
                   ),
                   _buildSubsection(
                     context,
@@ -182,20 +185,20 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Correspondências',
                     '• Cristais: Ametista, pedra da lua, água-marinha, pérola, sodalita\n'
-                    '• Ervas: Camomila, gardênia, jasmim, lótus, sálvia\n'
-                    '• Animais: Peixe, golfinho, cisne, sapo, lontra\n'
-                    '• Zodíaco: Câncer, Escorpião, Peixes',
+                        '• Ervas: Camomila, gardênia, jasmim, lótus, sálvia\n'
+                        '• Animais: Peixe, golfinho, cisne, sapo, lontra\n'
+                        '• Zodíaco: Câncer, Escorpião, Peixes',
                   ),
                   _buildSubsection(
                     context,
                     'Quando Trabalhar com Água',
                     '• Cura emocional e espiritual\n'
-                    '• Desenvolvimento da intuição\n'
-                    '• Trabalho com sonhos\n'
-                    '• Purificação energética\n'
-                    '• Amor e relacionamentos\n'
-                    '• Meditação e contemplação\n'
-                    '• Conexão com o subconsciente',
+                        '• Desenvolvimento da intuição\n'
+                        '• Trabalho com sonhos\n'
+                        '• Purificação energética\n'
+                        '• Amor e relacionamentos\n'
+                        '• Meditação e contemplação\n'
+                        '• Conexão com o subconsciente',
                   ),
                 ],
               ),
@@ -212,8 +215,8 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Essência',
                     'O Fogo representa transformação, paixão, vontade e poder pessoal. '
-                    'É o elemento da energia vital, da coragem, da criatividade e da ação. '
-                    'Fogo consome, transforma e ilumina.',
+                        'É o elemento da energia vital, da coragem, da criatividade e da ação. '
+                        'Fogo consome, transforma e ilumina.',
                   ),
                   _buildSubsection(
                     context,
@@ -254,20 +257,20 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Correspondências',
                     '• Cristais: Cornalina, citrino, rubi, granada, obsidiana\n'
-                    '• Ervas: Canela, gengibre, pimenta, manjericão, cravo\n'
-                    '• Animais: Dragão, leão, fênix, serpente de fogo, salamandra\n'
-                    '• Zodíaco: Áries, Leão, Sagitário',
+                        '• Ervas: Canela, gengibre, pimenta, manjericão, cravo\n'
+                        '• Animais: Dragão, leão, fênix, serpente de fogo, salamandra\n'
+                        '• Zodíaco: Áries, Leão, Sagitário',
                   ),
                   _buildSubsection(
                     context,
                     'Quando Trabalhar com Fogo',
                     '• Transformação pessoal\n'
-                    '• Coragem e força de vontade\n'
-                    '• Paixão e criatividade\n'
-                    '• Proteção ativa\n'
-                    '• Purificação energética\n'
-                    '• Banimento de energias negativas\n'
-                    '• Manifestação rápida de desejos',
+                        '• Coragem e força de vontade\n'
+                        '• Paixão e criatividade\n'
+                        '• Proteção ativa\n'
+                        '• Purificação energética\n'
+                        '• Banimento de energias negativas\n'
+                        '• Manifestação rápida de desejos',
                   ),
                 ],
               ),
@@ -284,8 +287,8 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Essência',
                     'O Ar representa intelecto, comunicação, pensamento e inspiração. '
-                    'É o elemento da mente, das ideias, da sabedoria e do conhecimento. '
-                    'Ar carrega mensagens, dispersa e renova.',
+                        'É o elemento da mente, das ideias, da sabedoria e do conhecimento. '
+                        'Ar carrega mensagens, dispersa e renova.',
                   ),
                   _buildSubsection(
                     context,
@@ -326,20 +329,20 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Correspondências',
                     '• Cristais: Citrino, topázio, fluorita, ágata de renda azul\n'
-                    '• Ervas: Lavanda, hortelã, eucalipto, sálvia branca, dente-de-leão\n'
-                    '• Animais: Águia, borboleta, pássaros, libélula, fada\n'
-                    '• Zodíaco: Gêmeos, Libra, Aquário',
+                        '• Ervas: Lavanda, hortelã, eucalipto, sálvia branca, dente-de-leão\n'
+                        '• Animais: Águia, borboleta, pássaros, libélula, fada\n'
+                        '• Zodíaco: Gêmeos, Libra, Aquário',
                   ),
                   _buildSubsection(
                     context,
                     'Quando Trabalhar com Ar',
                     '• Estudo e aprendizado\n'
-                    '• Comunicação e eloquência\n'
-                    '• Viagem e movimento\n'
-                    '• Inspiração criativa\n'
-                    '• Clareza mental\n'
-                    '• Novos começos\n'
-                    '• Trabalho com divindades celestes',
+                        '• Comunicação e eloquência\n'
+                        '• Viagem e movimento\n'
+                        '• Inspiração criativa\n'
+                        '• Clareza mental\n'
+                        '• Novos começos\n'
+                        '• Trabalho com divindades celestes',
                   ),
                 ],
               ),
@@ -361,8 +364,10 @@ class ElementsPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  _buildBalanceItem('🌍 Terra', 'Nosso corpo físico e recursos materiais'),
-                  _buildBalanceItem('🌊 Água', 'Nossas emoções e relacionamentos'),
+                  _buildBalanceItem(
+                      '🌍 Terra', 'Nosso corpo físico e recursos materiais'),
+                  _buildBalanceItem(
+                      '🌊 Água', 'Nossas emoções e relacionamentos'),
                   _buildBalanceItem('🔥 Fogo', 'Nossa energia e poder pessoal'),
                   _buildBalanceItem('💨 Ar', 'Nossa mente e comunicação'),
                   const SizedBox(height: 16),
@@ -371,16 +376,18 @@ class ElementsPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.lilac.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+                      border:
+                          Border.all(color: AppColors.lilac.withOpacity(0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Sinais de Desequilíbrio:',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -388,9 +395,10 @@ class ElementsPage extends StatelessWidget {
                           '• Água em excesso: Emotividade excessiva, instabilidade emocional\n'
                           '• Fogo em excesso: Impulsividade, raiva, esgotamento\n'
                           '• Ar em excesso: Distração, falta de praticidade, desconexão',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                       ],
                     ),
@@ -411,13 +419,13 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Meditação Elemental',
                     'Sente-se com um objeto representando cada elemento e medite sobre suas qualidades. '
-                    'Sinta a energia do elemento fluindo através de você.',
+                        'Sinta a energia do elemento fluindo através de você.',
                   ),
                   _buildPracticeItem(
                     context,
                     'Círculo Mágico',
                     'Ao lançar um círculo, invoque cada elemento em sua direção cardeal. '
-                    'Isso cria um espaço sagrado equilibrado e protegido.',
+                        'Isso cria um espaço sagrado equilibrado e protegido.',
                   ),
                   _buildPracticeItem(
                     context,
@@ -428,13 +436,13 @@ class ElementsPage extends StatelessWidget {
                     context,
                     'Feitiços Específicos',
                     'Trabalhe com o elemento correspondente à sua intenção: '
-                    'Terra para prosperidade, Água para amor, Fogo para coragem, Ar para sabedoria.',
+                        'Terra para prosperidade, Água para amor, Fogo para coragem, Ar para sabedoria.',
                   ),
                   _buildPracticeItem(
                     context,
                     'Conexão Diária',
                     'Passe tempo na natureza conectando-se com os elementos: '
-                    'caminhe descalço (Terra), tome banho ritual (Água), acenda velas (Fogo), pratique respiração (Ar).',
+                        'caminhe descalço (Terra), tome banho ritual (Água), acenda velas (Fogo), pratique respiração (Ar).',
                   ),
                 ],
               ),
@@ -522,7 +530,8 @@ class ElementsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPracticeItem(BuildContext context, String title, String description) {
+  Widget _buildPracticeItem(
+      BuildContext context, String title, String description) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(

@@ -1,21 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+
 import '../../../../core/services/payment_service.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
-/// Página de Paywall usando RevenueCat UI
-///
-/// Pode ser apresentada como:
-/// - Página navegável (Navigator.push)
-/// - Modal (showModalBottomSheet)
-/// - Inline (PaywallView widget)
-///
-/// Documentação: https://www.revenuecat.com/docs/tools/paywalls
+/// Ponto único de entrada para a oferta Premium do aplicativo.
 class PaywallPage extends StatelessWidget {
-  /// Se true, mostra botão de fechar
   final bool displayCloseButton;
-
-  /// Callback quando o paywall é fechado
   final VoidCallback? onDismiss;
 
   const PaywallPage({
@@ -26,49 +16,28 @@ class PaywallPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: PaywallView(
-        displayCloseButton: displayCloseButton,
-        onDismiss: () {
-          if (onDismiss != null) {
-            onDismiss!();
-          } else {
-            Navigator.of(context).pop();
-          }
-        },
-      ),
+    return const Scaffold(
+      backgroundColor: Color(0xFF090A12),
+      body: SafeArea(child: PremiumUpgradeSheet()),
     );
   }
 
-  /// Apresenta o paywall como modal fullscreen
-  static Future<PaywallResult?> showAsModal(BuildContext context) async {
-    return Navigator.of(context).push<PaywallResult>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (context) => PaywallPage(
-          onDismiss: () => Navigator.of(context).pop(PaywallResult.cancelled),
-        ),
-      ),
-    );
+  static Future<void> showAsModal(BuildContext context) {
+    return present(context);
   }
 
-  /// Apresenta o paywall usando RevenueCat UI nativo
-  ///
-  /// Esta é a forma recomendada de apresentar o paywall
-  static Future<PaywallResult> present(BuildContext context) async {
-    final paymentService = PaymentService();
-    return paymentService.presentPaywall();
+  static Future<void> present(BuildContext context) {
+    return showPremiumUpgradePaywall(context);
   }
 
-  /// Apresenta o paywall apenas se o usuário não for Pro
-  static Future<PaywallResult> presentIfNeeded(BuildContext context) async {
-    final paymentService = PaymentService();
-    return paymentService.presentPaywallIfNeeded();
+  static Future<void> presentIfNeeded(BuildContext context) async {
+    if (PaymentService().isPro) return;
+    await present(context);
   }
 }
 
-/// Widget de Paywall inline para embeddar em outras páginas
+/// Compatibilidade para chamadas antigas: abre o mesmo paywall modal,
+/// sem incorporar uma segunda implementação na árvore.
 class PaywallWidget extends StatelessWidget {
   final VoidCallback? onPurchaseCompleted;
   final VoidCallback? onDismiss;
@@ -81,20 +50,15 @@ class PaywallWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PaywallView(
-      onPurchaseCompleted: (customerInfo, storeTransaction) {
-        onPurchaseCompleted?.call();
-      },
-      onRestoreCompleted: (customerInfo) {
-        // Verificar se restauração deu acesso Pro
-        final paymentService = PaymentService();
-        if (paymentService.isPro) {
-          onPurchaseCompleted?.call();
-        }
-      },
-      onDismiss: () {
-        onDismiss?.call();
-      },
+    return Center(
+      child: ElevatedButton(
+        onPressed: () async {
+          await PaywallPage.present(context);
+          onDismiss?.call();
+          if (PaymentService().isPro) onPurchaseCompleted?.call();
+        },
+        child: const Text('Desbloquear Premium'),
+      ),
     );
   }
 }

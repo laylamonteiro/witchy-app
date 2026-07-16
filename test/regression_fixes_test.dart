@@ -1,14 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:grimorio_de_bolso/core/services/data_sync_service.dart';
+import 'package:grimorio_de_bolso/core/services/payment_service.dart';
+import 'package:grimorio_de_bolso/core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/core/services/notification_service.dart';
+import 'package:grimorio_de_bolso/core/providers/sync_provider.dart';
 import 'package:grimorio_de_bolso/core/widgets/mascot/cat_chat_bubble.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/enums.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/transit_model.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/services/transit_interpreter.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
+import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
+import 'package:grimorio_de_bolso/features/auth/presentation/widgets/premium_blur_widget.dart';
+import 'package:grimorio_de_bolso/features/settings/presentation/pages/privacy_settings_page.dart';
+import 'package:grimorio_de_bolso/features/settings/presentation/pages/settings_page.dart';
+import 'package:grimorio_de_bolso/features/subscription/presentation/pages/subscription_page.dart';
+import 'package:grimorio_de_bolso/features/subscription/presentation/widgets/pro_feature_gate.dart';
+import 'package:grimorio_de_bolso/features/subscription/presentation/widgets/subscription_offer_widgets.dart';
+
+void _ignoreSubscriptionSelection(SubscriptionType _) {}
+void _ignoreTap() {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -69,6 +85,503 @@ void main() {
       final local = service.toLocalForTest('birth_charts', remote);
       expect(local['chart_data'], '{"userId":"local_user"}');
       expect(local['unknown_birth_time'], 1);
+    });
+  });
+
+  group('Benefícios Premium', () {
+    test('lista reflete diferenciais implementados sem promessas obsoletas',
+        () {
+      final benefits = premiumBenefitItems.map((item) => item.text).toList();
+
+      expect(benefits, hasLength(5));
+      expect(
+        benefits,
+        contains(
+          'Converse à vontade com o Conselheiro Místico, sem limite de perguntas',
+        ),
+      );
+      expect(
+        benefits,
+        contains(
+          'Mantenha seu Grimório protegido na nuvem e sincronizado entre seus dispositivos',
+        ),
+      );
+      expect(benefits.any((text) => text.contains('em breve')), isFalse);
+      expect(
+        benefits.any((text) => text.contains('Suporte prioritário')),
+        isFalse,
+      );
+    });
+
+    testWidgets('paywall único cabe inteiro em celular sem exigir rolagem',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: PremiumUpgradeSheet()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PremiumOfferPanel), findsOneWidget);
+      expect(find.byType(SubscriptionHero), findsOneWidget);
+      expect(find.text('Conselheiro Místico ilimitado'), findsOneWidget);
+      expect(find.text('Sincronização entre dispositivos'), findsOneWidget);
+      expect(find.byType(Image), findsNWidgets(8));
+      expect(find.textContaining('O QUE VOCÊ DESBLOQUEIA'), findsNothing);
+      expect(find.text('Cancele a qualquer momento'), findsOneWidget);
+      expect(find.text('Cancele quando quiser'), findsNothing);
+      expect(find.byType(SingleChildScrollView), findsNothing);
+      expect(
+        find.byKey(const ValueKey('premium_paywall_fitted_content')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('Nova oferta de assinatura', () {
+    testWidgets('Fazer Upgrade de Configurações abre SubscriptionPage',
+        (tester) async {
+      final authProvider = AuthProvider();
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AuthProvider>.value(
+          value: authProvider,
+          child: MaterialApp(
+            home: Navigator(
+              onGenerateRoute: (_) => MaterialPageRoute<void>(
+                builder: (_) => const SettingsPage(),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('settings_upgrade_button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SubscriptionPage), findsOneWidget);
+      expect(find.text('Assinatura'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('navegação Premium da Privacidade continua funcionando',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final authProvider = AuthProvider();
+      final syncProvider = SyncProvider();
+      addTearDown(syncProvider.dispose);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            ChangeNotifierProvider<SyncProvider>.value(value: syncProvider),
+          ],
+          child: MaterialApp(
+            home: Navigator(
+              onGenerateRoute: (_) => MaterialPageRoute<void>(
+                builder: (_) => const PrivacySettingsPage(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Seja Premium'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Seja Premium'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SubscriptionPage), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('gate genérico abre o mesmo PremiumUpgradeSheet',
+        (tester) async {
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: AuthProvider()),
+            ChangeNotifierProvider<PaymentService>.value(
+              value: PaymentService(),
+            ),
+          ],
+          child: MaterialApp(
+            home: Navigator(
+              onGenerateRoute: (_) => MaterialPageRoute<void>(
+                builder: (_) => const Scaffold(
+                  body: ProFeatureGate(
+                    lockedChild: Text('Conteúdo bloqueado'),
+                    child: Text('Conteúdo Premium'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Conteúdo bloqueado'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PremiumUpgradeSheet), findsOneWidget);
+      expect(find.byType(PremiumOfferPanel), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('composição completa permanece responsiva em três tamanhos',
+        (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      for (final testCase in const [
+        (Size(320, 568), 1.3),
+        (Size(390, 844), 1.0),
+        (Size(600, 1024), 1.0),
+        (Size(390, 844), 1.5),
+      ]) {
+        final (size, textScale) = testCase;
+        await tester.binding.setSurfaceSize(size);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.darkTheme,
+            home: MediaQuery(
+              data: MediaQueryData(
+                textScaler: TextScaler.linear(textScale),
+              ),
+              child: const Scaffold(
+                body: SingleChildScrollView(
+                  padding: EdgeInsets.all(16),
+                  child: PremiumOfferPanel(
+                    selectedPlan: SubscriptionType.yearly,
+                    onSelected: _ignoreSubscriptionSelection,
+                    monthlyPrice: 'R\$ 9,90',
+                    yearlyPrice: 'R\$ 79,90',
+                    purchaseLoading: false,
+                    purchaseEnabled: true,
+                    onPurchase: _ignoreTap,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Começar Agora'), findsOneWidget);
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Falhou em $size com fonte ${textScale * 100}%',
+        );
+      }
+    });
+
+    testWidgets('benefícios compactos exibem apenas os títulos sem overflow',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(360, 760));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: const Scaffold(
+            body: SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: PremiumBenefitsSection(),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Conselheiro Místico ilimitado'), findsOneWidget);
+      expect(
+        find.text(
+          'Seu Grimório protegido na nuvem e sempre com você, onde estiver',
+        ),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('planos alternam seleção e usam preços fornecidos',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(420, 700));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      var selected = SubscriptionType.yearly;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) => SubscriptionPlanSelector(
+                selectedPlan: selected,
+                onSelected: (plan) => setState(() => selected = plan),
+                monthlyPrice: 'R\$ 12,34',
+                yearlyPrice: 'R\$ 98,76',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('R\$ 12,34'), findsOneWidget);
+      expect(find.text('R\$ 98,76'), findsOneWidget);
+      final monthlyPrice = tester.getRect(find.text('R\$ 12,34'));
+      final monthlyPeriod = tester.getRect(find.text('/mês'));
+      final yearlyPrice = tester.getRect(find.text('R\$ 98,76'));
+      final yearlyPeriod = tester.getRect(find.text('/ano'));
+      expect(monthlyPrice.right, lessThan(monthlyPeriod.left));
+      expect(yearlyPrice.right, lessThan(yearlyPeriod.left));
+      expect(
+        (monthlyPrice.center.dy - monthlyPeriod.center.dy).abs(),
+        lessThan(8),
+      );
+      expect(
+        (yearlyPrice.center.dy - yearlyPeriod.center.dy).abs(),
+        lessThan(8),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('subscription_plan_monthly')),
+      );
+      await tester.pumpAndSettle();
+      expect(selected, SubscriptionType.monthly);
+      expect(find.text('SELECIONADO'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('subscription_plan_yearly')),
+      );
+      await tester.pumpAndSettle();
+      expect(selected, SubscriptionType.yearly);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('planos permanecem lado a lado com fonte ampliada',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 700));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
+            child: Scaffold(
+              body: SingleChildScrollView(
+                child: SubscriptionPlanSelector(
+                  selectedPlan: SubscriptionType.yearly,
+                  onSelected: (_) {},
+                  monthlyPrice: 'R\$ 9,90',
+                  yearlyPrice: 'R\$ 79,90',
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final monthly = tester.getRect(
+        find.byKey(const ValueKey('subscription_plan_monthly')),
+      );
+      final yearly = tester.getRect(
+        find.byKey(const ValueKey('subscription_plan_yearly')),
+      );
+      expect(monthly.center.dy, closeTo(yearly.center.dy, 0.01));
+      expect(monthly.right, lessThan(yearly.left));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('botão de compra bloqueia interação durante loading',
+        (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: Scaffold(
+            body: SubscriptionPurchaseButton(
+              loading: true,
+              enabled: true,
+              onPressed: () => taps++,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      await tester.tap(find.byType(ElevatedButton));
+      expect(taps, 0);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'página Free abre paywall, usa preços do serviço e compra uma vez',
+        (tester) async {
+      final service = PaymentService();
+      final firstPurchase = Completer<PurchaseResult>();
+      final selectedPlans = <SubscriptionType>[];
+      final products = [
+        ProductInfo(
+          identifier: 'monthly-test',
+          title: 'Mensal',
+          description: 'Mensal',
+          priceString: 'R\$ 12,34',
+          price: 12.34,
+          currencyCode: 'BRL',
+          type: SubscriptionType.monthly,
+        ),
+        ProductInfo(
+          identifier: 'yearly-test',
+          title: 'Anual',
+          description: 'Anual',
+          priceString: 'R\$ 98,76',
+          price: 98.76,
+          currencyCode: 'BRL',
+          type: SubscriptionType.yearly,
+        ),
+      ];
+      service.setTestProducts(
+        products,
+        onPurchase: (plan) {
+          selectedPlans.add(plan);
+          return firstPurchase.future;
+        },
+      );
+      addTearDown(service.clearTestProducts);
+
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AuthProvider>.value(
+          value: AuthProvider(),
+          child: const MaterialApp(home: SubscriptionPage()),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(PremiumOfferPanel), findsNothing);
+      expect(find.text('Tem um Código Premium?'), findsOneWidget);
+      expect(find.text('Restaurar Compras'), findsOneWidget);
+      expect(find.text('Desbloquear Premium'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('open_premium_paywall_button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PremiumUpgradeSheet), findsOneWidget);
+      expect(find.byType(PremiumOfferPanel), findsOneWidget);
+      expect(find.text('R\$ 12,34'), findsOneWidget);
+      expect(find.text('R\$ 98,76'), findsOneWidget);
+
+      final monthlyPlan =
+          find.byKey(const ValueKey('subscription_plan_monthly'));
+      await tester.ensureVisible(monthlyPlan);
+      await tester.pumpAndSettle();
+      await tester.tap(monthlyPlan);
+      final purchaseButton = find.ancestor(
+        of: find.text('Começar Agora'),
+        matching: find.byType(ElevatedButton),
+      );
+      await tester.ensureVisible(purchaseButton);
+      await tester.pumpAndSettle();
+      await tester.tap(purchaseButton);
+      await tester.tap(purchaseButton);
+      await tester.pump();
+
+      expect(selectedPlans, [SubscriptionType.monthly]);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      firstPurchase.complete(PurchaseResult.error('Erro de teste'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'página Free não embute oferta e paywall renderiza assets reais',
+        (tester) async {
+      final service = PaymentService();
+      service.setTestProducts(const []);
+      addTearDown(service.clearTestProducts);
+
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AuthProvider>.value(
+          value: AuthProvider(),
+          child: const MaterialApp(home: SubscriptionPage()),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(PremiumOfferPanel), findsNothing);
+      expect(find.text('Tem um Código Premium?'), findsOneWidget);
+      expect(find.text('Restaurar Compras'), findsOneWidget);
+      expect(find.text('Desbloquear Premium'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('open_premium_paywall_button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SubscriptionHero), findsOneWidget);
+      expect(find.byType(Image), findsNWidgets(8));
+      expect(find.text('Mensal'), findsOneWidget);
+      expect(find.text('Anual'), findsOneWidget);
+      expect(find.text('Começar Agora'), findsOneWidget);
+      expect(find.text('Pagamento seguro'), findsOneWidget);
+      expect(find.text('Cancele a qualquer momento'), findsOneWidget);
+      expect(find.text('Cancele quando quiser'), findsNothing);
+      expect(find.text('Seus dados protegidos'), findsOneWidget);
+
+      for (final path in [
+        ...premiumBenefitItems.map((item) => item.assetPath),
+        'assets/premium/icon_shield.png',
+        'assets/premium/icon_sync.png',
+        'assets/premium/icon_lock.png',
+        'assets/premium/cat_hero.png',
+      ]) {
+        final data = await tester.runAsync(() => rootBundle.load(path));
+        expect(data!.lengthInBytes, greaterThan(0), reason: path);
+      }
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Premium mantém gerenciamento e vitalício mantém informativo',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final authProvider = AuthProvider();
+      await authProvider.setUserRole(UserRole.premium);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AuthProvider>.value(
+          value: authProvider,
+          child: const MaterialApp(home: SubscriptionPage()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Gerenciar Assinatura'), findsOneWidget);
+      expect(find.text('Plano Mensal'), findsWidgets);
+
+      await authProvider.setUserRole(UserRole.admin);
+      await authProvider.setUserRole(UserRole.premium);
+      await tester.pumpAndSettle();
+      expect(find.text('Acesso Vitalício (Código Premium)'), findsOneWidget);
+      expect(
+        find.text(
+          'Seu acesso Premium foi resgatado via Código Premium e não expira.',
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 

@@ -6,7 +6,7 @@ Para que o mapa astral seja calculado com PRECISÃO, é **extremamente important
 
 ### ✅ Hora CORRETA
 - **Informe a hora LOCAL do local onde você nasceu**
-- Exemplo: Se você nasceu em São Paulo às 19:39 (horário de São Paulo), informe **19:39**
+- Exemplo: Se você nasceu em São Paulo às HH:MM (horário de São Paulo), informe **HH:MM**
 - **NÃO** converta para UTC ou outro fuso horário
 - **NÃO** considere horário de verão - informe a hora que estava no relógio naquele dia
 
@@ -17,9 +17,9 @@ Para que o mapa astral seja calculado com PRECISÃO, é **extremamente important
 
 ### 🕐 Como Funciona Internamente
 
-1. Você informa: **31/03/1994 às 19:39 em São Paulo, Brazil**
+1. Você informa: **dd/mm/aaaa às HH:MM em São Paulo, Brazil**
 2. O app envia para a API:
-   - Datetime: `1994-03-31T19:39:00` (horário local, SEM timezone)
+   - Datetime: `1994-03-31THH:MM:00` (horário local, SEM timezone)
    - Coordenadas: `-23.5505, -46.6333`
 3. A API Prokerala:
    - Detecta que São Paulo está em UTC-3
@@ -28,10 +28,10 @@ Para que o mapa astral seja calculado com PRECISÃO, é **extremamente important
 
 ### ❌ Erros Comuns
 
-**ERRADO**: "Nasci em São Paulo às 19:39, mas agora estou em Lisboa, então vou converter para horário de Lisboa"
+**ERRADO**: "Nasci em São Paulo às HH:MM, mas agora estou em Lisboa, então vou converter para horário de Lisboa"
 - ❌ Isso vai gerar um mapa incorreto!
 
-**CERTO**: "Nasci em São Paulo às 19:39, então informo 19:39 e seleciono São Paulo como local"
+**CERTO**: "Nasci em São Paulo às HH:MM, então informo HH:MM e seleciono São Paulo como local"
 - ✅ Isso vai gerar um mapa correto!
 
 ### 🔍 Como Verificar se Está Correto

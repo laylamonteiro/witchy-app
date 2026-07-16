@@ -85,6 +85,7 @@ class PaymentService extends ChangeNotifier {
   List<ProductInfo> _products = [];
   CustomerInfo? _customerInfo;
   Offerings? _offerings;
+  Future<PurchaseResult> Function(SubscriptionType)? _purchaseOverride;
 
   /// Callback chamado quando o status Pro muda (para sincronizar com AuthProvider)
   Function(bool isPro)? _onProStatusChanged;
@@ -392,6 +393,8 @@ class PaymentService extends ChangeNotifier {
 
   /// Realiza uma compra de um tipo específico
   Future<PurchaseResult> purchase(SubscriptionType type) async {
+    if (_purchaseOverride != null) return _purchaseOverride!(type);
+
     debugPrint('🛒 Iniciando compra: $type');
 
     if (!RevenueCatConfig.isConfigured) {
@@ -625,6 +628,26 @@ class PaymentService extends ChangeNotifier {
       (p) => p?.type == type,
       orElse: () => null,
     );
+  }
+
+  @visibleForTesting
+  void setTestProducts(
+    List<ProductInfo> products, {
+    Future<PurchaseResult> Function(SubscriptionType)? onPurchase,
+  }) {
+    _products = List<ProductInfo>.of(products);
+    _purchaseOverride = onPurchase;
+    _isInitialized = true;
+    _status = PurchaseStatus.idle;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void clearTestProducts() {
+    _products = [];
+    _purchaseOverride = null;
+    _status = PurchaseStatus.idle;
+    notifyListeners();
   }
 
   /// Verifica se há assinatura ativa

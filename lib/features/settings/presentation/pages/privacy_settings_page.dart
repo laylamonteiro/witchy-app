@@ -12,6 +12,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/repositories/supabase_auth_repository.dart';
+import '../../../subscription/presentation/pages/subscription_page.dart';
 
 /// Página de configurações de privacidade
 class PrivacySettingsPage extends StatefulWidget {
@@ -36,34 +37,34 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
     final authProvider = context.read<AuthProvider>();
+    final syncProvider = context.read<SyncProvider>();
+    final prefs = await SharedPreferences.getInstance();
     final isPremium = authProvider.isPremiumEffective;
-
+    final cloudSyncEnabled = await DataSyncService.ensureCloudSyncPreference(
+      prefs,
+      isPremium: isPremium,
+    );
+    await syncProvider.refreshState();
+    if (!mounted) return;
     setState(() {
       _analyticsEnabled = prefs.getBool('privacy_analytics') ?? true;
       _crashReportingEnabled = prefs.getBool('privacy_crash_reporting') ?? true;
       _personalizedContent = prefs.getBool('privacy_personalized') ?? true;
-      // Sincronização: desabilitada por padrão para free, habilitada para premium
-      final migratedCloudSetting =
-          (prefs.getBool('privacy_sync') ?? isPremium) &&
-              (prefs.getBool('privacy_backup') ?? isPremium);
-      _cloudSyncEnabled =
-          prefs.getBool(DataSyncService.cloudSyncPreferenceKey) ??
-              migratedCloudSetting;
+      _cloudSyncEnabled = cloudSyncEnabled;
       _isLoading = false;
     });
-    if (!prefs.containsKey(DataSyncService.cloudSyncPreferenceKey)) {
-      await prefs.setBool(
-        DataSyncService.cloudSyncPreferenceKey,
-        _cloudSyncEnabled,
-      );
-    }
   }
 
   Future<void> _saveSetting(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
+    if (key == DataSyncService.cloudSyncPreferenceKey) {
+      await prefs.setBool(
+        DataSyncService.cloudSyncUserConfiguredKey,
+        true,
+      );
+    }
   }
 
   @override
@@ -73,7 +74,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: const ResponsiveAppBarTitle(
           'Privacidade',
           style: TextStyle(
             color: Colors.white,
@@ -397,8 +398,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, '/subscription'),
+                    onPressed: () => openSubscriptionPage(context),
                     icon: const Icon(Icons.star, size: 18),
                     label: const Text('Seja Premium'),
                     style: ElevatedButton.styleFrom(
@@ -443,16 +443,20 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              !_cloudSyncEnabled
-                                  ? 'Sincronização desativada'
-                                  : isReady
-                                      ? syncProvider.statusText
-                                      : 'Não conectado',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
+                            Expanded(
+                              child: Text(
+                                !_cloudSyncEnabled
+                                    ? 'Sincronização desativada'
+                                    : isReady
+                                        ? syncProvider.statusText
+                                        : 'Não conectado',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -537,7 +541,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Color _getSyncStatusColor(SyncStatus status) {
     switch (status) {
       case SyncStatus.idle:
-        return Colors.grey;
+        return AppColors.lilac;
       case SyncStatus.syncing:
         return AppColors.lilac;
       case SyncStatus.success:
@@ -552,7 +556,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   IconData _getSyncStatusIcon(SyncStatus status) {
     switch (status) {
       case SyncStatus.idle:
-        return Icons.cloud_off_outlined;
+        return Icons.cloud_queue_outlined;
       case SyncStatus.syncing:
         return Icons.sync;
       case SyncStatus.success:
@@ -965,7 +969,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/subscription');
+              openSubscriptionPage(this.context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9C27B0),

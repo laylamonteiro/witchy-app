@@ -13,14 +13,14 @@
 **Antes (ERRADO)**:
 ```dart
 birthDate.toIso8601String()
-// Resultado: "1994-03-31T19:39:00-03:00"
+// Resultado: "1994-03-31THH:MM:00-03:00"
 // ❌ Enviava timezone do dispositivo, não do local de nascimento
 ```
 
 **Depois (CORRETO)**:
 ```dart
 '${birthDate.year}-${birthDate.month}-${birthDate.day}T${birthDate.hour}:${birthDate.minute}:${birthDate.second}'
-// Resultado: "1994-03-31T19:39:00"
+// Resultado: "1994-03-31THH:MM:00"
 // ✅ Envia hora local, API calcula timezone pelas coordenadas
 ```
 
@@ -50,8 +50,8 @@ birthDate.toIso8601String()
 Use estes dados para testar (comparar com astro.com):
 
 **Exemplo 1: São Paulo**
-- Data: 31/03/1994
-- Hora: 19:39 (hora LOCAL de São Paulo)
+- Data: dd/mm/aaaa
+- Hora: HH:MM (hora LOCAL de São Paulo)
 - Local: São Paulo, SP, Brasil
 - Coordenadas: -23.5505, -46.6333
 - Timezone esperado: UTC-3 (ou UTC-2 se horário de verão)
@@ -77,7 +77,7 @@ Use estes dados para testar (comparar com astro.com):
 3. **Verificar nos logs**:
    ```
    📡 Tentando usar API externa (Prokerala)...
-   📅 DateTime LOCAL (sem TZ): 1994-03-31T19:39:00
+   📅 DateTime LOCAL (sem TZ): 1994-03-31THH:MM:00
    📍 Coordenadas: -23.5505,-46.6333
    ✅ API externa funcionou! Usando cálculos precisos.
    ```

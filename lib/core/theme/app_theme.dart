@@ -1,23 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// Título de AppBar que preserva a proporção das letras e só reduz a escala
+/// quando o espaço horizontal disponível não é suficiente.
+class ResponsiveAppBarTitle extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
+  final TextAlign textAlign;
+
+  const ResponsiveAppBarTitle(
+    this.text, {
+    super.key,
+    this.style,
+    this.textAlign = TextAlign.center,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.visible,
+        textAlign: textAlign,
+        style: style,
+      ),
+    );
+  }
+}
+
 class AppColors {
   // Fundos e bases
-  static const background = Color(0xFF0B0A16); // Quase preto com tom roxo profundo
+  static const background =
+      Color(0xFF0B0A16); // Quase preto com tom roxo profundo
   static const surface = Color(0xFF171425); // Roxo bem escuro para cards
   static const surfaceBorder = Color(0xFF26213A); // Roxo mais claro para bordas
 
   // Pastéis principais
   static const lilac = Color(0xFFC9A7FF); // Magia, espiritualidade, lua
   static const pink = Color(0xFFF1A7C5); // Amor próprio, afeto, fofura
-  static const pinkWitch = Color(0xFFF1A7C5); // Alias para pink (usado em sigilos)
+  static const pinkWitch =
+      Color(0xFFF1A7C5); // Alias para pink (usado em sigilos)
   static const mint = Color(0xFFA7F0D8); // Cura, natureza, bruxaria verde
-  static const starYellow = Color(0xFFFFE8A3); // Brilho, glitter, feedback positivo
+  static const starYellow =
+      Color(0xFFFFE8A3); // Brilho, glitter, feedback positivo
   static const gold = Color(0xFFFFD700); // Dourado para premium
 
   // Texto
   static const textPrimary = Color(0xFFF6F4FF); // Branquinho suave
-  static const textSecondary = Color(0xFFB7B2D6); // Texto secundário/placeholder
+  static const textSecondary =
+      Color(0xFFB7B2D6); // Texto secundário/placeholder
 
   // Status
   static const success = Color(0xFF7EE08A); // Sucesso/proteção

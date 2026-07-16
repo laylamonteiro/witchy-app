@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/goddess_model.dart';
+import '../../../auth/auth.dart';
 
 class GoddessDetailPage extends StatelessWidget {
   final GoddessModel goddess;
@@ -13,7 +14,7 @@ class GoddessDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(goddess.name),
+        title: ResponsiveAppBarTitle(goddess.name),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,
@@ -64,7 +65,8 @@ class GoddessDetailPage extends StatelessWidget {
                   ],
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(16),
@@ -126,7 +128,8 @@ class GoddessDetailPage extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(aspect.emoji, style: const TextStyle(fontSize: 16)),
+                            Text(aspect.emoji,
+                                style: const TextStyle(fontSize: 16)),
                             const SizedBox(width: 6),
                             Text(
                               aspect.displayName,
@@ -210,31 +213,36 @@ class GoddessDetailPage extends StatelessWidget {
 
             // Ritual Uses
             MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionTitle('Usos Rituais'),
-                  const SizedBox(height: 12),
-                  ...goddess.ritualUses.map((use) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('🔮 ', style: TextStyle(fontSize: 14)),
-                            Expanded(
-                              child: Text(
-                                use,
-                                style: const TextStyle(
-                                  color: AppColors.softWhite,
-                                  fontSize: 14,
-                                  height: 1.4,
+              child: PremiumContentSection(
+                feature: AppFeature.encyclopediaGoddessesDetails,
+                title: _buildSectionTitle('Usos Rituais'),
+                subtitle:
+                    'Práticas devocionais e rituais associados a esta divindade.',
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    ...goddess.ritualUses.map((use) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('🔮 ', style: TextStyle(fontSize: 14)),
+                              Expanded(
+                                child: Text(
+                                  use,
+                                  style: const TextStyle(
+                                    color: AppColors.softWhite,
+                                    fontSize: 14,
+                                    height: 1.4,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      )),
-                ],
+                            ],
+                          ),
+                        )),
+                  ],
+                ),
               ),
             ),
 
@@ -242,31 +250,36 @@ class GoddessDetailPage extends StatelessWidget {
 
             // Invocation Tips
             MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionTitle('Como Invocar'),
-                  const SizedBox(height: 12),
-                  ...goddess.invocationTips.map((tip) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('🌟 ', style: TextStyle(fontSize: 14)),
-                            Expanded(
-                              child: Text(
-                                tip,
-                                style: const TextStyle(
-                                  color: AppColors.softWhite,
-                                  fontSize: 14,
-                                  height: 1.4,
+              child: PremiumContentSection(
+                feature: AppFeature.encyclopediaGoddessesDetails,
+                title: _buildSectionTitle('Como Invocar'),
+                subtitle:
+                    'Orientações para conexão, invocação e trabalho devocional.',
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    ...goddess.invocationTips.map((tip) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('🌟 ', style: TextStyle(fontSize: 14)),
+                              Expanded(
+                                child: Text(
+                                  tip,
+                                  style: const TextStyle(
+                                    color: AppColors.softWhite,
+                                    fontSize: 14,
+                                    height: 1.4,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      )),
-                ],
+                            ],
+                          ),
+                        )),
+                  ],
+                ),
               ),
             ),
 

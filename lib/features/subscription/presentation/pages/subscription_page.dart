@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -19,6 +18,12 @@ class SubscriptionPage extends StatefulWidget {
 
   @override
   State<SubscriptionPage> createState() => _SubscriptionPageState();
+}
+
+Future<void> openSubscriptionPage(BuildContext context) {
+  return Navigator.of(context, rootNavigator: true).push<void>(
+    MaterialPageRoute(builder: (_) => const SubscriptionPage()),
+  );
 }
 
 class _SubscriptionPageState extends State<SubscriptionPage> {
@@ -46,7 +51,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: const ResponsiveAppBarTitle(
           'Assinatura',
           style: TextStyle(
             color: Colors.white,
@@ -71,7 +76,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 );
               }
 
-              // Fonte única de premium (RevenueCat, código beta ou admin)
+              // Fonte única de premium (RevenueCat, Código Premium ou admin)
               final isPro = authProvider.isPremiumEffective;
 
               return SingleChildScrollView(
@@ -94,7 +99,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                         ] else ...[
                           _buildUpgradeSection(),
                           const SizedBox(height: 24),
-                          // Card de resgate de código beta
+                          // Card de resgate de Código Premium
                           _buildBetaCodeCard(authProvider),
                         ],
 
@@ -123,9 +128,11 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     final isLifetimeSubscription = _paymentService.isLifetime;
     final isPremiumWithMonthlyPlan = currentUser.isPremium &&
         (currentUser.plan == SubscriptionPlan.monthly ||
-         currentUser.plan == SubscriptionPlan.yearly);
-    final isPremiumWithLifetime = currentUser.isPremium &&
-        currentUser.plan == SubscriptionPlan.lifetime;
+            currentUser.plan == SubscriptionPlan.yearly);
+    final isPremiumWithLifetime =
+        currentUser.isPremium && currentUser.plan == SubscriptionPlan.lifetime;
+    final isBetaCodePremium =
+        isPremiumWithLifetime && !currentUser.isAdmin && !hasRevenueCat;
 
     // Data de expiração (apenas para assinaturas via RevenueCat)
     final expirationDate = _paymentService.subscriptionExpirationDate;
@@ -149,13 +156,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         subscriptionLabel = 'Assinatura Ativa';
         labelColor = AppColors.starYellow;
       }
+    } else if (isBetaCodePremium) {
+      subscriptionLabel = 'Acesso Vitalício (Código Premium)';
+      labelColor = AppColors.starYellow;
     } else if (isPremiumWithLifetime) {
-      // Premium vitalício (código beta ou admin)
-      subscriptionLabel = 'Acesso Vitalício (Código Beta)';
+      subscriptionLabel = 'Acesso Vitalício';
       labelColor = AppColors.starYellow;
     } else if (isPremiumWithMonthlyPlan) {
       // Assinatura mensal/anual (sem RevenueCat ativo no momento)
-      final planName = currentUser.plan == SubscriptionPlan.monthly ? 'Mensal' : 'Anual';
+      final planName =
+          currentUser.plan == SubscriptionPlan.monthly ? 'Mensal' : 'Anual';
       subscriptionLabel = currentUser.isAdmin
           ? 'Plano $planName (Simulação)'
           : 'Plano $planName';
@@ -241,8 +251,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           _buildFeatureItem(Icons.auto_awesome, 'Previsões Mágicas ilimitadas'),
           _buildFeatureItem(Icons.book, 'Grimório completo'),
           _buildFeatureItem(Icons.psychology, 'Conselheiro Místico'),
-          _buildFeatureItem(Icons.account_circle, 'Perfil mágico personalizado'),
-          _buildFeatureItem(Icons.stars, 'Sugestões personalizadas pelos trânsitos'),
+          _buildFeatureItem(
+              Icons.account_circle, 'Perfil mágico personalizado'),
+          _buildFeatureItem(
+              Icons.stars, 'Sugestões personalizadas pelos trânsitos'),
           _buildFeatureItem(Icons.wb_sunny, 'Clima mágico diário completo'),
           _buildFeatureItem(Icons.calendar_today, 'Calendário lunar avançado'),
           _buildFeatureItem(Icons.sync, 'Sincronização entre dispositivos'),
@@ -259,11 +271,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         children: [
           Icon(icon, size: 20, color: AppColors.starYellow),
           const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
             ),
           ),
         ],
@@ -278,9 +292,11 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
+            key: const ValueKey('open_premium_paywall_button'),
             onPressed: _showPaywall,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9C27B0), // Cor consistente com outros botões Premium
+              backgroundColor: const Color(
+                  0xFF9C27B0), // Cor consistente com outros botões Premium
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -324,13 +340,17 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildFeatureItem(Icons.auto_awesome, 'Previsões Mágicas ilimitadas'),
+              _buildFeatureItem(
+                  Icons.auto_awesome, 'Previsões Mágicas ilimitadas'),
               _buildFeatureItem(Icons.book, 'Acesso ao Grimório completo'),
               _buildFeatureItem(Icons.psychology, 'Conselheiro Místico'),
-              _buildFeatureItem(Icons.account_circle, 'Perfil mágico personalizado'),
-              _buildFeatureItem(Icons.stars, 'Sugestões personalizadas com base nos trânsitos'),
+              _buildFeatureItem(
+                  Icons.account_circle, 'Perfil mágico personalizado'),
+              _buildFeatureItem(Icons.stars,
+                  'Sugestões personalizadas com base nos trânsitos'),
               _buildFeatureItem(Icons.wb_sunny, 'Clima mágico diário completo'),
-              _buildFeatureItem(Icons.calendar_today, 'Calendário lunar avançado'),
+              _buildFeatureItem(
+                  Icons.calendar_today, 'Calendário lunar avançado'),
               _buildFeatureItem(Icons.sync, 'Sincronização na nuvem'),
             ],
           ),
@@ -342,13 +362,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildManageSubscriptionButton(AuthProvider authProvider) {
     final currentUser = authProvider.currentUser;
     final hasRevenueCat = _paymentService.isPro;
-    final isPremiumWithLifetime = currentUser.isPremium &&
-        currentUser.plan == SubscriptionPlan.lifetime;
+    final isPremiumWithLifetime =
+        currentUser.isPremium && currentUser.plan == SubscriptionPlan.lifetime;
+    final isBetaCodePremium =
+        isPremiumWithLifetime && !currentUser.isAdmin && !hasRevenueCat;
     final isPremiumWithMonthlyPlan = currentUser.isPremium &&
         (currentUser.plan == SubscriptionPlan.monthly ||
-         currentUser.plan == SubscriptionPlan.yearly);
+            currentUser.plan == SubscriptionPlan.yearly);
 
-    // Premium vitalício (código beta) - apenas informativo
+    // Premium vitalício (Código Premium) - apenas informativo
     if (isPremiumWithLifetime && !hasRevenueCat) {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -357,14 +379,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.info_outline, color: AppColors.lilac, size: 20),
-            SizedBox(width: 12),
+            const Icon(Icons.info_outline, color: AppColors.lilac, size: 20),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Seu acesso Premium foi concedido via código beta e não expira',
-                style: TextStyle(
+                isBetaCodePremium
+                    ? 'Seu acesso Premium foi resgatado via Código Premium e não expira.'
+                    : 'Seu acesso Premium vitalício está ativo.',
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
                 ),
@@ -436,7 +460,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     content: Text(
                       currentUser.isAdmin
                           ? 'Em produção, este botão direcionaria para o Google Play para gerenciar a assinatura.\n\n'
-                            'Você está em modo de simulação como admin.'
+                              'Você está em modo de simulação como admin.'
                           : 'Para gerenciar sua assinatura, acesse as configurações da Google Play Store ou App Store.',
                       style: const TextStyle(color: Colors.white70),
                     ),
@@ -505,6 +529,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     return SizedBox(
       width: double.infinity,
       child: MagicalCard(
+        margin: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -517,7 +542,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
-                    'Tem um Código Beta?',
+                    'Tem um Código Premium?',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -598,9 +623,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(result['message']),
-                          backgroundColor: result['success']
-                              ? Colors.green
-                              : Colors.red,
+                          backgroundColor:
+                              result['success'] ? Colors.green : Colors.red,
                         ),
                       );
 
@@ -622,13 +646,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   ),
                   child: const Text('Resgatar'),
                 ),
-            ],
-          ),
-      ],
-    ),
-  ),
-);
-}
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildRestoreButton() {
     return Center(
@@ -657,12 +681,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   void _showPaywall() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremiumUpgradeSheet(),
-    );
+    showPremiumUpgradePaywall(context);
   }
 
   void _showRevenueCatNotConfiguredDialog() {

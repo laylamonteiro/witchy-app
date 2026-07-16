@@ -43,7 +43,7 @@ class SpellDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalhes'),
+        title: const ResponsiveAppBarTitle('Detalhes'),
         actions: [
           if (showSaveButton) ...[
             IconButton(
@@ -105,7 +105,8 @@ class SpellDetailPage extends StatelessWidget {
             ),
 
             // Fase da lua - apenas para premium
-            if (spell.moonPhase != null && context.watch<AuthProvider>().isPremium)
+            if (spell.moonPhase != null &&
+                context.watch<AuthProvider>().isPremium)
               MagicalCard(
                 child: Column(
                   children: [

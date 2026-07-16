@@ -45,7 +45,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const Text('Debug Logs'),
+        title: const ResponsiveAppBarTitle('Debug Logs'),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
@@ -242,7 +242,8 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text('Limpar Logs?', style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Limpar Logs?', style: TextStyle(color: Colors.white)),
         content: const Text(
           'Isso removerá todos os logs salvos.',
           style: TextStyle(color: Colors.white70),

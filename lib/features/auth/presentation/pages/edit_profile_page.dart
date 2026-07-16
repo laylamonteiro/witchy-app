@@ -14,6 +14,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../providers/auth_provider.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
+import '../../../subscription/presentation/pages/subscription_page.dart';
 
 /// Página de edição de perfil com todas as configurações de privacidade
 class EditProfilePage extends StatefulWidget {
@@ -46,19 +47,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
     final authProvider = context.read<AuthProvider>();
+    final prefs = await SharedPreferences.getInstance();
     final isPremium = authProvider.isPremiumEffective;
+    final cloudSyncEnabled = await DataSyncService.ensureCloudSyncPreference(
+      prefs,
+      isPremium: isPremium,
+    );
 
+    if (!mounted) return;
     setState(() {
       _nameController.text = authProvider.currentUser.displayName ?? '';
       _analyticsEnabled = prefs.getBool('privacy_analytics') ?? true;
       _crashReportingEnabled = prefs.getBool('privacy_crash_reporting') ?? true;
       _personalizedContent = prefs.getBool('privacy_personalized') ?? true;
-      _cloudSyncEnabled =
-          prefs.getBool(DataSyncService.cloudSyncPreferenceKey) ??
-              ((prefs.getBool('privacy_sync') ?? isPremium) &&
-                  (prefs.getBool('privacy_backup') ?? isPremium));
+      _cloudSyncEnabled = cloudSyncEnabled;
       _isLoading = false;
     });
   }
@@ -66,6 +69,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _saveSetting(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
+    if (key == DataSyncService.cloudSyncPreferenceKey) {
+      await prefs.setBool(
+        DataSyncService.cloudSyncUserConfiguredKey,
+        true,
+      );
+    }
   }
 
   @override
@@ -78,7 +87,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
+        title: ResponsiveAppBarTitle(
           'Editar Perfil',
           style: GoogleFonts.cinzelDecorative(
             color: Colors.white,
@@ -989,7 +998,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/subscription');
+              openSubscriptionPage(this.context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9C27B0),

@@ -38,12 +38,8 @@ class CatBubbleMessages {
 ///   (SharedPreferences `cat_bubble_last_shown_date`, escopado por conta).
 /// - "X" fecha; tocar no corpo abre o Clima Mágico Diário. Ambos gravam a
 ///   data para não reaparecer no mesmo dia.
-///
-/// Formato de NUVEM: o corpo é um retângulo arredondado (área de texto
-/// previsível → quebra automática confiável) e as ondulações da nuvem são
-/// decorativas nas bordas. Tamanho é DINÂMICO conforme o conteúdo (mensagens
-/// curtas geram um balão estreito; longas quebram em várias linhas até um
-/// limite). Sem setinha (deixava de apontar para o gato ao arrastar).
+/// - Formato orgânico com poucos lóbulos amplos e uma pequena cauda
+///   apontando para o gato. O tamanho continua dinâmico conforme o conteúdo.
 class CatChatBubble extends StatefulWidget {
   final ValueListenable<Offset> mascotPosition;
   final String? message;
@@ -66,9 +62,9 @@ class _CatChatBubbleState extends State<CatChatBubble>
   bool _dismissed = false;
 
   // Dimensões compactas
-  static const double _maxBubbleWidth = 180;
-  static const double _minTextWidth = 70;
-  static const EdgeInsets _contentPadding = EdgeInsets.fromLTRB(14, 11, 22, 12);
+  static const double _maxBubbleWidth = 176;
+  static const double _minTextWidth = 88;
+  static const EdgeInsets _contentPadding = EdgeInsets.fromLTRB(18, 18, 18, 23);
 
   static const TextStyle _messageStyle = TextStyle(
     color: Color(0xFF2B2143),
@@ -176,40 +172,28 @@ class _CatChatBubbleState extends State<CatChatBubble>
     );
   }
 
-  /// Texto com efeito typewriter. O texto completo fica invisível por baixo
-  /// para reservar o layout (largura + altura das linhas), então o balão
-  /// nasce no tamanho final e não pula durante a digitação.
+  /// Texto com efeito typewriter. A parte ainda não digitada permanece no
+  /// mesmo RichText, mas transparente. Assim, prefixo e mensagem completa
+  /// compartilham exatamente as mesmas quebras, posição e altura.
   Widget _buildTypewriterText() {
     return AnimatedBuilder(
       animation: _typedChars,
       builder: (context, _) {
         final count = _typedChars.value;
-        final isTyping = count < _message.length;
-        final visibleText = _message.substring(0, count);
-
-        return Stack(
-          children: [
-            Opacity(
-              opacity: 0,
-              child: Text(_message, style: _messageStyle),
-            ),
-            Text.rich(
+        return Text.rich(
+          key: const Key('cat-bubble-typewriter'),
+          TextSpan(
+            children: [
+              TextSpan(text: _message.substring(0, count)),
               TextSpan(
-                text: visibleText,
-                children: [
-                  if (isTyping)
-                    TextSpan(
-                      text: '▌',
-                      style: TextStyle(
-                        color: AppColors.lilac.withValues(alpha: 0.9),
-                        fontSize: 12,
-                      ),
-                    ),
-                ],
+                text: _message.substring(count),
+                style: const TextStyle(color: Colors.transparent),
               ),
-              style: _messageStyle,
-            ),
-          ],
+            ],
+          ),
+          style: _messageStyle,
+          textAlign: TextAlign.center,
+          softWrap: true,
         );
       },
     );
@@ -221,32 +205,25 @@ class _CatChatBubbleState extends State<CatChatBubble>
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final scaler = MediaQuery.textScalerOf(context);
-
-    // Largura máxima do balão respeitando a tela
     final maxBubble = math.min(_maxBubbleWidth, screenWidth - 24).toDouble();
-    final horizontalPad = _contentPadding.horizontal;
-    final maxTextWidth = maxBubble - horizontalPad;
-
-    // Mede o texto permitindo quebra em várias linhas até maxTextWidth.
-    // A largura resultante (linha mais longa) define um balão dinâmico:
-    // curto → estreito; longo → quebra até o limite.
-    final tp = TextPainter(
+    final horizontalPadding = _contentPadding.horizontal;
+    final maxTextWidth = maxBubble - horizontalPadding;
+    final textPainter = TextPainter(
       text: TextSpan(text: _message, style: _messageStyle),
       textDirection: TextDirection.ltr,
       textScaler: scaler,
     )..layout(maxWidth: maxTextWidth);
-
-    // Em telas muito estreitas o mínimo não pode exceder o máximo
-    final minText = math.min(_minTextWidth, maxTextWidth);
-    final textWidth = tp.width.clamp(minText, maxTextWidth);
-    final bubbleWidth = textWidth + horizontalPad;
+    final minTextWidth = math.min(_minTextWidth, maxTextWidth);
+    final textWidth = textPainter.width.clamp(minTextWidth, maxTextWidth);
+    final bubbleWidth = textWidth + horizontalPadding;
 
     return ValueListenableBuilder<Offset>(
       valueListenable: widget.mascotPosition,
       builder: (context, position, child) {
         final maxLeft = (screenWidth - bubbleWidth - 8).clamp(8.0, screenWidth);
         final left = (position.dx - 8).clamp(8.0, maxLeft).toDouble();
-        final top = (position.dy - 92).clamp(8.0, double.infinity).toDouble();
+        // A cauda fica visualmente conectada ao gatinho sem cobrir o rosto.
+        final top = (position.dy - 70).clamp(8.0, double.infinity).toDouble();
         return Positioned(left: left, top: top, child: child!);
       },
       child: FadeTransition(
@@ -261,7 +238,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
               color: Colors.transparent,
               child: InkWell(
                 onTap: _openMagicalWeather,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(32),
                 child: CustomPaint(
                   painter: _CloudPainter(),
                   child: Stack(
@@ -277,8 +254,8 @@ class _CatChatBubbleState extends State<CatChatBubble>
                       // Botão fechar: chip lilás sólido (sempre visível,
                       // independente do fundo) sobre o corpo branco da nuvem.
                       Positioned(
-                        top: 3,
-                        right: 4,
+                        top: 6,
+                        right: 7,
                         child: GestureDetector(
                           onTap: _close,
                           behavior: HitTestBehavior.opaque,
@@ -315,47 +292,36 @@ class _CatChatBubbleState extends State<CatChatBubble>
   }
 }
 
-/// Nuvem delicada: corpo arredondado (área de texto previsível) com bolhas
-/// decorativas suaves nas bordas superior e inferior. Escala com o tamanho
-/// do balão. Fundo branco, contorno lilás fino e sombra suave.
+/// Balão delicado com poucos lóbulos largos, evitando o aspecto quadrado e a
+/// repetição de pequenas bolhas. A cauda inferior acompanha o gato ao arrastar.
 class _CloudPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    final bodyBottom = h - 10;
 
-    // Raio das bolhas proporcional à altura, com teto para não exagerar
-    final bump = math.min(h * 0.26, 11.0);
-
-    Path circle(double cx, double cy, double r) => Path()
-      ..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r));
-
-    // Corpo: retângulo arredondado inset para as bolhas ficarem nas bordas
-    var cloud = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(bump * 0.6, bump * 0.7, w - bump * 1.2, h - bump * 1.4),
-        Radius.circular(h * 0.38),
-      ));
-
-    // Bolhas ao longo do topo e da base, distribuídas pela largura
-    final topY = bump * 0.85;
-    final botY = h - bump * 0.85;
-    final usable = w - bump * 1.4;
-    final count = math.max(2, (usable / (bump * 1.7)).floor());
-    for (int i = 0; i < count; i++) {
-      final t = count == 1 ? 0.5 : i / (count - 1);
-      final cx = bump * 0.7 + t * usable;
-      // alterna o tamanho para dar naturalidade
-      final rTop = bump * (i.isEven ? 1.0 : 0.82);
-      final rBot = bump * (i.isEven ? 0.85 : 1.0);
-      cloud = Path.combine(PathOperation.union, cloud, circle(cx, topY, rTop));
-      cloud = Path.combine(PathOperation.union, cloud, circle(cx, botY, rBot));
-    }
-    // Bolhas laterais suaves
-    cloud = Path.combine(
-        PathOperation.union, cloud, circle(bump * 0.6, h * 0.5, bump * 0.8));
-    cloud = Path.combine(
-        PathOperation.union, cloud, circle(w - bump * 0.6, h * 0.5, bump * 0.8));
+    final cloud = Path()
+      ..moveTo(w * 0.31, bodyBottom)
+      // base esquerda e lateral
+      ..cubicTo(
+          w * 0.18, bodyBottom + 1, w * 0.08, h * 0.82, w * 0.08, h * 0.67)
+      ..cubicTo(w * 0.01, h * 0.61, w * 0.02, h * 0.43, w * 0.11, h * 0.38)
+      ..cubicTo(w * 0.08, h * 0.24, w * 0.21, h * 0.15, w * 0.31, h * 0.19)
+      // três lóbulos amplos no topo
+      ..cubicTo(w * 0.36, h * 0.04, w * 0.51, h * 0.03, w * 0.57, h * 0.16)
+      ..cubicTo(w * 0.67, h * 0.03, w * 0.82, h * 0.08, w * 0.82, h * 0.22)
+      ..cubicTo(w * 0.94, h * 0.19, w * 1.01, h * 0.32, w * 0.94, h * 0.43)
+      // lateral e base direita
+      ..cubicTo(w * 1.01, h * 0.52, w * 0.98, h * 0.68, w * 0.89, h * 0.70)
+      ..cubicTo(w * 0.91, h * 0.84, w * 0.77, bodyBottom + 1, w * 0.67,
+          bodyBottom - 2)
+      ..cubicTo(
+          w * 0.58, h * 1.01, w * 0.46, h * 0.96, w * 0.43, bodyBottom - 1)
+      // pequena cauda voltada ao centro do gato
+      ..lineTo(w * 0.37, h)
+      ..quadraticBezierTo(w * 0.31, h * 0.98, w * 0.31, bodyBottom)
+      ..close();
 
     // Sombra suave
     canvas.save();

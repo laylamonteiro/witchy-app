@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -11,12 +10,12 @@ import '../../../../core/services/payment_service.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import '../../../auth/auth.dart';
-import '../../../subscription/subscription.dart';
 import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../subscription/presentation/pages/subscription_page.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
 
@@ -28,7 +27,7 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const Text('Configurações'),
+        title: const ResponsiveAppBarTitle('Configurações'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -101,20 +100,36 @@ class SettingsPage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              user.displayName ?? 'Bruxa Anônima',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+            // Compensa à esquerda o espaço ocupado pelo botão à direita para
+            // manter o texto exatamente no eixo central do avatar.
+            const SizedBox(width: 28),
+            Flexible(
+              fit: FlexFit.loose,
+              child: Text(
+                user.displayName ?? 'Bruxa Anônima',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.edit, color: Color(0xFF9C27B0), size: 20),
-              onPressed: () => _showEditNameDialog(context, authProvider),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+            SizedBox(
+              width: 20,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.edit,
+                  color: Color(0xFF9C27B0),
+                  size: 20,
+                ),
+                onPressed: () => _showEditNameDialog(context, authProvider),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
             ),
           ],
         ),
@@ -306,6 +321,7 @@ class SettingsPage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                key: const ValueKey('settings_upgrade_button'),
                 onPressed: () => _showUpgradeSheet(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9C27B0),
@@ -353,8 +369,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _manageSubscription(BuildContext context) async {
-    final paymentService = PaymentService();
-    await paymentService.presentCustomerCenter();
+    await openSubscriptionPage(context);
   }
 
   Widget _buildUsageStats(BuildContext context, UserModel user) {
@@ -783,7 +798,7 @@ class SettingsPage extends StatelessWidget {
               color: Color(0xFF9C27B0),
             ),
             title: const Text(
-              'Gerenciar Códigos Beta',
+              'Gerenciar Códigos Premium',
               style: TextStyle(color: Colors.white),
             ),
             subtitle: const Text(
@@ -837,12 +852,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showUpgradeSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremiumUpgradeSheet(),
-    );
+    openSubscriptionPage(context);
   }
 
   String _getInitials(String name) {
