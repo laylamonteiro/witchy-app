@@ -78,7 +78,7 @@ class SubscriptionHero extends StatelessWidget {
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+          padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: const LinearGradient(
@@ -90,7 +90,7 @@ class SubscriptionHero extends StatelessWidget {
           child: compact
               ? const Column(
                   children: [
-                    _CatHeroArt(height: 108),
+                    _CatHeroArt(height: 92),
                     _HeroCopy(centered: true, compact: true),
                   ],
                 )
@@ -99,7 +99,7 @@ class SubscriptionHero extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 4,
-                      child: _CatHeroArt(height: 138),
+                      child: _CatHeroArt(height: 120),
                     ),
                     SizedBox(width: 6),
                     Expanded(flex: 7, child: _HeroCopy()),
@@ -228,11 +228,11 @@ class _HeroCopy extends StatelessWidget {
       crossAxisAlignment: alignment,
       children: [
         Text(
-          'DESBLOQUEIE',
+          'ACESSE',
           textAlign: textAlign,
-          style: GoogleFonts.cinzelDecorative(
+          style: GoogleFonts.lora(
             color: AppColors.textPrimary,
-            fontSize: compact ? 14 : 16,
+            fontSize: compact ? 18 : 20,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -248,7 +248,7 @@ class _HeroCopy extends StatelessWidget {
               textAlign: textAlign,
               style: GoogleFonts.cinzelDecorative(
                 color: Colors.white,
-                fontSize: compact ? 22 : 25,
+                fontSize: compact ? 20 : 23,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
               ),
@@ -262,20 +262,20 @@ class _HeroCopy extends StatelessWidget {
             textAlign: textAlign,
             style: GoogleFonts.cinzelDecorative(
               color: AppColors.textPrimary,
-              fontSize: compact ? 21 : 24,
+              fontSize: compact ? 19 : 22,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.4,
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text.rich(
           textAlign: textAlign,
           TextSpan(
             style: GoogleFonts.lora(
               color: AppColors.textSecondary,
-              fontSize: compact ? 12 : 13,
-              height: 1.38,
+              fontSize: compact ? 11 : 12,
+              height: 1.34,
             ),
             children: const [
               TextSpan(text: 'Mais conhecimento, mais orientação e mais '),
@@ -342,14 +342,14 @@ class _PremiumBenefitRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 52,
-            height: 52,
-            padding: const EdgeInsets.all(7),
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -365,13 +365,13 @@ class _PremiumBenefitRow extends StatelessWidget {
               filterQuality: FilterQuality.high,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               item.compactText,
               style: GoogleFonts.lora(
                 color: AppColors.textPrimary,
-                fontSize: 15.5,
+                fontSize: 14.5,
                 height: 1.22,
                 fontWeight: FontWeight.w700,
               ),
@@ -418,10 +418,10 @@ class PremiumOfferPanel extends StatelessWidget {
         return Container(
           key: const ValueKey('premium_offer_panel'),
           padding: EdgeInsets.fromLTRB(
-            compact ? 14 : 20,
-            compact ? 14 : 20,
-            compact ? 14 : 20,
-            18,
+            compact ? 10 : 14,
+            compact ? 10 : 14,
+            compact ? 10 : 14,
+            14,
           ),
           decoration: BoxDecoration(
             color: const Color(0xFF10111D),
@@ -438,11 +438,11 @@ class PremiumOfferPanel extends StatelessWidget {
           child: Column(
             children: [
               const SubscriptionHero(),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               const PremiumOfferDivider(),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
               const PremiumBenefitsSection(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               if (unavailableNotice != null) ...[
                 unavailableNotice!,
                 const SizedBox(height: 14),
@@ -455,13 +455,13 @@ class PremiumOfferPanel extends StatelessWidget {
                 monthlyEnabled: monthlyEnabled,
                 yearlyEnabled: yearlyEnabled,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               SubscriptionPurchaseButton(
                 loading: purchaseLoading,
                 enabled: purchaseEnabled,
                 onPressed: onPurchase,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               const SubscriptionGuarantees(),
             ],
           ),
@@ -566,10 +566,10 @@ class _SubscriptionPlanCard extends StatelessWidget {
           key: ValueKey('subscription_plan_${type.name}'),
           onTap: enabled ? onTap : null,
           borderRadius: BorderRadius.circular(16),
-          child: AnimatedContainer(
+            child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            constraints: BoxConstraints(minHeight: emphasized ? 168 : 152),
-            padding: EdgeInsets.fromLTRB(10, emphasized ? 16 : 12, 10, 12),
+            constraints: BoxConstraints(minHeight: emphasized ? 152 : 136),
+            padding: EdgeInsets.fromLTRB(10, emphasized ? 12 : 10, 10, 10),
             decoration: BoxDecoration(
               color: selected ? const Color(0xFF2A1938) : AppColors.surface,
               borderRadius: BorderRadius.circular(16),
@@ -590,7 +590,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
-                  height: 24,
+                  height: 20,
                   child: tag == null
                       ? null
                       : DecoratedBox(
@@ -614,7 +614,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                           ),
                         ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 4),
                 Text(
                   title,
                   style: GoogleFonts.lora(
@@ -623,7 +623,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 4),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Row(
@@ -636,7 +636,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lora(
                           color: AppColors.textPrimary,
-                          fontSize: emphasized ? 25 : 23,
+                          fontSize: emphasized ? 23 : 21,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -652,7 +652,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                   ),
                 ),
                 if (savings != null) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     savings!,
                     textAlign: TextAlign.center,
@@ -690,8 +690,8 @@ class SubscriptionPurchaseButton extends StatelessWidget {
       duration: const Duration(milliseconds: 160),
       opacity: enabled ? 1 : 0.45,
       child: SizedBox(
-        width: double.infinity,
-        height: 56,
+      width: double.infinity,
+      height: 50,
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
@@ -727,7 +727,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
                 : Text(
                     'Começar Agora',
                     style: GoogleFonts.lora(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -754,14 +754,14 @@ class SubscriptionGuarantees extends StatelessWidget {
           'Cancele a qualquer momento',
           style: GoogleFonts.lora(
             color: AppColors.textSecondary,
-            fontSize: 12.5,
+            fontSize: 12,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Wrap(
           alignment: WrapAlignment.center,
-          spacing: 20,
-          runSpacing: 10,
+          spacing: 16,
+          runSpacing: 8,
           children: [
             for (final guarantee in guarantees)
               _GuaranteeItem(assetPath: guarantee.$1, label: guarantee.$2),
@@ -785,19 +785,19 @@ class _GuaranteeItem extends StatelessWidget {
       children: [
         Image.asset(
           assetPath,
-          width: 17,
-          height: 17,
+          width: 14,
+          height: 14,
           fit: BoxFit.contain,
           filterQuality: FilterQuality.high,
         ),
-        const SizedBox(width: 5),
+        const SizedBox(width: 4),
         Flexible(
           child: Text(
             label,
             maxLines: 2,
             style: const TextStyle(
               color: AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: 10,
               height: 1.2,
             ),
           ),

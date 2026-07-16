@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -405,44 +406,48 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                       !yearlyAvailable;
 
                   return LayoutBuilder(
-                    builder: (context, constraints) => Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-                      child: FittedBox(
-                        key: const ValueKey('premium_paywall_fitted_content'),
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.topCenter,
-                        child: SizedBox(
-                          width: constraints.maxWidth - 8,
-                          child: PremiumOfferPanel(
-                            selectedPlan: _selectedPlan,
-                            onSelected: (plan) =>
-                                setState(() => _selectedPlan = plan),
-                            monthlyPrice: _priceFor(
-                              SubscriptionType.monthly,
-                              'R\$ 9,90',
+                    builder: (context, constraints) {
+                      final maxWidth = math.min(constraints.maxWidth - 8, 720.0);
+
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: maxWidth),
+                            child: SingleChildScrollView(
+                              physics: const ClampingScrollPhysics(),
+                              child: PremiumOfferPanel(
+                                selectedPlan: _selectedPlan,
+                                onSelected: (plan) =>
+                                    setState(() => _selectedPlan = plan),
+                                monthlyPrice: _priceFor(
+                                  SubscriptionType.monthly,
+                                  'R\$ 9,90',
+                                ),
+                                yearlyPrice: _priceFor(
+                                  SubscriptionType.yearly,
+                                  'R\$ 79,90',
+                                ),
+                                monthlyEnabled: monthlyAvailable,
+                                yearlyEnabled: yearlyAvailable,
+                                purchaseLoading: _isPurchasing ||
+                                    _paymentService.status ==
+                                        PurchaseStatus.loading,
+                                purchaseEnabled: selectedAvailable && !noProducts,
+                                onPurchase: _purchaseSelectedPlan,
+                                unavailableNotice: noProducts
+                                    ? const Text(
+                                        'Os planos estão temporariamente indisponíveis',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: AppColors.warning),
+                                      )
+                                    : null,
+                              ),
                             ),
-                            yearlyPrice: _priceFor(
-                              SubscriptionType.yearly,
-                              'R\$ 79,90',
-                            ),
-                            monthlyEnabled: monthlyAvailable,
-                            yearlyEnabled: yearlyAvailable,
-                            purchaseLoading: _isPurchasing ||
-                                _paymentService.status ==
-                                    PurchaseStatus.loading,
-                            purchaseEnabled: selectedAvailable && !noProducts,
-                            onPurchase: _purchaseSelectedPlan,
-                            unavailableNotice: noProducts
-                                ? const Text(
-                                    'Os planos estão temporariamente indisponíveis',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(color: AppColors.warning),
-                                  )
-                                : null,
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),

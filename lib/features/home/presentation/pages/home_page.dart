@@ -137,7 +137,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               index: _selectedIndex,
               children: List.generate(3, _buildTabNavigator),
             ),
-            // Mascote arrastável flutuando sobre o conteúdo
+            CatChatBubble(mascotPosition: _mascotPosition),
+            // Mascote arrastável flutuando sobre o conteúdo — deve sobrepor o balão
             DraggableCatMascot(
               initialX: 20,
               initialY: 120,
@@ -147,7 +148,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 // Opcional: adicionar interação ao clicar no mascote
               },
             ),
-            CatChatBubble(mascotPosition: _mascotPosition),
           ],
         ),
         bottomNavigationBar: Container(
