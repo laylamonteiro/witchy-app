@@ -106,7 +106,7 @@ void main() {
       expect(makeUser().isPremium, isFalse);
     });
 
-    test('código beta = role premium + plano lifetime', () {
+    test('Código Premium = role premium + plano lifetime', () {
       final betaUser = makeUser(
         role: UserRole.premium,
         plan: SubscriptionPlan.lifetime,
@@ -145,8 +145,8 @@ void main() {
     });
 
     test('free tem apenas preview no mapa astral', () {
-      final access = FeatureAccess.checkAccess(
-          AppFeature.astrologyBirthChart, makeUser());
+      final access =
+          FeatureAccess.checkAccess(AppFeature.astrologyBirthChart, makeUser());
       expect(access.hasFullAccess, isFalse);
     });
 
@@ -204,8 +204,7 @@ void main() {
       }
     });
 
-    test('mensagens rotacionam em dias consecutivos e são determinísticas',
-        () {
+    test('mensagens rotacionam em dias consecutivos e são determinísticas', () {
       final day1 = DateTime(2026, 7, 14);
       final day2 = DateTime(2026, 7, 15);
 

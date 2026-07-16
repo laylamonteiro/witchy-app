@@ -7,7 +7,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/data/repositories/beta_code_repository.dart';
 
-/// Página de debug para códigos beta
+/// Página de debug para Códigos Premium
 /// Mostra informações detalhadas sobre Supabase e SQLite
 class BetaCodesDebugPage extends StatefulWidget {
   const BetaCodesDebugPage({super.key});
@@ -232,7 +232,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('🔧 Debug - Códigos Beta'),
+        title: const ResponsiveAppBarTitle('🔧 Debug - Códigos Premium'),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(

@@ -37,13 +37,14 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
   Future<void> _loadSettings() async {
     final authProvider = context.read<AuthProvider>();
+    final syncProvider = context.read<SyncProvider>();
     final prefs = await SharedPreferences.getInstance();
     final isPremium = authProvider.isPremiumEffective;
     final cloudSyncEnabled = await DataSyncService.ensureCloudSyncPreference(
       prefs,
       isPremium: isPremium,
     );
-
+    await syncProvider.refreshState();
     if (!mounted) return;
     setState(() {
       _analyticsEnabled = prefs.getBool('privacy_analytics') ?? true;
@@ -442,16 +443,20 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              !_cloudSyncEnabled
-                                  ? 'Sincronização desativada'
-                                  : isReady
-                                      ? syncProvider.statusText
-                                      : 'Não conectado',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
+                            Expanded(
+                              child: Text(
+                                !_cloudSyncEnabled
+                                    ? 'Sincronização desativada'
+                                    : isReady
+                                        ? syncProvider.statusText
+                                        : 'Não conectado',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -536,7 +541,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Color _getSyncStatusColor(SyncStatus status) {
     switch (status) {
       case SyncStatus.idle:
-        return Colors.grey;
+        return AppColors.lilac;
       case SyncStatus.syncing:
         return AppColors.lilac;
       case SyncStatus.success:
@@ -551,7 +556,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   IconData _getSyncStatusIcon(SyncStatus status) {
     switch (status) {
       case SyncStatus.idle:
-        return Icons.cloud_off_outlined;
+        return Icons.cloud_queue_outlined;
       case SyncStatus.syncing:
         return Icons.sync;
       case SyncStatus.success:

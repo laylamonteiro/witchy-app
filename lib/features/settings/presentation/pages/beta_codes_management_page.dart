@@ -240,7 +240,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Gerenciar Códigos Beta'),
+        title: const ResponsiveAppBarTitle('Gerenciar Códigos Premium'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -290,7 +290,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                           controller: _codeController,
                           decoration: InputDecoration(
                             labelText: 'Código',
-                            hintText: 'Digite o código (ex: BETA2025)',
+                            hintText: 'Digite o código (ex: PREMIUM2025)',
                             hintStyle: TextStyle(
                               color: AppColors.softWhite.withOpacity(0.5),
                             ),

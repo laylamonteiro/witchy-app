@@ -3,7 +3,7 @@ import '../../../../core/config/supabase_config.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/debug_log_service.dart';
 
-/// Repositório para gerenciar códigos beta
+/// Repositório para gerenciar Códigos Premium
 ///
 /// Quando o Supabase está configurado ele é a FONTE DA VERDADE: falhas de
 /// escrita são propagadas como erro (nunca degradam silenciosamente para o
@@ -16,7 +16,7 @@ class BetaCodeRepository {
   final SupabaseClient? _supabase =
       SupabaseConfig.isConfigured ? Supabase.instance.client : null;
 
-  /// Lista todos os códigos beta (apenas admin)
+  /// Lista todos os Códigos Premium (apenas admin)
   Future<List<Map<String, dynamic>>> getAllCodes() async {
     final supabase = _supabase;
     if (supabase != null) {
@@ -56,7 +56,7 @@ class BetaCodeRepository {
     return _getCodeFromLocal(cleanCode);
   }
 
-  /// Cria um novo código beta
+  /// Cria um novo Código Premium
   ///
   /// [code] - Código a ser criado
   /// [maxUses] - Número máximo de usos permitidos (padrão: 1)
@@ -106,7 +106,7 @@ class BetaCodeRepository {
     return _createCodeLocal(cleanCode, now, maxUses: maxUses);
   }
 
-  /// Resgata um código beta.
+  /// Resgata um Código Premium.
   ///
   /// Com Supabase configurado tenta primeiro a RPC `redeem_beta_code`
   /// (atômica, à prova de corrida — ver supabase/restore_database.sql).
@@ -248,8 +248,7 @@ class BetaCodeRepository {
         'updated_at': now.toIso8601String(),
       }).eq('id', userId);
     } catch (e) {
-      await debugLog(
-          'BETA_CODE', 'Falha ao persistir premium em profiles: $e');
+      await debugLog('BETA_CODE', 'Falha ao persistir premium em profiles: $e');
     }
   }
 

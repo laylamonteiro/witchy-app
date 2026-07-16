@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -71,7 +70,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 );
               }
 
-              // Fonte única de premium (RevenueCat, código beta ou admin)
+              // Fonte única de premium (RevenueCat, Código Premium ou admin)
               final isPro = authProvider.isPremiumEffective;
 
               return SingleChildScrollView(
@@ -94,7 +93,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                         ] else ...[
                           _buildUpgradeSection(),
                           const SizedBox(height: 24),
-                          // Card de resgate de código beta
+                          // Card de resgate de Código Premium
                           _buildBetaCodeCard(authProvider),
                         ],
 
@@ -126,6 +125,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             currentUser.plan == SubscriptionPlan.yearly);
     final isPremiumWithLifetime =
         currentUser.isPremium && currentUser.plan == SubscriptionPlan.lifetime;
+    final isBetaCodePremium =
+        isPremiumWithLifetime && !currentUser.isAdmin && !hasRevenueCat;
 
     // Data de expiração (apenas para assinaturas via RevenueCat)
     final expirationDate = _paymentService.subscriptionExpirationDate;
@@ -149,9 +150,11 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         subscriptionLabel = 'Assinatura Ativa';
         labelColor = AppColors.starYellow;
       }
+    } else if (isBetaCodePremium) {
+      subscriptionLabel = 'Acesso Vitalício (Código Premium)';
+      labelColor = AppColors.starYellow;
     } else if (isPremiumWithLifetime) {
-      // Premium vitalício (código beta ou admin)
-      subscriptionLabel = 'Acesso Vitalício (Código Beta)';
+      subscriptionLabel = 'Acesso Vitalício';
       labelColor = AppColors.starYellow;
     } else if (isPremiumWithMonthlyPlan) {
       // Assinatura mensal/anual (sem RevenueCat ativo no momento)
@@ -352,11 +355,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     final hasRevenueCat = _paymentService.isPro;
     final isPremiumWithLifetime =
         currentUser.isPremium && currentUser.plan == SubscriptionPlan.lifetime;
+    final isBetaCodePremium =
+        isPremiumWithLifetime && !currentUser.isAdmin && !hasRevenueCat;
     final isPremiumWithMonthlyPlan = currentUser.isPremium &&
         (currentUser.plan == SubscriptionPlan.monthly ||
             currentUser.plan == SubscriptionPlan.yearly);
 
-    // Premium vitalício (código beta) - apenas informativo
+    // Premium vitalício (Código Premium) - apenas informativo
     if (isPremiumWithLifetime && !hasRevenueCat) {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -365,14 +370,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.info_outline, color: AppColors.lilac, size: 20),
-            SizedBox(width: 12),
+            const Icon(Icons.info_outline, color: AppColors.lilac, size: 20),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Seu acesso Premium foi concedido via código beta e não expira',
-                style: TextStyle(
+                isBetaCodePremium
+                    ? 'Seu acesso Premium foi resgatado via Código Premium e não expira.'
+                    : 'Seu acesso Premium vitalício está ativo.',
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
                 ),
@@ -513,6 +520,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     return SizedBox(
       width: double.infinity,
       child: MagicalCard(
+        margin: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -525,7 +533,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
-                    'Tem um Código Beta?',
+                    'Tem um Código Premium?',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
