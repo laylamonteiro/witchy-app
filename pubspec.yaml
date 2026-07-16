@@ -111,6 +111,7 @@ flutter:
     - assets/images/metais/
     - assets/icons/
     - assets/ephe/
+    - assets/premium/
 
 # Configuração do ícone do app
 flutter_launcher_icons:

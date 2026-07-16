@@ -1,9 +1,23 @@
 import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
 import '../../../../core/services/payment_service.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../subscription/presentation/widgets/subscription_offer_widgets.dart';
+
+Future<void> showPremiumUpgradePaywall(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    useRootNavigator: true,
+    useSafeArea: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const PremiumUpgradeSheet(),
+  );
+}
 
 /// Texto placeholder exibido (com blur) no lugar do conteúdo Premium real.
 ///
@@ -201,12 +215,7 @@ class PremiumContentSection extends StatelessWidget {
     return Center(
       child: ElevatedButton.icon(
         onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) => const PremiumUpgradeSheet(),
-          );
+          showPremiumUpgradePaywall(context);
         },
         icon: const Icon(Icons.star, size: 18),
         label: const Text('Seja Premium'),
@@ -297,346 +306,194 @@ class PremiumUpgradeSheet extends StatefulWidget {
 }
 
 class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
-  SubscriptionType _selectedPlan =
-      SubscriptionType.yearly; // Anual por padrão (popular)
-  bool _isLoading = false;
+  final PaymentService _paymentService = PaymentService();
+  SubscriptionType _selectedPlan = SubscriptionType.yearly;
+  bool _isInitializing = false;
+  bool _isPurchasing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeProducts();
+  }
+
+  Future<void> _initializeProducts() async {
+    if (_paymentService.isInitialized) {
+      _selectAvailablePlan();
+      return;
+    }
+    setState(() => _isInitializing = true);
+    await _paymentService.initialize();
+    if (!mounted) return;
+    setState(() {
+      _isInitializing = false;
+      _selectAvailablePlan();
+    });
+  }
+
+  void _selectAvailablePlan() {
+    if (_productFor(_selectedPlan) == null &&
+        _productFor(SubscriptionType.monthly) != null) {
+      _selectedPlan = SubscriptionType.monthly;
+    }
+  }
+
+  ProductInfo? _productFor(SubscriptionType type) {
+    return _paymentService.getProduct(type);
+  }
+
+  String _priceFor(SubscriptionType type, String fallback) {
+    return _productFor(type)?.priceString ?? fallback;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF9C27B0),
-                  const Color(0xFFE91E63),
-                ],
-              ),
-            ),
-            child: const Icon(
-              Icons.auto_awesome,
-              color: Colors.white,
-              size: 40,
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Grimório Premium',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Desbloqueie todo o potencial mágico',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 32),
-          // Benefits
-          _buildBenefit(Icons.auto_stories, 'Feitiços ilimitados'),
-          _buildBenefit(Icons.book, 'Enciclopédia completa'),
-          _buildBenefit(Icons.psychology, 'Conselheiro Místico IA ilimitado'),
-          _buildBenefit(Icons.stars, 'Mapa Astral completo'),
-          _buildBenefit(Icons.auto_fix_high, 'Sigilos e Adivinhação'),
-          _buildBenefit(Icons.cloud_sync, 'Backup na nuvem (em breve)'),
-          const SizedBox(height: 32),
-          // Pricing
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildPricingOption(
-                context,
-                'Mensal',
-                'R\$ 9,90',
-                '/mês',
-                SubscriptionType.monthly,
-                false,
-              ),
-              _buildPricingOption(
-                context,
-                'Anual',
-                'R\$ 79,90',
-                '/ano',
-                SubscriptionType.yearly,
-                true,
-                savings: 'Economize 33%',
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          // CTA Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : () => _handleSubscribe(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF9C27B0),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                disabledBackgroundColor:
-                    const Color(0xFF9C27B0).withValues(alpha: 0.5),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text(
-                      'Começar Agora',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Cancele a qualquer momento',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBenefit(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: const Color(0xFF9C27B0),
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPricingOption(
-    BuildContext context,
-    String title,
-    String price,
-    String period,
-    SubscriptionType planType,
-    bool isPopular, {
-    String? savings,
-  }) {
-    final isSelected = _selectedPlan == planType;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedPlan = planType;
-        });
-      },
+    final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+    return Material(
+      color: Colors.transparent,
       child: Container(
-        width: 140,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF9C27B0).withValues(alpha: 0.3)
-              : isPopular
-                  ? const Color(0xFF9C27B0).withValues(alpha: 0.1)
-                  : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF9C27B0)
-                : isPopular
-                    ? const Color(0xFF9C27B0).withValues(alpha: 0.5)
-                    : Colors.white.withValues(alpha: 0.1),
-            width: isSelected
-                ? 3
-                : isPopular
-                    ? 2
-                    : 1,
-          ),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.96,
+        ),
+        padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + bottomPadding),
+        decoration: const BoxDecoration(
+          color: Color(0xFF090A12),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
         ),
         child: Column(
           children: [
-            if (isSelected)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF9C27B0),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  'SELECIONADO',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+            Row(
+              children: [
+                const Spacer(),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-              )
-            else if (isPopular)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF9C27B0).withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  'POPULAR',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      key: const ValueKey('close_premium_paywall'),
+                      tooltip: 'Fechar',
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white54),
+                    ),
                   ),
                 ),
-              ),
-            Text(
-              title,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ],
+            ),
+            Expanded(
+              child: ListenableBuilder(
+                listenable: _paymentService,
+                builder: (context, _) {
+                  if (_isInitializing) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: AppColors.lilac),
+                    );
+                  }
+
+                  final monthlyAvailable =
+                      _productFor(SubscriptionType.monthly) != null;
+                  final yearlyAvailable =
+                      _productFor(SubscriptionType.yearly) != null;
+                  final selectedAvailable = _productFor(_selectedPlan) != null;
+                  final noProducts = _paymentService.isInitialized &&
+                      !monthlyAvailable &&
+                      !yearlyAvailable;
+
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final maxWidth = math.min(constraints.maxWidth - 8, 720.0);
+
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: maxWidth),
+                            child: SingleChildScrollView(
+                              physics: const ClampingScrollPhysics(),
+                              child: PremiumOfferPanel(
+                                selectedPlan: _selectedPlan,
+                                onSelected: (plan) =>
+                                    setState(() => _selectedPlan = plan),
+                                monthlyPrice: _priceFor(
+                                  SubscriptionType.monthly,
+                                  'R\$ 9,90',
+                                ),
+                                yearlyPrice: _priceFor(
+                                  SubscriptionType.yearly,
+                                  'R\$ 79,90',
+                                ),
+                                monthlyEnabled: monthlyAvailable,
+                                yearlyEnabled: yearlyAvailable,
+                                purchaseLoading: _isPurchasing ||
+                                    _paymentService.status ==
+                                        PurchaseStatus.loading,
+                                purchaseEnabled: selectedAvailable && !noProducts,
+                                onPurchase: _purchaseSelectedPlan,
+                                unavailableNotice: noProducts
+                                    ? const Text(
+                                        'Os planos estão temporariamente indisponíveis',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: AppColors.warning),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              price,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              period,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 12,
-              ),
-            ),
-            if (savings != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                savings,
-                style: const TextStyle(
-                  color: Color(0xFF4CAF50),
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
           ],
         ),
       ),
     );
   }
 
-  Future<void> _handleSubscribe(BuildContext context) async {
-    setState(() => _isLoading = true);
+  Future<void> _purchaseSelectedPlan() async {
+    if (_isPurchasing || _productFor(_selectedPlan) == null) return;
 
+    final messenger = ScaffoldMessenger.of(context);
+    final authProvider = context.read<AuthProvider>();
+    setState(() => _isPurchasing = true);
     try {
-      final paymentService = PaymentService();
-
-      // Inicializar se necessário
-      if (!paymentService.isInitialized) {
-        await paymentService.initialize();
-      }
-
-      // Comprar o plano selecionado diretamente
-      final result = await paymentService.purchase(_selectedPlan);
-
+      final result = await _paymentService.purchase(_selectedPlan);
       if (!mounted) return;
 
       if (result.success) {
-        // Atualizar estado do AuthProvider após compra bem-sucedida
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
         await authProvider.refreshPremiumStatus();
-
-        // Fechar o bottom sheet
+        if (!mounted) return;
         Navigator.pop(context);
-
-        // Mostrar mensagem de sucesso
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
-            content: Text('Parabéns! Você agora é Premium! ✨'),
-            backgroundColor: Color(0xFF9C27B0),
-            duration: Duration(seconds: 3),
+            content: Text('Premium ativado com sucesso!'),
+            backgroundColor: Colors.green,
           ),
         );
-      } else {
-        // Mostrar erro
-        ScaffoldMessenger.of(context).showSnackBar(
+      } else if (result.errorMessage != 'Compra cancelada') {
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(result.errorMessage ?? 'Erro ao processar pagamento'),
-            backgroundColor: const Color(0xFFF44336),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro inesperado: $e'),
-            backgroundColor: const Color(0xFFF44336),
+            content: Text(
+              result.errorMessage ?? 'Não foi possível concluir a compra',
+            ),
+            backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isPurchasing = false);
     }
   }
 }
 
-/// Widget wrapper que mostra preview limitado
 class PremiumPreviewWrapper extends StatelessWidget {
   final Widget child;
   final AppFeature feature;
@@ -727,11 +584,6 @@ class PremiumPreviewWrapper extends StatelessWidget {
   }
 
   void _showUpgrade(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremiumUpgradeSheet(),
-    );
+    showPremiumUpgradePaywall(context);
   }
 }

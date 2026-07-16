@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
@@ -637,50 +636,8 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  void _showUpgradeSheet(BuildContext context) async {
-    // Usar o paywall do RevenueCat
-    final paymentService = PaymentService();
-    final result = await paymentService.presentPaywall();
-
-    if (!context.mounted) return;
-
-    // Se o resultado foi cancelled e o RevenueCat não está configurado, mostrar aviso
-    if (result == PaywallResult.cancelled && !paymentService.isInitialized) {
-      _showRevenueCatNotConfiguredDialog(context);
-    }
-  }
-
-  void _showRevenueCatNotConfiguredDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
-          children: [
-            Icon(Icons.warning_amber, color: Color(0xFFFFC107)),
-            SizedBox(width: 8),
-            Text(
-              'Pagamentos Não Configurados',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ],
-        ),
-        content: const Text(
-          'O sistema de pagamentos ainda não foi configurado nesta versão do app.\n\n'
-          'Se você é desenvolvedor, verifique os logs do console para mais detalhes.',
-          style: TextStyle(color: Colors.white70, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Entendi',
-              style: TextStyle(color: Color(0xFF9C27B0)),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _showUpgradeSheet(BuildContext context) {
+    openSubscriptionPage(context);
   }
 
   List<Color> _getRoleColors(UserRole role) {
@@ -869,7 +826,7 @@ class ProfilePage extends StatelessWidget {
   void _handleManageSubscription(
       BuildContext context, PaymentService paymentService) {
     // Sempre navegar para página de assinatura (contém Código Premium e outras opções)
-    Navigator.pushNamed(context, '/subscription');
+    openSubscriptionPage(context);
   }
 
   void _showAboutDialog(BuildContext context) async {

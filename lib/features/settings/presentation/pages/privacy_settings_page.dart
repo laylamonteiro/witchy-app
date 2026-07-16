@@ -12,6 +12,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/repositories/supabase_auth_repository.dart';
+import '../../../subscription/presentation/pages/subscription_page.dart';
 
 /// Página de configurações de privacidade
 class PrivacySettingsPage extends StatefulWidget {
@@ -397,8 +398,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, '/subscription'),
+                    onPressed: () => openSubscriptionPage(context),
                     icon: const Icon(Icons.star, size: 18),
                     label: const Text('Seja Premium'),
                     style: ElevatedButton.styleFrom(
@@ -969,7 +969,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/subscription');
+              openSubscriptionPage(this.context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9C27B0),

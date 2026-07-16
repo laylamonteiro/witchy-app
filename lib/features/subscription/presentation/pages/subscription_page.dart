@@ -20,6 +20,12 @@ class SubscriptionPage extends StatefulWidget {
   State<SubscriptionPage> createState() => _SubscriptionPageState();
 }
 
+Future<void> openSubscriptionPage(BuildContext context) {
+  return Navigator.of(context, rootNavigator: true).push<void>(
+    MaterialPageRoute(builder: (_) => const SubscriptionPage()),
+  );
+}
+
 class _SubscriptionPageState extends State<SubscriptionPage> {
   final PaymentService _paymentService = PaymentService();
   bool _isLoading = false;
@@ -265,11 +271,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         children: [
           Icon(icon, size: 20, color: AppColors.starYellow),
           const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
             ),
           ),
         ],
@@ -284,6 +292,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
+            key: const ValueKey('open_premium_paywall_button'),
             onPressed: _showPaywall,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(
@@ -672,12 +681,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   void _showPaywall() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremiumUpgradeSheet(),
-    );
+    showPremiumUpgradePaywall(context);
   }
 
   void _showRevenueCatNotConfiguredDialog() {

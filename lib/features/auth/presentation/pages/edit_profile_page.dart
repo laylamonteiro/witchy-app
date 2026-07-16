@@ -14,6 +14,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../providers/auth_provider.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
+import '../../../subscription/presentation/pages/subscription_page.dart';
 
 /// Página de edição de perfil com todas as configurações de privacidade
 class EditProfilePage extends StatefulWidget {
@@ -997,7 +998,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/subscription');
+              openSubscriptionPage(this.context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9C27B0),

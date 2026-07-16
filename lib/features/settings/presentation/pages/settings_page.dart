@@ -15,6 +15,7 @@ import '../../../journeys/journeys.dart';
 import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../subscription/presentation/pages/subscription_page.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
 
@@ -320,6 +321,7 @@ class SettingsPage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                key: const ValueKey('settings_upgrade_button'),
                 onPressed: () => _showUpgradeSheet(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9C27B0),
@@ -367,7 +369,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _manageSubscription(BuildContext context) async {
-    await Navigator.pushNamed(context, '/subscription');
+    await openSubscriptionPage(context);
   }
 
   Widget _buildUsageStats(BuildContext context, UserModel user) {
@@ -850,7 +852,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showUpgradeSheet(BuildContext context) {
-    Navigator.pushNamed(context, '/subscription');
+    openSubscriptionPage(context);
   }
 
   String _getInitials(String name) {
