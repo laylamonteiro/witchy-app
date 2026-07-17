@@ -76,10 +76,6 @@ class _GrimoirePageState extends State<GrimoirePage>
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.lilac,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          padding: EdgeInsets.zero,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 16),
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
