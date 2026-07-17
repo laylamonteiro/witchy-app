@@ -52,13 +52,16 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   bool _isDragging = false;
   bool _isBlinking = false;
   bool _isHappy = false; // Expressão feliz quando toca
+  bool _isSleepWarning = false;
 
   // Pose atual do mascote
   MascotPose _currentPose = MascotPose.sitting;
 
   // Timer para idle (dormir após inatividade)
   Timer? _idleTimer;
+  Timer? _sleepTransitionTimer;
   static const Duration _idleTimeout = Duration(seconds: 12);
+  static const Duration _lyingRelaxedIdleTimeout = Duration(seconds: 5);
 
   // Controladores de animação
   late AnimationController _scaleController;
@@ -196,7 +199,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
       end: 0.05,
     ).animate(CurvedAnimation(
       parent: _wobbleController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeInOutCirc,
     ));
 
     // Controlador de brilhos
@@ -254,38 +257,72 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
       return '${widget.assetFolder}/cat_sit_happy.png';
     }
 
+    // Só usar angry como aviso de sono, não como expressão padrão
+    if (_isSleepWarning && _currentPose == MascotPose.sitting) {
+      return '${widget.assetFolder}/cat_sit_angry.png';
+    }
+
     // Usar wobble para alternar cauda esquerda/direita quando não está arrastando
     if (!_isDragging && _wobbleController.isAnimating) {
       final wobbleValue = _wobbleAnimation.value;
-      if (wobbleValue < -0.02) {
+      if (wobbleValue <= 0) {
         return '${widget.assetFolder}/cat_sit_tail_left.png';
-      } else if (wobbleValue > 0.02) {
-        return '${widget.assetFolder}/cat_sit_tail_right.png';
       }
+      return '${widget.assetFolder}/cat_sit_tail_right.png';
     }
 
-    // Expressão padrão: angry (cara de bravo fofo)
-    return '${widget.assetFolder}/cat_sit_angry.png';
+    // Expressão padrão sentada neutra utilizando cauda esquerda
+    return '${widget.assetFolder}/cat_sit_tail_left.png';
   }
 
   /// Reseta o timer de inatividade
   /// [resetPose] - se true, força a pose para sitting (default: false)
+  void _cancelSleepTransitionTimer() {
+    _sleepTransitionTimer?.cancel();
+    _sleepTransitionTimer = null;
+  }
+
   void _resetIdleTimer({bool resetPose = false}) {
     _idleTimer?.cancel();
+    _cancelSleepTransitionTimer();
 
     // Se solicitado, acordar completamente
     if (resetPose && _currentPose != MascotPose.sitting) {
       setState(() {
         _currentPose = MascotPose.sitting;
+        _isSleepWarning = false;
       });
+    } else {
+      _isSleepWarning = false;
     }
 
-    _idleTimer = Timer(_idleTimeout, () {
-      if (mounted && !_isDragging) {
+    final idleDuration = _currentPose == MascotPose.lyingRelaxed
+        ? _lyingRelaxedIdleTimeout
+        : _idleTimeout;
+
+    _idleTimer = Timer(idleDuration, () {
+      if (!mounted || _isDragging) return;
+
+      if (_currentPose == MascotPose.lyingRelaxed) {
         setState(() {
           _currentPose = MascotPose.sleeping;
+          _isSleepWarning = false;
         });
+        return;
       }
+
+      setState(() {
+        _isSleepWarning = true;
+      });
+
+      _sleepTransitionTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted && !_isDragging) {
+          setState(() {
+            _currentPose = MascotPose.sleeping;
+            _isSleepWarning = false;
+          });
+        }
+      });
     });
   }
 
@@ -318,6 +355,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     _purringController.dispose();
     _wobbleController.dispose();
     _sparkleController.dispose();
+    _cancelSleepTransitionTimer();
     super.dispose();
   }
 
