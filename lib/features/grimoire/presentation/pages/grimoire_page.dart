@@ -113,7 +113,7 @@ class _ToolsTab extends StatelessWidget {
           MagicalCard(
             child: Column(
               children: [
-                const Text('‧⋆‧ ⛦ ‧⋆‧', style: TextStyle(fontSize: 48)),
+                const Text('‧ ⛦ ‧', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 Text(
                   'Ferramentas Mágicas',
@@ -134,7 +134,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '🧙🏼‍♂️',
+            icon: '🔮',
             title: 'Conselheiro Místico',
             description:
                 'Sabedoria ancestral para suas dúvidas de bruxaria e magia',

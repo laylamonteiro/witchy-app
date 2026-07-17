@@ -172,7 +172,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(width: 8),
-                      const Text('🧙🏻‍♂️', style: TextStyle(fontSize: 80)),
+                      const Text('🔮', style: TextStyle(fontSize: 80)),
                     ],
                   ),
                   const SizedBox(height: 16),
