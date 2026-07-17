@@ -6,7 +6,7 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
-import 'spell_form_page.dart';
+import 'ai_spell_creation_page.dart';
 import 'spell_detail_page.dart';
 import '../../data/models/spell_model.dart';
 
@@ -256,7 +256,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const SpellFormPage(),
+        builder: (_) => const AISpellCreationPage(),
       ),
     );
   }

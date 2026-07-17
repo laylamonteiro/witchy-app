@@ -293,6 +293,7 @@ class AuthProvider extends ChangeNotifier {
           affirmationsToday: 0,
           runeReadingsToday: 0,
           oracleReadingsToday: 0,
+          advisorConsultationsToday: 0,
         );
         await prefs.setString(dailyLimitsKey, now.toIso8601String());
         needsSave = true;
@@ -420,6 +421,24 @@ class AuthProvider extends ChangeNotifier {
     if (_currentUser.isFree) {
       _currentUser = _currentUser.copyWith(
         oracleReadingsToday: _currentUser.oracleReadingsToday + 1,
+      );
+      await _saveUser();
+      notifyListeners();
+    }
+  }
+
+  /// Verifica se pode consultar o Conselheiro Místico (P&R) hoje
+  bool get canUseAdvisor => _currentUser.canUseAdvisor;
+
+  /// Quantas consultas ao Conselheiro Místico restam hoje
+  int get remainingAdvisorConsultations =>
+      _currentUser.remainingAdvisorConsultations;
+
+  /// Incrementa contador de consultas ao Conselheiro Místico (P&R)
+  Future<void> incrementAdvisorConsultations() async {
+    if (_currentUser.isFree) {
+      _currentUser = _currentUser.copyWith(
+        advisorConsultationsToday: _currentUser.advisorConsultationsToday + 1,
       );
       await _saveUser();
       notifyListeners();

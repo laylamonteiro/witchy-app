@@ -4,7 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
 import 'app_spells_list_page.dart';
 import 'user_spells_list_page.dart';
-import 'ai_spell_creation_page.dart';
+import 'mystic_advisor_page.dart';
 import '../../../astrology/presentation/pages/astrology_page.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
@@ -168,11 +168,11 @@ class _ToolsTab extends StatelessWidget {
             icon: '✨',
             title: 'Conselheiro Místico',
             description:
-                'Manifeste feitiços personalizados com sabedoria arcana',
+                'Sabedoria ancestral para suas dúvidas de bruxaria e magia',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const AISpellCreationPage(),
+                  builder: (_) => const MysticAdvisorPage(),
                 ),
               );
             },

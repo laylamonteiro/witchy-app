@@ -303,10 +303,25 @@ class FeatureAccess {
               : 'Limite diário atingido. Assine para leituras ilimitadas!',
         );
 
-      // === BLOQUEADO PARA FREE (IA) ===
+      // === LIMITE DIÁRIO (IA) ===
 
-      // Funcionalidades de IA - limite de 3 por dia
+      // Conselheiro Místico (P&R) - contador próprio, limite diário
       case AppFeature.aiMysticCounselor:
+        if (user.advisorConsultationsToday >=
+            UserModel.freeAdvisorConsultationsLimit) {
+          return AccessResult.preview(
+            message:
+                'Você usou sua consulta ao Conselheiro Místico hoje. Assine para consultas ilimitadas!',
+          );
+        }
+        return AccessResult.limited(
+          remaining: user.remainingAdvisorConsultations,
+          limit: UserModel.freeAdvisorConsultationsLimit,
+          message:
+              'Resta ${user.remainingAdvisorConsultations} consulta(s) ao Conselheiro hoje',
+        );
+
+      // Demais funcionalidades de IA (Novo Feitiço, etc) - limite diário
       case AppFeature.aiDreamAnalysis:
       case AppFeature.aiSpellSuggestions:
       case AppFeature.aiMagicalWeather:
