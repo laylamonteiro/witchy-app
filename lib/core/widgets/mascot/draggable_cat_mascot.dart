@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+// Using raster PNG assets for the mascot images instead of SVG
 import 'dart:math' as math;
 import 'dart:async';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// Poses do mascote baseadas nos novos SVG assets
@@ -27,6 +28,8 @@ class DraggableCatMascot extends StatefulWidget {
   final VoidCallback? onTap;
   final double size;
   final ValueNotifier<Offset>? positionNotifier;
+  /// Pasta base onde estão os assets do mascote (ex: 'assets/icons/new_cat')
+  final String assetFolder;
 
   const DraggableCatMascot({
     super.key,
@@ -35,6 +38,7 @@ class DraggableCatMascot extends StatefulWidget {
     this.onTap,
     this.size = 85,
     this.positionNotifier,
+    this.assetFolder = 'assets/icons/new_cat',
   });
 
   @override
@@ -232,36 +236,36 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   String get _currentSpriteAsset {
     // Se dormindo
     if (_currentPose == MascotPose.sleeping) {
-      return 'assets/icons/cat_sleep.svg';
+      return '${widget.assetFolder}/cat_sleep.png';
     }
 
     // Se deitado relaxado
     if (_currentPose == MascotPose.lyingRelaxed) {
-      return 'assets/icons/cat_lie_relaxed.svg';
+      return '${widget.assetFolder}/cat_lie_relaxed.png';
     }
 
     // Sentado - várias expressões
     if (_isBlinking) {
-      return 'assets/icons/cat_sit_blink.svg';
+      return '${widget.assetFolder}/cat_sit_blink.png';
     }
 
     // Feliz quando está sendo arrastado ou após tap
     if (_isHappy || _isDragging) {
-      return 'assets/icons/cat_sit_happy.svg';
+      return '${widget.assetFolder}/cat_sit_happy.png';
     }
 
     // Usar wobble para alternar cauda esquerda/direita quando não está arrastando
     if (!_isDragging && _wobbleController.isAnimating) {
       final wobbleValue = _wobbleAnimation.value;
       if (wobbleValue < -0.02) {
-        return 'assets/icons/cat_sit_tail_left.svg';
+        return '${widget.assetFolder}/cat_sit_tail_left.png';
       } else if (wobbleValue > 0.02) {
-        return 'assets/icons/cat_sit_tail_right.svg';
+        return '${widget.assetFolder}/cat_sit_tail_right.png';
       }
     }
 
     // Expressão padrão: angry (cara de bravo fofo)
-    return 'assets/icons/cat_sit_angry.svg';
+    return '${widget.assetFolder}/cat_sit_angry.png';
   }
 
   /// Reseta o timer de inatividade
@@ -569,10 +573,28 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                       angle: _isDragging ? 0 : _wobbleAnimation.value,
                       child: Transform.scale(
                         scale: _scaleAnimation.value * (_isDragging ? 1.0 : _purringAnimation.value),
-                        child: SvgPicture.asset(
+                        child: Image.asset(
                           _currentSpriteAsset,
                           width: widget.size,
                           height: widget.size,
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
+                          errorBuilder: (context, error, stackTrace) {
+                            debugPrint('Mascot asset load failed: $_currentSpriteAsset -> $error');
+                            final filename = _currentSpriteAsset.split('/').last;
+                            final svgPath = 'assets/icons/old_cat/${filename.replaceAll('.png', '.svg')}';
+                            try {
+                              return SvgPicture.asset(
+                                svgPath,
+                                width: widget.size,
+                                height: widget.size,
+                                fit: BoxFit.contain,
+                              );
+                            } catch (e) {
+                              debugPrint('SVG fallback failed: $svgPath -> $e');
+                              return const SizedBox.shrink();
+                            }
+                          },
                         ),
                       ),
                     ),
