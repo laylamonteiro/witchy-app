@@ -30,6 +30,7 @@ import 'features/diary/presentation/providers/dream_provider.dart';
 import 'features/diary/presentation/providers/desire_provider.dart';
 import 'features/diary/presentation/providers/gratitude_provider.dart';
 import 'features/diary/presentation/providers/affirmation_provider.dart';
+import 'features/diary/presentation/providers/free_writing_provider.dart';
 import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart';
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
@@ -251,6 +252,13 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
         ),
         ChangeNotifierProxyProvider<AuthProvider, AffirmationProvider>(
           create: (_) => AffirmationProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, FreeWritingProvider>(
+          create: (_) => FreeWritingProvider(),
           update: (_, auth, provider) {
             provider!.setUserId(auth.currentUser.id);
             return provider;
