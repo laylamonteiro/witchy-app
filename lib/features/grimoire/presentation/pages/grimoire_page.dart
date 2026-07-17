@@ -113,7 +113,7 @@ class _ToolsTab extends StatelessWidget {
           MagicalCard(
             child: Column(
               children: [
-                const Text('✨', style: TextStyle(fontSize: 48)),
+                const Text('‧⋆‧ ⛦ ‧⋆‧', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 Text(
                   'Ferramentas Mágicas',
@@ -123,7 +123,7 @@ class _ToolsTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Recursos avançados para sua prática',
+                  'Recursos para auxiliar em suas práticas de magia e manifestação',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.softWhite.withOpacity(0.8),
                       ),
@@ -148,7 +148,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '🔮',
+            icon: '🃏',
             title: 'Cartas do Oráculo',
             description: 'Mensagens e orientação do universo',
             onTap: () {
@@ -161,7 +161,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '⛤',
+            icon: ' ⛤',
             title: 'Sigilos',
             description: 'Crie símbolos mágicos para suas intenções',
             onTap: () {
@@ -174,7 +174,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: 'ᚱ',
+            icon: ' ᚱ ',
             title: 'Leitura de Runas',
             description: 'Consulte as antigas runas nórdicas',
             onTap: () {
@@ -187,7 +187,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '⟟',
+            icon: ' ⟟ ',
             title: 'Pêndulo',
             description: 'Perguntas de sim ou não',
             onTap: () {

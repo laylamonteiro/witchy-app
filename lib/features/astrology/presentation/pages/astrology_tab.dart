@@ -53,10 +53,10 @@ class _AstrologyTabState extends State<AstrologyTab> {
               MagicalCard(
                 child: Column(
                   children: [
-                    const Text('✨', style: TextStyle(fontSize: 48)),
+                    const Text('‧⋆‧ ☽◯☾ ‧⋆‧', style: TextStyle(fontSize: 45)),
                     const SizedBox(height: 16),
                     Text(
-                      'Astrologia Mágica',
+                      'Astrologia Mística',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             color: AppColors.lilac,
                           ),
@@ -76,7 +76,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
               // Signos do Zodíaco
               _buildOption(
                 context,
-                icon: '',
+                icon: '🌌',
                 title: 'Signos do Zodíaco',
                 description:
                     'Conheça os 12 signos e seus significados mágicos',
@@ -133,7 +133,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
               // Clima Mágico Diário
               _buildOption(
                 context,
-                icon: '🌙',
+                icon: '🪐',
                 title: 'Clima Mágico Diário',
                 description: 'Trânsitos planetários e energia do dia',
                 onTap: () {
