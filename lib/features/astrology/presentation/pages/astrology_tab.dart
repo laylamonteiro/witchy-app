@@ -148,7 +148,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
               // Sugestões Personalizadas
               _buildOption(
                 context,
-                icon: '⚜️',
+                icon: '✨',
                 title: 'Sugestões Personalizadas',
                 description: 'Práticas baseadas nos seus trânsitos',
                 onTap: () {
