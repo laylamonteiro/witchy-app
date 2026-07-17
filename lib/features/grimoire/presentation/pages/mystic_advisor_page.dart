@@ -171,14 +171,8 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset(
-                        'assets/icons/new_cat/cat_sit_neutral.png',
-                        height: 96,
-                        errorBuilder: (_, __, ___) =>
-                            const Text('🐈‍⬛', style: TextStyle(fontSize: 48)),
-                      ),
                       const SizedBox(width: 8),
-                      const Text('🔮', style: TextStyle(fontSize: 40)),
+                      const Text('🧙🏻‍♂️', style: TextStyle(fontSize: 80)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -191,8 +185,8 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Faça uma pergunta sobre bruxaria, magia ou misticismo. '
-                    'O conselheiro compartilhará sua sabedoria ancestral.',
+                    'Faça uma pergunta sobre bruxaria, magia ou misticismo, '
+                    'e o conselheiro compartilhará sua sabedoria ancestral 🪄',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.softWhite.withOpacity(0.8),
                         ),

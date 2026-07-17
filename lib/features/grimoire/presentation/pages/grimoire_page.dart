@@ -165,7 +165,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '✨',
+            icon: '🧙🏼‍♂️',
             title: 'Conselheiro Místico',
             description:
                 'Sabedoria ancestral para suas dúvidas de bruxaria e magia',
