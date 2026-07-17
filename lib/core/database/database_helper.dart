@@ -29,7 +29,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -160,6 +160,18 @@ class DatabaseHelper {
       )
     ''');
 
+    // Tabela de Escrita Livre (reflexões da aba 💡 de Diários)
+    await db.execute('''
+      CREATE TABLE free_writings (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        content TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
     // Tabela de Mapas Astrais
     await db.execute('''
       CREATE TABLE birth_charts (
@@ -277,6 +289,8 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_sigils_user_id ON sigils(user_id)');
     await db
         .execute('CREATE INDEX idx_gratitudes_user_id ON gratitudes(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_free_writings_user_id ON free_writings(user_id)');
     await db.execute(
         'CREATE INDEX idx_affirmations_user_id ON affirmations(user_id)');
     await db.execute(
@@ -815,6 +829,27 @@ class DatabaseHelper {
         );
       });
     }
+
+    // Migração v12: tabela de Escrita Livre (reflexões da aba 💡 de Diários).
+    if (oldVersion < 12) {
+      final freeWritingsTable = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='free_writings'");
+
+      if (freeWritingsTable.isEmpty) {
+        await db.execute('''
+          CREATE TABLE free_writings (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL DEFAULT 'local_user',
+            content TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            synced INTEGER NOT NULL DEFAULT 0
+          )
+        ''');
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_free_writings_user_id ON free_writings(user_id)');
+      }
+    }
   }
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
@@ -829,6 +864,7 @@ class DatabaseHelper {
       'desires',
       'gratitudes',
       'affirmations',
+      'free_writings',
       'daily_rituals',
       'ritual_logs',
       'sigils',
@@ -915,6 +951,7 @@ class DatabaseHelper {
       'desires',
       'gratitudes',
       'affirmations',
+      'free_writings',
       'daily_rituals',
       'ritual_logs',
       'sigils',

@@ -3,48 +3,55 @@ import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../providers/spell_provider.dart';
-import '../../data/models/spell_model.dart';
-import 'spell_detail_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
 
-class AISpellCreationPage extends StatefulWidget {
-  const AISpellCreationPage({super.key});
+/// Conselheiro Místico: responde perguntas sobre bruxaria, magia e misticismo.
+///
+/// Formato pergunta -> resposta única. A resposta é revelada com efeito
+/// "typewriter" para reforçar o ar de sabedoria de um oráculo que fala aos poucos.
+class MysticAdvisorPage extends StatefulWidget {
+  const MysticAdvisorPage({super.key});
 
   @override
-  State<AISpellCreationPage> createState() => _AISpellCreationPageState();
+  State<MysticAdvisorPage> createState() => _MysticAdvisorPageState();
 }
 
-class _AISpellCreationPageState extends State<AISpellCreationPage> {
-  final _intentionController = TextEditingController();
-  SpellModel? _generatedSpell;
-  bool _isGenerating = false;
+class _MysticAdvisorPageState extends State<MysticAdvisorPage>
+    with SingleTickerProviderStateMixin {
+  final _questionController = TextEditingController();
+  String? _answer;
+  bool _isAsking = false;
+
+  late final AnimationController _typeController;
+  Animation<int>? _typedChars;
 
   @override
   void initState() {
     super.initState();
     // Listener para habilitar/desabilitar botão conforme usuário digita
-    _intentionController.addListener(() {
+    _questionController.addListener(() {
       setState(() {});
     });
+    _typeController = AnimationController(vsync: this);
   }
 
   @override
   void dispose() {
-    _intentionController.dispose();
+    _questionController.dispose();
+    _typeController.dispose();
     super.dispose();
   }
 
-  Future<void> _generateSpell() async {
+  Future<void> _askAdvisor() async {
     // Esconder teclado
     FocusScope.of(context).unfocus();
 
-    if (_intentionController.text.trim().isEmpty) {
+    if (_questionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Descreva sua intenção primeiro'),
+          content: Text('Faça sua pergunta primeiro'),
           backgroundColor: AppColors.alert,
         ),
       );
@@ -53,11 +60,11 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
 
     // Verificar limite diário para usuários free
     final authProvider = context.read<AuthProvider>();
-    if (!authProvider.currentUser.canUseAi) {
+    if (!authProvider.currentUser.canUseAdvisor) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'Você atingiu o limite diário de consultas. Volte amanhã ou seja Premium!'),
+              'Você já consultou o Conselheiro hoje. Volte amanhã ou seja Premium!'),
           backgroundColor: AppColors.alert,
           duration: Duration(seconds: 4),
         ),
@@ -72,29 +79,30 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     }
 
     setState(() {
-      _isGenerating = true;
-      _generatedSpell = null;
+      _isAsking = true;
+      _answer = null;
     });
 
     try {
       final aiService = AIService.instance;
-      final spell = await aiService.generateSpell(
-        _intentionController.text.trim(),
+      final answer = await aiService.answerMysticQuestion(
+        _questionController.text.trim(),
       );
 
-      // Incrementar uso de IA
-      await authProvider.incrementAiConsultations();
+      // Incrementar uso do Conselheiro
+      await authProvider.incrementAdvisorConsultations();
 
       if (!mounted) return;
 
       setState(() {
-        _generatedSpell = spell;
+        _answer = answer;
       });
-    } catch (e, stackTrace) {
+      _startTypewriter(answer);
+    } catch (e) {
       if (!mounted) return;
 
       String errorMessage =
-          'O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.';
+          'O conselheiro não pôde responder agora. Tente novamente mais tarde.';
 
       if (e.toString().contains('limit') ||
           e.toString().contains('quota') ||
@@ -127,35 +135,28 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     } finally {
       if (mounted) {
         setState(() {
-          _isGenerating = false;
+          _isAsking = false;
         });
       }
     }
   }
 
-  Future<void> _saveSpell() async {
-    if (_generatedSpell == null) return;
-
-    final provider = context.read<SpellProvider>();
-    await provider.addSpell(_generatedSpell!);
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Feitiço salvo no seu grimório! ✨'),
-        backgroundColor: AppColors.success,
-      ),
+  /// Revela a resposta letra a letra, como um oráculo que fala aos poucos.
+  void _startTypewriter(String text) {
+    _typeController.stop();
+    _typeController.duration =
+        Duration(milliseconds: (text.length * 18).clamp(800, 6000));
+    _typedChars = StepTween(begin: 0, end: text.length).animate(
+      CurvedAnimation(parent: _typeController, curve: Curves.linear),
     );
-
-    Navigator.pop(context);
+    _typeController.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Novo Feitiço'),
+        title: const ResponsiveAppBarTitle('Conselheiro Místico'),
         backgroundColor: AppColors.darkBackground,
       ),
       backgroundColor: AppColors.darkBackground,
@@ -167,18 +168,25 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
             MagicalCard(
               child: Column(
                 children: [
-                  const Text('✨', style: TextStyle(fontSize: 48)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(width: 8),
+                      const Text('🔮', style: TextStyle(fontSize: 80)),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   Text(
-                    'Descreva sua Intenção',
+                    'Sabedoria do Conselheiro',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: AppColors.lilac,
                         ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Compartilhe o que você deseja manifestar. '
-                    'Quanto mais detalhes, mais poderoso será o feitiço!',
+                    'Faça uma pergunta sobre bruxaria, magia ou misticismo, '
+                    'e o conselheiro compartilhará sua sabedoria ancestral 🪄',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.softWhite.withOpacity(0.8),
                         ),
@@ -192,11 +200,11 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
 
             MagicalCard(
               child: TextField(
-                controller: _intentionController,
+                controller: _questionController,
                 style: const TextStyle(color: AppColors.softWhite),
                 decoration: InputDecoration(
-                  hintText: 'Ex: Quero atrair prosperidade financeira para '
-                      'pagar minhas contas e ter mais tranquilidade',
+                  hintText: 'Ex: Qual a melhor fase da lua para um ritual '
+                      'de proteção?',
                   hintStyle: TextStyle(
                     color: AppColors.softWhite.withOpacity(0.5),
                   ),
@@ -215,7 +223,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                     borderSide: const BorderSide(color: AppColors.lilac),
                   ),
                 ),
-                maxLines: 6,
+                maxLines: 4,
                 textCapitalization: TextCapitalization.sentences,
               ),
             ),
@@ -224,10 +232,10 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
 
             ElevatedButton.icon(
               onPressed:
-                  _isGenerating || _intentionController.text.trim().isEmpty
+                  _isAsking || _questionController.text.trim().isEmpty
                       ? null
-                      : _generateSpell,
-              icon: _isGenerating
+                      : _askAdvisor,
+              icon: _isAsking
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -238,9 +246,9 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                         ),
                       ),
                     )
-                  : const Icon(Icons.auto_awesome),
+                  : const Icon(Icons.auto_stories),
               label: Text(
-                  _isGenerating ? 'Manifestando...' : 'Manifestar Feitiço ✨'),
+                  _isAsking ? 'Consultando os astros...' : 'Consultar o Conselheiro'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.lilac,
                 foregroundColor: AppColors.darkBackground,
@@ -252,16 +260,16 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
               ),
             ),
 
-            // Exibir usos restantes para usuários free
+            // Exibir consultas restantes para usuários free
             Consumer<AuthProvider>(
               builder: (context, authProvider, _) {
                 if (authProvider.isPremium) return const SizedBox.shrink();
                 final remaining =
-                    authProvider.currentUser.remainingAiConsultations;
+                    authProvider.currentUser.remainingAdvisorConsultations;
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    'Consultas restantes hoje: $remaining/${UserModel.freeAiConsultationsLimit}',
+                    'Consultas restantes hoje: $remaining/${UserModel.freeAdvisorConsultationsLimit}',
                     style: TextStyle(
                       color: remaining > 0
                           ? AppColors.softWhite.withOpacity(0.6)
@@ -274,7 +282,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
               },
             ),
 
-            if (_generatedSpell != null) ...[
+            if (_answer != null) ...[
               const SizedBox(height: 24),
               MagicalCard(
                 child: Column(
@@ -282,96 +290,20 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                   children: [
                     Row(
                       children: [
-                        const Text('🌟', style: TextStyle(fontSize: 32)),
+                        const Text('🌙', style: TextStyle(fontSize: 28)),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _generatedSpell!.name,
-                            style: const TextStyle(
-                              color: AppColors.lilac,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        Text(
+                          'O Conselheiro responde',
+                          style: const TextStyle(
+                            color: AppColors.lilac,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.lilac.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            _generatedSpell!.category.displayName,
-                            style: const TextStyle(
-                              color: AppColors.lilac,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _generatedSpell!.type == SpellType.attraction
-                                ? AppColors.success.withOpacity(0.2)
-                                : AppColors.alert.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            _generatedSpell!.type.displayName,
-                            style: TextStyle(
-                              color:
-                                  _generatedSpell!.type == SpellType.attraction
-                                      ? AppColors.success
-                                      : AppColors.alert,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _generatedSpell!.purpose,
-                      style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Center(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => SpellDetailPage(
-                                spell: _generatedSpell!,
-                                showSaveButton: true,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.visibility, size: 18),
-                        label: const Text('Ver Detalhes'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lilac,
-                          foregroundColor: AppColors.darkBackground,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 32, vertical: 14),
-                        ),
-                      ),
-                    ),
+                    _buildTypewriterAnswer(_answer!),
                   ],
                 ),
               ),
@@ -379,6 +311,40 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Resposta com efeito typewriter. A parte ainda não revelada permanece
+  /// transparente no mesmo texto, preservando quebras e altura do layout.
+  Widget _buildTypewriterAnswer(String text) {
+    final style = TextStyle(
+      color: AppColors.softWhite.withOpacity(0.9),
+      fontSize: 15,
+      height: 1.5,
+    );
+
+    final animation = _typedChars;
+    if (animation == null) {
+      return Text(text, style: style);
+    }
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        final count = animation.value.clamp(0, text.length);
+        return Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: text.substring(0, count)),
+              TextSpan(
+                text: text.substring(count),
+                style: const TextStyle(color: Colors.transparent),
+              ),
+            ],
+          ),
+          style: style,
+        );
+      },
     );
   }
 }

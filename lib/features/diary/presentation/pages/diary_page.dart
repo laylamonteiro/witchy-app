@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'gratitudes_list_page.dart';
 import 'affirmations_list_page.dart';
+import 'free_writing_tab.dart';
 import 'dreams_list_page.dart';
 import 'desires_list_page.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -22,7 +22,10 @@ class DiaryPage extends StatefulWidget {
 class _DiaryPageState extends State<DiaryPage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
-  static const String _lastTabKey = 'diary_last_tab';
+
+  /// Aba central "💭" (Escrita Livre) — sempre a aba inicial e o alvo do reset
+  /// (duplo-toque em "Diários" na bottom nav).
+  static const int _defaultTabIndex = 2;
 
   @override
   bool get wantKeepAlive => true;
@@ -30,43 +33,25 @@ class _DiaryPageState extends State<DiaryPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(_onTabChanged);
+    _tabController = TabController(
+      length: 5,
+      vsync: this,
+      initialIndex: _defaultTabIndex,
+    );
     widget.resetNotifier?.addListener(_onResetRequested);
-    _loadLastTab();
   }
 
   @override
   void dispose() {
     widget.resetNotifier?.removeListener(_onResetRequested);
-    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
 
   void _onResetRequested() {
-    if (mounted && _tabController.index != 0) {
-      _tabController.animateTo(0);
+    if (mounted && _tabController.index != _defaultTabIndex) {
+      _tabController.animateTo(_defaultTabIndex);
     }
-  }
-
-  void _onTabChanged() {
-    if (!_tabController.indexIsChanging) {
-      _saveLastTab(_tabController.index);
-    }
-  }
-
-  Future<void> _loadLastTab() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lastTab = prefs.getInt(_lastTabKey) ?? 0;
-    if (mounted && lastTab != _tabController.index) {
-      _tabController.animateTo(lastTab);
-    }
-  }
-
-  Future<void> _saveLastTab(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_lastTabKey, index);
   }
 
   @override
@@ -92,10 +77,11 @@ class _DiaryPageState extends State<DiaryPage>
           tabAlignment: TabAlignment.center,
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
-          labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+          labelPadding: const EdgeInsets.symmetric(horizontal: 13),
           tabs: const [
             Tab(text: 'Gratidão'),
             Tab(text: 'Afirmações'),
+            Tab(child: Text('💭', style: TextStyle(fontSize: 16))),
             Tab(text: 'Sonhos'),
             Tab(text: 'Desejos'),
           ],
@@ -106,6 +92,7 @@ class _DiaryPageState extends State<DiaryPage>
         children: const [
           GratitudesListPage(),
           AffirmationsListPage(),
+          FreeWritingTab(),
           DreamsListPage(),
           DesiresListPage(),
         ],

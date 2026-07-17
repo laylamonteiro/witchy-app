@@ -106,7 +106,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                   children: [
                     const Row(
                       children: [
-                        Text('✨', style: TextStyle(fontSize: 24)),
+                        Text('🧙🏻‍♂️', style: TextStyle(fontSize: 24)),
                         SizedBox(width: 8),
                         Text(
                           'Conselheiro Místico',

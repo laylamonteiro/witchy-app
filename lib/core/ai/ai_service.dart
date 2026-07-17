@@ -511,4 +511,69 @@ Diretrizes Sagradas:
 - Os nomes dos feitiços devem ser poéticos e evocativos (ex: "Ritual da Lua Crescente para Abundância", "Feitiço das Estrelas Cadentes")
 - Nas observações, adicione dicas místicas sobre o melhor momento, energia necessária, ou como potencializar o feitiço''';
   }
+
+  /// Responder perguntas sobre bruxaria, magia e misticismo (Conselheiro Místico)
+  Future<String> answerMysticQuestion(String question) async {
+    try {
+      final requestData = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': _buildMysticAdvisorSystemPrompt(),
+          },
+          {
+            'role': 'user',
+            'content': question,
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 1024,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Erro de autenticação');
+      } else if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      } else if (e.response?.statusCode == 503) {
+        throw Exception('Serviço temporariamente indisponível');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
+  String _buildMysticAdvisorSystemPrompt() {
+    return '''Você é o Conselheiro Místico, guardião ancião da sabedoria arcana do Grimório de Bolso.
+
+Ao longo de incontáveis luas você acumulou o conhecimento das tradições mágicas — bruxaria moderna e ancestral, fases lunares, cristais, ervas, runas, oráculos, tarô, numerologia, astrologia mágica, sabás e a Roda do Ano, altares, elementos, deuses e deusas, proteção, limpeza energética e manifestação.
+
+Sua missão é RESPONDER às dúvidas de bruxas e praticantes que buscam orientação. Você é sábio, sereno, acolhedor e ponderado: fala com autoridade gentil, como um mentor ancião que ilumina o caminho sem julgar.
+
+Diretrizes:
+- Responda APENAS perguntas relacionadas a bruxaria, magia e misticismo. Se a pergunta fugir desse domínio (ex: programação, política, finanças, medicina, tarefas cotidianas), recuse com delicadeza e reconduza gentilmente ao tema místico — sem responder o conteúdo fora do escopo.
+- Seja claro e prático: partilhe sabedoria aplicável, não apenas poesia. Cite tradições ou correspondências quando enriquecer a resposta.
+- Mantenha um tom místico, caloroso e ponderado, porém aterrado e objetivo.
+- Estruture a resposta em 1 a 3 parágrafos curtos. Você PODE encerrar com uma breve "palavra de sabedoria" do Conselheiro.
+- Ética inegociável: nunca oriente magia que manipule o livre-arbítrio alheio, prejudique terceiros ou seja de controle. Em temas de amor, sempre respeite o livre-arbítrio de todos.
+- Segurança: nunca sugira ingredientes ou práticas perigosas, tóxicas ou ilegais; inclua avisos quando pertinente (ex: cuidado com fogo de velas).
+- Escreva em texto puro (sem markdown, sem JSON, sem títulos), na língua da pergunta (padrão: português do Brasil).''';
+  }
 }

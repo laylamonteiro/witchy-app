@@ -14,6 +14,7 @@ enum SyncEntity {
   desires,
   gratitudes,
   affirmations,
+  freeWritings,
   dailyRituals,
   ritualLogs,
   sigils,
@@ -538,6 +539,8 @@ class DataSyncService {
         return SupabaseTables.gratitudes;
       case SyncEntity.affirmations:
         return SupabaseTables.affirmations;
+      case SyncEntity.freeWritings:
+        return SupabaseTables.freeWritings;
       case SyncEntity.dailyRituals:
         return SupabaseTables.dailyRituals;
       case SyncEntity.ritualLogs:
@@ -572,6 +575,8 @@ class DataSyncService {
         return 'gratitudes';
       case SyncEntity.affirmations:
         return 'affirmations';
+      case SyncEntity.freeWritings:
+        return 'free_writings';
       case SyncEntity.dailyRituals:
         return 'daily_rituals';
       case SyncEntity.ritualLogs:
@@ -655,6 +660,7 @@ class DataSyncService {
     'desires': {'created_at', 'updated_at'},
     'gratitudes': {'date', 'created_at', 'updated_at'},
     'affirmations': {'created_at', 'updated_at'},
+    'free_writings': {'created_at', 'updated_at'},
     'daily_rituals': {'created_at', 'updated_at'},
     'ritual_logs': {'completed_at', 'updated_at'},
     'sigils': {'created_at', 'updated_at'},

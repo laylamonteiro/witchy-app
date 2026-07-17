@@ -69,6 +69,7 @@ class UserModel {
   final int affirmationsToday;  // Limite: 3/dia
   final int runeReadingsToday;  // Limite: 1/dia (cada tipo)
   final int oracleReadingsToday;  // Limite: 1/dia (cada tipo)
+  final int advisorConsultationsToday;  // Conselheiro Místico (P&R) - Limite: 1/dia
 
   const UserModel({
     required this.id,
@@ -93,6 +94,7 @@ class UserModel {
     this.affirmationsToday = 0,
     this.runeReadingsToday = 0,
     this.oracleReadingsToday = 0,
+    this.advisorConsultationsToday = 0,
   });
 
   /// Usuário padrão (local, sem autenticação)
@@ -146,7 +148,7 @@ class UserModel {
   /// Limite de entradas de diário por mês para plano free
   static const int freeDiaryEntriesLimit = 30;
 
-  /// Limite de consultas IA por dia para plano free (Conselheiro Místico)
+  /// Limite de consultas IA por dia para plano free (Novo Feitiço)
   static const int freeAiConsultationsLimit = 1;
 
   /// Limite de uso do pêndulo por dia para TODOS os usuários
@@ -160,6 +162,9 @@ class UserModel {
 
   /// Limite de leituras de oracle por dia para free
   static const int freeOracleReadingsLimit = 1;
+
+  /// Limite de consultas ao Conselheiro Místico (P&R) por dia para free
+  static const int freeAdvisorConsultationsLimit = 1;
 
   /// Verifica se pode criar mais feitiços
   bool get canCreateSpell => isPremium || spellsCount < freeSpellsLimit;
@@ -212,6 +217,16 @@ class UserModel {
     return freeOracleReadingsLimit - oracleReadingsToday;
   }
 
+  /// Verifica se pode consultar o Conselheiro Místico (P&R) hoje
+  bool get canUseAdvisor =>
+      isPremium || advisorConsultationsToday < freeAdvisorConsultationsLimit;
+
+  /// Quantas consultas ao Conselheiro Místico restam hoje
+  int get remainingAdvisorConsultations {
+    if (isPremium) return -1; // ilimitado
+    return freeAdvisorConsultationsLimit - advisorConsultationsToday;
+  }
+
   UserModel copyWith({
     String? id,
     String? email,
@@ -235,6 +250,7 @@ class UserModel {
     int? affirmationsToday,
     int? runeReadingsToday,
     int? oracleReadingsToday,
+    int? advisorConsultationsToday,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -259,6 +275,8 @@ class UserModel {
       affirmationsToday: affirmationsToday ?? this.affirmationsToday,
       runeReadingsToday: runeReadingsToday ?? this.runeReadingsToday,
       oracleReadingsToday: oracleReadingsToday ?? this.oracleReadingsToday,
+      advisorConsultationsToday:
+          advisorConsultationsToday ?? this.advisorConsultationsToday,
     );
   }
 
@@ -286,6 +304,7 @@ class UserModel {
       'affirmationsToday': affirmationsToday,
       'runeReadingsToday': runeReadingsToday,
       'oracleReadingsToday': oracleReadingsToday,
+      'advisorConsultationsToday': advisorConsultationsToday,
     };
   }
 
@@ -334,6 +353,7 @@ class UserModel {
       affirmationsToday: json['affirmationsToday'] ?? 0,
       runeReadingsToday: json['runeReadingsToday'] ?? 0,
       oracleReadingsToday: json['oracleReadingsToday'] ?? 0,
+      advisorConsultationsToday: json['advisorConsultationsToday'] ?? 0,
     );
   }
 }

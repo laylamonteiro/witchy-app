@@ -38,6 +38,7 @@ class SupabaseTables {
   static const String desires = 'desires';
   static const String gratitudes = 'gratitudes';
   static const String affirmations = 'affirmations';
+  static const String freeWritings = 'free_writings';
   static const String dailyRituals = 'daily_rituals';
   static const String ritualLogs = 'ritual_logs';
   static const String sigils = 'sigils';

@@ -6,9 +6,13 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
-import 'spell_form_page.dart';
+import 'ai_spell_creation_page.dart';
 import 'spell_detail_page.dart';
 import '../../data/models/spell_model.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+
+/// Origem dos feitiços exibidos na aba "Meu Grimório".
+enum _SpellSource { all, mine, ancestral }
 
 class UserSpellsListPage extends StatefulWidget {
   const UserSpellsListPage({super.key});
@@ -20,6 +24,17 @@ class UserSpellsListPage extends StatefulWidget {
 class _UserSpellsListPageState extends State<UserSpellsListPage> {
   String _searchQuery = '';
   SpellCategory? _filterCategory;
+  _SpellSource _source = _SpellSource.all;
+
+  @override
+  void initState() {
+    super.initState();
+    // Carrega feitiços do usuário + ancestrais (gatilho antes vivia no
+    // AppSpellsListPage, agora mesclado nesta aba).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SpellProvider>().loadSpells();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +131,21 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
               ),
             ),
 
+            // Filtro de origem: Todos / Meus / Ancestrais
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _buildSourceChip('Todos', _SpellSource.all),
+                  const SizedBox(width: 8),
+                  _buildSourceChip('Meus', _SpellSource.mine),
+                  const SizedBox(width: 8),
+                  _buildSourceChip('Ancestrais', _SpellSource.ancestral),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+
             // Lista de feitiços
             Expanded(
               child: Consumer<SpellProvider>(
@@ -124,7 +154,13 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                     return const LoadingWidget(message: 'Carregando feitiços...');
                   }
 
-                  var spells = provider.userSpells;
+                  final isPremium = context.watch<AuthProvider>().isPremium;
+
+                  var spells = _source == _SpellSource.mine
+                      ? provider.userSpells
+                      : _source == _SpellSource.ancestral
+                          ? provider.appSpells
+                          : provider.spells;
 
                   // Aplicar filtros
                   if (_searchQuery.isNotEmpty) {
@@ -142,17 +178,22 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                   }
 
                   if (spells.isEmpty) {
+                    final hasActiveFilter =
+                        _searchQuery.isNotEmpty || _filterCategory != null;
+                    // Ação "Adicionar Feitiço" só faz sentido quando não há
+                    // filtro ativo e não estamos vendo apenas os ancestrais.
+                    final showAddAction =
+                        !hasActiveFilter && _source != _SpellSource.ancestral;
                     return EmptyStateWidget(
-                      message: _searchQuery.isNotEmpty || _filterCategory != null
+                      message: hasActiveFilter
                           ? 'Nenhum feitiço encontrado'
-                          : 'Seu grimório está vazio.\nComece adicionando seu primeiro feitiço!',
+                          : _source == _SpellSource.ancestral
+                              ? 'Nenhum feitiço ancestral disponível'
+                              : 'Seu grimório está vazio.\nComece adicionando seu primeiro feitiço!',
                       icon: Icons.auto_stories,
-                      actionText: _searchQuery.isEmpty && _filterCategory == null
-                          ? 'Adicionar Feitiço'
-                          : null,
-                      onAction: _searchQuery.isEmpty && _filterCategory == null
-                          ? () => _navigateToForm(context)
-                          : null,
+                      actionText: showAddAction ? 'Adicionar Feitiço' : null,
+                      onAction:
+                          showAddAction ? () => _navigateToForm(context) : null,
                     );
                   }
 
@@ -161,6 +202,10 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                     itemCount: spells.length,
                     itemBuilder: (context, index) {
                       final spell = spells[index];
+                      // Fase lunar: sempre visível nos feitiços do usuário;
+                      // nos ancestrais fica atrás do gate premium.
+                      final showMoon = spell.moonPhase != null &&
+                          (!spell.isPreloaded || isPremium);
                       return MagicalCard(
                         onTap: () {
                           Navigator.push(
@@ -180,7 +225,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                                   style: const TextStyle(fontSize: 24),
                                 ),
                                 const SizedBox(width: 8),
-                                if (spell.moonPhase != null) ...[
+                                if (showMoon) ...[
                                   Text(
                                     spell.moonPhase!.emoji,
                                     style: const TextStyle(fontSize: 20),
@@ -200,6 +245,8 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                               spacing: 8,
                               runSpacing: 4,
                               children: [
+                                if (spell.isPreloaded)
+                                  _buildChip('Ancestral', AppColors.starYellow),
                                 _buildChip(
                                   spell.category.displayName,
                                   AppColors.lilac,
@@ -212,7 +259,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                                 ),
                               ],
                             ),
-                            if (spell.moonPhase != null) ...[
+                            if (showMoon) ...[
                               const SizedBox(height: 8),
                               Text(
                                 'Lua: ${spell.moonPhase!.displayName}',
@@ -252,11 +299,33 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
     );
   }
 
+  Widget _buildSourceChip(String label, _SpellSource source) {
+    final selected = _source == source;
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) {
+        FocusScope.of(context).unfocus();
+        setState(() => _source = source);
+      },
+      labelStyle: TextStyle(
+        color: selected ? AppColors.darkBackground : AppColors.softWhite,
+        fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 13,
+      ),
+      selectedColor: AppColors.lilac,
+      backgroundColor: AppColors.surface,
+      side: BorderSide(
+        color: selected ? AppColors.lilac : AppColors.surfaceBorder,
+      ),
+    );
+  }
+
   void _navigateToForm(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const SpellFormPage(),
+        builder: (_) => const AISpellCreationPage(),
       ),
     );
   }
