@@ -51,7 +51,8 @@ class SpellDetailPage extends StatelessWidget {
               tooltip: 'Salvar no Grimório',
               onPressed: () => _saveSpell(context),
             ),
-          ] else ...[
+          ] else if (!spell.isPreloaded) ...[
+            // Feitiços ancestrais (pré-carregados) são somente leitura.
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {

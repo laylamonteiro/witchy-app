@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/magical_card.dart';
-import 'app_spells_list_page.dart';
 import 'user_spells_list_page.dart';
 import 'mystic_advisor_page.dart';
-import '../../../astrology/presentation/pages/astrology_page.dart';
+import '../../../astrology/presentation/pages/astrology_tab.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
@@ -27,7 +25,10 @@ class GrimoirePage extends StatefulWidget {
 class _GrimoirePageState extends State<GrimoirePage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
-  static const String _lastTabKey = 'grimoire_last_tab';
+
+  /// Aba central "Ferramentas" — sempre a aba inicial e o alvo do reset
+  /// (duplo-toque em "Grimório" na bottom nav).
+  static const int _defaultTabIndex = 1;
 
   @override
   bool get wantKeepAlive => true;
@@ -35,43 +36,25 @@ class _GrimoirePageState extends State<GrimoirePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(_onTabChanged);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: _defaultTabIndex,
+    );
     widget.resetNotifier?.addListener(_onResetRequested);
-    _loadLastTab();
   }
 
   @override
   void dispose() {
     widget.resetNotifier?.removeListener(_onResetRequested);
-    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
 
   void _onResetRequested() {
-    if (mounted && _tabController.index != 0) {
-      _tabController.animateTo(0);
+    if (mounted && _tabController.index != _defaultTabIndex) {
+      _tabController.animateTo(_defaultTabIndex);
     }
-  }
-
-  void _onTabChanged() {
-    if (!_tabController.indexIsChanging) {
-      _saveLastTab(_tabController.index);
-    }
-  }
-
-  Future<void> _loadLastTab() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lastTab = prefs.getInt(_lastTabKey) ?? 0;
-    if (mounted && lastTab != _tabController.index) {
-      _tabController.animateTo(lastTab);
-    }
-  }
-
-  Future<void> _saveLastTab(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_lastTabKey, index);
   }
 
   @override
@@ -100,8 +83,8 @@ class _GrimoirePageState extends State<GrimoirePage>
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
+            Tab(text: 'Astrologia'),
             Tab(text: 'Ferramentas'),
-            Tab(text: 'Grimório Ancestral'),
             Tab(text: 'Meu Grimório'),
           ],
         ),
@@ -109,8 +92,8 @@ class _GrimoirePageState extends State<GrimoirePage>
       body: TabBarView(
         controller: _tabController,
         children: const [
+          AstrologyTab(),
           _ToolsTab(),
-          AppSpellsListPage(),
           UserSpellsListPage(),
         ],
       ),
@@ -149,19 +132,6 @@ class _ToolsTab extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          _buildToolCard(
-            context,
-            icon: '🌟',
-            title: 'Astrologia',
-            description: 'Mapa astral e perfil mágico personalizado',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const AstrologyPage(),
-                ),
-              );
-            },
           ),
           _buildToolCard(
             context,
