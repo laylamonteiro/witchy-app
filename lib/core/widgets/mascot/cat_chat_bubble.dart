@@ -12,10 +12,13 @@ class CatBubbleMessages {
   CatBubbleMessages._();
 
   static const List<String> messages = [
-    'Que tal olhar o clima mágico do seu dia?',
-    'Seu clima mágico já foi revelado hoje?',
-    'Os astros prepararam algo interessante para você.',
-    'Descubra a energia mágica deste dia.',
+    'Que tal olhar o clima mágico do seu dia? 🪄',
+    'Seu clima mágico já foi revelado hoje 🔮',
+    'Os astros prepararam algo interessante para você 👀',
+    'Descubra a energia mágica de hoje ✨',
+    'O clima mágico do dia está esperando por você 🌙',
+    'Hoje é um bom dia para explorar a magia ao seu redor 🌟',
+    'A magia do dia está em suas mãos, descubra agora! 🧙‍'
   ];
 
   /// Mensagem determinística do dia: rotaciona pelo dia do ano.
@@ -64,7 +67,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
   // Dimensões compactas
   static const double _maxBubbleWidth = 176;
   static const double _minTextWidth = 88;
-  static const EdgeInsets _contentPadding = EdgeInsets.fromLTRB(18, 18, 18, 23);
+  static const EdgeInsets _contentPadding = EdgeInsets.symmetric(horizontal: 18, vertical: 18);
 
   static const TextStyle _messageStyle = TextStyle(
     color: Color(0xFF2B2143),
@@ -246,9 +249,11 @@ class _CatChatBubbleState extends State<CatChatBubble>
                     children: [
                       Padding(
                         padding: _contentPadding,
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: _buildTypewriterText(),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: maxTextWidth),
+                            child: _buildTypewriterText(),
+                          ),
                         ),
                       ),
                       // Botão fechar: chip lilás sólido (sempre visível,
