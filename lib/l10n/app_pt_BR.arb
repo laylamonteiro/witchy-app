@@ -1,0 +1,36 @@
+{
+  "@@locale": "pt_BR",
+  "appTitle": "Grimório de Bolso",
+  "settingsTitle": "Configurações",
+  "settingsLanguageTitle": "Idioma",
+  "settingsLanguageSubtitle": "Escolha manualmente o idioma do app",
+  "settingsLanguageSystem": "Sistema / português do Brasil",
+  "settingsLanguagePortuguese": "Português (Brasil)",
+  "settingsLanguageEnglish": "Inglês",
+  "settingsLanguageSpanish": "Espanhol",
+  "settingsLanguageChanged": "Idioma alterado para {language}",
+  "homeTitle": "Início",
+  "grimoireTitle": "Grimório",
+  "diaryTitle": "Diário",
+  "authLogin": "Entrar",
+  "authSignup": "Criar conta",
+  "premiumTitle": "Premium",
+  "encyclopediaTitle": "Enciclopédia",
+  "toolsTitle": "Ferramentas",
+  "errorsGeneric": "Algo deu errado. Tente novamente.",
+  "itemsCount": "{count, plural, =0{Nenhum item} =1{1 item} other{{count} itens}}",
+  "@settingsLanguageChanged": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}
