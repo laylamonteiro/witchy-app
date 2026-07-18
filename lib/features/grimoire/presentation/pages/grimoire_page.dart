@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import 'user_spells_list_page.dart';
 import 'mystic_advisor_page.dart';
@@ -75,7 +76,7 @@ class _GrimoirePageState extends State<GrimoirePage>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.lilac,
+          indicatorColor: context.gc.lilac,
           isScrollable: true,
           tabAlignment: TabAlignment.center,
           labelStyle: const TextStyle(fontSize: 14),
@@ -118,14 +119,14 @@ class _ToolsTab extends StatelessWidget {
                 Text(
                   'Ferramentas Mágicas',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Recursos para auxiliar em suas práticas de magia e manifestação',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -228,7 +229,7 @@ class _ToolsTab extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.softWhite,
+                          color: context.gc.softWhite,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -236,15 +237,15 @@ class _ToolsTab extends StatelessWidget {
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.7),
+                          color: context.gc.softWhite.withOpacity(0.7),
                         ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               size: 16,
             ),
           ],

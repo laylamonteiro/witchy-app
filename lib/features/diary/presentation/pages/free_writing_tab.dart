@@ -5,6 +5,7 @@ import '../providers/free_writing_provider.dart';
 import '../../data/models/free_writing_model.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'free_writings_list_page.dart';
 
 /// Aba 💡 de Diários: canvas de escrita livre.
@@ -127,12 +128,12 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                   Text(
                     _greeting,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.history, color: AppColors.lilac),
+                    icon: Icon(Icons.history, color: context.gc.lilac),
                     tooltip: 'Reflexões anteriores',
                     onPressed: _openHistory,
                   ),
@@ -148,9 +149,9 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                   textAlignVertical: TextAlignVertical.top,
                   keyboardType: TextInputType.multiline,
                   textCapitalization: TextCapitalization.sentences,
-                  cursorColor: AppColors.lilac,
-                  style: const TextStyle(
-                    color: AppColors.softWhite,
+                  cursorColor: context.gc.lilac,
+                  style: TextStyle(
+                    color: context.gc.softWhite,
                     fontSize: 17,
                     height: 1.5,
                   ),
@@ -158,7 +159,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                     border: InputBorder.none,
                     hintText: 'O que está na sua mente hoje?',
                     hintStyle: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.4),
+                      color: context.gc.softWhite.withOpacity(0.4),
                       fontSize: 17,
                       height: 1.5,
                     ),

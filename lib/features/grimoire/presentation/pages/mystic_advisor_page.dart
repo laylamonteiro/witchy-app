@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
@@ -50,9 +51,9 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
 
     if (_questionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Faça sua pergunta primeiro'),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
         ),
       );
       return;
@@ -62,10 +63,10 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
     final authProvider = context.read<AuthProvider>();
     if (!authProvider.currentUser.canUseAdvisor) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
               'Você já consultou o Conselheiro hoje. Volte amanhã ou seja Premium!'),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
       );
@@ -128,7 +129,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
           duration: const Duration(seconds: 5),
         ),
       );
@@ -157,9 +158,9 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
     return Scaffold(
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Conselheiro Místico'),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -179,7 +180,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                   Text(
                     'Sabedoria do Conselheiro',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -188,7 +189,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                     'Faça uma pergunta sobre bruxaria, magia ou misticismo, '
                     'e o conselheiro compartilhará sua sabedoria ancestral 🪄',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withOpacity(0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -201,26 +202,26 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
             MagicalCard(
               child: TextField(
                 controller: _questionController,
-                style: const TextStyle(color: AppColors.softWhite),
+                style: TextStyle(color: context.gc.softWhite),
                 decoration: InputDecoration(
                   hintText: 'Ex: Qual a melhor fase da lua para um ritual '
                       'de proteção?',
                   hintStyle: TextStyle(
-                    color: AppColors.softWhite.withOpacity(0.5),
+                    color: context.gc.softWhite.withOpacity(0.5),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.lilac),
+                    borderSide: BorderSide(color: context.gc.lilac),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: AppColors.lilac.withOpacity(0.3),
+                      color: context.gc.lilac.withOpacity(0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.lilac),
+                    borderSide: BorderSide(color: context.gc.lilac),
                   ),
                 ),
                 maxLines: 4,
@@ -236,13 +237,13 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                       ? null
                       : _askAdvisor,
               icon: _isAsking
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.darkBackground,
+                          context.gc.darkBackground,
                         ),
                       ),
                     )
@@ -250,13 +251,13 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
               label: Text(
                   _isAsking ? 'Consultando os astros...' : 'Consultar o Conselheiro'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.lilac,
-                foregroundColor: AppColors.darkBackground,
+                backgroundColor: context.gc.lilac,
+                foregroundColor: context.gc.darkBackground,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 16,
                 ),
-                disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
+                disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
               ),
             ),
 
@@ -272,8 +273,8 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                     'Consultas restantes hoje: $remaining/${UserModel.freeAdvisorConsultationsLimit}',
                     style: TextStyle(
                       color: remaining > 0
-                          ? AppColors.softWhite.withOpacity(0.6)
-                          : AppColors.alert,
+                          ? context.gc.softWhite.withOpacity(0.6)
+                          : context.gc.alert,
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,
@@ -294,8 +295,8 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                         const SizedBox(width: 12),
                         Text(
                           'O Conselheiro responde',
-                          style: const TextStyle(
-                            color: AppColors.lilac,
+                          style: TextStyle(
+                            color: context.gc.lilac,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -318,7 +319,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
   /// transparente no mesmo texto, preservando quebras e altura do layout.
   Widget _buildTypewriterAnswer(String text) {
     final style = TextStyle(
-      color: AppColors.softWhite.withOpacity(0.9),
+      color: context.gc.softWhite.withOpacity(0.9),
       fontSize: 15,
       height: 1.5,
     );

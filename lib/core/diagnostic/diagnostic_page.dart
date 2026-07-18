@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 import '../widgets/magical_card.dart';
 import '../ai/ai_service.dart';
 import '../ai/groq_credentials.dart';
@@ -368,7 +369,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             '${logsText.length} caracteres no total',
             style: const TextStyle(fontSize: 13),
           ),
-          backgroundColor: AppColors.success,
+          backgroundColor: context.gc.success,
           duration: const Duration(seconds: 3),
         ),
       );
@@ -614,10 +615,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
     return Scaffold(
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Diagnóstico Completo'),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.lilac,
+          indicatorColor: context.gc.lilac,
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           padding: EdgeInsets.zero,
@@ -657,7 +658,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             ),
         ],
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -704,13 +705,13 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 width: 150,
                 child: Text(label,
                     style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withOpacity(0.7),
                         fontSize: 13)),
               ),
               Expanded(
                 child: Text(value,
                     style: TextStyle(
-                        color: color ?? AppColors.softWhite,
+                        color: color ?? context.gc.softWhite,
                         fontSize: 13,
                         fontWeight: FontWeight.w600)),
               ),
@@ -726,21 +727,21 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           MagicalCard(
             child: Column(
               children: [
-                const Icon(Icons.notifications_active,
-                    size: 64, color: AppColors.lilac),
+                Icon(Icons.notifications_active,
+                    size: 64, color: context.gc.lilac),
                 const SizedBox(height: 16),
                 Text('Diagnóstico de Notificações',
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall
-                        ?.copyWith(color: AppColors.lilac)),
+                        ?.copyWith(color: context.gc.lilac)),
                 const SizedBox(height: 8),
                 Text(
                   'Permissões, agendamento e notificações pendentes',
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
-                      ?.copyWith(color: AppColors.softWhite.withOpacity(0.8)),
+                      ?.copyWith(color: context.gc.softWhite.withOpacity(0.8)),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -753,9 +754,9 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Estado',
+                Text('Estado',
                     style: TextStyle(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
@@ -764,7 +765,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   provider.isInitialized ? 'Sim ✓' : 'Não',
                   color: provider.isInitialized
                       ? const Color(0xFF4CAF50)
-                      : AppColors.alert,
+                      : context.gc.alert,
                 ),
                 kv(
                   'Permissão (agendamento)',
@@ -776,8 +777,8 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   color: provider.permissionGranted == true
                       ? const Color(0xFF4CAF50)
                       : (provider.permissionGranted == false
-                          ? AppColors.alert
-                          : AppColors.softWhite),
+                          ? context.gc.alert
+                          : context.gc.softWhite),
                 ),
                 FutureBuilder<bool?>(
                   future: provider.areNotificationsEnabled(),
@@ -791,8 +792,8 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     color: snap.data == true
                         ? const Color(0xFF4CAF50)
                         : (snap.data == false
-                            ? AppColors.alert
-                            : AppColors.softWhite),
+                            ? context.gc.alert
+                            : context.gc.softWhite),
                   ),
                 ),
                 kv('Agendadas (contador)', '${provider.scheduledCount}'),
@@ -803,7 +804,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   'Último erro',
                   provider.lastError ?? 'Nenhum',
                   color: provider.lastError != null
-                      ? AppColors.alert
+                      ? context.gc.alert
                       : const Color(0xFF4CAF50),
                 ),
               ],
@@ -815,33 +816,33 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Prévia para o usuário',
+                Text('Prévia para o usuário',
                     style: TextStyle(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
                 Text(
                   'Este é o conteúdo exato enviado pelo botão de teste:',
                   style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.7),
+                      color: context.gc.softWhite.withOpacity(0.7),
                       fontSize: 12),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.softWhite.withOpacity(0.1),
+                    color: context.gc.softWhite.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(14),
                     border:
-                        Border.all(color: AppColors.lilac.withOpacity(0.35)),
+                        Border.all(color: context.gc.lilac.withOpacity(0.35)),
                   ),
-                  child: const Row(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: AppColors.lilac,
+                        backgroundColor: context.gc.lilac,
                         child: Icon(Icons.auto_stories,
                             size: 19, color: Color(0xFF2B2143)),
                       ),
@@ -855,25 +856,25 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                                 Expanded(
                                   child: Text('Grimório de Bolso',
                                       style: TextStyle(
-                                          color: AppColors.softWhite,
+                                          color: context.gc.softWhite,
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600)),
                                 ),
                                 Text('agora',
                                     style: TextStyle(
-                                        color: AppColors.softWhite,
+                                        color: context.gc.softWhite,
                                         fontSize: 10)),
                               ],
                             ),
                             SizedBox(height: 5),
                             Text(NotificationService.debugNotificationTitle,
                                 style: TextStyle(
-                                    color: AppColors.softWhite,
+                                    color: context.gc.softWhite,
                                     fontWeight: FontWeight.bold)),
                             SizedBox(height: 2),
                             Text(NotificationService.debugNotificationBody,
                                 style: TextStyle(
-                                    color: AppColors.softWhite,
+                                    color: context.gc.softWhite,
                                     fontSize: 12,
                                     height: 1.25)),
                           ],
@@ -896,14 +897,14 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                               : result.error ??
                                   'Não foi possível enviar a notificação.'),
                           backgroundColor:
-                              result.success ? null : AppColors.alert,
+                              result.success ? null : context.gc.alert,
                         ),
                       );
                     },
                     icon: const Icon(Icons.send_to_mobile, size: 18),
                     label: const Text('Enviar notificação de teste'),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.lilac,
+                        backgroundColor: context.gc.lilac,
                         foregroundColor: const Color(0xFF2B2143)),
                   ),
                 ),
@@ -911,7 +912,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   'A aparência final pode variar conforme Android/iOS e as configurações do aparelho.',
                   style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.6),
+                      color: context.gc.softWhite.withOpacity(0.6),
                       fontSize: 11),
                 ),
               ],
@@ -924,9 +925,9 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Notificações agendadas',
+                Text('Notificações agendadas',
                     style: TextStyle(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
@@ -934,22 +935,22 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   future: provider.pendingNotifications(),
                   builder: (context, snap) {
                     if (snap.connectionState != ConnectionState.done) {
-                      return const Padding(
+                      return Padding(
                         padding: EdgeInsets.all(8),
                         child: Center(
                             child: CircularProgressIndicator(
-                                color: AppColors.lilac)),
+                                color: context.gc.lilac)),
                       );
                     }
                     if (snap.hasError) {
                       return kv('Erro', '${snap.error}',
-                          color: AppColors.alert);
+                          color: context.gc.alert);
                     }
                     final items = snap.data ?? [];
                     if (items.isEmpty) {
                       return Text('Nenhuma notificação agendada.',
                           style: TextStyle(
-                              color: AppColors.softWhite.withOpacity(0.7)));
+                              color: context.gc.softWhite.withOpacity(0.7)));
                     }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -960,14 +961,14 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('#${n.id}  ${n.title ?? "(sem título)"}',
-                                  style: const TextStyle(
-                                      color: AppColors.softWhite,
+                                  style: TextStyle(
+                                      color: context.gc.softWhite,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 13)),
                               if (n.body != null && n.body!.isNotEmpty)
                                 Text(n.body!,
                                     style: TextStyle(
-                                        color: AppColors.softWhite
+                                        color: context.gc.softWhite
                                             .withOpacity(0.7),
                                         fontSize: 12)),
                             ],
@@ -997,7 +998,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   icon: const Icon(Icons.refresh, size: 18),
                   label: const Text('Reagendar'),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.lilac,
+                      backgroundColor: context.gc.lilac,
                       foregroundColor: const Color(0xFF2B2143)),
                 ),
               ),
@@ -1028,19 +1029,19 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           MagicalCard(
             child: Column(
               children: [
-                const Icon(Icons.payment, size: 64, color: AppColors.lilac),
+                Icon(Icons.payment, size: 64, color: context.gc.lilac),
                 const SizedBox(height: 16),
                 Text(
                   'Diagnóstico de Pagamentos',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Informações do RevenueCat e status das compras',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -1062,15 +1063,15 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           ? Icons.check_circle
                           : Icons.cancel,
                       color: paymentService.isInitialized
-                          ? AppColors.success
-                          : AppColors.alert,
+                          ? context.gc.success
+                          : context.gc.alert,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'Status de Inicialização',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                     ),
                   ],
@@ -1120,15 +1121,15 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     Icon(
                       paymentService.isPro ? Icons.star : Icons.star_border,
                       color: paymentService.isPro
-                          ? AppColors.starYellow
-                          : AppColors.textSecondary,
+                          ? context.gc.starYellow
+                          : context.gc.textSecondary,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'Status Premium',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                     ),
                   ],
@@ -1169,16 +1170,16 @@ class _DiagnosticPageState extends State<DiagnosticPage>
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.shopping_cart,
-                      color: AppColors.mint,
+                      color: context.gc.mint,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'Produtos Disponíveis',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.mint,
+                            color: context.gc.mint,
                           ),
                     ),
                   ],
@@ -1205,17 +1206,17 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.alert.withOpacity(0.1),
+                      color: context.gc.alert.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppColors.alert.withOpacity(0.3),
+                        color: context.gc.alert.withOpacity(0.3),
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.warning,
-                          color: AppColors.alert,
+                          color: context.gc.alert,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -1223,7 +1224,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           child: Text(
                             'Nenhum produto carregado. Verifique a configuração no RevenueCat Dashboard.',
                             style: TextStyle(
-                              color: AppColors.alert,
+                              color: context.gc.alert,
                               fontSize: 12,
                             ),
                           ),
@@ -1232,7 +1233,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     ),
                   ),
                 ] else ...[
-                  const Divider(color: AppColors.surfaceBorder),
+                  Divider(color: context.gc.surfaceBorder),
                   const SizedBox(height: 8),
                   ...paymentService.products.map((product) {
                     return Padding(
@@ -1242,8 +1243,8 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           Container(
                             width: 6,
                             height: 6,
-                            decoration: const BoxDecoration(
-                              color: AppColors.mint,
+                            decoration: BoxDecoration(
+                              color: context.gc.mint,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -1254,8 +1255,8 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                               children: [
                                 Text(
                                   product.title,
-                                  style: const TextStyle(
-                                    color: AppColors.softWhite,
+                                  style: TextStyle(
+                                    color: context.gc.softWhite,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -1263,7 +1264,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                                 Text(
                                   '${product.identifier} • ${product.priceString}',
                                   style: TextStyle(
-                                    color: AppColors.softWhite.withOpacity(0.6),
+                                    color: context.gc.softWhite.withOpacity(0.6),
                                     fontSize: 11,
                                   ),
                                 ),
@@ -1289,10 +1290,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
               Clipboard.setData(ClipboardData(text: diagnosticInfo));
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content:
                         Text('Diagnóstico copiado! Cole e envie para análise.'),
-                    backgroundColor: AppColors.success,
+                    backgroundColor: context.gc.success,
                   ),
                 );
               }
@@ -1300,7 +1301,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             icon: const Icon(Icons.copy),
             label: const Text('Copiar Diagnóstico Completo'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: context.gc.lilac,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -1315,10 +1316,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: context.gc.cardBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.lilac.withOpacity(0.3),
+                color: context.gc.lilac.withOpacity(0.3),
               ),
             ),
             child: Column(
@@ -1326,16 +1327,16 @@ class _DiagnosticPageState extends State<DiagnosticPage>
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline,
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Como usar',
                       style: TextStyle(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -1349,7 +1350,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   '3. Envie para análise do problema\n\n'
                   'Essas informações ajudam a identificar problemas de configuração.',
                   style: TextStyle(
-                    color: AppColors.softWhite.withOpacity(0.8),
+                    color: context.gc.softWhite.withOpacity(0.8),
                     fontSize: 12,
                     height: 1.5,
                   ),
@@ -1371,7 +1372,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           Text(
             label,
             style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.8),
+              color: context.gc.softWhite.withOpacity(0.8),
               fontSize: 14,
             ),
           ),
@@ -1380,7 +1381,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
               Text(
                 value,
                 style: TextStyle(
-                  color: isOk ? AppColors.success : AppColors.alert,
+                  color: isOk ? context.gc.success : context.gc.alert,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -1483,20 +1484,20 @@ class _DiagnosticPageState extends State<DiagnosticPage>
               MagicalCard(
                 child: Column(
                   children: [
-                    const Icon(Icons.login, size: 64, color: AppColors.lilac),
+                    Icon(Icons.login, size: 64, color: context.gc.lilac),
                     const SizedBox(height: 16),
                     Text(
                       'Diagnóstico de Login Social',
                       style:
                           Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: AppColors.lilac,
+                                color: context.gc.lilac,
                               ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Testa o fluxo de login com provedores sociais como Google.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.softWhite.withOpacity(0.8),
+                            color: context.gc.softWhite.withOpacity(0.8),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -1518,9 +1519,9 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                         'Login com Google SUCESSO! Usuário: ${result.user?.email}');
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text('Login com Google SUCESSO!'),
-                          backgroundColor: AppColors.success,
+                          backgroundColor: context.gc.success,
                         ),
                       );
                     }
@@ -1531,7 +1532,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                         SnackBar(
                           content: Text(
                               'Login com Google FALHOU: ${result.errorMessage}'),
-                          backgroundColor: AppColors.alert,
+                          backgroundColor: context.gc.alert,
                         ),
                       );
                     }
@@ -1540,8 +1541,8 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 icon: const Icon(Icons.g_mobiledata),
                 label: const Text('Testar Login com Google'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: AppColors.darkBackground,
+                  backgroundColor: context.gc.lilac,
+                  foregroundColor: context.gc.darkBackground,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1552,7 +1553,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
               Text(
                 'Logs de Login Social',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
               ),
               const SizedBox(height: 8),
@@ -1562,10 +1563,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   child: SingleChildScrollView(
                     child: SelectableText(
                       _logs.join('\n'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 12,
-                        color: AppColors.softWhite,
+                        color: context.gc.softWhite,
                       ),
                     ),
                   ),
@@ -1577,7 +1578,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 icon: const Icon(Icons.copy),
                 label: const Text('Copiar Logs de Login Social'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
+                  backgroundColor: context.gc.lilac,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -1624,7 +1625,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                                     .textTheme
                                     .bodySmall
                                     ?.copyWith(
-                                      color: AppColors.textSecondary,
+                                      color: context.gc.textSecondary,
                                     ),
                               ),
                               Text(
@@ -1671,9 +1672,9 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.swap_horiz,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                           size: 24,
                         ),
                         const SizedBox(width: 12),
@@ -1681,7 +1682,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           'Simular Plano',
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: AppColors.lilac,
+                                    color: context.gc.lilac,
                                   ),
                         ),
                       ],
@@ -1690,7 +1691,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     Text(
                       'Alterne entre roles para testar a experiência de cada tipo de usuário',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.gc.textSecondary,
                           ),
                     ),
                     const SizedBox(height: 16),
@@ -1719,9 +1720,9 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.analytics,
-                          color: AppColors.mint,
+                          color: context.gc.mint,
                           size: 24,
                         ),
                         const SizedBox(width: 12),
@@ -1729,7 +1730,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           'Estatísticas de Uso',
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: AppColors.mint,
+                                    color: context.gc.mint,
                                   ),
                         ),
                       ],
@@ -1756,9 +1757,9 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.refresh,
-                          color: AppColors.alert,
+                          color: context.gc.alert,
                           size: 24,
                         ),
                         const SizedBox(width: 12),
@@ -1766,7 +1767,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           'Ações de Reset',
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: AppColors.alert,
+                                    color: context.gc.alert,
                                   ),
                         ),
                       ],
@@ -1779,9 +1780,9 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           await authProvider.resetUser();
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                              SnackBar(
                                 content: Text('Usuário resetado para padrão'),
-                                backgroundColor: AppColors.alert,
+                                backgroundColor: context.gc.alert,
                               ),
                             );
                           }
@@ -1789,8 +1790,8 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                         icon: const Icon(Icons.person_off),
                         label: const Text('Resetar Usuário'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.alert,
-                          side: const BorderSide(color: AppColors.alert),
+                          foregroundColor: context.gc.alert,
+                          side: BorderSide(color: context.gc.alert),
                         ),
                       ),
                     ),
@@ -1844,14 +1845,14 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           Text(
             label,
             style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.8),
+              color: context.gc.softWhite.withOpacity(0.8),
               fontSize: 14,
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.softWhite,
+            style: TextStyle(
+              color: context.gc.softWhite,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -1903,19 +1904,19 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           MagicalCard(
             child: Column(
               children: [
-                const Icon(Icons.star, size: 64, color: AppColors.lilac),
+                Icon(Icons.star, size: 64, color: context.gc.lilac),
                 const SizedBox(height: 16),
                 Text(
                   'Mapa Astral',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Testa cálculos astronômicos locais',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -1933,7 +1934,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   'Dados do Nascimento',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 16),
@@ -1942,17 +1943,17 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     Expanded(
                       child: TextField(
                         controller: _dateController,
-                        style: const TextStyle(color: AppColors.softWhite),
-                        decoration: const InputDecoration(
+                        style: TextStyle(color: context.gc.softWhite),
+                        decoration: InputDecoration(
                           labelText: 'Data',
                           hintText: 'DD/MM/AAAA',
-                          labelStyle: TextStyle(color: AppColors.lilac),
+                          labelStyle: TextStyle(color: context.gc.lilac),
                           enabledBorder: UnderlineInputBorder(
                             borderSide:
-                                BorderSide(color: AppColors.surfaceBorder),
+                                BorderSide(color: context.gc.surfaceBorder),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.lilac),
+                            borderSide: BorderSide(color: context.gc.lilac),
                           ),
                         ),
                       ),
@@ -1961,17 +1962,17 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     Expanded(
                       child: TextField(
                         controller: _timeController,
-                        style: const TextStyle(color: AppColors.softWhite),
-                        decoration: const InputDecoration(
+                        style: TextStyle(color: context.gc.softWhite),
+                        decoration: InputDecoration(
                           labelText: 'Hora',
                           hintText: 'HH:MM',
-                          labelStyle: TextStyle(color: AppColors.lilac),
+                          labelStyle: TextStyle(color: context.gc.lilac),
                           enabledBorder: UnderlineInputBorder(
                             borderSide:
-                                BorderSide(color: AppColors.surfaceBorder),
+                                BorderSide(color: context.gc.surfaceBorder),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.lilac),
+                            borderSide: BorderSide(color: context.gc.lilac),
                           ),
                         ),
                       ),
@@ -1982,7 +1983,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   'Local de Nascimento',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
@@ -1990,18 +1991,18 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 TextField(
                   controller: _birthPlaceController,
                   focusNode: _birthPlaceFocusNode,
-                  style: const TextStyle(color: AppColors.softWhite),
+                  style: TextStyle(color: context.gc.softWhite),
                   decoration: InputDecoration(
                     hintText: 'Ex: Campinas, Bueno Brandão, São Paulo...',
                     hintStyle: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.5),
+                      color: context.gc.softWhite.withOpacity(0.5),
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.location_on,
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
                     suffixIcon: _isSearchingLocation
-                        ? const Padding(
+                        ? Padding(
                             padding: EdgeInsets.all(12.0),
                             child: SizedBox(
                               width: 20,
@@ -2009,20 +2010,20 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.lilac,
+                                  context.gc.lilac,
                                 ),
                               ),
                             ),
                           )
                         : (_selectedLatitude != null &&
                                 _selectedLongitude != null)
-                            ? const Icon(
+                            ? Icon(
                                 Icons.check_circle,
-                                color: AppColors.success,
+                                color: context.gc.success,
                               )
                             : null,
                     filled: true,
-                    fillColor: AppColors.cardBackground,
+                    fillColor: context.gc.cardBackground,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -2041,10 +2042,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
+                      color: context.gc.cardBackground,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.lilac.withOpacity(0.3),
+                        color: context.gc.lilac.withOpacity(0.3),
                       ),
                     ),
                     child: ListView.separated(
@@ -2052,7 +2053,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _locationSuggestions.length,
                       separatorBuilder: (context, index) => Divider(
-                        color: AppColors.lilac.withOpacity(0.2),
+                        color: context.gc.lilac.withOpacity(0.2),
                         height: 1,
                       ),
                       itemBuilder: (context, index) {
@@ -2094,22 +2095,22 @@ class _DiagnosticPageState extends State<DiagnosticPage>
 
                         return ListTile(
                           dense: true,
-                          leading: const Icon(
+                          leading: Icon(
                             Icons.place,
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                             size: 20,
                           ),
                           title: Text(
                             displayText,
-                            style: const TextStyle(
-                              color: AppColors.softWhite,
+                            style: TextStyle(
+                              color: context.gc.softWhite,
                               fontSize: 14,
                             ),
                           ),
                           subtitle: Text(
                             coordsText,
                             style: TextStyle(
-                              color: AppColors.softWhite.withOpacity(0.6),
+                              color: context.gc.softWhite.withOpacity(0.6),
                               fontSize: 11,
                             ),
                           ),
@@ -2125,17 +2126,17 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
+                      color: context.gc.success.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppColors.success.withOpacity(0.3),
+                        color: context.gc.success.withOpacity(0.3),
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.check_circle,
-                          color: AppColors.success,
+                          color: context.gc.success,
                           size: 18,
                         ),
                         const SizedBox(width: 8),
@@ -2144,7 +2145,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                             '✓ $_birthPlace\n'
                             'Lat: ${_selectedLatitude!.toStringAsFixed(4)}, Lon: ${_selectedLongitude!.toStringAsFixed(4)}',
                             style: TextStyle(
-                              color: AppColors.success,
+                              color: context.gc.success,
                               fontSize: 12,
                               height: 1.4,
                             ),
@@ -2163,20 +2164,20 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           ElevatedButton.icon(
             onPressed: _isTesting ? null : _testBirthChart,
             icon: _isTesting
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.darkBackground),
+                          context.gc.darkBackground),
                     ),
                   )
                 : const Icon(Icons.play_arrow),
             label: Text(_isTesting ? 'Testando...' : 'Executar Teste'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
-              foregroundColor: AppColors.darkBackground,
+              backgroundColor: context.gc.lilac,
+              foregroundColor: context.gc.darkBackground,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -2191,16 +2192,16 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: _result!.contains('SUCESSO')
-                      ? AppColors.success.withOpacity(0.2)
-                      : AppColors.alert.withOpacity(0.2),
+                      ? context.gc.success.withOpacity(0.2)
+                      : context.gc.alert.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   _result!,
                   style: TextStyle(
                     color: _result!.contains('SUCESSO')
-                        ? AppColors.success
-                        : AppColors.alert,
+                        ? context.gc.success
+                        : context.gc.alert,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -2216,11 +2217,11 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   'Logs de Diagnóstico',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.copy, color: AppColors.lilac),
+                  icon: Icon(Icons.copy, color: context.gc.lilac),
                   onPressed: _copyLogs,
                   tooltip: 'Copiar logs',
                 ),
@@ -2233,10 +2234,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 child: SingleChildScrollView(
                   child: SelectableText(
                     _logs.join('\n'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 12,
-                      color: AppColors.softWhite,
+                      color: context.gc.softWhite,
                     ),
                   ),
                 ),
@@ -2262,19 +2263,19 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           MagicalCard(
             child: Column(
               children: [
-                Icon(icon, size: 64, color: AppColors.lilac),
+                Icon(icon, size: 64, color: context.gc.lilac),
                 const SizedBox(height: 16),
                 Text(
                   title,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -2285,22 +2286,22 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           ElevatedButton.icon(
             onPressed: _isTesting ? null : onTest,
             icon: _isTesting
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.darkBackground),
+                          context.gc.darkBackground),
                     ),
                   )
                 : const Icon(Icons.play_arrow),
             label: Text(_isTesting ? 'Testando...' : 'Executar Teste'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
-              foregroundColor: AppColors.darkBackground,
+              backgroundColor: context.gc.lilac,
+              foregroundColor: context.gc.darkBackground,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
+              disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
             ),
           ),
           if (_result != null) ...[
@@ -2315,10 +2316,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                             ? Icons.warning
                             : Icons.error,
                     color: _result!.startsWith('SUCESSO')
-                        ? AppColors.success
+                        ? context.gc.success
                         : _result!.startsWith('AVISO')
-                            ? AppColors.starYellow
-                            : AppColors.alert,
+                            ? context.gc.starYellow
+                            : context.gc.alert,
                     size: 32,
                   ),
                   const SizedBox(width: 12),
@@ -2327,10 +2328,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                       _result!,
                       style: TextStyle(
                         color: _result!.startsWith('SUCESSO')
-                            ? AppColors.success
+                            ? context.gc.success
                             : _result!.startsWith('AVISO')
-                                ? AppColors.starYellow
-                                : AppColors.alert,
+                                ? context.gc.starYellow
+                                : context.gc.alert,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -2344,7 +2345,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             Text(
               'Logs de Diagnóstico',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                   ),
             ),
             const SizedBox(height: 8),
@@ -2354,10 +2355,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 child: SingleChildScrollView(
                   child: SelectableText(
                     _logs.join('\n'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 12,
-                      color: AppColors.softWhite,
+                      color: context.gc.softWhite,
                     ),
                   ),
                 ),

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/providers/sync_provider.dart';
 import '../../../../core/database/database_helper.dart';
@@ -70,7 +71,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -87,8 +88,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.lilac))
+          ? Center(
+              child: CircularProgressIndicator(color: context.gc.lilac))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -216,8 +217,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
-          color: AppColors.lilac,
+        style: TextStyle(
+          color: context.gc.lilac,
           fontSize: 14,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
@@ -229,7 +230,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Widget _buildSettingsCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -248,10 +249,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.lilac.withValues(alpha: 0.2),
+          color: context.gc.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.lilac, size: 20),
+        child: Icon(icon, color: context.gc.lilac, size: 20),
       ),
       title: Text(
         title,
@@ -270,7 +271,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: AppColors.lilac,
+        activeColor: context.gc.lilac,
       ),
     );
   }
@@ -285,8 +286,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     final color = isDestructive ? Colors.red : Colors.white;
     final iconBgColor = isDestructive
         ? Colors.red.withValues(alpha: 0.2)
-        : AppColors.lilac.withValues(alpha: 0.2);
-    final iconColor = isDestructive ? Colors.red : AppColors.lilac;
+        : context.gc.lilac.withValues(alpha: 0.2);
+    final iconColor = isDestructive ? Colors.red : context.gc.lilac;
 
     return ListTile(
       leading: Container(
@@ -341,14 +342,14 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.lilac.withValues(alpha: 0.2),
-                  AppColors.gold.withValues(alpha: 0.1),
+                  context.gc.lilac.withValues(alpha: 0.2),
+                  context.gc.gold.withValues(alpha: 0.1),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+              border: Border.all(color: context.gc.gold.withValues(alpha: 0.5)),
             ),
             child: Column(
               children: [
@@ -357,14 +358,14 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.gold.withValues(alpha: 0.2),
+                        color: context.gc.gold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.workspace_premium,
-                          color: AppColors.gold, size: 28),
+                      child: Icon(Icons.workspace_premium,
+                          color: context.gc.gold, size: 28),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -380,7 +381,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                           Text(
                             'Recurso exclusivo Premium',
                             style: TextStyle(
-                              color: AppColors.gold,
+                              color: context.gc.gold,
                               fontSize: 12,
                             ),
                           ),
@@ -402,7 +403,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     icon: const Icon(Icons.star, size: 18),
                     label: const Text('Seja Premium'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.gold,
+                      backgroundColor: context.gc.gold,
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -416,7 +417,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.gc.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white10),
           ),
@@ -464,13 +465,13 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: AppColors.gold.withValues(alpha: 0.2),
+                                color: context.gc.gold.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'PREMIUM',
                                 style: TextStyle(
-                                  color: AppColors.gold,
+                                  color: context.gc.gold,
                                   fontSize: 9,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -507,23 +508,23 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                                     : result.error ?? 'Erro na sincronização',
                               ),
                               backgroundColor: result.success
-                                  ? AppColors.success
-                                  : AppColors.alert,
+                                  ? context.gc.success
+                                  : context.gc.alert,
                             ),
                           );
                         }
                       },
-                      icon: const Icon(Icons.refresh, color: AppColors.lilac),
+                      icon: Icon(Icons.refresh, color: context.gc.lilac),
                       tooltip: 'Sincronizar agora',
                     ),
                   if (isSyncing)
-                    const SizedBox(
+                    SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.lilac),
+                            AlwaysStoppedAnimation<Color>(context.gc.lilac),
                       ),
                     ),
                 ],
@@ -541,13 +542,13 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Color _getSyncStatusColor(SyncStatus status) {
     switch (status) {
       case SyncStatus.idle:
-        return AppColors.lilac;
+        return context.gc.lilac;
       case SyncStatus.syncing:
-        return AppColors.lilac;
+        return context.gc.lilac;
       case SyncStatus.success:
-        return AppColors.success;
+        return context.gc.success;
       case SyncStatus.error:
-        return AppColors.alert;
+        return context.gc.alert;
       case SyncStatus.conflict:
         return Colors.orange;
     }
@@ -572,21 +573,21 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.lilac.withValues(alpha: 0.1),
+        color: context.gc.lilac.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.shield_outlined, color: AppColors.lilac, size: 20),
+              Icon(Icons.shield_outlined, color: context.gc.lilac, size: 20),
               SizedBox(width: 8),
               Text(
                 'Sua Privacidade Importa',
                 style: TextStyle(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -610,10 +611,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text(
+            child: Text(
               'Ler Política de Privacidade completa',
               style: TextStyle(
-                color: AppColors.lilac,
+                color: context.gc.lilac,
                 decoration: TextDecoration.underline,
               ),
             ),
@@ -627,7 +628,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: const Text(
           'Exportar Dados',
           style: TextStyle(color: Colors.white),
@@ -648,7 +649,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               await _performExport();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: context.gc.lilac,
             ),
             child:
                 const Text('Exportar', style: TextStyle(color: Colors.white)),
@@ -661,9 +662,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Future<void> _performExport() async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Exportando dados...'),
-          backgroundColor: AppColors.lilac,
+          backgroundColor: context.gc.lilac,
         ),
       );
 
@@ -715,9 +716,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Dados exportados com sucesso!'),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.gc.success,
           ),
         );
       }
@@ -726,7 +727,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao exportar: $e'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -737,7 +738,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: const Text(
           'Limpar Dados Locais?',
           style: TextStyle(color: Colors.white),
@@ -799,9 +800,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Dados locais removidos com sucesso'),
-              backgroundColor: AppColors.success,
+              backgroundColor: context.gc.success,
             ),
           );
         }
@@ -810,7 +811,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Erro ao limpar dados: $e'),
-              backgroundColor: AppColors.alert,
+              backgroundColor: context.gc.alert,
             ),
           );
         }
@@ -822,7 +823,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.red),
@@ -867,12 +868,12 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          backgroundColor: AppColors.surface,
+        builder: (context) => AlertDialog(
+          backgroundColor: context.gc.surface,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: AppColors.lilac),
+              CircularProgressIndicator(color: context.gc.lilac),
               SizedBox(height: 16),
               Text(
                 'Excluindo conta...',
@@ -912,9 +913,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
         // Mostrar mensagem de sucesso
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Conta excluída com sucesso'),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.gc.success,
           ),
         );
 
@@ -931,7 +932,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao excluir conta: $e'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -942,7 +943,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: const Row(
           children: [
             Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
@@ -988,7 +989,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.gc.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

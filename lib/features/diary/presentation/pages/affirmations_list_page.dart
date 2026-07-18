@@ -7,6 +7,7 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'affirmation_form_page.dart';
 
 class AffirmationsListPage extends StatefulWidget {
@@ -115,7 +116,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                                             .textTheme
                                             .bodySmall
                                             ?.copyWith(
-                                              color: AppColors.textSecondary,
+                                              color: context.gc.textSecondary,
                                             ),
                                       ),
                                     ],
@@ -128,8 +129,8 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                                         ? Icons.favorite
                                         : Icons.favorite_border,
                                     color: affirmation.isFavorite
-                                        ? AppColors.pinkWitch
-                                        : AppColors.textSecondary,
+                                        ? context.gc.pinkWitch
+                                        : context.gc.textSecondary,
                                   ),
                                   onPressed: () => provider
                                       .toggleFavorite(affirmation),
@@ -163,11 +164,11 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
       onSelected: (_) {
         context.read<AffirmationProvider>().setCategory(category);
       },
-      backgroundColor: AppColors.surface,
-      selectedColor: AppColors.lilac.withOpacity(0.3),
-      checkmarkColor: AppColors.lilac,
+      backgroundColor: context.gc.surface,
+      selectedColor: context.gc.lilac.withOpacity(0.3),
+      checkmarkColor: context.gc.lilac,
       side: BorderSide(
-        color: isSelected ? AppColors.lilac : AppColors.surfaceBorder,
+        color: isSelected ? context.gc.lilac : context.gc.surfaceBorder,
       ),
     );
   }

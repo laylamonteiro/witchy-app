@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/data/repositories/beta_code_repository.dart';
@@ -230,7 +231,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('🔧 Debug - Códigos Premium'),
         backgroundColor: Colors.transparent,
@@ -255,7 +256,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                     icon: const Icon(Icons.refresh),
                     label: const Text('Diagnóstico Completo'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.lilac,
+                      backgroundColor: context.gc.lilac,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -268,7 +269,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                     icon: const Icon(Icons.add),
                     label: const Text('Testar Criação'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.pink,
+                      backgroundColor: context.gc.pink,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -286,12 +287,12 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
               decoration: BoxDecoration(
                 color: Colors.black87,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+                border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
               ),
               child: _isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                     )
                   : _logs.isEmpty
@@ -318,7 +319,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                             } else if (log.contains('⚠️')) {
                               textColor = Colors.orangeAccent;
                             } else if (log.contains('===')) {
-                              textColor = AppColors.lilac;
+                              textColor = context.gc.lilac;
                             } else if (log.contains('1️⃣') ||
                                 log.contains('2️⃣') ||
                                 log.contains('3️⃣') ||
@@ -352,10 +353,10 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '💡 Dicas:',
                     style: TextStyle(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),

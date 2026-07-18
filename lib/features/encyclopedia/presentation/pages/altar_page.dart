@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
 
@@ -11,10 +12,10 @@ class AltarPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('O Altar Mágico'),
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -45,14 +46,14 @@ class AltarPage extends StatelessWidget {
                     'Não precisa ser elaborado ou caro; o que importa é a intenção e o respeito com que você o trata. '
                     'Seu altar é uma extensão da sua energia e um portal entre o mundo físico e o espiritual.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'Explore as seções abaixo para aprender a montar, purificar, manter e utilizar seu altar.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
                   ),
@@ -145,15 +146,15 @@ class AltarPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.lilac.withOpacity(0.1),
+                      color: context.gc.lilac.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: AppColors.lilac.withOpacity(0.3)),
+                          Border.all(color: context.gc.lilac.withOpacity(0.3)),
                     ),
                     child: Text(
                       '💡 Lembre-se: Não existe lista obrigatória. Use o que ressoa com você e sua prática.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.gc.textSecondary,
                             fontStyle: FontStyle.italic,
                           ),
                     ),
@@ -186,10 +187,10 @@ class AltarPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.alert.withOpacity(0.1),
+                      color: context.gc.alert.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: AppColors.alert.withOpacity(0.3)),
+                          Border.all(color: context.gc.alert.withOpacity(0.3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +226,7 @@ class AltarPage extends StatelessWidget {
                   Text(
                     'A purificação remove energias estagnadas ou negativas, renovando o espaço sagrado.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -243,15 +244,15 @@ class AltarPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity(0.1),
+                      color: context.gc.info.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: AppColors.info.withOpacity(0.3)),
+                          Border.all(color: context.gc.info.withOpacity(0.3)),
                     ),
                     child: Text(
                       '🌙 Frequência recomendada: A cada lua nova ou cheia, ou quando sentir a energia pesada.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.gc.textSecondary,
                             fontStyle: FontStyle.italic,
                           ),
                     ),
@@ -312,10 +313,10 @@ class AltarPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.mint.withOpacity(0.1),
+                      color: context.gc.mint.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: AppColors.mint.withOpacity(0.3)),
+                          Border.all(color: context.gc.mint.withOpacity(0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +326,7 @@ class AltarPage extends StatelessWidget {
                           style: Theme.of(context)
                               .textTheme
                               .titleSmall
-                              ?.copyWith(color: AppColors.mint),
+                              ?.copyWith(color: context.gc.mint),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -334,7 +335,7 @@ class AltarPage extends StatelessWidget {
                           '• Noite: Agradeça pelo dia, apague a vela com reverência',
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: context.gc.textSecondary,
                                   ),
                         ),
                       ],
@@ -360,7 +361,7 @@ class AltarPage extends StatelessWidget {
                     '\n\nPermita que seu altar cresça organicamente, reflita suas mudanças e seja sempre um espaço de paz, '
                     'poder e conexão com o sagrado.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -398,14 +399,14 @@ class AltarPage extends StatelessWidget {
                       style: GoogleFonts.cinzelDecorative(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Seu primeiro encontro com seu altar',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: context.gc.textSecondary,
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -416,23 +417,23 @@ class AltarPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const Divider(color: AppColors.lilac),
+          Divider(color: context.gc.lilac),
           const SizedBox(height: 16),
 
           // Introdução
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.lilac.withOpacity(0.1),
+              color: context.gc.lilac.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+              border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
             ),
             child: Text(
               'Não se preocupe se você não tem todos os itens "tradicionais". '
               'Um altar pode começar com uma vela e uma intenção. O importante é que '
               'seja significativo para VOCÊ. Não existe altar errado quando é feito com coração.',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: context.gc.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -477,9 +478,9 @@ class AltarPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.mint.withOpacity(0.1),
+              color: context.gc.mint.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.mint.withOpacity(0.3)),
+              border: Border.all(color: context.gc.mint.withOpacity(0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,7 +489,7 @@ class AltarPage extends StatelessWidget {
                   '🌟 Nas primeiras vezes no altar',
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.mint,
+                    color: context.gc.mint,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -515,9 +516,9 @@ class AltarPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.starYellow.withOpacity(0.1),
+              color: context.gc.starYellow.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.starYellow.withOpacity(0.3)),
+              border: Border.all(color: context.gc.starYellow.withOpacity(0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,7 +527,7 @@ class AltarPage extends StatelessWidget {
                   '💬 O que falar no altar?',
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.starYellow,
+                    color: context.gc.starYellow,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -543,7 +544,7 @@ class AltarPage extends StatelessWidget {
                 Text(
                   'Lembre-se: Não existe fórmula errada. O universo entende sua intenção!',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                     fontStyle: FontStyle.italic,
                     fontSize: 12,
                   ),
@@ -558,9 +559,9 @@ class AltarPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.pink.withOpacity(0.1),
+              color: context.gc.pink.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.pink.withOpacity(0.3)),
+              border: Border.all(color: context.gc.pink.withOpacity(0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,7 +570,7 @@ class AltarPage extends StatelessWidget {
                   '❓ Dúvidas Comuns de Iniciantes',
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.pink,
+                    color: context.gc.pink,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -601,15 +602,15 @@ class AltarPage extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.lilac.withOpacity(0.2),
+              color: context.gc.lilac.withOpacity(0.2),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.lilac),
+              border: Border.all(color: context.gc.lilac),
             ),
             child: Center(
               child: Text(
                 numero,
-                style: const TextStyle(
-                  color: AppColors.lilac,
+                style: TextStyle(
+                  color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -623,8 +624,8 @@ class AltarPage extends StatelessWidget {
               children: [
                 Text(
                   titulo,
-                  style: const TextStyle(
-                    color: AppColors.lilac,
+                  style: TextStyle(
+                    color: context.gc.lilac,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -633,7 +634,7 @@ class AltarPage extends StatelessWidget {
                 Text(
                   descricao,
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                     height: 1.4,
                     fontSize: 13,
                   ),
@@ -642,12 +643,12 @@ class AltarPage extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('💡 ', style: TextStyle(color: AppColors.starYellow)),
+                    Text('💡 ', style: TextStyle(color: context.gc.starYellow)),
                     Expanded(
                       child: Text(
                         dica,
                         style: TextStyle(
-                          color: AppColors.starYellow,
+                          color: context.gc.starYellow,
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
                         ),
@@ -669,7 +670,7 @@ class AltarPage extends StatelessWidget {
       child: Text(
         texto,
         style: TextStyle(
-          color: AppColors.textSecondary,
+          color: context.gc.textSecondary,
           fontSize: 13,
           height: 1.4,
         ),
@@ -686,7 +687,7 @@ class AltarPage extends StatelessWidget {
           Text(
             titulo,
             style: TextStyle(
-              color: AppColors.starYellow,
+              color: context.gc.starYellow,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
@@ -695,13 +696,13 @@ class AltarPage extends StatelessWidget {
             margin: const EdgeInsets.only(top: 4),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.gc.surface,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               fala,
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: context.gc.textSecondary,
                 fontStyle: FontStyle.italic,
                 fontSize: 12,
               ),
@@ -721,7 +722,7 @@ class AltarPage extends StatelessWidget {
           Text(
             pergunta,
             style: TextStyle(
-              color: AppColors.pink,
+              color: context.gc.pink,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
@@ -730,7 +731,7 @@ class AltarPage extends StatelessWidget {
           Text(
             resposta,
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: context.gc.textSecondary,
               fontSize: 12,
             ),
           ),
@@ -755,7 +756,7 @@ class AltarPage extends StatelessWidget {
           Text(
             description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                 ),
           ),
         ],
@@ -789,7 +790,7 @@ class AltarPage extends StatelessWidget {
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.gc.textSecondary,
                       ),
                 ),
               ],
@@ -806,7 +807,7 @@ class AltarPage extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.cancel, color: AppColors.alert, size: 20),
+          Icon(Icons.cancel, color: context.gc.alert, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -821,7 +822,7 @@ class AltarPage extends StatelessWidget {
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.gc.textSecondary,
                       ),
                 ),
               ],
@@ -848,7 +849,7 @@ class AltarPage extends StatelessWidget {
           Text(
             description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                 ),
           ),
         ],
@@ -863,7 +864,7 @@ class AltarPage extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle, color: AppColors.mint, size: 20),
+          Icon(Icons.check_circle, color: context.gc.mint, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -878,7 +879,7 @@ class AltarPage extends StatelessWidget {
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.gc.textSecondary,
                       ),
                 ),
               ],
@@ -895,7 +896,7 @@ class AltarPage extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_awesome, color: AppColors.starYellow, size: 20),
+          Icon(Icons.auto_awesome, color: context.gc.starYellow, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -910,7 +911,7 @@ class AltarPage extends StatelessWidget {
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.gc.textSecondary,
                       ),
                 ),
               ],

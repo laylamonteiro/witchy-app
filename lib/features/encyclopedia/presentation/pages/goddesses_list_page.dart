@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/goddess_model.dart';
 import '../../data/data_sources/goddesses_data.dart';
@@ -59,7 +60,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: Column(
         children: [
           // Search bar com filtro ao lado (igual Grimório Ancestral)
@@ -72,7 +73,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Buscar deusas...',
-                      prefixIcon: const Icon(Icons.search, color: AppColors.lilac),
+                      prefixIcon: Icon(Icons.search, color: context.gc.lilac),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear),
@@ -83,7 +84,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                             )
                           : null,
                       filled: true,
-                      fillColor: AppColors.surface,
+                      fillColor: context.gc.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -96,7 +97,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                 PopupMenuButton<String>(
                   icon: Icon(
                     Icons.filter_list,
-                    color: _selectedOrigin != null ? AppColors.lilac : AppColors.softWhite,
+                    color: _selectedOrigin != null ? context.gc.lilac : context.gc.softWhite,
                   ),
                   tooltip: 'Filtrar por origem',
                   onSelected: (value) {
@@ -117,13 +118,13 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                           Icon(
                             Icons.public,
                             size: 20,
-                            color: _selectedOrigin == null ? AppColors.lilac : AppColors.softWhite,
+                            color: _selectedOrigin == null ? context.gc.lilac : context.gc.softWhite,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'Todas as Origens',
                             style: TextStyle(
-                              color: _selectedOrigin == null ? AppColors.lilac : null,
+                              color: _selectedOrigin == null ? context.gc.lilac : null,
                               fontWeight: _selectedOrigin == null ? FontWeight.bold : null,
                             ),
                           ),
@@ -140,7 +141,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                               Text(
                                 origin.displayName,
                                 style: TextStyle(
-                                  color: _selectedOrigin == origin ? AppColors.lilac : null,
+                                  color: _selectedOrigin == origin ? context.gc.lilac : null,
                                   fontWeight: _selectedOrigin == origin ? FontWeight.bold : null,
                                 ),
                               ),
@@ -175,9 +176,9 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                         _filterGoddesses(_searchController.text);
                       });
                     },
-                    backgroundColor: AppColors.lilac.withOpacity(0.2),
-                    side: const BorderSide(color: AppColors.lilac),
-                    labelStyle: const TextStyle(color: AppColors.lilac, fontSize: 12),
+                    backgroundColor: context.gc.lilac.withOpacity(0.2),
+                    side: BorderSide(color: context.gc.lilac),
+                    labelStyle: TextStyle(color: context.gc.lilac, fontSize: 12),
                   ),
                 ],
               ),
@@ -224,7 +225,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: AppColors.lilac.withOpacity(0.2),
+                            color: context.gc.lilac.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(
@@ -240,7 +241,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: AppColors.lilac.withOpacity(0.2),
+                        color: context.gc.lilac.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
@@ -265,7 +266,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                           style: GoogleFonts.cinzelDecorative(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                         ),
                       ),
@@ -279,7 +280,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                       Text(
                         goddess.origin.displayName,
                         style: TextStyle(
-                          color: AppColors.softWhite.withOpacity(0.7),
+                          color: context.gc.softWhite.withOpacity(0.7),
                           fontSize: 12,
                         ),
                       ),
@@ -291,16 +292,16 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.7),
+                      color: context.gc.softWhite.withOpacity(0.7),
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ],
         ),

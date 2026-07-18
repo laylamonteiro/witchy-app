@@ -7,6 +7,7 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'dream_form_page.dart';
 
 class DreamsListPage extends StatefulWidget {
@@ -67,7 +68,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
                           dateFormat.format(dream.date),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: context.gc.textSecondary,
                                   ),
                         ),
                       ],
@@ -87,8 +88,8 @@ class _DreamsListPageState extends State<DreamsListPage> {
                             .map((tag) => Chip(
                                   label: Text(tag, style: const TextStyle(fontSize: 12)),
                                   backgroundColor:
-                                      AppColors.lilac.withOpacity(0.2),
-                                  side: const BorderSide(color: AppColors.lilac),
+                                      context.gc.lilac.withOpacity(0.2),
+                                  side: BorderSide(color: context.gc.lilac),
                                 ))
                             .toList(),
                       ),
@@ -97,8 +98,8 @@ class _DreamsListPageState extends State<DreamsListPage> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.favorite,
-                              size: 16, color: AppColors.pink),
+                          Icon(Icons.favorite,
+                              size: 16, color: context.gc.pink),
                           const SizedBox(width: 4),
                           Text(
                             dream.feeling!,

@@ -5,6 +5,7 @@ import '../providers/encyclopedia_provider.dart';
 import '../../data/models/crystal_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'crystal_detail_page.dart';
 
 class CrystalsListPage extends StatefulWidget {
@@ -94,12 +95,12 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                       width: 60,
                                       height: 60,
                                       decoration: BoxDecoration(
-                                        color: AppColors.lilac.withOpacity(0.2),
+                                        color: context.gc.lilac.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: const Icon(
+                                      child: Icon(
                                         Icons.diamond,
-                                        color: AppColors.lilac,
+                                        color: context.gc.lilac,
                                         size: 32,
                                       ),
                                     );
@@ -109,12 +110,12 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    color: AppColors.lilac.withOpacity(0.2),
+                                    color: context.gc.lilac.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.diamond,
-                                    color: AppColors.lilac,
+                                    color: context.gc.lilac,
                                     size: 32,
                                   ),
                                 ),
@@ -132,7 +133,7 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                       style: GoogleFonts.cinzelDecorative(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.lilac,
+                                        color: context.gc.lilac,
                                       ),
                                     ),
                                   ),
@@ -159,9 +160,9 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.chevron_right,
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                       ],
                     ),

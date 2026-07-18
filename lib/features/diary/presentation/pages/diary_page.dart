@@ -5,6 +5,7 @@ import 'free_writing_tab.dart';
 import 'dreams_list_page.dart';
 import 'desires_list_page.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 
@@ -72,7 +73,7 @@ class _DiaryPageState extends State<DiaryPage>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.lilac,
+          indicatorColor: context.gc.lilac,
           isScrollable: true,
           tabAlignment: TabAlignment.center,
           labelStyle: const TextStyle(fontSize: 14),

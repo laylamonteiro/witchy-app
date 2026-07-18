@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/diagnostic/diagnostic_page.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
@@ -739,7 +740,7 @@ class SettingsPage extends StatelessWidget {
             result.error ?? 'Não foi possível atualizar as notificações',
           ),
           duration: const Duration(seconds: 2),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
         ),
       );
     }

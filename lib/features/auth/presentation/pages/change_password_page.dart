@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 
@@ -37,7 +38,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.lilac),
+          icon: Icon(Icons.arrow_back, color: context.gc.lilac),
           onPressed: () => Navigator.pop(context),
         ),
         title: ResponsiveAppBarTitle(
@@ -45,7 +46,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           style: GoogleFonts.cinzelDecorative(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         centerTitle: true,
@@ -89,12 +90,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.lilac.withValues(alpha: 0.2),
+            color: context.gc.lilac.withValues(alpha: 0.2),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.password_outlined,
             size: 40,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 24),
@@ -103,7 +104,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 8),
@@ -111,7 +112,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           'Digite sua senha atual e escolha uma nova senha',
           style: GoogleFonts.nunito(
             fontSize: 15,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -124,15 +125,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _currentPasswordController,
       obscureText: _obscureCurrentPassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: 'Senha Atual',
         hintText: '••••••••',
-        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.lilac),
+        prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -157,15 +158,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _newPasswordController,
       obscureText: _obscureNewPassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: 'Nova Senha',
         hintText: 'Mínimo 6 caracteres',
-        prefixIcon: const Icon(Icons.lock_open_outlined, color: AppColors.mint),
+        prefixIcon: Icon(Icons.lock_open_outlined, color: context.gc.mint),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -193,15 +194,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: _obscureConfirmPassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: 'Confirmar Nova Senha',
         hintText: 'Digite a nova senha novamente',
-        prefixIcon: const Icon(Icons.lock_open_outlined, color: AppColors.mint),
+        prefixIcon: Icon(Icons.lock_open_outlined, color: context.gc.mint),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -226,13 +227,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return ElevatedButton(
       onPressed: _isLoading ? null : _handleChangePassword,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.lilac,
+        backgroundColor: context.gc.lilac,
         foregroundColor: const Color(0xFF2B2143),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        disabledBackgroundColor: AppColors.lilac.withValues(alpha: 0.5),
+        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
       ),
       child: _isLoading
           ? const SizedBox(
@@ -281,9 +282,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (mounted) {
         // Mostrar sucesso
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Senha alterada com sucesso!'),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.gc.success,
           ),
         );
 
@@ -306,7 +307,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }

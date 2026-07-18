@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/goddess_model.dart';
 import '../../../auth/auth.dart';
@@ -15,9 +16,9 @@ class GoddessDetailPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(goddess.name),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -48,7 +49,7 @@ class GoddessDetailPage extends StatelessWidget {
                     style: GoogleFonts.cinzelDecorative(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -57,7 +58,7 @@ class GoddessDetailPage extends StatelessWidget {
                     Text(
                       goddess.alternateNames!,
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withOpacity(0.7),
                         fontSize: 14,
                         fontStyle: FontStyle.italic,
                       ),
@@ -68,7 +69,7 @@ class GoddessDetailPage extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: context.gc.surface,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -78,8 +79,8 @@ class GoddessDetailPage extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           goddess.origin.displayName,
-                          style: const TextStyle(
-                            color: AppColors.softWhite,
+                          style: TextStyle(
+                            color: context.gc.softWhite,
                             fontSize: 14,
                           ),
                         ),
@@ -89,8 +90,8 @@ class GoddessDetailPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     goddess.description,
-                    style: const TextStyle(
-                      color: AppColors.softWhite,
+                    style: TextStyle(
+                      color: context.gc.softWhite,
                       fontSize: 15,
                       height: 1.5,
                     ),
@@ -119,10 +120,10 @@ class GoddessDetailPage extends StatelessWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.lilac.withOpacity(0.2),
+                          color: context.gc.lilac.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: AppColors.lilac.withOpacity(0.5),
+                            color: context.gc.lilac.withOpacity(0.5),
                           ),
                         ),
                         child: Row(
@@ -133,8 +134,8 @@ class GoddessDetailPage extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               aspect.displayName,
-                              style: const TextStyle(
-                                color: AppColors.lilac,
+                              style: TextStyle(
+                                color: context.gc.lilac,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -158,8 +159,8 @@ class GoddessDetailPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     goddess.correspondences,
-                    style: const TextStyle(
-                      color: AppColors.softWhite,
+                    style: TextStyle(
+                      color: context.gc.softWhite,
                       fontSize: 14,
                       height: 1.6,
                     ),
@@ -199,8 +200,8 @@ class GoddessDetailPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     goddess.mythology,
-                    style: const TextStyle(
-                      color: AppColors.softWhite,
+                    style: TextStyle(
+                      color: context.gc.softWhite,
                       fontSize: 14,
                       height: 1.6,
                     ),
@@ -231,8 +232,8 @@ class GoddessDetailPage extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   use,
-                                  style: const TextStyle(
-                                    color: AppColors.softWhite,
+                                  style: TextStyle(
+                                    color: context.gc.softWhite,
                                     fontSize: 14,
                                     height: 1.4,
                                   ),
@@ -268,8 +269,8 @@ class GoddessDetailPage extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   tip,
-                                  style: const TextStyle(
-                                    color: AppColors.softWhite,
+                                  style: TextStyle(
+                                    color: context.gc.softWhite,
                                     fontSize: 14,
                                     height: 1.4,
                                   ),
@@ -296,7 +297,7 @@ class GoddessDetailPage extends StatelessWidget {
       style: GoogleFonts.cinzelDecorative(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: AppColors.lilac,
+        color: context.gc.lilac,
       ),
     );
   }
@@ -308,7 +309,7 @@ class GoddessDetailPage extends StatelessWidget {
         Text(
           '$emoji $title',
           style: TextStyle(
-            color: AppColors.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withOpacity(0.8),
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
@@ -324,13 +325,13 @@ class GoddessDetailPage extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.gc.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 item,
-                style: const TextStyle(
-                  color: AppColors.softWhite,
+                style: TextStyle(
+                  color: context.gc.softWhite,
                   fontSize: 12,
                 ),
               ),
@@ -346,7 +347,7 @@ class GoddessDetailPage extends StatelessWidget {
       width: 200,
       height: 200,
       decoration: BoxDecoration(
-        color: AppColors.lilac.withOpacity(0.2),
+        color: context.gc.lilac.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(

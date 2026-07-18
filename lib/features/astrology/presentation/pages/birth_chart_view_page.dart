@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -18,7 +19,7 @@ class BirthChartViewPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Seu Mapa Astral'),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
         actions: [
           IconButton(
             icon: const Icon(Icons.auto_awesome),
@@ -33,16 +34,16 @@ class BirthChartViewPage extends StatelessWidget {
           ),
         ],
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: Consumer<AstrologyProvider>(
         builder: (context, provider, _) {
           final chart = provider.birthChart;
 
           if (chart == null) {
-            return const Center(
+            return Center(
               child: Text(
                 'Nenhum mapa astral encontrado',
-                style: TextStyle(color: AppColors.softWhite),
+                style: TextStyle(color: context.gc.softWhite),
               ),
             );
           }
@@ -62,7 +63,7 @@ class BirthChartViewPage extends StatelessWidget {
                         chart.birthPlace,
                         style:
                             Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: AppColors.lilac,
+                                  color: context.gc.lilac,
                                 ),
                         textAlign: TextAlign.center,
                       ),
@@ -70,7 +71,7 @@ class BirthChartViewPage extends StatelessWidget {
                       Text(
                         DateFormat('dd/MM/yyyy').format(chart.birthDate),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppColors.softWhite,
+                              color: context.gc.softWhite,
                             ),
                       ),
                       if (!chart.unknownBirthTime)
@@ -78,7 +79,7 @@ class BirthChartViewPage extends StatelessWidget {
                           chart.birthTime.format(context),
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: AppColors.softWhite,
+                                    color: context.gc.softWhite,
                                   ),
                         ),
                     ],
@@ -161,8 +162,8 @@ class BirthChartViewPage extends StatelessWidget {
                             children: [
                               Text(
                                 '${planet.planet.symbol} ${planet.planet.displayName}',
-                                style: const TextStyle(
-                                  color: AppColors.softWhite,
+                                style: TextStyle(
+                                  color: context.gc.softWhite,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -171,15 +172,15 @@ class BirthChartViewPage extends StatelessWidget {
                                 children: [
                                   Text(
                                     planet.positionString,
-                                    style: const TextStyle(
-                                      color: AppColors.lilac,
+                                    style: TextStyle(
+                                      color: context.gc.lilac,
                                     ),
                                   ),
                                   Text(
                                     'Casa ${planet.houseNumber}',
                                     style: TextStyle(
                                       color:
-                                          AppColors.softWhite.withOpacity(0.6),
+                                          context.gc.softWhite.withOpacity(0.6),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -218,15 +219,15 @@ class BirthChartViewPage extends StatelessWidget {
                                   children: [
                                     Text(
                                       'Casa ${house.number}',
-                                      style: const TextStyle(
-                                        color: AppColors.softWhite,
+                                      style: TextStyle(
+                                        color: context.gc.softWhite,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(
                                       house.cuspString,
-                                      style: const TextStyle(
-                                        color: AppColors.lilac,
+                                      style: TextStyle(
+                                        color: context.gc.lilac,
                                       ),
                                     ),
                                   ],
@@ -237,7 +238,7 @@ class BirthChartViewPage extends StatelessWidget {
                                     child: Text(
                                       'Planetas: ${planetsInHouse.map((p) => p.planet.symbol).join(' ')}',
                                       style: TextStyle(
-                                        color: AppColors.softWhite
+                                        color: context.gc.softWhite
                                             .withOpacity(0.6),
                                         fontSize: 12,
                                       ),
@@ -262,11 +263,11 @@ class BirthChartViewPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (chart.aspects.isEmpty)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.all(16),
                           child: Text(
                             'Nenhum aspecto significativo encontrado',
-                            style: TextStyle(color: AppColors.softWhite),
+                            style: TextStyle(color: context.gc.softWhite),
                           ),
                         )
                       else
@@ -280,10 +281,10 @@ class BirthChartViewPage extends StatelessWidget {
                                   aspect.description,
                                   style: TextStyle(
                                     color: aspect.type.isHarmonious
-                                        ? AppColors.success
+                                        ? context.gc.success
                                         : aspect.type.isChallenging
-                                            ? AppColors.alert
-                                            : AppColors.softWhite,
+                                            ? context.gc.alert
+                                            : context.gc.softWhite,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -295,7 +296,7 @@ class BirthChartViewPage extends StatelessWidget {
                                   feature: AppFeature.astrologyBirthChart,
                                   maxLines: 3,
                                   style: TextStyle(
-                                    color: AppColors.softWhite.withOpacity(0.7),
+                                    color: context.gc.softWhite.withOpacity(0.7),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -356,8 +357,8 @@ class BirthChartViewPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.lilac,
-                    foregroundColor: AppColors.darkBackground,
+                    backgroundColor: context.gc.lilac,
+                    foregroundColor: context.gc.darkBackground,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text(
@@ -394,24 +395,24 @@ class BirthChartViewPage extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                 ),
                 Icon(
                   Icons.info_outline,
-                  color: AppColors.lilac.withOpacity(0.6),
+                  color: context.gc.lilac.withOpacity(0.6),
                   size: 20,
                 ),
               ],
             ),
-            const Divider(color: AppColors.lilac),
+            Divider(color: context.gc.lilac),
             content,
             const SizedBox(height: 8),
             Center(
               child: Text(
                 'Toque para saber mais',
                 style: TextStyle(
-                  color: AppColors.lilac.withOpacity(0.5),
+                  color: context.gc.lilac.withOpacity(0.5),
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
                 ),
@@ -427,7 +428,7 @@ class BirthChartViewPage extends StatelessWidget {
       BuildContext context, String title, Widget content) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.gc.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -448,7 +449,7 @@ class BirthChartViewPage extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.lilac.withOpacity(0.3),
+                    color: context.gc.lilac.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -459,19 +460,19 @@ class BirthChartViewPage extends StatelessWidget {
                 style: GoogleFonts.cinzelDecorative(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Guia para Iniciantes',
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.6),
+                  color: context.gc.softWhite.withOpacity(0.6),
                   fontSize: 14,
                   fontStyle: FontStyle.italic,
                 ),
               ),
-              const Divider(color: AppColors.lilac),
+              Divider(color: context.gc.lilac),
               const SizedBox(height: 16),
               content,
               const SizedBox(height: 20),
@@ -493,15 +494,15 @@ class BirthChartViewPage extends StatelessWidget {
             children: [
               Text(
                 planet,
-                style: const TextStyle(
-                  color: AppColors.softWhite,
+                style: TextStyle(
+                  color: context.gc.softWhite,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
                 meaning,
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.6),
+                  color: context.gc.softWhite.withOpacity(0.6),
                   fontSize: 12,
                 ),
               ),
@@ -509,8 +510,8 @@ class BirthChartViewPage extends StatelessWidget {
           ),
           Text(
             position,
-            style: const TextStyle(
-              color: AppColors.lilac,
+            style: TextStyle(
+              color: context.gc.lilac,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -555,9 +556,9 @@ class _TrioPrincipalExplanation extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.lilac.withOpacity(0.1),
+            color: context.gc.lilac.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+            border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -565,7 +566,7 @@ class _TrioPrincipalExplanation extends StatelessWidget {
               Text(
                 '💡 Por que é importante?',
                 style: TextStyle(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -575,7 +576,7 @@ class _TrioPrincipalExplanation extends StatelessWidget {
                 'Se você está começando na astrologia, entender seu Sol, Lua e Ascendente '
                 'é o primeiro passo para se conhecer através das estrelas.',
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,
                 ),
               ),
@@ -597,7 +598,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
           'Os planetas pessoais são aqueles que se movem rapidamente pelo zodíaco e '
           'influenciam aspectos do dia a dia da sua personalidade.',
           style: TextStyle(
-            color: AppColors.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
@@ -626,9 +627,9 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.mint.withOpacity(0.1),
+            color: context.gc.mint.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.mint.withOpacity(0.3)),
+            border: Border.all(color: context.gc.mint.withOpacity(0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -636,7 +637,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
               Text(
                 '✨ Dica para iniciantes',
                 style: TextStyle(
-                  color: AppColors.mint,
+                  color: context.gc.mint,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -646,7 +647,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
                 'podem ter posições diferentes. Confira o seu Perfil Mágico para uma análise '
                 'personalizada de cada planeta.',
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,
                 ),
               ),
@@ -668,7 +669,7 @@ class _TodosPlanetasExplanation extends StatelessWidget {
           'Além dos planetas pessoais, existem planetas sociais e geracionais que '
           'influenciam aspectos mais amplos da sua vida.',
           style: TextStyle(
-            color: AppColors.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
@@ -701,9 +702,9 @@ class _TodosPlanetasExplanation extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.starYellow.withOpacity(0.1),
+            color: context.gc.starYellow.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.starYellow.withOpacity(0.3)),
+            border: Border.all(color: context.gc.starYellow.withOpacity(0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -711,7 +712,7 @@ class _TodosPlanetasExplanation extends StatelessWidget {
               Text(
                 '📚 O que significa "Casa"?',
                 style: TextStyle(
-                  color: AppColors.starYellow,
+                  color: context.gc.starYellow,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -720,7 +721,7 @@ class _TodosPlanetasExplanation extends StatelessWidget {
                 'Cada planeta está posicionado em um signo E em uma casa. O signo mostra COMO '
                 'a energia se expressa, a casa mostra ONDE na sua vida ela atua.',
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,
                 ),
               ),
@@ -742,7 +743,7 @@ class _CasasExplanation extends StatelessWidget {
           'As 12 casas astrológicas representam diferentes áreas da sua vida. Cada casa '
           'é governada pelo signo que está na sua cúspide (início).',
           style: TextStyle(
-            color: AppColors.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
@@ -769,9 +770,9 @@ class _CasasExplanation extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.lilac.withOpacity(0.1),
+            color: context.gc.lilac.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+            border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -779,7 +780,7 @@ class _CasasExplanation extends StatelessWidget {
               Text(
                 '🔮 Casas importantes para bruxaria',
                 style: TextStyle(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -789,7 +790,7 @@ class _CasasExplanation extends StatelessWidget {
                 'conexão com o divino) são especialmente importantes para praticantes de magia. '
                 'Veja seu Perfil Mágico para uma análise detalhada dessas casas.',
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,
                 ),
               ),
@@ -810,8 +811,8 @@ class _CasasExplanation extends StatelessWidget {
             width: 70,
             child: Text(
               house,
-              style: const TextStyle(
-                color: AppColors.lilac,
+              style: TextStyle(
+                color: context.gc.lilac,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -821,7 +822,7 @@ class _CasasExplanation extends StatelessWidget {
             child: Text(
               meaning,
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.8),
+                color: context.gc.softWhite.withOpacity(0.8),
                 fontSize: 13,
               ),
             ),
@@ -842,7 +843,7 @@ class _AspectosExplanation extends StatelessWidget {
           'Aspectos são as relações angulares entre os planetas. Eles mostram como as energias '
           'planetárias interagem entre si no seu mapa.',
           style: TextStyle(
-            color: AppColors.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
@@ -850,35 +851,35 @@ class _AspectosExplanation extends StatelessWidget {
         _buildAspectType(
           '☌ Conjunção (0°)',
           'Os planetas estão juntos. Energia intensa e fusionada.',
-          AppColors.lilac,
+          context.gc.lilac,
         ),
         _buildAspectType(
           '⚹ Sextil (60°)',
           'Aspecto harmonioso. Oportunidades e talentos naturais.',
-          AppColors.success,
+          context.gc.success,
         ),
         _buildAspectType(
           '□ Quadratura (90°)',
           'Aspecto desafiador. Tensão que gera crescimento.',
-          AppColors.alert,
+          context.gc.alert,
         ),
         _buildAspectType(
           '△ Trígono (120°)',
           'Aspecto muito harmonioso. Fluxo fácil de energia.',
-          AppColors.success,
+          context.gc.success,
         ),
         _buildAspectType(
           '☍ Oposição (180°)',
           'Aspecto desafiador. Polaridade e necessidade de equilíbrio.',
-          AppColors.alert,
+          context.gc.alert,
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.mint.withOpacity(0.1),
+            color: context.gc.mint.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.mint.withOpacity(0.3)),
+            border: Border.all(color: context.gc.mint.withOpacity(0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -886,7 +887,7 @@ class _AspectosExplanation extends StatelessWidget {
               Text(
                 '💫 Importante saber',
                 style: TextStyle(
-                  color: AppColors.mint,
+                  color: context.gc.mint,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -897,7 +898,7 @@ class _AspectosExplanation extends StatelessWidget {
                 'Na magia, entender seus aspectos ajuda a saber quais energias trabalham '
                 'bem juntas e quais precisam de mais atenção nos seus rituais.',
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,
                 ),
               ),
@@ -938,7 +939,7 @@ class _AspectosExplanation extends StatelessWidget {
                 Text(
                   meaning,
                   style: TextStyle(
-                    color: AppColors.softWhite.withOpacity(0.8),
+                    color: context.gc.softWhite.withOpacity(0.8),
                     fontSize: 13,
                   ),
                 ),
@@ -960,14 +961,14 @@ Widget _buildSection(String title, String content) {
         style: GoogleFonts.cinzelDecorative(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: AppColors.lilac,
+          color: context.gc.lilac,
         ),
       ),
       const SizedBox(height: 8),
       Text(
         content,
         style: TextStyle(
-          color: AppColors.softWhite.withOpacity(0.9),
+          color: context.gc.softWhite.withOpacity(0.9),
           height: 1.6,
         ),
       ),

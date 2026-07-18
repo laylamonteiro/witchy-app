@@ -5,6 +5,7 @@ import '../providers/encyclopedia_provider.dart';
 import '../../data/models/color_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'color_detail_page.dart';
 
 class ColorsListPage extends StatefulWidget {
@@ -89,7 +90,7 @@ class _ColorsListPageState extends State<ColorsListPage> {
                             color: colorModel.color,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppColors.surfaceBorder,
+                              color: context.gc.surfaceBorder,
                               width: 2,
                             ),
                           ),
@@ -104,7 +105,7 @@ class _ColorsListPageState extends State<ColorsListPage> {
                                 style: GoogleFonts.cinzelDecorative(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.lilac,
+                                  color: context.gc.lilac,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -135,9 +136,9 @@ class _ColorsListPageState extends State<ColorsListPage> {
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.chevron_right,
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                       ],
                     ),

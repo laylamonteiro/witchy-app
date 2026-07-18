@@ -7,6 +7,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/moon_phase_widget.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'spell_form_page.dart';
 
 class SpellDetailPage extends StatelessWidget {
@@ -26,9 +27,9 @@ class SpellDetailPage extends StatelessWidget {
     if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text('Feitiço salvo no seu grimório! ✨'),
-        backgroundColor: AppColors.success,
+        backgroundColor: context.gc.success,
       ),
     );
 
@@ -92,12 +93,12 @@ class SpellDetailPage extends StatelessWidget {
                       _buildChip(
                         spell.type.displayName,
                         spell.type == SpellType.attraction
-                            ? AppColors.mint
-                            : AppColors.pink,
+                            ? context.gc.mint
+                            : context.gc.pink,
                       ),
                       _buildChip(
                         spell.purpose,
-                        AppColors.lilac,
+                        context.gc.lilac,
                       ),
                     ],
                   ),
@@ -142,10 +143,10 @@ class SpellDetailPage extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.fiber_manual_record,
                               size: 12,
-                              color: AppColors.lilac,
+                              color: context.gc.lilac,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -185,7 +186,7 @@ class SpellDetailPage extends StatelessWidget {
               MagicalCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.timer, color: AppColors.lilac),
+                    Icon(Icons.timer, color: context.gc.lilac),
                     const SizedBox(width: 12),
                     Text(
                       'Duração: ${spell.duration} ${spell.duration == 1 ? "dia" : "dias"}',
@@ -259,7 +260,7 @@ class SpellDetailPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.alert,
+              foregroundColor: context.gc.alert,
             ),
             child: const Text('Excluir'),
           ),

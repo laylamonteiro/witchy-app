@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../subscription/presentation/widgets/subscription_offer_widgets.dart';
 
 Future<void> showPremiumUpgradePaywall(BuildContext context) {
@@ -391,8 +392,8 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                 listenable: _paymentService,
                 builder: (context, _) {
                   if (_isInitializing) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: AppColors.lilac),
+                    return Center(
+                      child: CircularProgressIndicator(color: context.gc.lilac),
                     );
                   }
 
@@ -436,10 +437,10 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                 purchaseEnabled: selectedAvailable && !noProducts,
                                 onPurchase: _purchaseSelectedPlan,
                                 unavailableNotice: noProducts
-                                    ? const Text(
+                                    ? Text(
                                         'Os planos estão temporariamente indisponíveis',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: AppColors.warning),
+                                        style: TextStyle(color: context.gc.warning),
                                       )
                                     : null,
                               ),

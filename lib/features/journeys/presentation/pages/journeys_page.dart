@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/journey_model.dart';
@@ -190,7 +191,7 @@ class _JourneysPageState extends State<JourneysPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -208,8 +209,8 @@ class _JourneysPageState extends State<JourneysPage>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          indicatorColor: AppColors.lilac,
-          labelColor: AppColors.lilac,
+          indicatorColor: context.gc.lilac,
+          labelColor: context.gc.lilac,
           unselectedLabelColor: Colors.white54,
           tabs: const [
             Tab(text: 'Todas'),
@@ -220,8 +221,8 @@ class _JourneysPageState extends State<JourneysPage>
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.lilac))
+          ? Center(
+              child: CircularProgressIndicator(color: context.gc.lilac))
           : Column(
               children: [
                 // XP Header
@@ -265,12 +266,12 @@ class _JourneysPageState extends State<JourneysPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.lilac.withValues(alpha: 0.3),
-            AppColors.pink.withValues(alpha: 0.3),
+            context.gc.lilac.withValues(alpha: 0.3),
+            context.gc.pink.withValues(alpha: 0.3),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.5)),
+        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -280,7 +281,7 @@ class _JourneysPageState extends State<JourneysPage>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [AppColors.lilac, AppColors.pink],
+                colors: [context.gc.lilac, context.gc.pink],
               ),
             ),
             child: Center(
@@ -322,7 +323,7 @@ class _JourneysPageState extends State<JourneysPage>
                     value: xpInLevel / xpForNextLevel,
                     backgroundColor: Colors.white24,
                     valueColor:
-                        const AlwaysStoppedAnimation(AppColors.starYellow),
+                        AlwaysStoppedAnimation(context.gc.starYellow),
                     minHeight: 6,
                   ),
                 ),
@@ -363,7 +364,7 @@ class _JourneysPageState extends State<JourneysPage>
 
     return RefreshIndicator(
       onRefresh: _loadUserStats,
-      color: AppColors.lilac,
+      color: context.gc.lilac,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: journeys.length,
@@ -393,7 +394,7 @@ class _JourneysPageState extends State<JourneysPage>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCompleted
@@ -492,19 +493,19 @@ class _JourneysPageState extends State<JourneysPage>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.starYellow.withValues(alpha: 0.2),
+                        color: context.gc.starYellow.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star,
-                              color: AppColors.starYellow, size: 14),
+                          Icon(Icons.star,
+                              color: context.gc.starYellow, size: 14),
                           const SizedBox(width: 4),
                           Text(
                             '$earnedXp/${journey.xpReward} XP',
-                            style: const TextStyle(
-                              color: AppColors.starYellow,
+                            style: TextStyle(
+                              color: context.gc.starYellow,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -533,8 +534,8 @@ class _JourneysPageState extends State<JourneysPage>
         maxChildSize: 0.95,
         expand: false,
         builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
+          decoration: BoxDecoration(
+            color: context.gc.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -711,13 +712,13 @@ class _JourneysPageState extends State<JourneysPage>
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 color:
-                                    AppColors.starYellow.withValues(alpha: 0.2),
+                                    context.gc.starYellow.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 '+${step.xpReward} XP',
-                                style: const TextStyle(
-                                  color: AppColors.starYellow,
+                                style: TextStyle(
+                                  color: context.gc.starYellow,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),

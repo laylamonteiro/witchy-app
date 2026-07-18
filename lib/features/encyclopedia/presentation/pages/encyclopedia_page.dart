@@ -13,6 +13,7 @@ import '../../../runes/presentation/pages/runes_list_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class EncyclopediaPage extends StatefulWidget {
   /// Notificador da HomePage: re-toque na aba "Enciclopédia" volta para a
@@ -97,7 +98,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
             alignment: Alignment.centerLeft,
             child: TabBar(
               controller: _tabController,
-              indicatorColor: AppColors.lilac,
+              indicatorColor: context.gc.lilac,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               padding: EdgeInsets.zero,

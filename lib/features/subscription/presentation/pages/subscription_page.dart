@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
@@ -47,7 +48,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -69,9 +70,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             listenable: _paymentService,
             builder: (context, _) {
               if (_isLoading) {
-                return const Center(
+                return Center(
                   child: CircularProgressIndicator(
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                   ),
                 );
               }
@@ -148,20 +149,20 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       // Premium via RevenueCat
       if (isLifetimeSubscription) {
         subscriptionLabel = 'Acesso Vitalício';
-        labelColor = AppColors.starYellow;
+        labelColor = context.gc.starYellow;
       } else if (expirationDate != null) {
         subscriptionLabel = 'Válido até ${_formatDate(expirationDate)}';
         labelColor = Colors.white70;
       } else {
         subscriptionLabel = 'Assinatura Ativa';
-        labelColor = AppColors.starYellow;
+        labelColor = context.gc.starYellow;
       }
     } else if (isBetaCodePremium) {
       subscriptionLabel = 'Acesso Vitalício (Código Premium)';
-      labelColor = AppColors.starYellow;
+      labelColor = context.gc.starYellow;
     } else if (isPremiumWithLifetime) {
       subscriptionLabel = 'Acesso Vitalício';
-      labelColor = AppColors.starYellow;
+      labelColor = context.gc.starYellow;
     } else if (isPremiumWithMonthlyPlan) {
       // Assinatura mensal/anual (sem RevenueCat ativo no momento)
       final planName =
@@ -172,7 +173,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       labelColor = Colors.white70;
     } else {
       subscriptionLabel = 'Premium Ativo';
-      labelColor = AppColors.starYellow;
+      labelColor = context.gc.starYellow;
     }
 
     return Container(
@@ -181,17 +182,17 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         gradient: isPro
             ? LinearGradient(
                 colors: [
-                  AppColors.lilac.withValues(alpha: 0.3),
-                  AppColors.pink.withValues(alpha: 0.3),
+                  context.gc.lilac.withValues(alpha: 0.3),
+                  context.gc.pink.withValues(alpha: 0.3),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : null,
-        color: isPro ? null : AppColors.surface,
+        color: isPro ? null : context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isPro ? AppColors.lilac : Colors.white24,
+          color: isPro ? context.gc.lilac : Colors.white24,
           width: isPro ? 2 : 1,
         ),
       ),
@@ -201,7 +202,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           Icon(
             isPro ? Icons.star : Icons.star_border,
             size: 48,
-            color: isPro ? AppColors.starYellow : Colors.white54,
+            color: isPro ? context.gc.starYellow : Colors.white54,
           ),
           const SizedBox(height: 12),
 
@@ -233,7 +234,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -269,7 +270,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppColors.starYellow),
+          Icon(icon, size: 20, color: context.gc.starYellow),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -325,7 +326,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.gc.surface,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -375,13 +376,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.gc.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+          border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.info_outline, color: AppColors.lilac, size: 20),
+            Icon(Icons.info_outline, color: context.gc.lilac, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -407,16 +408,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.gc.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+              border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.info_outline, color: AppColors.lilac, size: 20),
+                    Icon(Icons.info_outline, color: context.gc.lilac, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -452,7 +453,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    backgroundColor: AppColors.surface,
+                    backgroundColor: context.gc.surface,
                     title: const Text(
                       'Gerenciar Assinatura',
                       style: TextStyle(color: Colors.white),
@@ -467,9 +468,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text(
+                        child: Text(
                           'Entendi',
-                          style: TextStyle(color: AppColors.lilac),
+                          style: TextStyle(color: context.gc.lilac),
                         ),
                       ),
                     ],
@@ -540,13 +541,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   style: TextStyle(fontSize: 24),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Tem um Código Premium?',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
                   ),
                 ),
@@ -556,7 +557,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             Text(
               'Resgate seu código para obter acesso Premium vitalício!',
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withOpacity(0.7),
                 fontSize: 14,
               ),
             ),
@@ -569,21 +570,21 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     decoration: InputDecoration(
                       hintText: 'Digite seu código',
                       hintStyle: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.5),
+                        color: context.gc.softWhite.withOpacity(0.5),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.lilac),
+                        borderSide: BorderSide(color: context.gc.lilac),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: AppColors.lilac.withOpacity(0.3),
+                          color: context.gc.lilac.withOpacity(0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.lilac),
+                        borderSide: BorderSide(color: context.gc.lilac),
                       ),
                     ),
                     textCapitalization: TextCapitalization.characters,
@@ -634,7 +635,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.lilac,
+                    backgroundColor: context.gc.lilac,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
@@ -709,9 +710,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Entendi',
-              style: TextStyle(color: AppColors.lilac),
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
         ],

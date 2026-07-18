@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/presentation/pages/user_spells_list_page.dart';
@@ -282,7 +283,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -305,11 +306,11 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.lilac))
+          ? Center(
+              child: CircularProgressIndicator(color: context.gc.lilac))
           : RefreshIndicator(
               onRefresh: _loadStats,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
@@ -352,21 +353,21 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.lilac.withValues(alpha: 0.3),
-            AppColors.pink.withValues(alpha: 0.3),
+            context.gc.lilac.withValues(alpha: 0.3),
+            context.gc.pink.withValues(alpha: 0.3),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.5)),
+        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.auto_awesome,
             size: 48,
-            color: AppColors.starYellow,
+            color: context.gc.starYellow,
           ),
           const SizedBox(height: 12),
           Text(
@@ -431,7 +432,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -641,7 +642,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.gc.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
@@ -682,7 +683,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -778,7 +779,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),

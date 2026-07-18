@@ -6,6 +6,7 @@ import '../providers/encyclopedia_provider.dart';
 import 'herb_detail_page.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class HerbsListPage extends StatefulWidget {
   const HerbsListPage({super.key});
@@ -93,7 +94,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    color: AppColors.mint.withOpacity(0.2),
+                                    color: context.gc.mint.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Center(
@@ -109,7 +110,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
                               width: 60,
                               height: 60,
                               decoration: BoxDecoration(
-                                color: AppColors.mint.withOpacity(0.2),
+                                color: context.gc.mint.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
@@ -133,14 +134,14 @@ class _HerbsListPageState extends State<HerbsListPage> {
                                   style: GoogleFonts.cinzelDecorative(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.lilac,
+                                    color: context.gc.lilac,
                                   ),
                                 ),
                               ),
                               if (herb.toxic)
-                                const Icon(
+                                Icon(
                                   Icons.warning_amber_rounded,
-                                  color: AppColors.alert,
+                                  color: context.gc.alert,
                                   size: 20,
                                 ),
                             ],
@@ -166,9 +167,9 @@ class _HerbsListPageState extends State<HerbsListPage> {
                         ],
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.chevron_right,
-                      color: AppColors.textSecondary,
+                      color: context.gc.textSecondary,
                     ),
                   ],
                 ),

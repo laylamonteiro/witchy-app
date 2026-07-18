@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../data/models/rune_spread_model.dart';
 import '../../data/data_sources/runes_data.dart';
 import '../../data/repositories/rune_reading_repository.dart';
@@ -50,10 +51,10 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     final authProvider = context.read<AuthProvider>();
     if (!authProvider.canUseRunes) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
               'Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
       );
@@ -128,9 +129,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     return Scaffold(
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Leitura de Runas'),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -146,7 +147,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                       'Leitura de Runas',
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: AppColors.lilac,
+                                color: context.gc.lilac,
                               ),
                     ),
                     const SizedBox(height: 12),
@@ -155,7 +156,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                       'Cada runa pode aparecer em posição normal ou invertida (quando aplicável), '
                       'mudando seu significado.',
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                         fontSize: 14,
                         height: 1.5,
                       ),
@@ -166,7 +167,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                       'Runas Invertidas: Quando uma runa aparece de cabeça para baixo, '
                       'geralmente indica bloqueios ou aspectos desafiadores do significado original.',
                       style: TextStyle(
-                        color: AppColors.lilac.withOpacity(0.7),
+                        color: context.gc.lilac.withOpacity(0.7),
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                         height: 1.4,
@@ -182,7 +183,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               Text(
                 'Escolha um Layout',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -216,27 +217,27 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               MagicalCard(
                 child: TextField(
                   controller: _questionController,
-                  style: const TextStyle(color: AppColors.softWhite),
+                  style: TextStyle(color: context.gc.softWhite),
                   decoration: InputDecoration(
                     labelText: 'Sua Pergunta (opcional)',
-                    labelStyle: const TextStyle(color: AppColors.lilac),
+                    labelStyle: TextStyle(color: context.gc.lilac),
                     hintText: 'O que as runas devem revelar?',
                     hintStyle: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.5),
+                      color: context.gc.softWhite.withOpacity(0.5),
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.lilac),
+                      borderSide: BorderSide(color: context.gc.lilac),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: AppColors.lilac.withOpacity(0.3),
+                        color: context.gc.lilac.withOpacity(0.3),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.lilac),
+                      borderSide: BorderSide(color: context.gc.lilac),
                     ),
                   ),
                   maxLines: 2,
@@ -248,26 +249,26 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               ElevatedButton.icon(
                 onPressed: _isDrawing ? null : _drawRunes,
                 icon: _isDrawing
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.darkBackground,
+                            context.gc.darkBackground,
                           ),
                         ),
                       )
                     : const Icon(Icons.auto_awesome),
                 label: Text(_isDrawing ? 'Tirando runas...' : 'Tirar Runas'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: AppColors.darkBackground,
+                  backgroundColor: context.gc.lilac,
+                  foregroundColor: context.gc.darkBackground,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 16,
                   ),
-                  disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
+                  disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
                 ),
               ),
 
@@ -283,8 +284,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                       'Leituras restantes hoje: $remaining/${UserModel.freeRuneReadingsLimit}',
                       style: TextStyle(
                         color: remaining > 0
-                            ? AppColors.softWhite.withOpacity(0.6)
-                            : AppColors.alert,
+                            ? context.gc.softWhite.withOpacity(0.6)
+                            : context.gc.alert,
                         fontSize: 12,
                       ),
                       textAlign: TextAlign.center,
@@ -309,8 +310,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                 icon: const Icon(Icons.refresh),
                 label: const Text('Nova Leitura'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.lilac,
-                  side: const BorderSide(color: AppColors.lilac),
+                  foregroundColor: context.gc.lilac,
+                  side: BorderSide(color: context.gc.lilac),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -335,11 +336,11 @@ class _RuneReadingPageState extends State<RuneReadingPage>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.lilac.withOpacity(0.2)
-              : AppColors.cardBackground,
+              ? context.gc.lilac.withOpacity(0.2)
+              : context.gc.cardBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.lilac : AppColors.surfaceBorder,
+            color: isSelected ? context.gc.lilac : context.gc.surfaceBorder,
             width: 2,
           ),
         ),
@@ -347,7 +348,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.lilac : AppColors.softWhite,
+              color: isSelected ? context.gc.lilac : context.gc.softWhite,
               size: 32,
             ),
             const SizedBox(width: 16),
@@ -358,7 +359,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   Text(
                     spread.displayName,
                     style: TextStyle(
-                      color: isSelected ? AppColors.lilac : AppColors.softWhite,
+                      color: isSelected ? context.gc.lilac : context.gc.softWhite,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -367,7 +368,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   Text(
                     spread.description,
                     style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.7),
+                      color: context.gc.softWhite.withOpacity(0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -375,9 +376,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               ),
             ),
             if (isSelected)
-              const Icon(
+              Icon(
                 Icons.check_circle,
-                color: AppColors.lilac,
+                color: context.gc.lilac,
               ),
           ],
         ),
@@ -397,7 +398,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               Text(
                 'Sua Leitura',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
               ),
               if (_questionController.text.isNotEmpty) ...[
@@ -405,7 +406,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                 Text(
                   _questionController.text,
                   style: TextStyle(
-                    color: AppColors.softWhite.withOpacity(0.8),
+                    color: context.gc.softWhite.withOpacity(0.8),
                     fontStyle: FontStyle.italic,
                   ),
                   textAlign: TextAlign.center,
@@ -457,7 +458,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                             width: 60,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: AppColors.lilac.withOpacity(0.2),
+                              color: context.gc.lilac.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Center(
@@ -465,7 +466,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                                 position.rune.symbol,
                                 style: TextStyle(
                                   fontSize: 32,
-                                  color: AppColors.lilac,
+                                  color: context.gc.lilac,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -479,7 +480,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                                 Text(
                                   position.positionMeaning,
                                   style: TextStyle(
-                                    color: AppColors.softWhite.withOpacity(0.7),
+                                    color: context.gc.softWhite.withOpacity(0.7),
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -487,8 +488,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                                 const SizedBox(height: 4),
                                 Text(
                                   position.rune.name,
-                                  style: const TextStyle(
-                                    color: AppColors.lilac,
+                                  style: TextStyle(
+                                    color: context.gc.lilac,
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -503,13 +504,13 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.alert.withOpacity(0.2),
+                                color: context.gc.alert.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Invertida',
                                 style: TextStyle(
-                                  color: AppColors.alert,
+                                  color: context.gc.alert,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -523,8 +524,8 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                                 position.rune.reversedMeaning != null
                             ? position.rune.reversedMeaning!
                             : position.rune.divination,
-                        style: const TextStyle(
-                          color: AppColors.softWhite,
+                        style: TextStyle(
+                          color: context.gc.softWhite,
                           height: 1.5,
                         ),
                       ),
