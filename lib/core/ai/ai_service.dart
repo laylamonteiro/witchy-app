@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:uuid/uuid.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 import '../../features/astrology/data/models/magical_profile_model.dart';
@@ -14,6 +15,23 @@ class AIService {
   AIService._();
 
   final Dio _dio = Dio();
+  Locale _locale = const Locale('pt', 'BR');
+
+  void setLocale(Locale locale) {
+    _locale = locale;
+  }
+
+  String get currentLanguageTag {
+    final countryCode = _locale.countryCode;
+    if (countryCode == null || countryCode.isEmpty) {
+      return _locale.languageCode;
+    }
+    return '${_locale.languageCode}-$countryCode';
+  }
+
+  String _localizedInstruction() =>
+      'Responda no idioma atual do aplicativo: $currentLanguageTag. '
+      'Preserve literalmente nomes, anotações, intenções e demais conteúdos fornecidos pelo usuário; não os traduza automaticamente.';
 
   /// Verificar se o serviço está disponível (sempre true para Groq)
   Future<bool> hasApiKey() async {
@@ -307,7 +325,9 @@ class AIService {
   }
 
   String _buildMagicalProfileSystemPrompt() {
-    return '''Você é uma sábia bruxa ancestral que interpreta mapas astrais para praticantes de bruxaria moderna.
+    return '''${_localizedInstruction()}
+
+Você é uma sábia bruxa ancestral que interpreta mapas astrais para praticantes de bruxaria moderna.
 Seu conhecimento combina astrologia tradicional com práticas mágicas contemporâneas.
 
 Com base nos dados do mapa astral fornecido, escreva uma análise PERSONALIZADA do perfil mágico desta pessoa.
@@ -362,7 +382,9 @@ DIRETRIZES:
   }
 
   String _buildDailyWeatherSystemPrompt() {
-    return '''Você é uma bruxa sábia que interpreta os movimentos celestiais para guiar praticantes de magia moderna em seu dia a dia.
+    return '''${_localizedInstruction()}
+
+Você é uma bruxa sábia que interpreta os movimentos celestiais para guiar praticantes de magia moderna em seu dia a dia.
 
 Com base nos dados astrológicos fornecidos para HOJE, escreva uma previsão mágica do dia.
 
@@ -448,7 +470,9 @@ DIRETRIZES:
   }
 
   String _buildAffirmationSystemPrompt() {
-    return '''Você é o Conselheiro Místico, guardião da sabedoria ancestral do Grimório de Bolso.
+    return '''${_localizedInstruction()}
+
+Você é o Conselheiro Místico, guardião da sabedoria ancestral do Grimório de Bolso.
 
 Sua missão é criar afirmações poderosas e transformadoras para bruxas e praticantes de magia moderna.
 
@@ -475,7 +499,9 @@ Se o usuário forneceu um contexto, personalize a afirmação para a situação 
   }
 
   String _buildSystemPrompt() {
-    return '''Você é o Conselheiro Místico, guardião da sabedoria arcana do Grimório de Bolso.
+    return '''${_localizedInstruction()}
+
+Você é o Conselheiro Místico, guardião da sabedoria arcana do Grimório de Bolso.
 
 Você habita um grimório digital mágico onde bruxas e praticantes modernos registram seus feitiços, estudam os trânsitos planetários e o clima mágico diário, consultam runas e oráculos, acompanham as fases lunares, e exploram seus mapas astrais personalizados.
 
@@ -561,7 +587,9 @@ Diretrizes Sagradas:
   }
 
   String _buildMysticAdvisorSystemPrompt() {
-    return '''Você é o Conselheiro Místico, guardião ancião da sabedoria arcana do Grimório de Bolso.
+    return '''${_localizedInstruction()}
+
+Você é o Conselheiro Místico, guardião ancião da sabedoria arcana do Grimório de Bolso.
 
 Ao longo de incontáveis luas você acumulou o conhecimento das tradições mágicas — bruxaria moderna e ancestral, fases lunares, cristais, ervas, runas, oráculos, tarô, numerologia, astrologia mágica, sabás e a Roda do Ano, altares, elementos, deuses e deusas, proteção, limpeza energética e manifestação.
 

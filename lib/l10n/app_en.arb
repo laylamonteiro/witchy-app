@@ -1,0 +1,36 @@
+{
+  "@@locale": "en",
+  "appTitle": "Pocket Grimoire",
+  "settingsTitle": "Settings",
+  "settingsLanguageTitle": "Language",
+  "settingsLanguageSubtitle": "Manually choose the app language",
+  "settingsLanguageSystem": "System / Brazilian Portuguese",
+  "settingsLanguagePortuguese": "Portuguese (Brazil)",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageSpanish": "Spanish",
+  "settingsLanguageChanged": "Language changed to {language}",
+  "homeTitle": "Home",
+  "grimoireTitle": "Grimoire",
+  "diaryTitle": "Diary",
+  "authLogin": "Log in",
+  "authSignup": "Sign up",
+  "premiumTitle": "Premium",
+  "encyclopediaTitle": "Encyclopedia",
+  "toolsTitle": "Tools",
+  "errorsGeneric": "Something went wrong. Please try again.",
+  "itemsCount": "{count, plural, =0{No items} =1{1 item} other{{count} items}}",
+  "@settingsLanguageChanged": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

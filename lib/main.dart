@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -15,6 +17,7 @@ import 'core/database/database_helper.dart';
 import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/sync_provider.dart';
+import 'core/providers/language_provider.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/payment_service.dart';
 import 'core/services/premium_access.dart';
@@ -56,6 +59,8 @@ void main() async {
 
   // Initialize date formatting for Portuguese locale
   await initializeDateFormatting('pt_BR', null);
+  await initializeDateFormatting('en', null);
+  await initializeDateFormatting('es', null);
 
   // Initialize database
   await DatabaseHelper.instance.database;
@@ -220,6 +225,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider.value(value: PaymentService()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider(widget.prefs)),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
         // SpellProvider agora depende de AuthProvider para filtrar por usuário
         ChangeNotifierProxyProvider<AuthProvider, SpellProvider>(
@@ -293,20 +299,31 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           },
         ),
       ],
-      child: MaterialApp(
-        navigatorKey: _rootNavigatorKey,
-        title: 'Grimório de Bolso',
-        theme: AppTheme.darkTheme,
-        home: AuthWrapper(showSplash: _showSplash),
-        routes: {
-          '/home': (context) => const HomePage(),
-          '/welcome': (context) => const WelcomePage(),
-          '/login': (context) => const LoginPage(),
-          '/signup': (context) => const SignupPage(),
-          '/onboarding': (context) => const OnboardingPage(),
-          '/subscription': (context) => const SubscriptionPage(),
-        },
-        debugShowCheckedModeBanner: false,
+      child: Consumer<LanguageProvider>(
+        builder: (context, languageProvider, _) => MaterialApp(
+          navigatorKey: _rootNavigatorKey,
+          title: 'Grimório de Bolso',
+          locale: languageProvider.locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: LanguageProvider.supportedLocales,
+          localeResolutionCallback: LanguageProvider.resolve,
+          theme: AppTheme.darkTheme,
+          home: AuthWrapper(showSplash: _showSplash),
+          routes: {
+            '/home': (context) => const HomePage(),
+            '/welcome': (context) => const WelcomePage(),
+            '/login': (context) => const LoginPage(),
+            '/signup': (context) => const SignupPage(),
+            '/onboarding': (context) => const OnboardingPage(),
+            '/subscription': (context) => const SubscriptionPage(),
+          },
+          debugShowCheckedModeBanner: false,
+        ),
       ),
     );
   }
