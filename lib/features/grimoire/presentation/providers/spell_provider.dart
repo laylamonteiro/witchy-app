@@ -87,6 +87,10 @@ class SpellProvider with ChangeNotifier {
 
   Future<void> updateSpell(SpellModel spell) async {
     try {
+      if (spell.isPreloaded) {
+        return;
+      }
+
       await _repository.update(spell.copyWith(userId: _currentUserId));
       await loadSpells();
     } catch (e) {
@@ -97,6 +101,11 @@ class SpellProvider with ChangeNotifier {
 
   Future<void> deleteSpell(String id) async {
     try {
+      final spell = await _repository.getById(id);
+      if (spell?.isPreloaded ?? false) {
+        return;
+      }
+
       await _repository.delete(id);
       await loadSpells();
     } catch (e) {

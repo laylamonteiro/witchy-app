@@ -74,6 +74,11 @@ class SpellRepository {
   }
 
   Future<int> update(SpellModel spell) async {
+    final existingSpell = await getById(spell.id);
+    if (existingSpell?.isPreloaded ?? false) {
+      return 0;
+    }
+
     final db = await _dbHelper.database;
     final result = await db.update(
       'spells',
@@ -86,6 +91,11 @@ class SpellRepository {
   }
 
   Future<int> delete(String id) async {
+    final existingSpell = await getById(id);
+    if (existingSpell?.isPreloaded ?? false) {
+      return 0;
+    }
+
     final db = await _dbHelper.database;
     final result = await db.delete(
       'spells',
