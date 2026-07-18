@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
+import '../data_sources/spells_data.dart';
 import '../models/spell_model.dart';
 
 class SpellRepository {
@@ -15,6 +16,42 @@ class SpellRepository {
       orderBy: 'created_at DESC',
     );
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
+  }
+
+
+  /// Garante que os feitiços ancestrais do app existam no banco.
+  ///
+  /// A verificação consulta apenas registros pré-carregados para manter o seed
+  /// idempotente e evitar depender de dados criados pelo usuário.
+  Future<void> ensurePreloadedSpells() async {
+    final db = await _dbHelper.database;
+    final existingPreloadedRows = await db.query(
+      'spells',
+      columns: ['id'],
+      where: 'is_preloaded = ?',
+      whereArgs: [1],
+    );
+    final existingPreloadedIds = existingPreloadedRows
+        .map((row) => row['id'] as String)
+        .toSet();
+
+    final batch = db.batch();
+    var hasMissingSeed = false;
+
+    for (final spell in preloadedSpells) {
+      if (!existingPreloadedIds.contains(spell.id)) {
+        hasMissingSeed = true;
+        batch.insert(
+          'spells',
+          spell.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+
+    if (hasMissingSeed) {
+      await batch.commit(noResult: true);
+    }
   }
 
   /// Retorna feitiços do usuário + pré-carregados (excluindo feitiços de outros usuários)
