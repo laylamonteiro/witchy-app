@@ -3,11 +3,25 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../models/spell_model.dart';
 
-class SpellRepository {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  final DataSyncService _syncService = DataSyncService();
+abstract class SpellLocalStore {
+  Future<List<SpellModel>> getAll();
+  Future<List<SpellModel>> getForUser(String userId);
+  Future<SpellModel?> getById(String id);
+  Future<List<SpellModel>> getByPurpose(String purpose);
+  Future<List<SpellModel>> getByType(SpellType type);
+  Future<int> insert(SpellModel spell);
+  Future<int> update(SpellModel spell);
+  Future<int> delete(String id);
+  Future<int> count();
+}
 
-  /// Retorna todos os feitiços (sem filtro de usuário) - usado apenas para admin/debug
+class SqfliteSpellLocalStore implements SpellLocalStore {
+  SqfliteSpellLocalStore({DatabaseHelper? dbHelper})
+      : _dbHelper = dbHelper ?? DatabaseHelper.instance;
+
+  final DatabaseHelper _dbHelper;
+
+  @override
   Future<List<SpellModel>> getAll() async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -17,7 +31,7 @@ class SpellRepository {
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
   }
 
-  /// Retorna feitiços do usuário + pré-carregados (excluindo feitiços de outros usuários)
+  @override
   Future<List<SpellModel>> getForUser(String userId) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -29,6 +43,7 @@ class SpellRepository {
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
   }
 
+  @override
   Future<SpellModel?> getById(String id) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -40,6 +55,7 @@ class SpellRepository {
     return SpellModel.fromMap(maps.first);
   }
 
+  @override
   Future<List<SpellModel>> getByPurpose(String purpose) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -51,6 +67,7 @@ class SpellRepository {
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
   }
 
+  @override
   Future<List<SpellModel>> getByType(SpellType type) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -62,43 +79,112 @@ class SpellRepository {
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
   }
 
+  @override
   Future<int> insert(SpellModel spell) async {
     final db = await _dbHelper.database;
-    final result = await db.insert(
+    return db.insert(
       'spells',
       spell.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    _syncService.syncItem(SyncEntity.spells, spell.toMap());
-    return result;
   }
 
+  @override
   Future<int> update(SpellModel spell) async {
     final db = await _dbHelper.database;
-    final result = await db.update(
+    return db.update(
       'spells',
       spell.toMap(),
       where: 'id = ?',
       whereArgs: [spell.id],
     );
-    _syncService.syncItem(SyncEntity.spells, spell.toMap());
-    return result;
   }
 
+  @override
   Future<int> delete(String id) async {
     final db = await _dbHelper.database;
-    final result = await db.delete(
+    return db.delete(
       'spells',
       where: 'id = ?',
       whereArgs: [id],
     );
-    _syncService.deleteItem(SyncEntity.spells, id);
-    return result;
   }
 
+  @override
   Future<int> count() async {
     final db = await _dbHelper.database;
     final result = await db.rawQuery('SELECT COUNT(*) FROM spells');
     return Sqflite.firstIntValue(result) ?? 0;
   }
+}
+
+abstract class SpellSyncGateway {
+  Future<void> sync(SpellModel spell);
+  Future<void> delete(String id);
+}
+
+class DataSyncSpellGateway implements SpellSyncGateway {
+  DataSyncSpellGateway({DataSyncService? syncService})
+      : _syncService = syncService ?? DataSyncService();
+
+  final DataSyncService _syncService;
+
+  @override
+  Future<void> sync(SpellModel spell) =>
+      _syncService.syncItem(SyncEntity.spells, spell.toMap());
+
+  @override
+  Future<void> delete(String id) =>
+      _syncService.deleteItem(SyncEntity.spells, id);
+}
+
+class SpellRepository {
+  SpellRepository({SpellLocalStore? localStore, SpellSyncGateway? syncGateway})
+      : _localStore = localStore ?? SqfliteSpellLocalStore(),
+        _syncGateway = syncGateway ?? DataSyncSpellGateway();
+
+  final SpellLocalStore _localStore;
+  final SpellSyncGateway _syncGateway;
+
+  /// Retorna todos os feitiços (sem filtro de usuário) - usado apenas para admin/debug
+  Future<List<SpellModel>> getAll() => _localStore.getAll();
+
+  /// Retorna feitiços do usuário + pré-carregados (excluindo feitiços de outros usuários)
+  Future<List<SpellModel>> getForUser(String userId) =>
+      _localStore.getForUser(userId);
+
+  Future<SpellModel?> getById(String id) => _localStore.getById(id);
+
+  Future<List<SpellModel>> getByPurpose(String purpose) =>
+      _localStore.getByPurpose(purpose);
+
+  Future<List<SpellModel>> getByType(SpellType type) =>
+      _localStore.getByType(type);
+
+  Future<int> insert(SpellModel spell) async {
+    final result = await _localStore.insert(spell);
+    if (!spell.isPreloaded) {
+      await _syncGateway.sync(spell);
+    }
+    return result;
+  }
+
+  Future<int> update(SpellModel spell) async {
+    final result = await _localStore.update(spell);
+    if (!spell.isPreloaded) {
+      await _syncGateway.sync(spell);
+    }
+    return result;
+  }
+
+  Future<int> delete(String id) async {
+    final spell = await _localStore.getById(id);
+    final result = await _localStore.delete(id);
+    if (spell != null && !spell.isPreloaded) {
+      await _syncGateway.delete(id);
+    }
+    return result;
+  }
+
+  Future<int> count() => _localStore.count();
 }
