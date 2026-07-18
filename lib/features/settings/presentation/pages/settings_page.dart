@@ -18,6 +18,7 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
+import 'theme_picker_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -533,6 +534,15 @@ class SettingsPage extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),
+            ),
+          ),
+          _buildDivider(),
+          _buildOptionTile(
+            icon: Icons.palette_outlined,
+            title: 'Aparência',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ThemePickerPage()),
             ),
           ),
           _buildDivider(),

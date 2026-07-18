@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'grimoire_colors.dart';
 
 /// Título de AppBar que preserva a proporção das letras e só reduz a escala
 /// quando o espaço horizontal disponível não é suficiente.
@@ -32,152 +33,157 @@ class ResponsiveAppBarTitle extends StatelessWidget {
   }
 }
 
+/// Constantes de cor legadas — fallback para widgets ainda não migrados para
+/// `context.gc`. Os valores apontam para o tema padrão (Vinho & Orquídea).
+///
+/// Migração: `AppColors.x` → `context.gc.x`.
 class AppColors {
   // Fundos e bases
-  static const background =
-      Color(0xFF0B0A16); // Quase preto com tom roxo profundo
-  static const surface = Color(0xFF171425); // Roxo bem escuro para cards
-  static const surfaceBorder = Color(0xFF26213A); // Roxo mais claro para bordas
+  static const background = Color(0xFF140A17);
+  static const surface = Color(0xFF221329);
+  static const surfaceBorder = Color(0xFF3A2647);
 
-  // Pastéis principais
-  static const lilac = Color(0xFFC9A7FF); // Magia, espiritualidade, lua
-  static const pink = Color(0xFFF1A7C5); // Amor próprio, afeto, fofura
-  static const pinkWitch =
-      Color(0xFFF1A7C5); // Alias para pink (usado em sigilos)
-  static const mint = Color(0xFFA7F0D8); // Cura, natureza, bruxaria verde
-  static const starYellow =
-      Color(0xFFFFE8A3); // Brilho, glitter, feedback positivo
-  static const gold = Color(0xFFFFD700); // Dourado para premium
+  // Acento principal
+  static const lilac = Color(0xFFD98FE0);
+
+  // Pastéis
+  static const pink = Color(0xFFF1A7C5);
+  static const pinkWitch = Color(0xFFF1A7C5);
+  static const mint = Color(0xFFA7F0D8);
+  static const starYellow = Color(0xFFFFE8A3);
+  static const gold = Color(0xFFFFD700);
 
   // Texto
-  static const textPrimary = Color(0xFFF6F4FF); // Branquinho suave
-  static const textSecondary =
-      Color(0xFFB7B2D6); // Texto secundário/placeholder
+  static const textPrimary = Color(0xFFF6F4FF);
+  static const textSecondary = Color(0xFFB7B2D6);
 
   // Status
-  static const success = Color(0xFF7EE08A); // Sucesso/proteção
-  static const alert = Color(0xFFFF6B81); // Alerta/cuidado
-  static const warning = Color(0xFFFF6B81); // Alias para alert (avisos)
-  static const info = Color(0xFFA7C7FF); // Info/neutro
+  static const success = Color(0xFF7EE08A);
+  static const alert = Color(0xFFFF6B81);
+  static const warning = Color(0xFFFF6B81);
+  static const info = Color(0xFFA7C7FF);
 
-  // Aliases para compatibilidade
-  static const softWhite = textPrimary; // Alias para textPrimary
-  static const darkBackground = background; // Alias para background
-  static const cardBackground = surface; // Alias para surface
+  // Aliases
+  static const softWhite = textPrimary;
+  static const darkBackground = background;
+  static const cardBackground = surface;
 }
 
 class AppTheme {
-  static ThemeData get darkTheme {
+  /// Tema padrão (compatibilidade). Prefira `AppTheme.build(...)`.
+  static ThemeData get darkTheme => build(GrimoireColors.vinhoOrquidea);
+
+  /// Monta um [ThemeData] a partir de um conjunto de cores [c].
+  static ThemeData build(GrimoireColors c) {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: AppColors.background,
+      brightness: c.brightness,
+      scaffoldBackgroundColor: c.background,
       fontFamily: GoogleFonts.nunito().fontFamily,
 
-      colorScheme: const ColorScheme.dark(
-        primary: AppColors.lilac,
-        secondary: AppColors.pink,
-        tertiary: AppColors.mint,
-        surface: AppColors.surface,
-        error: AppColors.alert,
-        onPrimary: Color(0xFF2B2143),
-        onSecondary: Color(0xFF2B2143),
-        onSurface: AppColors.textPrimary,
+      // Disponibiliza as cores via context.gc
+      extensions: [c],
+
+      colorScheme: ColorScheme(
+        brightness: c.brightness,
+        primary: c.lilac,
+        onPrimary: c.onPrimary,
+        secondary: c.pink,
+        onSecondary: c.onPrimary,
+        tertiary: c.mint,
+        onTertiary: c.onPrimary,
+        surface: c.surface,
+        onSurface: c.textPrimary,
+        error: c.alert,
+        onError: c.brightness == Brightness.dark
+            ? const Color(0xFF2B2143)
+            : Colors.white,
       ),
 
       // Text Theme
       textTheme: TextTheme(
-        // Títulos grandes (logo, nome do app)
         displayLarge: GoogleFonts.cinzelDecorative(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: AppColors.lilac,
+          color: c.lilac,
         ),
         displayMedium: GoogleFonts.cinzelDecorative(
           fontSize: 28,
           fontWeight: FontWeight.bold,
-          color: AppColors.lilac,
+          color: c.lilac,
         ),
         displaySmall: GoogleFonts.cinzelDecorative(
           fontSize: 24,
           fontWeight: FontWeight.w600,
-          color: AppColors.lilac,
+          color: c.lilac,
         ),
-
-        // Títulos de seções
         headlineLarge: GoogleFonts.nunito(
           fontSize: 22,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: c.textPrimary,
         ),
         headlineMedium: GoogleFonts.cinzelDecorative(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: c.textPrimary,
         ),
         headlineSmall: GoogleFonts.cinzelDecorative(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: c.textPrimary,
         ),
-
-        // Títulos de cards
         titleLarge: GoogleFonts.nunito(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: AppColors.lilac,
+          color: c.lilac,
         ),
         titleMedium: GoogleFonts.nunito(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: AppColors.lilac,
+          color: c.lilac,
         ),
         titleSmall: GoogleFonts.nunito(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: AppColors.lilac,
+          color: c.lilac,
         ),
-
-        // Corpo de texto
         bodyLarge: GoogleFonts.nunito(
           fontSize: 16,
-          color: AppColors.textPrimary,
+          color: c.textPrimary,
         ),
         bodyMedium: GoogleFonts.nunito(
           fontSize: 14,
-          color: AppColors.textPrimary,
+          color: c.textPrimary,
         ),
         bodySmall: GoogleFonts.nunito(
           fontSize: 12,
-          color: AppColors.textSecondary,
+          color: c.textSecondary,
         ),
-
-        // Labels
         labelLarge: GoogleFonts.nunito(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: c.textPrimary,
         ),
         labelMedium: GoogleFonts.nunito(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
+          color: c.textSecondary,
         ),
         labelSmall: GoogleFonts.nunito(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
+          color: c.textSecondary,
         ),
       ),
 
       // Card Theme
       cardTheme: CardThemeData(
-        color: AppColors.surface,
+        color: c.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(
-            color: AppColors.surfaceBorder,
+          side: BorderSide(
+            color: c.surfaceBorder,
             width: 1,
           ),
         ),
@@ -186,8 +192,8 @@ class AppTheme {
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.lilac,
-          foregroundColor: const Color(0xFF2B2143),
+          backgroundColor: c.lilac,
+          foregroundColor: c.onPrimary,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
@@ -203,8 +209,8 @@ class AppTheme {
       // Outlined Button Theme
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.lilac,
-          side: const BorderSide(color: AppColors.lilac, width: 2),
+          foregroundColor: c.lilac,
+          side: BorderSide(color: c.lilac, width: 2),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -219,7 +225,7 @@ class AppTheme {
       // Text Button Theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.lilac,
+          foregroundColor: c.lilac,
           textStyle: GoogleFonts.nunito(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -230,51 +236,51 @@ class AppTheme {
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: c.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.surfaceBorder),
+          borderSide: BorderSide(color: c.surfaceBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.surfaceBorder),
+          borderSide: BorderSide(color: c.surfaceBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.lilac, width: 2),
+          borderSide: BorderSide(color: c.lilac, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.alert),
+          borderSide: BorderSide(color: c.alert),
         ),
         labelStyle: GoogleFonts.nunito(
-          color: AppColors.textSecondary,
+          color: c.textSecondary,
         ),
         hintStyle: GoogleFonts.nunito(
-          color: AppColors.textSecondary,
+          color: c.textSecondary,
         ),
       ),
 
       // App Bar Theme
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.background,
+        backgroundColor: c.background,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: GoogleFonts.cinzelDecorative(
           fontSize: 22,
           fontWeight: FontWeight.w600,
-          color: AppColors.lilac,
+          color: c.lilac,
         ),
-        iconTheme: const IconThemeData(
-          color: AppColors.lilac,
+        iconTheme: IconThemeData(
+          color: c.lilac,
         ),
       ),
 
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.lilac,
-        unselectedItemColor: AppColors.textSecondary,
+        backgroundColor: c.surface,
+        selectedItemColor: c.lilac,
+        unselectedItemColor: c.textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
         selectedLabelStyle: GoogleFonts.nunito(
@@ -288,14 +294,14 @@ class AppTheme {
       ),
 
       // Icon Theme
-      iconTheme: const IconThemeData(
-        color: AppColors.lilac,
+      iconTheme: IconThemeData(
+        color: c.lilac,
         size: 24,
       ),
 
       // Divider Theme
-      dividerTheme: const DividerThemeData(
-        color: AppColors.surfaceBorder,
+      dividerTheme: DividerThemeData(
+        color: c.surfaceBorder,
         thickness: 1,
         space: 1,
       ),

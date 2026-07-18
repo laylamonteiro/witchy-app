@@ -10,7 +10,7 @@ import 'package:sqflite_common/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'core/database/database_helper.dart';
 import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
@@ -218,6 +218,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider(widget.prefs)),
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider.value(value: PaymentService()),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
@@ -293,20 +294,23 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           },
         ),
       ],
-      child: MaterialApp(
-        navigatorKey: _rootNavigatorKey,
-        title: 'Grimório de Bolso',
-        theme: AppTheme.darkTheme,
-        home: AuthWrapper(showSplash: _showSplash),
-        routes: {
-          '/home': (context) => const HomePage(),
-          '/welcome': (context) => const WelcomePage(),
-          '/login': (context) => const LoginPage(),
-          '/signup': (context) => const SignupPage(),
-          '/onboarding': (context) => const OnboardingPage(),
-          '/subscription': (context) => const SubscriptionPage(),
-        },
-        debugShowCheckedModeBanner: false,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) => MaterialApp(
+          navigatorKey: _rootNavigatorKey,
+          title: 'Grimório de Bolso',
+          theme: themeProvider.themeData,
+          home: child,
+          routes: {
+            '/home': (context) => const HomePage(),
+            '/welcome': (context) => const WelcomePage(),
+            '/login': (context) => const LoginPage(),
+            '/signup': (context) => const SignupPage(),
+            '/onboarding': (context) => const OnboardingPage(),
+            '/subscription': (context) => const SubscriptionPage(),
+          },
+          debugShowCheckedModeBanner: false,
+        ),
+        child: AuthWrapper(showSplash: _showSplash),
       ),
     );
   }
