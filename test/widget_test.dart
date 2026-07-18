@@ -234,4 +234,124 @@ void main() {
       expect(CatBubbleMessages.dateKey(DateTime(2026, 12, 31)), '2026-12-31');
     });
   });
+  group('FeatureAccessService - acesso unificado e limites centrais', () {
+    UserModel makeAccessUser({
+      UserRole role = UserRole.free,
+      SubscriptionPlan plan = SubscriptionPlan.free,
+      int aiToday = 0,
+      int oracleToday = 0,
+    }) {
+      return UserModel(
+        id: 'test_access_user',
+        role: role,
+        plan: plan,
+        createdAt: DateTime(2026, 1, 1),
+        lastLoginAt: DateTime(2026, 1, 1),
+        aiConsultationsToday: aiToday,
+        oracleReadingsToday: oracleToday,
+      );
+    }
+
+    test('free usa limites centralizados para quiromancia IA e tarot', () {
+      final user = makeAccessUser();
+
+      final palmistry = FeatureAccess.checkAccess(
+        AppFeature.aiPalmistry,
+        user,
+        isPremiumEffective: false,
+      );
+      final tarot = FeatureAccess.checkAccess(
+        AppFeature.tarotReadings,
+        user,
+        isPremiumEffective: false,
+      );
+
+      expect(palmistry.hasFullAccess, isTrue);
+      expect(palmistry.limitWindow, LimitWindow.daily);
+      expect(tarot.hasFullAccess, isTrue);
+      expect(tarot.limitWindow, LimitWindow.daily);
+    });
+
+    test('premium ativo por API efetiva tem acesso total', () {
+      final user = makeAccessUser();
+
+      expect(
+        FeatureAccess.checkAccess(
+          AppFeature.interactiveMagicalLearning,
+          user,
+          isPremiumEffective: true,
+        ).hasFullAccess,
+        isTrue,
+      );
+    });
+
+    test('premium expirado não usa role local isolado como acesso efetivo', () {
+      final user = makeAccessUser(
+        role: UserRole.premium,
+        plan: SubscriptionPlan.monthly,
+      );
+
+      final access = FeatureAccess.checkAccess(
+        AppFeature.astrologyBirthChart,
+        user,
+        isPremiumEffective: false,
+      );
+
+      expect(access.hasFullAccess, isFalse);
+      expect(access.isPreview, isTrue);
+    });
+
+    test('cupom lifetime libera acesso mesmo offline quando usa dados locais', () {
+      final user = makeAccessUser(
+        role: UserRole.premium,
+        plan: SubscriptionPlan.lifetime,
+      );
+
+      expect(
+        FeatureAccess.checkAccess(
+          AppFeature.aiPersonalizedDreamInterpretation,
+          user,
+          isOffline: true,
+        ).hasFullAccess,
+        isTrue,
+      );
+    });
+
+    test('offline free permanece limitado pelos dados locais', () {
+      final user = makeAccessUser(aiToday: UserModel.freeAiConsultationsLimit);
+
+      final access = FeatureAccess.checkAccess(
+        AppFeature.numerologyReadings,
+        user,
+        isPremiumEffective: false,
+        isOffline: true,
+      );
+
+      expect(access.hasFullAccess, isFalse);
+      expect(access.limit, UserModel.freeAiConsultationsLimit);
+      expect(access.limitWindow, LimitWindow.daily);
+    });
+
+    test('analytics de bloqueio não carrega dados pessoais', () {
+      final events = <BlockedAccessEvent>[];
+      FeatureAccessService.instance.setBlockedAccessAnalyticsHook(events.add);
+      addTearDown(() {
+        FeatureAccessService.instance.setBlockedAccessAnalyticsHook(null);
+      });
+
+      FeatureAccess.checkAccess(
+        AppFeature.astrologyBirthChart,
+        makeAccessUser(),
+        isPremiumEffective: false,
+      );
+
+      expect(events, hasLength(1));
+      final params = events.single.toAnalyticsParameters();
+      expect(params['feature'], AppFeature.astrologyBirthChart.name);
+      expect(params.containsKey('email'), isFalse);
+      expect(params.containsKey('user_id'), isFalse);
+      expect(params.containsKey('display_name'), isFalse);
+    });
+  });
+
 }

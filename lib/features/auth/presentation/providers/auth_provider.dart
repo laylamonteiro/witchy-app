@@ -309,7 +309,12 @@ class AuthProvider extends ChangeNotifier {
 
   /// Verifica acesso a uma feature
   AccessResult checkFeatureAccess(AppFeature feature) {
-    return FeatureAccess.checkAccess(feature, _currentUser);
+    return FeatureAccess.checkAccess(
+      feature,
+      _currentUser,
+      isPremiumEffective: isPremiumEffective,
+      isOffline: !_currentUser.isAuthenticated,
+    );
   }
 
   /// Verifica se tem acesso total a uma feature

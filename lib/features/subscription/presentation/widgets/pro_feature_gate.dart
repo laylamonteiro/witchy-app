@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/data/models/feature_access.dart';
 import '../pages/paywall_page.dart';
 
 /// Widget que protege funcionalidades Pro
@@ -29,12 +30,16 @@ class ProFeatureGate extends StatelessWidget {
   /// Callback opcional quando o usuário tenta acessar conteúdo bloqueado
   final VoidCallback? onLockedTap;
 
+  /// Feature opcional usada para registrar analytics e padronizar a mensagem.
+  final AppFeature? feature;
+
   const ProFeatureGate({
     super.key,
     required this.child,
     this.lockedChild,
     this.showPaywallOnTap = true,
     this.onLockedTap,
+    this.feature,
   });
 
   @override
@@ -47,7 +52,10 @@ class ProFeatureGate extends StatelessWidget {
           return child;
         }
 
-        final locked = lockedChild ?? _buildDefaultLockedWidget(context);
+        final access = feature == null
+            ? AccessResult.preview()
+            : authProvider.checkFeatureAccess(feature!);
+        final locked = lockedChild ?? _buildDefaultLockedWidget(context, access.message);
 
         if (showPaywallOnTap) {
           return GestureDetector(
@@ -67,7 +75,7 @@ class ProFeatureGate extends StatelessWidget {
     );
   }
 
-  Widget _buildDefaultLockedWidget(BuildContext context) {
+  Widget _buildDefaultLockedWidget(BuildContext context, String? message) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -75,14 +83,17 @@ class ProFeatureGate extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.white24),
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.lock, color: Colors.white54, size: 20),
-          SizedBox(width: 8),
-          Text(
-            'Funcionalidade Pro',
-            style: TextStyle(color: Colors.white54),
+          const Icon(Icons.lock, color: Colors.white54, size: 20),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              message ?? FeatureAccessMessages.preview,
+              style: const TextStyle(color: Colors.white54),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
