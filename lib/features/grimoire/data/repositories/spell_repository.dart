@@ -24,7 +24,7 @@ class SpellRepository {
       'spells',
       where: 'user_id = ? OR is_preloaded = 1',
       whereArgs: [userId],
-      orderBy: 'created_at DESC',
+      orderBy: 'is_preloaded ASC, created_at DESC, name COLLATE NOCASE ASC, id ASC',
     );
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
   }
