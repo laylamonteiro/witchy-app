@@ -1,3 +1,5 @@
+import '../../../../core/i18n/treatment_preference.dart';
+
 /// Roles de usuário no sistema
 enum UserRole {
   /// Usuário gratuito - acesso limitado
@@ -51,6 +53,7 @@ class UserModel {
   final DateTime createdAt;
   final DateTime lastLoginAt;
   final Map<String, dynamic>? settings;
+  final TreatmentPreference treatmentPreference;
 
   /// Método de autenticação utilizado
   final AuthMethod authMethod;
@@ -84,6 +87,7 @@ class UserModel {
     required this.createdAt,
     required this.lastLoginAt,
     this.settings,
+    this.treatmentPreference = TreatmentPreference.fallback,
     this.authMethod = AuthMethod.local,
     this.spellsCount = 0,
     this.diaryEntriesThisMonth = 0,
@@ -240,6 +244,7 @@ class UserModel {
     DateTime? createdAt,
     DateTime? lastLoginAt,
     Map<String, dynamic>? settings,
+    TreatmentPreference? treatmentPreference,
     AuthMethod? authMethod,
     int? spellsCount,
     int? diaryEntriesThisMonth,
@@ -265,6 +270,7 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       settings: settings ?? this.settings,
+      treatmentPreference: treatmentPreference ?? this.treatmentPreference,
       authMethod: authMethod ?? this.authMethod,
       spellsCount: spellsCount ?? this.spellsCount,
       diaryEntriesThisMonth: diaryEntriesThisMonth ?? this.diaryEntriesThisMonth,
@@ -294,6 +300,7 @@ class UserModel {
       'createdAt': createdAt.toIso8601String(),
       'lastLoginAt': lastLoginAt.toIso8601String(),
       'settings': settings,
+      'treatmentPreference': treatmentPreference.toJson(),
       'authMethod': authMethod.name,
       'spellsCount': spellsCount,
       'diaryEntriesThisMonth': diaryEntriesThisMonth,
@@ -334,6 +341,7 @@ class UserModel {
           ? DateTime.parse(json['lastLoginAt'])
           : DateTime.now(),
       settings: json['settings'],
+      treatmentPreference: TreatmentPreference.fromJson(json['treatmentPreference']),
       authMethod: json['authMethod'] != null
           ? AuthMethod.values.firstWhere(
               (e) => e.name == json['authMethod'],

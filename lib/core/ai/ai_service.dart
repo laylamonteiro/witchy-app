@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
+import '../i18n/treatment_preference.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 import '../../features/astrology/data/models/magical_profile_model.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
@@ -21,18 +22,27 @@ class AIService {
   }
 
   /// Gerar feitiço com IA usando Groq
-  Future<SpellModel> generateSpell(String userIntention) async {
-    return _generateWithGroq(userIntention);
+  Future<SpellModel> generateSpell(
+    String userIntention, {
+    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+  }) async {
+    return _generateWithGroq(
+      userIntention,
+      treatmentPreference: treatmentPreference,
+    );
   }
 
-  Future<SpellModel> _generateWithGroq(String intention) async {
+  Future<SpellModel> _generateWithGroq(
+    String intention, {
+    required TreatmentPreference treatmentPreference,
+  }) async {
     try {
       final requestData = {
         'model': 'llama-3.3-70b-versatile',
         'messages': [
           {
             'role': 'system',
-            'content': _buildSystemPrompt(),
+            'content': _buildSystemPrompt(treatmentPreference),
           },
           {
             'role': 'user',
@@ -150,6 +160,7 @@ class AIService {
   Future<String> generateMagicalProfileText({
     required BirthChartModel birthChart,
     required MagicalProfile profile,
+    TreatmentPreference? treatmentPreference,
   }) async {
     try {
       final chartSummary = _buildChartSummary(birthChart, profile);
@@ -159,7 +170,9 @@ class AIService {
         'messages': [
           {
             'role': 'system',
-            'content': _buildMagicalProfileSystemPrompt(),
+            'content': _buildMagicalProfileSystemPrompt(
+              treatmentPreference ?? profile.treatmentPreference,
+            ),
           },
           {
             'role': 'user',
@@ -198,6 +211,7 @@ class AIService {
     required List<String> energyKeywords,
     required List<Map<String, String>> transits,
     required List<Map<String, String>> aspects,
+    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
   }) async {
     try {
       final weatherSummary = _buildWeatherSummary(
@@ -214,7 +228,7 @@ class AIService {
         'messages': [
           {
             'role': 'system',
-            'content': _buildDailyWeatherSystemPrompt(),
+            'content': _buildDailyWeatherSystemPrompt(treatmentPreference),
           },
           {
             'role': 'user',
@@ -306,7 +320,7 @@ class AIService {
     return buffer.toString();
   }
 
-  String _buildMagicalProfileSystemPrompt() {
+  String _buildMagicalProfileSystemPrompt(TreatmentPreference treatmentPreference) {
     return '''Você é uma sábia bruxa ancestral que interpreta mapas astrais para praticantes de bruxaria moderna.
 Seu conhecimento combina astrologia tradicional com práticas mágicas contemporâneas.
 
@@ -355,13 +369,15 @@ DIRETRIZES:
 - Seja específica nas interpretações, não genérica
 - Conecte cada posição planetária com práticas mágicas concretas
 - Mencione fases lunares, sabbats e momentos propícios quando relevante
-- O tom deve ser de uma mentora sábia e carinhosa
+- O tom deve ser de ${TreatmentText.wiseGuide(treatmentPreference)}
 - Use "você" para se dirigir à pessoa
+- ${TreatmentText.aiInstruction(treatmentPreference)}
+- ${TreatmentText.preservationInstruction()}
 - Não repita informações genéricas sobre signos - seja específica para esta configuração única
 - Total: aproximadamente 800-1000 palavras''';
   }
 
-  String _buildDailyWeatherSystemPrompt() {
+  String _buildDailyWeatherSystemPrompt(TreatmentPreference treatmentPreference) {
     return '''Você é uma bruxa sábia que interpreta os movimentos celestiais para guiar praticantes de magia moderna em seu dia a dia.
 
 Com base nos dados astrológicos fornecidos para HOJE, escreva uma previsão mágica do dia.
@@ -392,6 +408,8 @@ FORMATO DA RESPOSTA (use exatamente esta estrutura):
 DIRETRIZES:
 - Seja específica para os trânsitos e aspectos fornecidos
 - Use linguagem acolhedora e acessível
+- ${TreatmentText.aiInstruction(treatmentPreference)}
+- ${TreatmentText.preservationInstruction()}
 - Sugira práticas simples que qualquer pessoa pode fazer
 - Conecte as energias astrológicas com práticas mágicas concretas
 - O tom deve ser de guia diária, prática e inspiradora
@@ -404,6 +422,7 @@ DIRETRIZES:
   Future<String> generateAffirmation({
     required String category,
     String? userContext,
+    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
   }) async {
     try {
       final prompt = userContext != null && userContext.isNotEmpty
@@ -415,7 +434,7 @@ DIRETRIZES:
         'messages': [
           {
             'role': 'system',
-            'content': _buildAffirmationSystemPrompt(),
+            'content': _buildAffirmationSystemPrompt(treatmentPreference),
           },
           {
             'role': 'user',
@@ -447,18 +466,20 @@ DIRETRIZES:
     }
   }
 
-  String _buildAffirmationSystemPrompt() {
+  String _buildAffirmationSystemPrompt(TreatmentPreference treatmentPreference) {
     return '''Você é o Conselheiro Místico, guardião da sabedoria ancestral do Grimório de Bolso.
 
-Sua missão é criar afirmações poderosas e transformadoras para bruxas e praticantes de magia moderna.
+Sua missão é criar afirmações poderosas e transformadoras para ${TreatmentText.practitioner(treatmentPreference)} de magia moderna.
 
 REGRAS PARA CRIAR AFIRMAÇÕES:
 1. Sempre escreva no tempo PRESENTE (nunca futuro)
 2. Use linguagem POSITIVA (evite palavras negativas como "não", "nunca", "sem")
 3. Seja ESPECÍFICO mas não muito longo (máximo 2 frases)
 4. Use linguagem mística mas acessível
-5. A afirmação deve ser empoderador e acolhedora
-6. Conecte com elementos mágicos quando apropriado (lua, estrelas, elementos, etc.)
+5. A afirmação deve ser empoderadora e acolhedora, respeitando a preferência de tratamento
+6. ${TreatmentText.aiInstruction(treatmentPreference)}
+7. ${TreatmentText.preservationInstruction()}
+8. Conecte com elementos mágicos quando apropriado (lua, estrelas, elementos, etc.)
 
 CATEGORIAS E EXEMPLOS:
 - Abundância: "O universo conspira a meu favor e a prosperidade flui para mim como um rio de ouro"
@@ -474,8 +495,8 @@ RETORNE APENAS A AFIRMAÇÃO, sem explicações, aspas ou formatação adicional
 Se o usuário forneceu um contexto, personalize a afirmação para a situação específica.''';
   }
 
-  String _buildSystemPrompt() {
-    return '''Você é o Conselheiro Místico, guardião da sabedoria arcana do Grimório de Bolso.
+  String _buildSystemPrompt(TreatmentPreference treatmentPreference) {
+    return '''Você é o ${TreatmentText.advisorTitle(treatmentPreference)}, guardião da sabedoria arcana do Grimório de Bolso.
 
 Você habita um grimório digital mágico onde bruxas e praticantes modernos registram seus feitiços, estudam os trânsitos planetários e o clima mágico diário, consultam runas e oráculos, acompanham as fases lunares, e exploram seus mapas astrais personalizados.
 
@@ -504,6 +525,8 @@ Diretrizes Sagradas:
 - Seja específico e poético nos passos (enumere de 1 a X, separados por \\n)
 - Escolha a fase lunar mais apropriada para o tipo de magia
 - Tom: Acolhedor, místico, evocativo, mas sempre prático e aterrado
+- ${TreatmentText.aiInstruction(treatmentPreference)}
+- ${TreatmentText.preservationInstruction()}
 - Feitiços devem ser SEMPRE éticos: sem manipulação de livre arbítrio, sem prejudicar terceiros, sem magia de controle
 - Em feitiços de amor, SEMPRE incluir "respeitando o livre arbítrio de todos os envolvidos"
 - Use entre 5-7 ingredientes (nunca menos de 5, nunca mais de 7)
@@ -513,14 +536,17 @@ Diretrizes Sagradas:
   }
 
   /// Responder perguntas sobre bruxaria, magia e misticismo (Conselheiro Místico)
-  Future<String> answerMysticQuestion(String question) async {
+  Future<String> answerMysticQuestion(
+    String question, {
+    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+  }) async {
     try {
       final requestData = {
         'model': 'llama-3.3-70b-versatile',
         'messages': [
           {
             'role': 'system',
-            'content': _buildMysticAdvisorSystemPrompt(),
+            'content': _buildMysticAdvisorSystemPrompt(treatmentPreference),
           },
           {
             'role': 'user',
@@ -560,8 +586,8 @@ Diretrizes Sagradas:
     }
   }
 
-  String _buildMysticAdvisorSystemPrompt() {
-    return '''Você é o Conselheiro Místico, guardião ancião da sabedoria arcana do Grimório de Bolso.
+  String _buildMysticAdvisorSystemPrompt(TreatmentPreference treatmentPreference) {
+    return '''Você é o ${TreatmentText.advisorTitle(treatmentPreference)}, guardião ancião da sabedoria arcana do Grimório de Bolso.
 
 Ao longo de incontáveis luas você acumulou o conhecimento das tradições mágicas — bruxaria moderna e ancestral, fases lunares, cristais, ervas, runas, oráculos, tarô, numerologia, astrologia mágica, sabás e a Roda do Ano, altares, elementos, deuses e deusas, proteção, limpeza energética e manifestação.
 
@@ -574,6 +600,8 @@ Diretrizes:
 - Estruture a resposta em 1 a 3 parágrafos curtos. Você PODE encerrar com uma breve "palavra de sabedoria" do Conselheiro.
 - Ética inegociável: nunca oriente magia que manipule o livre-arbítrio alheio, prejudique terceiros ou seja de controle. Em temas de amor, sempre respeite o livre-arbítrio de todos.
 - Segurança: nunca sugira ingredientes ou práticas perigosas, tóxicas ou ilegais; inclua avisos quando pertinente (ex: cuidado com fogo de velas).
-- Escreva em texto puro (sem markdown, sem JSON, sem títulos), na língua da pergunta (padrão: português do Brasil).''';
+- Escreva em texto puro (sem markdown, sem JSON, sem títulos), na língua da pergunta (padrão: português do Brasil).
+- ${TreatmentText.aiInstruction(treatmentPreference)}
+- ${TreatmentText.preservationInstruction()}''';
   }
 }
