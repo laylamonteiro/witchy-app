@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -29,7 +29,8 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.settingsTitle),
+        title:
+            ResponsiveAppBarTitle(AppLocalizations.of(context)!.settingsTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -73,7 +74,6 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-
   Widget _buildLanguageCard(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final languageProvider = context.watch<LanguageProvider>();
@@ -81,12 +81,12 @@ class SettingsPage extends StatelessWidget {
     String labelFor(Locale locale) {
       switch (locale.languageCode) {
         case 'en':
-          return l10n.settingsLanguageEnglish;
+          return '🇺🇸 EN';
         case 'es':
-          return l10n.settingsLanguageSpanish;
+          return '🇪🇸 ES';
         case 'pt':
         default:
-          return l10n.settingsLanguagePortuguese;
+          return '🇧🇷 PT-BR';
       }
     }
 
@@ -99,10 +99,6 @@ class SettingsPage extends StatelessWidget {
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
-        ),
-        subtitle: Text(
-          l10n.settingsLanguageSubtitle,
-          style: const TextStyle(color: Colors.white70),
         ),
         trailing: DropdownButton<Locale>(
           value: languageProvider.locale,
@@ -119,12 +115,18 @@ class SettingsPage extends StatelessWidget {
               .toList(),
           onChanged: (locale) async {
             if (locale == null) return;
+
             await context.read<LanguageProvider>().setLocale(locale);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.settingsLanguageChanged(labelFor(locale)))),
-              );
-            }
+
+            if (!context.mounted) return;
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  l10n.settingsLanguageChanged(labelFor(locale)),
+                ),
+              ),
+            );
           },
         ),
       ),

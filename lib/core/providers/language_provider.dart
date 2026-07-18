@@ -8,8 +8,8 @@ class LanguageProvider extends ChangeNotifier {
   static const Locale fallbackLocale = Locale('pt', 'BR');
   static const List<Locale> supportedLocales = [
     fallbackLocale,
-    Locale('en'),
     Locale('es'),
+    Locale('en'),
   ];
 
   final SharedPreferences _prefs;

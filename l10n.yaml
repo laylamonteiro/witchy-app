@@ -1,10 +1,11 @@
 arb-dir: lib/l10n
-template-arb-file: app_pt_BR.arb
+template-arb-file: app_pt.arb
 output-localization-file: app_localizations.dart
 output-class: AppLocalizations
-synthetic-package: true
+output-dir: lib/l10n/generated
 nullable-getter: false
 preferred-supported-locales:
+  - pt
   - pt_BR
   - en
   - es
