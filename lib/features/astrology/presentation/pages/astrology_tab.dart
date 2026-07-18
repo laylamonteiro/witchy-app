@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -119,6 +120,12 @@ class _AstrologyTabState extends State<AstrologyTab> {
                 _buildOption(
                   context,
                   icon: '✨',
+                  iconWidget: SvgPicture.asset(
+                    'assets/icons/magic_mirror.svg',
+                    width: 40,
+                    height: 40,
+                    semanticsLabel: 'Espelho mágico',
+                  ),
                   title: 'Perfil Mágico',
                   description: 'Interpretação astrológica para bruxaria',
                   onTap: () {
@@ -227,20 +234,31 @@ class _AstrologyTabState extends State<AstrologyTab> {
 
   Widget _buildOption(
     BuildContext context, {
-    required String icon,
+    String? icon,
+    Widget? iconWidget,
     required String title,
     required String description,
     required VoidCallback onTap,
   }) {
+    assert(icon != null || iconWidget != null,
+        'Informe um emoji em icon ou um widget em iconWidget.');
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: MagicalCard(
         child: Row(
           children: [
-            Text(
-              icon,
-              style: const TextStyle(fontSize: 40),
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: iconWidget ??
+                    Text(
+                      icon!,
+                      style: const TextStyle(fontSize: 40),
+                    ),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
