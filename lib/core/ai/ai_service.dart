@@ -639,6 +639,63 @@ Diretrizes Sagradas:
     }
   }
 
+  /// Interpretar uma tiragem de tarot já sorteada no app (Premium).
+  Future<String> interpretTarotSpread({
+    required String summary,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final requestData = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': '''${_localizedInstruction()}
+
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, taróloga experiente na tradição Rider-Waite.
+
+As cartas abaixo JÁ FORAM SORTEADAS pelo aplicativo, com posição, orientação e significado base — não sorteie outras nem contradiga o sorteio. Sua missão é TECER a leitura: como as cartas conversam entre si nas posições, a narrativa que formam e um conselho prático final.
+
+Formato: texto puro (sem markdown/JSON), 2 a 4 parágrafos acolhedores.
+- Trate cartas "difíceis" (Morte, Torre, Diabo...) como convites à transformação, nunca como presságios de tragédia.
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''',
+          },
+          {
+            'role': 'user',
+            'content': summary,
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 1100,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 40),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
   /// Explicar (nunca calcular) um perfil numerológico já computado no app.
   Future<String> explainNumerology({
     required String summary,

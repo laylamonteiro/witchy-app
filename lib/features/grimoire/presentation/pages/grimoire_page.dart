@@ -12,6 +12,7 @@ import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 import '../../../sigils/presentation/widgets/sigil_icon.dart';
 import '../../../numerology/presentation/pages/numerology_page.dart';
+import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 
@@ -171,6 +172,19 @@ class _ToolsTab extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const SigilStep1IntentionPage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text('🎴', style: TextStyle(fontSize: 40)),
+            title: 'Tarot',
+            description: 'Tiragens, carta do dia e tutor de aprendizado',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const TarotPage(),
                 ),
               );
             },
