@@ -7,6 +7,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 /// Histórico de reflexões da escrita livre.
 ///
@@ -65,19 +66,19 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
                           child: Text(
                             dateFormat.format(writing.updatedAt),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: context.gc.textSecondary,
                                 ),
                           ),
                         ),
                         InkWell(
                           onTap: () => _confirmDelete(context, writing),
                           borderRadius: BorderRadius.circular(20),
-                          child: const Padding(
+                          child: Padding(
                             padding: EdgeInsets.all(4),
                             child: Icon(
                               Icons.delete_outline,
                               size: 20,
-                              color: AppColors.alert,
+                              color: context.gc.alert,
                             ),
                           ),
                         ),
@@ -116,7 +117,7 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
               context.read<FreeWritingProvider>().delete(writing.id);
               Navigator.pop(dialogContext);
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.alert),
+            style: TextButton.styleFrom(foregroundColor: context.gc.alert),
             child: const Text('Excluir'),
           ),
         ],

@@ -6,6 +6,7 @@ import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
 
@@ -151,10 +152,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           ],
         ),
         bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: AppColors.surfaceBorder,
+                color: context.gc.surfaceBorder,
                 width: 1,
               ),
             ),

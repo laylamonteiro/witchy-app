@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/auth_provider.dart';
 
 /// Tela de onboarding com slides explicando funcionalidades do app
@@ -19,7 +20,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final List<OnboardingSlide> _slides = [
     OnboardingSlide(
       icon: Icons.auto_stories,
-      iconColor: AppColors.lilac,
+      iconColor: context.gc.lilac,
       title: 'Seu Grimório Digital',
       description:
           'Guarde seus feitiços, rituais e receitas mágicas em um só lugar. Organize por fase lunar, ingredientes e muito mais.',
@@ -30,7 +31,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     OnboardingSlide(
       icon: Icons.nightlight_round,
-      iconColor: AppColors.starYellow,
+      iconColor: context.gc.starYellow,
       title: 'Calendário Lunar',
       description:
           'Acompanhe as fases da lua e descubra o melhor momento para cada tipo de magia. Receba notificações em luas cheias e novas.',
@@ -41,7 +42,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     OnboardingSlide(
       icon: Icons.book,
-      iconColor: AppColors.pink,
+      iconColor: context.gc.pink,
       title: 'Diários Mágicos',
       description:
           'Registre sonhos, desejos, gratidão e afirmações. Acompanhe sua evolução espiritual dia após dia.',
@@ -52,7 +53,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     OnboardingSlide(
       icon: Icons.stars,
-      iconColor: AppColors.mint,
+      iconColor: context.gc.mint,
       title: 'Astrologia Completa',
       description:
           'Descubra seu mapa astral, perfil mágico personalizado e receba previsões diárias baseadas nos trânsitos planetários.',
@@ -63,7 +64,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     OnboardingSlide(
       icon: Icons.auto_awesome,
-      iconColor: AppColors.lilac,
+      iconColor: context.gc.lilac,
       title: 'Pronta para Começar?',
       description:
           'Crie sua conta para sincronizar seus dados em todos os dispositivos e ter acesso completo às funcionalidades.',
@@ -108,7 +109,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   'Pular',
                   style: GoogleFonts.nunito(
                     fontSize: 16,
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                   ),
                 ),
               ),
@@ -173,7 +174,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 style: GoogleFonts.cinzelDecorative(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: context.gc.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -183,7 +184,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 slide.description,
                 style: GoogleFonts.nunito(
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                   height: 1.6,
                 ),
                 textAlign: TextAlign.center,
@@ -208,8 +209,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
           end: Alignment.bottomCenter,
           colors: [
             Colors.transparent,
-            AppColors.background.withValues(alpha: 0.9),
-            AppColors.background,
+            context.gc.background.withValues(alpha: 0.9),
+            context.gc.background,
           ],
         ),
       ),
@@ -229,8 +230,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4),
                   color: isActive
-                      ? AppColors.lilac
-                      : AppColors.surfaceBorder,
+                      ? context.gc.lilac
+                      : context.gc.surfaceBorder,
                 ),
               );
             }),
@@ -244,7 +245,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: ElevatedButton(
                 onPressed: () => _finishOnboarding(createAccount: true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
+                  backgroundColor: context.gc.lilac,
                   foregroundColor: const Color(0xFF2B2143),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -271,7 +272,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   style: GoogleFonts.nunito(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                   ),
                 ),
               ),
@@ -283,7 +284,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: ElevatedButton(
                 onPressed: _nextPage,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
+                  backgroundColor: context.gc.lilac,
                   foregroundColor: const Color(0xFF2B2143),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 
 class MagicalCard extends StatelessWidget {
   final Widget child;
@@ -20,7 +20,7 @@ class MagicalCard extends StatelessWidget {
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Material(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
@@ -30,7 +30,7 @@ class MagicalCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.surfaceBorder,
+                color: context.gc.surfaceBorder,
                 width: 1,
               ),
             ),

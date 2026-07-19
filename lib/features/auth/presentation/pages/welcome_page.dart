@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
 
@@ -12,13 +13,13 @@ class WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
               Color(0xFF1A1033), // Roxo mais escuro no topo
-              AppColors.background,
+              context.gc.background,
             ],
           ),
         ),
@@ -37,7 +38,7 @@ class WelcomePage extends StatelessWidget {
                   style: GoogleFonts.cinzelDecorative(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -47,7 +48,7 @@ class WelcomePage extends StatelessWidget {
                   'Sua jornada mágica começa aqui',
                   style: GoogleFonts.nunito(
                     fontSize: 16,
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -76,26 +77,26 @@ class WelcomePage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.lilac.withValues(alpha: 0.3),
-            AppColors.pink.withValues(alpha: 0.3),
+            context.gc.lilac.withValues(alpha: 0.3),
+            context.gc.pink.withValues(alpha: 0.3),
           ],
         ),
         border: Border.all(
-          color: AppColors.lilac.withValues(alpha: 0.5),
+          color: context.gc.lilac.withValues(alpha: 0.5),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.lilac.withValues(alpha: 0.3),
+            color: context.gc.lilac.withValues(alpha: 0.3),
             blurRadius: 30,
             spreadRadius: 5,
           ),
         ],
       ),
-      child: const Icon(
+      child: Icon(
         Icons.auto_stories,
         size: 56,
-        color: AppColors.lilac,
+        color: context.gc.lilac,
       ),
     );
   }
@@ -111,10 +112,10 @@ class WelcomePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.5),
+        color: context.gc.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.surfaceBorder,
+          color: context.gc.surfaceBorder,
         ),
       ),
       child: Column(
@@ -126,12 +127,12 @@ class WelcomePage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.lilac.withValues(alpha: 0.2),
+                    color: context.gc.lilac.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     feature.$2,
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                     size: 20,
                   ),
                 ),
@@ -140,7 +141,7 @@ class WelcomePage extends StatelessWidget {
                   feature.$1,
                   style: GoogleFonts.nunito(
                     fontSize: 15,
-                    color: AppColors.textPrimary,
+                    color: context.gc.textPrimary,
                   ),
                 ),
               ],
@@ -163,7 +164,7 @@ class WelcomePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const SignupPage()),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: context.gc.lilac,
               foregroundColor: const Color(0xFF2B2143),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -189,8 +190,8 @@ class WelcomePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const LoginPage()),
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.lilac,
-              side: const BorderSide(color: AppColors.lilac, width: 2),
+              foregroundColor: context.gc.lilac,
+              side: BorderSide(color: context.gc.lilac, width: 2),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

@@ -6,6 +6,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/moon_phase_widget.dart';
 import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 
@@ -98,12 +99,12 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color:
-                                      AppColors.surface.withValues(alpha: 0.8),
+                                      context.gc.surface.withValues(alpha: 0.8),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.chevron_left,
-                                  color: AppColors.lilac,
+                                  color: context.gc.lilac,
                                   size: 20,
                                 ),
                               ),
@@ -128,12 +129,12 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color:
-                                      AppColors.surface.withValues(alpha: 0.8),
+                                      context.gc.surface.withValues(alpha: 0.8),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.chevron_right,
-                                  color: AppColors.lilac,
+                                  color: context.gc.lilac,
                                   size: 20,
                                 ),
                               ),
@@ -157,7 +158,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                       Text(
                         'Acompanhe as próximas mudanças da lua',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.gc.textSecondary,
                             ),
                       ),
                       const SizedBox(height: 16),
@@ -173,9 +174,9 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.lightbulb_outline,
-                            color: AppColors.starYellow,
+                            color: context.gc.starYellow,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -256,10 +257,10 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: AppColors.alert,
+                    color: context.gc.alert,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -335,7 +336,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
             Text(
               dateFormat.format(date),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                   ),
             ),
             const SizedBox(height: 12),
@@ -423,10 +424,10 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: context.gc.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.lilac.withValues(alpha: 0.3),
+          color: context.gc.lilac.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -450,14 +451,14 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                 Text(
                   dateFormat.format(date),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.gc.textSecondary,
                       ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   timeText,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                         fontWeight: FontWeight.w600,
                       ),
                 ),
@@ -481,11 +482,11 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isGoodTime
-            ? AppColors.success.withValues(alpha: 0.1)
-            : AppColors.info.withValues(alpha: 0.1),
+            ? context.gc.success.withValues(alpha: 0.1)
+            : context.gc.info.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isGoodTime ? AppColors.success : AppColors.info,
+          color: isGoodTime ? context.gc.success : context.gc.info,
           width: 1,
         ),
       ),
@@ -493,7 +494,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
         children: [
           Icon(
             isGoodTime ? Icons.check_circle : Icons.info,
-            color: isGoodTime ? AppColors.success : AppColors.info,
+            color: isGoodTime ? context.gc.success : context.gc.info,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -503,7 +504,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                 Text(
                   spellType.displayName,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: isGoodTime ? AppColors.success : AppColors.info,
+                        color: isGoodTime ? context.gc.success : context.gc.info,
                       ),
                 ),
                 Text(

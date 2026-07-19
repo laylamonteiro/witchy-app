@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../auth/auth.dart';
@@ -53,9 +54,9 @@ class _PendulumPageState extends State<PendulumPage>
     // Verificar limite diário (para TODOS os usuários)
     if (!authProvider.canUsePendulum) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Você já usou suas 3 consultas de hoje. Volte amanhã!'),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
         ),
       );
       return;
@@ -63,9 +64,9 @@ class _PendulumPageState extends State<PendulumPage>
 
     if (_question.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Faça uma pergunta primeiro'),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
         ),
       );
       return;
@@ -139,9 +140,9 @@ class _PendulumPageState extends State<PendulumPage>
     return Scaffold(
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Pêndulo'),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -155,14 +156,14 @@ class _PendulumPageState extends State<PendulumPage>
                   Text(
                     'Consultar o Pêndulo',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Faça perguntas de sim ou não. Concentre-se e confie na resposta.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withOpacity(0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -182,13 +183,13 @@ class _PendulumPageState extends State<PendulumPage>
                         ),
                         decoration: BoxDecoration(
                           color: hasRemaining
-                              ? AppColors.success.withOpacity(0.2)
-                              : AppColors.alert.withOpacity(0.2),
+                              ? context.gc.success.withOpacity(0.2)
+                              : context.gc.alert.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: hasRemaining
-                                ? AppColors.success.withOpacity(0.5)
-                                : AppColors.alert.withOpacity(0.5),
+                                ? context.gc.success.withOpacity(0.5)
+                                : context.gc.alert.withOpacity(0.5),
                           ),
                         ),
                         child: Row(
@@ -202,8 +203,8 @@ class _PendulumPageState extends State<PendulumPage>
                                       : Icons.timer),
                               size: 16,
                               color: hasRemaining
-                                  ? AppColors.success
-                                  : AppColors.alert,
+                                  ? context.gc.success
+                                  : context.gc.alert,
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -215,8 +216,8 @@ class _PendulumPageState extends State<PendulumPage>
                               style: TextStyle(
                                 fontSize: 12,
                                 color: hasRemaining
-                                    ? AppColors.success
-                                    : AppColors.alert,
+                                    ? context.gc.success
+                                    : context.gc.alert,
                               ),
                             ),
                           ],
@@ -239,6 +240,10 @@ class _PendulumPageState extends State<PendulumPage>
                   builder: (context, child) {
                     return CustomPaint(
                       painter: PendulumPainter(
+                        accentColor: context.gc.lilac,
+                        successColor: context.gc.success,
+                        alertColor: context.gc.alert,
+                        starColor: context.gc.starYellow,
                         swingAngle: _isSwinging
                             ? sin(_swingController.value * 2 * pi) * 0.8
                             : 0,
@@ -260,36 +265,36 @@ class _PendulumPageState extends State<PendulumPage>
                 enabled: _answer == null && !_isSwinging,
                 style: TextStyle(
                   color: (_answer == null && !_isSwinging)
-                      ? AppColors.softWhite
-                      : AppColors.softWhite.withOpacity(0.5),
+                      ? context.gc.softWhite
+                      : context.gc.softWhite.withOpacity(0.5),
                 ),
                 decoration: InputDecoration(
                   labelText: 'Sua Pergunta',
-                  labelStyle: const TextStyle(color: AppColors.lilac),
+                  labelStyle: TextStyle(color: context.gc.lilac),
                   hintText: 'Ex: Devo aceitar aquele emprego?',
                   hintStyle: TextStyle(
-                    color: AppColors.softWhite.withOpacity(0.5),
+                    color: context.gc.softWhite.withOpacity(0.5),
                   ),
-                  prefixIcon: const Icon(Icons.help, color: AppColors.lilac),
+                  prefixIcon: Icon(Icons.help, color: context.gc.lilac),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.lilac),
+                    borderSide: BorderSide(color: context.gc.lilac),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: AppColors.lilac.withOpacity(0.3),
+                      color: context.gc.lilac.withOpacity(0.3),
                     ),
                   ),
                   disabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: AppColors.lilac.withOpacity(0.1),
+                      color: context.gc.lilac.withOpacity(0.1),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.lilac),
+                    borderSide: BorderSide(color: context.gc.lilac),
                   ),
                 ),
                 maxLines: 2,
@@ -307,26 +312,26 @@ class _PendulumPageState extends State<PendulumPage>
               ElevatedButton.icon(
                 onPressed: _isSwinging ? null : _askPendulum,
                 icon: _isSwinging
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.darkBackground,
+                            context.gc.darkBackground,
                           ),
                         ),
                       )
                     : const Icon(Icons.help),
                 label: Text(_isSwinging ? 'Consultando...' : 'Perguntar'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: AppColors.darkBackground,
+                  backgroundColor: context.gc.lilac,
+                  foregroundColor: context.gc.darkBackground,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 16,
                   ),
-                  disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
+                  disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
                 ),
               ),
 
@@ -343,7 +348,7 @@ class _PendulumPageState extends State<PendulumPage>
                       _answer!.displayName,
                       style:
                           Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                color: AppColors.lilac,
+                                color: context.gc.lilac,
                                 fontWeight: FontWeight.bold,
                               ),
                     ),
@@ -351,7 +356,7 @@ class _PendulumPageState extends State<PendulumPage>
                     Text(
                       _answer!.message,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppColors.softWhite,
+                            color: context.gc.softWhite,
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -370,8 +375,8 @@ class _PendulumPageState extends State<PendulumPage>
                 icon: const Icon(Icons.refresh),
                 label: const Text('Nova Consulta'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.lilac,
-                  side: const BorderSide(color: AppColors.lilac),
+                  foregroundColor: context.gc.lilac,
+                  side: BorderSide(color: context.gc.lilac),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -386,21 +391,29 @@ class _PendulumPageState extends State<PendulumPage>
 class PendulumPainter extends CustomPainter {
   final double swingAngle;
   final PendulumAnswer? answer;
+  final Color accentColor;
+  final Color successColor;
+  final Color alertColor;
+  final Color starColor;
 
   PendulumPainter({
     required this.swingAngle,
+    required this.accentColor,
+    required this.successColor,
+    required this.alertColor,
+    required this.starColor,
     this.answer,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.lilac
+      ..color = accentColor
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
     final fillPaint = Paint()
-      ..color = AppColors.lilac
+      ..color = accentColor
       ..style = PaintingStyle.fill;
 
     // Ponto de fixação
@@ -430,7 +443,7 @@ class PendulumPainter extends CustomPainter {
 
     // Desenhar pêndulo (cristal)
     final pendulumPaint = Paint()
-      ..color = AppColors.lilac
+      ..color = accentColor
       ..style = PaintingStyle.fill;
 
     final pendulumPath = Path();
@@ -449,7 +462,7 @@ class PendulumPainter extends CustomPainter {
       size,
       'SIM',
       Offset(size.width * 0.2, size.height * 0.5),
-      AppColors.success,
+      successColor,
       isSelected: answer == PendulumAnswer.yes,
     );
     _drawAnswerText(
@@ -457,7 +470,7 @@ class PendulumPainter extends CustomPainter {
       size,
       'NÃO',
       Offset(size.width * 0.8, size.height * 0.5),
-      AppColors.alert,
+      alertColor,
       isSelected: answer == PendulumAnswer.no,
     );
     _drawAnswerText(
@@ -465,7 +478,7 @@ class PendulumPainter extends CustomPainter {
       size,
       'TALVEZ',
       Offset(size.width * 0.5, size.height * 0.8),
-      AppColors.starYellow,
+      starColor,
       isSelected: answer == PendulumAnswer.maybe,
     );
   }
@@ -497,6 +510,11 @@ class PendulumPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PendulumPainter oldDelegate) {
-    return oldDelegate.swingAngle != swingAngle || oldDelegate.answer != answer;
+    return oldDelegate.swingAngle != swingAngle ||
+        oldDelegate.answer != answer ||
+        oldDelegate.accentColor != accentColor ||
+        oldDelegate.successColor != successColor ||
+        oldDelegate.alertColor != alertColor ||
+        oldDelegate.starColor != starColor;
   }
 }

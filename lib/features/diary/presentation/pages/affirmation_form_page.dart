@@ -4,6 +4,7 @@ import '../../data/models/affirmation_model.dart';
 import '../providers/affirmation_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -70,13 +71,13 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.1),
+                  color: context.gc.info.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.info),
+                  border: Border.all(color: context.gc.info),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: AppColors.info),
+                    Icon(Icons.info_outline, color: context.gc.info),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -94,17 +95,17 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.lilac.withOpacity(0.1),
-                      AppColors.lilac.withOpacity(0.05),
+                      context.gc.lilac.withOpacity(0.1),
+                      context.gc.lilac.withOpacity(0.05),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+                  border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
                         Text('🧙🏻‍♂️', style: TextStyle(fontSize: 24)),
                         SizedBox(width: 8),
@@ -113,7 +114,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                         ),
                       ],
@@ -123,7 +124,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                       'Deixe o Conselheiro Místico criar uma afirmação poderosa para você',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withOpacity(0.7),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -143,12 +144,12 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                       child: ElevatedButton.icon(
                         onPressed: _isGenerating ? null : _generateAffirmation,
                         icon: _isGenerating
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 16,
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: AppColors.darkBackground,
+                                  color: context.gc.darkBackground,
                                 ),
                               )
                             : const Icon(Icons.auto_awesome),
@@ -156,8 +157,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                             ? 'Consultando...'
                             : 'Gerar Afirmação'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lilac,
-                          foregroundColor: AppColors.darkBackground,
+                          backgroundColor: context.gc.lilac,
+                          foregroundColor: context.gc.darkBackground,
                         ),
                       ),
                     ),
@@ -171,7 +172,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 'Ou escreva sua própria afirmação:',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.softWhite.withOpacity(0.6),
+                  color: context.gc.softWhite.withOpacity(0.6),
                 ),
               ),
               const SizedBox(height: 8),
@@ -237,8 +238,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                       'Afirmações restantes hoje: $remaining/${UserModel.freeAffirmationsLimit}',
                       style: TextStyle(
                         color: remaining > 0
-                            ? AppColors.softWhite.withOpacity(0.6)
-                            : AppColors.alert,
+                            ? context.gc.softWhite.withOpacity(0.6)
+                            : context.gc.alert,
                         fontSize: 12,
                       ),
                       textAlign: TextAlign.center,
@@ -270,9 +271,9 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Afirmação criada pelo Conselheiro Místico!'),
-            backgroundColor: AppColors.lilac,
+            backgroundColor: context.gc.lilac,
           ),
         );
       }
@@ -281,7 +282,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao gerar afirmação: $e'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -310,10 +311,10 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     if (widget.affirmation == null &&
         !authProvider.currentUser.canUseAffirmations) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
               'Você atingiu o limite diário de afirmações. Volte amanhã ou seja Premium!'),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
       );
@@ -363,7 +364,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close form
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.alert),
+            style: TextButton.styleFrom(foregroundColor: context.gc.alert),
             child: const Text('Excluir'),
           ),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../data/models/enums.dart';
 
 /// Dados detalhados de cada signo do zodíaco
@@ -305,9 +306,9 @@ class ZodiacSignsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Signos do Zodíaco'),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -322,7 +323,7 @@ class ZodiacSignsPage extends StatelessWidget {
                   Text(
                     'Os 12 Signos',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
@@ -330,7 +331,7 @@ class ZodiacSignsPage extends StatelessWidget {
                     'Descubra as características, dons mágicos e práticas '
                     'recomendadas para cada signo do zodíaco.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withOpacity(0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -367,7 +368,7 @@ class ZodiacSignsPage extends StatelessWidget {
             style: GoogleFonts.cinzelDecorative(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
           subtitle: Column(
@@ -377,7 +378,7 @@ class ZodiacSignsPage extends StatelessWidget {
               Text(
                 data.dateRange,
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.7),
+                  color: context.gc.softWhite.withOpacity(0.7),
                   fontSize: 12,
                 ),
               ),
@@ -395,7 +396,7 @@ class ZodiacSignsPage extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.6),
+                        color: context.gc.softWhite.withOpacity(0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -404,10 +405,10 @@ class ZodiacSignsPage extends StatelessWidget {
               ),
             ],
           ),
-          iconColor: AppColors.lilac,
-          collapsedIconColor: AppColors.lilac,
+          iconColor: context.gc.lilac,
+          collapsedIconColor: context.gc.lilac,
           children: [
-            const Divider(color: AppColors.lilac),
+            Divider(color: context.gc.lilac),
             const SizedBox(height: 8),
 
             // Planeta regente
@@ -462,7 +463,7 @@ class ZodiacSignsPage extends StatelessWidget {
               title,
               textAlign: TextAlign.start,
               style: TextStyle(
-                color: AppColors.lilac,
+                color: context.gc.lilac,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
@@ -475,8 +476,8 @@ class ZodiacSignsPage extends StatelessWidget {
             textWidthBasis: TextWidthBasis.parent,
             style: TextStyle(
               color: isHighlight
-                  ? AppColors.starYellow
-                  : AppColors.softWhite.withOpacity(0.9),
+                  ? context.gc.starYellow
+                  : context.gc.softWhite.withOpacity(0.9),
               fontSize: isHighlight ? 13 : 14,
               height: 1.5,
               fontStyle: isHighlight ? FontStyle.italic : FontStyle.normal,

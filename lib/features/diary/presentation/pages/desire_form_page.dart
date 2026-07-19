@@ -4,6 +4,7 @@ import '../../data/models/desire_model.dart';
 import '../providers/desire_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class DesireFormPage extends StatefulWidget {
   final DesireModel? desire;
@@ -178,7 +179,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.alert,
+              foregroundColor: context.gc.alert,
             ),
             child: const Text('Excluir'),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/color_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/auth.dart';
 
 class ColorDetailPage extends StatelessWidget {
@@ -29,7 +30,7 @@ class ColorDetailPage extends StatelessWidget {
                       color: colorModel.color,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.surfaceBorder,
+                        color: context.gc.surfaceBorder,
                         width: 2,
                       ),
                     ),

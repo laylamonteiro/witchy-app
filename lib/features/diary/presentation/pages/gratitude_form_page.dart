@@ -4,6 +4,7 @@ import '../../data/models/gratitude_model.dart';
 import '../providers/gratitude_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class GratitudeFormPage extends StatefulWidget {
   final GratitudeModel? gratitude;
@@ -176,7 +177,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close form
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.alert),
+            style: TextButton.styleFrom(foregroundColor: context.gc.alert),
             child: const Text('Excluir'),
           ),
         ],

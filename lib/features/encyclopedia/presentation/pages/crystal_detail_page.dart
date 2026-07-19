@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/crystal_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/auth.dart';
 
 class CrystalDetailPage extends StatelessWidget {
@@ -69,9 +70,9 @@ class CrystalDetailPage extends StatelessWidget {
               MagicalCard(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.alert.withOpacity(0.1),
+                    color: context.gc.alert.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.alert, width: 2),
+                    border: Border.all(color: context.gc.alert, width: 2),
                   ),
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -79,9 +80,9 @@ class CrystalDetailPage extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.warning_amber_rounded,
-                            color: AppColors.alert,
+                            color: context.gc.alert,
                             size: 28,
                           ),
                           const SizedBox(width: 8),
@@ -91,7 +92,7 @@ class CrystalDetailPage extends StatelessWidget {
                                 .textTheme
                                 .titleLarge
                                 ?.copyWith(
-                                  color: AppColors.alert,
+                                  color: context.gc.alert,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -144,8 +145,8 @@ class CrystalDetailPage extends StatelessWidget {
                     children: crystal.intentions
                         .map((intention) => Chip(
                               label: Text(intention),
-                              backgroundColor: AppColors.mint.withOpacity(0.2),
-                              side: const BorderSide(color: AppColors.mint),
+                              backgroundColor: context.gc.mint.withOpacity(0.2),
+                              side: BorderSide(color: context.gc.mint),
                             ))
                         .toList(),
                   ),
@@ -177,8 +178,8 @@ class CrystalDetailPage extends StatelessWidget {
                                     : Icons.dangerous,
                                 size: 16,
                                 color: methodObj.isSafe
-                                    ? AppColors.info
-                                    : AppColors.alert,
+                                    ? context.gc.info
+                                    : context.gc.alert,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
@@ -193,7 +194,7 @@ class CrystalDetailPage extends StatelessWidget {
                                             : TextDecoration.lineThrough,
                                         color: methodObj.isSafe
                                             ? null
-                                            : AppColors.textSecondary,
+                                            : context.gc.textSecondary,
                                       ),
                                 ),
                               ),
@@ -208,7 +209,7 @@ class CrystalDetailPage extends StatelessWidget {
                                     .textTheme
                                     .bodySmall
                                     ?.copyWith(
-                                      color: AppColors.alert,
+                                      color: context.gc.alert,
                                       fontStyle: FontStyle.italic,
                                     ),
                               ),
@@ -243,8 +244,8 @@ class CrystalDetailPage extends StatelessWidget {
                                 methodObj.isSafe ? Icons.bolt : Icons.dangerous,
                                 size: 16,
                                 color: methodObj.isSafe
-                                    ? AppColors.starYellow
-                                    : AppColors.alert,
+                                    ? context.gc.starYellow
+                                    : context.gc.alert,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
@@ -259,7 +260,7 @@ class CrystalDetailPage extends StatelessWidget {
                                             : TextDecoration.lineThrough,
                                         color: methodObj.isSafe
                                             ? null
-                                            : AppColors.textSecondary,
+                                            : context.gc.textSecondary,
                                       ),
                                 ),
                               ),
@@ -274,7 +275,7 @@ class CrystalDetailPage extends StatelessWidget {
                                     .textTheme
                                     .bodySmall
                                     ?.copyWith(
-                                      color: AppColors.alert,
+                                      color: context.gc.alert,
                                       fontStyle: FontStyle.italic,
                                     ),
                               ),
@@ -306,10 +307,10 @@ class CrystalDetailPage extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.auto_awesome,
                               size: 16,
-                              color: AppColors.starYellow,
+                              color: context.gc.starYellow,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -337,12 +338,12 @@ class CrystalDetailPage extends StatelessWidget {
       width: 200,
       height: 200,
       decoration: BoxDecoration(
-        color: AppColors.lilac.withOpacity(0.2),
+        color: context.gc.lilac.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const Icon(
+      child: Icon(
         Icons.diamond,
-        color: AppColors.lilac,
+        color: context.gc.lilac,
         size: 80,
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/debug_log_service.dart';
 import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 
 /// Página para visualizar logs de debug
 class DebugLogsPage extends StatefulWidget {
@@ -82,13 +83,13 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
                       selected: isSelected,
                       onSelected: (_) => setState(() => _filterTag = tag),
                       backgroundColor: const Color(0xFF1A1A2E),
-                      selectedColor: AppColors.lilac.withOpacity(0.3),
+                      selectedColor: context.gc.lilac.withOpacity(0.3),
                       labelStyle: TextStyle(
-                        color: isSelected ? AppColors.lilac : Colors.white70,
+                        color: isSelected ? context.gc.lilac : context.gc.textSecondary,
                         fontSize: 12,
                       ),
                       side: BorderSide(
-                        color: isSelected ? AppColors.lilac : Colors.white24,
+                        color: isSelected ? context.gc.lilac : context.gc.textSecondary,
                       ),
                     ),
                   );
@@ -104,12 +105,12 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
               children: [
                 Text(
                   'Total: ${_filteredLogs.length} logs',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
                 ),
                 const Spacer(),
                 Text(
                   'Última atualização: ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -120,10 +121,10 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
           // Logs list
           Expanded(
             child: _filteredLogs.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       'Nenhum log encontrado',
-                      style: TextStyle(color: Colors.white54),
+                      style: TextStyle(color: context.gc.textSecondary),
                     ),
                   )
                 : ListView.builder(
@@ -150,19 +151,19 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
     Color tagColor;
     switch (log.tag) {
       case 'AUTH':
-        tagColor = AppColors.lilac;
+        tagColor = context.gc.lilac;
         break;
       case 'ERROR':
         tagColor = Colors.red;
         break;
       case 'NAV':
-        tagColor = AppColors.mint;
+        tagColor = context.gc.mint;
         break;
       case 'SYSTEM':
-        tagColor = AppColors.starYellow;
+        tagColor = context.gc.starYellow;
         break;
       default:
-        tagColor = Colors.white70;
+        tagColor = context.gc.textSecondary;
     }
 
     final isSessionStart = log.message.contains('═══');
@@ -172,11 +173,11 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: isSessionStart
-            ? AppColors.lilac.withOpacity(0.1)
+            ? context.gc.lilac.withOpacity(0.1)
             : const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(4),
         border: isSessionStart
-            ? Border.all(color: AppColors.lilac.withOpacity(0.3))
+            ? Border.all(color: context.gc.lilac.withOpacity(0.3))
             : null,
       ),
       child: Row(
@@ -186,7 +187,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
           Text(
             time,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
+              color: context.gc.textPrimary.withOpacity(0.4),
               fontSize: 10,
               fontFamily: 'monospace',
             ),
@@ -215,7 +216,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
             child: Text(
               log.message,
               style: TextStyle(
-                color: isSessionStart ? AppColors.lilac : Colors.white,
+                color: isSessionStart ? context.gc.lilac : context.gc.textPrimary,
                 fontSize: 12,
                 fontFamily: 'monospace',
               ),
@@ -230,9 +231,9 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
     final logsText = _logService.exportLogs();
     Clipboard.setData(ClipboardData(text: logsText));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text('Logs copiados para a área de transferência'),
-        backgroundColor: AppColors.mint,
+        backgroundColor: context.gc.mint,
       ),
     );
   }
@@ -243,10 +244,10 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title:
-            const Text('Limpar Logs?', style: TextStyle(color: Colors.white)),
-        content: const Text(
+            Text('Limpar Logs?', style: TextStyle(color: context.gc.textPrimary)),
+        content: Text(
           'Isso removerá todos os logs salvos.',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -256,7 +257,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Limpar', style: TextStyle(color: Colors.white)),
+            child: Text('Limpar', style: TextStyle(color: context.gc.textPrimary)),
           ),
         ],
       ),

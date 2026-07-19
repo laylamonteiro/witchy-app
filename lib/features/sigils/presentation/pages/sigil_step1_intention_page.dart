@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../data/models/sigil_model.dart';
@@ -55,10 +56,10 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Criar Sigilo'),
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -86,7 +87,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                     'Ao transformar palavras em símbolos abstratos, você cria uma marca energética '
                     'que carrega o poder da sua vontade, sem revelar sua intenção para outras pessoas.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
@@ -94,7 +95,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                     'Defina sua intenção, escolha uma palavra que a represente, '
                     'e o app criará automaticamente seu sigilo único.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
                   ),
@@ -126,24 +127,24 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                     decoration: InputDecoration(
                       hintText: 'Digite uma palavra...',
                       hintStyle: TextStyle(
-                        color: AppColors.textSecondary.withOpacity(0.5),
+                        color: context.gc.textSecondary.withOpacity(0.5),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: AppColors.surfaceBorder,
+                        borderSide: BorderSide(
+                          color: context.gc.surfaceBorder,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: AppColors.surfaceBorder,
+                        borderSide: BorderSide(
+                          color: context.gc.surfaceBorder,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: AppColors.lilac,
+                        borderSide: BorderSide(
+                          color: context.gc.lilac,
                           width: 2,
                         ),
                       ),
@@ -158,7 +159,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: _intentionController.text.contains(' ')
                               ? Colors.red.shade300
-                              : AppColors.textSecondary,
+                              : context.gc.textSecondary,
                         ),
                   ),
                 ],
@@ -185,7 +186,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                   Text(
                     'Dica: Escolha palavras positivas e específicas que ressoem com você.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
                   ),
@@ -209,7 +210,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                 child: Text(
                   'Continuar',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.gc.textSecondary,
                       ),
                 ),
               ),
@@ -225,12 +226,12 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          const Text('•', style: TextStyle(color: AppColors.lilac)),
+          Text('•', style: TextStyle(color: context.gc.lilac)),
           const SizedBox(width: 8),
           Text(
             text,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                 ),
           ),
         ],

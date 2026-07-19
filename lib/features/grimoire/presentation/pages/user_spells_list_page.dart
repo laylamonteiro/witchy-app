@@ -6,6 +6,7 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'ai_spell_creation_page.dart';
 import 'spell_detail_page.dart';
 import '../../data/models/spell_model.dart';
@@ -64,7 +65,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                   PopupMenuButton<String>(
                     icon: Icon(
                       Icons.filter_list,
-                      color: _filterCategory != null ? AppColors.lilac : null,
+                      color: _filterCategory != null ? context.gc.lilac : null,
                     ),
                     tooltip: 'Filtrar por categoria',
                     onSelected: (value) {
@@ -89,8 +90,8 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                                   : Icons.filter_list_off,
                               size: 18,
                               color: _filterCategory == null
-                                  ? AppColors.lilac
-                                  : AppColors.softWhite,
+                                  ? context.gc.lilac
+                                  : context.gc.softWhite,
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -120,7 +121,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                                 ),
                                 if (_filterCategory == category) ...[
                                   const Spacer(),
-                                  const Icon(Icons.check, size: 18, color: AppColors.lilac),
+                                  Icon(Icons.check, size: 18, color: context.gc.lilac),
                                 ],
                               ],
                             ),
@@ -246,16 +247,16 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                               runSpacing: 4,
                               children: [
                                 if (spell.isPreloaded)
-                                  _buildChip('Ancestral', AppColors.starYellow),
+                                  _buildChip('Ancestral', context.gc.starYellow),
                                 _buildChip(
                                   spell.category.displayName,
-                                  AppColors.lilac,
+                                  context.gc.lilac,
                                 ),
                                 _buildChip(
                                   spell.type.displayName,
                                   spell.type == SpellType.attraction
-                                      ? AppColors.mint
-                                      : AppColors.pink,
+                                      ? context.gc.mint
+                                      : context.gc.pink,
                                 ),
                               ],
                             ),
@@ -309,14 +310,14 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
         setState(() => _source = source);
       },
       labelStyle: TextStyle(
-        color: selected ? AppColors.darkBackground : AppColors.softWhite,
+        color: selected ? context.gc.darkBackground : context.gc.softWhite,
         fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         fontSize: 13,
       ),
-      selectedColor: AppColors.lilac,
-      backgroundColor: AppColors.surface,
+      selectedColor: context.gc.lilac,
+      backgroundColor: context.gc.surface,
       side: BorderSide(
-        color: selected ? AppColors.lilac : AppColors.surfaceBorder,
+        color: selected ? context.gc.lilac : context.gc.surfaceBorder,
       ),
     );
   }

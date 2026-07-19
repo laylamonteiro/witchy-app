@@ -5,6 +5,7 @@ import '../providers/wheel_of_year_provider.dart';
 import '../../data/models/sabbat_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class WheelOfYearPage extends StatelessWidget {
   final bool embedded;
@@ -53,7 +54,7 @@ class WheelOfYearPage extends StatelessWidget {
                           nextSabbat.type.southernHemisphereDate,
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: context.gc.textSecondary,
                                   ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -93,9 +94,9 @@ class WheelOfYearPage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.info_outline,
-                          color: AppColors.info,
+                          color: context.gc.info,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -113,7 +114,7 @@ class WheelOfYearPage extends StatelessWidget {
                     Text(
                       'Estas datas foram adaptadas para o hemisfério sul, seguindo o ciclo natural das estações.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.gc.textSecondary,
                           ),
                     ),
                   ],
@@ -150,14 +151,14 @@ class WheelOfYearPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.lilac.withValues(alpha: 0.2),
+        color: context.gc.lilac.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.lilac),
+        border: Border.all(color: context.gc.lilac),
       ),
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               fontWeight: FontWeight.w600,
             ),
       ),
@@ -182,13 +183,13 @@ class WheelOfYearPage extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isPast
-                ? AppColors.surface.withValues(alpha: 0.5)
-                : AppColors.surface,
+                ? context.gc.surface.withValues(alpha: 0.5)
+                : context.gc.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isPast
-                  ? AppColors.surfaceBorder.withValues(alpha: 0.5)
-                  : AppColors.surfaceBorder,
+                  ? context.gc.surfaceBorder.withValues(alpha: 0.5)
+                  : context.gc.surfaceBorder,
             ),
           ),
           child: Row(
@@ -197,7 +198,7 @@ class WheelOfYearPage extends StatelessWidget {
                 sabbat.emoji,
                 style: TextStyle(
                   fontSize: 40,
-                  color: isPast ? Colors.white.withValues(alpha: 0.5) : null,
+                  color: isPast ? context.gc.textPrimary.withValues(alpha: 0.5) : null,
                 ),
               ),
               const SizedBox(width: 16),
@@ -209,15 +210,15 @@ class WheelOfYearPage extends StatelessWidget {
                       sabbat.name,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             color: isPast
-                                ? AppColors.textSecondary
-                                : AppColors.lilac,
+                                ? context.gc.textSecondary
+                                : context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       sabbat.type.southernHemisphereDate,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.gc.textSecondary,
                           ),
                     ),
                     if (!isPast) ...[
@@ -229,7 +230,7 @@ class WheelOfYearPage extends StatelessWidget {
                                 ? 'Amanhã'
                                 : 'Em $daysUntil dias',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.mint,
+                              color: context.gc.mint,
                               fontWeight: FontWeight.w600,
                             ),
                       ),
@@ -241,8 +242,8 @@ class WheelOfYearPage extends StatelessWidget {
                 Icons.arrow_forward_ios,
                 size: 16,
                 color: isPast
-                    ? AppColors.textSecondary.withValues(alpha: 0.5)
-                    : AppColors.textSecondary,
+                    ? context.gc.textSecondary.withValues(alpha: 0.5)
+                    : context.gc.textSecondary,
               ),
             ],
           ),
@@ -258,7 +259,7 @@ class WheelOfYearPage extends StatelessWidget {
   ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.gc.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -274,7 +275,7 @@ class WheelOfYearPage extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceBorder,
+                    color: context.gc.surfaceBorder,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -298,17 +299,17 @@ class WheelOfYearPage extends StatelessWidget {
               Text(
                 'Datas',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.lilac.withValues(alpha: 0.1),
+                  color: context.gc.lilac.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border:
-                      Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+                      Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +332,7 @@ class WheelOfYearPage extends StatelessWidget {
                                     .textTheme
                                     .titleMedium
                                     ?.copyWith(
-                                      color: AppColors.lilac,
+                                      color: context.gc.lilac,
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
@@ -364,7 +365,7 @@ class WheelOfYearPage extends StatelessWidget {
                                     .textTheme
                                     .titleMedium
                                     ?.copyWith(
-                                      color: AppColors.lilac,
+                                      color: context.gc.lilac,
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
@@ -375,7 +376,7 @@ class WheelOfYearPage extends StatelessWidget {
                                     .textTheme
                                     .bodyMedium
                                     ?.copyWith(
-                                      color: AppColors.textSecondary,
+                                      color: context.gc.textSecondary,
                                     ),
                               ),
                             ],
@@ -409,8 +410,8 @@ class WheelOfYearPage extends StatelessWidget {
                     .map((crystal) => Chip(
                           label: Text(crystal),
                           backgroundColor:
-                              AppColors.lilac.withValues(alpha: 0.2),
-                          side: const BorderSide(color: AppColors.lilac),
+                              context.gc.lilac.withValues(alpha: 0.2),
+                          side: BorderSide(color: context.gc.lilac),
                         ))
                     .toList(),
               ),
@@ -427,8 +428,8 @@ class WheelOfYearPage extends StatelessWidget {
                     .map((herb) => Chip(
                           label: Text(herb),
                           backgroundColor:
-                              AppColors.mint.withValues(alpha: 0.2),
-                          side: const BorderSide(color: AppColors.mint),
+                              context.gc.mint.withValues(alpha: 0.2),
+                          side: BorderSide(color: context.gc.mint),
                         ))
                     .toList(),
               ),
@@ -445,8 +446,8 @@ class WheelOfYearPage extends StatelessWidget {
                     .map((color) => Chip(
                           label: Text(color),
                           backgroundColor:
-                              AppColors.starYellow.withValues(alpha: 0.2),
-                          side: const BorderSide(color: AppColors.starYellow),
+                              context.gc.starYellow.withValues(alpha: 0.2),
+                          side: BorderSide(color: context.gc.starYellow),
                         ))
                     .toList(),
               ),
@@ -483,11 +484,11 @@ class WheelOfYearPage extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           '•',
                           style: TextStyle(
                             fontSize: 20,
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                         ),
                         const SizedBox(width: 8),

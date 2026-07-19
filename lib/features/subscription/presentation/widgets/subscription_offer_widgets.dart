@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class PremiumBenefitItem {
   final IconData icon;
@@ -231,7 +232,7 @@ class _HeroCopy extends StatelessWidget {
           'ACESSE',
           textAlign: textAlign,
           style: GoogleFonts.lora(
-            color: AppColors.textPrimary,
+            color: context.gc.textPrimary,
             fontSize: compact ? 18 : 20,
             fontWeight: FontWeight.w600,
           ),
@@ -247,7 +248,7 @@ class _HeroCopy extends StatelessWidget {
               'TODO O PODER',
               textAlign: textAlign,
               style: GoogleFonts.cinzelDecorative(
-                color: Colors.white,
+                color: context.gc.textPrimary,
                 fontSize: compact ? 20 : 23,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
@@ -261,7 +262,7 @@ class _HeroCopy extends StatelessWidget {
             'DA SUA MAGIA',
             textAlign: textAlign,
             style: GoogleFonts.cinzelDecorative(
-              color: AppColors.textPrimary,
+              color: context.gc.textPrimary,
               fontSize: compact ? 19 : 22,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.4,
@@ -273,7 +274,7 @@ class _HeroCopy extends StatelessWidget {
           textAlign: textAlign,
           TextSpan(
             style: GoogleFonts.lora(
-              color: AppColors.textSecondary,
+              color: context.gc.textSecondary,
               fontSize: compact ? 11 : 12,
               height: 1.34,
             ),
@@ -281,7 +282,7 @@ class _HeroCopy extends StatelessWidget {
               TextSpan(text: 'Mais conhecimento, mais orientação e mais '),
               TextSpan(
                 text: 'conexão',
-                style: TextStyle(color: AppColors.lilac),
+                style: TextStyle(color: context.gc.lilac),
               ),
               TextSpan(text: ' com o seu caminho'),
             ],
@@ -306,7 +307,7 @@ class PremiumOfferDivider extends StatelessWidget {
           height: 8,
           transform: Matrix4.rotationZ(0.78),
           decoration: BoxDecoration(
-            color: AppColors.lilac,
+            color: context.gc.lilac,
             border: Border.all(color: const Color(0xFFE0C8F7)),
           ),
         ),
@@ -353,7 +354,7 @@ class _PremiumBenefitRow extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.lilac.withValues(alpha: 0.30),
+                color: context.gc.lilac.withValues(alpha: 0.30),
               ),
               boxShadow: const [
                 BoxShadow(color: Color(0x332B0A3F), blurRadius: 12),
@@ -370,7 +371,7 @@ class _PremiumBenefitRow extends StatelessWidget {
             child: Text(
               item.compactText,
               style: GoogleFonts.lora(
-                color: AppColors.textPrimary,
+                color: context.gc.textPrimary,
                 fontSize: 14.5,
                 height: 1.22,
                 fontWeight: FontWeight.w700,
@@ -551,7 +552,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = selected ? const Color(0xFFA934C4) : AppColors.surfaceBorder;
+    final accent = selected ? const Color(0xFFA934C4) : context.gc.surfaceBorder;
     final tag = selected ? 'SELECIONADO' : (popular ? 'POPULAR' : null);
 
     return Semantics(
@@ -571,7 +572,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
             constraints: BoxConstraints(minHeight: emphasized ? 152 : 136),
             padding: EdgeInsets.fromLTRB(10, emphasized ? 12 : 10, 10, 10),
             decoration: BoxDecoration(
-              color: selected ? const Color(0xFF2A1938) : AppColors.surface,
+              color: selected ? const Color(0xFF2A1938) : context.gc.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: accent,
@@ -605,8 +606,8 @@ class _SubscriptionPlanCard extends StatelessWidget {
                             ),
                             child: Text(
                               tag,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.gc.textPrimary,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -618,7 +619,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                 Text(
                   title,
                   style: GoogleFonts.lora(
-                    color: AppColors.textPrimary,
+                    color: context.gc.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -635,7 +636,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                         price,
                         maxLines: 1,
                         style: GoogleFonts.lora(
-                          color: AppColors.textPrimary,
+                          color: context.gc.textPrimary,
                           fontSize: emphasized ? 23 : 21,
                           fontWeight: FontWeight.w700,
                         ),
@@ -644,7 +645,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                       Text(
                         period,
                         style: GoogleFonts.lora(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           fontSize: 13,
                         ),
                       ),
@@ -656,8 +657,8 @@ class _SubscriptionPlanCard extends StatelessWidget {
                   Text(
                     savings!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.success,
+                    style: TextStyle(
+                      color: context.gc.success,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -712,16 +713,16 @@ class SubscriptionPurchaseButton extends StatelessWidget {
               backgroundColor: Colors.transparent,
               disabledBackgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              foregroundColor: Colors.white,
+              foregroundColor: context.gc.textPrimary,
               shape: const StadiumBorder(),
             ),
             child: loading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: context.gc.textPrimary,
                     ),
                   )
                 : Text(
@@ -753,7 +754,7 @@ class SubscriptionGuarantees extends StatelessWidget {
         Text(
           'Cancele a qualquer momento',
           style: GoogleFonts.lora(
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
             fontSize: 12,
           ),
         ),
@@ -795,8 +796,8 @@ class _GuaranteeItem extends StatelessWidget {
           child: Text(
             label,
             maxLines: 2,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: context.gc.textSecondary,
               fontSize: 10,
               height: 1.2,
             ),

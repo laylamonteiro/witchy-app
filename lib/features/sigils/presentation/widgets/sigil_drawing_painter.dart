@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../data/models/sigil_wheel_model.dart';
 
 /// Painter para desenhar o sigilo (linhas conectando os pontos)
@@ -8,9 +7,13 @@ class SigilDrawingPainter extends CustomPainter {
   final String intention;
   final bool showStartEnd;
   final Map<String, WheelPosition>? customPositions;
+  final Color lineColor;
+  final Color pointColor;
 
   SigilDrawingPainter({
     required this.intention,
+    required this.lineColor,
+    required this.pointColor,
     this.showStartEnd = true,
     this.customPositions,
   });
@@ -26,7 +29,7 @@ class SigilDrawingPainter extends CustomPainter {
 
     // Desenhar linhas conectando os pontos
     final linePaint = Paint()
-      ..color = AppColors.starYellow
+      ..color = lineColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round
@@ -61,7 +64,7 @@ class SigilDrawingPainter extends CustomPainter {
 
       // Desenhar todos os pontos intermediários (círculos lilás)
       final pointPaint = Paint()
-        ..color = AppColors.lilac
+        ..color = pointColor
         ..style = PaintingStyle.fill;
 
       for (int i = 1; i < points.length - 1; i++) {
@@ -74,6 +77,8 @@ class SigilDrawingPainter extends CustomPainter {
   bool shouldRepaint(covariant SigilDrawingPainter oldDelegate) {
     return oldDelegate.intention != intention ||
         oldDelegate.showStartEnd != showStartEnd ||
-        oldDelegate.customPositions != customPositions;
+        oldDelegate.customPositions != customPositions ||
+        oldDelegate.lineColor != lineColor ||
+        oldDelegate.pointColor != pointColor;
   }
 }

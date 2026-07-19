@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_input_page.dart';
 import 'birth_chart_view_page.dart';
@@ -37,9 +38,9 @@ class _AstrologyTabState extends State<AstrologyTab> {
     return Consumer<AstrologyProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.lilac),
+              valueColor: AlwaysStoppedAnimation<Color>(context.gc.lilac),
             ),
           );
         }
@@ -58,14 +59,14 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     Text(
                       'Astrologia Mística',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Descubra seu mapa astral e perfil mágico personalizado',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.softWhite.withOpacity(0.8),
+                            color: context.gc.softWhite.withOpacity(0.8),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -179,27 +180,27 @@ class _AstrologyTabState extends State<AstrologyTab> {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.info_outline,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Sobre a Astrologia',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: AppColors.lilac,
+                                color: context.gc.lilac,
                               ),
                         ),
                       ],
                     ),
-                    const Divider(color: AppColors.lilac),
+                    Divider(color: context.gc.lilac),
                     Text(
                       'Seu mapa astral é calculado com base na posição dos planetas '
                       'no momento e local do seu nascimento. O perfil mágico interpreta '
                       'essas posições de forma específica para práticas de bruxaria.',
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                         height: 1.5,
                       ),
                     ),
@@ -207,7 +208,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     Text(
                       'Para melhores resultados, tenha em mãos:',
                       style: TextStyle(
-                        color: AppColors.softWhite,
+                        color: context.gc.softWhite,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -250,7 +251,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.softWhite,
+                          color: context.gc.softWhite,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -258,15 +259,15 @@ class _AstrologyTabState extends State<AstrologyTab> {
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.7),
+                          color: context.gc.softWhite.withOpacity(0.7),
                         ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               size: 16,
             ),
           ],
@@ -281,10 +282,10 @@ class _AstrologyTabState extends State<AstrologyTab> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '• ',
             style: TextStyle(
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               fontSize: 16,
             ),
           ),
@@ -292,7 +293,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
             child: Text(
               text,
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.8),
+                color: context.gc.softWhite.withOpacity(0.8),
               ),
             ),
           ),
@@ -308,29 +309,29 @@ class _AstrologyTabState extends State<AstrologyTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: const Text(
+        backgroundColor: context.gc.cardBackground,
+        title: Text(
           'Recalcular Mapa Astral?',
-          style: TextStyle(color: AppColors.softWhite),
+          style: TextStyle(color: context.gc.softWhite),
         ),
-        content: const Text(
+        content: Text(
           'Isso irá substituir seu mapa astral atual. '
           'Você tem certeza?',
-          style: TextStyle(color: AppColors.softWhite),
+          style: TextStyle(color: context.gc.softWhite),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(
+            child: Text(
               'Cancelar',
-              style: TextStyle(color: AppColors.lilac),
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
+            child: Text(
               'Continuar',
-              style: TextStyle(color: AppColors.lilac),
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
         ],

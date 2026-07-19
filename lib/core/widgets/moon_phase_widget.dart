@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
-import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 
 class MoonPhaseWidget extends StatelessWidget {
   final MoonPhase phase;
@@ -40,7 +40,7 @@ class MoonPhaseWidget extends StatelessWidget {
           Text(
             phase.displayName,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -50,7 +50,7 @@ class MoonPhaseWidget extends StatelessWidget {
           Text(
             phase.description,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                 ),
             textAlign: TextAlign.center,
             maxLines: 2,

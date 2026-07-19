@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/providers/sync_provider.dart';
 import '../../../../core/database/database_helper.dart';
@@ -83,25 +84,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final user = authProvider.currentUser;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: ResponsiveAppBarTitle(
           'Editar Perfil',
           style: GoogleFonts.cinzelDecorative(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.lilac))
+          ? Center(
+              child: CircularProgressIndicator(color: context.gc.lilac))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -120,9 +121,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         );
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text('Nome atualizado!'),
-                              backgroundColor: AppColors.success,
+                              backgroundColor: context.gc.success,
                             ),
                           );
                         }
@@ -277,7 +278,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: Text(
         title,
         style: GoogleFonts.nunito(
-          color: AppColors.lilac,
+          color: context.gc.lilac,
           fontSize: 14,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
@@ -289,9 +290,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildSettingsCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.gc.textPrimary10),
       ),
       child: Column(children: children),
     );
@@ -307,24 +308,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.lilac.withValues(alpha: 0.2),
+          color: context.gc.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.lilac, size: 20),
+        child: Icon(icon, color: context.gc.lilac, size: 20),
       ),
       title: TextField(
         controller: controller,
-        style: GoogleFonts.nunito(color: Colors.white),
+        style: GoogleFonts.nunito(color: context.gc.textPrimary),
         decoration: InputDecoration(
           labelText: title,
-          labelStyle: GoogleFonts.nunito(color: Colors.white54),
+          labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
         ),
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.check, color: AppColors.lilac),
+        icon: Icon(Icons.check, color: context.gc.lilac),
         onPressed: onSave,
       ),
     );
@@ -339,22 +340,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.lilac.withValues(alpha: 0.2),
+          color: context.gc.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.lilac, size: 20),
+        child: Icon(icon, color: context.gc.lilac, size: 20),
       ),
       title: Text(
         title,
         style: GoogleFonts.nunito(
-          color: Colors.white54,
+          color: context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
       subtitle: Text(
         value ?? 'Não informado',
         style: GoogleFonts.nunito(
-          color: Colors.white,
+          color: context.gc.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -372,29 +373,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.lilac.withValues(alpha: 0.2),
+          color: context.gc.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.lilac, size: 20),
+        child: Icon(icon, color: context.gc.lilac, size: 20),
       ),
       title: Text(
         title,
         style: GoogleFonts.nunito(
-          color: Colors.white,
+          color: context.gc.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
         subtitle,
         style: GoogleFonts.nunito(
-          color: Colors.white54,
+          color: context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: AppColors.lilac,
+        activeColor: context.gc.lilac,
       ),
     );
   }
@@ -406,11 +407,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? Colors.red : Colors.white;
+    final color = isDestructive ? Colors.red : context.gc.textPrimary;
     final iconBgColor = isDestructive
         ? Colors.red.withValues(alpha: 0.2)
-        : AppColors.lilac.withValues(alpha: 0.2);
-    final iconColor = isDestructive ? Colors.red : AppColors.lilac;
+        : context.gc.lilac.withValues(alpha: 0.2);
+    final iconColor = isDestructive ? Colors.red : context.gc.lilac;
 
     return ListTile(
       leading: Container(
@@ -433,7 +434,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         style: GoogleFonts.nunito(
           color: isDestructive
               ? Colors.red.withValues(alpha: 0.7)
-              : Colors.white54,
+              : context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
@@ -446,7 +447,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Divider(
       height: 1,
       indent: 56,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: context.gc.textPrimary.withValues(alpha: 0.1),
     );
   }
 
@@ -454,22 +455,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.lilac.withValues(alpha: 0.1),
+        color: context.gc.lilac.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.shield_outlined,
-                  color: AppColors.lilac, size: 20),
+              Icon(Icons.shield_outlined,
+                  color: context.gc.lilac, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Sua Privacidade Importa',
                 style: GoogleFonts.nunito(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -480,7 +481,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             'Seus dados mágicos são sagrados. Nunca vendemos suas informações pessoais '
             'e você tem controle total sobre o que é coletado e armazenado.',
             style: GoogleFonts.nunito(
-              color: Colors.white70,
+              color: context.gc.textSecondary,
               fontSize: 13,
               height: 1.4,
             ),
@@ -498,10 +499,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Text(
           'Alterar Senha',
-          style: GoogleFonts.nunito(color: Colors.white),
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -509,17 +510,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: currentPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Senha Atual',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColors.lilac),
+                  borderSide: BorderSide(color: context.gc.lilac),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -528,17 +529,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: newPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Nova Senha',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColors.lilac),
+                  borderSide: BorderSide(color: context.gc.lilac),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -547,17 +548,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: confirmPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Confirmar Nova Senha',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColors.lilac),
+                  borderSide: BorderSide(color: context.gc.lilac),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -574,9 +575,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
               if (newPasswordController.text !=
                   confirmPasswordController.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text('As senhas não coincidem'),
-                    backgroundColor: AppColors.alert,
+                    backgroundColor: context.gc.alert,
                   ),
                 );
                 return;
@@ -584,10 +585,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
               if (newPasswordController.text.length < 6) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content:
                         Text('A nova senha deve ter pelo menos 6 caracteres'),
-                    backgroundColor: AppColors.alert,
+                    backgroundColor: context.gc.alert,
                   ),
                 );
                 return;
@@ -611,8 +612,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             ? 'Senha alterada com sucesso!'
                             : result.errorMessage ?? 'Erro ao alterar senha'),
                         backgroundColor: result.success
-                            ? AppColors.success
-                            : AppColors.alert,
+                            ? context.gc.success
+                            : context.gc.alert,
                       ),
                     );
                   }
@@ -621,7 +622,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Erro: $e'),
-                        backgroundColor: AppColors.alert,
+                        backgroundColor: context.gc.alert,
                       ),
                     );
                   }
@@ -630,20 +631,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Modo local - sempre sucesso (senhas não são armazenadas localmente)
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text('Senha alterada com sucesso!'),
-                      backgroundColor: AppColors.success,
+                      backgroundColor: context.gc.success,
                     ),
                   );
                 }
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: context.gc.lilac,
             ),
             child: Text(
               'Alterar',
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -655,15 +656,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Text(
           'Exportar Dados',
-          style: GoogleFonts.nunito(color: Colors.white),
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Text(
           'Seus dados serão exportados em formato JSON. '
           'Isso pode levar alguns segundos.',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -676,10 +677,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
               await _performExport();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: context.gc.lilac,
             ),
             child: Text('Exportar',
-                style: GoogleFonts.nunito(color: Colors.white)),
+                style: GoogleFonts.nunito(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -689,9 +690,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _performExport() async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Exportando dados...'),
-          backgroundColor: AppColors.lilac,
+          backgroundColor: context.gc.lilac,
         ),
       );
 
@@ -743,9 +744,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Dados exportados com sucesso!'),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.gc.success,
           ),
         );
       }
@@ -754,7 +755,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao exportar: $e'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -765,15 +766,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Text(
           'Limpar Dados Locais?',
-          style: GoogleFonts.nunito(color: Colors.white),
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Text(
           'Isso removerá todos os dados salvos neste dispositivo. '
           'Se você tem sincronização ativada, seus dados na nuvem serão mantidos.',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -786,7 +787,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               backgroundColor: Colors.orange,
             ),
             child:
-                Text('Limpar', style: GoogleFonts.nunito(color: Colors.white)),
+                Text('Limpar', style: GoogleFonts.nunito(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -828,9 +829,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Dados locais removidos com sucesso'),
-              backgroundColor: AppColors.success,
+              backgroundColor: context.gc.success,
             ),
           );
         }
@@ -839,7 +840,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Erro ao limpar dados: $e'),
-              backgroundColor: AppColors.alert,
+              backgroundColor: context.gc.alert,
             ),
           );
         }
@@ -851,7 +852,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Row(
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.red),
@@ -870,7 +871,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           '- Mapa astral\n'
           '- Configurações\n\n'
           'Tem certeza absoluta?',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -884,7 +885,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             child: Text(
               'Excluir Permanentemente',
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -897,15 +898,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          backgroundColor: AppColors.surface,
+          backgroundColor: context.gc.surface,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(color: AppColors.lilac),
+              CircularProgressIndicator(color: context.gc.lilac),
               const SizedBox(height: 16),
               Text(
                 'Excluindo conta...',
-                style: GoogleFonts.nunito(color: Colors.white70),
+                style: GoogleFonts.nunito(color: context.gc.textSecondary),
               ),
             ],
           ),
@@ -941,9 +942,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         // Mostrar mensagem de sucesso
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Conta excluída com sucesso'),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.gc.success,
           ),
         );
 
@@ -960,7 +961,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao excluir conta: $e'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -971,28 +972,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Row(
           children: [
             const Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
             const SizedBox(width: 8),
             Text(
               'Recurso Premium',
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ],
         ),
         content: Text(
           'A sincronização de dados na nuvem é um recurso exclusivo para usuários Premium.\n\n'
           'Com o Premium, seus dados ficam sempre seguros e sincronizados entre todos os seus dispositivos.',
-          style: GoogleFonts.nunito(color: Colors.white70, height: 1.5),
+          style: GoogleFonts.nunito(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Agora Não',
-              style: GoogleFonts.nunito(color: Colors.white54),
+              style: GoogleFonts.nunito(color: context.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1005,7 +1006,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             child: Text(
               'Fazer Upgrade',
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],

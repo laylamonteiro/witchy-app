@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/config/admin_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -39,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.lilac),
+          icon: Icon(Icons.arrow_back, color: context.gc.lilac),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -72,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
                       'Esqueci minha senha',
                       style: GoogleFonts.nunito(
                         fontSize: 14,
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                     ),
                   ),
@@ -105,12 +106,12 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.lilac.withValues(alpha: 0.2),
+            color: context.gc.lilac.withValues(alpha: 0.2),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.lock_outline,
             size: 40,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 24),
@@ -119,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 8),
@@ -127,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
           'Entre para acessar seu grimório',
           style: GoogleFonts.nunito(
             fontSize: 16,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
         ),
       ],
@@ -138,11 +139,11 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: 'Email',
         hintText: 'seu@email.com',
-        prefixIcon: const Icon(Icons.email_outlined, color: AppColors.lilac),
+        prefixIcon: Icon(Icons.email_outlined, color: context.gc.lilac),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -162,15 +163,15 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: 'Senha',
         hintText: '••••••',
-        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.lilac),
+        prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -200,13 +201,13 @@ class _LoginPageState extends State<LoginPage> {
     return ElevatedButton(
       onPressed: _isLoading ? null : _handleLogin,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.lilac,
+        backgroundColor: context.gc.lilac,
         foregroundColor: const Color(0xFF2B2143),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        disabledBackgroundColor: AppColors.lilac.withValues(alpha: 0.5),
+        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
       ),
       child: _isLoading
           ? const SizedBox(
@@ -232,7 +233,7 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         Expanded(
           child: Divider(
-            color: AppColors.surfaceBorder,
+            color: context.gc.surfaceBorder,
             thickness: 1,
           ),
         ),
@@ -242,13 +243,13 @@ class _LoginPageState extends State<LoginPage> {
             'ou continue com',
             style: GoogleFonts.nunito(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: context.gc.textSecondary,
             ),
           ),
         ),
         Expanded(
           child: Divider(
-            color: AppColors.surfaceBorder,
+            color: context.gc.surfaceBorder,
             thickness: 1,
           ),
         ),
@@ -279,8 +280,8 @@ class _LoginPageState extends State<LoginPage> {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.textPrimary,
-        side: const BorderSide(color: AppColors.surfaceBorder),
+        foregroundColor: context.gc.textPrimary,
+        side: BorderSide(color: context.gc.surfaceBorder),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -297,7 +298,7 @@ class _LoginPageState extends State<LoginPage> {
               style: GoogleFonts.nunito(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: context.gc.textPrimary,
               ),
             ),
           const SizedBox(width: 8),
@@ -321,7 +322,7 @@ class _LoginPageState extends State<LoginPage> {
           'Não tem uma conta? ',
           style: GoogleFonts.nunito(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
         ),
         TextButton(
@@ -339,7 +340,7 @@ class _LoginPageState extends State<LoginPage> {
             style: GoogleFonts.nunito(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
         ),
@@ -413,7 +414,7 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$e'.replaceAll('Exception: ', '')),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -427,9 +428,9 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _handleGoogleLogin() async {
     if (!SupabaseConfig.isConfigured) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Login social não disponível no momento'),
-          backgroundColor: AppColors.info,
+          backgroundColor: context.gc.info,
         ),
       );
       return;
@@ -454,7 +455,7 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.errorMessage ?? 'Erro no login com Google'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -463,7 +464,7 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro no login com Google: $e'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }

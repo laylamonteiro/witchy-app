@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/astrology_provider.dart';
 import '../../data/models/enums.dart';
 import '../../data/data_sources/planet_sign_interpretations.dart';
@@ -24,7 +25,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Perfil Mágico'),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
         actions: [
           Consumer<AstrologyProvider>(
             builder: (context, provider, _) {
@@ -42,16 +43,16 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           ),
         ],
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: Consumer<AstrologyProvider>(
         builder: (context, provider, _) {
           final profile = provider.magicalProfile;
 
           if (profile == null) {
-            return const Center(
+            return Center(
               child: Text(
                 'Perfil mágico não encontrado',
-                style: TextStyle(color: AppColors.softWhite),
+                style: TextStyle(color: context.gc.softWhite),
               ),
             );
           }
@@ -73,14 +74,14 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                             .textTheme
                             .headlineMedium
                             ?.copyWith(
-                              color: AppColors.lilac,
+                              color: context.gc.lilac,
                             ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Interpretação astrológica adaptada para bruxaria',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.softWhite.withOpacity(0.8),
+                              color: context.gc.softWhite.withOpacity(0.8),
                             ),
                         textAlign: TextAlign.center,
                       ),
@@ -107,18 +108,18 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                             style: GoogleFonts.cinzelDecorative(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.lilac,
+                              color: context.gc.lilac,
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Divider(color: AppColors.lilac),
+                      Divider(color: context.gc.lilac),
                       const SizedBox(height: 12),
                       Text(
                         profile.dominantElement.magicalDescription,
-                        style: const TextStyle(
-                          color: AppColors.softWhite,
+                        style: TextStyle(
+                          color: context.gc.softWhite,
                           height: 1.5,
                           fontSize: 15,
                         ),
@@ -127,7 +128,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       Text(
                         'Distribuição:',
                         style: TextStyle(
-                          color: AppColors.softWhite.withOpacity(0.7),
+                          color: context.gc.softWhite.withOpacity(0.7),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -141,12 +142,12 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                               Text(
                                 '${entry.key.symbol} ${entry.key.displayName}',
                                 style:
-                                    const TextStyle(color: AppColors.softWhite),
+                                    TextStyle(color: context.gc.softWhite),
                               ),
                               Text(
                                 '${entry.value} planeta(s)',
                                 style: TextStyle(
-                                  color: AppColors.softWhite.withOpacity(0.6),
+                                  color: context.gc.softWhite.withOpacity(0.6),
                                 ),
                               ),
                             ],
@@ -169,16 +170,16 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                         style: GoogleFonts.cinzelDecorative(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Divider(color: AppColors.lilac),
+                      Divider(color: context.gc.lilac),
                       const SizedBox(height: 12),
                       Text(
                         profile.dominantModality.description,
-                        style: const TextStyle(
-                          color: AppColors.softWhite,
+                        style: TextStyle(
+                          color: context.gc.softWhite,
                           height: 1.5,
                           fontSize: 15,
                         ),
@@ -210,11 +211,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                           style: GoogleFonts.cinzelDecorative(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Divider(color: AppColors.lilac),
+                        Divider(color: context.gc.lilac),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
@@ -226,16 +227,16 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.lilac.withOpacity(0.2),
+                                color: context.gc.lilac.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: AppColors.lilac.withOpacity(0.5),
+                                  color: context.gc.lilac.withOpacity(0.5),
                                 ),
                               ),
                               child: Text(
                                 tool,
-                                style: const TextStyle(
-                                  color: AppColors.lilac,
+                                style: TextStyle(
+                                  color: context.gc.lilac,
                                   fontSize: 12,
                                 ),
                               ),
@@ -284,7 +285,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                   style: GoogleFonts.cinzelDecorative(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                   ),
                 ),
               ),
@@ -294,13 +295,13 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           Text(
             'Toque em cada planeta para entender seu significado no seu mapa',
             style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.6),
+              color: context.gc.softWhite.withOpacity(0.6),
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
           ),
           const SizedBox(height: 8),
-          const Divider(color: AppColors.lilac),
+          Divider(color: context.gc.lilac),
           const SizedBox(height: 12),
 
           // Lista de planetas pessoais
@@ -325,10 +326,10 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             child: TextButton.icon(
               onPressed: () =>
                   _showAllPlanetsDialog(context, birthChart.planets),
-              icon: const Icon(Icons.expand_more, color: AppColors.lilac),
-              label: const Text(
+              icon: Icon(Icons.expand_more, color: context.gc.lilac),
+              label: Text(
                 'Ver todos os planetas',
-                style: TextStyle(color: AppColors.lilac),
+                style: TextStyle(color: context.gc.lilac),
               ),
             ),
           ),
@@ -357,15 +358,15 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           children: [
             Text(
               '${planet.displayName} em ',
-              style: const TextStyle(
-                color: AppColors.softWhite,
+              style: TextStyle(
+                color: context.gc.softWhite,
                 fontWeight: FontWeight.w500,
               ),
             ),
             Text(
               sign.displayName,
-              style: const TextStyle(
-                color: AppColors.lilac,
+              style: TextStyle(
+                color: context.gc.lilac,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -379,13 +380,13 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.alert.withOpacity(0.2),
+                  color: context.gc.alert.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
+                child: Text(
                   'R',
                   style: TextStyle(
-                    color: AppColors.alert,
+                    color: context.gc.alert,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -397,26 +398,26 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
         subtitle: Text(
           'Casa $houseNumber | ${sign.element.symbol} ${sign.element.displayName}',
           style: TextStyle(
-            color: AppColors.softWhite.withOpacity(0.6),
+            color: context.gc.softWhite.withOpacity(0.6),
             fontSize: 12,
           ),
         ),
-        iconColor: AppColors.lilac,
-        collapsedIconColor: AppColors.lilac.withOpacity(0.6),
+        iconColor: context.gc.lilac,
+        collapsedIconColor: context.gc.lilac.withOpacity(0.6),
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.surface.withOpacity(0.3),
+              color: context.gc.surface.withOpacity(0.3),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColors.lilac.withOpacity(0.2),
+                color: context.gc.lilac.withOpacity(0.2),
               ),
             ),
             child: Text(
               PlanetSignInterpretations.getInterpretation(planet, sign),
-              style: const TextStyle(
-                color: AppColors.softWhite,
+              style: TextStyle(
+                color: context.gc.softWhite,
                 height: 1.6,
                 fontSize: 14,
               ),
@@ -431,7 +432,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
   void _showAllPlanetsDialog(BuildContext context, List<dynamic> planets) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.cardBackground,
+      backgroundColor: context.gc.cardBackground,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -449,7 +450,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.lilac.withOpacity(0.5),
+                color: context.gc.lilac.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -461,12 +462,12 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                 style: GoogleFonts.cinzelDecorative(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                 ),
               ),
             ),
             const SizedBox(height: 8),
-            const Divider(color: AppColors.lilac),
+            Divider(color: context.gc.lilac),
             // Lista
             Expanded(
               child: ListView.builder(
@@ -501,13 +502,13 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
       return MagicalCard(
         child: Column(
           children: [
-            const CircularProgressIndicator(color: AppColors.lilac),
+            CircularProgressIndicator(color: context.gc.lilac),
             const SizedBox(height: 16),
             Text(
               'Gerando sua análise personalizada...',
               style: GoogleFonts.cinzelDecorative(
                 fontSize: 18,
-                color: AppColors.lilac,
+                color: context.gc.lilac,
               ),
               textAlign: TextAlign.center,
             ),
@@ -515,7 +516,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             Text(
               'O Conselheiro Místico está analisando seu mapa astral\ne criando uma interpretação única para você.',
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withOpacity(0.7),
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -546,7 +547,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                         style: GoogleFonts.cinzelDecorative(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                       ),
                     ),
@@ -556,13 +557,13 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                 Text(
                   'Gerada especialmente para você com base no seu mapa astral',
                   style: TextStyle(
-                    color: AppColors.softWhite.withOpacity(0.6),
+                    color: context.gc.softWhite.withOpacity(0.6),
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Divider(color: AppColors.lilac),
+                Divider(color: context.gc.lilac),
                 const SizedBox(height: 12),
                 // FAIL-CLOSED: para free, o texto premium real NUNCA é
                 // renderizado (nem com blur) — mostra placeholder desfocado.
@@ -583,7 +584,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       label: const Text('Seja Premium'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9C27B0),
-                        foregroundColor: Colors.white,
+                        foregroundColor: context.gc.textPrimary,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -610,20 +611,20 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
       return MagicalCard(
         child: Column(
           children: [
-            const Icon(Icons.error_outline, color: AppColors.alert, size: 48),
+            Icon(Icons.error_outline, color: context.gc.alert, size: 48),
             const SizedBox(height: 16),
             Text(
               'Não foi possível gerar sua análise',
               style: GoogleFonts.cinzelDecorative(
                 fontSize: 18,
-                color: AppColors.alert,
+                color: context.gc.alert,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Verifique sua conexão e tente novamente.',
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withOpacity(0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -633,8 +634,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               icon: const Icon(Icons.refresh),
               label: const Text('Tentar novamente'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.lilac,
-                foregroundColor: AppColors.darkBackground,
+                backgroundColor: context.gc.lilac,
+                foregroundColor: context.gc.darkBackground,
               ),
             ),
           ],
@@ -653,14 +654,14 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             style: GoogleFonts.cinzelDecorative(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Consulte o Conselheiro Místico para uma\nanálise única do seu perfil mágico.',
             style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.8),
+              color: context.gc.softWhite.withOpacity(0.8),
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
@@ -671,8 +672,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             icon: const Icon(Icons.auto_awesome),
             label: const Text('Gerar Análise'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
-              foregroundColor: AppColors.darkBackground,
+              backgroundColor: context.gc.lilac,
+              foregroundColor: context.gc.darkBackground,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
@@ -703,23 +704,23 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
       h2: GoogleFonts.cinzelDecorative(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: AppColors.lilac,
+        color: context.gc.lilac,
       ),
-      p: const TextStyle(
-        color: AppColors.softWhite,
+      p: TextStyle(
+        color: context.gc.softWhite,
         height: 1.6,
         fontSize: 15,
       ),
-      listBullet: const TextStyle(
-        color: AppColors.lilac,
+      listBullet: TextStyle(
+        color: context.gc.lilac,
         fontSize: 15,
       ),
-      strong: const TextStyle(
-        color: AppColors.lilac,
+      strong: TextStyle(
+        color: context.gc.lilac,
         fontWeight: FontWeight.bold,
       ),
       em: TextStyle(
-        color: AppColors.softWhite.withOpacity(0.9),
+        color: context.gc.softWhite.withOpacity(0.9),
         fontStyle: FontStyle.italic,
       ),
     );

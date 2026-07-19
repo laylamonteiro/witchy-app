@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../data/models/sigil_model.dart';
@@ -17,10 +18,10 @@ class SigilStep2LettersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Letras Mágicas'),
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -37,7 +38,7 @@ class SigilStep2LettersPage extends StatelessWidget {
             Text(
               'A essência mágica da sua intenção',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                   ),
               textAlign: TextAlign.center,
             ),
@@ -50,14 +51,14 @@ class SigilStep2LettersPage extends StatelessWidget {
                   Text(
                     'Sua intenção:',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     sigil.intention,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -67,12 +68,12 @@ class SigilStep2LettersPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Seta para baixo
-            const Center(
+            Center(
               child: Text(
                 '↓',
                 style: TextStyle(
                   fontSize: 32,
-                  color: AppColors.starYellow,
+                  color: context.gc.starYellow,
                 ),
               ),
             ),
@@ -85,7 +86,7 @@ class SigilStep2LettersPage extends StatelessWidget {
                   Text(
                     'Transformada em:',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -99,10 +100,10 @@ class SigilStep2LettersPage extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: context.gc.surface,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                             width: 2,
                           ),
                         ),
@@ -113,7 +114,7 @@ class SigilStep2LettersPage extends StatelessWidget {
                                 .textTheme
                                 .headlineSmall
                                 ?.copyWith(
-                                  color: AppColors.starYellow,
+                                  color: context.gc.starYellow,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -145,7 +146,7 @@ class SigilStep2LettersPage extends StatelessWidget {
                   Text(
                     'Sua palavra foi simplificada seguindo a tradição dos sigilos:',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
@@ -158,7 +159,7 @@ class SigilStep2LettersPage extends StatelessWidget {
                     'Esta sequência simplificada será conectada na Roda das Bruxas '
                     'para formar o símbolo mágico do seu sigilo.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
                   ),
@@ -194,13 +195,13 @@ class SigilStep2LettersPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          const Text('•', style: TextStyle(color: AppColors.lilac)),
+          Text('•', style: TextStyle(color: context.gc.lilac)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: context.gc.textSecondary,
                 fontSize: 14,
               ),
             ),

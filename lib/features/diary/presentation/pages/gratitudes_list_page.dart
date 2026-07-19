@@ -7,6 +7,7 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'gratitude_form_page.dart';
 
 class GratitudesListPage extends StatefulWidget {
@@ -67,7 +68,7 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
                           dateFormat.format(gratitude.date),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: context.gc.textSecondary,
                                   ),
                         ),
                       ],
@@ -87,8 +88,8 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
                             .map((tag) => Chip(
                                   label: Text(tag, style: const TextStyle(fontSize: 12)),
                                   backgroundColor:
-                                      AppColors.mint.withOpacity(0.2),
-                                  side: const BorderSide(color: AppColors.mint),
+                                      context.gc.mint.withOpacity(0.2),
+                                  side: BorderSide(color: context.gc.mint),
                                 ))
                             .toList(),
                       ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   final String message;
@@ -26,13 +26,13 @@ class EmptyStateWidget extends StatelessWidget {
             Icon(
               icon,
               size: 80,
-              color: AppColors.surfaceBorder,
+              color: context.gc.surfaceBorder,
             ),
             const SizedBox(height: 24),
             Text(
               message,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                   ),
               textAlign: TextAlign.center,
             ),

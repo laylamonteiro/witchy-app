@@ -4,6 +4,7 @@ import '../../data/models/dream_model.dart';
 import '../providers/dream_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class DreamFormPage extends StatefulWidget {
   final DreamModel? dream;
@@ -194,7 +195,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.alert,
+              foregroundColor: context.gc.alert,
             ),
             child: const Text('Excluir'),
           ),

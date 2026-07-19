@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import 'login_page.dart';
@@ -32,7 +33,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.lilac),
+          icon: Icon(Icons.arrow_back, color: context.gc.lilac),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -78,12 +79,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.success.withValues(alpha: 0.2),
+            color: context.gc.success.withValues(alpha: 0.2),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.mark_email_read_outlined,
             size: 64,
-            color: AppColors.success,
+            color: context.gc.success,
           ),
         ),
         const SizedBox(height: 32),
@@ -93,7 +94,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
           textAlign: TextAlign.center,
         ),
@@ -103,7 +104,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           'Enviamos um link de recuperação para\n${_emailController.text}',
           style: GoogleFonts.nunito(
             fontSize: 16,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -113,7 +114,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           'Verifique sua caixa de entrada e spam.',
           style: GoogleFonts.nunito(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -125,7 +126,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             MaterialPageRoute(builder: (_) => const LoginPage()),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.lilac,
+            backgroundColor: context.gc.lilac,
             foregroundColor: const Color(0xFF2B2143),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
@@ -148,7 +149,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             'Não recebeu? Enviar novamente',
             style: GoogleFonts.nunito(
               fontSize: 14,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
         ),
@@ -163,12 +164,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.starYellow.withValues(alpha: 0.2),
+            color: context.gc.starYellow.withValues(alpha: 0.2),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.lock_reset,
             size: 40,
-            color: AppColors.starYellow,
+            color: context.gc.starYellow,
           ),
         ),
         const SizedBox(height: 24),
@@ -177,7 +178,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 12),
@@ -185,7 +186,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           'Sem problemas! Digite seu email e enviaremos um link para criar uma nova senha.',
           style: GoogleFonts.nunito(
             fontSize: 15,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -198,11 +199,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: 'Email',
         hintText: 'seu@email.com',
-        prefixIcon: const Icon(Icons.email_outlined, color: AppColors.lilac),
+        prefixIcon: Icon(Icons.email_outlined, color: context.gc.lilac),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -220,13 +221,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return ElevatedButton(
       onPressed: _isLoading ? null : _handleSendReset,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.lilac,
+        backgroundColor: context.gc.lilac,
         foregroundColor: const Color(0xFF2B2143),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        disabledBackgroundColor: AppColors.lilac.withValues(alpha: 0.5),
+        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
       ),
       child: _isLoading
           ? const SizedBox(
@@ -255,7 +256,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           'Lembrou a senha? ',
           style: GoogleFonts.nunito(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
         ),
         TextButton(
@@ -270,7 +271,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             style: GoogleFonts.nunito(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
         ),
@@ -311,7 +312,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao enviar email: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -339,9 +340,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Email reenviado com sucesso!'),
-            backgroundColor: AppColors.success,
+            backgroundColor: context.gc.success,
           ),
         );
       }
@@ -351,7 +352,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao reenviar: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }

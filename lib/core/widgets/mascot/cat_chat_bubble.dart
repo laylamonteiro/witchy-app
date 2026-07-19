@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/grimoire_colors.dart';
 import '../../../features/astrology/presentation/pages/daily_magical_weather_page.dart';
 import '../../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -243,7 +243,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
                 onTap: _openMagicalWeather,
                 borderRadius: BorderRadius.circular(32),
                 child: CustomPaint(
-                  painter: _CloudPainter(),
+                  painter: _CloudPainter(context.gc.lilac),
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -268,7 +268,7 @@ class _CatChatBubbleState extends State<CatChatBubble>
                             width: 18,
                             height: 18,
                             decoration: BoxDecoration(
-                              color: AppColors.lilac,
+                              color: context.gc.lilac,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
@@ -300,6 +300,9 @@ class _CatChatBubbleState extends State<CatChatBubble>
 /// Balão delicado com poucos lóbulos largos, evitando o aspecto quadrado e a
 /// repetição de pequenas bolhas. A cauda inferior acompanha o gato ao arrastar.
 class _CloudPainter extends CustomPainter {
+  final Color color;
+  _CloudPainter(this.color);
+
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
@@ -334,7 +337,7 @@ class _CloudPainter extends CustomPainter {
     canvas.drawPath(
       cloud,
       Paint()
-        ..color = AppColors.lilac.withValues(alpha: 0.22)
+        ..color = color.withValues(alpha: 0.22)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
     canvas.restore();
@@ -344,7 +347,7 @@ class _CloudPainter extends CustomPainter {
     canvas.drawPath(
       cloud,
       Paint()
-        ..color = AppColors.lilac.withValues(alpha: 0.75)
+        ..color = color.withValues(alpha: 0.75)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.1,
     );

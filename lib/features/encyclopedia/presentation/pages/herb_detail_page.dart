@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/herb_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/auth.dart';
 
 class HerbDetailPage extends StatelessWidget {
@@ -35,7 +36,7 @@ class HerbDetailPage extends StatelessWidget {
                             width: 200,
                             height: 200,
                             decoration: BoxDecoration(
-                              color: AppColors.mint.withOpacity(0.2),
+                              color: context.gc.mint.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Center(
@@ -53,7 +54,7 @@ class HerbDetailPage extends StatelessWidget {
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                        color: AppColors.mint.withOpacity(0.2),
+                        color: context.gc.mint.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Center(
@@ -73,7 +74,7 @@ class HerbDetailPage extends StatelessWidget {
                     herb.scientificName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontStyle: FontStyle.italic,
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   if (herb.folkNames != null) ...[
@@ -81,7 +82,7 @@ class HerbDetailPage extends StatelessWidget {
                     Text(
                       herb.folkNames!,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.gc.textSecondary,
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -121,9 +122,9 @@ class HerbDetailPage extends StatelessWidget {
               MagicalCard(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.alert.withOpacity(0.1),
+                    color: context.gc.alert.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.alert, width: 2),
+                    border: Border.all(color: context.gc.alert, width: 2),
                   ),
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -131,9 +132,9 @@ class HerbDetailPage extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.warning_amber_rounded,
-                            color: AppColors.alert,
+                            color: context.gc.alert,
                             size: 28,
                           ),
                           const SizedBox(width: 8),
@@ -143,7 +144,7 @@ class HerbDetailPage extends StatelessWidget {
                                 .textTheme
                                 .titleLarge
                                 ?.copyWith(
-                                  color: AppColors.alert,
+                                  color: context.gc.alert,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -156,13 +157,13 @@ class HerbDetailPage extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.alert.withOpacity(0.2),
+                              color: context.gc.alert.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.dangerous,
-                                    color: AppColors.alert, size: 20),
+                                Icon(Icons.dangerous,
+                                    color: context.gc.alert, size: 20),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -172,7 +173,7 @@ class HerbDetailPage extends StatelessWidget {
                                         .bodyMedium
                                         ?.copyWith(
                                           fontWeight: FontWeight.bold,
-                                          color: AppColors.alert,
+                                          color: context.gc.alert,
                                         ),
                                   ),
                                 ),
@@ -226,8 +227,8 @@ class HerbDetailPage extends StatelessWidget {
                     children: herb.magicalProperties
                         .map((property) => Chip(
                               label: Text(property),
-                              backgroundColor: AppColors.mint.withOpacity(0.2),
-                              side: const BorderSide(color: AppColors.mint),
+                              backgroundColor: context.gc.mint.withOpacity(0.2),
+                              side: BorderSide(color: context.gc.mint),
                             ))
                         .toList(),
                   ),
@@ -243,7 +244,7 @@ class HerbDetailPage extends StatelessWidget {
                     children: [
                       Icon(
                         herb.edible ? Icons.restaurant : Icons.no_meals,
-                        color: herb.edible ? AppColors.mint : AppColors.alert,
+                        color: herb.edible ? context.gc.mint : context.gc.alert,
                         size: 32,
                       ),
                       const SizedBox(height: 4),
@@ -257,7 +258,7 @@ class HerbDetailPage extends StatelessWidget {
                     children: [
                       Icon(
                         herb.toxic ? Icons.dangerous : Icons.verified_user,
-                        color: herb.toxic ? AppColors.alert : AppColors.mint,
+                        color: herb.toxic ? context.gc.alert : context.gc.mint,
                         size: 32,
                       ),
                       const SizedBox(height: 4),
@@ -290,10 +291,10 @@ class HerbDetailPage extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.auto_awesome,
                               size: 16,
-                              color: AppColors.starYellow,
+                              color: context.gc.starYellow,
                             ),
                             const SizedBox(width: 8),
                             Expanded(

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/repositories/beta_code_repository.dart';
 import 'beta_codes_debug_page.dart';
@@ -245,7 +246,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.bug_report, color: AppColors.lilac),
+            icon: Icon(Icons.bug_report, color: context.gc.lilac),
             tooltip: 'Debug',
             onPressed: () {
               Navigator.push(
@@ -270,7 +271,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
                             Text('➕', style: TextStyle(fontSize: 24)),
                             SizedBox(width: 12),
@@ -279,7 +280,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.lilac,
+                                color: context.gc.lilac,
                               ),
                             ),
                           ],
@@ -292,23 +293,23 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                             labelText: 'Código',
                             hintText: 'Digite o código (ex: PREMIUM2025)',
                             hintStyle: TextStyle(
-                              color: AppColors.softWhite.withOpacity(0.5),
+                              color: context.gc.softWhite.withOpacity(0.5),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide:
-                                  const BorderSide(color: AppColors.lilac),
+                                  BorderSide(color: context.gc.lilac),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: AppColors.lilac.withOpacity(0.3),
+                                color: context.gc.lilac.withOpacity(0.3),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide:
-                                  const BorderSide(color: AppColors.lilac),
+                                  BorderSide(color: context.gc.lilac),
                             ),
                           ),
                           textCapitalization: TextCapitalization.characters,
@@ -329,23 +330,23 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                                   hintText: '1',
                                   suffixText: 'uso(s)',
                                   hintStyle: TextStyle(
-                                    color: AppColors.softWhite.withOpacity(0.5),
+                                    color: context.gc.softWhite.withOpacity(0.5),
                                   ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                        color: AppColors.lilac),
+                                    borderSide: BorderSide(
+                                        color: context.gc.lilac),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.lilac.withOpacity(0.3),
+                                      color: context.gc.lilac.withOpacity(0.3),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                        color: AppColors.lilac),
+                                    borderSide: BorderSide(
+                                        color: context.gc.lilac),
                                   ),
                                 ),
                                 keyboardType: TextInputType.number,
@@ -358,8 +359,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                             ElevatedButton(
                               onPressed: _createCode,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.lilac,
-                                foregroundColor: Colors.white,
+                                backgroundColor: context.gc.lilac,
+                                foregroundColor: context.gc.textPrimary,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 24,
                                   vertical: 20,
@@ -416,12 +417,12 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                   const SizedBox(height: 24),
 
                   // Lista de códigos
-                  const Text(
+                  Text(
                     'Códigos Criados',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -433,7 +434,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                         child: Text(
                           'Nenhum código criado ainda',
                           style: TextStyle(
-                            color: AppColors.softWhite.withOpacity(0.5),
+                            color: context.gc.softWhite.withOpacity(0.5),
                           ),
                         ),
                       ),
@@ -469,7 +470,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.softWhite.withOpacity(0.7),
+              color: context.gc.softWhite.withOpacity(0.7),
             ),
           ),
         ],
@@ -528,10 +529,10 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               Expanded(
                 child: SelectableText(
                   codeText,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                     fontFamily: 'monospace',
                   ),
                 ),
@@ -558,7 +559,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
             'Criado em: ${_formatDate(createdAt)}',
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.softWhite.withOpacity(0.6),
+              color: context.gc.softWhite.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 4),
@@ -568,7 +569,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               Icon(
                 Icons.people_outline,
                 size: 14,
-                color: AppColors.softWhite.withOpacity(0.6),
+                color: context.gc.softWhite.withOpacity(0.6),
               ),
               const SizedBox(width: 4),
               Text(
@@ -587,7 +588,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                   '($usesRemaining restante${usesRemaining > 1 ? 's' : ''})',
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.softWhite.withOpacity(0.5),
+                    color: context.gc.softWhite.withOpacity(0.5),
                   ),
                 ),
               ],
@@ -599,7 +600,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               'Último uso em: ${_formatDate(usedAt)}',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.softWhite.withOpacity(0.6),
+                color: context.gc.softWhite.withOpacity(0.6),
               ),
             ),
           ],
@@ -609,7 +610,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               'Último usuário: $usedBy',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.softWhite.withOpacity(0.6),
+                color: context.gc.softWhite.withOpacity(0.6),
               ),
             ),
           ],
