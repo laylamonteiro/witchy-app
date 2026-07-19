@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -46,7 +47,7 @@ class _LessonPageState extends State<LessonPage> {
     for (var i = 0; i < widget.lesson.pagePrompts.length; i++) {
       final answer = _promptControllers[i].text.trim();
       buffer.writeln('✦ ${widget.lesson.pagePrompts[i]}');
-      buffer.writeln(answer.isEmpty ? '(a preencher)' : answer);
+      buffer.writeln(answer.isEmpty ? AppLocalizations.of(context)!.learnToFill : answer);
       if (i != widget.lesson.pagePrompts.length - 1) buffer.writeln();
     }
     return buffer.toString();
@@ -68,7 +69,7 @@ class _LessonPageState extends State<LessonPage> {
         ingredients: lesson.pageIngredients,
         steps: _assemblePage(),
         observations:
-            'Página do Grimório Vivo — ${widget.trail.title} · ${lesson.title}',
+            AppLocalizations.of(context)!.learnPageNote(widget.trail.title, lesson.title),
       );
       await context.read<SpellProvider>().addSpell(spell);
       final reward = await context
@@ -136,8 +137,8 @@ class _LessonPageState extends State<LessonPage> {
               const SizedBox(height: 12),
               Text(
                 reward.trailBound
-                    ? 'Trilha Encadernada!'
-                    : 'Página escrita!',
+                    ? AppLocalizations.of(context)!.learnTrailBound
+                    : AppLocalizations.of(context)!.learnPageDone,
                 style: Theme.of(dialogContext)
                     .textTheme
                     .headlineSmall
@@ -156,8 +157,7 @@ class _LessonPageState extends State<LessonPage> {
               if (reward.trailBound) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'O capítulo "${widget.trail.title}" agora é um livro '
-                  'encadernado no seu grimório — escrito por você.',
+                  AppLocalizations.of(context)!.learnChapterBound(widget.trail.title),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: dialogContext.gc.textSecondary,
@@ -175,7 +175,7 @@ class _LessonPageState extends State<LessonPage> {
                     color: dialogContext.gc.lilac.withValues(alpha: 0.15),
                   ),
                   child: Text(
-                    '${reward.leveledUpTo!.emoji} Novo título: '
+                    '${reward.leveledUpTo!.emoji} ${AppLocalizations.of(context)!.learnNewTitle}: '
                     '${reward.leveledUpTo!.title}',
                     style: TextStyle(
                       color: dialogContext.gc.lilac,
@@ -187,7 +187,7 @@ class _LessonPageState extends State<LessonPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Que assim seja ✨'),
+                child: Text(AppLocalizations.of(context)!.learnSoBeIt),
               ),
             ],
           ),
@@ -221,7 +221,7 @@ class _LessonPageState extends State<LessonPage> {
   }
 
   Widget _buildStepper(BuildContext context) {
-    const labels = ['📜 Ensino', '🕯️ Prática', '✍️ A Página'];
+    final labels = [AppLocalizations.of(context)!.learnStepTeaching, AppLocalizations.of(context)!.learnStepPractice, AppLocalizations.of(context)!.learnStepPage];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
@@ -282,7 +282,7 @@ class _LessonPageState extends State<LessonPage> {
             child: ElevatedButton.icon(
               onPressed: () => setState(() => _step = 1),
               icon: const Icon(Icons.arrow_forward, size: 18),
-              label: const Text('Ir para a prática'),
+              label: Text(AppLocalizations.of(context)!.learnGoToPractice),
             ),
           ),
           const SizedBox(height: 24),
@@ -318,7 +318,7 @@ class _LessonPageState extends State<LessonPage> {
                   contentPadding: EdgeInsets.zero,
                   activeColor: context.gc.lilac,
                   title: Text(
-                    'Fiz a prática (ou vou fazer hoje)',
+                    AppLocalizations.of(context)!.learnDidPractice,
                     style: TextStyle(
                       color: context.gc.textPrimary,
                       fontSize: 14,
@@ -335,7 +335,7 @@ class _LessonPageState extends State<LessonPage> {
               onPressed:
                   _practiceDone ? () => setState(() => _step = 2) : null,
               icon: const Icon(Icons.edit, size: 18),
-              label: const Text('Escrever minha página'),
+              label: Text(AppLocalizations.of(context)!.learnWriteMyPage),
             ),
           ),
           const SizedBox(height: 24),
@@ -356,8 +356,7 @@ class _LessonPageState extends State<LessonPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Responda com as suas palavras — o app monta a página e '
-                  'guarda no Meu Grimório. Ela é sua para sempre.',
+                  AppLocalizations.of(context)!.learnAnswerHelp,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
                         height: 1.4,
@@ -368,7 +367,7 @@ class _LessonPageState extends State<LessonPage> {
                   controller: _titleController,
                   textCapitalization: TextCapitalization.sentences,
                   decoration:
-                      const InputDecoration(labelText: 'Título da página'),
+                      InputDecoration(labelText: AppLocalizations.of(context)!.learnPageTitleLabel),
                 ),
                 for (var i = 0; i < widget.lesson.pagePrompts.length; i++) ...[
                   const SizedBox(height: 14),
@@ -386,8 +385,8 @@ class _LessonPageState extends State<LessonPage> {
                     maxLines: null,
                     minLines: 2,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      hintText: 'Escreva aqui…',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.learnWriteHere,
                     ),
                   ),
                 ],
@@ -406,7 +405,7 @@ class _LessonPageState extends State<LessonPage> {
                             ),
                           )
                         : const Icon(Icons.menu_book, size: 18),
-                    label: const Text('Selar página no grimório'),
+                    label: Text(AppLocalizations.of(context)!.learnSealPage),
                   ),
                 ),
               ],

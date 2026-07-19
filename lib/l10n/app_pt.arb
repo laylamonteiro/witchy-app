@@ -779,5 +779,114 @@
         "type": "String"
       }
     }
+  },
+  "aiSpellDescribeFirst": "Descreva sua intenção primeiro",
+  "aiSpellDailyLimit": "Você atingiu o limite diário de consultas. Volte amanhã ou seja Premium!",
+  "aiSpellGenericError": "O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.",
+  "aiSpellDescribeIntention": "Descreva sua Intenção",
+  "aiSpellIntentionHelp": "Compartilhe o que você deseja manifestar. Quanto mais detalhes, mais poderoso será o feitiço!",
+  "aiSpellIntentionHint": "Ex: Quero atrair prosperidade financeira para pagar minhas contas e ter mais tranquilidade",
+  "aiSpellManifesting": "Manifestando...",
+  "aiSpellManifest": "Manifestar Feitiço ✨",
+  "aiSpellSeeDetails": "Ver Detalhes",
+  "learnUnlockPrevious": "Complete a lição anterior para destravar esta.",
+  "learnLessonN": "Lição {number} — {title}",
+  "learnPageWritten": "Página escrita: \"{title}\"",
+  "learnPremiumLesson": "Lição Premium",
+  "learnCreatesPage": "Cria a página: \"{title}\"",
+  "learnToFill": "(a preencher)",
+  "learnPageNote": "Página do Grimório Vivo — {trail} · {lesson}",
+  "learnTrailBound": "Trilha Encadernada!",
+  "learnPageDone": "Página escrita!",
+  "learnChapterBound": "O capítulo \"{title}\" agora é um livro encadernado no seu grimório — escrito por você.",
+  "learnNewTitle": "Novo título",
+  "learnSoBeIt": "Que assim seja ✨",
+  "learnStepTeaching": "📜 Ensino",
+  "learnStepPractice": "🕯️ Prática",
+  "learnStepPage": "✍️ A Página",
+  "learnGoToPractice": "Ir para a prática",
+  "learnDidPractice": "Fiz a prática (ou vou fazer hoje)",
+  "learnWriteMyPage": "Escrever minha página",
+  "learnAnswerHelp": "Responda com as suas palavras — o app monta a página e guarda no Meu Grimório. Ela é sua para sempre.",
+  "learnPageTitleLabel": "Título da página",
+  "learnWriteHere": "Escreva aqui…",
+  "learnSealPage": "Selar página no grimório",
+  "@learnLessonN": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@learnPageWritten": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@learnCreatesPage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "@learnPageNote": {
+    "placeholders": {
+      "trail": {
+        "type": "String"
+      },
+      "lesson": {
+        "type": "String"
+      }
+    }
+  },
+  "@learnChapterBound": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "learnHomeTitle": "Aprenda escrevendo o seu grimório",
+  "learnHomeSubtitle": "Cada lição termina com uma página criada por você no Meu Grimório. Ao completar uma trilha, o capítulo é seu — escrito de próprio punho.",
+  "learnMaxTitle": "Título máximo alcançado ✨",
+  "learnNextTitle": "{pages} páginas escritas · próximo título: {title} ({xp} XP)",
+  "learnBoundShort": "Encadernada!",
+  "learnPagesProgress": "{done}/{total} páginas",
+  "learnBoundVolume": "📕 Volume encadernado — {count} páginas escritas por você",
+  "@learnNextTitle": {
+    "placeholders": {
+      "pages": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "xp": {
+        "type": "String"
+      }
+    }
+  },
+  "@learnPagesProgress": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "@learnBoundVolume": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
   }
 }

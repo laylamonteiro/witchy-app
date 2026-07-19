@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -79,7 +80,7 @@ class TrailPage extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:
-                  const Text('Complete a lição anterior para destravar esta.'),
+                  Text(AppLocalizations.of(context)!.learnUnlockPrevious),
               backgroundColor: context.gc.alert,
             ),
           );
@@ -111,7 +112,7 @@ class TrailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Lição ${index + 1} — ${lesson.title}',
+                    AppLocalizations.of(context)!.learnLessonN('${index + 1}', lesson.title),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: accessible || completed
                               ? context.gc.textPrimary
@@ -122,10 +123,10 @@ class TrailPage extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     completed
-                        ? 'Página escrita: "${lesson.pageTitle}"'
+                        ? AppLocalizations.of(context)!.learnPageWritten(lesson.pageTitle)
                         : needsPremium && unlocked
-                            ? 'Lição Premium'
-                            : 'Cria a página: "${lesson.pageTitle}"',
+                            ? AppLocalizations.of(context)!.learnPremiumLesson
+                            : AppLocalizations.of(context)!.learnCreatesPage(lesson.pageTitle),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -44,7 +45,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
                       const Text('📖', style: TextStyle(fontSize: 44)),
                       const SizedBox(height: 10),
                       Text(
-                        'Aprenda escrevendo o seu grimório',
+                        AppLocalizations.of(context)!.learnHomeTitle,
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
@@ -53,9 +54,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Cada lição termina com uma página criada por você '
-                        'no Meu Grimório. Ao completar uma trilha, o '
-                        'capítulo é seu — escrito de próprio punho.',
+                        AppLocalizations.of(context)!.learnHomeSubtitle,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: context.gc.textSecondary,
@@ -107,8 +106,8 @@ class _LearningHomePageState extends State<LearningHomePage> {
                       const SizedBox(height: 6),
                       Text(
                         learning.nextLevel == null
-                            ? 'Título máximo alcançado ✨'
-                            : '${learning.totalPagesWritten} páginas escritas · próximo título: ${learning.nextLevel!.title} (${learning.nextLevel!.minXp} XP)',
+                            ? AppLocalizations.of(context)!.learnMaxTitle
+                            : AppLocalizations.of(context)!.learnNextTitle('${learning.totalPagesWritten}', learning.nextLevel!.title, '${learning.nextLevel!.minXp}'),
                         style: TextStyle(
                           color: context.gc.textSecondary,
                           fontSize: 11,
@@ -201,7 +200,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  complete ? 'Encadernada!' : '$done/$total páginas',
+                  complete ? AppLocalizations.of(context)!.learnBoundShort : AppLocalizations.of(context)!.learnPagesProgress('$done', '$total'),
                   style: TextStyle(
                     color: complete
                         ? context.gc.success
@@ -268,8 +267,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '📕 Volume encadernado — ${trail.lessons.length} páginas '
-                  'escritas por você',
+                  AppLocalizations.of(context)!.learnBoundVolume('${trail.lessons.length}'),
                   style: TextStyle(
                     color: context.gc.starYellow,
                     fontSize: 12,

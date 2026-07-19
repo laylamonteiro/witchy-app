@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -45,7 +46,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     if (_intentionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Descreva sua intenção primeiro'),
+          content: Text(AppLocalizations.of(context)!.aiSpellDescribeFirst),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -58,7 +59,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Você atingiu o limite diário de consultas. Volte amanhã ou seja Premium!'),
+              AppLocalizations.of(context)!.aiSpellDailyLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -95,27 +96,27 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       if (!mounted) return;
 
       String errorMessage =
-          'O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.';
+          AppLocalizations.of(context)!.aiSpellGenericError;
 
       if (e.toString().contains('limit') ||
           e.toString().contains('quota') ||
           e.toString().contains('usage') ||
           e.toString().contains('429')) {
         errorMessage =
-            'O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos.';
+            AppLocalizations.of(context)!.advisorRateLimited;
       } else if (e.toString().contains('autenticação') ||
           e.toString().contains('authentication') ||
           e.toString().contains('401')) {
         errorMessage =
-            'Erro temporário no serviço místico. Tente novamente em instantes.';
+            AppLocalizations.of(context)!.advisorTempError;
       } else if (e.toString().contains('network') ||
           e.toString().contains('connection') ||
           e.toString().contains('timeout')) {
         errorMessage =
-            'Erro de conexão. Verifique sua internet e tente novamente.';
+            AppLocalizations.of(context)!.advisorConnectionError;
       } else if (e.toString().contains('503')) {
         errorMessage =
-            'O portal místico está temporariamente fechado. Tente novamente em alguns minutos.';
+            AppLocalizations.of(context)!.advisorPortalClosed;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +145,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Feitiço salvo no seu grimório! ✨'),
+        content: Text(AppLocalizations.of(context)!.spellSavedToGrimoire),
         backgroundColor: context.gc.success,
       ),
     );
@@ -156,7 +157,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Novo Feitiço'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.spellNew),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -171,15 +172,14 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                   const Text('✨', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 16),
                   Text(
-                    'Descreva sua Intenção',
+                    AppLocalizations.of(context)!.aiSpellDescribeIntention,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Compartilhe o que você deseja manifestar. '
-                    'Quanto mais detalhes, mais poderoso será o feitiço!',
+                    AppLocalizations.of(context)!.aiSpellIntentionHelp,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -196,8 +196,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                 controller: _intentionController,
                 style: TextStyle(color: context.gc.softWhite),
                 decoration: InputDecoration(
-                  hintText: 'Ex: Quero atrair prosperidade financeira para '
-                      'pagar minhas contas e ter mais tranquilidade',
+                  hintText: AppLocalizations.of(context)!.aiSpellIntentionHint,
                   hintStyle: TextStyle(
                     color: context.gc.softWhite.withOpacity(0.5),
                   ),
@@ -241,7 +240,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                     )
                   : const Icon(Icons.auto_awesome),
               label: Text(
-                  _isGenerating ? 'Manifestando...' : 'Manifestar Feitiço ✨'),
+                  _isGenerating ? AppLocalizations.of(context)!.aiSpellManifesting : AppLocalizations.of(context)!.aiSpellManifest),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.darkBackground,
@@ -262,7 +261,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    'Consultas restantes hoje: $remaining/${UserModel.freeAiConsultationsLimit}',
+                    AppLocalizations.of(context)!.advisorRemainingToday('$remaining/${UserModel.freeAiConsultationsLimit}'),
                     style: TextStyle(
                       color: remaining > 0
                           ? context.gc.softWhite.withOpacity(0.6)
@@ -364,7 +363,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                           );
                         },
                         icon: const Icon(Icons.visibility, size: 18),
-                        label: const Text('Ver Detalhes'),
+                        label: Text(AppLocalizations.of(context)!.aiSpellSeeDetails),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: context.gc.lilac,
                           foregroundColor: context.gc.darkBackground,
