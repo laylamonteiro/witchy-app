@@ -136,7 +136,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '🔮',
+            icon: const Text('🔮', style: TextStyle(fontSize: 40)),
             title: 'Conselheiro Místico',
             description:
                 'Sabedoria ancestral para suas dúvidas de bruxaria e magia',
@@ -150,7 +150,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '🃏',
+            icon: const Text('🃏', style: TextStyle(fontSize: 40)),
             title: 'Cartas do Oráculo',
             description: 'Mensagens e orientação do universo',
             onTap: () {
@@ -176,7 +176,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: ' ᚱ ',
+            icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
             title: 'Leitura de Runas',
             description: 'Consulte as antigas runas nórdicas',
             onTap: () {
@@ -189,7 +189,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: ' ⟟ ',
+            icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
             title: 'Pêndulo',
             description: 'Perguntas de sim ou não',
             onTap: () {
