@@ -34,12 +34,12 @@ class MetalDetailPage extends StatelessWidget {
                         height: 200,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return _buildPlaceholderImage();
+                          return _buildPlaceholderImage(context);
                         },
                       ),
                     )
                   else
-                    _buildPlaceholderImage(),
+                    _buildPlaceholderImage(context),
                   const SizedBox(height: 16),
                   Text(
                     metal.name,
@@ -297,7 +297,7 @@ class MetalDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderImage() {
+  Widget _buildPlaceholderImage(BuildContext context) {
     return Container(
       width: 200,
       height: 200,

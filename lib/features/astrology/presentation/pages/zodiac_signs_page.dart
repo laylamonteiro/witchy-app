@@ -413,33 +413,34 @@ class ZodiacSignsPage extends StatelessWidget {
 
             // Planeta regente
             _buildSection(
+              context,
               '',
               'Planeta Regente: ${data.rulingPlanet}',
               isHighlight: true,
             ),
 
             // Palavras-chave
-            _buildSection('', data.keywords, isHighlight: true),
+            _buildSection(context, '', data.keywords, isHighlight: true),
 
             const SizedBox(height: 12),
 
             // Personalidade
-            _buildSection('Personalidade', data.personality),
+            _buildSection(context, 'Personalidade', data.personality),
 
             // Dons Mágicos
-            _buildSection('Dons Mágicos', data.magicalGifts),
+            _buildSection(context, 'Dons Mágicos', data.magicalGifts),
 
             // Práticas Recomendadas
-            _buildSection('Práticas Recomendadas', data.bestPractices),
+            _buildSection(context, 'Práticas Recomendadas', data.bestPractices),
 
             // Cristais
-            _buildSection('Cristais', data.crystals),
+            _buildSection(context, 'Cristais', data.crystals),
 
             // Ervas
-            _buildSection('Ervas', data.herbs),
+            _buildSection(context, 'Ervas', data.herbs),
 
             // Cores
-            _buildSection('Cores', data.colors),
+            _buildSection(context, 'Cores', data.colors),
 
             const SizedBox(height: 8),
           ],
@@ -449,6 +450,7 @@ class ZodiacSignsPage extends StatelessWidget {
   }
 
   Widget _buildSection(
+    BuildContext context,
     String title,
     String content, {
     bool isHighlight = false,

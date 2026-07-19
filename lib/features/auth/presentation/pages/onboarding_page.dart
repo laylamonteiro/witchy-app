@@ -17,7 +17,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingSlide> _slides = [
+  // Getter (e não campo) porque as cores do tema dependem do context.
+  List<OnboardingSlide> get _slides => [
     OnboardingSlide(
       icon: Icons.auto_stories,
       iconColor: context.gc.lilac,

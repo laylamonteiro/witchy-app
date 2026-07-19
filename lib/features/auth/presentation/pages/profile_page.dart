@@ -300,6 +300,7 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildUsageRow(
+            context,
             'Feitiços',
             user.spellsCount,
             UserModel.freeSpellsLimit,
@@ -307,6 +308,7 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
+            context,
             'Entradas de Diário',
             user.diaryEntriesThisMonth,
             UserModel.freeDiaryEntriesLimit,
@@ -315,6 +317,7 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
+            context,
             'Consultas IA',
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
@@ -327,6 +330,7 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildUsageRow(
+    BuildContext context,
     String label,
     int used,
     int limit,
@@ -407,6 +411,7 @@ class ProfilePage extends StatelessWidget {
       child: Column(
         children: [
           _buildOptionTile(
+            context,
             icon: Icons.person_outline,
             title: 'Editar Perfil',
             onTap: () => Navigator.push(
@@ -414,16 +419,18 @@ class ProfilePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const EditProfilePage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           // Opção de gerenciar assinatura
           _buildOptionTile(
+            context,
             icon: Icons.card_membership,
             title: 'Gerenciar Assinatura',
             onTap: () => _handleManageSubscription(context, paymentService),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           // Estatísticas mágicas
           _buildOptionTile(
+            context,
             icon: Icons.analytics_outlined,
             title: 'Estatísticas Mágicas',
             onTap: () => Navigator.push(
@@ -431,9 +438,10 @@ class ProfilePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           // Jornadas gamificadas
           _buildOptionTile(
+            context,
             icon: Icons.explore_outlined,
             title: 'Jornadas Mágicas',
             onTap: () => Navigator.push(
@@ -441,26 +449,30 @@ class ProfilePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const JourneysPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.notifications_outlined,
             title: 'Notificações',
             onTap: () => _showNotificationsDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.help_outline,
             title: 'Ajuda & Suporte',
             onTap: () => _showHelpDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.info_outline,
             title: 'Sobre o App',
             onTap: () => _showAboutDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.logout,
             title: 'Sair da Conta',
             textColor: const Color(0xFFF44336),
@@ -479,18 +491,18 @@ class ProfilePage extends StatelessWidget {
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text(
           'Sair da Conta',
-          style: TextStyle(color: context.gc.textPrimary),
+          style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
           'Tem certeza que deseja sair?\nSeus dados locais serão mantidos.',
-          style: TextStyle(color: context.gc.textSecondary),
+          style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancelar',
-              style: TextStyle(color: context.gc.textSecondary),
+              style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -507,7 +519,7 @@ class ProfilePage extends StatelessWidget {
             ),
             child: Text(
               'Sair',
-              style: TextStyle(color: context.gc.textPrimary),
+              style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
         ],
@@ -609,7 +621,8 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionTile({
+  Widget _buildOptionTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -630,7 +643,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Divider(
       height: 1,
       color: context.gc.textPrimary.withValues(alpha: 0.1),
@@ -726,6 +739,7 @@ class ProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHelpItem(
+              context,
               icon: Icons.email_outlined,
               title: 'Email de Suporte',
               subtitle: 'suporte@grimoriodebolso.com',
@@ -733,6 +747,7 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
+              context,
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
               subtitle: 'Perguntas frequentes',
@@ -740,6 +755,7 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
+              context,
               icon: Icons.policy_outlined,
               title: 'Política de Privacidade',
               subtitle: 'Seus dados estão seguros',
@@ -760,7 +776,8 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHelpItem({
+  Widget _buildHelpItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,

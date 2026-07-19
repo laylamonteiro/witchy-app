@@ -278,13 +278,13 @@ class _HeroCopy extends StatelessWidget {
               fontSize: compact ? 11 : 12,
               height: 1.34,
             ),
-            children: const [
-              TextSpan(text: 'Mais conhecimento, mais orientação e mais '),
+            children: [
+              const TextSpan(text: 'Mais conhecimento, mais orientação e mais '),
               TextSpan(
                 text: 'conexão',
                 style: TextStyle(color: context.gc.lilac),
               ),
-              TextSpan(text: ' com o seu caminho'),
+              const TextSpan(text: ' com o seu caminho'),
             ],
           ),
         ),

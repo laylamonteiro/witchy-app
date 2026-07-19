@@ -30,7 +30,7 @@ class WelcomePage extends StatelessWidget {
               children: [
                 const Spacer(flex: 2),
                 // Logo/Ícone
-                _buildLogo(),
+                _buildLogo(context),
                 const SizedBox(height: 32),
                 // Título
                 Text(
@@ -54,7 +54,7 @@ class WelcomePage extends StatelessWidget {
                 ),
                 const Spacer(flex: 2),
                 // Features preview
-                _buildFeaturesList(),
+                _buildFeaturesList(context),
                 const Spacer(flex: 2),
                 // Botões
                 _buildButtons(context),
@@ -67,7 +67,7 @@ class WelcomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLogo() {
+  Widget _buildLogo(BuildContext context) {
     return Container(
       width: 120,
       height: 120,
@@ -101,7 +101,7 @@ class WelcomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeaturesList() {
+  Widget _buildFeaturesList(BuildContext context) {
     final features = [
       ('Calendário Lunar', Icons.nightlight_round),
       ('Grimório Digital', Icons.menu_book),

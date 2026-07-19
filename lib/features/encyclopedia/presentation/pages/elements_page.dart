@@ -366,11 +366,13 @@ class ElementsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildBalanceItem(
+                      context,
                       '🌍 Terra', 'Nosso corpo físico e recursos materiais'),
                   _buildBalanceItem(
+                      context,
                       '🌊 Água', 'Nossas emoções e relacionamentos'),
-                  _buildBalanceItem('🔥 Fogo', 'Nossa energia e poder pessoal'),
-                  _buildBalanceItem('💨 Ar', 'Nossa mente e comunicação'),
+                  _buildBalanceItem(context, '🔥 Fogo', 'Nossa energia e poder pessoal'),
+                  _buildBalanceItem(context, '💨 Ar', 'Nossa mente e comunicação'),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -508,7 +510,7 @@ class ElementsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceItem(String element, String description) {
+  Widget _buildBalanceItem(BuildContext context, String element, String description) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(

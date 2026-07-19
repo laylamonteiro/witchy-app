@@ -443,30 +443,35 @@ class AltarPage extends StatelessWidget {
 
           // Passos numerados
           _buildPassoNumerado(
+              context,
               '1',
               'Escolha o Local',
               'Um cantinho onde você não será perturbado(a). Pode ser uma mesinha, prateleira, ou até uma caixa que você abre quando for praticar.',
               'Não precisa ser grande! Um espaço de 30x30cm já é suficiente.'),
 
           _buildPassoNumerado(
+              context,
               '2',
               'Limpe o Espaço',
               'Limpe fisicamente com um pano, depois passe fumaça de incenso ou visualize uma luz branca purificando.',
               'Diga: "Que este espaço seja purificado e abençoado."'),
 
           _buildPassoNumerado(
+              context,
               '3',
               'Adicione uma Vela',
               'A vela é o coração do altar - representa o fogo e a luz divina. Uma única vela branca já é suficiente.',
               'Velas brancas são universais e podem substituir qualquer cor.'),
 
           _buildPassoNumerado(
+              context,
               '4',
               'Adicione Itens Significativos',
               'Coloque o que tem significado para você: foto de ancestrais, cristal que ganhou, flores, uma concha da praia.',
               'Comece com 3-5 itens e vá adicionando com o tempo.'),
 
           _buildPassoNumerado(
+              context,
               '5',
               'Consagre seu Altar',
               'Acenda a vela, respire fundo e diga: "Consagro este altar como meu espaço sagrado. Que ele seja um portal de conexão."',
@@ -495,16 +500,22 @@ class AltarPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _buildListaSimples(
+                    context,
                     '1. Acenda a vela com intenção, observe a chama'),
                 _buildListaSimples(
+                    context,
                     '2. Faça 3 respirações profundas para se centrar'),
                 _buildListaSimples(
+                    context,
                     '3. Agradeça pelo dia, pela vida, por algo bom'),
                 _buildListaSimples(
+                    context,
                     '4. Defina uma intenção: "Hoje eu peço/agradeço..."'),
                 _buildListaSimples(
+                    context,
                     '5. Fique alguns minutos em silêncio ou converse'),
                 _buildListaSimples(
+                    context,
                     '6. Feche: "Agradeço pela conexão. Que assim seja."'),
               ],
             ),
@@ -592,7 +603,7 @@ class AltarPage extends StatelessWidget {
   }
 
   Widget _buildPassoNumerado(
-      String numero, String titulo, String descricao, String dica) {
+      BuildContext context, String numero, String titulo, String descricao, String dica) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -664,7 +675,7 @@ class AltarPage extends StatelessWidget {
     );
   }
 
-  Widget _buildListaSimples(String texto) {
+  Widget _buildListaSimples(BuildContext context, String texto) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(

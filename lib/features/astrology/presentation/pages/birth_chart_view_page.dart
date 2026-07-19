@@ -96,17 +96,20 @@ class BirthChartViewPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildPlanetRow(
+                        context,
                         '☉ Sol',
                         chart.sun.positionString,
                         'Sua essência',
                       ),
                       _buildPlanetRow(
+                        context,
                         '☽ Lua',
                         chart.moon.positionString,
                         'Suas emoções',
                       ),
                       if (chart.ascendant != null)
                         _buildPlanetRow(
+                          context,
                           '⬆ Ascendente',
                           chart.ascendant!.positionString,
                           'Como você se apresenta',
@@ -126,16 +129,19 @@ class BirthChartViewPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildPlanetRow(
+                        context,
                         '☿ Mercúrio',
                         chart.mercury.positionString,
                         'Comunicação',
                       ),
                       _buildPlanetRow(
+                        context,
                         '♀ Vênus',
                         chart.venus.positionString,
                         'Amor e beleza',
                       ),
                       _buildPlanetRow(
+                        context,
                         '♂ Marte',
                         chart.mars.positionString,
                         'Ação e energia',
@@ -483,7 +489,7 @@ class BirthChartViewPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlanetRow(String planet, String position, String meaning) {
+  Widget _buildPlanetRow(BuildContext context, String planet, String position, String meaning) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -530,6 +536,7 @@ class _TrioPrincipalExplanation extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSection(
+          context,
           '☉ O Sol - Sua Essência',
           'O Sol representa quem você realmente é no seu núcleo mais profundo. É a sua identidade '
               'fundamental, seus objetivos de vida e como você brilha no mundo.\n\n'
@@ -538,6 +545,7 @@ class _TrioPrincipalExplanation extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildSection(
+          context,
           '☽ A Lua - Suas Emoções',
           'A Lua governa suas emoções, intuição e mundo interior. Ela revela como você processa '
               'sentimentos, o que precisa para se sentir seguro(a) e suas reações instintivas.\n\n'
@@ -546,6 +554,7 @@ class _TrioPrincipalExplanation extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildSection(
+          context,
           '⬆ O Ascendente - Sua Máscara',
           'O Ascendente (ou signo nascente) é como você se apresenta ao mundo e as primeiras '
               'impressões que causa. É sua "máscara social" e aparência externa.\n\n'
@@ -604,6 +613,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildSection(
+          context,
           '☿ Mercúrio - Comunicação',
           'Mercúrio governa como você pensa, se comunica e processa informações. '
               'Influencia sua forma de aprender, falar e escrever.\n\n'
@@ -611,6 +621,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildSection(
+          context,
           '♀ Vênus - Amor e Beleza',
           'Vênus rege o amor, relacionamentos, beleza e prazer. Mostra o que você valoriza, '
               'como se relaciona romanticamente e seu senso estético.\n\n'
@@ -618,6 +629,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildSection(
+          context,
           '♂ Marte - Ação e Energia',
           'Marte representa sua energia de ação, como você luta pelo que quer, sua coragem '
               'e também raiva. É o planeta da iniciativa e determinação.\n\n'
@@ -675,26 +687,31 @@ class _TodosPlanetasExplanation extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildSection(
+          context,
           '♃ Júpiter - Expansão',
           'Planeta da sorte, crescimento e abundância. Mostra onde você tem facilidade na vida.',
         ),
         const SizedBox(height: 12),
         _buildSection(
+          context,
           '♄ Saturno - Estrutura',
           'Planeta das lições, responsabilidade e maturidade. Indica onde você enfrenta desafios para crescer.',
         ),
         const SizedBox(height: 12),
         _buildSection(
+          context,
           '♅ Urano - Revolução',
           'Planeta da inovação, mudança súbita e originalidade. Mostra onde você quebra padrões.',
         ),
         const SizedBox(height: 12),
         _buildSection(
+          context,
           '♆ Netuno - Espiritualidade',
           'Planeta dos sonhos, intuição e transcendência. Indica sua conexão espiritual.',
         ),
         const SizedBox(height: 12),
         _buildSection(
+          context,
           '♇ Plutão - Transformação',
           'Planeta do poder, morte e renascimento. Mostra onde você passa por transformações profundas.',
         ),
@@ -749,22 +766,28 @@ class _CasasExplanation extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildHouseRow(
+            context,
             'Casa 1', 'Identidade, aparência física, como você inicia coisas'),
         _buildHouseRow(
+            context,
             'Casa 2', 'Recursos, dinheiro, valores pessoais, autoestima'),
-        _buildHouseRow('Casa 3', 'Comunicação, irmãos, vizinhos, pensamento'),
-        _buildHouseRow('Casa 4', 'Lar, família, raízes, vida privada'),
-        _buildHouseRow('Casa 5', 'Criatividade, romance, filhos, diversão'),
-        _buildHouseRow('Casa 6', 'Saúde, rotina, trabalho diário, serviço'),
-        _buildHouseRow('Casa 7', 'Parcerias, casamento, contratos, o outro'),
+        _buildHouseRow(context, 'Casa 3', 'Comunicação, irmãos, vizinhos, pensamento'),
+        _buildHouseRow(context, 'Casa 4', 'Lar, família, raízes, vida privada'),
+        _buildHouseRow(context, 'Casa 5', 'Criatividade, romance, filhos, diversão'),
+        _buildHouseRow(context, 'Casa 6', 'Saúde, rotina, trabalho diário, serviço'),
+        _buildHouseRow(context, 'Casa 7', 'Parcerias, casamento, contratos, o outro'),
         _buildHouseRow(
+            context,
             'Casa 8', 'Transformação, sexualidade, morte/renascimento, magia'),
         _buildHouseRow(
+            context,
             'Casa 9', 'Filosofia, viagens, ensino superior, expansão'),
         _buildHouseRow(
+            context,
             'Casa 10', 'Carreira, reputação, status, missão de vida'),
-        _buildHouseRow('Casa 11', 'Amizades, grupos, sonhos, causas sociais'),
+        _buildHouseRow(context, 'Casa 11', 'Amizades, grupos, sonhos, causas sociais'),
         _buildHouseRow(
+            context,
             'Casa 12', 'Inconsciente, espiritualidade, karma, retiros'),
         const SizedBox(height: 16),
         Container(
@@ -801,7 +824,7 @@ class _CasasExplanation extends StatelessWidget {
     );
   }
 
-  Widget _buildHouseRow(String house, String meaning) {
+  Widget _buildHouseRow(BuildContext context, String house, String meaning) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -849,26 +872,31 @@ class _AspectosExplanation extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _buildAspectType(
+          context,
           '☌ Conjunção (0°)',
           'Os planetas estão juntos. Energia intensa e fusionada.',
           context.gc.lilac,
         ),
         _buildAspectType(
+          context,
           '⚹ Sextil (60°)',
           'Aspecto harmonioso. Oportunidades e talentos naturais.',
           context.gc.success,
         ),
         _buildAspectType(
+          context,
           '□ Quadratura (90°)',
           'Aspecto desafiador. Tensão que gera crescimento.',
           context.gc.alert,
         ),
         _buildAspectType(
+          context,
           '△ Trígono (120°)',
           'Aspecto muito harmonioso. Fluxo fácil de energia.',
           context.gc.success,
         ),
         _buildAspectType(
+          context,
           '☍ Oposição (180°)',
           'Aspecto desafiador. Polaridade e necessidade de equilíbrio.',
           context.gc.alert,
@@ -909,7 +937,7 @@ class _AspectosExplanation extends StatelessWidget {
     );
   }
 
-  Widget _buildAspectType(String name, String meaning, Color color) {
+  Widget _buildAspectType(BuildContext context, String name, String meaning, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -952,7 +980,7 @@ class _AspectosExplanation extends StatelessWidget {
   }
 }
 
-Widget _buildSection(String title, String content) {
+Widget _buildSection(BuildContext context, String title, String content) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [

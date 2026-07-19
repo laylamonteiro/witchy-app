@@ -37,12 +37,12 @@ class GoddessDetailPage extends StatelessWidget {
                         height: 200,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return _buildPlaceholderImage();
+                          return _buildPlaceholderImage(context);
                         },
                       ),
                     )
                   else
-                    _buildPlaceholderImage(),
+                    _buildPlaceholderImage(context),
                   const SizedBox(height: 16),
                   Text(
                     goddess.name,
@@ -108,7 +108,7 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Aspectos & Domínios'),
+                  _buildSectionTitle(context, 'Aspectos & Domínios'),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
@@ -155,7 +155,7 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Correspondências'),
+                  _buildSectionTitle(context, 'Correspondências'),
                   const SizedBox(height: 12),
                   Text(
                     goddess.correspondences,
@@ -176,15 +176,15 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Símbolos & Associações'),
+                  _buildSectionTitle(context, 'Símbolos & Associações'),
                   const SizedBox(height: 12),
-                  _buildChipSection('Símbolos', goddess.symbols, '✨'),
+                  _buildChipSection(context, 'Símbolos', goddess.symbols, '✨'),
                   const SizedBox(height: 12),
-                  _buildChipSection('Animais Sagrados', goddess.animals, '🐾'),
+                  _buildChipSection(context, 'Animais Sagrados', goddess.animals, '🐾'),
                   const SizedBox(height: 12),
-                  _buildChipSection('Plantas', goddess.plants, '🌿'),
+                  _buildChipSection(context, 'Plantas', goddess.plants, '🌿'),
                   const SizedBox(height: 12),
-                  _buildChipSection('Cores', goddess.colors, '🎨'),
+                  _buildChipSection(context, 'Cores', goddess.colors, '🎨'),
                 ],
               ),
             ),
@@ -196,7 +196,7 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Mitologia'),
+                  _buildSectionTitle(context, 'Mitologia'),
                   const SizedBox(height: 12),
                   Text(
                     goddess.mythology,
@@ -216,7 +216,7 @@ class GoddessDetailPage extends StatelessWidget {
             MagicalCard(
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaGoddessesDetails,
-                title: _buildSectionTitle('Usos Rituais'),
+                title: _buildSectionTitle(context, 'Usos Rituais'),
                 subtitle:
                     'Práticas devocionais e rituais associados a esta divindade.',
                 content: Column(
@@ -253,7 +253,7 @@ class GoddessDetailPage extends StatelessWidget {
             MagicalCard(
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaGoddessesDetails,
-                title: _buildSectionTitle('Como Invocar'),
+                title: _buildSectionTitle(context, 'Como Invocar'),
                 subtitle:
                     'Orientações para conexão, invocação e trabalho devocional.',
                 content: Column(
@@ -291,7 +291,7 @@ class GoddessDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
       style: GoogleFonts.cinzelDecorative(
@@ -302,7 +302,7 @@ class GoddessDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildChipSection(String title, List<String> items, String emoji) {
+  Widget _buildChipSection(BuildContext context, String title, List<String> items, String emoji) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -342,7 +342,7 @@ class GoddessDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderImage() {
+  Widget _buildPlaceholderImage(BuildContext context) {
     return Container(
       width: 200,
       height: 200,

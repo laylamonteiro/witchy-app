@@ -138,7 +138,7 @@ class SettingsPage extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: _getRoleColors(user.role),
+              colors: _getRoleColors(context, user.role),
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -198,7 +198,7 @@ class SettingsPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: _getRoleColors(user.role),
+              colors: _getRoleColors(context, user.role),
             ),
             borderRadius: BorderRadius.circular(20),
           ),
@@ -454,6 +454,7 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildUsageRow(
+            context,
             'Feitiços',
             user.spellsCount,
             UserModel.freeSpellsLimit,
@@ -461,6 +462,7 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
+            context,
             'Entradas de Diário',
             user.diaryEntriesThisMonth,
             UserModel.freeDiaryEntriesLimit,
@@ -469,6 +471,7 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
+            context,
             'Consultas IA',
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
@@ -481,6 +484,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildUsageRow(
+    BuildContext context,
     String label,
     int used,
     int limit,
@@ -559,8 +563,9 @@ class SettingsPage extends StatelessWidget {
       child: Column(
         children: [
           _buildLanguageOptionTile(context),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.person_outline,
             title: 'Editar Perfil',
             onTap: () => _showEditProfileDialog(context, authProvider),
@@ -568,8 +573,9 @@ class SettingsPage extends StatelessWidget {
           // Só mostra "Alterar Senha" para usuários que usam email/senha
           // Usuários OAuth (Google) não podem alterar senha no app
           if (authProvider.currentUser.usesEmailPassword) ...[
-            _buildDivider(),
+            _buildDivider(context),
             _buildOptionTile(
+              context,
               icon: Icons.lock_outline,
               title: 'Alterar Senha',
               onTap: () => Navigator.push(
@@ -578,8 +584,9 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ],
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.analytics_outlined,
             title: 'Estatísticas Mágicas',
             onTap: () => Navigator.push(
@@ -587,8 +594,9 @@ class SettingsPage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.explore_outlined,
             title: 'Jornadas Mágicas',
             onTap: () => Navigator.push(
@@ -596,8 +604,9 @@ class SettingsPage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const JourneysPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.palette_outlined,
             title: 'Aparência',
             onTap: () => Navigator.push(
@@ -605,14 +614,16 @@ class SettingsPage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const ThemePickerPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.notifications_outlined,
             title: 'Notificações',
             onTap: () => _showNotificationsBottomSheet(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.privacy_tip_outlined,
             title: 'Privacidade',
             onTap: () => Navigator.push(
@@ -620,20 +631,23 @@ class SettingsPage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const PrivacySettingsPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.help_outline,
             title: 'Ajuda & Suporte',
             onTap: () => _showHelpDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.info_outline,
             title: 'Sobre o App',
             onTap: () => _showAboutDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.logout,
             title: 'Sair da Conta',
             textColor: context.gc.alert,
@@ -893,7 +907,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionTile({
+  Widget _buildOptionTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -914,7 +929,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Divider(
       height: 1,
       color: context.gc.textPrimary.withValues(alpha: 0.1),
@@ -1024,21 +1039,21 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: pageContext,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: context.gc.surface,
+        backgroundColor: dialogContext.gc.surface,
         title: Text(
           'Sair da Conta',
-          style: TextStyle(color: context.gc.textPrimary),
+          style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
           'Tem certeza que deseja sair?\nSeus dados locais serão mantidos.',
-          style: TextStyle(color: context.gc.textSecondary),
+          style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancelar',
-              style: TextStyle(color: context.gc.textSecondary),
+              style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1051,11 +1066,11 @@ class SettingsPage extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: context.gc.alert,
+              backgroundColor: dialogContext.gc.alert,
             ),
             child: Text(
               'Sair',
-              style: TextStyle(color: context.gc.textPrimary),
+              style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
         ],
@@ -1083,6 +1098,7 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHelpItem(
+              context,
               icon: Icons.email_outlined,
               title: 'Email de Suporte',
               subtitle: 'suporte@grimoriodebolso.com',
@@ -1090,6 +1106,7 @@ class SettingsPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
+              context,
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
               subtitle: 'Perguntas frequentes',
@@ -1097,6 +1114,7 @@ class SettingsPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
+              context,
               icon: Icons.policy_outlined,
               title: 'Política de Privacidade',
               subtitle: 'Seus dados estão seguros',
@@ -1117,7 +1135,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHelpItem({
+  Widget _buildHelpItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -1238,7 +1257,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  List<Color> _getRoleColors(UserRole role) {
+  List<Color> _getRoleColors(BuildContext context, UserRole role) {
     switch (role) {
       case UserRole.admin:
         return [const Color(0xFFFFD700), const Color(0xFFFF8C00)];

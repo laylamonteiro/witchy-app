@@ -150,9 +150,10 @@ class SigilStep2LettersPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 12),
-                  _buildStep('1. Acentos foram normalizados'),
-                  _buildStep('2. Espaços e símbolos foram removidos'),
+                  _buildStep(context, '1. Acentos foram normalizados'),
+                  _buildStep(context, '2. Espaços e símbolos foram removidos'),
                   _buildStep(
+                      context,
                       '3. Letras duplicadas foram eliminadas (mantém apenas a primeira ocorrência)'),
                   const SizedBox(height: 12),
                   Text(
@@ -190,7 +191,7 @@ class SigilStep2LettersPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStep(String text) {
+  Widget _buildStep(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
