@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:gal/gal.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/database/database_helper.dart';
@@ -31,6 +34,11 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
   bool _showWheel = true;
   bool _showStartEnd = true;
   bool _isShuffled = false;
+  bool _isExporting = false;
+
+  /// Delimita a área do desenho para exportar exatamente o que está na tela
+  /// (com/sem roda, com/sem pontos).
+  final GlobalKey _drawingKey = GlobalKey();
   Map<String, WheelPosition>? _shuffledPositions;
   bool _isSaving = false;
 
@@ -63,6 +71,61 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Não foi possível salvar o sigilo: $e')),
       );
+    }
+  }
+
+  /// Exporta o desenho atual como PNG para a galeria do dispositivo.
+  Future<void> _exportToGallery() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      final boundary = _drawingKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) {
+        throw Exception('Desenho ainda não está pronto');
+      }
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception('Falha ao gerar a imagem');
+      }
+
+      final name =
+          'sigilo_${DateTime.now().millisecondsSinceEpoch}';
+      await Gal.putImageBytes(
+        byteData.buffer.asUint8List(),
+        name: name,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Sigilo salvo na galeria! ✨'),
+          backgroundColor: context.gc.success,
+        ),
+      );
+    } on GalException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.type == GalExceptionType.accessDenied
+                ? 'Permita o acesso à galeria para salvar o sigilo.'
+                : 'Não foi possível salvar a imagem.',
+          ),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$e'.replaceAll('Exception: ', '')),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
     }
   }
 
@@ -116,7 +179,9 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
               child: Column(
                 children: [
                   // Desenho do sigilo
-                  Container(
+                  RepaintBoundary(
+                    key: _drawingKey,
+                    child: Container(
                     width: 360,
                     height: 360,
                     decoration: BoxDecoration(
@@ -144,6 +209,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         showStartEnd: _showStartEnd,
                         customPositions: _shuffledPositions,
                       ),
+                    ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -255,6 +321,25 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                           foregroundColor: _isShuffled
                               ? context.gc.mint
                               : context.gc.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        onPressed: _isExporting ? null : _exportToGallery,
+                        icon: _isExporting
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.gc.lilac,
+                                ),
+                              )
+                            : const Icon(Icons.download, size: 20),
+                        tooltip: 'Salvar imagem na galeria',
+                        style: IconButton.styleFrom(
+                          backgroundColor: context.gc.surface,
+                          foregroundColor: context.gc.textSecondary,
                         ),
                       ),
                       if (_isShuffled) ...[
