@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -16,7 +17,7 @@ class RunesListPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Runas'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.runesListTitle),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -36,7 +37,7 @@ class RunesListPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Sobre as Runas',
+                          AppLocalizations.of(context)!.runesAbout,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                       ),
@@ -44,18 +45,14 @@ class RunesListPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'As runas são um alfabeto antigo usado pelos povos germânicos '
-                    'e nórdicos. Além de escrita, cada runa carrega significados '
-                    'simbólicos profundos e pode ser usada para reflexão, '
-                    'autoconhecimento e leitura oracular.',
+                    AppLocalizations.of(context)!.runesAboutText,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Explore as 24 runas do Futhark Antigo abaixo. '
-                    'Toque em cada uma para conhecer seu significado.',
+                    AppLocalizations.of(context)!.runesExplore,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -68,7 +65,7 @@ class RunesListPage extends StatelessWidget {
 
             // Título da lista
             Text(
-              'Futhark Antigo',
+              AppLocalizations.of(context)!.runesElderFuthark,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),

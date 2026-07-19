@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:math';
@@ -55,7 +56,7 @@ class _PendulumPageState extends State<PendulumPage>
     if (!authProvider.canUsePendulum) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Você já usou suas 3 consultas de hoje. Volte amanhã!'),
+          content: Text(AppLocalizations.of(context)!.pendulumUsedAll),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -65,7 +66,7 @@ class _PendulumPageState extends State<PendulumPage>
     if (_question.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Faça uma pergunta primeiro'),
+          content: Text(AppLocalizations.of(context)!.pendulumAskFirst),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -139,7 +140,7 @@ class _PendulumPageState extends State<PendulumPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Pêndulo'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.pendulumTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -154,14 +155,14 @@ class _PendulumPageState extends State<PendulumPage>
                   const Text('⟟', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 16),
                   Text(
-                    'Consultar o Pêndulo',
+                    AppLocalizations.of(context)!.pendulumConsult,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Faça perguntas de sim ou não. Concentre-se e confie na resposta.',
+                    AppLocalizations.of(context)!.pendulumIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -209,10 +210,10 @@ class _PendulumPageState extends State<PendulumPage>
                             const SizedBox(width: 6),
                             Text(
                               isUnlimited
-                                  ? 'Consultas ilimitadas (Admin)'
+                                  ? AppLocalizations.of(context)!.pendulumUnlimitedAdmin
                                   : (hasRemaining
                                       ? '$remaining de $total consultas disponíveis hoje'
-                                      : 'Consultas usadas ($used/$total) - volte amanhã'),
+                                      : AppLocalizations.of(context)!.pendulumUsedComeBack('$used', '$total')),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: hasRemaining
@@ -269,9 +270,9 @@ class _PendulumPageState extends State<PendulumPage>
                       : context.gc.softWhite.withOpacity(0.5),
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Sua Pergunta',
+                  labelText: AppLocalizations.of(context)!.pendulumYourQuestion,
                   labelStyle: TextStyle(color: context.gc.lilac),
-                  hintText: 'Ex: Devo aceitar aquele emprego?',
+                  hintText: AppLocalizations.of(context)!.pendulumQuestionHint,
                   hintStyle: TextStyle(
                     color: context.gc.softWhite.withOpacity(0.5),
                   ),
@@ -323,7 +324,7 @@ class _PendulumPageState extends State<PendulumPage>
                         ),
                       )
                     : const Icon(Icons.help),
-                label: Text(_isSwinging ? 'Consultando...' : 'Perguntar'),
+                label: Text(_isSwinging ? AppLocalizations.of(context)!.pendulumAsking : AppLocalizations.of(context)!.pendulumAsk),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
@@ -373,7 +374,7 @@ class _PendulumPageState extends State<PendulumPage>
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Nova Consulta'),
+                label: Text(AppLocalizations.of(context)!.pendulumNewConsult),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: context.gc.lilac,
                   side: BorderSide(color: context.gc.lilac),
@@ -460,7 +461,7 @@ class PendulumPainter extends CustomPainter {
     _drawAnswerText(
       canvas,
       size,
-      'SIM',
+      AppLocalizations.of(context)!.pendulumYes,
       Offset(size.width * 0.2, size.height * 0.5),
       successColor,
       isSelected: answer == PendulumAnswer.yes,
@@ -468,7 +469,7 @@ class PendulumPainter extends CustomPainter {
     _drawAnswerText(
       canvas,
       size,
-      'NÃO',
+      AppLocalizations.of(context)!.pendulumNo,
       Offset(size.width * 0.8, size.height * 0.5),
       alertColor,
       isSelected: answer == PendulumAnswer.no,
@@ -476,7 +477,7 @@ class PendulumPainter extends CustomPainter {
     _drawAnswerText(
       canvas,
       size,
-      'TALVEZ',
+      AppLocalizations.of(context)!.pendulumMaybe,
       Offset(size.width * 0.5, size.height * 0.8),
       starColor,
       isSelected: answer == PendulumAnswer.maybe,

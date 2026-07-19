@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
@@ -49,7 +50,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
+              AppLocalizations.of(context)!.oracleDailyLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -129,7 +130,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Cartas do Oráculo'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.oracleTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -145,7 +146,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                     const Text('🔮', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      'Cartas do Oráculo',
+                      AppLocalizations.of(context)!.oracleTitle,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: context.gc.lilac,
@@ -153,7 +154,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Receba orientação e mensagens do universo',
+                      AppLocalizations.of(context)!.oracleSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: context.gc.softWhite.withOpacity(0.8),
                           ),
@@ -187,7 +188,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                         ),
                       )
                     : const Icon(Icons.auto_awesome),
-                label: Text(_isDrawing ? 'Tirando cartas...' : 'Tirar Cartas'),
+                label: Text(_isDrawing ? AppLocalizations.of(context)!.oracleDrawing : AppLocalizations.of(context)!.oracleDraw),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
@@ -208,7 +209,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      'Leituras restantes hoje: $remaining/${UserModel.freeOracleReadingsLimit}',
+                      AppLocalizations.of(context)!.oracleRemainingToday('$remaining/${UserModel.freeOracleReadingsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
                             ? context.gc.softWhite.withOpacity(0.6)
@@ -232,7 +233,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Nova Leitura'),
+                label: Text(AppLocalizations.of(context)!.oracleNewReading),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: context.gc.lilac,
                   side: BorderSide(color: context.gc.lilac),
@@ -320,7 +321,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               const Text('✨', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 16),
               Text(
-                'Sua Leitura',
+                AppLocalizations.of(context)!.oracleYourReading,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: context.gc.lilac,
                     ),

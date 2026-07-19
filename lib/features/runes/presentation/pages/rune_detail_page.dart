@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -69,7 +70,7 @@ class RuneDetailPage extends StatelessWidget {
                       const Text('✨', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        'Palavras-chave',
+                        AppLocalizations.of(context)!.runesKeywords,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -117,7 +118,7 @@ class RuneDetailPage extends StatelessWidget {
                       const Text('📖', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        'Significado',
+                        AppLocalizations.of(context)!.runesMeaning,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -153,9 +154,7 @@ class RuneDetailPage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Lembre-se: as runas são ferramentas de reflexão e '
-                        'autoconhecimento. Use-as como um ponto de partida para '
-                        'explorar suas próprias percepções e intuições.',
+                        AppLocalizations.of(context)!.runesRemember,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: context.gc.textSecondary,
                               fontStyle: FontStyle.italic,

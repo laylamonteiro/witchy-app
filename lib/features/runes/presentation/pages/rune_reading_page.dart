@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
@@ -53,7 +54,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
+              AppLocalizations.of(context)!.oracleDailyLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -112,7 +113,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       id: const Uuid().v4(),
       question: _questionController.text.isNotEmpty
           ? _questionController.text
-          : 'Sem pergunta',
+          : AppLocalizations.of(context)!.runesNoQuestion,
       spreadType: _selectedSpread,
       positions: positions,
       date: DateTime.now(),
@@ -128,7 +129,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Leitura de Runas'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.runesReadingTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -144,7 +145,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     const Text('ᚱᚢᚾᚨ', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      'Leitura de Runas',
+                      AppLocalizations.of(context)!.runesReadingTitle,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: context.gc.lilac,
@@ -152,9 +153,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'As runas são símbolos do alfabeto rúnico nórdico usado para adivinhação. '
-                      'Cada runa pode aparecer em posição normal ou invertida (quando aplicável), '
-                      'mudando seu significado.',
+                      AppLocalizations.of(context)!.runesReadingIntro,
                       style: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.8),
                         fontSize: 14,
@@ -164,8 +163,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Runas Invertidas: Quando uma runa aparece de cabeça para baixo, '
-                      'geralmente indica bloqueios ou aspectos desafiadores do significado original.',
+                      AppLocalizations.of(context)!.runesReversedNote,
                       style: TextStyle(
                         color: context.gc.lilac.withOpacity(0.7),
                         fontSize: 12,
@@ -181,7 +179,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               const SizedBox(height: 16),
 
               Text(
-                'Escolha um Layout',
+                AppLocalizations.of(context)!.runesChooseLayout,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: context.gc.lilac,
                     ),
@@ -219,9 +217,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   controller: _questionController,
                   style: TextStyle(color: context.gc.softWhite),
                   decoration: InputDecoration(
-                    labelText: 'Sua Pergunta (opcional)',
+                    labelText: AppLocalizations.of(context)!.runesQuestionOptional,
                     labelStyle: TextStyle(color: context.gc.lilac),
-                    hintText: 'O que as runas devem revelar?',
+                    hintText: AppLocalizations.of(context)!.runesQuestionHint,
                     hintStyle: TextStyle(
                       color: context.gc.softWhite.withOpacity(0.5),
                     ),
@@ -260,7 +258,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                         ),
                       )
                     : const Icon(Icons.auto_awesome),
-                label: Text(_isDrawing ? 'Tirando runas...' : 'Tirar Runas'),
+                label: Text(_isDrawing ? AppLocalizations.of(context)!.runesDrawing : AppLocalizations.of(context)!.runesDraw),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
@@ -281,7 +279,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      'Leituras restantes hoje: $remaining/${UserModel.freeRuneReadingsLimit}',
+                      AppLocalizations.of(context)!.oracleRemainingToday('$remaining/${UserModel.freeRuneReadingsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
                             ? context.gc.softWhite.withOpacity(0.6)
@@ -308,7 +306,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Nova Leitura'),
+                label: Text(AppLocalizations.of(context)!.oracleNewReading),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: context.gc.lilac,
                   side: BorderSide(color: context.gc.lilac),
@@ -396,7 +394,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               const Text('✨', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 16),
               Text(
-                'Sua Leitura',
+                AppLocalizations.of(context)!.oracleYourReading,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: context.gc.lilac,
                     ),
@@ -508,7 +506,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                'Invertida',
+                                AppLocalizations.of(context)!.runesReversed,
                                 style: TextStyle(
                                   color: context.gc.alert,
                                   fontSize: 10,
