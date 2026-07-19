@@ -9,6 +9,7 @@ import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
+import '../../../sigils/presentation/widgets/sigil_icon.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 
@@ -162,7 +163,7 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: ' ⛤',
+            icon: const SigilIcon(size: 40),
             title: 'Sigilos',
             description: 'Crie símbolos mágicos para suas intenções',
             onTap: () {
@@ -206,7 +207,7 @@ class _ToolsTab extends StatelessWidget {
 
   Widget _buildToolCard(
     BuildContext context, {
-    required String icon,
+    required Widget icon,
     required String title,
     required String description,
     required VoidCallback onTap,
@@ -217,10 +218,7 @@ class _ToolsTab extends StatelessWidget {
       child: MagicalCard(
         child: Row(
           children: [
-            Text(
-              icon,
-              style: const TextStyle(fontSize: 40),
-            ),
+            icon,
             const SizedBox(width: 16),
             Expanded(
               child: Column(

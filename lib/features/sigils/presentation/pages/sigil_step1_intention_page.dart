@@ -5,6 +5,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../data/models/sigil_model.dart';
 import 'sigil_step2_letters_page.dart';
+import '../widgets/sigil_icon.dart';
 
 /// Etapa 1: Definir intenção para o sigilo
 class SigilStep1IntentionPage extends StatefulWidget {
@@ -73,7 +74,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                 children: [
                   Row(
                     children: [
-                      const Text('🃏', style: TextStyle(fontSize: 32)),
+                      const SigilIcon(size: 32),
                       const SizedBox(width: 12),
                       Text(
                         'O que é um Sigilo?',
