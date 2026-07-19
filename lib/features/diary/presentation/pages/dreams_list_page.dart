@@ -9,6 +9,8 @@ import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'dream_form_page.dart';
+import 'dream_interpretation_page.dart';
+import 'dream_themes_page.dart';
 
 class DreamsListPage extends StatefulWidget {
   const DreamsListPage({super.key});
@@ -38,19 +40,27 @@ class _DreamsListPageState extends State<DreamsListPage> {
           }
 
           if (provider.dreams.isEmpty) {
-            return EmptyStateWidget(
-              message:
-                  'Você ainda não registrou nenhum sonho.\nComece seu diário onírico!',
-              icon: Icons.nightlight,
-              actionText: 'Registrar Sonho',
-              onAction: () => _navigateToForm(context),
+            return Column(
+              children: [
+                _buildDreamToolsHeader(context),
+                Expanded(
+                  child: EmptyStateWidget(
+                    message:
+                        'Você ainda não registrou nenhum sonho.\nComece seu diário onírico!',
+                    icon: Icons.nightlight,
+                    actionText: 'Registrar Sonho',
+                    onAction: () => _navigateToForm(context),
+                  ),
+                ),
+              ],
             );
           }
 
           return ListView.builder(
-            itemCount: provider.dreams.length,
+            itemCount: provider.dreams.length + 1,
             itemBuilder: (context, index) {
-              final dream = provider.dreams[index];
+              if (index == 0) return _buildDreamToolsHeader(context);
+              final dream = provider.dreams[index - 1];
               return MagicalCard(
                 onTap: () => _navigateToForm(context, dream: dream),
                 child: Column(
@@ -127,6 +137,84 @@ class _DreamsListPageState extends State<DreamsListPage> {
       context,
       MaterialPageRoute(
         builder: (_) => DreamFormPage(dream: dream),
+      ),
+    );
+  }
+
+  /// Atalhos da seção de Interpretação de Sonhos: IA (Premium) e temas (Free).
+  Widget _buildDreamToolsHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildToolChip(
+              context,
+              emoji: '🔮',
+              label: 'Interpretar Sonho',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DreamInterpretationPage(),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildToolChip(
+              context,
+              emoji: '🌙',
+              label: 'Temas Oníricos',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DreamThemesPage(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolChip(
+    BuildContext context, {
+    required String emoji,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: context.gc.surface,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: context.gc.surfaceBorder),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

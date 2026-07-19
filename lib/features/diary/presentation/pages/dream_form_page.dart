@@ -121,6 +121,41 @@ class _DreamFormPageState extends State<DreamFormPage> {
                 hintText: 'Ex: Paz, medo, alegria, confusão',
               ),
             ),
+            // Interpretação por IA já salva: somente leitura, nunca editada.
+            if (widget.dream?.interpretation != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.gc.lilac.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.gc.lilac.withOpacity(0.4),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '🔮 Interpretação',
+                      style: TextStyle(
+                        color: context.gc.lilac,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.dream!.interpretation!,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 32),
             MagicalButton(
               text: widget.dream == null ? 'Salvar Sonho' : 'Atualizar',

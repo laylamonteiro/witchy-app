@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 13,
+      version: 14,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -67,6 +67,7 @@ class DatabaseHelper {
         content TEXT NOT NULL,
         tags TEXT,
         feeling TEXT,
+        interpretation TEXT,
         date INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -870,6 +871,16 @@ class DatabaseHelper {
         'CREATE INDEX IF NOT EXISTS idx_spells_preloaded_user_id '
         'ON spells(is_preloaded, user_id)',
       );
+    }
+
+    // Migração v14: interpretação de sonhos por IA salva junto do sonho.
+    if (oldVersion < 14) {
+      final dreamCols = await db.rawQuery('PRAGMA table_info(dreams)');
+      final hasInterpretation =
+          dreamCols.any((col) => col['name'] == 'interpretation');
+      if (!hasInterpretation) {
+        await db.execute('ALTER TABLE dreams ADD COLUMN interpretation TEXT');
+      }
     }
   }
 

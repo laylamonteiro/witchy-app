@@ -293,8 +293,8 @@ class FeatureAccessService {
       blockedMessage: 'Você usou sua consulta ao Conselheiro Místico hoje. Assine Premium para consultas ilimitadas.',
     ),
     AppFeature.aiDreamAnalysis: _aiLimit,
-    AppFeature.aiPalmistry: _aiLimit,
-    AppFeature.aiPersonalizedDreamInterpretation: _aiLimit,
+    // aiPalmistry e aiPersonalizedDreamInterpretation são exclusivas Premium:
+    // fora do mapa de limites, o plano Free recebe preview -> paywall.
     AppFeature.aiSpellSuggestions: _aiLimit,
     AppFeature.aiMagicalWeather: _aiLimit,
     AppFeature.interactiveMagicalLearning: _aiLimit,
@@ -403,6 +403,10 @@ class FeatureAccessService {
       case AppFeature.sigilsCreate:
       case AppFeature.sigilsView:
         return 'Criação de sigilos é uma funcionalidade Premium.';
+      case AppFeature.aiPersonalizedDreamInterpretation:
+        return 'A interpretação personalizada de sonhos por IA é exclusiva do plano Premium.';
+      case AppFeature.aiPalmistry:
+        return 'A leitura de mãos por IA é exclusiva do plano Premium.';
       default:
         return FeatureAccessMessages.preview;
     }

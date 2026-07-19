@@ -639,6 +639,88 @@ Diretrizes Sagradas:
     }
   }
 
+  /// Interpretar um sonho descrito pela pessoa (recurso Premium)
+  Future<String> interpretDream({
+    required String dreamDescription,
+    String? feelings,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final userContent = feelings != null && feelings.trim().isNotEmpty
+          ? 'Sonho: $dreamDescription\n\nEmoções ao acordar: $feelings'
+          : 'Sonho: $dreamDescription';
+
+      final requestData = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': _buildDreamInterpreterSystemPrompt(gender),
+          },
+          {
+            'role': 'user',
+            'content': userContent,
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 1400,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 45),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Erro de autenticação');
+      } else if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      } else if (e.response?.statusCode == 503) {
+        throw Exception('Serviço temporariamente indisponível');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
+  String _buildDreamInterpreterSystemPrompt(Gender gender) {
+    return '''${_localizedInstruction()}
+
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, especialista em simbolismo onírico: junguiano, folclórico, místico e das tradições de bruxaria.
+
+Sua missão é INTERPRETAR o sonho descrito, com profundidade e acolhimento.
+
+Como analisar:
+- Considere emoções sentidas, personagens, locais, símbolos e repetições presentes no relato.
+- Use o contexto que a pessoa fornecer; não invente detalhes que não estão no relato.
+- Apresente POSSIBILIDADES de interpretação (2 a 3 leituras possíveis), nunca certezas absolutas — sonhos são pessoais e polissêmicos.
+- Quando um símbolo tiver significados distintos em tradições diferentes, mencione brevemente as variações.
+
+Formato da resposta (texto puro, sem markdown, sem JSON):
+1º parágrafo — acolhimento breve e visão geral do sonho.
+2º e 3º parágrafos — os símbolos centrais e suas possíveis leituras.
+Último parágrafo — uma sugestão prática e gentil (reflexão, ritual simples ou registro no diário).
+
+Limites:
+- Não faça diagnósticos médicos ou psicológicos, nem previsões de morte/tragédia como fato.
+- Não use tom alarmista; mesmo símbolos sombrios devem ser tratados como convites à reflexão.
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''';
+  }
+
   String _buildMysticAdvisorSystemPrompt(
     Gender gender,
   ) {

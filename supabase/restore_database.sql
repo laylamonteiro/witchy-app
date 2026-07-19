@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS dreams (
   content TEXT NOT NULL,
   tags TEXT,
   feeling TEXT,
+  interpretation TEXT,
   date TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -231,6 +232,7 @@ CREATE TABLE IF NOT EXISTS daily_magical_weather (
 -- `updated_at` em TODO upsert e usa a coluna na resolução de conflitos.
 -- Sem ela o PostgREST rejeita o upsert ("column not found in schema cache").
 ALTER TABLE dreams                 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE dreams                 ADD COLUMN IF NOT EXISTS interpretation TEXT;
 ALTER TABLE gratitudes             ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE affirmations           ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE free_writings          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
