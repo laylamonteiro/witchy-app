@@ -778,5 +778,20 @@
   "tarotFlipCard": "Invertir carta",
   "tarotUnflipCard": "Posición normal",
   "tarotUprightMeaning": "Significado",
-  "tarotReversedMeaning": "Significado invertido"
+  "tarotReversedMeaning": "Significado invertido",
+  "grimoireMyRecords": "Mis Registros",
+  "grimoireMyRecordsSub": "Páginas del Grimorio Vivo, estudios y reflexiones",
+  "grimoireNoRecords": "Tus páginas del Grimorio Vivo y registros aparecerán aquí.",
+  "learnFillAtLeastOne": "Responde al menos una pregunta antes de sellar la página",
+  "learnOpenTool": "Abrir {tool}",
+  "learnToolHint": "Esta lección usa una herramienta de la app — ábrela aquí y vuelve para escribir tu página.",
+  "learnSavesTo": "Esta página se guardará en: {place}",
+  "learnPlaceDreams": "Diario de Sueños",
+  "learnPlaceGratitude": "Diario de Gratitud",
+  "learnPlaceAffirmations": "Afirmaciones",
+  "learnPlaceDesires": "Diario de Deseos",
+  "learnSection1": "Fundamento",
+  "learnSection2": "Profundizando",
+  "learnSection3": "En la práctica",
+  "learnSection4": "Para llevar contigo"
 }

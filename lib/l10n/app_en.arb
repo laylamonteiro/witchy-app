@@ -778,5 +778,20 @@
   "tarotFlipCard": "Reverse card",
   "tarotUnflipCard": "Upright position",
   "tarotUprightMeaning": "Meaning",
-  "tarotReversedMeaning": "Reversed meaning"
+  "tarotReversedMeaning": "Reversed meaning",
+  "grimoireMyRecords": "My Records",
+  "grimoireMyRecordsSub": "Living Grimoire pages, studies and reflections",
+  "grimoireNoRecords": "Your Living Grimoire pages and records will appear here.",
+  "learnFillAtLeastOne": "Answer at least one question before sealing the page",
+  "learnOpenTool": "Open {tool}",
+  "learnToolHint": "This lesson uses one of the app's tools — open it here and come back to write your page.",
+  "learnSavesTo": "This page will be saved in: {place}",
+  "learnPlaceDreams": "Dream Diary",
+  "learnPlaceGratitude": "Gratitude Diary",
+  "learnPlaceAffirmations": "Affirmations",
+  "learnPlaceDesires": "Desire Diary",
+  "learnSection1": "Foundation",
+  "learnSection2": "Going deeper",
+  "learnSection3": "In practice",
+  "learnSection4": "To carry with you"
 }

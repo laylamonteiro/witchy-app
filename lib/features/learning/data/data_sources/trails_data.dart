@@ -15,6 +15,7 @@ const List<LearningTrail> learningTrails = [
     lessons: [
       TrailLesson(
         id: 'mb_01',
+        recordKind: LessonRecordKind.note,
         title: 'A intenção é o coração',
         teaching:
             'Toda magia começa antes da vela, do cristal ou da palavra: começa na intenção. Na magia branca, a intenção é formulada de forma clara, positiva e presente — não "quero parar de ter medo", mas "eu caminho protegida e confiante".\n\nUma boa intenção tem três marcas: é específica, é sua (não controla a vontade dos outros) e é dita como se já fosse. Praticantes experientes passam mais tempo lapidando a frase do que montando o altar.',
@@ -176,6 +177,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mb_10',
+        recordKind: LessonRecordKind.gratitude,
         title: 'Encerrando com gratidão',
         teaching:
             'Todo trabalho de magia branca termina no mesmo lugar: a gratidão. Agradecer fecha o circuito da energia, reconhecendo o recebido antes de ver resultados. É também a proteção mais subestimada: um coração agradecido não opera pela carência.\n\nNesta última página, você cria seu ritual pessoal de encerramento — sua assinatura mágica.',
@@ -205,6 +207,7 @@ const List<LearningTrail> learningTrails = [
     lessons: [
       TrailLesson(
         id: 'mv_01',
+        recordKind: LessonRecordKind.note,
         title: 'Conhecer uma planta de verdade',
         teaching:
             'A magia verde não começa decorando tabelas — começa com UMA planta conhecida de verdade: nome, cheiro, textura, como reage à água e ao sol.\n\nBruxas verdes tradicionais tinham relação profunda com poucas dúzias de plantas: colhiam na hora certa, agradeciam, usavam cada parte. Sua primeira página é o retrato de uma aliada.',
@@ -330,6 +333,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mv_08',
+        recordKind: LessonRecordKind.note,
         title: 'O jardim de lua',
         teaching:
             'A tradição planta o que cresce para cima na lua crescente e raízes na minguante; colhe folhas de poder na cheia; descansa a terra na nova. Mais que agricultura, é treino de paciência mágica: nem tudo é para agora.\n\nO Calendário Lunar do app é seu almanaque de bolso.',
@@ -347,6 +351,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mv_09',
+        recordKind: LessonRecordKind.gratitude,
         title: 'Colheita e agradecimento',
         teaching:
             'Colher é a metade esquecida do plantio. A colheita ritual pede: hora certa (manhã após secar o orvalho, tradicionalmente), pedido de licença à planta, corte limpo, agradecimento e uso íntegro — nada colhido à toa.\n\nO mesmo vale para as colheitas simbólicas da vida: reconhecer, agradecer, usar bem.',
@@ -364,6 +369,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mv_10',
+        recordKind: LessonRecordKind.note,
         title: 'Seu herbário mágico',
         teaching:
             'A última página desta trilha é a capa do seu herbário: a lista viva das suas plantas aliadas, com seus usos testados por VOCÊ. O herbário da bruxa verde nunca está pronto — cresce a cada estação, como o jardim.\n\nDaqui em diante, cada planta nova merece uma página própria no seu grimório.',
@@ -393,6 +399,7 @@ const List<LearningTrail> learningTrails = [
     lessons: [
       TrailLesson(
         id: 'wi_01',
+        recordKind: LessonRecordKind.note,
         title: 'A Rede: "não prejudique ninguém"',
         teaching:
             'A ética wiccana cabe numa frase, a Rede: "Faz o que quiseres, desde que não prejudiques ninguém" — incluindo você mesma, o que muita gente esquece.\n\nDela deriva a reflexão do retorno (a "Lei Tríplice" para muitos): a energia posta em movimento volta, em qualidade mais que em aritmética. Sua primeira página é o seu código pessoal.',
@@ -410,6 +417,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'wi_02',
+        recordKind: LessonRecordKind.note,
         title: 'Deusa e Deus: a dualidade',
         teaching:
             'A Wicca clássica honra o divino em dualidade: a Deusa Tripla (Donzela, Mãe, Anciã — os ciclos da lua) e o Deus Cornífero (o sol e a natureza selvagem que nasce e morre com as estações).\n\nCorrentes atuais flexibilizam essa visão. O essencial é o sagrado imanente: o divino NA natureza, não fora dela.',
@@ -428,6 +436,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'wi_03',
+        recordKind: LessonRecordKind.note,
         title: 'O altar wiccano',
         teaching:
             'O altar wiccano organiza o cosmos numa mesa: os quatro elementos (pentáculo/sal para Terra, incenso para Ar, vela para Fogo, taça para Água), símbolos da Deusa e do Deus, e o athame ou varinha como condutor da vontade.\n\nComece simples: uma vela, um copo, uma pedra, uma pena. O altar cresce com a prática (visite a aba Altar da Enciclopédia).',
@@ -497,6 +506,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'wi_07',
+        recordKind: LessonRecordKind.note,
         title: 'O Livro das Sombras',
         teaching:
             'O Livro das Sombras é o coração material da bruxa wiccana: rituais, receitas, sonhos, fracassos e descobertas — TUDO registrado. Tradicionalmente copiado à mão da mestra para a iniciada; hoje, cada bruxa inicia o seu.\n\nVocê já está escrevendo o seu: este app é ele. Esta página define como você o organiza.',
@@ -548,6 +558,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'wi_10',
+        recordKind: LessonRecordKind.desire,
         title: 'Autoiniciação: o compromisso',
         teaching:
             'Sem coven, a bruxa solitária se autoinicia: um ritual em que VOCÊ se compromete com o caminho, diante do sagrado como o entende. Tradicionalmente após "um ano e um dia" de estudo — mas o tempo certo é o seu.\n\nEsta última página é o rascunho do seu rito de dedicação. Realize quando sentir que é hora — e volte para registrar.',
@@ -577,6 +588,7 @@ const List<LearningTrail> learningTrails = [
     lessons: [
       TrailLesson(
         id: 'bt_01',
+        recordKind: LessonRecordKind.note,
         title: 'Os espíritos do lugar',
         teaching:
             'A bruxaria tradicional é enraizada no LUGAR: rios, encruzilhadas, quintais. O primeiro passo é conhecer os espíritos da terra onde você pisa — como se faz amizade: presença regular, pequenas oferendas respeitosas, escuta.\n\nO folclore local é o mapa espiritual mais honesto que existe.',
@@ -594,6 +606,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'bt_02',
+        recordKind: LessonRecordKind.note,
         title: 'Ancestrais: a linhagem viva',
         teaching:
             'Na tradição, os mortos não estão longe: ancestrais são aliados de primeira hora — os de sangue, os de afeto e os de ofício (as bruxas que vieram antes).\n\nUm altar simples: superfície limpa, copo d\'água, vela, objeto ou foto de quem partiu. Renove a água, converse. Sua página registra o começo do vínculo.',
@@ -647,6 +660,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'bt_05',
+        recordKind: LessonRecordKind.affirmation,
         title: 'Benzimento: a palavra que cura',
         teaching:
             'As benzedeiras são a bruxaria tradicional viva do Brasil: cura com palavra, ramo e fé. A estrutura é poesia funcional: nomeia o mal, invoca a força maior, manda para longe, sela. O ramo que murcha "levou" o que tirou.\n\nSua página honra essa linhagem — para uso pessoal, com respeito por quem guarda o ofício.',
@@ -700,6 +714,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'bt_08',
+        recordKind: LessonRecordKind.dream,
         title: 'Sonhos e sinais: a escuta torta',
         teaching:
             'O caminho torto escuta o mundo: sonhos, bichos que cruzam, objetos que caem, nomes ouvidos três vezes. Não é paranoia — é atenção poética. O tradicional é registrar SEM interpretar na hora; padrões falam com o tempo.\n\nO Diário de Sonhos e os Temas Oníricos do app são seus aliados aqui.',
@@ -717,6 +732,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'bt_09',
+        recordKind: LessonRecordKind.desire,
         title: 'O caminho torto: pacto consigo',
         teaching:
             'A bruxaria tradicional não pede conversão — pede coerência. O "pacto" verdadeiro é consigo: praticar o que funciona, honrar o que sustenta, abandonar o que é enfeite. Sem dogma, com raiz.\n\nEsta página é o seu acordo de praticante: o que é inegociável no SEU caminho torto.',
@@ -734,6 +750,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'bt_10',
+        recordKind: LessonRecordKind.note,
         title: 'Transmissão: guardar e passar adiante',
         teaching:
             'Todo saber tradicional sobrevive por transmissão: a avó que benze, a vizinha que ensina o chá. Você agora é elo dessa corrente — guardiã do que aprendeu e, um dia, ponte para alguém.\n\nA última página desta trilha é o seu testamento vivo: o que do seu caminho merece atravessar o tempo.',
@@ -763,6 +780,7 @@ const List<LearningTrail> learningTrails = [
     lessons: [
       TrailLesson(
         id: 'mc_01',
+        recordKind: LessonRecordKind.note,
         title: 'Crença como ferramenta',
         teaching:
             'O axioma caóta: a crença não é a verdade — é o INSTRUMENTO. Se acreditar em X produz o resultado, o caóta veste a crença como um casaco, trabalha, e depois o pendura.\n\nNão é cinismo: é levar a crença tão a sério a ponto de usá-la deliberadamente. Bem-vinda ao laboratório.',
@@ -780,6 +798,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mc_02',
+        recordKind: LessonRecordKind.sigil,
         title: 'Sigilos: o desejo criptografado',
         teaching:
             'O sigilo de Austin Osman Spare: escrever o desejo, eliminar letras repetidas, fundir as restantes num glifo — e ESQUECER, lançando o símbolo no inconsciente por um estado alterado (o gnosis: exaustão, dança, olhar fixo).\n\nO esquecimento não é detalhe: a mente ansiosa sabota; o inconsciente, livre, trabalha. A ferramenta de Sigilos do app faz o glifo por você.',
@@ -797,6 +816,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mc_03',
+        recordKind: LessonRecordKind.note,
         title: 'Gnosis: os portais do transe',
         teaching:
             'Gnosis é o estado onde a mente crítica cala e o comando passa: excitatório (dança, tambor, hiperventilação leve, clímax) ou inibitório (imobilidade, jejum curto, olhar fixo, silêncio absoluto).\n\nCada pessoa tem seus portais. Mapear os SEUS é infraestrutura mágica básica — com segurança e sem substâncias: o corpo já tem tudo.',
@@ -814,6 +834,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mc_04',
+        recordKind: LessonRecordKind.note,
         title: 'O diário de resultados',
         teaching:
             'O que separa o caóta do místico de sofá é o REGISTRO: data, operação, técnica, estado, resultado. Sem diário, todo sucesso é lembrado e todo fracasso esquecido — e você não aprende nada.\n\nImpiedoso com a autoilusão, gentil com o processo: fracasso é dado, não vergonha.',
@@ -848,6 +869,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mc_06',
+        recordKind: LessonRecordKind.rune,
         title: 'Troca de paradigma',
         teaching:
             'O exercício-rei do caos: viver um período inteiro dentro de outro sistema de crenças — uma semana como animista, outra como cética radical, outra como devota. Não para zombar: para EXPERIMENTAR de dentro.\n\nO prêmio é a flexibilidade: quem já morou em várias casas de crença nunca mais confunde a mobília com o mundo.',
@@ -865,6 +887,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mc_07',
+        recordKind: LessonRecordKind.desire,
         title: 'Magia do resultado: metas operacionais',
         teaching:
             'Caos é pragmatismo: magia a serviço de metas reais. A operação bem desenhada define alvo específico, prazo, técnica, e — a marca caóta — a AÇÃO MUNDANA casada: o feitiço de emprego acompanha currículos enviados.\n\nMagia sem ação é loteria; ação sem magia é metade do arsenal.',
@@ -900,6 +923,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mc_09',
+        recordKind: LessonRecordKind.oracle,
         title: 'Sincronicidade: surfar o acaso',
         teaching:
             'Para o caóta, a sincronicidade é feedback do sistema: quando as "coincidências" se alinham à operação, algo está em curso. Não se força — se surfa: registrar, agradecer e ajustar a rota pelos sinais.\n\nCuidado com a apofenia (ver padrão em tudo): o diário de resultados é o antídoto.',
@@ -917,6 +941,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'mc_10',
+        recordKind: LessonRecordKind.note,
         title: 'Construa seu próprio sistema',
         teaching:
             'O destino do caos é a autonomia: depois de testar crenças, técnicas e paradigmas, você monta o SEU sistema — pessoal, funcional, revisável. Misture o esbá com sigilos e o benzimento da avó: se passa no seu diário de resultados, é seu.\n\nLimites apenas éticos: nada de dano a pessoas ou animais, nada criminoso. O resto — o estranho, o simbólico, o inventado — é matéria-prima legítima.',
@@ -946,6 +971,7 @@ const List<LearningTrail> learningTrails = [
     lessons: [
       TrailLesson(
         id: 'ta_01',
+        recordKind: LessonRecordKind.tarot,
         title: 'O baralho: mapa em 78 cartas',
         teaching:
             'O tarot é um mapa da experiência humana em 78 cartas: 22 Arcanos Maiores (as grandes forças e passagens da vida) e 56 Menores em quatro naipes — Paus/fogo (ação), Copas/água (emoção), Espadas/ar (mente) e Ouros/terra (matéria).\n\nAntes de decorar: manuseie. O tarot se aprende pelas mãos e pelos olhos.',
@@ -963,6 +989,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_02',
+        recordKind: LessonRecordKind.tarot,
         title: 'A Jornada do Louco (0-VII)',
         teaching:
             'Os Arcanos Maiores contam uma história: o Louco (0) parte em jornada e encontra os primeiros mestres — Mago (vontade), Sacerdotisa (intuição), Imperatriz (criação), Imperador (estrutura), Hierofante (tradição), Enamorados (escolha) e Carro (vitória da vontade).\n\nÉ o primeiro terço: aprender as forças básicas do mundo.',
@@ -980,6 +1007,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_03',
+        recordKind: LessonRecordKind.tarot,
         title: 'As provas da alma (VIII-XIV)',
         teaching:
             'O segundo terço da Jornada são as provas internas: Força (coragem gentil), Eremita (recolhimento), Roda (ciclos), Justiça (consequência), Enforcado (nova perspectiva), Morte (transformação) e Temperança (síntese).\n\nSão as cartas que assustam os iniciantes e sustentam os leitores: aqui mora a maturidade.',
@@ -997,6 +1025,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_04',
+        recordKind: LessonRecordKind.tarot,
         title: 'A noite escura e o amanhecer (XV-XXI)',
         teaching:
             'O terço final atravessa a noite: Diabo (apegos), Torre (ruptura), Estrela (esperança), Lua (ilusões) — e amanhece: Sol (alegria), Julgamento (chamado) e Mundo (completude).\n\nA Jornada inteira agora é sua: do salto do Louco à dança do Mundo. E ela recomeça sempre, em espiral.',
@@ -1014,6 +1043,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_05',
+        recordKind: LessonRecordKind.tarot,
         title: 'Paus e Copas: fogo e água',
         teaching:
             'Os naipes falam do cotidiano. PAUS é fogo: projetos, paixão, movimento — do Ás (faísca) ao Dez (sobrecarga). COPAS é água: vínculos, emoções, intuição — do transbordar do Ás à plenitude do Dez.\n\nDica de leitura: número + naipe = frase. Três (expansão) de Copas (afeto) = celebração entre amigas.',
@@ -1031,6 +1061,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_06',
+        recordKind: LessonRecordKind.tarot,
         title: 'Espadas e Ouros: ar e terra',
         teaching:
             'ESPADAS é ar: a mente — clareza que corta e ansiedade que fere. O naipe mais "difícil" do baralho é também o mais honesto. OUROS é terra: corpo, trabalho, dinheiro — a magia da matéria bem cuidada.\n\nComplete a lógica: agora você lê qualquer menor por número + elemento.',
@@ -1048,6 +1079,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_07',
+        recordKind: LessonRecordKind.tarot,
         title: 'A corte: as dezesseis pessoas',
         teaching:
             'Valete, Cavaleiro, Rainha e Rei de cada naipe: as cartas de corte são PESSOAS e POSTURAS — o Valete aprende, o Cavaleiro age, a Rainha domina por dentro, o Rei governa por fora.\n\nNa leitura, corte pode ser alguém na situação OU um papel que você está vestindo. Pergunte sempre: quem é — ou o que estou sendo?',
@@ -1065,6 +1097,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_08',
+        recordKind: LessonRecordKind.tarot,
         title: 'Tirar cartas: a pergunta é metade',
         teaching:
             'A leitura começa antes do embaralhar: na pergunta. Perguntas abertas rendem ("o que preciso ver sobre X?"); sim/não empobrece; sobre terceiros, invade. Reformule até a pergunta apontar para VOCÊ.\n\nDepois: respire, embaralhe com a pergunta no corpo, e leia primeiro a IMAGEM — o significado decorado vem em socorro, não na frente.',
@@ -1082,6 +1115,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_09',
+        recordKind: LessonRecordKind.tarot,
         title: 'Tecer a história: leitura combinada',
         teaching:
             'Cartas não falam sozinhas — conversam. A leitura madura tece: repetição de naipe (tema dominante), maiores em maioria (forças grandes em jogo), vizinhanças que se iluminam (a Torre ao lado da Estrela é ruptura com esperança).\n\nSeu papel é contar a história que as cartas formam JUNTAS — com começo, tensão e conselho.',
@@ -1099,6 +1133,7 @@ const List<LearningTrail> learningTrails = [
       ),
       TrailLesson(
         id: 'ta_10',
+        recordKind: LessonRecordKind.tarot,
         title: 'Seu tarot: ética e voz própria',
         teaching:
             'A leitora madura tem ética e voz: não prevê morte nem doença, não decide a vida de ninguém, devolve o poder a quem consulta. E tem estilo próprio — suas cartas-âncora, seus rituais de mesa, sua forma de contar.\n\nEsta última página é o seu manifesto de leitora: como o tarot vive em você daqui em diante.',

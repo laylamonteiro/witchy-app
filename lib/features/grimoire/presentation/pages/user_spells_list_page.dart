@@ -25,11 +25,16 @@ class UserSpellsListPage extends StatefulWidget {
 
   final SpellSource initialSource;
 
+  /// Quando verdadeiro, lista apenas as páginas de registro do Grimório
+  /// Vivo (Meus Registros), separadas dos feitiços.
+  final bool recordsOnly;
+
   const UserSpellsListPage({
     super.key,
     this.title,
     this.categoryGroup,
     this.initialSource = SpellSource.all,
+    this.recordsOnly = false,
   });
 
   @override
@@ -160,19 +165,22 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
             ),
 
             // Filtro de origem: Todos / Meus / Ancestrais
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _buildSourceChip(AppLocalizations.of(context)!.spellSourceAll, SpellSource.all),
-                  const SizedBox(width: 8),
-                  _buildSourceChip(AppLocalizations.of(context)!.spellSourceMine, SpellSource.mine),
-                  const SizedBox(width: 8),
-                  _buildSourceChip(AppLocalizations.of(context)!.spellSourceAncestral, SpellSource.ancestral),
-                ],
+            // (sem sentido na aba de registros do Grimório Vivo)
+            if (!widget.recordsOnly) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    _buildSourceChip(AppLocalizations.of(context)!.spellSourceAll, SpellSource.all),
+                    const SizedBox(width: 8),
+                    _buildSourceChip(AppLocalizations.of(context)!.spellSourceMine, SpellSource.mine),
+                    const SizedBox(width: 8),
+                    _buildSourceChip(AppLocalizations.of(context)!.spellSourceAncestral, SpellSource.ancestral),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
+            ],
 
             // Lista de feitiços
             Expanded(
@@ -189,6 +197,10 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                       : _source == SpellSource.ancestral
                           ? provider.appSpells
                           : provider.spells;
+                  // Registros do Grimório Vivo ficam na aba própria.
+                  spells = spells
+                      .where((s) => s.isRecord == widget.recordsOnly)
+                      .toList();
 
                   // Aplicar filtros
                   if (_searchQuery.isNotEmpty) {
@@ -220,9 +232,11 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                     return EmptyStateWidget(
                       message: hasActiveFilter
                           ? AppLocalizations.of(context)!.spellNoneFound
-                          : _source == SpellSource.ancestral
-                              ? AppLocalizations.of(context)!.spellNoAncestral
-                              : AppLocalizations.of(context)!.spellEmptyGrimoire,
+                          : widget.recordsOnly
+                              ? AppLocalizations.of(context)!.grimoireNoRecords
+                              : _source == SpellSource.ancestral
+                                  ? AppLocalizations.of(context)!.spellNoAncestral
+                                  : AppLocalizations.of(context)!.spellEmptyGrimoire,
                       icon: Icons.auto_stories,
                       actionText: showAddAction ? AppLocalizations.of(context)!.spellAdd : null,
                       onAction:

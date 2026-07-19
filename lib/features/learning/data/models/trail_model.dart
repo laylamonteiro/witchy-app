@@ -1,5 +1,70 @@
 import '../../../grimoire/data/models/spell_model.dart';
 
+/// Onde a página escrita na lição é registrada dentro do app.
+///
+/// A ideia do Grimório Vivo é levar a pessoa a usar todas as
+/// funcionalidades naturalmente: cada lição salva no lugar certo.
+enum LessonRecordKind {
+  /// Meu Grimório → Meus Feitiços (um feitiço de verdade).
+  spell,
+
+  /// Meu Grimório → Meus Registros (estudo, reflexão, planejamento).
+  note,
+
+  /// Diário de Sonhos.
+  dream,
+
+  /// Diário de Gratidão.
+  gratitude,
+
+  /// Afirmações.
+  affirmation,
+
+  /// Diário de Desejos.
+  desire,
+
+  /// Registro + atalho para a ferramenta de Sigilos.
+  sigil,
+
+  /// Registro + atalho para as Runas.
+  rune,
+
+  /// Registro + atalho para as Cartas do Oráculo.
+  oracle,
+
+  /// Registro + atalho para o Pêndulo.
+  pendulum,
+
+  /// Registro + atalho para o Tarot.
+  tarot,
+}
+
+extension LessonRecordKindX on LessonRecordKind {
+  /// Tipos que abrem uma ferramenta do app como parte da prática.
+  bool get isTool => switch (this) {
+        LessonRecordKind.sigil ||
+        LessonRecordKind.rune ||
+        LessonRecordKind.oracle ||
+        LessonRecordKind.pendulum ||
+        LessonRecordKind.tarot =>
+          true,
+        _ => false,
+      };
+
+  /// Tipos gravados no Meu Grimório como página de registro (não feitiço).
+  bool get savesAsNote => this != LessonRecordKind.spell && !savesInDiary;
+
+  /// Tipos gravados nos Diários.
+  bool get savesInDiary => switch (this) {
+        LessonRecordKind.dream ||
+        LessonRecordKind.gratitude ||
+        LessonRecordKind.affirmation ||
+        LessonRecordKind.desire =>
+          true,
+        _ => false,
+      };
+}
+
 /// Trilha de aprendizado do Grimório Vivo.
 ///
 /// Conceito: aprender FAZENDO o próprio grimório — cada lição termina com a
@@ -44,6 +109,9 @@ class TrailLesson {
   /// página final é montada com pergunta + resposta.
   final List<String> pagePrompts;
 
+  /// Onde esta página é registrada (feitiço, registro, diário, ferramenta).
+  final LessonRecordKind recordKind;
+
   const TrailLesson({
     required this.id,
     required this.title,
@@ -55,5 +123,6 @@ class TrailLesson {
     this.pageType = SpellType.attraction,
     this.pageIngredients = const [],
     required this.pagePrompts,
+    this.recordKind = LessonRecordKind.spell,
   });
 }

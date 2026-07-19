@@ -180,7 +180,10 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
   }
 
   Widget _buildGroupCards(BuildContext context, SpellProvider provider) {
-    final userCount = provider.userSpells.length;
+    final userCount =
+        provider.userSpells.where((s) => !s.isRecord).length;
+    final recordCount =
+        provider.userSpells.where((s) => s.isRecord).length;
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 90),
@@ -201,6 +204,23 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
             ),
           ),
         ),
+        _buildHubCard(
+          context,
+          emoji: '📖',
+          title: AppLocalizations.of(context)!.grimoireMyRecords,
+          subtitle: AppLocalizations.of(context)!.grimoireMyRecordsSub,
+          count: recordCount,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => UserSpellsListPage(
+                title: AppLocalizations.of(context)!.grimoireMyRecords,
+                initialSource: SpellSource.mine,
+                recordsOnly: true,
+              ),
+            ),
+          ),
+        ),
         for (final group in _spellGroups(AppLocalizations.of(context)!))
           _buildHubCard(
             context,
@@ -208,7 +228,8 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
             title: group.title,
             subtitle: group.subtitle,
             count: provider.spells
-                .where((s) => group.categories.contains(s.category))
+                .where((s) =>
+                    !s.isRecord && group.categories.contains(s.category))
                 .length,
             onTap: () => Navigator.push(
               context,
@@ -293,6 +314,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
     final query = _searchQuery.toLowerCase();
     final results = provider.spells
         .where((s) =>
+            !s.isRecord &&
             s.name.toLowerCase().contains(query) ||
             s.purpose.toLowerCase().contains(query) ||
             s.category.displayName.toLowerCase().contains(query))

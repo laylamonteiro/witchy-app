@@ -79,6 +79,10 @@ class SpellModel {
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
+  /// Páginas de registro do Grimório Vivo (aba "Meus Registros"):
+  /// gravadas como feitiço, mas separadas dos feitiços de verdade.
+  bool get isRecord => id.startsWith('registro_');
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
