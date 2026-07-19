@@ -22,25 +22,27 @@ class LearningTrail {
   });
 }
 
-/// Uma lição: ensino curto -> prática -> página do grimório.
+/// Uma lição: ensino curto -> prática -> página guiada.
 class TrailLesson {
   final String id;
   final String title;
 
-  /// Conteúdo de ensino (2-4 parágrafos, texto corrido).
+  /// Conteúdo de ensino (parágrafos separados por \n\n).
   final String teaching;
 
   /// Prática sugerida antes de escrever a página.
   final String practice;
 
-  /// A página a criar: título sugerido e roteiro que pré-preenche o
-  /// formulário de feitiço do app.
+  /// A página a criar no Meu Grimório.
   final String pageTitle;
   final String pagePurpose;
   final SpellCategory pageCategory;
   final SpellType pageType;
   final List<String> pageIngredients;
-  final String pageStepsTemplate;
+
+  /// Perguntas do preenchimento guiado: cada uma vira um campo próprio e a
+  /// página final é montada com pergunta + resposta.
+  final List<String> pagePrompts;
 
   const TrailLesson({
     required this.id,
@@ -52,6 +54,6 @@ class TrailLesson {
     required this.pageCategory,
     this.pageType = SpellType.attraction,
     this.pageIngredients = const [],
-    required this.pageStepsTemplate,
+    required this.pagePrompts,
   });
 }

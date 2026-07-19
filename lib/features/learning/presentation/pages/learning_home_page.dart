@@ -62,14 +62,56 @@ class _LearningHomePageState extends State<LearningHomePage> {
                               height: 1.5,
                             ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
+                      // Nível e XP — a gamificação das Jornadas Mágicas
+                      // aplicada ao aprendizado.
+                      Row(
+                        children: [
+                          Text(learning.level.emoji,
+                              style: const TextStyle(fontSize: 22)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  learning.level.title,
+                                  style: TextStyle(
+                                    color: context.gc.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                LinearProgressIndicator(
+                                  value: learning.levelProgress,
+                                  backgroundColor: context.gc.surfaceBorder,
+                                  valueColor: AlwaysStoppedAnimation(
+                                      context.gc.starYellow),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${learning.xp} XP',
+                            style: TextStyle(
+                              color: context.gc.starYellow,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
                       Text(
-                        '${learning.totalPagesWritten} de '
-                        '${LearningProvider.totalLessons} páginas escritas',
+                        learning.nextLevel == null
+                            ? 'Título máximo alcançado ✨'
+                            : '${learning.totalPagesWritten} páginas escritas · próximo título: ${learning.nextLevel!.title} (${learning.nextLevel!.minXp} XP)',
                         style: TextStyle(
-                          color: context.gc.starYellow,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          color: context.gc.textSecondary,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -97,7 +139,9 @@ class _LearningHomePageState extends State<LearningHomePage> {
         MaterialPageRoute(builder: (_) => TrailPage(trail: trail)),
       ),
       borderRadius: BorderRadius.circular(16),
-      child: MagicalCard(
+      child: complete
+          ? _buildBoundCover(context, trail)
+          : MagicalCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -170,6 +214,73 @@ class _LearningHomePageState extends State<LearningHomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Capa de livro encadernado: a trilha completa vira um volume do grimório.
+  Widget _buildBoundCover(BuildContext context, trail) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(context.gc.surface, context.gc.starYellow, 0.10)!,
+            Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!,
+          ],
+        ),
+        border: Border.all(color: context.gc.starYellow, width: 1.6),
+        boxShadow: [
+          BoxShadow(
+            color: context.gc.starYellow.withValues(alpha: 0.18),
+            blurRadius: 14,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Lombada do livro
+          Container(
+            width: 10,
+            height: 64,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: context.gc.starYellow.withValues(alpha: 0.8),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Text(trail.emoji, style: const TextStyle(fontSize: 30)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  trail.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '📕 Volume encadernado — ${trail.lessons.length} páginas '
+                  'escritas por você',
+                  style: TextStyle(
+                    color: context.gc.starYellow,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.auto_stories, color: context.gc.starYellow),
+        ],
       ),
     );
   }
