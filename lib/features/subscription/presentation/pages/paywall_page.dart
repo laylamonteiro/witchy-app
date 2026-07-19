@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/payment_service.dart';
@@ -58,7 +59,7 @@ class PaywallWidget extends StatelessWidget {
           onDismiss?.call();
           if (PaymentService().isPro) onPurchaseCompleted?.call();
         },
-        child: const Text('Desbloquear Premium'),
+        child: Text(AppLocalizations.of(context)!.premiumUnlock),
       ),
     );
   }

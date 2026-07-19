@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
@@ -219,7 +220,7 @@ class PremiumContentSection extends StatelessWidget {
           showPremiumUpgradePaywall(context);
         },
         icon: const Icon(Icons.star, size: 18),
-        label: const Text('Seja Premium'),
+        label: Text(AppLocalizations.of(context)!.premiumBePremium),
         style: ElevatedButton.styleFrom(
           backgroundColor: context.gc.lilac,
           foregroundColor: context.gc.onPrimary,
@@ -379,7 +380,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                     alignment: Alignment.centerRight,
                     child: IconButton(
                       key: const ValueKey('close_premium_paywall'),
-                      tooltip: 'Fechar',
+                      tooltip: AppLocalizations.of(context)!.commonClose,
                       onPressed: () => Navigator.pop(context),
                       icon: Icon(Icons.close, color: context.gc.textSecondary),
                     ),
@@ -438,7 +439,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                 onPurchase: _purchaseSelectedPlan,
                                 unavailableNotice: noProducts
                                     ? Text(
-                                        'Os planos estão temporariamente indisponíveis',
+                                        AppLocalizations.of(context)!.premiumPlansUnavailable,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(color: context.gc.warning),
                                       )
@@ -474,8 +475,8 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
         if (!mounted) return;
         Navigator.pop(context);
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Premium ativado com sucesso!'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.premiumActivated),
             backgroundColor: Colors.green,
           ),
         );
@@ -483,7 +484,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              result.errorMessage ?? 'Não foi possível concluir a compra',
+              result.errorMessage ?? AppLocalizations.of(context)!.premiumPurchaseFailed,
             ),
             backgroundColor: Colors.red,
           ),
@@ -540,7 +541,7 @@ class PremiumPreviewWrapper extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        previewMessage ?? access.message ?? 'Conteúdo Premium',
+                        previewMessage ?? access.message ?? AppLocalizations.of(context)!.premiumContentLabel,
                         style: TextStyle(
                           color: context.gc.textPrimary,
                           fontSize: 12,
@@ -555,7 +556,7 @@ class PremiumPreviewWrapper extends StatelessWidget {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: Text(
-                        'Upgrade',
+                        AppLocalizations.of(context)!.premiumUpgradeAction,
                         style: TextStyle(
                           color: context.gc.textPrimary,
                           fontWeight: FontWeight.bold,

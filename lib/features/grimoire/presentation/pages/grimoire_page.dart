@@ -143,8 +143,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('📖', style: TextStyle(fontSize: 40)),
-            title: 'Grimório Vivo',
-            description: 'Trilhas de aprendizado: cada lição vira uma página sua',
+            title: AppLocalizations.of(context)!.toolLivingGrimoireTitle,
+            description: AppLocalizations.of(context)!.toolLivingGrimoireDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -195,8 +195,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🎴', style: TextStyle(fontSize: 40)),
-            title: 'Tarot',
-            description: 'Tiragens, carta do dia e tutor de aprendizado',
+            title: AppLocalizations.of(context)!.toolTarotTitle,
+            description: AppLocalizations.of(context)!.toolTarotDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -208,8 +208,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🎭', style: TextStyle(fontSize: 40)),
-            title: 'Teste de Arquétipo',
-            description: 'Descubra qual arquétipo vibra mais alto em você',
+            title: AppLocalizations.of(context)!.toolArchetypeTitle,
+            description: AppLocalizations.of(context)!.toolArchetypeDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -221,8 +221,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
-            title: 'Leitura de Mãos',
-            description: 'Quiromancia pela palma da sua mão',
+            title: AppLocalizations.of(context)!.toolPalmistryTitle,
+            description: AppLocalizations.of(context)!.toolPalmistryDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(

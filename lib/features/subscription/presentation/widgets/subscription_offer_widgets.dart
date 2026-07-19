@@ -1,72 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-
-class PremiumBenefitItem {
-  final IconData icon;
-  final String emphasizedText;
-  final String detailText;
-  final String compactText;
-  final String description;
-  final String assetPath;
-
-  const PremiumBenefitItem(
-    this.icon,
-    this.emphasizedText,
-    this.detailText,
-    this.compactText,
-    this.description,
-    this.assetPath,
-  );
-
-  String get text => '$emphasizedText$detailText';
-}
-
-const List<PremiumBenefitItem> premiumBenefitItems = [
-  PremiumBenefitItem(
-    Icons.psychology,
-    'Converse à vontade com o Conselheiro Místico',
-    ', sem limite de perguntas',
-    'Conselheiro Místico ilimitado',
-    'Converse à vontade com seu guia, sempre que precisar',
-    'assets/premium/icon_orb.png',
-  ),
-  PremiumBenefitItem(
-    Icons.menu_book,
-    'Descubra os segredos da Enciclopédia Mágica',
-    ', com conteúdos e práticas exclusivas',
-    'Enciclopédia com conteúdos completos',
-    'Descubra os segredos da magia com conteúdos e práticas exclusivas',
-    'assets/premium/icon_book.png',
-  ),
-  PremiumBenefitItem(
-    Icons.nightlight_round,
-    'Receba um Clima Mágico Diário feito para você',
-    ', com interpretações e sugestões do seu mapa',
-    'Clima Mágico Diário personalizado',
-    'Previsões e sugestões feitas para você, com base no seu mapa astral',
-    'assets/premium/icon_moon.png',
-  ),
-  PremiumBenefitItem(
-    Icons.auto_fix_high,
-    'Faça leituras ilimitadas de Runas, Oráculo e Sigilos',
-    ', sempre que precisar de orientação',
-    'Leituras ilimitadas de Runas, Oráculo e Sigilos',
-    'Busque respostas e aprofunde sua conexão espiritual sempre que quiser',
-    'assets/premium/icon_runes.png',
-  ),
-  PremiumBenefitItem(
-    Icons.cloud_done,
-    'Mantenha seu Grimório protegido na nuvem',
-    ' e sincronizado entre seus dispositivos',
-    'Sincronização entre dispositivos',
-    'Seu Grimório protegido na nuvem e sempre com você, onde estiver',
-    'assets/premium/icon_cloud.png',
-  ),
-];
 
 class SubscriptionHero extends StatelessWidget {
   const SubscriptionHero({super.key});
@@ -209,7 +147,7 @@ class _CatHeroArt extends StatelessWidget {
               fit: BoxFit.contain,
               alignment: Alignment.bottomCenter,
               filterQuality: FilterQuality.high,
-              semanticLabel: 'Gato mágico do Grimório de Bolso',
+              semanticLabel: AppLocalizations.of(context)!.premiumCatSemantic,
             ),
           ),
         ],
@@ -235,7 +173,7 @@ class _HeroCopy extends StatelessWidget {
       crossAxisAlignment: alignment,
       children: [
         Text(
-          'ACESSE',
+          AppLocalizations.of(context)!.premiumHeroAccess,
           textAlign: textAlign,
           style: GoogleFonts.lora(
             color: context.gc.textPrimary,
@@ -254,7 +192,7 @@ class _HeroCopy extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              'TODO O PODER',
+              AppLocalizations.of(context)!.premiumHeroPower,
               textAlign: textAlign,
               style: GoogleFonts.cinzelDecorative(
                 color: context.gc.textPrimary,
@@ -268,7 +206,7 @@ class _HeroCopy extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
-            'DA SUA MAGIA',
+            AppLocalizations.of(context)!.premiumHeroMagic,
             textAlign: textAlign,
             style: GoogleFonts.cinzelDecorative(
               color: context.gc.textPrimary,
@@ -288,12 +226,12 @@ class _HeroCopy extends StatelessWidget {
               height: 1.34,
             ),
             children: [
-              const TextSpan(text: 'Mais conhecimento, mais orientação e mais '),
+              TextSpan(text: AppLocalizations.of(context)!.premiumHeroTagline1),
               TextSpan(
-                text: 'conexão',
+                text: AppLocalizations.of(context)!.premiumHeroTaglineHighlight,
                 style: TextStyle(color: context.gc.lilac),
               ),
-              const TextSpan(text: ' com o seu caminho'),
+              TextSpan(text: AppLocalizations.of(context)!.premiumHeroTagline2),
             ],
           ),
         ),
@@ -337,12 +275,23 @@ class PremiumBenefitsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final benefits = [
+      ('assets/premium/icon_orb.png', l10n.premiumBenefitAdvisor),
+      ('assets/premium/icon_book.png', l10n.premiumBenefitEncyclopedia),
+      ('assets/premium/icon_moon.png', l10n.premiumBenefitDailyClimate),
+      ('assets/premium/icon_runes.png', l10n.premiumBenefitUnlimitedReadings),
+      ('assets/premium/icon_cloud.png', l10n.premiumBenefitCloudSync),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var index = 0; index < premiumBenefitItems.length; index++) ...[
-          _PremiumBenefitRow(item: premiumBenefitItems[index]),
-          if (index != premiumBenefitItems.length - 1)
+        for (var index = 0; index < benefits.length; index++) ...[
+          _PremiumBenefitRow(
+            assetPath: benefits[index].$1,
+            label: benefits[index].$2,
+          ),
+          if (index != benefits.length - 1)
             Divider(height: 10, color: context.gc.surfaceBorder),
         ],
       ],
@@ -351,9 +300,10 @@ class PremiumBenefitsSection extends StatelessWidget {
 }
 
 class _PremiumBenefitRow extends StatelessWidget {
-  final PremiumBenefitItem item;
+  final String assetPath;
+  final String label;
 
-  const _PremiumBenefitRow({required this.item});
+  const _PremiumBenefitRow({required this.assetPath, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +329,7 @@ class _PremiumBenefitRow extends StatelessWidget {
               ],
             ),
             child: Image.asset(
-              item.assetPath,
+              assetPath,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.high,
             ),
@@ -387,7 +337,7 @@ class _PremiumBenefitRow extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              item.compactText,
+              label,
               style: GoogleFonts.lora(
                 color: context.gc.textPrimary,
                 fontSize: 14.5,
@@ -512,19 +462,19 @@ class SubscriptionPlanSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final monthly = _SubscriptionPlanCard(
       type: SubscriptionType.monthly,
-      title: 'Mensal',
+      title: AppLocalizations.of(context)!.premiumPlanMonthly,
       price: monthlyPrice,
-      period: '/mês',
+      period: AppLocalizations.of(context)!.premiumPerMonth,
       selected: selectedPlan == SubscriptionType.monthly,
       enabled: monthlyEnabled,
       onTap: () => onSelected(SubscriptionType.monthly),
     );
     final yearly = _SubscriptionPlanCard(
       type: SubscriptionType.yearly,
-      title: 'Anual',
+      title: AppLocalizations.of(context)!.premiumPlanYearly,
       price: yearlyPrice,
-      period: '/ano',
-      savings: 'Economize 33%',
+      period: AppLocalizations.of(context)!.premiumPerYear,
+      savings: AppLocalizations.of(context)!.premiumSave33,
       popular: true,
       emphasized: true,
       selected: selectedPlan == SubscriptionType.yearly,
@@ -571,13 +521,15 @@ class _SubscriptionPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = selected ? context.gc.lilac : context.gc.surfaceBorder;
-    final tag = selected ? 'SELECIONADO' : (popular ? 'POPULAR' : null);
+    final l10n = AppLocalizations.of(context)!;
+    final tag =
+        selected ? l10n.premiumTagSelected : (popular ? l10n.premiumTagPopular : null);
 
     return Semantics(
       button: true,
       selected: selected,
       enabled: enabled,
-      label: 'Plano $title, $price $period',
+      label: l10n.premiumPlanSemantics(title, price, period),
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 160),
         opacity: enabled ? 1 : 0.45,
@@ -750,7 +702,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    'Começar Agora',
+                    AppLocalizations.of(context)!.premiumStartNow,
                     style: GoogleFonts.lora(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -768,15 +720,16 @@ class SubscriptionGuarantees extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const guarantees = [
-      ('assets/premium/icon_shield.png', 'Pagamento seguro'),
-      ('assets/premium/icon_lock.png', 'Seus dados protegidos'),
+    final l10n = AppLocalizations.of(context)!;
+    final guarantees = [
+      ('assets/premium/icon_shield.png', l10n.premiumSecurePayment),
+      ('assets/premium/icon_lock.png', l10n.premiumDataProtected),
     ];
 
     return Column(
       children: [
         Text(
-          'Cancele a qualquer momento',
+          l10n.premiumCancelAnytime,
           style: GoogleFonts.lora(
             color: context.gc.textSecondary,
             fontSize: 12,
