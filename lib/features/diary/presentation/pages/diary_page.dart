@@ -24,7 +24,7 @@ class _DiaryPageState extends State<DiaryPage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
 
-  /// Aba central "💡" (Escrita Livre) — sempre a aba inicial e o alvo do reset
+  /// Aba central "💭" (Escrita Livre) — sempre a aba inicial e o alvo do reset
   /// (duplo-toque em "Diários" na bottom nav).
   static const int _defaultTabIndex = 2;
 
@@ -78,11 +78,11 @@ class _DiaryPageState extends State<DiaryPage>
           tabAlignment: TabAlignment.center,
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
-          labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+          labelPadding: const EdgeInsets.symmetric(horizontal: 13),
           tabs: const [
             Tab(text: 'Gratidão'),
             Tab(text: 'Afirmações'),
-            Tab(child: Text('💡', style: TextStyle(fontSize: 20))),
+            Tab(child: Text('💭', style: TextStyle(fontSize: 16))),
             Tab(text: 'Sonhos'),
             Tab(text: 'Desejos'),
           ],

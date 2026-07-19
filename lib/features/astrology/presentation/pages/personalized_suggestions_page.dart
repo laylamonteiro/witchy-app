@@ -301,7 +301,7 @@ class _PersonalizedSuggestionsPageState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🔮', style: TextStyle(fontSize: 64)),
+              const Text('🌟', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               Text(
                 'Mapa Astral Necessário',

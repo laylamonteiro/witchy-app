@@ -119,7 +119,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
