@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:uuid/uuid.dart';
 
-import '../i18n/treatment_preference.dart';
+import '../i18n/gender.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../features/astrology/data/models/enums.dart';
 import '../../features/astrology/data/models/magical_profile_model.dart';
@@ -24,11 +24,11 @@ class AIService {
     _locale = locale;
   }
 
-  TreatmentPreference _treatment = TreatmentPreference.fallback;
+  Gender _gender = Gender.fallback;
 
-  /// Preferencia de tratamento da pessoa logada (fonte: AuthProvider).
-  void setTreatmentPreference(TreatmentPreference preference) {
-    _treatment = preference;
+  /// Gênero/forma de tratamento da pessoa logada (fonte: AuthProvider).
+  void setGender(Gender preference) {
+    _gender = preference;
   }
 
   String get currentLanguageTag {
@@ -51,17 +51,17 @@ class AIService {
   /// Gerar feitiço com IA usando Groq
   Future<SpellModel> generateSpell(
     String userIntention, {
-    TreatmentPreference? treatmentPreference,
+    Gender? gender,
   }) async {
     return _generateWithGroq(
       userIntention,
-      treatmentPreference: treatmentPreference ?? _treatment,
+      gender: gender ?? _gender,
     );
   }
 
   Future<SpellModel> _generateWithGroq(
     String intention, {
-    required TreatmentPreference treatmentPreference,
+    required Gender gender,
   }) async {
     try {
       final requestData = {
@@ -69,7 +69,7 @@ class AIService {
         'messages': [
           {
             'role': 'system',
-            'content': _buildSystemPrompt(treatmentPreference),
+            'content': _buildSystemPrompt(gender),
           },
           {
             'role': 'user',
@@ -185,7 +185,7 @@ class AIService {
   Future<String> generateMagicalProfileText({
     required BirthChartModel birthChart,
     required MagicalProfile profile,
-    TreatmentPreference? treatmentPreference,
+    Gender? gender,
   }) async {
     try {
       final chartSummary = _buildChartSummary(birthChart, profile);
@@ -196,7 +196,7 @@ class AIService {
           {
             'role': 'system',
             'content': _buildMagicalProfileSystemPrompt(
-              treatmentPreference ?? _treatment,
+              gender ?? _gender,
             ),
           },
           {
@@ -236,9 +236,9 @@ class AIService {
     required List<String> energyKeywords,
     required List<Map<String, String>> transits,
     required List<Map<String, String>> aspects,
-    TreatmentPreference? treatmentPreference,
+    Gender? gender,
   }) async {
-    treatmentPreference ??= _treatment;
+    gender ??= _gender;
     try {
       final weatherSummary = _buildWeatherSummary(
         moonPhase: moonPhase,
@@ -254,7 +254,7 @@ class AIService {
         'messages': [
           {
             'role': 'system',
-            'content': _buildDailyWeatherSystemPrompt(treatmentPreference),
+            'content': _buildDailyWeatherSystemPrompt(gender),
           },
           {
             'role': 'user',
@@ -358,7 +358,7 @@ class AIService {
   }
 
   String _buildMagicalProfileSystemPrompt(
-    TreatmentPreference treatmentPreference,
+    Gender gender,
   ) {
     return '''${_localizedInstruction()}
 
@@ -410,16 +410,16 @@ DIRETRIZES:
 - Seja específica nas interpretações, não genérica
 - Conecte cada posição planetária com práticas mágicas concretas
 - Mencione fases lunares, sabbats e momentos propícios quando relevante
-- O tom deve ser de ${TreatmentText.wiseGuide(treatmentPreference)}
+- O tom deve ser de ${GenderText.wiseGuide(gender)}
 - Use "você" para se dirigir à pessoa
-- ${TreatmentText.aiInstruction(treatmentPreference)}
-- ${TreatmentText.preservationInstruction()}
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}
 - Não repita informações genéricas sobre signos - seja específica para esta configuração única
 - Total: aproximadamente 800-1000 palavras''';
   }
 
   String _buildDailyWeatherSystemPrompt(
-    TreatmentPreference treatmentPreference,
+    Gender gender,
   ) {
     return '''${_localizedInstruction()}
 
@@ -453,8 +453,8 @@ FORMATO DA RESPOSTA (use exatamente esta estrutura):
 DIRETRIZES:
 - Seja específica para os trânsitos e aspectos fornecidos
 - Use linguagem acolhedora e acessível
-- ${TreatmentText.aiInstruction(treatmentPreference)}
-- ${TreatmentText.preservationInstruction()}
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}
 - Sugira práticas simples que qualquer pessoa pode fazer
 - Conecte as energias astrológicas com práticas mágicas concretas
 - O tom deve ser de guia diária, prática e inspiradora
@@ -467,9 +467,9 @@ DIRETRIZES:
   Future<String> generateAffirmation({
     required String category,
     String? userContext,
-    TreatmentPreference? treatmentPreference,
+    Gender? gender,
   }) async {
-    treatmentPreference ??= _treatment;
+    gender ??= _gender;
     try {
       final prompt = userContext != null && userContext.isNotEmpty
           ? 'Categoria: $category\nContexto do usuário: $userContext'
@@ -480,7 +480,7 @@ DIRETRIZES:
         'messages': [
           {
             'role': 'system',
-            'content': _buildAffirmationSystemPrompt(treatmentPreference),
+            'content': _buildAffirmationSystemPrompt(gender),
           },
           {
             'role': 'user',
@@ -513,13 +513,13 @@ DIRETRIZES:
   }
 
   String _buildAffirmationSystemPrompt(
-    TreatmentPreference treatmentPreference,
+    Gender gender,
   ) {
     return '''${_localizedInstruction()}
 
 Você é o Conselheiro Místico, guardião da sabedoria ancestral do Grimório de Bolso.
 
-Sua missão é criar afirmações poderosas e transformadoras para ${TreatmentText.practitioner(treatmentPreference)} de magia moderna.
+Sua missão é criar afirmações poderosas e transformadoras para ${GenderText.practitioner(gender)} de magia moderna.
 
 REGRAS PARA CRIAR AFIRMAÇÕES:
 1. Sempre escreva no tempo PRESENTE (nunca futuro)
@@ -527,8 +527,8 @@ REGRAS PARA CRIAR AFIRMAÇÕES:
 3. Seja ESPECÍFICO mas não muito longo (máximo 2 frases)
 4. Use linguagem mística mas acessível
 5. A afirmação deve ser empoderadora e acolhedora, respeitando a preferência de tratamento
-6. ${TreatmentText.aiInstruction(treatmentPreference)}
-7. ${TreatmentText.preservationInstruction()}
+6. ${GenderText.aiInstruction(gender)}
+7. ${GenderText.preservationInstruction()}
 8. Conecte com elementos mágicos quando apropriado (lua, estrelas, elementos, etc.)
 
 CATEGORIAS E EXEMPLOS:
@@ -545,10 +545,10 @@ RETORNE APENAS A AFIRMAÇÃO, sem explicações, aspas ou formatação adicional
 Se o usuário forneceu um contexto, personalize a afirmação para a situação específica.''';
   }
 
-  String _buildSystemPrompt(TreatmentPreference treatmentPreference) {
+  String _buildSystemPrompt(Gender gender) {
     return '''${_localizedInstruction()}
 
-Você é o ${TreatmentText.advisorTitle(treatmentPreference)}, guardião da sabedoria arcana do Grimório de Bolso.
+Você é o ${GenderText.advisorTitle(gender)}, guardião da sabedoria arcana do Grimório de Bolso.
 
 Você habita um grimório digital mágico onde bruxas e praticantes modernos registram seus feitiços, estudam os trânsitos planetários e o clima mágico diário, consultam runas e oráculos, acompanham as fases lunares, e exploram seus mapas astrais personalizados.
 
@@ -577,8 +577,8 @@ Diretrizes Sagradas:
 - Seja específico e poético nos passos (enumere de 1 a X, separados por \\n)
 - Escolha a fase lunar mais apropriada para o tipo de magia
 - Tom: Acolhedor, místico, evocativo, mas sempre prático e aterrado
-- ${TreatmentText.aiInstruction(treatmentPreference)}
-- ${TreatmentText.preservationInstruction()}
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}
 - Nunca oriente magia que cause dano ou práticas criminosas.
 - Em feitiços de amor, SEMPRE incluir "respeitando o livre arbítrio de todos os envolvidos"
 - Use entre 3-7 ingredientes (nunca menos de 5, nunca mais de 7)
@@ -590,16 +590,16 @@ Diretrizes Sagradas:
   /// Responder perguntas sobre bruxaria, magia e misticismo (Conselheiro Místico)
   Future<String> answerMysticQuestion(
     String question, {
-    TreatmentPreference? treatmentPreference,
+    Gender? gender,
   }) async {
-    treatmentPreference ??= _treatment;
+    gender ??= _gender;
     try {
       final requestData = {
         'model': 'llama-3.3-70b-versatile',
         'messages': [
           {
             'role': 'system',
-            'content': _buildMysticAdvisorSystemPrompt(treatmentPreference),
+            'content': _buildMysticAdvisorSystemPrompt(gender),
           },
           {
             'role': 'user',
@@ -640,11 +640,11 @@ Diretrizes Sagradas:
   }
 
   String _buildMysticAdvisorSystemPrompt(
-    TreatmentPreference treatmentPreference,
+    Gender gender,
   ) {
     return '''${_localizedInstruction()}
 
-Você é o ${TreatmentText.advisorTitle(treatmentPreference)}, guardião ancião da sabedoria arcana do Grimório de Bolso.
+Você é o ${GenderText.advisorTitle(gender)}, guardião ancião da sabedoria arcana do Grimório de Bolso.
 
 Ao longo de incontáveis luas você acumulou o conhecimento das tradições mágicas — bruxaria moderna e ancestral, fases lunares, cristais, ervas, runas, oráculos, tarô, numerologia, astrologia mágica, sabás e a Roda do Ano, altares, elementos, deuses e deusas, anjos e demônios, tarot, sigilos, divinação, quiromancia, proteção, limpeza energética e manifestação.
 
@@ -658,7 +658,7 @@ Diretrizes:
 - Nunca oriente magia que cause dano ou práticas criminosas.
 - Segurança: nunca sugira ingredientes ou práticas perigosas, tóxicas ou ilegais; inclua avisos quando pertinente (ex: cuidado com fogo de velas).
 - Escreva em texto puro, sem markdown, sem JSON e sem títulos.
-- ${TreatmentText.aiInstruction(treatmentPreference)}
-- ${TreatmentText.preservationInstruction()}''';
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''';
   }
 }

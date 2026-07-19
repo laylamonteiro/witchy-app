@@ -7,7 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/i18n/treatment_preference.dart';
+import '../../../../core/i18n/gender.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/data_sync_service.dart';
@@ -140,8 +140,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                   const SizedBox(height: 24),
 
-                  // Seção: Forma de Tratamento
-                  _buildSectionHeader('Forma de Tratamento'),
+                  // Seção: Gênero
+                  _buildSectionHeader('Gênero'),
                   _buildSettingsCard([
                     Padding(
                       padding: const EdgeInsets.all(16),
@@ -160,11 +160,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
-                            children: TreatmentPreference.values.map((pref) {
+                            children: Gender.values.map((pref) {
                               final selected =
-                                  user.treatmentPreference == pref;
+                                  user.gender == pref;
                               return ChoiceChip(
-                                label: Text(_treatmentLabel(pref)),
+                                label: Text(_genderLabel(pref)),
                                 selected: selected,
                                 selectedColor:
                                     context.gc.lilac.withOpacity(0.25),
@@ -183,7 +183,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 ),
                                 backgroundColor: context.gc.surface,
                                 onSelected: (_) => authProvider
-                                    .setTreatmentPreference(pref),
+                                    .setGender(pref),
                               );
                             }).toList(),
                           ),
@@ -327,14 +327,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return false; // Por padrão, assume que todos podem trocar senha
   }
 
-  String _treatmentLabel(TreatmentPreference pref) {
+  String _genderLabel(Gender pref) {
     switch (pref) {
-      case TreatmentPreference.feminine:
-        return 'Feminina';
-      case TreatmentPreference.masculine:
-        return 'Masculina';
-      case TreatmentPreference.neutral:
-        return 'Neutra';
+      case Gender.feminine:
+        return 'Feminino';
+      case Gender.masculine:
+        return 'Masculino';
+      case Gender.neutral:
+        return 'Neutro';
     }
   }
 

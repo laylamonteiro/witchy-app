@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../../../../core/i18n/treatment_preference.dart';
+import '../../../../core/i18n/gender.dart';
 import 'enums.dart';
 
 class MagicalProfile {
@@ -36,7 +36,7 @@ class MagicalProfile {
   // Texto personalizado gerado por IA
   final String? aiGeneratedText;
   final String? chartHash; // Hash dos dados do mapa para verificar se mudou
-  final TreatmentPreference treatmentPreference;
+  final Gender gender;
 
   final DateTime generatedAt;
 
@@ -61,7 +61,7 @@ class MagicalProfile {
     required this.generatedAt,
     this.aiGeneratedText,
     this.chartHash,
-    this.treatmentPreference = TreatmentPreference.fallback,
+    this.gender = Gender.fallback,
   });
 
   Map<String, dynamic> toJson() {
@@ -90,7 +90,7 @@ class MagicalProfile {
       'generatedAt': generatedAt.toIso8601String(),
       'aiGeneratedText': aiGeneratedText,
       'chartHash': chartHash,
-      'treatmentPreference': treatmentPreference.toJson(),
+      'gender': gender.toJson(),
     };
   }
 
@@ -115,7 +115,7 @@ class MagicalProfile {
     DateTime? generatedAt,
     String? aiGeneratedText,
     String? chartHash,
-    TreatmentPreference? treatmentPreference,
+    Gender? gender,
   }) {
     return MagicalProfile(
       userId: userId ?? this.userId,
@@ -138,7 +138,7 @@ class MagicalProfile {
       generatedAt: generatedAt ?? this.generatedAt,
       aiGeneratedText: aiGeneratedText ?? this.aiGeneratedText,
       chartHash: chartHash ?? this.chartHash,
-      treatmentPreference: treatmentPreference ?? this.treatmentPreference,
+      gender: gender ?? this.gender,
     );
   }
 
@@ -182,7 +182,7 @@ class MagicalProfile {
       generatedAt: DateTime.parse(json['generatedAt']),
       aiGeneratedText: json['aiGeneratedText'],
       chartHash: json['chartHash'],
-      treatmentPreference: TreatmentPreference.fromJson(json['treatmentPreference']),
+      gender: Gender.fromJson(json['gender']),
     );
   }
 

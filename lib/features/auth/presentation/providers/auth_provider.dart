@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/ai/ai_service.dart';
-import '../../../../core/i18n/treatment_preference.dart';
+import '../../../../core/i18n/gender.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/services/premium_access.dart';
@@ -134,8 +134,8 @@ class AuthProvider extends ChangeNotifier {
     if (userJson != null) {
       try {
         _currentUser = UserModel.fromJson(jsonDecode(userJson));
-        AIService.instance.setTreatmentPreference(
-          _currentUser.treatmentPreference,
+        AIService.instance.setGender(
+          _currentUser.gender,
         );
         // Resetar contadores se necessário
         await _checkAndResetCounters();
@@ -216,13 +216,13 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, jsonEncode(_currentUser.toJson()));
     // Ponto único de mudança do usuário: mantém a IA ciente do tratamento.
-    AIService.instance.setTreatmentPreference(_currentUser.treatmentPreference);
+    AIService.instance.setGender(_currentUser.gender);
   }
 
   /// Define a forma de tratamento (feminina/masculina/neutra) da pessoa.
-  Future<void> setTreatmentPreference(TreatmentPreference preference) async {
-    if (_currentUser.treatmentPreference == preference) return;
-    _currentUser = _currentUser.copyWith(treatmentPreference: preference);
+  Future<void> setGender(Gender preference) async {
+    if (_currentUser.gender == preference) return;
+    _currentUser = _currentUser.copyWith(gender: preference);
     await _saveUser();
     notifyListeners();
   }
