@@ -764,5 +764,13 @@
   "chartTypeToSearch": "Type at least 3 characters to search",
   "chartPlaceHint": "E.g.: London, UK",
   "chartCalculate": "Calculate Birth Chart ✨",
-  "chartNoonNote": "Without the exact time, we'll use noon (12:00) and the equal house system."
+  "chartNoonNote": "Without the exact time, we'll use noon (12:00) and the equal house system.",
+  "quizTitle": "Archetype Quiz",
+  "quizProgress": "{current} of {total}",
+  "quizYourArchetypeIs": "Your archetype is",
+  "quizSeeInEncyclopedia": "See in the Encyclopedia",
+  "quizRetake": "Retake the quiz",
+  "quizStrongestEnergies": "Your strongest energies",
+  "quizMirrorNote": "Archetypes are mirrors, not drawers: you carry several — this is the one vibrating strongest in you right now. Explore the others in the Encyclopedia's Archetypes tab.",
+  "quizSavedOn": "Result of your last quiz ({date})"
 }

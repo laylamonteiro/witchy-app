@@ -764,5 +764,13 @@
   "chartTypeToSearch": "Escribe al menos 3 caracteres para buscar",
   "chartPlaceHint": "Ej.: Madrid, España",
   "chartCalculate": "Calcular Carta Astral ✨",
-  "chartNoonNote": "Sin la hora exacta, usaremos el mediodía (12:00) y el sistema de casas iguales."
+  "chartNoonNote": "Sin la hora exacta, usaremos el mediodía (12:00) y el sistema de casas iguales.",
+  "quizTitle": "Test de Arquetipo",
+  "quizProgress": "{current} de {total}",
+  "quizYourArchetypeIs": "Tu arquetipo es",
+  "quizSeeInEncyclopedia": "Ver en la Enciclopedia",
+  "quizRetake": "Repetir el test",
+  "quizStrongestEnergies": "Tus energías más fuertes",
+  "quizMirrorNote": "Los arquetipos son espejos, no cajones: llevas varios — este es el que vibra más fuerte en ti ahora. Explora los demás en la pestaña Arquetipos de la Enciclopedia.",
+  "quizSavedOn": "Resultado de tu último test ({date})"
 }

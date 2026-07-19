@@ -168,13 +168,13 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: const Text('🃏', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolOracleTitle,
-            description: AppLocalizations.of(context)!.toolOracleDesc,
+            icon: const Text('🎴', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolTarotTitle,
+            description: AppLocalizations.of(context)!.toolTarotDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const OracleCardsPage(),
+                  builder: (_) => const TarotPage(),
                 ),
               );
             },
@@ -194,13 +194,13 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: const Text('🎴', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolTarotTitle,
-            description: AppLocalizations.of(context)!.toolTarotDesc,
+            icon: const Text('🃏', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolOracleTitle,
+            description: AppLocalizations.of(context)!.toolOracleDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const TarotPage(),
+                  builder: (_) => const OracleCardsPage(),
                 ),
               );
             },

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -99,10 +101,53 @@ class ArchetypeQuizPage extends StatefulWidget {
 }
 
 class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
+  static const _resultKey = 'archetype_result';
+  static const _topThreeKey = 'archetype_top3';
+  static const _dateKey = 'archetype_date';
+
   int _index = 0;
   final Map<String, int> _scores = {};
   List<MapEntry<String, int>> _topThree = [];
   ArcaneEntry? _result;
+  String? _savedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSaved();
+  }
+
+  Future<void> _loadSaved() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString(_resultKey);
+    if (name == null || !mounted) return;
+    setState(() {
+      _result = archetypesData.firstWhere(
+        (e) => e.name == name,
+        orElse: () => archetypesData.first,
+      );
+      _topThree = (prefs.getStringList(_topThreeKey) ?? [])
+          .map((raw) {
+            final parts = raw.split('|');
+            return MapEntry(parts.first, int.tryParse(parts.last) ?? 0);
+          })
+          .toList();
+      _savedDate = prefs.getString(_dateKey);
+    });
+  }
+
+  Future<void> _persist(String winner) async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    _savedDate = '${now.day.toString().padLeft(2, '0')}/'
+        '${now.month.toString().padLeft(2, '0')}/${now.year}';
+    await prefs.setString(_resultKey, winner);
+    await prefs.setStringList(
+      _topThreeKey,
+      [for (final e in _topThree) '${e.key}|${e.value}'],
+    );
+    await prefs.setString(_dateKey, _savedDate!);
+  }
 
   void _answer(_QuizOption option) {
     _scores[option.archetype] = (_scores[option.archetype] ?? 0) + 1;
@@ -121,6 +166,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
           ..sort((a, b) => b.value.compareTo(a.value)))
         .take(3)
         .toList();
+    _persist(winner);
     setState(() {
       _result = archetypesData.firstWhere(
         (e) => e.name == winner,
@@ -135,6 +181,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
       _scores.clear();
       _topThree = [];
       _result = null;
+      _savedDate = null;
     });
   }
 
@@ -142,7 +189,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Teste de Arquétipo'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.quizTitle),
       ),
       body: _result != null ? _buildResult(_result!) : _buildQuestion(),
     );
@@ -164,7 +211,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            '${_index + 1} de ${_questions.length}',
+            AppLocalizations.of(context)!.quizProgress('${_index + 1}', '${_questions.length}'),
             textAlign: TextAlign.center,
             style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
           ),
@@ -216,8 +263,19 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
               children: [
                 Text(result.emoji, style: const TextStyle(fontSize: 56)),
                 const SizedBox(height: 12),
+                if (_savedDate != null) ...[
+                  Text(
+                    AppLocalizations.of(context)!.quizSavedOn(_savedDate!),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                ],
                 Text(
-                  'Seu arquétipo é',
+                  AppLocalizations.of(context)!.quizYourArchetypeIs,
                   style: TextStyle(color: context.gc.textSecondary),
                 ),
                 const SizedBox(height: 4),
@@ -247,13 +305,13 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                     ),
                   ),
                   icon: const Icon(Icons.menu_book, size: 18),
-                  label: const Text('Ver na Enciclopédia'),
+                  label: Text(AppLocalizations.of(context)!.quizSeeInEncyclopedia),
                 ),
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: _restart,
                   icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text('Refazer o teste'),
+                  label: Text(AppLocalizations.of(context)!.quizRetake),
                 ),
               ],
             ),
@@ -264,7 +322,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Suas energias mais fortes',
+                    AppLocalizations.of(context)!.quizStrongestEnergies,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: context.gc.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -312,9 +370,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
             ),
           MagicalCard(
             child: Text(
-              'Arquétipos são espelhos, não gavetas: você carrega vários — '
-              'este é o que vibra mais alto em você agora. Explore os outros '
-              'na aba Arquétipos da Enciclopédia.',
+              AppLocalizations.of(context)!.quizMirrorNote,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: context.gc.textSecondary,
                     fontStyle: FontStyle.italic,

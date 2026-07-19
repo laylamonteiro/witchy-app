@@ -989,5 +989,30 @@
   "chartPlaceHint": "Ex: São Paulo, Brasil",
   "chartCalculate": "Calcular Mapa Astral ✨",
   "chartNoonNote": "Sem a hora exata, usaremos meio-dia (12:00) e o sistema de casas iguais.",
-  "settingsLanguageSubtitle": "Escolha manualmente o idioma do app"
+  "settingsLanguageSubtitle": "Escolha manualmente o idioma do app",
+  "quizTitle": "Teste de Arquétipo",
+  "quizProgress": "{current} de {total}",
+  "quizYourArchetypeIs": "Seu arquétipo é",
+  "quizSeeInEncyclopedia": "Ver na Enciclopédia",
+  "quizRetake": "Refazer o teste",
+  "quizStrongestEnergies": "Suas energias mais fortes",
+  "quizMirrorNote": "Arquétipos são espelhos, não gavetas: você carrega vários — este é o que vibra mais alto em você agora. Explore os outros na aba Arquétipos da Enciclopédia.",
+  "quizSavedOn": "Resultado do seu último teste ({date})",
+  "@quizProgress": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "@quizSavedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }
