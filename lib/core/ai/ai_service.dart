@@ -24,6 +24,13 @@ class AIService {
     _locale = locale;
   }
 
+  TreatmentPreference _treatment = TreatmentPreference.fallback;
+
+  /// Preferencia de tratamento da pessoa logada (fonte: AuthProvider).
+  void setTreatmentPreference(TreatmentPreference preference) {
+    _treatment = preference;
+  }
+
   String get currentLanguageTag {
     final countryCode = _locale.countryCode;
     if (countryCode == null || countryCode.isEmpty) {
@@ -44,11 +51,11 @@ class AIService {
   /// Gerar feitiço com IA usando Groq
   Future<SpellModel> generateSpell(
     String userIntention, {
-    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+    TreatmentPreference? treatmentPreference,
   }) async {
     return _generateWithGroq(
       userIntention,
-      treatmentPreference: treatmentPreference,
+      treatmentPreference: treatmentPreference ?? _treatment,
     );
   }
 
@@ -189,7 +196,7 @@ class AIService {
           {
             'role': 'system',
             'content': _buildMagicalProfileSystemPrompt(
-              treatmentPreference ?? profile.treatmentPreference,
+              treatmentPreference ?? _treatment,
             ),
           },
           {
@@ -229,8 +236,9 @@ class AIService {
     required List<String> energyKeywords,
     required List<Map<String, String>> transits,
     required List<Map<String, String>> aspects,
-    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+    TreatmentPreference? treatmentPreference,
   }) async {
+    treatmentPreference ??= _treatment;
     try {
       final weatherSummary = _buildWeatherSummary(
         moonPhase: moonPhase,
@@ -459,8 +467,9 @@ DIRETRIZES:
   Future<String> generateAffirmation({
     required String category,
     String? userContext,
-    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+    TreatmentPreference? treatmentPreference,
   }) async {
+    treatmentPreference ??= _treatment;
     try {
       final prompt = userContext != null && userContext.isNotEmpty
           ? 'Categoria: $category\nContexto do usuário: $userContext'
@@ -581,8 +590,9 @@ Diretrizes Sagradas:
   /// Responder perguntas sobre bruxaria, magia e misticismo (Conselheiro Místico)
   Future<String> answerMysticQuestion(
     String question, {
-    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+    TreatmentPreference? treatmentPreference,
   }) async {
+    treatmentPreference ??= _treatment;
     try {
       final requestData = {
         'model': 'llama-3.3-70b-versatile',

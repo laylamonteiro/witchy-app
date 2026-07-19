@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/i18n/treatment_preference.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/data_sync_service.dart';
@@ -134,6 +135,60 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       icon: Icons.email_outlined,
                       title: 'Email',
                       value: user.email,
+                    ),
+                  ]),
+
+                  const SizedBox(height: 24),
+
+                  // Seção: Forma de Tratamento
+                  _buildSectionHeader('Forma de Tratamento'),
+                  _buildSettingsCard([
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Como o app deve se dirigir a você? Usamos essa '
+                            'escolha nos textos personalizados e nas respostas '
+                            'da IA.',
+                            style: TextStyle(
+                              color: context.gc.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            children: TreatmentPreference.values.map((pref) {
+                              final selected =
+                                  user.treatmentPreference == pref;
+                              return ChoiceChip(
+                                label: Text(_treatmentLabel(pref)),
+                                selected: selected,
+                                selectedColor:
+                                    context.gc.lilac.withOpacity(0.25),
+                                labelStyle: TextStyle(
+                                  color: selected
+                                      ? context.gc.lilac
+                                      : context.gc.textSecondary,
+                                  fontWeight: selected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                side: BorderSide(
+                                  color: selected
+                                      ? context.gc.lilac
+                                      : context.gc.surfaceBorder,
+                                ),
+                                backgroundColor: context.gc.surface,
+                                onSelected: (_) => authProvider
+                                    .setTreatmentPreference(pref),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     ),
                   ]),
 
@@ -270,6 +325,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
     // Você pode adicionar um campo no UserModel para rastrear isso melhor
     if (email == null) return false;
     return false; // Por padrão, assume que todos podem trocar senha
+  }
+
+  String _treatmentLabel(TreatmentPreference pref) {
+    switch (pref) {
+      case TreatmentPreference.feminine:
+        return 'Feminina';
+      case TreatmentPreference.masculine:
+        return 'Masculina';
+      case TreatmentPreference.neutral:
+        return 'Neutra';
+    }
   }
 
   Widget _buildSectionHeader(String title) {
