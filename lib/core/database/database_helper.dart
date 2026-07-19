@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../../features/grimoire/data/models/spell_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -29,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 12,
+      version: 13,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -280,6 +281,10 @@ class DatabaseHelper {
 
     // Criar índices para user_id em todas as tabelas
     await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
+    await db.execute(
+      'CREATE INDEX idx_spells_preloaded_user_id '
+      'ON spells(is_preloaded, user_id)',
+    );
     await db.execute('CREATE INDEX idx_dreams_user_id ON dreams(user_id)');
     await db.execute('CREATE INDEX idx_desires_user_id ON desires(user_id)');
     await db.execute(
@@ -850,6 +855,22 @@ class DatabaseHelper {
             'CREATE INDEX IF NOT EXISTS idx_free_writings_user_id ON free_writings(user_id)');
       }
     }
+
+    // Migração v13: feitiços precarregados são globais e não pertencem a um usuário local.
+    if (oldVersion < 13) {
+      await db.execute(
+        """
+        UPDATE spells
+        SET user_id = '${SpellModel.globalUserId}', synced = 1
+        WHERE is_preloaded = 1
+          AND (user_id IS NULL OR user_id IN ('local_user', 'current_user'))
+        """,
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_spells_preloaded_user_id '
+        'ON spells(is_preloaded, user_id)',
+      );
+    }
   }
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
@@ -859,7 +880,6 @@ class DatabaseHelper {
 
     final db = await database;
     const tables = [
-      'spells',
       'dreams',
       'desires',
       'gratitudes',
@@ -877,6 +897,12 @@ class DatabaseHelper {
     ];
 
     await db.transaction((txn) async {
+      await txn.update(
+        'spells',
+        {'user_id': userId, 'synced': 0},
+        where: "user_id IN ('local_user', 'current_user') AND is_preloaded = 0",
+      );
+
       for (final table in tables) {
         await txn.update(
           table,
