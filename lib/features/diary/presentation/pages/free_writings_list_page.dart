@@ -45,7 +45,7 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
           }
 
           if (provider.freeWritings.isEmpty) {
-            return const EmptyStateWidget(
+            return EmptyStateWidget(
               message:
                   AppLocalizations.of(context)!.diaryEmptyReflections,
               icon: Icons.auto_stories,

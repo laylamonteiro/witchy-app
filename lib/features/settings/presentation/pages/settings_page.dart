@@ -391,7 +391,7 @@ class SettingsPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.auto_awesome, size: 18),
@@ -768,7 +768,7 @@ class SettingsPage extends StatelessWidget {
                   border: Border.all(
                       color: const Color(0xFF2196F3).withOpacity(0.3)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,

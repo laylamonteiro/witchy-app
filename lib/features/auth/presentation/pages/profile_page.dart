@@ -260,7 +260,7 @@ class ProfilePage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.auto_awesome, size: 18),

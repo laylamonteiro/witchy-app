@@ -231,7 +231,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                   maxLines: 6,
                   minLines: 4,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: AppLocalizations.of(context)!.dreamTextHint,
                   ),
                 ),
@@ -241,7 +241,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                   maxLines: 2,
                   minLines: 1,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: AppLocalizations.of(context)!.dreamFeelingOptional,
                   ),
                 ),
@@ -346,7 +346,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                     maxLines: 2,
                     minLines: 1,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: AppLocalizations.of(context)!.dreamNotesOptional,
                     ),
                   ),

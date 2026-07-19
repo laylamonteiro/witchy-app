@@ -65,7 +65,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryTitleLabel,
                 hintText: AppLocalizations.of(context)!.diaryDesireTitleHint,
               ),
@@ -73,7 +73,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryDescLabel,
                 hintText: AppLocalizations.of(context)!.diaryDesireDescHint,
               ),
@@ -82,7 +82,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
             const SizedBox(height: 16),
             DropdownButtonFormField<DesireStatus>(
               value: _selectedStatus,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryStatusLabel,
               ),
               items: DesireStatus.values.map((status) {
@@ -106,7 +106,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _evolutionController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryDesireProgressLabel,
                 hintText: AppLocalizations.of(context)!.diaryDesireProgressHint,
               ),
@@ -128,7 +128,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
     // Verificar se pelo menos um campo foi preenchido
     if (_titleController.text.isEmpty && _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(AppLocalizations.of(context)!.diaryFillTitleOrDesc),
           backgroundColor: Colors.orange,
         ),

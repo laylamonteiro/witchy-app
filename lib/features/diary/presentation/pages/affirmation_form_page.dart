@@ -131,7 +131,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _contextController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.diaryContextOptional,
                         hintText: AppLocalizations.of(context)!.diaryContextHint,
                         helperText:
@@ -181,7 +181,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
             TextFormField(
               controller: _textController,
               enabled: !isPreloaded,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryAffirmationLabel,
                 hintText: AppLocalizations.of(context)!.diaryAffirmationHint,
                 helperText: AppLocalizations.of(context)!.diaryAffirmationHelper,
@@ -191,7 +191,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
             const SizedBox(height: 16),
             DropdownButtonFormField<AffirmationCategory>(
               value: _selectedCategory,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryCategoryLabel,
               ),
               items: AffirmationCategory.values
@@ -299,7 +299,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
   Future<void> _saveAffirmation() async {
     if (_textController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(AppLocalizations.of(context)!.diaryTypeOrGenerate),
           backgroundColor: Colors.orange,
         ),

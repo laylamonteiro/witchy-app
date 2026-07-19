@@ -69,7 +69,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryTitleLabel,
                 hintText: AppLocalizations.of(context)!.diaryDreamTitleHint,
               ),
@@ -99,7 +99,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _contentController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryDreamDescLabel,
                 hintText: AppLocalizations.of(context)!.diaryDreamDescHint,
               ),
@@ -108,7 +108,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _tagsController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryTagsLabel,
                 hintText: AppLocalizations.of(context)!.diaryDreamTagsHint,
                 helperText: AppLocalizations.of(context)!.diaryTagsHelper,
@@ -117,7 +117,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _feelingController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryDreamFeelingLabel,
                 hintText: AppLocalizations.of(context)!.diaryDreamFeelingHint,
               ),
@@ -173,7 +173,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
     // Verificar se pelo menos um campo foi preenchido
     if (_titleController.text.isEmpty && _contentController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(AppLocalizations.of(context)!.diaryFillTitleOrDesc),
           backgroundColor: Colors.orange,
         ),

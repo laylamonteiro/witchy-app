@@ -65,7 +65,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryTitleLabel,
                 hintText: AppLocalizations.of(context)!.diaryGratitudeTitleHint,
               ),
@@ -95,7 +95,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _contentController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryGratitudeLabel,
                 hintText: AppLocalizations.of(context)!.diaryGratitudeHint,
               ),
@@ -104,7 +104,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _tagsController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.diaryTagsLabel,
                 hintText: AppLocalizations.of(context)!.diaryGratitudeTagsHint,
                 helperText: AppLocalizations.of(context)!.diaryTagsHelper,
@@ -126,7 +126,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     // Verificar se pelo menos um campo foi preenchido
     if (_titleController.text.isEmpty && _contentController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(AppLocalizations.of(context)!.diaryFillTitleOrContent),
           backgroundColor: Colors.orange,
         ),
