@@ -15,6 +15,7 @@ import '../../../numerology/presentation/pages/numerology_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
+import '../../../learning/presentation/pages/learning_home_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 
@@ -138,6 +139,19 @@ class _ToolsTab extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text('📖', style: TextStyle(fontSize: 40)),
+            title: 'Grimório Vivo',
+            description: 'Trilhas de aprendizado: cada lição vira uma página sua',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const LearningHomePage(),
+                ),
+              );
+            },
           ),
           _buildToolCard(
             context,

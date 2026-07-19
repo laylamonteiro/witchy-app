@@ -34,6 +34,7 @@ import 'features/diary/presentation/providers/desire_provider.dart';
 import 'features/diary/presentation/providers/gratitude_provider.dart';
 import 'features/diary/presentation/providers/affirmation_provider.dart';
 import 'features/diary/presentation/providers/free_writing_provider.dart';
+import 'features/learning/presentation/providers/learning_provider.dart';
 import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart';
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
@@ -224,6 +225,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(widget.prefs)),
+        ChangeNotifierProvider(create: (_) => LearningProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider.value(value: PaymentService()),
         ChangeNotifierProvider(create: (_) => LanguageProvider(widget.prefs)),

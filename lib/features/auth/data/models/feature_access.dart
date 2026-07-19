@@ -292,7 +292,8 @@ class FeatureAccessService {
     // fora do mapa de limites, o plano Free recebe preview -> paywall.
     AppFeature.aiSpellSuggestions: _aiLimit,
     AppFeature.aiMagicalWeather: _aiLimit,
-    AppFeature.interactiveMagicalLearning: _aiLimit,
+    // interactiveMagicalLearning (Grimorio Vivo alem da licao 1) e exclusiva
+    // Premium: fora do mapa, o Free recebe preview -> paywall.
   };
 
   AccessResult checkAccess(
@@ -402,6 +403,8 @@ class FeatureAccessService {
         return 'A interpretação personalizada de sonhos é exclusiva do plano Premium.';
       case AppFeature.numerologyReadings:
         return 'A explicação do Conselheiro Místico é exclusiva do plano Premium.';
+      case AppFeature.interactiveMagicalLearning:
+        return 'As trilhas completas do Grimório Vivo são exclusivas do plano Premium.';
       case AppFeature.aiPalmistry:
         return 'A leitura de mãos é exclusiva do plano Premium.';
       default:
