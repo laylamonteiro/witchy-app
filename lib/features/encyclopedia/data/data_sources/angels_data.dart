@@ -177,6 +177,48 @@ const List<ArcaneEntry> angelsData = [
     related: ['A Sábia (Arquétipos)', 'A Alquimista (Arquétipos)'],
   ),
   ArcaneEntry(
+    name: 'Lúcifer',
+    emoji: '🌟',
+    summary: 'O anjo portador da luz: a estrela-d\'alva antes e depois da queda',
+    origin: 'Latim lucifer ("portador da luz", a estrela-d\'alva); Isaías 14',
+    history:
+        'Originalmente o nome latino de Vênus como estrela da manhã, "Lúcifer" foi associado ao rei caído de Isaías 14 e, daí, ao anjo rebelde. Milton o tornou o anti-herói trágico de Paraíso Perdido; correntes românticas e ocultistas o releram como símbolo do conhecimento e da rebeldia luminosa.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Religiosa',
+        view: 'O anjo que caiu por orgulho; identificado a Satanás na tradição cristã.',
+      ),
+      ArcanePerspective(
+        tradition: 'Literária',
+        view:
+            'Em Milton e no romantismo, o rebelde magnífico — "melhor reinar no inferno que servir no céu".',
+      ),
+      ArcanePerspective(
+        tradition: 'Ocultista moderna',
+        view:
+            'Símbolo do livre-pensamento e da busca do conhecimento (luciferianismo filosófico), distinto do satanismo popular.',
+      ),
+    ],
+    characteristics: ['Orgulho', 'Brilho intelectual', 'Rebeldia', 'Queda e busca'],
+    symbolism: [
+      'A estrela da manhã: a luz que precede o sol',
+      'A queda: o preço da hybris',
+      'A tocha: o conhecimento que liberta ou queima',
+    ],
+    correspondences: ['Vênus matutina', 'Enxofre simbólico', 'Azul elétrico'],
+    studyPractices: [
+      'Ler Isaías 14 e Paraíso Perdido em paralelo',
+      'Refletir sobre orgulho saudável vs. hybris',
+    ],
+    magicalUses: [
+      'Estudo simbólico do próprio brilho e das próprias quedas',
+      'Contemplação de Vênus no céu matutino',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo. Nenhuma prática aqui envolve ou incentiva dano.',
+    related: ['A Alquimista (Arquétipos)', 'Símbolos Sagrados'],
+  ),
+  ArcaneEntry(
     name: 'Metatron',
     emoji: '📖',
     summary: 'O escriba celeste e a geometria do cosmos',
@@ -406,5 +448,205 @@ const List<ArcaneEntry> angelsData = [
     cautions:
         'Conteúdo histórico-informativo: as tradições divergem e nenhuma leitura é definitiva.',
     related: ['A Guardiã (Arquétipos)', 'Miguel'],
+  ),
+  ArcaneEntry(
+    name: 'Ariel',
+    emoji: '🦁',
+    summary: 'O leão de Deus, anjo da natureza e dos elementos',
+    origin: 'Hebraico Ari\'el ("leão de Deus"); tradições cabalística e ocultista',
+    history:
+        'Citado em textos apócrifos e grimórios como o anjo que rege a natureza selvagem, os animais e os espíritos elementais. Na magia renascentista aparece como regente do Ar (e, em algumas fontes, da Terra), e Shakespeare o eternizou como o espírito de A Tempestade.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Cabalística',
+        view: 'Nome angélico ligado à face selvagem do sagrado: a força do leão a serviço da criação.',
+      ),
+      ArcanePerspective(
+        tradition: 'Ocultista',
+        view: 'Regente de espíritos elementais; invocado em operações de harmonia com a natureza.',
+      ),
+      ArcanePerspective(
+        tradition: 'Literária',
+        view: 'O espírito ágil de Shakespeare: o vento que serve, encanta e por fim é libertado.',
+      ),
+    ],
+    characteristics: ['Conexão com a natureza', 'Cura ambiental', 'Coragem mansa', 'Elementais'],
+    symbolism: [
+      'O leão: força que protege em vez de devorar',
+      'O vento: mensagens da natureza',
+      'A rosa-dos-ventos: os quatro elementos em equilíbrio',
+    ],
+    correspondences: ['Ar e Terra', 'Verde e dourado', 'Plantas silvestres', 'Quartzo verde'],
+    studyPractices: [
+      'Comparar Ariel nos grimórios e em A Tempestade',
+      'Caminhada contemplativa: que mensagens a natureza traz hoje?',
+    ],
+    magicalUses: [
+      'Meditações de reconexão com a natureza e os elementos',
+      'Bênçãos de jardins, plantas e animais',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo: as tradições divergem e nenhuma leitura é definitiva.',
+    related: ['A Caçadora (Arquétipos)', 'Elementos'],
+  ),
+  ArcaneEntry(
+    name: 'Haniel',
+    emoji: '🌹',
+    summary: 'A graça de Deus: anjo de Vênus, do amor e da lua',
+    origin: 'Hebraico Hana\'el ("graça de Deus"); angelologia cabalística',
+    history:
+        'Na Cabala, Haniel rege a esfera de Netzach, associada a Vênus, à beleza e à vitória. A tradição o liga aos ciclos da lua e aos mistérios femininos, sendo um dos anjos mais invocados na magia planetária venusiana.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Cabalística',
+        view: 'Regente de Netzach: a beleza, o desejo elevado e a persistência da vida.',
+      ),
+      ArcanePerspective(
+        tradition: 'Ocultista',
+        view: 'Anjo planetário de Vênus, invocado às sextas-feiras em operações de amor-próprio e harmonia.',
+      ),
+      ArcanePerspective(
+        tradition: 'Popular',
+        view: 'Anjo da graça e do encanto: ajuda a ver beleza nos próprios ciclos.',
+      ),
+    ],
+    characteristics: ['Amor-próprio', 'Harmonia', 'Intuição lunar', 'Encanto'],
+    symbolism: [
+      'A rosa: beleza que floresce com espinhos',
+      'A lua crescente: ciclos e renovação',
+      'A estrela de Vênus: o amor como bússola',
+    ],
+    correspondences: ['Sexta-feira', 'Vênus/Lua', 'Verde-esmeralda e rosa', 'Rosa e jasmim'],
+    studyPractices: [
+      'Estudar Netzach na Árvore da Vida',
+      'Diário de ciclos: como a sua energia muda com a lua?',
+    ],
+    magicalUses: [
+      'Rituais de amor-próprio e reconciliação interior',
+      'Trabalhos lunares de intuição e beleza',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo: as tradições divergem e nenhuma leitura é definitiva.',
+    related: ['A Donzela (Arquétipos)', 'Deusas'],
+  ),
+  ArcaneEntry(
+    name: 'Azrael',
+    emoji: '🕊️',
+    summary: 'O anjo da morte e das passagens, consolo dos que atravessam',
+    origin: 'Tradições islâmica e judaica (Azra\'il, "aquele a quem Deus ajuda")',
+    history:
+        'No Islã, Azrael é o anjo que recolhe as almas com compaixão; no folclore judaico, o mensageiro das passagens. Longe da figura sombria popular, as fontes o descrevem como servo dedicado que acompanha cada travessia com misericórdia.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Religiosa',
+        view: 'O anjo encarregado da passagem das almas, que age apenas sob ordem divina.',
+      ),
+      ArcanePerspective(
+        tradition: 'Folclórica',
+        view: 'O escriba que anota nascimentos e apaga nomes na hora da partida.',
+      ),
+      ArcanePerspective(
+        tradition: 'Ocultista moderna',
+        view: 'Psicopompo invocado em ritos de luto e no culto respeitoso aos ancestrais.',
+      ),
+    ],
+    characteristics: ['Compaixão', 'Travessias', 'Luto e consolo', 'Memória dos que partiram'],
+    symbolism: [
+      'A pena e o livro: cada vida registrada',
+      'O véu: a fronteira entre os mundos',
+      'A pomba: a alma que parte em paz',
+    ],
+    correspondences: ['Sábado', 'Saturno', 'Cinza e branco', 'Cipreste e mirra'],
+    studyPractices: [
+      'Comparar o Azrael islâmico com os psicopompos de outras culturas',
+      'Escrever cartas de despedida ou gratidão a quem partiu',
+    ],
+    magicalUses: [
+      'Ritos de luto, encerramento de ciclos e honra aos ancestrais',
+      'Meditações de aceitação das grandes mudanças',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo. Luto profundo merece também apoio humano e profissional.',
+    related: ['A Rainha Sombria (Arquétipos)', 'Roda do Ano'],
+  ),
+  ArcaneEntry(
+    name: 'Samael',
+    emoji: '⚖️',
+    summary: 'O veneno de Deus: o anjo severo entre a luz e a sombra',
+    origin: 'Talmude e literatura rabínica; Sama\'el ("veneno de Deus")',
+    history:
+        'Figura ambígua da angelologia judaica: arcanjo da severidade e acusador celeste, às vezes identificado ao anjo da morte, às vezes a Marte. No folclore cabalístico é apontado como consorte de Lilith — um dos pares mais comentados do ocultismo.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Rabínica',
+        view: 'O acusador que testa os justos: severidade que serve, não que destrói.',
+      ),
+      ArcanePerspective(
+        tradition: 'Cabalística',
+        view: 'Associado a Gevurah e a Marte: a força que corta o que precisa ser cortado.',
+      ),
+      ArcanePerspective(
+        tradition: 'Ocultista',
+        view: 'Símbolo do trabalho de sombra: encarar o acusador interno e integrá-lo.',
+      ),
+    ],
+    characteristics: ['Severidade', 'Justiça dura', 'Limites', 'Sombra integrada'],
+    symbolism: [
+      'A espada de Marte: o corte necessário',
+      'O veneno: o remédio na dose certa',
+      'A balança inclinada: julgamento em tensão',
+    ],
+    correspondences: ['Terça-feira', 'Marte', 'Vermelho escuro', 'Pimenta e ferro'],
+    studyPractices: [
+      'Estudar Gevurah e o papel do rigor na Árvore da Vida',
+      'Refletir: onde a severidade protege — e onde fere?',
+    ],
+    magicalUses: [
+      'Meditações de limites e de trabalho de sombra',
+      'Estudo simbólico do par Samael-Lilith no folclore',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo. Nenhuma prática aqui envolve ou incentiva dano.',
+    related: ['Lilith (Demônios)', 'A Rainha Sombria (Arquétipos)'],
+  ),
+  ArcaneEntry(
+    name: 'Zadkiel',
+    emoji: '💜',
+    summary: 'A justiça de Deus: anjo da misericórdia e da transmutação',
+    origin: 'Hebraico Tzadki\'el ("justiça de Deus"); angelologia cabalística',
+    history:
+        'Associado na Cabala à esfera de Chesed (misericórdia) e a Júpiter, Zadkiel é lembrado como o anjo que deteve a mão de Abraão. O esoterismo moderno o ligou à "chama violeta" da transmutação, popularizada pelas escolas teosóficas.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Cabalística',
+        view: 'Regente de Chesed: a generosidade que expande e perdoa.',
+      ),
+      ArcanePerspective(
+        tradition: 'Teosófica/Nova Era',
+        view: 'Guardião da chama violeta: transmutar memórias pesadas em aprendizado.',
+      ),
+      ArcanePerspective(
+        tradition: 'Religiosa',
+        view: 'O anjo da misericórdia que interrompe sacrifícios desnecessários.',
+      ),
+    ],
+    characteristics: ['Perdão', 'Generosidade', 'Transmutação', 'Abundância justa'],
+    symbolism: [
+      'A chama violeta: o passado transformado',
+      'O cetro de Júpiter: benevolência que governa',
+      'A mão detida: a misericórdia acima do rito',
+    ],
+    correspondences: ['Quinta-feira', 'Júpiter', 'Violeta e azul-royal', 'Ametista'],
+    studyPractices: [
+      'Estudar Chesed e o equilíbrio entre dar e reter',
+      'Prática de perdão: a quem você ainda cobra uma dívida interna?',
+    ],
+    magicalUses: [
+      'Rituais de perdão e liberação de mágoas',
+      'Meditações de transmutação com a chama violeta',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo: as tradições divergem e nenhuma leitura é definitiva.',
+    related: ['A Curandeira (Arquétipos)', 'Cristais'],
   ),
 ];

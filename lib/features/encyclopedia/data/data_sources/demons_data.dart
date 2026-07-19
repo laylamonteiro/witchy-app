@@ -47,48 +47,6 @@ const List<ArcaneEntry> demonsData = [
     related: ['A Rainha Sombria (Arquétipos)', 'Lua Nova'],
   ),
   ArcaneEntry(
-    name: 'Lúcifer',
-    emoji: '🌟',
-    summary: 'O portador da luz: de Vênus matutina a símbolo da queda',
-    origin: 'Latim lucifer ("portador da luz", a estrela-d\'alva); Isaías 14',
-    history:
-        'Originalmente o nome latino de Vênus como estrela da manhã, "Lúcifer" foi associado ao rei caído de Isaías 14 e, daí, ao anjo rebelde. Milton o tornou o anti-herói trágico de Paraíso Perdido; correntes românticas e ocultistas o releram como símbolo do conhecimento e da rebeldia luminosa.',
-    perspectives: [
-      ArcanePerspective(
-        tradition: 'Religiosa',
-        view: 'O anjo que caiu por orgulho; identificado a Satanás na tradição cristã.',
-      ),
-      ArcanePerspective(
-        tradition: 'Literária',
-        view:
-            'Em Milton e no romantismo, o rebelde magnífico — "melhor reinar no inferno que servir no céu".',
-      ),
-      ArcanePerspective(
-        tradition: 'Ocultista moderna',
-        view:
-            'Símbolo do livre-pensamento e da busca do conhecimento (luciferianismo filosófico), distinto do satanismo popular.',
-      ),
-    ],
-    characteristics: ['Orgulho', 'Brilho intelectual', 'Rebeldia', 'Queda e busca'],
-    symbolism: [
-      'A estrela da manhã: a luz que precede o sol',
-      'A queda: o preço da hybris',
-      'A tocha: o conhecimento que liberta ou queima',
-    ],
-    correspondences: ['Vênus matutina', 'Enxofre simbólico', 'Azul elétrico'],
-    studyPractices: [
-      'Ler Isaías 14 e Paraíso Perdido em paralelo',
-      'Refletir sobre orgulho saudável vs. hybris',
-    ],
-    magicalUses: [
-      'Estudo simbólico do próprio brilho e das próprias quedas',
-      'Contemplação de Vênus no céu matutino',
-    ],
-    cautions:
-        'Conteúdo histórico-informativo. Nenhuma prática aqui envolve ou incentiva dano.',
-    related: ['A Alquimista (Arquétipos)', 'Símbolos Sagrados'],
-  ),
-  ArcaneEntry(
     name: 'Asmodeus',
     emoji: '💍',
     summary: 'O demônio do Livro de Tobias e rei dos prazeres na goécia',
@@ -393,5 +351,245 @@ const List<ArcaneEntry> demonsData = [
     cautions:
         'Conteúdo histórico-informativo. Nenhuma prática de dano é ensinada ou incentivada.',
     related: ['Água (Temas Oníricos)', 'A Rainha Sombria (Arquétipos)'],
+  ),
+  ArcaneEntry(
+    name: 'Astaroth',
+    emoji: '👑',
+    summary: 'O grão-duque da Goécia, eco demonizado da deusa Astarte',
+    origin: 'Goécia (Lemegeton); derivado de Astarte/Ishtar',
+    history:
+        'Nos grimórios, Astaroth é um grão-duque que ensina ciências e revela segredos do passado e do futuro. O nome descende de Astarte, grande deusa do Oriente Próximo — um caso clássico de divindade antiga demonizada pela tradição posterior.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Goética',
+        view: 'Duque que ensina artes liberais e responde sobre coisas ocultas.',
+      ),
+      ArcanePerspective(
+        tradition: 'Histórica',
+        view: 'A memória de Astarte/Ishtar transformada em demônio: o rebaixamento das deusas.',
+      ),
+      ArcanePerspective(
+        tradition: 'Ocultista moderna',
+        view: 'Símbolo do saber proibido e do resgate do feminino divino apagado.',
+      ),
+    ],
+    characteristics: ['Conhecimento oculto', 'Memória ancestral', 'Eloquência', 'Passado revelado'],
+    symbolism: [
+      'A serpente na mão: o saber que assusta',
+      'A coroa ducal: nobreza caída',
+      'A estrela de oito pontas: herança de Ishtar',
+    ],
+    correspondences: ['Vênus (herança de Astarte)', 'Quarta-feira nos grimórios', 'Verde profundo'],
+    studyPractices: [
+      'Comparar Astarte nos textos ugaríticos com o Astaroth goético',
+      'Refletir: que saberes já foram chamados de proibidos?',
+    ],
+    magicalUses: [
+      'Estudo simbólico da demonização de divindades femininas',
+      'Contemplação sobre resgatar saberes apagados',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo sobre grimórios. Nenhuma prática aqui envolve ou incentiva dano.',
+    related: ['Deusas', 'A Sábia (Arquétipos)'],
+  ),
+  ArcaneEntry(
+    name: 'Paimon',
+    emoji: '🐪',
+    summary: 'O rei obediente da Goécia, mestre das artes e das ciências',
+    origin: 'Goécia (Lemegeton), um dos reis do Oeste',
+    history:
+        'Descrito como um rei que chega em grande estardalhaço, montado num dromedário e precedido de músicos, Paimon ensina todas as artes, ciências e segredos. Os grimórios o listam entre os espíritos mais obedientes ao exorcista — e o cinema recente o devolveu à cultura popular.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Goética',
+        view: 'Rei que ensina filosofia, artes e os segredos da mente.',
+      ),
+      ArcanePerspective(
+        tradition: 'Histórica',
+        view: 'Possível eco de espíritos pré-islâmicos do deserto incorporados aos grimórios europeus.',
+      ),
+      ArcanePerspective(
+        tradition: 'Cultura pop',
+        view: 'Reintroduzido pelo terror contemporâneo como símbolo de influência oculta.',
+      ),
+    ],
+    characteristics: ['Maestria', 'Conhecimento das mentes', 'Cerimônia', 'Vínculo e lealdade'],
+    symbolism: [
+      'O dromedário: a travessia paciente do deserto',
+      'A música que o precede: o poder que se anuncia',
+      'A coroa do Oeste: domínio sobre o entardecer',
+    ],
+    correspondences: ['Oeste', 'Música cerimonial', 'Azul-noite e ouro'],
+    studyPractices: [
+      'Ler a descrição de Paimon no Lemegeton em contexto histórico',
+      'Estudar como o cinema ressignifica figuras goéticas',
+    ],
+    magicalUses: [
+      'Estudo simbólico da maestria e do aprendizado profundo',
+      'Análise crítica dos grimórios como literatura mágica',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo sobre grimórios. Nenhuma prática aqui envolve ou incentiva dano.',
+    related: ['A Alquimista (Arquétipos)', 'Símbolos Sagrados'],
+  ),
+  ArcaneEntry(
+    name: 'Bael',
+    emoji: '🐸',
+    summary: 'O primeiro rei da Goécia, senhor da invisibilidade',
+    origin: 'Goécia (Lemegeton); do título semítico Ba\'al ("senhor")',
+    history:
+        'Primeiro espírito listado no Lemegeton, Bael aparece com três cabeças — de homem, gato e sapo — e concede a arte de tornar-se invisível. Seu nome vem de Ba\'al, título dos grandes deuses cananeus, outro caso de divindade antiga rebaixada a demônio.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Goética',
+        view: 'Rei do Leste que ensina a invisibilidade e a astúcia.',
+      ),
+      ArcanePerspective(
+        tradition: 'Histórica',
+        view: 'Ba\'al Hadade, deus da tempestade cananeu, demonizado pela polêmica bíblica.',
+      ),
+      ArcanePerspective(
+        tradition: 'Simbólica',
+        view: 'As três cabeças: as máscaras que usamos para sermos vistos — ou não.',
+      ),
+    ],
+    characteristics: ['Invisibilidade', 'Astúcia', 'Realeza antiga', 'Máscaras'],
+    symbolism: [
+      'As três cabeças: as faces do eu',
+      'A invisibilidade: proteção e ocultamento',
+      'O trono do Leste: o poder do amanhecer',
+    ],
+    correspondences: ['Leste', 'Tempestade (herança de Ba\'al)', 'Preto e âmbar'],
+    studyPractices: [
+      'Comparar Ba\'al nos textos de Ugarit com o Bael goético',
+      'Refletir: quando ser invisível protege — e quando apaga?',
+    ],
+    magicalUses: [
+      'Estudo simbólico de discrição e fronteiras pessoais',
+      'Contemplação das próprias máscaras sociais',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo sobre grimórios. Nenhuma prática aqui envolve ou incentiva dano.',
+    related: ['Deusas', 'Símbolos Sagrados'],
+  ),
+  ArcaneEntry(
+    name: 'Stolas',
+    emoji: '🦉',
+    summary: 'O príncipe-coruja que ensina ervas, pedras e astronomia',
+    origin: 'Goécia (Lemegeton), príncipe dos grimórios',
+    history:
+        'Stolas (ou Stolos) aparece como uma grande coruja coroada que ensina astronomia e o poder das ervas e das pedras preciosas — o espírito goético mais próximo do coração da bruxaria natural. Por isso é figura querida entre praticantes que estudam plantas e cristais.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Goética',
+        view: 'Príncipe que ensina astronomia, ervas e o valor das pedras.',
+      ),
+      ArcanePerspective(
+        tradition: 'Simbólica',
+        view: 'A coruja coroada: a sabedoria noturna que enxerga no escuro.',
+      ),
+      ArcanePerspective(
+        tradition: 'Bruxaria natural',
+        view: 'Padroeiro informal do estudo de herbários e lapidários mágicos.',
+      ),
+    ],
+    characteristics: ['Sabedoria natural', 'Herbalismo', 'Astros', 'Visão noturna'],
+    symbolism: [
+      'A coruja: ver o que a luz esconde',
+      'A coroa: o saber como realeza',
+      'O céu estrelado: o mapa acima e dentro de nós',
+    ],
+    correspondences: ['Ervas e cristais', 'Noite', 'Verde-musgo e prata'],
+    studyPractices: [
+      'Montar um índice próprio de ervas e pedras estudadas',
+      'Observar o céu por uma lunação e registrar',
+    ],
+    magicalUses: [
+      'Estudo simbólico do aprendizado de ervas e cristais',
+      'Contemplações noturnas de observação do céu',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo sobre grimórios. Nenhuma prática aqui envolve ou incentiva dano.',
+    related: ['Ervas', 'Cristais'],
+  ),
+  ArcaneEntry(
+    name: 'Buer',
+    emoji: '🌿',
+    summary: 'O presidente-curandeiro da Goécia, mestre das ervas medicinais',
+    origin: 'Goécia (Lemegeton), presidente dos grimórios',
+    history:
+        'Buer ensina filosofia natural, lógica e as virtudes das ervas, e é descrito como aquele que "cura todas as enfermidades". Ilustrado por Collin de Plancy como uma roda de cinco pernas, tornou-se símbolo curioso do movimento perpétuo do aprendizado.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Goética',
+        view: 'Presidente que ensina as virtudes das plantas e restaura a saúde.',
+      ),
+      ArcanePerspective(
+        tradition: 'Histórica',
+        view: 'Reflexo do médico-filósofo antigo: cura, lógica e ética andavam juntas.',
+      ),
+      ArcanePerspective(
+        tradition: 'Simbólica',
+        view: 'A roda de cinco pernas: o conhecimento que não para de girar.',
+      ),
+    ],
+    characteristics: ['Cura', 'Herbalismo', 'Lógica', 'Filosofia natural'],
+    symbolism: [
+      'A roda: o movimento contínuo do estudo',
+      'O centauro com arco (outras fontes): instinto e mira',
+      'O ramo de ervas: remédio na natureza',
+    ],
+    correspondences: ['Ervas medicinais', 'Sagitário nos grimórios', 'Verde e branco'],
+    studyPractices: [
+      'Estudar a história da medicina das ervas',
+      'Refletir sobre a ética de curar: limites e responsabilidade',
+    ],
+    magicalUses: [
+      'Estudo simbólico do caminho de quem cura',
+      'Contemplação sobre saúde como equilíbrio',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo. Ervas medicinais reais exigem orientação profissional.',
+    related: ['Ervas', 'A Curandeira (Arquétipos)'],
+  ),
+  ArcaneEntry(
+    name: 'Dantalion',
+    emoji: '📖',
+    summary: 'O duque dos mil rostos que conhece todos os pensamentos',
+    origin: 'Goécia (Lemegeton), 71º espírito',
+    history:
+        'Dantalion aparece com incontáveis rostos de homens e mulheres, segurando um livro. Os grimórios dizem que conhece os pensamentos de todas as pessoas e ensina todas as artes e ciências — a imagem perfeita da empatia levada ao limite do mistério.',
+    perspectives: [
+      ArcanePerspective(
+        tradition: 'Goética',
+        view: 'Duque que revela pensamentos e ensina qualquer arte ou ciência.',
+      ),
+      ArcanePerspective(
+        tradition: 'Simbólica',
+        view: 'Os mil rostos: toda mente humana contém multidões.',
+      ),
+      ArcanePerspective(
+        tradition: 'Ocultista moderna',
+        view: 'Figura associada ao estudo da empatia, da persuasão e dos próprios vieses.',
+      ),
+    ],
+    characteristics: ['Empatia radical', 'Multiplicidade', 'Estudo das mentes', 'O livro interior'],
+    symbolism: [
+      'O livro na mão: cada pessoa é uma biblioteca',
+      'Os mil rostos: as versões de nós mesmos',
+      'O espelho: ler o outro é ler a si',
+    ],
+    correspondences: ['Mercúrio', 'Quarta-feira', 'Lilás e grafite'],
+    studyPractices: [
+      'Refletir: quantos "eus" falam dentro de você?',
+      'Praticar escuta profunda sem julgamento por um dia',
+    ],
+    magicalUses: [
+      'Estudo simbólico da empatia e da comunicação',
+      'Contemplação dos próprios múltiplos rostos',
+    ],
+    cautions:
+        'Conteúdo histórico-informativo sobre grimórios. Nenhuma prática aqui envolve ou incentiva dano.',
+    related: ['A Vidente (Arquétipos)', 'A Tecelã (Arquétipos)'],
   ),
 ];
