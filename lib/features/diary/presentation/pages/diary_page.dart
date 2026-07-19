@@ -80,7 +80,7 @@ class _DiaryPageState extends State<DiaryPage>
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           labelPadding: const EdgeInsets.symmetric(horizontal: 13),
-          tabs: const [
+          tabs: [
             Tab(text: AppLocalizations.of(context)!.diaryTabGratitude),
             Tab(text: AppLocalizations.of(context)!.diaryTabAffirmations),
             const Tab(child: Text('💭', style: TextStyle(fontSize: 16))),

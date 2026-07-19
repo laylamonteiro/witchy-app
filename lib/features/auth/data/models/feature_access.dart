@@ -278,13 +278,8 @@ class FeatureAccessService {
       availableMessage: 'leitura(s) gratuita(s) de tarot hoje',
       blockedMessage: FeatureAccessMessages.limitReached,
     ),
-    AppFeature.numerologyReadings: FeatureUsageLimit(
-      limit: UserModel.freeAiConsultationsLimit,
-      window: LimitWindow.daily,
-      used: (user) => user.aiConsultationsToday,
-      availableMessage: 'consulta(s) gratuita(s) de numerologia hoje',
-      blockedMessage: FeatureAccessMessages.limitReached,
-    ),
+    // numerologyReadings (explicação do Conselheiro Místico) é exclusiva
+    // Premium: fora do mapa de limites, o plano Free recebe preview -> paywall.
     AppFeature.aiMysticCounselor: FeatureUsageLimit(
       limit: UserModel.freeAdvisorConsultationsLimit,
       window: LimitWindow.daily,
@@ -405,6 +400,8 @@ class FeatureAccessService {
         return 'Criação de sigilos é uma funcionalidade Premium.';
       case AppFeature.aiPersonalizedDreamInterpretation:
         return 'A interpretação personalizada de sonhos é exclusiva do plano Premium.';
+      case AppFeature.numerologyReadings:
+        return 'A explicação do Conselheiro Místico é exclusiva do plano Premium.';
       case AppFeature.aiPalmistry:
         return 'A leitura de mãos é exclusiva do plano Premium.';
       default:
