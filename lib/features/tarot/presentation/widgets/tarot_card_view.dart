@@ -114,35 +114,52 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
-/// Verso da carta (para o embaralhamento/revelação).
+/// Verso da carta (para o embaralhamento/revelação). Usa a arte oficial do
+/// baralho com fallback estilizado.
 class TarotCardBack extends StatelessWidget {
   final double width;
+  final TarotDeck deck;
 
-  const TarotCardBack({super.key, this.width = 110});
+  const TarotCardBack({
+    super.key,
+    this.width = 110,
+    this.deck = TarotDeck.riderWaite,
+  });
 
   @override
   Widget build(BuildContext context) {
     final height = width / TarotCardView.aspectRatio;
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.5)),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(context.gc.surface, context.gc.lilac, 0.25)!,
-            context.gc.surface,
-          ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Image.asset(
+        TarotCard.backAssetPath(deck),
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (context, _, __) => Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border:
+                Border.all(color: context.gc.lilac.withValues(alpha: 0.5)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(context.gc.surface, context.gc.lilac, 0.25)!,
+                context.gc.surface,
+              ],
+            ),
+          ),
+          child: Center(
+            child: Text('✦',
+                style: TextStyle(
+                  color: context.gc.starYellow,
+                  fontSize: width * 0.3,
+                )),
+          ),
         ),
-      ),
-      child: Center(
-        child: Text('✦', style: TextStyle(
-          color: context.gc.starYellow,
-          fontSize: width * 0.3,
-        )),
       ),
     );
   }

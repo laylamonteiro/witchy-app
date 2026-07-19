@@ -62,10 +62,39 @@ class TarotCard {
   String get id =>
       '${suit.assetPrefix}_${number.toString().padLeft(2, '0')}';
 
+  /// Código do arquivo no padrão do deck "sm_RWSa" (Wikimedia):
+  /// T-00..T-21 (maiores); menores: 0A=Ás, 02..10, J1=Valete, J2=Cavaleiro,
+  /// QU=Rainha, KI=Rei; X-BA = verso.
+  String get _fileCode {
+    if (suit == TarotSuit.major) {
+      return 'T-${number.toString().padLeft(2, '0')}';
+    }
+    final suitCode = switch (suit) {
+      TarotSuit.wands => 'W',
+      TarotSuit.cups => 'C',
+      TarotSuit.swords => 'S',
+      TarotSuit.pentacles => 'P',
+      TarotSuit.major => 'T',
+    };
+    final numCode = switch (number) {
+      1 => '0A',
+      11 => 'J1',
+      12 => 'J2',
+      13 => 'QU',
+      14 => 'KI',
+      _ => number.toString().padLeft(2, '0'),
+    };
+    return '$suitCode-$numCode';
+  }
+
   /// Caminho do asset; a UI usa errorBuilder para exibir placeholder
-  /// estilizado enquanto a imagem não estiver no repositório.
+  /// estilizado se a imagem faltar.
   String assetPath(TarotDeck deck) =>
-      'assets/tarot/${deck.folder}/$id.webp';
+      'assets/tarot/${deck.folder}/sm_RWSa-$_fileCode.webp';
+
+  /// Verso oficial do baralho.
+  static String backAssetPath(TarotDeck deck) =>
+      'assets/tarot/${deck.folder}/sm_RWSa-X-BA.webp';
 
   /// Numeral exibido no placeholder (romano para maiores).
   String get displayNumber {
