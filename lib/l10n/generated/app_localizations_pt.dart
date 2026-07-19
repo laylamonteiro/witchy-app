@@ -72,6 +72,153 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get navEncyclopedia => 'Enciclopédia';
+
+  @override
+  String get navGrimoire => 'Grimório';
+
+  @override
+  String get navDiaries => 'Diários';
+
+  @override
+  String get grimoirePageTitle => 'Grimório Digital';
+
+  @override
+  String get grimoireTabAstrology => 'Astrologia';
+
+  @override
+  String get grimoireTabTools => 'Ferramentas';
+
+  @override
+  String get grimoireTabMyGrimoire => 'Meu Grimório';
+
+  @override
+  String get diaryPageTitle => 'Diários';
+
+  @override
+  String get diaryTabGratitude => 'Gratidão';
+
+  @override
+  String get diaryTabAffirmations => 'Afirmações';
+
+  @override
+  String get diaryTabDreams => 'Sonhos';
+
+  @override
+  String get diaryTabDesires => 'Desejos';
+
+  @override
+  String get encyclopediaPageTitle => 'Enciclopédia Mágica';
+
+  @override
+  String get encyTabMoon => 'Lua';
+
+  @override
+  String get encyTabSabbats => 'Sabbats';
+
+  @override
+  String get encyTabCrystals => 'Cristais';
+
+  @override
+  String get encyTabHerbs => 'Ervas';
+
+  @override
+  String get encyTabMetals => 'Metais';
+
+  @override
+  String get encyTabColors => 'Cores';
+
+  @override
+  String get encyTabGoddesses => 'Deusas';
+
+  @override
+  String get encyTabElements => 'Elementos';
+
+  @override
+  String get encyTabAltar => 'Altar';
+
+  @override
+  String get encyTabRunes => 'Runas';
+
+  @override
+  String get encyTabArchetypes => 'Arquétipos';
+
+  @override
+  String get encyTabAngels => 'Anjos';
+
+  @override
+  String get encyTabDemons => 'Demônios';
+
+  @override
+  String get encyTabSymbols => 'Símbolos';
+
+  @override
+  String get commonSave => 'Salvar';
+
+  @override
+  String get commonCancel => 'Cancelar';
+
+  @override
+  String get commonDelete => 'Excluir';
+
+  @override
+  String get commonBack => 'Voltar';
+
+  @override
+  String get commonEdit => 'Editar';
+
+  @override
+  String get commonSearch => 'Buscar';
+
+  @override
+  String get commonConfirm => 'Confirmar';
+
+  @override
+  String get toolsHeaderTitle => 'Ferramentas Mágicas';
+
+  @override
+  String get toolsHeaderSubtitle =>
+      'Recursos para auxiliar em suas práticas de magia e manifestação';
+
+  @override
+  String get toolMysticAdvisorTitle => 'Conselheiro Místico';
+
+  @override
+  String get toolMysticAdvisorDesc =>
+      'Sabedoria ancestral para suas dúvidas de bruxaria e magia';
+
+  @override
+  String get toolOracleTitle => 'Cartas do Oráculo';
+
+  @override
+  String get toolOracleDesc => 'Mensagens e orientação do universo';
+
+  @override
+  String get toolSigilsTitle => 'Sigilos';
+
+  @override
+  String get toolSigilsDesc => 'Crie símbolos mágicos para suas intenções';
+
+  @override
+  String get toolNumerologyTitle => 'Numerologia';
+
+  @override
+  String get toolNumerologyDesc =>
+      'Seus números-chave, horas espelho e sequências';
+
+  @override
+  String get toolRunesTitle => 'Leitura de Runas';
+
+  @override
+  String get toolRunesDesc => 'Consulte as antigas runas nórdicas';
+
+  @override
+  String get toolPendulumTitle => 'Pêndulo';
+
+  @override
+  String get toolPendulumDesc => 'Perguntas de sim ou não';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -142,4 +289,151 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
     );
     return '$_temp0';
   }
+
+  @override
+  String get navEncyclopedia => 'Enciclopédia';
+
+  @override
+  String get navGrimoire => 'Grimório';
+
+  @override
+  String get navDiaries => 'Diários';
+
+  @override
+  String get grimoirePageTitle => 'Grimório Digital';
+
+  @override
+  String get grimoireTabAstrology => 'Astrologia';
+
+  @override
+  String get grimoireTabTools => 'Ferramentas';
+
+  @override
+  String get grimoireTabMyGrimoire => 'Meu Grimório';
+
+  @override
+  String get diaryPageTitle => 'Diários';
+
+  @override
+  String get diaryTabGratitude => 'Gratidão';
+
+  @override
+  String get diaryTabAffirmations => 'Afirmações';
+
+  @override
+  String get diaryTabDreams => 'Sonhos';
+
+  @override
+  String get diaryTabDesires => 'Desejos';
+
+  @override
+  String get encyclopediaPageTitle => 'Enciclopédia Mágica';
+
+  @override
+  String get encyTabMoon => 'Lua';
+
+  @override
+  String get encyTabSabbats => 'Sabbats';
+
+  @override
+  String get encyTabCrystals => 'Cristais';
+
+  @override
+  String get encyTabHerbs => 'Ervas';
+
+  @override
+  String get encyTabMetals => 'Metais';
+
+  @override
+  String get encyTabColors => 'Cores';
+
+  @override
+  String get encyTabGoddesses => 'Deusas';
+
+  @override
+  String get encyTabElements => 'Elementos';
+
+  @override
+  String get encyTabAltar => 'Altar';
+
+  @override
+  String get encyTabRunes => 'Runas';
+
+  @override
+  String get encyTabArchetypes => 'Arquétipos';
+
+  @override
+  String get encyTabAngels => 'Anjos';
+
+  @override
+  String get encyTabDemons => 'Demônios';
+
+  @override
+  String get encyTabSymbols => 'Símbolos';
+
+  @override
+  String get commonSave => 'Salvar';
+
+  @override
+  String get commonCancel => 'Cancelar';
+
+  @override
+  String get commonDelete => 'Excluir';
+
+  @override
+  String get commonBack => 'Voltar';
+
+  @override
+  String get commonEdit => 'Editar';
+
+  @override
+  String get commonSearch => 'Buscar';
+
+  @override
+  String get commonConfirm => 'Confirmar';
+
+  @override
+  String get toolsHeaderTitle => 'Ferramentas Mágicas';
+
+  @override
+  String get toolsHeaderSubtitle =>
+      'Recursos para auxiliar em suas práticas de magia e manifestação';
+
+  @override
+  String get toolMysticAdvisorTitle => 'Conselheiro Místico';
+
+  @override
+  String get toolMysticAdvisorDesc =>
+      'Sabedoria ancestral para suas dúvidas de bruxaria e magia';
+
+  @override
+  String get toolOracleTitle => 'Cartas do Oráculo';
+
+  @override
+  String get toolOracleDesc => 'Mensagens e orientação do universo';
+
+  @override
+  String get toolSigilsTitle => 'Sigilos';
+
+  @override
+  String get toolSigilsDesc => 'Crie símbolos mágicos para suas intenções';
+
+  @override
+  String get toolNumerologyTitle => 'Numerologia';
+
+  @override
+  String get toolNumerologyDesc =>
+      'Seus números-chave, horas espelho e sequências';
+
+  @override
+  String get toolRunesTitle => 'Leitura de Runas';
+
+  @override
+  String get toolRunesDesc => 'Consulte as antigas runas nórdicas';
+
+  @override
+  String get toolPendulumTitle => 'Pêndulo';
+
+  @override
+  String get toolPendulumDesc => 'Perguntas de sim ou não';
 }
