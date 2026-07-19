@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -68,14 +69,14 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _stat(context, '🔥', 'Melhor combo', '$_bestCombo'),
-                    _stat(context, '📅', 'Dias seguidos', '$_dayStreak'),
-                    _stat(context, '🎯', 'Precisão', '$accuracy%'),
+                    _stat(context, '🔥', AppLocalizations.of(context)!.tarotBestCombo, '$_bestCombo'),
+                    _stat(context, '📅', AppLocalizations.of(context)!.tarotDayStreak, '$_dayStreak'),
+                    _stat(context, '🎯', AppLocalizations.of(context)!.tarotAccuracy, '$accuracy%'),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$_answered respondidas · ${tarotCards.length} cartas no baralho',
+                  AppLocalizations.of(context)!.tarotAnsweredOf('$_answered', '${tarotCards.length}'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
                       ),
@@ -88,7 +89,7 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Teste o que você sabe',
+                  AppLocalizations.of(context)!.tarotQuizTitle,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.lilac,
@@ -97,9 +98,7 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Uma sessão com perguntas embaralhadas sobre os '
-                  'significados das cartas. Acertos consecutivos formam '
-                  'combo — volte todos os dias para manter a sequência.',
+                  AppLocalizations.of(context)!.tarotQuizDesc,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
@@ -109,7 +108,7 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                 ElevatedButton.icon(
                   onPressed: _startSession,
                   icon: const Icon(Icons.play_arrow, size: 18),
-                  label: const Text('Sessão de 10 perguntas'),
+                  label: Text(AppLocalizations.of(context)!.tarotQuizStart),
                 ),
               ],
             ),
@@ -254,12 +253,12 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: dialogContext.gc.surface,
         title: Text(
-          _sessionCorrect >= 7 ? 'Brilhante! ✨' : 'Sessão concluída 🌙',
+          _sessionCorrect >= 7 ? AppLocalizations.of(context)!.tarotQuizBrilliant : AppLocalizations.of(context)!.tarotQuizDone,
           style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
-          'Você acertou $_sessionCorrect de ${_questions.length}.'
-          '${_sessionCorrect >= 7 ? ' As cartas reconhecem sua dedicação.' : ' Continue praticando — cada sessão aprofunda a leitura.'}',
+          AppLocalizations.of(context)!.tarotQuizScore('$_sessionCorrect', '${_questions.length}') +
+              (_sessionCorrect >= 7 ? AppLocalizations.of(context)!.tarotQuizPraise : AppLocalizations.of(context)!.tarotQuizEncourage),
           style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
@@ -268,7 +267,7 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
               Navigator.pop(dialogContext);
               Navigator.pop(context);
             },
-            child: const Text('Concluir'),
+            child: Text(AppLocalizations.of(context)!.tarotQuizFinish),
           ),
         ],
       ),
@@ -313,7 +312,7 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
             Center(child: TarotCardView(card: question.card, width: 130)),
             const SizedBox(height: 16),
             Text(
-              'O que representa ${question.card.name}?',
+              AppLocalizations.of(context)!.tarotQuizQuestion(question.card.name),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: context.gc.textPrimary,

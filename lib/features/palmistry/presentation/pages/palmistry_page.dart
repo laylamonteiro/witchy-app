@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -62,13 +63,12 @@ class _PalmistryPageState extends State<PalmistryPage> {
 
       if (bytes.length > _maxUploadBytes) {
         throw Exception(
-          'A imagem ficou grande demais. Tente com menos zoom ou outra foto.',
+          AppLocalizations.of(context)!.palmImageTooLarge,
         );
       }
       if (bytes.length < 20 * 1024) {
         throw Exception(
-          'A imagem parece pequena ou escura demais para leitura. '
-          'Fotografe a palma bem iluminada, preenchendo a tela.',
+          AppLocalizations.of(context)!.palmImageTooSmall,
         );
       }
 
@@ -96,13 +96,13 @@ class _PalmistryPageState extends State<PalmistryPage> {
     final date = '${now.day.toString().padLeft(2, '0')}/'
         '${now.month.toString().padLeft(2, '0')}/${now.year}';
     await context.read<FreeWritingProvider>().save(
-          FreeWritingModel(content: '🖐️ Leitura de Mãos — $date\n\n$reading'),
+          FreeWritingModel(content: '🖐️ ${AppLocalizations.of(context)!.palmReadingHeader} — $date\n\n$reading'),
         );
     if (!mounted) return;
     setState(() => _saved = true);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Leitura salva nas suas Reflexões! ✨'),
+        content: Text(AppLocalizations.of(context)!.palmSavedToReflections),
         backgroundColor: context.gc.success,
       ),
     );
@@ -115,7 +115,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Leitura de Mãos'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.toolPalmistryTitle),
       ),
       body: !access.hasFullAccess
           ? _buildPremiumInvite(access.message)
@@ -133,7 +133,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
             const Text('🖐️', style: TextStyle(fontSize: 56)),
             const SizedBox(height: 16),
             Text(
-              'Quiromancia',
+              AppLocalizations.of(context)!.palmistryTitle,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: context.gc.lilac,
                   ),
@@ -142,7 +142,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
             const SizedBox(height: 12),
             Text(
               message ??
-                  'A leitura de mãos é exclusiva do plano Premium.',
+                  AppLocalizations.of(context)!.palmPremiumOnly,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.gc.textSecondary,
                   ),
@@ -157,7 +157,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                 builder: (context) => const PremiumUpgradeSheet(),
               ),
               icon: const Icon(Icons.star, size: 18),
-              label: const Text('Seja Premium'),
+              label: Text(AppLocalizations.of(context)!.premiumBePremium),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.onPrimary,
@@ -182,21 +182,20 @@ class _PalmistryPageState extends State<PalmistryPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '🖐️ Como fotografar',
+                  AppLocalizations.of(context)!.palmHowTo,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.lilac,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(height: 10),
-                _tip(context, 'Palma da mão dominante aberta e relaxada'),
-                _tip(context, 'Luz natural, sem sombras fortes sobre as linhas'),
-                _tip(context, 'A palma deve preencher quase toda a foto'),
-                _tip(context, 'Evite fotos tremidas ou desfocadas'),
+                _tip(context, AppLocalizations.of(context)!.palmTip1),
+                _tip(context, AppLocalizations.of(context)!.palmTip2),
+                _tip(context, AppLocalizations.of(context)!.palmTip3),
+                _tip(context, AppLocalizations.of(context)!.palmTip4),
                 const SizedBox(height: 10),
                 Text(
-                  'Privacidade: a foto é processada na hora e descartada — '
-                  'não fica salva no aparelho nem em servidores.',
+                  AppLocalizations.of(context)!.palmPrivacyNote,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
                         fontStyle: FontStyle.italic,
@@ -213,7 +212,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                     onPressed:
                         _isAnalyzing ? null : () => _pick(ImageSource.camera),
                     icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                    label: const Text('Câmera'),
+                    label: Text(AppLocalizations.of(context)!.palmCamera),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -222,7 +221,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                     onPressed:
                         _isAnalyzing ? null : () => _pick(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library_outlined, size: 18),
-                    label: const Text('Galeria'),
+                    label: Text(AppLocalizations.of(context)!.palmGallery),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: context.gc.lilac,
                       side: BorderSide(color: context.gc.lilac),
@@ -239,7 +238,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                   CircularProgressIndicator(color: context.gc.lilac),
                   const SizedBox(height: 12),
                   Text(
-                    'Lendo as linhas da sua mão…',
+                    AppLocalizations.of(context)!.palmReadingLines,
                     style: TextStyle(color: context.gc.textSecondary),
                   ),
                 ],
@@ -251,7 +250,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '✨ Sua Leitura',
+                    AppLocalizations.of(context)!.palmYourReading,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -267,8 +266,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Leitura simbólica para reflexão — não substitui '
-                    'orientação médica, psicológica ou profissional.',
+                    AppLocalizations.of(context)!.palmDisclaimer,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -284,7 +282,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                         size: 18,
                       ),
                       label: Text(
-                        _saved ? 'Salva nas Reflexões' : 'Salvar leitura',
+                        _saved ? AppLocalizations.of(context)!.palmSavedShort : AppLocalizations.of(context)!.palmSaveReading,
                       ),
                     ),
                   ),

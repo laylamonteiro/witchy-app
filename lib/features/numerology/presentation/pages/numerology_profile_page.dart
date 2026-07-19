@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -59,7 +60,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
     if (name.isEmpty || _birthDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Informe o nome completo e a data de nascimento'),
+          content: Text(AppLocalizations.of(context)!.numFillNameAndDate),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -85,7 +86,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(access.message ??
-              'Limite diário atingido. Assine Premium para consultas ilimitadas.'),
+              AppLocalizations.of(context)!.numDailyLimit),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -129,7 +130,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Perfil Pessoal'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.numPersonalProfile),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -141,7 +142,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Seus dados de nascimento',
+                    AppLocalizations.of(context)!.numYourBirthData,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -149,8 +150,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Use o nome completo de nascimento — é ele que carrega a '
-                    'assinatura numerológica original.',
+                    AppLocalizations.of(context)!.numBirthNameHelp,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),
@@ -159,8 +159,8 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                   TextField(
                     controller: _nameController,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Nome completo',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.numFullName,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -176,8 +176,8 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                           const SizedBox(width: 8),
                           Text(
                             _birthDate == null
-                                ? 'Escolher data de nascimento'
-                                : 'Nascimento: '
+                                ? AppLocalizations.of(context)!.numChooseBirthDate
+                                : '${AppLocalizations.of(context)!.numBirthPrefix}: '
                                     '${_birthDate!.day.toString().padLeft(2, '0')}/'
                                     '${_birthDate!.month.toString().padLeft(2, '0')}/'
                                     '${_birthDate!.year}',
@@ -193,7 +193,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                     child: ElevatedButton.icon(
                       onPressed: _calculate,
                       icon: const Icon(Icons.calculate_outlined, size: 18),
-                      label: const Text('Calcular meus números'),
+                      label: Text(AppLocalizations.of(context)!.numCalculate),
                     ),
                   ),
                 ],
@@ -214,8 +214,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Quer uma síntese de como esses números conversam '
-                      'entre si?',
+                      AppLocalizations.of(context)!.numSynthesisQuestion,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: context.gc.textSecondary,
                           ),
@@ -235,8 +234,8 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                             )
                           : const Icon(Icons.auto_awesome, size: 18),
                       label: Text(_isExplaining
-                          ? 'Tecendo a síntese…'
-                          : 'Explicação do Conselheiro Místico'),
+                          ? AppLocalizations.of(context)!.numWeavingSynthesis
+                          : AppLocalizations.of(context)!.numAdvisorExplanation),
                     ),
                     if (_aiText != null) ...[
                       const SizedBox(height: 16),

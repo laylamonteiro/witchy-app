@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -36,7 +37,7 @@ class _TarotPageState extends State<TarotPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Tarot'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.toolTarotTitle),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: context.gc.lilac,
@@ -44,8 +45,8 @@ class _TarotPageState extends State<TarotPage>
           tabAlignment: TabAlignment.center,
           labelPadding: const EdgeInsets.symmetric(horizontal: 24),
           tabs: const [
-            Tab(text: 'Tiragem'),
-            Tab(text: 'Aprender'),
+            Tab(text: AppLocalizations.of(context)!.tarotTabDraw),
+            Tab(text: AppLocalizations.of(context)!.tarotTabLearn),
           ],
         ),
       ),
@@ -64,17 +65,16 @@ class _TarotPageState extends State<TarotPage>
 enum TarotSpread { daily, threeCards, cross }
 
 extension TarotSpreadX on TarotSpread {
-  String get displayName => switch (this) {
-        TarotSpread.daily => 'Carta do Dia',
-        TarotSpread.threeCards => 'Três Cartas',
-        TarotSpread.cross => 'Cruz de Cinco',
+  String displayName(AppLocalizations l10n) => switch (this) {
+        TarotSpread.daily => l10n.tarotDailyCard,
+        TarotSpread.threeCards => l10n.tarotThreeCards,
+        TarotSpread.cross => l10n.tarotCross,
       };
 
-  String get description => switch (this) {
-        TarotSpread.daily => 'A energia que acompanha o seu dia',
-        TarotSpread.threeCards => 'Passado · Presente · Futuro',
-        TarotSpread.cross =>
-          'Situação, desafio, raiz, conselho e tendência',
+  String description(AppLocalizations l10n) => switch (this) {
+        TarotSpread.daily => l10n.tarotDailyDesc,
+        TarotSpread.threeCards => l10n.tarotThreeDesc,
+        TarotSpread.cross => l10n.tarotCrossDesc,
       };
 
   String get emoji => switch (this) {
@@ -83,15 +83,19 @@ extension TarotSpreadX on TarotSpread {
         TarotSpread.cross => '✚',
       };
 
-  List<String> get positions => switch (this) {
-        TarotSpread.daily => ['Carta do Dia'],
-        TarotSpread.threeCards => ['Passado', 'Presente', 'Futuro'],
+  List<String> positions(AppLocalizations l10n) => switch (this) {
+        TarotSpread.daily => [l10n.tarotDailyCard],
+        TarotSpread.threeCards => [
+            l10n.tarotPosPast,
+            l10n.tarotPosPresent,
+            l10n.tarotPosFuture,
+          ],
         TarotSpread.cross => [
-            'Situação',
-            'Desafio',
-            'Raiz',
-            'Conselho',
-            'Tendência',
+            l10n.tarotPosSituation,
+            l10n.tarotPosChallenge,
+            l10n.tarotPosRoot,
+            l10n.tarotPosAdvice,
+            l10n.tarotPosTendency,
           ],
       };
 }
@@ -120,7 +124,7 @@ class _SpreadTabState extends State<_SpreadTab> {
     return TarotDrawnCard(
       card: card,
       isReversed: random.nextInt(4) == 0,
-      positionLabel: 'Carta do Dia',
+      positionLabel: AppLocalizations.of(context)!.tarotDailyCard,
     );
   }
 
@@ -132,8 +136,8 @@ class _SpreadTabState extends State<_SpreadTab> {
       if (!authProvider.canUseOracle) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-              'Você já fez sua tiragem gratuita hoje. Assine Premium para tiragens ilimitadas!',
+            content: Text(
+              AppLocalizations.of(context)!.tarotFreeLimitReached,
             ),
             backgroundColor: context.gc.alert,
           ),
@@ -149,7 +153,7 @@ class _SpreadTabState extends State<_SpreadTab> {
       await authProvider.incrementOracleReadings();
     }
 
-    final positions = spread.positions;
+    final positions = spread.positions(AppLocalizations.of(context)!);
     List<TarotDrawnCard> drawn;
     if (spread == TarotSpread.daily) {
       drawn = [_dailyCard()];
@@ -197,11 +201,11 @@ class _SpreadTabState extends State<_SpreadTab> {
     setState(() => _isReadingAI = true);
     try {
       final summary = StringBuffer()
-        ..writeln('Tiragem: ${_activeSpread!.displayName}');
+        ..writeln('${AppLocalizations.of(context)!.tarotSpreadLabel}: ${_activeSpread!.displayName(AppLocalizations.of(context)!)}');
       for (final drawn in _drawn) {
         summary.writeln(
           '- ${drawn.positionLabel}: ${drawn.card.name}'
-          '${drawn.isReversed ? ' (invertida)' : ''} — ${drawn.meaning}',
+          '${drawn.isReversed ? ' (${AppLocalizations.of(context)!.tarotReversed})' : ''} — ${drawn.meaning}',
         );
       }
       final reading = await AIService.instance
@@ -232,7 +236,7 @@ class _SpreadTabState extends State<_SpreadTab> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
               child: Text(
-                'Respire fundo, pense na sua pergunta e escolha a tiragem.',
+                AppLocalizations.of(context)!.tarotBreathe,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: context.gc.textSecondary,
                     ),
@@ -253,7 +257,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              spread.displayName,
+                              spread.displayName(AppLocalizations.of(context)!),
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -264,7 +268,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              spread.description,
+                              spread.description(AppLocalizations.of(context)!),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -286,7 +290,7 @@ class _SpreadTabState extends State<_SpreadTab> {
               child: Row(
                 children: [
                   Text(
-                    '${_activeSpread!.emoji} ${_activeSpread!.displayName}',
+                    '${_activeSpread!.emoji} ${_activeSpread!.displayName(AppLocalizations.of(context)!)}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -300,7 +304,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                       _aiReading = null;
                     }),
                     icon: const Icon(Icons.refresh, size: 16),
-                    label: const Text('Nova tiragem'),
+                    label: Text(AppLocalizations.of(context)!.tarotNewSpread),
                   ),
                 ],
               ),
@@ -353,7 +357,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                     children: [
                       Text(
                         '${drawn.positionLabel} — ${drawn.card.name}'
-                        '${drawn.isReversed ? ' (invertida)' : ''}',
+                        '${drawn.isReversed ? ' (${AppLocalizations.of(context)!.tarotReversed})' : ''}',
                         style:
                             Theme.of(context).textTheme.titleSmall?.copyWith(
                                   color: context.gc.lilac,
@@ -402,8 +406,8 @@ class _SpreadTabState extends State<_SpreadTab> {
                           : const Icon(Icons.auto_awesome, size: 18),
                       label: Text(
                         _isReadingAI
-                            ? 'Consultando as cartas…'
-                            : 'Interpretação do Conselheiro Místico',
+                            ? AppLocalizations.of(context)!.tarotConsultingCards
+                            : AppLocalizations.of(context)!.tarotAdvisorInterpretation,
                       ),
                     ),
                     if (_aiReading != null) ...[

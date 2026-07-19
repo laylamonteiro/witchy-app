@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -15,7 +16,7 @@ class NumerologyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Numerologia'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.toolNumerologyTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -28,7 +29,7 @@ class NumerologyPage extends StatelessWidget {
                   const Text('🔢', style: TextStyle(fontSize: 44)),
                   const SizedBox(height: 12),
                   Text(
-                    'A Magia dos Números',
+                    AppLocalizations.of(context)!.numMagicOfNumbers,
                     style: Theme.of(context)
                         .textTheme
                         .headlineMedium
@@ -37,9 +38,7 @@ class NumerologyPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Explore os números que vibram na sua vida: seu perfil '
-                    'de nascimento, o significado de qualquer número, as '
-                    'horas espelho e as sequências que insistem em aparecer.',
+                    AppLocalizations.of(context)!.numIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -51,9 +50,9 @@ class NumerologyPage extends StatelessWidget {
             _buildModeCard(
               context,
               emoji: '🌟',
-              title: 'Perfil Pessoal',
+              title: AppLocalizations.of(context)!.numPersonalProfile,
               description:
-                  'Seus 5 números-chave a partir do nome e da data de nascimento',
+                  AppLocalizations.of(context)!.numPersonalProfileDesc,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const NumerologyProfilePage(),
@@ -63,8 +62,8 @@ class NumerologyPage extends StatelessWidget {
             _buildModeCard(
               context,
               emoji: '🔍',
-              title: 'Consultar um Número',
-              description: 'Um número te acompanha? Descubra o que ele vibra',
+              title: AppLocalizations.of(context)!.numLookupTitle,
+              description: AppLocalizations.of(context)!.numLookupDesc,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const NumberLookupPage(),
@@ -74,8 +73,8 @@ class NumerologyPage extends StatelessWidget {
             _buildModeCard(
               context,
               emoji: '🕰️',
-              title: 'Horas Espelho',
-              description: 'O recado das horas duplas: 11:11, 22:22 e além',
+              title: AppLocalizations.of(context)!.numMirrorHours,
+              description: AppLocalizations.of(context)!.numMirrorHoursDesc,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const MirrorHoursPage(),
@@ -85,8 +84,8 @@ class NumerologyPage extends StatelessWidget {
             _buildModeCard(
               context,
               emoji: '🌀',
-              title: 'Sequências Repetidas',
-              description: 'O significado de padrões como 333, 1010 e 1234',
+              title: AppLocalizations.of(context)!.numSequences,
+              description: AppLocalizations.of(context)!.numSequencesDesc,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const RepeatedSequencesPage(),
@@ -285,7 +284,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Consultar um Número'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.numLookupTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -297,7 +296,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Que número te acompanha?',
+                    AppLocalizations.of(context)!.numWhichNumber,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -305,8 +304,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Placas, datas, portas, recibos… digite o número e veja '
-                    'sua essência numerológica.',
+                    AppLocalizations.of(context)!.numLookupHelp,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),
@@ -319,14 +317,14 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
                           controller: _controller,
                           keyboardType: TextInputType.number,
                           decoration:
-                              const InputDecoration(hintText: 'Ex.: 713'),
+                              InputDecoration(hintText: AppLocalizations.of(context)!.numLookupHint),
                           onSubmitted: (_) => _lookup(),
                         ),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton(
                         onPressed: _lookup,
-                        child: const Text('Ver'),
+                        child: Text(AppLocalizations.of(context)!.numSee),
                       ),
                     ],
                   ),
@@ -338,7 +336,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    '$_original reduz para $_result',
+                    AppLocalizations.of(context)!.numReducesTo('$_original', '$_result'),
                     textAlign: TextAlign.center,
                     style: TextStyle(color: context.gc.textSecondary),
                   ),
@@ -362,7 +360,7 @@ class MirrorHoursPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Horas Espelho'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.numMirrorHours),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -370,8 +368,7 @@ class MirrorHoursPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Text(
-              'Olhou o relógio exatamente numa hora dupla? Cada espelho '
-              'carrega uma vibração numérica. Toque para ver o recado.',
+              AppLocalizations.of(context)!.numMirrorIntro,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.gc.textSecondary,
                   ),
@@ -463,12 +460,12 @@ class _MirrorHourSheet extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Vibração do número $number',
+            AppLocalizations.of(context)!.numVibrationOf('$number'),
             style: TextStyle(color: context.gc.textSecondary),
           ),
           NumberMeaningCard(
             number: number,
-            contextLine: 'Recado do espelho $label',
+            contextLine: AppLocalizations.of(context)!.numMirrorMessage(label),
           ),
         ],
       ),
@@ -486,7 +483,7 @@ class RepeatedSequencesPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Sequências Repetidas'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.numSequences),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -496,8 +493,7 @@ class RepeatedSequencesPage extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
               child: Text(
-                'Aquele número que aparece em todo lugar pode ser um padrão '
-                'pedindo atenção. Os clássicos:',
+                AppLocalizations.of(context)!.numSequencesIntro,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: context.gc.textSecondary,
                     ),
@@ -532,7 +528,7 @@ class RepeatedSequencesPage extends StatelessWidget {
                         color: context.gc.lilac.withOpacity(0.12),
                       ),
                       child: Text(
-                        'vibra no $number',
+                        AppLocalizations.of(context)!.numVibratesIn('$number'),
                         style:
                             TextStyle(color: context.gc.lilac, fontSize: 12),
                       ),
