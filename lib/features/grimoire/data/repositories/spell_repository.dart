@@ -131,6 +131,11 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
 
   @override
   Future<int> update(SpellModel spell) async {
+    final existingSpell = await getById(spell.id);
+    if (existingSpell?.isPreloaded ?? false) {
+      return 0;
+    }
+
     final db = await _dbHelper.database;
     return db.update(
       'spells',
@@ -142,6 +147,11 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
 
   @override
   Future<int> delete(String id) async {
+    final existingSpell = await getById(id);
+    if (existingSpell?.isPreloaded ?? false) {
+      return 0;
+    }
+
     final db = await _dbHelper.database;
     return db.delete(
       'spells',
