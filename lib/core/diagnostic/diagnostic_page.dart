@@ -1302,7 +1302,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             label: const Text('Copiar Diagnóstico Completo'),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
-              foregroundColor: Colors.white,
+              foregroundColor: context.gc.textPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1579,7 +1579,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 label: const Text('Copiar Logs de Login Social'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
-                  foregroundColor: Colors.white,
+                  foregroundColor: context.gc.textPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1818,8 +1818,8 @@ class _DiagnosticPageState extends State<DiagnosticPage>
         onPressed: () => authProvider.setUserRole(role),
         style: ElevatedButton.styleFrom(
           backgroundColor:
-              isSelected ? _getRoleColor(role) : Colors.white.withOpacity(0.1),
-          foregroundColor: Colors.white,
+              isSelected ? _getRoleColor(role) : context.gc.textPrimary.withOpacity(0.1),
+          foregroundColor: context.gc.textPrimary,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),

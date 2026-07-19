@@ -287,20 +287,20 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const ResponsiveAppBarTitle(
+        title: ResponsiveAppBarTitle(
           'Estatísticas Mágicas',
           style: TextStyle(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white70),
+            icon: Icon(Icons.refresh, color: context.gc.textSecondary),
             onPressed: _loadStats,
           ),
         ],
@@ -372,16 +372,16 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           const SizedBox(height: 12),
           Text(
             '$totalPractices',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.gc.textPrimary,
               fontSize: 48,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const Text(
+          Text(
             'Praticas Mágicas',
             style: TextStyle(
-              color: Colors.white70,
+              color: context.gc.textSecondary,
               fontSize: 16,
             ),
           ),
@@ -405,20 +405,20 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
   Widget _buildMiniStat(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.white54, size: 20),
+        Icon(icon, color: context.gc.textSecondary, size: 20),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.gc.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white54,
+          style: TextStyle(
+            color: context.gc.textSecondary,
             fontSize: 11,
           ),
         ),
@@ -434,19 +434,19 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.gc.textPrimary10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.local_fire_department, color: Colors.orange, size: 24),
               SizedBox(width: 8),
               Text(
                 'Sequencias',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.gc.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -532,8 +532,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               ),
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white54,
+                style: TextStyle(
+                  color: context.gc.textSecondary,
                   fontSize: 12,
                 ),
               ),
@@ -548,10 +548,10 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Suas Praticas',
           style: TextStyle(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -653,16 +653,16 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             const SizedBox(height: 8),
             Text(
               '$count',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.gc.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white54,
+              style: TextStyle(
+                color: context.gc.textSecondary,
                 fontSize: 11,
               ),
               textAlign: TextAlign.center,
@@ -685,19 +685,19 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.gc.textPrimary10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.star, color: Colors.amber, size: 24),
               SizedBox(width: 8),
               Text(
                 'Manifestacoes',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.gc.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -733,8 +733,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               total > 0
                   ? '${((manifested / total) * 100).toStringAsFixed(0)}% de taxa de manifestacao'
                   : 'Comece a registrar seus desejos!',
-              style: const TextStyle(
-                color: Colors.white54,
+              style: TextStyle(
+                color: context.gc.textSecondary,
                 fontSize: 12,
               ),
             ),
@@ -763,8 +763,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           ),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white54,
+            style: TextStyle(
+              color: context.gc.textSecondary,
               fontSize: 12,
             ),
           ),
@@ -781,19 +781,19 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.gc.textPrimary10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.auto_fix_high, color: Colors.purple, size: 24),
               SizedBox(width: 8),
               Text(
                 'Feitiços por Tipo',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.gc.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -809,7 +809,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                       flex: 2,
                       child: Text(
                         entry.key,
-                        style: const TextStyle(color: Colors.white70),
+                        style: TextStyle(color: context.gc.textSecondary),
                       ),
                     ),
                     Expanded(
@@ -822,7 +822,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                                   spellsByType.values
                                       .reduce((a, b) => a > b ? a : b)
                               : 0,
-                          backgroundColor: Colors.white10,
+                          backgroundColor: context.gc.textPrimary10,
                           valueColor: AlwaysStoppedAnimation(
                             _getTypeColor(entry.key),
                           ),
@@ -833,8 +833,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                     const SizedBox(width: 8),
                     Text(
                       '${entry.value}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.gc.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

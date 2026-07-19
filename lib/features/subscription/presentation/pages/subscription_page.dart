@@ -52,15 +52,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const ResponsiveAppBarTitle(
+        title: ResponsiveAppBarTitle(
           'Assinatura',
           style: TextStyle(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -144,7 +144,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
     if (!isPro) {
       subscriptionLabel = 'Desbloqueie todos os recursos';
-      labelColor = Colors.white54;
+      labelColor = context.gc.textSecondary;
     } else if (hasRevenueCat) {
       // Premium via RevenueCat
       if (isLifetimeSubscription) {
@@ -152,7 +152,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         labelColor = context.gc.starYellow;
       } else if (expirationDate != null) {
         subscriptionLabel = 'Válido até ${_formatDate(expirationDate)}';
-        labelColor = Colors.white70;
+        labelColor = context.gc.textSecondary;
       } else {
         subscriptionLabel = 'Assinatura Ativa';
         labelColor = context.gc.starYellow;
@@ -170,7 +170,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       subscriptionLabel = currentUser.isAdmin
           ? 'Plano $planName (Simulação)'
           : 'Plano $planName';
-      labelColor = Colors.white70;
+      labelColor = context.gc.textSecondary;
     } else {
       subscriptionLabel = 'Premium Ativo';
       labelColor = context.gc.starYellow;
@@ -192,7 +192,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         color: isPro ? null : context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isPro ? context.gc.lilac : Colors.white24,
+          color: isPro ? context.gc.lilac : context.gc.textSecondary,
           width: isPro ? 2 : 1,
         ),
       ),
@@ -202,15 +202,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           Icon(
             isPro ? Icons.star : Icons.star_border,
             size: 48,
-            color: isPro ? context.gc.starYellow : Colors.white54,
+            color: isPro ? context.gc.starYellow : context.gc.textSecondary,
           ),
           const SizedBox(height: 12),
 
           // Título
           Text(
             isPro ? 'Grimório de Bolso Premium' : 'Plano Gratuito',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.gc.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -240,10 +240,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Seus Benefícios Premium',
             style: TextStyle(
-              color: Colors.white,
+              color: context.gc.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -275,8 +275,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: context.gc.textSecondary,
                 fontSize: 14,
               ),
             ),
@@ -298,7 +298,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(
                   0xFF9C27B0), // Cor consistente com outros botões Premium
-              foregroundColor: Colors.white,
+              foregroundColor: context.gc.textPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -332,10 +332,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'O que você ganha com o Premium:',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.gc.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -389,8 +389,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 isBetaCodePremium
                     ? 'Seu acesso Premium foi resgatado via Código Premium e não expira.'
                     : 'Seu acesso Premium vitalício está ativo.',
-                style: const TextStyle(
-                  color: Colors.white70,
+                style: TextStyle(
+                  color: context.gc.textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -422,8 +422,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     Expanded(
                       child: Text(
                         'Plano ${currentUser.plan == SubscriptionPlan.monthly ? "Mensal" : "Anual"}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.gc.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -433,10 +433,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 ),
                 if (currentUser.isAdmin) ...[
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Modo de simulação: Em produção, este seria um plano ativo via Play Store com renovação automática.',
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: context.gc.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -454,16 +454,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   context: context,
                   builder: (context) => AlertDialog(
                     backgroundColor: context.gc.surface,
-                    title: const Text(
+                    title: Text(
                       'Gerenciar Assinatura',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: context.gc.textPrimary),
                     ),
                     content: Text(
                       currentUser.isAdmin
                           ? 'Em produção, este botão direcionaria para o Google Play para gerenciar a assinatura.\n\n'
                               'Você está em modo de simulação como admin.'
                           : 'Para gerenciar sua assinatura, acesse as configurações da Google Play Store ou App Store.',
-                      style: const TextStyle(color: Colors.white70),
+                      style: TextStyle(color: context.gc.textSecondary),
                     ),
                     actions: [
                       TextButton(
@@ -478,8 +478,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 );
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white54),
+                foregroundColor: context.gc.textPrimary,
+                side: BorderSide(color: context.gc.textSecondary),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -505,8 +505,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       child: OutlinedButton(
         onPressed: _openCustomerCenter,
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white,
-          side: const BorderSide(color: Colors.white54),
+          foregroundColor: context.gc.textPrimary,
+          side: BorderSide(color: context.gc.textSecondary),
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -636,7 +636,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.gc.lilac,
-                    foregroundColor: Colors.white,
+                    foregroundColor: context.gc.textPrimary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 16,
@@ -662,18 +662,18 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ? null
             : _restorePurchases,
         child: _paymentService.status == PurchaseStatus.loading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white54,
+                  color: context.gc.textSecondary,
                 ),
               )
-            : const Text(
+            : Text(
                 'Restaurar Compras',
                 style: TextStyle(
-                  color: Colors.white54,
+                  color: context.gc.textSecondary,
                   decoration: TextDecoration.underline,
                 ),
               ),
@@ -690,22 +690,22 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.warning_amber, color: Color(0xFFFFC107)),
             SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Pagamentos Não Configurados',
-                style: TextStyle(color: Colors.white, fontSize: 18),
+                style: TextStyle(color: context.gc.textPrimary, fontSize: 18),
               ),
             ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'O sistema de pagamentos ainda não foi configurado nesta versão do app.\n\n'
           'Se você é desenvolvedor, verifique os logs do console para mais detalhes sobre como configurar o RevenueCat.',
-          style: TextStyle(color: Colors.white70, height: 1.5),
+          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(

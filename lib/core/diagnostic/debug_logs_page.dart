@@ -85,11 +85,11 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
                       backgroundColor: const Color(0xFF1A1A2E),
                       selectedColor: context.gc.lilac.withOpacity(0.3),
                       labelStyle: TextStyle(
-                        color: isSelected ? context.gc.lilac : Colors.white70,
+                        color: isSelected ? context.gc.lilac : context.gc.textSecondary,
                         fontSize: 12,
                       ),
                       side: BorderSide(
-                        color: isSelected ? context.gc.lilac : Colors.white24,
+                        color: isSelected ? context.gc.lilac : context.gc.textSecondary,
                       ),
                     ),
                   );
@@ -105,12 +105,12 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
               children: [
                 Text(
                   'Total: ${_filteredLogs.length} logs',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
                 ),
                 const Spacer(),
                 Text(
                   'Última atualização: ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -121,10 +121,10 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
           // Logs list
           Expanded(
             child: _filteredLogs.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       'Nenhum log encontrado',
-                      style: TextStyle(color: Colors.white54),
+                      style: TextStyle(color: context.gc.textSecondary),
                     ),
                   )
                 : ListView.builder(
@@ -163,7 +163,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
         tagColor = context.gc.starYellow;
         break;
       default:
-        tagColor = Colors.white70;
+        tagColor = context.gc.textSecondary;
     }
 
     final isSessionStart = log.message.contains('═══');
@@ -187,7 +187,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
           Text(
             time,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
+              color: context.gc.textPrimary.withOpacity(0.4),
               fontSize: 10,
               fontFamily: 'monospace',
             ),
@@ -216,7 +216,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
             child: Text(
               log.message,
               style: TextStyle(
-                color: isSessionStart ? context.gc.lilac : Colors.white,
+                color: isSessionStart ? context.gc.lilac : context.gc.textPrimary,
                 fontSize: 12,
                 fontFamily: 'monospace',
               ),
@@ -244,10 +244,10 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title:
-            const Text('Limpar Logs?', style: TextStyle(color: Colors.white)),
-        content: const Text(
+            Text('Limpar Logs?', style: TextStyle(color: context.gc.textPrimary)),
+        content: Text(
           'Isso removerá todos os logs salvos.',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -257,7 +257,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Limpar', style: TextStyle(color: Colors.white)),
+            child: Text('Limpar', style: TextStyle(color: context.gc.textPrimary)),
           ),
         ],
       ),

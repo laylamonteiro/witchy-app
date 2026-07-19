@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -73,16 +74,16 @@ class ProFeatureGate extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black26,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: context.gc.textSecondary),
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.lock, color: Colors.white54, size: 20),
+          Icon(Icons.lock, color: context.gc.textSecondary, size: 20),
           SizedBox(width: 8),
           Text(
             'Funcionalidade Pro',
-            style: TextStyle(color: Colors.white54),
+            style: TextStyle(color: context.gc.textSecondary),
           ),
         ],
       ),

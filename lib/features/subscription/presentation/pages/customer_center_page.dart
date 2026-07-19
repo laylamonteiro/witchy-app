@@ -45,15 +45,15 @@ class _CustomerCenterPageState extends State<CustomerCenterPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const ResponsiveAppBarTitle(
+        title: ResponsiveAppBarTitle(
           'Central do Assinante',
           style: TextStyle(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -65,10 +65,10 @@ class _CustomerCenterPageState extends State<CustomerCenterPage> {
               color: context.gc.lilac,
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Abrindo Central do Assinante...',
               style: TextStyle(
-                color: Colors.white70,
+                color: context.gc.textSecondary,
                 fontSize: 16,
               ),
             ),
@@ -131,20 +131,20 @@ class CustomerCenterWidget extends StatelessWidget {
             color: context.gc.lilac,
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Central do Assinante',
             style: TextStyle(
-              color: Colors.white,
+              color: context.gc.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Gerencie sua assinatura, solicite suporte ou cancele',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white54,
+              color: context.gc.textSecondary,
               fontSize: 14,
             ),
           ),
@@ -153,7 +153,7 @@ class CustomerCenterWidget extends StatelessWidget {
             onPressed: () => paymentService.presentCustomerCenter(),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
-              foregroundColor: Colors.white,
+              foregroundColor: context.gc.textPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text('Abrir Central'),

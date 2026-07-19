@@ -360,7 +360,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                               onPressed: _createCode,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: context.gc.lilac,
-                                foregroundColor: Colors.white,
+                                foregroundColor: context.gc.textPrimary,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 24,
                                   vertical: 20,

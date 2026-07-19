@@ -75,15 +75,15 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const ResponsiveAppBarTitle(
+        title: ResponsiveAppBarTitle(
           'Privacidade',
           style: TextStyle(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -232,7 +232,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.gc.textPrimary10),
       ),
       child: Column(children: children),
     );
@@ -256,15 +256,15 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: context.gc.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          color: Colors.white54,
+        style: TextStyle(
+          color: context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
@@ -283,7 +283,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? Colors.red : Colors.white;
+    final color = isDestructive ? Colors.red : context.gc.textPrimary;
     final iconBgColor = isDestructive
         ? Colors.red.withValues(alpha: 0.2)
         : context.gc.lilac.withValues(alpha: 0.2);
@@ -310,7 +310,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         style: TextStyle(
           color: isDestructive
               ? Colors.red.withValues(alpha: 0.7)
-              : Colors.white54,
+              : context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
@@ -323,7 +323,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     return Divider(
       height: 1,
       indent: 56,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: context.gc.textPrimary.withValues(alpha: 0.1),
     );
   }
 
@@ -372,7 +372,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                           Text(
                             'Sincronização na Nuvem',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: context.gc.textPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -391,9 +391,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Mantenha seus dados sincronizados entre todos os seus dispositivos e nunca perca seus feitiços e diários.',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  style: TextStyle(color: context.gc.textSecondary, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -419,7 +419,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           decoration: BoxDecoration(
             color: context.gc.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white10),
+            border: Border.all(color: context.gc.textPrimary10),
           ),
           child: Column(
             children: [
@@ -453,8 +453,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                                         : 'Não conectado',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: context.gc.textPrimary,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16,
                                 ),
@@ -486,8 +486,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                               : isReady
                                   ? syncProvider.lastSyncText
                                   : 'Faça login para sincronizar',
-                          style: const TextStyle(
-                            color: Colors.white54,
+                          style: TextStyle(
+                            color: context.gc.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -594,11 +594,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Seus dados mágicos são sagrados. Nunca vendemos suas informações pessoais '
             'e você tem controle total sobre o que é coletado e armazenado.',
             style: TextStyle(
-              color: Colors.white70,
+              color: context.gc.textSecondary,
               fontSize: 13,
               height: 1.4,
             ),
@@ -629,14 +629,14 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
-        title: const Text(
+        title: Text(
           'Exportar Dados',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.gc.textPrimary),
         ),
-        content: const Text(
+        content: Text(
           'Seus dados serão exportados em formato JSON. '
           'Isso pode levar alguns segundos.',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -652,7 +652,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               backgroundColor: context.gc.lilac,
             ),
             child:
-                const Text('Exportar', style: TextStyle(color: Colors.white)),
+                Text('Exportar', style: TextStyle(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -739,14 +739,14 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
-        title: const Text(
+        title: Text(
           'Limpar Dados Locais?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.gc.textPrimary),
         ),
-        content: const Text(
+        content: Text(
           'Isso removera todos os dados salvos neste dispositivo. '
           'Se você tem sincronização ativada, seus dados na nuvem serão mantidos.',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -758,7 +758,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
             ),
-            child: const Text('Limpar', style: TextStyle(color: Colors.white)),
+            child: Text('Limpar', style: TextStyle(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -834,7 +834,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\n'
           'Todos os seus dados serão permanentemente excluídos, incluindo:\n'
           '- Feitiços e rituais\n'
@@ -842,7 +842,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           '- Mapa astral\n'
           '- Configurações\n\n'
           'Tem certeza absoluta?',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -854,9 +854,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text(
+            child: Text(
               'Excluir Permanentemente',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -877,7 +877,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               SizedBox(height: 16),
               Text(
                 'Excluindo conta...',
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(color: context.gc.textSecondary),
               ),
             ],
           ),
@@ -944,27 +944,27 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
             SizedBox(width: 8),
             Text(
               'Recurso Premium',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'A sincronização de dados na nuvem é um recurso exclusivo para usuários Premium.\n\n'
           'Com o Premium, seus dados ficam sempre seguros e sincronizados entre todos os seus dispositivos.',
-          style: TextStyle(color: Colors.white70, height: 1.5),
+          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Agora Não',
-              style: TextStyle(color: Colors.white54),
+              style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -975,9 +975,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9C27B0),
             ),
-            child: const Text(
+            child: Text(
               'Fazer Upgrade',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -1005,16 +1005,16 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: context.gc.textSecondary,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: Text(
                 'Política de Privacidade',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.gc.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1024,7 +1024,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               child: SingleChildScrollView(
                 controller: scrollController,
                 padding: const EdgeInsets.all(16),
-                child: const Text(
+                child: Text(
                   '''POLÍTICA DE PRIVACIDADE - GRIMÓRIO DE BOLSO
 
 Última atualização: Novembro 2025
@@ -1068,7 +1068,7 @@ Para dúvidas sobre privacidade, entre em contato:
 privacidade@grimoriodebolso.com.br
 ''',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: context.gc.textSecondary,
                     fontSize: 14,
                     height: 1.6,
                   ),

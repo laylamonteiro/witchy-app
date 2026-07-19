@@ -334,7 +334,7 @@ class BirthChartViewPage extends StatelessWidget {
                               'Desbloquear interpretações completas'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF9C27B0),
-                            foregroundColor: Colors.white,
+                            foregroundColor: context.gc.textPrimary,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 24, vertical: 12),
                             shape: RoundedRectangleBorder(

@@ -154,10 +154,10 @@ class DivinationHubPage extends StatelessWidget {
                                 ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'PREMIUM',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: context.gc.textPrimary,
                                   fontSize: 8,
                                   fontWeight: FontWeight.bold,
                                 ),

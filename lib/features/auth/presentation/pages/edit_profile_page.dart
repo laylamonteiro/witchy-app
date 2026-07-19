@@ -91,12 +91,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
         title: ResponsiveAppBarTitle(
           'Editar Perfil',
           style: GoogleFonts.cinzelDecorative(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -292,7 +292,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.gc.textPrimary10),
       ),
       child: Column(children: children),
     );
@@ -315,10 +315,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
       title: TextField(
         controller: controller,
-        style: GoogleFonts.nunito(color: Colors.white),
+        style: GoogleFonts.nunito(color: context.gc.textPrimary),
         decoration: InputDecoration(
           labelText: title,
-          labelStyle: GoogleFonts.nunito(color: Colors.white54),
+          labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
@@ -348,14 +348,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       title: Text(
         title,
         style: GoogleFonts.nunito(
-          color: Colors.white54,
+          color: context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
       subtitle: Text(
         value ?? 'Não informado',
         style: GoogleFonts.nunito(
-          color: Colors.white,
+          color: context.gc.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -381,14 +381,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       title: Text(
         title,
         style: GoogleFonts.nunito(
-          color: Colors.white,
+          color: context.gc.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
         subtitle,
         style: GoogleFonts.nunito(
-          color: Colors.white54,
+          color: context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
@@ -407,7 +407,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? Colors.red : Colors.white;
+    final color = isDestructive ? Colors.red : context.gc.textPrimary;
     final iconBgColor = isDestructive
         ? Colors.red.withValues(alpha: 0.2)
         : context.gc.lilac.withValues(alpha: 0.2);
@@ -434,7 +434,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         style: GoogleFonts.nunito(
           color: isDestructive
               ? Colors.red.withValues(alpha: 0.7)
-              : Colors.white54,
+              : context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
@@ -447,7 +447,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Divider(
       height: 1,
       indent: 56,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: context.gc.textPrimary.withValues(alpha: 0.1),
     );
   }
 
@@ -481,7 +481,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             'Seus dados mágicos são sagrados. Nunca vendemos suas informações pessoais '
             'e você tem controle total sobre o que é coletado e armazenado.',
             style: GoogleFonts.nunito(
-              color: Colors.white70,
+              color: context.gc.textSecondary,
               fontSize: 13,
               height: 1.4,
             ),
@@ -502,7 +502,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         backgroundColor: context.gc.surface,
         title: Text(
           'Alterar Senha',
-          style: GoogleFonts.nunito(color: Colors.white),
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -510,13 +510,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: currentPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Senha Atual',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -529,13 +529,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: newPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Nova Senha',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -548,13 +548,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: confirmPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Confirmar Nova Senha',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -644,7 +644,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             child: Text(
               'Alterar',
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -659,12 +659,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
         backgroundColor: context.gc.surface,
         title: Text(
           'Exportar Dados',
-          style: GoogleFonts.nunito(color: Colors.white),
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Text(
           'Seus dados serão exportados em formato JSON. '
           'Isso pode levar alguns segundos.',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -680,7 +680,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               backgroundColor: context.gc.lilac,
             ),
             child: Text('Exportar',
-                style: GoogleFonts.nunito(color: Colors.white)),
+                style: GoogleFonts.nunito(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -769,12 +769,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
         backgroundColor: context.gc.surface,
         title: Text(
           'Limpar Dados Locais?',
-          style: GoogleFonts.nunito(color: Colors.white),
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Text(
           'Isso removerá todos os dados salvos neste dispositivo. '
           'Se você tem sincronização ativada, seus dados na nuvem serão mantidos.',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -787,7 +787,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               backgroundColor: Colors.orange,
             ),
             child:
-                Text('Limpar', style: GoogleFonts.nunito(color: Colors.white)),
+                Text('Limpar', style: GoogleFonts.nunito(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -871,7 +871,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           '- Mapa astral\n'
           '- Configurações\n\n'
           'Tem certeza absoluta?',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
@@ -885,7 +885,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             child: Text(
               'Excluir Permanentemente',
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -906,7 +906,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const SizedBox(height: 16),
               Text(
                 'Excluindo conta...',
-                style: GoogleFonts.nunito(color: Colors.white70),
+                style: GoogleFonts.nunito(color: context.gc.textSecondary),
               ),
             ],
           ),
@@ -979,21 +979,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
             const SizedBox(width: 8),
             Text(
               'Recurso Premium',
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ],
         ),
         content: Text(
           'A sincronização de dados na nuvem é um recurso exclusivo para usuários Premium.\n\n'
           'Com o Premium, seus dados ficam sempre seguros e sincronizados entre todos os seus dispositivos.',
-          style: GoogleFonts.nunito(color: Colors.white70, height: 1.5),
+          style: GoogleFonts.nunito(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Agora Não',
-              style: GoogleFonts.nunito(color: Colors.white54),
+              style: GoogleFonts.nunito(color: context.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1006,7 +1006,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             child: Text(
               'Fazer Upgrade',
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],

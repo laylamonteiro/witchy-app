@@ -248,7 +248,7 @@ class _HeroCopy extends StatelessWidget {
               'TODO O PODER',
               textAlign: textAlign,
               style: GoogleFonts.cinzelDecorative(
-                color: Colors.white,
+                color: context.gc.textPrimary,
                 fontSize: compact ? 20 : 23,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
@@ -606,8 +606,8 @@ class _SubscriptionPlanCard extends StatelessWidget {
                             ),
                             child: Text(
                               tag,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.gc.textPrimary,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -713,16 +713,16 @@ class SubscriptionPurchaseButton extends StatelessWidget {
               backgroundColor: Colors.transparent,
               disabledBackgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              foregroundColor: Colors.white,
+              foregroundColor: context.gc.textPrimary,
               shape: const StadiumBorder(),
             ),
             child: loading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: context.gc.textPrimary,
                     ),
                   )
                 : Text(

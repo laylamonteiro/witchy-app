@@ -257,7 +257,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                     label: const Text('Diagnóstico Completo'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.gc.lilac,
-                      foregroundColor: Colors.white,
+                      foregroundColor: context.gc.textPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -270,7 +270,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                     label: const Text('Testar Criação'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.gc.pink,
-                      foregroundColor: Colors.white,
+                      foregroundColor: context.gc.textPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -296,12 +296,12 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                       ),
                     )
                   : _logs.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
                             'Nenhum log ainda.\nClique em "Diagnóstico Completo" para começar.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.white54,
+                              color: context.gc.textSecondary,
                               fontSize: 14,
                             ),
                           ),
@@ -310,7 +310,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
                           itemCount: _logs.length,
                           itemBuilder: (context, index) {
                             final log = _logs[index];
-                            Color textColor = Colors.white70;
+                            Color textColor = context.gc.textSecondary;
 
                             if (log.contains('✅')) {
                               textColor = Colors.greenAccent;
@@ -385,12 +385,12 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(color: Colors.white70)),
+          Text('• ', style: TextStyle(color: context.gc.textSecondary)),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: context.gc.textSecondary,
                 fontSize: 12,
               ),
             ),

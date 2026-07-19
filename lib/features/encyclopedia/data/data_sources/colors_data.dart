@@ -40,7 +40,7 @@ final List<ColorModel> colorsData = [
       'Meditação',
     ],
   ),
-  const ColorModel(
+  ColorModel(
     name: 'Branco',
     color: Colors.white,
     meaning: 'Pureza, paz, verdade, proteção espiritual',

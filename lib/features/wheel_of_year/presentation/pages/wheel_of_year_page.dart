@@ -198,7 +198,7 @@ class WheelOfYearPage extends StatelessWidget {
                 sabbat.emoji,
                 style: TextStyle(
                   fontSize: 40,
-                  color: isPast ? Colors.white.withValues(alpha: 0.5) : null,
+                  color: isPast ? context.gc.textPrimary.withValues(alpha: 0.5) : null,
                 ),
               ),
               const SizedBox(width: 16),

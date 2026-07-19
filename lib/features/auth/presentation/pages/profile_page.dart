@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -87,8 +88,8 @@ class ProfilePage extends StatelessWidget {
           children: [
             Text(
               user.displayName ?? 'Bruxa Anônima',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.gc.textPrimary,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -114,8 +115,8 @@ class ProfilePage extends StatelessWidget {
           ),
           child: Text(
             _getRoleLabel(user.role),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.gc.textPrimary,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -135,17 +136,17 @@ class ProfilePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
+        title: Text(
           'Editar Nome',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
             hintText: 'Seu nome mágico',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+            hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide:
@@ -160,9 +161,9 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Cancelar',
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -204,7 +205,7 @@ class ProfilePage extends StatelessWidget {
         border: Border.all(
           color: isFree
               ? const Color(0xFF9C27B0).withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.2),
+              : context.gc.textPrimary.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -213,7 +214,7 @@ class ProfilePage extends StatelessWidget {
             children: [
               Icon(
                 isFree ? Icons.workspace_premium_outlined : Icons.star,
-                color: Colors.white,
+                color: context.gc.textPrimary,
                 size: 32,
               ),
               const SizedBox(width: 12),
@@ -223,8 +224,8 @@ class ProfilePage extends StatelessWidget {
                   children: [
                     Text(
                       isFree ? 'Plano Gratuito' : 'Plano Premium',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.gc.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -234,7 +235,7 @@ class ProfilePage extends StatelessWidget {
                           ? 'Algumas funcionalidades são limitadas'
                           : 'Acesso completo a todas as funcionalidades',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: context.gc.textPrimary.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -251,7 +252,7 @@ class ProfilePage extends StatelessWidget {
                 onPressed: () => _showUpgradeSheet(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9C27B0),
-                  foregroundColor: Colors.white,
+                  foregroundColor: context.gc.textPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
@@ -283,16 +284,16 @@ class ProfilePage extends StatelessWidget {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.gc.textPrimary.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Uso do Plano Gratuito',
             style: TextStyle(
-              color: Colors.white,
+              color: context.gc.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -344,7 +345,7 @@ class ProfilePage extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(icon, color: Colors.white54, size: 20),
+        Icon(icon, color: context.gc.textSecondary, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -355,8 +356,8 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
                       fontSize: 14,
                     ),
                   ),
@@ -373,15 +374,15 @@ class ProfilePage extends StatelessWidget {
               if (subtitle != null)
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: Colors.white38,
+                  style: TextStyle(
+                    color: context.gc.textSecondary,
                     fontSize: 11,
                   ),
                 ),
               const SizedBox(height: 4),
               LinearProgressIndicator(
                 value: percentage.clamp(0, 1),
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: context.gc.textPrimary.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation(progressColor),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -400,7 +401,7 @@ class ProfilePage extends StatelessWidget {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.gc.textPrimary.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -476,20 +477,20 @@ class ProfilePage extends StatelessWidget {
       context: pageContext,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
+        title: Text(
           'Sair da Conta',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.gc.textPrimary),
         ),
-        content: const Text(
+        content: Text(
           'Tem certeza que deseja sair?\nSeus dados locais serão mantidos.',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
+            child: Text(
               'Cancelar',
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -504,9 +505,9 @@ class ProfilePage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF44336),
             ),
-            child: const Text(
+            child: Text(
               'Sair',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -542,9 +543,9 @@ class ProfilePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Simular Plano:',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+            style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Row(
@@ -590,8 +591,8 @@ class ProfilePage extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: isSelected
               ? const Color(0xFF9C27B0)
-              : Colors.white.withValues(alpha: 0.1),
-          foregroundColor: Colors.white,
+              : context.gc.textPrimary.withValues(alpha: 0.1),
+          foregroundColor: context.gc.textPrimary,
           padding: const EdgeInsets.symmetric(vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -614,16 +615,16 @@ class ProfilePage extends StatelessWidget {
     required VoidCallback onTap,
     Color? textColor,
   }) {
-    final color = textColor ?? Colors.white;
+    final color = textColor ?? context.gc.textPrimary;
     return ListTile(
-      leading: Icon(icon, color: textColor ?? Colors.white70),
+      leading: Icon(icon, color: textColor ?? context.gc.textSecondary),
       title: Text(
         title,
         style: TextStyle(color: color),
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: textColor?.withValues(alpha: 0.5) ?? Colors.white38,
+        color: textColor?.withValues(alpha: 0.5) ?? context.gc.textSecondary,
       ),
       onTap: onTap,
     );
@@ -632,7 +633,7 @@ class ProfilePage extends StatelessWidget {
   Widget _buildDivider() {
     return Divider(
       height: 1,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: context.gc.textPrimary.withValues(alpha: 0.1),
     );
   }
 
@@ -678,19 +679,19 @@ class ProfilePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.notifications_outlined, color: Color(0xFF9C27B0)),
             SizedBox(width: 8),
             Text(
               'Notificações',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'As configurações de notificações estarão disponíveis em breve!\n\nVocê poderá personalizar alertas para:\n• Lembretes de rituais\n• Fases da lua\n• Datas mágicas especiais',
-          style: TextStyle(color: Colors.white70, height: 1.5),
+          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
@@ -710,13 +711,13 @@ class ProfilePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.help_outline, color: Color(0xFF9C27B0)),
             SizedBox(width: 8),
             Text(
               'Ajuda & Suporte',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
@@ -780,22 +781,22 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Colors.white54,
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white38),
+            Icon(Icons.chevron_right, color: context.gc.textSecondary),
           ],
         ),
       ),
@@ -838,13 +839,13 @@ class ProfilePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        title: Row(
           children: [
             Text('✨', style: TextStyle(fontSize: 24)),
             SizedBox(width: 8),
             Text(
               'Grimório de Bolso',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
@@ -854,12 +855,12 @@ class ProfilePage extends StatelessWidget {
           children: [
             Text(
               'Versão ${packageInfo.version} (${packageInfo.buildNumber})',
-              style: const TextStyle(color: Colors.white70),
+              style: TextStyle(color: context.gc.textSecondary),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Seu companheiro para práticas mágicas, rituais e autoconhecimento através da astrologia e bruxaria moderna.',
-              style: TextStyle(color: Colors.white70, height: 1.5),
+              style: TextStyle(color: context.gc.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -867,9 +868,9 @@ class ProfilePage extends StatelessWidget {
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '© 2024 Grimório de Bolso',
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
             ),
           ],
         ),

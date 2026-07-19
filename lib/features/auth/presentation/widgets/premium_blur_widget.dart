@@ -222,7 +222,7 @@ class PremiumContentSection extends StatelessWidget {
         label: const Text('Seja Premium'),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF9C27B0),
-          foregroundColor: Colors.white,
+          foregroundColor: context.gc.textPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -370,7 +370,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: context.gc.textSecondary,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -381,7 +381,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                       key: const ValueKey('close_premium_paywall'),
                       tooltip: 'Fechar',
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Colors.white54),
+                      icon: Icon(Icons.close, color: context.gc.textSecondary),
                     ),
                   ),
                 ),
@@ -536,13 +536,13 @@ class PremiumPreviewWrapper extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.lock, color: Colors.white, size: 16),
+                    Icon(Icons.lock, color: context.gc.textPrimary, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         previewMessage ?? access.message ?? 'Conteúdo Premium',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.gc.textPrimary,
                           fontSize: 12,
                         ),
                       ),
@@ -554,10 +554,10 @@ class PremiumPreviewWrapper extends StatelessWidget {
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: const Text(
+                      child: Text(
                         'Upgrade',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.gc.textPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
