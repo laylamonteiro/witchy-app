@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -65,7 +66,7 @@ class _GrimoirePageState extends State<GrimoirePage>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Grimório Digital'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.grimoirePageTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -73,7 +74,7 @@ class _GrimoirePageState extends State<GrimoirePage>
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
-            tooltip: 'Configurações',
+            tooltip: AppLocalizations.of(context)!.settingsTitle,
           ),
         ],
         bottom: TabBar(
@@ -84,10 +85,10 @@ class _GrimoirePageState extends State<GrimoirePage>
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-          tabs: const [
-            Tab(text: 'Astrologia'),
-            Tab(text: 'Ferramentas'),
-            Tab(text: 'Meu Grimório'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.grimoireTabAstrology),
+            Tab(text: AppLocalizations.of(context)!.grimoireTabTools),
+            Tab(text: AppLocalizations.of(context)!.grimoireTabMyGrimoire),
           ],
         ),
       ),
@@ -119,14 +120,14 @@ class _ToolsTab extends StatelessWidget {
                 const Text('‧ ⛦ ‧', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 Text(
-                  'Ferramentas Mágicas',
+                  AppLocalizations.of(context)!.toolsHeaderTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Recursos para auxiliar em suas práticas de magia e manifestação',
+                  AppLocalizations.of(context)!.toolsHeaderSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: context.gc.softWhite.withOpacity(0.8),
                       ),
@@ -138,9 +139,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🔮', style: TextStyle(fontSize: 40)),
-            title: 'Conselheiro Místico',
-            description:
-                'Sabedoria ancestral para suas dúvidas de bruxaria e magia',
+            title: AppLocalizations.of(context)!.toolMysticAdvisorTitle,
+            description: AppLocalizations.of(context)!.toolMysticAdvisorDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -152,8 +152,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🃏', style: TextStyle(fontSize: 40)),
-            title: 'Cartas do Oráculo',
-            description: 'Mensagens e orientação do universo',
+            title: AppLocalizations.of(context)!.toolOracleTitle,
+            description: AppLocalizations.of(context)!.toolOracleDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -165,8 +165,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const SigilIcon(size: 40),
-            title: 'Sigilos',
-            description: 'Crie símbolos mágicos para suas intenções',
+            title: AppLocalizations.of(context)!.toolSigilsTitle,
+            description: AppLocalizations.of(context)!.toolSigilsDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -178,8 +178,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🔢', style: TextStyle(fontSize: 40)),
-            title: 'Numerologia',
-            description: 'Seus números-chave, horas espelho e sequências',
+            title: AppLocalizations.of(context)!.toolNumerologyTitle,
+            description: AppLocalizations.of(context)!.toolNumerologyDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -191,8 +191,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
-            title: 'Leitura de Runas',
-            description: 'Consulte as antigas runas nórdicas',
+            title: AppLocalizations.of(context)!.toolRunesTitle,
+            description: AppLocalizations.of(context)!.toolRunesDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -204,8 +204,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
-            title: 'Pêndulo',
-            description: 'Perguntas de sim ou não',
+            title: AppLocalizations.of(context)!.toolPendulumTitle,
+            description: AppLocalizations.of(context)!.toolPendulumDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(

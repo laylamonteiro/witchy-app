@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'crystals_list_page.dart';
 import 'colors_list_page.dart';
@@ -86,7 +87,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Enciclopédia Mágica'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.encyclopediaPageTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -109,21 +110,21 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
               padding: EdgeInsets.zero,
               labelStyle: const TextStyle(fontSize: 14),
               unselectedLabelStyle: const TextStyle(fontSize: 14),
-              tabs: const [
-                Tab(text: 'Lua'),
-                Tab(text: 'Sabbats'),
-                Tab(text: 'Cristais'),
-                Tab(text: 'Ervas'),
-                Tab(text: 'Metais'),
-                Tab(text: 'Cores'),
-                Tab(text: 'Deusas'),
-                Tab(text: 'Elementos'),
-                Tab(text: 'Altar'),
-                Tab(text: 'Runas'),
-                Tab(text: 'Arquétipos'),
-                Tab(text: 'Anjos'),
-                Tab(text: 'Demônios'),
-                Tab(text: 'Símbolos'),
+              tabs: [
+                Tab(text: AppLocalizations.of(context)!.encyTabMoon),
+                Tab(text: AppLocalizations.of(context)!.encyTabSabbats),
+                Tab(text: AppLocalizations.of(context)!.encyTabCrystals),
+                Tab(text: AppLocalizations.of(context)!.encyTabHerbs),
+                Tab(text: AppLocalizations.of(context)!.encyTabMetals),
+                Tab(text: AppLocalizations.of(context)!.encyTabColors),
+                Tab(text: AppLocalizations.of(context)!.encyTabGoddesses),
+                Tab(text: AppLocalizations.of(context)!.encyTabElements),
+                Tab(text: AppLocalizations.of(context)!.encyTabAltar),
+                Tab(text: AppLocalizations.of(context)!.encyTabRunes),
+                Tab(text: AppLocalizations.of(context)!.encyTabArchetypes),
+                Tab(text: AppLocalizations.of(context)!.encyTabAngels),
+                Tab(text: AppLocalizations.of(context)!.encyTabDemons),
+                Tab(text: AppLocalizations.of(context)!.encyTabSymbols),
               ],
             ),
           ),
