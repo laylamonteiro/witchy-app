@@ -349,9 +349,13 @@ class AIService {
     return buffer.toString();
   }
 
+<<<<<<< HEAD
   String _buildMagicalProfileSystemPrompt(
     TreatmentPreference treatmentPreference,
   ) {
+=======
+  String _buildMagicalProfileSystemPrompt() {
+>>>>>>> origin/codex/add-localization-configuration-and-files
     return '''${_localizedInstruction()}
 
 Você é uma sábia bruxa ancestral que interpreta mapas astrais para praticantes de bruxaria moderna.
@@ -410,9 +414,13 @@ DIRETRIZES:
 - Total: aproximadamente 800-1000 palavras''';
   }
 
+<<<<<<< HEAD
   String _buildDailyWeatherSystemPrompt(
     TreatmentPreference treatmentPreference,
   ) {
+=======
+  String _buildDailyWeatherSystemPrompt() {
+>>>>>>> origin/codex/add-localization-configuration-and-files
     return '''${_localizedInstruction()}
 
 Você é uma bruxa sábia que interpreta os movimentos celestiais para guiar praticantes de magia moderna em seu dia a dia.
@@ -503,10 +511,17 @@ DIRETRIZES:
     }
   }
 
+<<<<<<< HEAD
   String _buildAffirmationSystemPrompt(
     TreatmentPreference treatmentPreference,
   ) {
     return '''${_localizedInstruction()}
+=======
+  String _buildAffirmationSystemPrompt() {
+    return '''${_localizedInstruction()}
+
+Você é o Conselheiro Místico, guardião da sabedoria ancestral do Grimório de Bolso.
+>>>>>>> origin/codex/add-localization-configuration-and-files
 
 Você é o Conselheiro Místico, guardião da sabedoria ancestral do Grimório de Bolso.
 
@@ -536,10 +551,17 @@ RETORNE APENAS A AFIRMAÇÃO, sem explicações, aspas ou formatação adicional
 Se o usuário forneceu um contexto, personalize a afirmação para a situação específica.''';
   }
 
+<<<<<<< HEAD
   String _buildSystemPrompt(TreatmentPreference treatmentPreference) {
     return '''${_localizedInstruction()}
 
 Você é o ${TreatmentText.advisorTitle(treatmentPreference)}, guardião da sabedoria arcana do Grimório de Bolso.
+=======
+  String _buildSystemPrompt() {
+    return '''${_localizedInstruction()}
+
+Você é o Conselheiro Místico, guardião da sabedoria arcana do Grimório de Bolso.
+>>>>>>> origin/codex/add-localization-configuration-and-files
 
 Você habita um grimório digital mágico onde bruxas e praticantes modernos registram seus feitiços, estudam os trânsitos planetários e o clima mágico diário, consultam runas e oráculos, acompanham as fases lunares, e exploram seus mapas astrais personalizados.
 
@@ -629,10 +651,17 @@ Diretrizes Sagradas:
     }
   }
 
+<<<<<<< HEAD
   String _buildMysticAdvisorSystemPrompt(
     TreatmentPreference treatmentPreference,
   ) {
     return '''${_localizedInstruction()}
+=======
+  String _buildMysticAdvisorSystemPrompt() {
+    return '''${_localizedInstruction()}
+
+Você é o Conselheiro Místico, guardião ancião da sabedoria arcana do Grimório de Bolso.
+>>>>>>> origin/codex/add-localization-configuration-and-files
 
 Você é o ${TreatmentText.advisorTitle(treatmentPreference)}, guardião ancião da sabedoria arcana do Grimório de Bolso.
 
