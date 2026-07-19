@@ -16,6 +16,7 @@ import '../../data/models/sigil_wheel_model.dart';
 import '../widgets/witch_wheel_painter.dart';
 import '../widgets/sigil_drawing_painter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
 /// Etapa 3: Mostrar desenho do sigilo com a Roda das Bruxas
 class SigilStep3DrawingPage extends StatefulWidget {
@@ -74,9 +75,21 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     }
   }
 
-  /// Exporta o desenho atual como PNG para a galeria do dispositivo.
+  /// Exporta o desenho atual como PNG para a galeria (exclusivo Premium).
   Future<void> _exportToGallery() async {
     if (_isExporting) return;
+
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.isPremiumEffective) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
+      );
+      return;
+    }
+
     setState(() => _isExporting = true);
     try {
       final boundary = _drawingKey.currentContext?.findRenderObject()

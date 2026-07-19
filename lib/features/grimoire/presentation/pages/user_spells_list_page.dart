@@ -13,10 +13,23 @@ import '../../data/models/spell_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Origem dos feitiços exibidos na aba "Meu Grimório".
-enum _SpellSource { all, mine, ancestral }
+enum SpellSource { all, mine, ancestral }
 
 class UserSpellsListPage extends StatefulWidget {
-  const UserSpellsListPage({super.key});
+  /// Quando aberto a partir do hub de categorias: título da AppBar própria.
+  final String? title;
+
+  /// Restringe a lista a um grupo de categorias (null = todas).
+  final Set<SpellCategory>? categoryGroup;
+
+  final SpellSource initialSource;
+
+  const UserSpellsListPage({
+    super.key,
+    this.title,
+    this.categoryGroup,
+    this.initialSource = SpellSource.all,
+  });
 
   @override
   State<UserSpellsListPage> createState() => _UserSpellsListPageState();
@@ -25,7 +38,7 @@ class UserSpellsListPage extends StatefulWidget {
 class _UserSpellsListPageState extends State<UserSpellsListPage> {
   String _searchQuery = '';
   SpellCategory? _filterCategory;
-  _SpellSource _source = _SpellSource.all;
+  late SpellSource _source = widget.initialSource;
 
   @override
   void initState() {
@@ -39,6 +52,17 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final body = _buildBody(context);
+    if (widget.title == null) return body;
+    return Scaffold(
+      appBar: AppBar(
+        title: ResponsiveAppBarTitle(widget.title!),
+      ),
+      body: body,
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
     return Stack(
       children: [
         Column(
@@ -105,7 +129,9 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                           ],
                         ),
                       ),
-                      ...SpellCategory.values.map((category) => PopupMenuItem<String>(
+                      ...(widget.categoryGroup?.toList() ??
+                              SpellCategory.values)
+                          .map((category) => PopupMenuItem<String>(
                             value: category.name,
                             child: Row(
                               children: [
@@ -137,11 +163,11 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _buildSourceChip('Todos', _SpellSource.all),
+                  _buildSourceChip('Todos', SpellSource.all),
                   const SizedBox(width: 8),
-                  _buildSourceChip('Meus', _SpellSource.mine),
+                  _buildSourceChip('Meus', SpellSource.mine),
                   const SizedBox(width: 8),
-                  _buildSourceChip('Ancestrais', _SpellSource.ancestral),
+                  _buildSourceChip('Ancestrais', SpellSource.ancestral),
                 ],
               ),
             ),
@@ -157,9 +183,9 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
 
                   final isPremium = context.watch<AuthProvider>().isPremium;
 
-                  var spells = _source == _SpellSource.mine
+                  var spells = _source == SpellSource.mine
                       ? provider.userSpells
-                      : _source == _SpellSource.ancestral
+                      : _source == SpellSource.ancestral
                           ? provider.appSpells
                           : provider.spells;
 
@@ -177,6 +203,11 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                   if (_filterCategory != null) {
                     spells = spells.where((s) => s.category == _filterCategory).toList();
                   }
+                  final group = widget.categoryGroup;
+                  if (group != null) {
+                    spells =
+                        spells.where((s) => group.contains(s.category)).toList();
+                  }
 
                   if (spells.isEmpty) {
                     final hasActiveFilter =
@@ -184,11 +215,11 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                     // Ação "Adicionar Feitiço" só faz sentido quando não há
                     // filtro ativo e não estamos vendo apenas os ancestrais.
                     final showAddAction =
-                        !hasActiveFilter && _source != _SpellSource.ancestral;
+                        !hasActiveFilter && _source != SpellSource.ancestral;
                     return EmptyStateWidget(
                       message: hasActiveFilter
                           ? 'Nenhum feitiço encontrado'
-                          : _source == _SpellSource.ancestral
+                          : _source == SpellSource.ancestral
                               ? 'Nenhum feitiço ancestral disponível'
                               : 'Seu grimório está vazio.\nComece adicionando seu primeiro feitiço!',
                       icon: Icons.auto_stories,
@@ -300,7 +331,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
     );
   }
 
-  Widget _buildSourceChip(String label, _SpellSource source) {
+  Widget _buildSourceChip(String label, SpellSource source) {
     final selected = _source == source;
     return ChoiceChip(
       label: Text(label),
