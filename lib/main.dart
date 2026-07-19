@@ -145,9 +145,9 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     final lastOpened = widget.prefs.getInt(_lastOpenedKey) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    // Se o app foi aberto nos últimos 5 minutos, não mostrar splash
+    // Se o app foi aberto nos últimos 30 minutos, não mostrar splash
     // (significa que está voltando de background, não de um fechamento completo)
-    if (now - lastOpened < 5 * 60 * 1000) {
+    if (now - lastOpened < 30 * 60 * 1000) {
       setState(() {
         _showSplash = false;
       });

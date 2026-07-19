@@ -257,7 +257,9 @@ class _AstrologyTabState extends State<AstrologyTab> {
                 child: iconWidget ??
                     Text(
                       icon!,
-                      style: const TextStyle(fontSize: 40),
+                      // 32 dentro da caixa de 40: o glifo do emoji é mais alto
+                      // que o corpo da fonte e em 40 estourava o padrão visual.
+                      style: const TextStyle(fontSize: 32),
                     ),
               ),
             ),

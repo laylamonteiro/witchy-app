@@ -90,16 +90,16 @@ class SettingsPage extends StatelessWidget {
     }
 
     return ListTile(
-      leading: const Icon(Icons.language, color: Colors.white70),
+      leading: Icon(Icons.language, color: context.gc.textSecondary),
       title: Text(
         l10n.settingsLanguageTitle,
-        style: const TextStyle(color: Colors.white),
+        style: TextStyle(color: context.gc.textPrimary),
       ),
       trailing: DropdownButton<Locale>(
         value: languageProvider.locale,
-        dropdownColor: const Color(0xFF1A1A2E),
+        dropdownColor: context.gc.surface,
         underline: const SizedBox.shrink(),
-        style: const TextStyle(color: Colors.white),
+        style: TextStyle(color: context.gc.textPrimary),
         items: LanguageProvider.supportedLocales
             .map(
               (locale) => DropdownMenuItem<Locale>(
