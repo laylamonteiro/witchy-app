@@ -166,7 +166,7 @@ class SettingsPage extends StatelessWidget {
             Flexible(
               fit: FlexFit.loose,
               child: Text(
-                user.displayName ?? 'Bruxa Anônima',
+                user.displayName ?? AppLocalizations.of(context)!.profileAnonymous,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -226,7 +226,7 @@ class SettingsPage extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
         title: Text(
-          'Editar Nome',
+          AppLocalizations.of(context)!.profileEditName,
           style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
@@ -234,7 +234,7 @@ class SettingsPage extends StatelessWidget {
           autofocus: true,
           style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Seu nome mágico',
+            hintText: AppLocalizations.of(context)!.authNameHint,
             hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -251,7 +251,7 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancelar',
+              AppLocalizations.of(context)!.commonCancel,
               style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
@@ -268,7 +268,7 @@ class SettingsPage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
             ),
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.commonSave),
           ),
         ],
       ),
@@ -314,7 +314,7 @@ class SettingsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isFree ? 'Plano Gratuito' : 'Plano Premium',
+                      isFree ? AppLocalizations.of(context)!.profileFreePlan : AppLocalizations.of(context)!.profilePremiumPlan,
                       style: TextStyle(
                         color: context.gc.textPrimary,
                         fontSize: 18,
@@ -323,8 +323,8 @@ class SettingsPage extends StatelessWidget {
                     ),
                     Text(
                       isFree
-                          ? 'Algumas funcionalidades são limitadas'
-                          : 'Acesso completo a todas as funcionalidades',
+                          ? AppLocalizations.of(context)!.profileFreePlanDesc
+                          : AppLocalizations.of(context)!.profilePremiumPlanDesc,
                       style: TextStyle(
                         color: context.gc.textPrimary.withValues(alpha: 0.7),
                         fontSize: 12,
@@ -340,7 +340,7 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 12),
             if (paymentService.isLifetime)
               Text(
-                'Assinatura Vitalícia',
+                AppLocalizations.of(context)!.settingsLifetime,
                 style: TextStyle(
                   color: context.gc.textPrimary.withValues(alpha: 0.9),
                   fontSize: 13,
@@ -348,7 +348,7 @@ class SettingsPage extends StatelessWidget {
               )
             else if (paymentService.subscriptionExpirationDate != null)
               Text(
-                'Renova em: ${_formatDate(paymentService.subscriptionExpirationDate!)}',
+                AppLocalizations.of(context)!.settingsRenewsOn(_formatDate(paymentService.subscriptionExpirationDate!)),
                 style: TextStyle(
                   color: context.gc.textPrimary.withValues(alpha: 0.9),
                   fontSize: 13,
@@ -368,8 +368,8 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
                 icon: const Icon(Icons.settings, size: 18),
-                label: const Text(
-                  'Gerenciar Assinatura',
+                label: Text(
+                  AppLocalizations.of(context)!.profileManageSubscription,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -397,7 +397,7 @@ class SettingsPage extends StatelessWidget {
                     Icon(Icons.auto_awesome, size: 18),
                     SizedBox(width: 8),
                     Text(
-                      'Fazer Upgrade',
+                      AppLocalizations.of(context)!.profileUpgrade,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -411,19 +411,20 @@ class SettingsPage extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     final months = [
-      'Jan',
-      'Fev',
-      'Mar',
-      'Abr',
-      'Mai',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Set',
-      'Out',
-      'Nov',
-      'Dez'
+      l10n.monthJanShort,
+      l10n.monthFebShort,
+      l10n.monthMarShort,
+      l10n.monthAprShort,
+      l10n.monthMayShort,
+      l10n.monthJunShort,
+      l10n.monthJulShort,
+      l10n.monthAugShort,
+      l10n.monthSepShort,
+      l10n.monthOctShort,
+      l10n.monthNovShort,
+      l10n.monthDecShort,
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -446,7 +447,7 @@ class SettingsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Uso do Plano Gratuito',
+            AppLocalizations.of(context)!.profileFreeUsage,
             style: TextStyle(
               color: context.gc.textPrimary,
               fontSize: 16,
@@ -456,7 +457,7 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 16),
           _buildUsageRow(
             context,
-            'Feitiços',
+            AppLocalizations.of(context)!.profileSpells,
             user.spellsCount,
             UserModel.freeSpellsLimit,
             Icons.auto_fix_high,
@@ -464,20 +465,20 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            'Entradas de Diário',
+            AppLocalizations.of(context)!.profileDiaryEntries,
             user.diaryEntriesThisMonth,
             UserModel.freeDiaryEntriesLimit,
             Icons.book,
-            subtitle: 'este mês',
+            subtitle: AppLocalizations.of(context)!.profileThisMonth,
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            'Conselheiro Místico',
+            AppLocalizations.of(context)!.profileMysticAdvisor,
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
             Icons.psychology,
-            subtitle: 'hoje',
+            subtitle: AppLocalizations.of(context)!.profileToday,
           ),
         ],
       ),
@@ -568,7 +569,7 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.person_outline,
-            title: 'Editar Perfil',
+            title: AppLocalizations.of(context)!.profileEditProfile,
             onTap: () => _showEditProfileDialog(context, authProvider),
           ),
           // Só mostra "Alterar Senha" para usuários que usam email/senha
@@ -578,7 +579,7 @@ class SettingsPage extends StatelessWidget {
             _buildOptionTile(
               context,
               icon: Icons.lock_outline,
-              title: 'Alterar Senha',
+              title: AppLocalizations.of(context)!.changePasswordTitle,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
@@ -589,7 +590,7 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.analytics_outlined,
-            title: 'Estatísticas Mágicas',
+            title: AppLocalizations.of(context)!.profileMagicalStats,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
@@ -599,7 +600,7 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.explore_outlined,
-            title: 'Jornadas Mágicas',
+            title: AppLocalizations.of(context)!.profileMagicalJourneys,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),
@@ -609,7 +610,7 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.palette_outlined,
-            title: 'Aparência',
+            title: AppLocalizations.of(context)!.settingsAppearance,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ThemePickerPage()),
@@ -619,14 +620,14 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.notifications_outlined,
-            title: 'Notificações',
+            title: AppLocalizations.of(context)!.profileNotifications,
             onTap: () => _showNotificationsBottomSheet(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.privacy_tip_outlined,
-            title: 'Privacidade',
+            title: AppLocalizations.of(context)!.settingsPrivacy,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PrivacySettingsPage()),
@@ -636,21 +637,21 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.help_outline,
-            title: 'Ajuda & Suporte',
+            title: AppLocalizations.of(context)!.profileHelpSupport,
             onTap: () => _showHelpDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.info_outline,
-            title: 'Sobre o App',
+            title: AppLocalizations.of(context)!.profileAboutApp,
             onTap: () => _showAboutDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.logout,
-            title: 'Sair da Conta',
+            title: AppLocalizations.of(context)!.profileLogout,
             textColor: context.gc.alert,
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
@@ -686,7 +687,7 @@ class SettingsPage extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Notificações',
+                    AppLocalizations.of(context)!.profileNotifications,
                     style: TextStyle(
                       color: context.gc.textPrimary,
                       fontSize: 20,
@@ -702,7 +703,7 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Configure lembretes para eventos mágicos importantes',
+                AppLocalizations.of(context)!.settingsNotifDesc,
                 style: TextStyle(
                   color: context.gc.textSecondary,
                   fontSize: 14,
@@ -715,8 +716,8 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       _NotificationTile(
                         icon: '🌕',
-                        title: 'Lua Cheia',
-                        subtitle: 'Lembrete 1 dia antes da Lua Cheia',
+                        title: AppLocalizations.of(context)!.settingsFullMoon,
+                        subtitle: AppLocalizations.of(context)!.settingsFullMoonDesc,
                         value: notificationProvider.fullMoonNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -729,8 +730,8 @@ class SettingsPage extends StatelessWidget {
                       Divider(color: context.gc.textPrimary10),
                       _NotificationTile(
                         icon: '🌑',
-                        title: 'Lua Nova',
-                        subtitle: 'Lembrete 1 dia antes da Lua Nova',
+                        title: AppLocalizations.of(context)!.settingsNewMoon,
+                        subtitle: AppLocalizations.of(context)!.settingsNewMoonDesc,
                         value: notificationProvider.newMoonNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -743,8 +744,8 @@ class SettingsPage extends StatelessWidget {
                       Divider(color: context.gc.textPrimary10),
                       _NotificationTile(
                         icon: '🎃',
-                        title: 'Sabbats',
-                        subtitle: 'Lembrete 3 dias antes de cada Sabbat',
+                        title: AppLocalizations.of(context)!.settingsSabbats,
+                        subtitle: AppLocalizations.of(context)!.settingsSabbatsDesc,
                         value: notificationProvider.sabbatNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -777,7 +778,7 @@ class SettingsPage extends StatelessWidget {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'As notificações serão enviadas apenas em dispositivos móveis',
+                        AppLocalizations.of(context)!.settingsNotifMobileOnly,
                         style: TextStyle(
                           color: Color(0xFF2196F3),
                           fontSize: 12,
@@ -811,7 +812,7 @@ class SettingsPage extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            result.error ?? 'Não foi possível atualizar as notificações',
+            result.error ?? AppLocalizations.of(context)!.settingsNotifUpdateError,
           ),
           duration: const Duration(seconds: 2),
           backgroundColor: context.gc.alert,
@@ -959,21 +960,20 @@ class SettingsPage extends StatelessWidget {
             Icon(Icons.warning_amber, color: context.gc.gold),
             SizedBox(width: 8),
             Text(
-              'Pagamentos Não Configurados',
+              AppLocalizations.of(context)!.settingsPaymentsNotConfigured,
               style: TextStyle(color: context.gc.textPrimary, fontSize: 18),
             ),
           ],
         ),
         content: Text(
-          'O sistema de pagamentos ainda não foi configurado nesta versão do app.\n\n'
-          'Se você é desenvolvedor, verifique os logs do console para mais detalhes.',
+          AppLocalizations.of(context)!.settingsPaymentsNotConfiguredDesc,
           style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Entendi',
+              AppLocalizations.of(context)!.commonUnderstood,
               style: TextStyle(color: context.gc.lilac),
             ),
           ),
@@ -991,14 +991,14 @@ class SettingsPage extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
         title: Text(
-          'Editar Perfil',
+          AppLocalizations.of(context)!.profileEditProfile,
           style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
           controller: nameController,
           style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
-            labelText: 'Nome',
+            labelText: AppLocalizations.of(context)!.authNameLabel,
             labelStyle: TextStyle(color: context.gc.textSecondary),
             enabledBorder: OutlineInputBorder(
               borderSide:
@@ -1015,7 +1015,7 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child:
-                Text('Cancelar', style: TextStyle(color: context.gc.textSecondary)),
+                Text(AppLocalizations.of(context)!.commonCancel, style: TextStyle(color: context.gc.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1026,7 +1026,7 @@ class SettingsPage extends StatelessWidget {
               backgroundColor: context.gc.lilac,
             ),
             child: Text(
-              'Salvar',
+              AppLocalizations.of(context)!.commonSave,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ),
@@ -1042,18 +1042,18 @@ class SettingsPage extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: dialogContext.gc.surface,
         title: Text(
-          'Sair da Conta',
+          AppLocalizations.of(context)!.profileLogout,
           style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
-          'Tem certeza que deseja sair?\nSeus dados locais serão mantidos.',
+          AppLocalizations.of(context)!.profileLogoutConfirm,
           style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              'Cancelar',
+              AppLocalizations.of(context)!.commonCancel,
               style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
@@ -1070,7 +1070,7 @@ class SettingsPage extends StatelessWidget {
               backgroundColor: dialogContext.gc.alert,
             ),
             child: Text(
-              'Sair',
+              AppLocalizations.of(context)!.profileLogoutAction,
               style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
@@ -1089,7 +1089,7 @@ class SettingsPage extends StatelessWidget {
             Icon(Icons.help_outline, color: context.gc.lilac),
             SizedBox(width: 8),
             Text(
-              'Ajuda & Suporte',
+              AppLocalizations.of(context)!.profileHelpSupport,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
@@ -1101,7 +1101,7 @@ class SettingsPage extends StatelessWidget {
             _buildHelpItem(
               context,
               icon: Icons.email_outlined,
-              title: 'Email de Suporte',
+              title: AppLocalizations.of(context)!.profileSupportEmail,
               subtitle: 'suporte@grimoriodebolso.com',
               onTap: () => _launchEmail(),
             ),
@@ -1110,23 +1110,23 @@ class SettingsPage extends StatelessWidget {
               context,
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
-              subtitle: 'Perguntas frequentes',
+              subtitle: AppLocalizations.of(context)!.profileFaq,
               onTap: () => _launchFaq(),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
               context,
               icon: Icons.policy_outlined,
-              title: 'Política de Privacidade',
-              subtitle: 'Seus dados estão seguros',
+              title: AppLocalizations.of(context)!.authPrivacyPolicy,
+              subtitle: AppLocalizations.of(context)!.profilePrivacySafe,
               onTap: () => _openPrivacyPolicy(context),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
               context,
               icon: Icons.gavel_outlined,
-              title: 'Termos de Uso',
-              subtitle: 'As regras do nosso círculo',
+              title: AppLocalizations.of(context)!.authTermsOfUse,
+              subtitle: AppLocalizations.of(context)!.settingsTermsSubtitle,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => LegalDocumentPage.terms),
               ),
@@ -1137,7 +1137,7 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Fechar',
+              AppLocalizations.of(context)!.commonClose,
               style: TextStyle(color: context.gc.lilac),
             ),
           ),
@@ -1234,17 +1234,17 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Versão ${packageInfo.version} (${packageInfo.buildNumber})',
+              AppLocalizations.of(context)!.aboutVersion(packageInfo.version, packageInfo.buildNumber),
               style: TextStyle(color: context.gc.textSecondary),
             ),
             const SizedBox(height: 16),
             Text(
-              'Seu companheiro para práticas mágicas, rituais e autoconhecimento através da astrologia e bruxaria moderna.',
+              AppLocalizations.of(context)!.aboutDescription,
               style: TextStyle(color: context.gc.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 16),
             Text(
-              'Desenvolvido com 🔮 e ✨',
+              AppLocalizations.of(context)!.aboutMadeWith,
               style: TextStyle(color: context.gc.lilac),
             ),
             const SizedBox(height: 8),
@@ -1258,7 +1258,7 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Fechar',
+              AppLocalizations.of(context)!.commonClose,
               style: TextStyle(color: context.gc.lilac),
             ),
           ),

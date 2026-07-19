@@ -322,5 +322,41 @@
   "editDeleteErrorPrefix": "Erro ao excluir conta",
   "editPremiumFeature": "Recurso Premium",
   "editSyncPremiumPitch": "A sincronização de dados na nuvem é um recurso exclusivo para usuários Premium.\n\nCom o Premium, seus dados ficam sempre seguros e sincronizados entre todos os seus dispositivos.",
-  "editNotNow": "Agora Não"
+  "editNotNow": "Agora Não",
+  "settingsLifetime": "Assinatura Vitalícia",
+  "settingsRenewsOn": "Renova em: {date}",
+  "settingsAppearance": "Aparência",
+  "settingsPrivacy": "Privacidade",
+  "settingsNotifDesc": "Configure lembretes para eventos mágicos importantes",
+  "settingsFullMoon": "Lua Cheia",
+  "settingsFullMoonDesc": "Lembrete 1 dia antes da Lua Cheia",
+  "settingsNewMoon": "Lua Nova",
+  "settingsNewMoonDesc": "Lembrete 1 dia antes da Lua Nova",
+  "settingsSabbats": "Sabbats",
+  "settingsSabbatsDesc": "Lembrete 3 dias antes de cada Sabbat",
+  "settingsNotifMobileOnly": "As notificações serão enviadas apenas em dispositivos móveis",
+  "settingsNotifUpdateError": "Não foi possível atualizar as notificações",
+  "settingsPaymentsNotConfigured": "Pagamentos Não Configurados",
+  "settingsPaymentsNotConfiguredDesc": "O sistema de pagamentos ainda não foi configurado nesta versão do app.\n\nSe você é desenvolvedor, verifique os logs do console para mais detalhes.",
+  "commonUnderstood": "Entendi",
+  "settingsTermsSubtitle": "As regras do nosso círculo",
+  "monthJanShort": "Jan",
+  "monthFebShort": "Fev",
+  "monthMarShort": "Mar",
+  "monthAprShort": "Abr",
+  "monthMayShort": "Mai",
+  "monthJunShort": "Jun",
+  "monthJulShort": "Jul",
+  "monthAugShort": "Ago",
+  "monthSepShort": "Set",
+  "monthOctShort": "Out",
+  "monthNovShort": "Nov",
+  "monthDecShort": "Dez",
+  "@settingsRenewsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }
