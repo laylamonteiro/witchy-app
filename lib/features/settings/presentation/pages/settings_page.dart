@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-=======
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
->>>>>>> origin/codex/add-localization-configuration-and-files
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -35,12 +31,8 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-<<<<<<< HEAD
         title:
             ResponsiveAppBarTitle(AppLocalizations.of(context)!.settingsTitle),
-=======
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.settingsTitle),
->>>>>>> origin/codex/add-localization-configuration-and-files
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -65,9 +57,6 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 20),
                 ],
 
-                _buildLanguageCard(context),
-                const SizedBox(height: 20),
-
                 // Opções de conta
                 _buildAccountOptions(context, authProvider),
 
@@ -84,19 +73,13 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-<<<<<<< HEAD
   Widget _buildLanguageOptionTile(BuildContext context) {
-=======
-
-  Widget _buildLanguageCard(BuildContext context) {
->>>>>>> origin/codex/add-localization-configuration-and-files
     final l10n = AppLocalizations.of(context)!;
     final languageProvider = context.watch<LanguageProvider>();
 
     String labelFor(Locale locale) {
       switch (locale.languageCode) {
         case 'en':
-<<<<<<< HEAD
           return '🇺🇸 EN';
         case 'es':
           return '🇪🇸 ES';
@@ -140,54 +123,6 @@ class SettingsPage extends StatelessWidget {
             ),
           );
         },
-=======
-          return l10n.settingsLanguageEnglish;
-        case 'es':
-          return l10n.settingsLanguageSpanish;
-        case 'pt':
-        default:
-          return l10n.settingsLanguagePortuguese;
-      }
-    }
-
-    return MagicalCard(
-      child: ListTile(
-        leading: const Icon(Icons.language, color: Color(0xFF9C27B0)),
-        title: Text(
-          l10n.settingsLanguageTitle,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Text(
-          l10n.settingsLanguageSubtitle,
-          style: const TextStyle(color: Colors.white70),
-        ),
-        trailing: DropdownButton<Locale>(
-          value: languageProvider.locale,
-          dropdownColor: const Color(0xFF1A1A2E),
-          underline: const SizedBox.shrink(),
-          style: const TextStyle(color: Colors.white),
-          items: LanguageProvider.supportedLocales
-              .map(
-                (locale) => DropdownMenuItem<Locale>(
-                  value: locale,
-                  child: Text(labelFor(locale)),
-                ),
-              )
-              .toList(),
-          onChanged: (locale) async {
-            if (locale == null) return;
-            await context.read<LanguageProvider>().setLocale(locale);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.settingsLanguageChanged(labelFor(locale)))),
-              );
-            }
-          },
-        ),
->>>>>>> origin/codex/add-localization-configuration-and-files
       ),
     );
   }

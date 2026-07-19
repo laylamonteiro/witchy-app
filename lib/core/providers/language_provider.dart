@@ -8,13 +8,8 @@ class LanguageProvider extends ChangeNotifier {
   static const Locale fallbackLocale = Locale('pt', 'BR');
   static const List<Locale> supportedLocales = [
     fallbackLocale,
-<<<<<<< HEAD
     Locale('es'),
     Locale('en'),
-=======
-    Locale('en'),
-    Locale('es'),
->>>>>>> origin/codex/add-localization-configuration-and-files
   ];
 
   final SharedPreferences _prefs;
