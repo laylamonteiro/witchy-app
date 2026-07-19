@@ -772,5 +772,11 @@
   "quizRetake": "Refazer o teste",
   "quizStrongestEnergies": "Suas energias mais fortes",
   "quizMirrorNote": "Arquétipos são espelhos, não gavetas: você carrega vários — este é o que vibra mais alto em você agora. Explore os outros na aba Arquétipos da Enciclopédia.",
-  "quizSavedOn": "Resultado do seu último teste ({date})"
+  "quizSavedOn": "Resultado do seu último teste ({date})",
+  "tarotLibraryTitle": "Biblioteca de Cartas",
+  "tarotLibraryDesc": "As 78 cartas com imagem, significado e leitura invertida",
+  "tarotFlipCard": "Inverter carta",
+  "tarotUnflipCard": "Posição normal",
+  "tarotUprightMeaning": "Significado",
+  "tarotReversedMeaning": "Significado invertido"
 }

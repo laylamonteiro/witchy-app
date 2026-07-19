@@ -772,5 +772,11 @@
   "quizRetake": "Repetir el test",
   "quizStrongestEnergies": "Tus energías más fuertes",
   "quizMirrorNote": "Los arquetipos son espejos, no cajones: llevas varios — este es el que vibra más fuerte en ti ahora. Explora los demás en la pestaña Arquetipos de la Enciclopedia.",
-  "quizSavedOn": "Resultado de tu último test ({date})"
+  "quizSavedOn": "Resultado de tu último test ({date})",
+  "tarotLibraryTitle": "Biblioteca de Cartas",
+  "tarotLibraryDesc": "Las 78 cartas con imagen, significado y lectura invertida",
+  "tarotFlipCard": "Invertir carta",
+  "tarotUnflipCard": "Posición normal",
+  "tarotUprightMeaning": "Significado",
+  "tarotReversedMeaning": "Significado invertido"
 }

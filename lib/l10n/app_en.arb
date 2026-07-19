@@ -772,5 +772,11 @@
   "quizRetake": "Retake the quiz",
   "quizStrongestEnergies": "Your strongest energies",
   "quizMirrorNote": "Archetypes are mirrors, not drawers: you carry several — this is the one vibrating strongest in you right now. Explore the others in the Encyclopedia's Archetypes tab.",
-  "quizSavedOn": "Result of your last quiz ({date})"
+  "quizSavedOn": "Result of your last quiz ({date})",
+  "tarotLibraryTitle": "Card Library",
+  "tarotLibraryDesc": "All 78 cards with image, meaning and reversed reading",
+  "tarotFlipCard": "Reverse card",
+  "tarotUnflipCard": "Upright position",
+  "tarotUprightMeaning": "Meaning",
+  "tarotReversedMeaning": "Reversed meaning"
 }

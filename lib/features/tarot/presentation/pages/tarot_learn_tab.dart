@@ -8,6 +8,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
 import '../widgets/tarot_card_view.dart';
+import 'tarot_library_page.dart';
 
 /// Tutor de Tarot: quiz de significados com combo e sequência de dias.
 class TarotLearnTab extends StatefulWidget {
@@ -85,6 +86,45 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
             ),
           ),
           MagicalCard(
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TarotLibraryPage()),
+              ),
+              borderRadius: BorderRadius.circular(12),
+              child: Row(
+                children: [
+                  const Text('📚', style: TextStyle(fontSize: 32)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.tarotLibraryTitle,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: context.gc.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        Text(
+                          AppLocalizations.of(context)!.tarotLibraryDesc,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: context.gc.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: context.gc.textSecondary),
+                ],
+              ),
+            ),
+          ),
+          MagicalCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -141,12 +181,139 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
   }
 }
 
+/// Pergunta da sessão: de carta (imagem + significados) ou conceitual
+/// (sobre tiragens e a estrutura do baralho).
 class _QuizQuestion {
-  final TarotCard card;
-  final List<TarotCard> options;
+  final TarotCard? card;
+  final String? prompt;
+  final List<String> optionTexts;
+  final int correctIndex;
 
-  const _QuizQuestion({required this.card, required this.options});
+  const _QuizQuestion.card({
+    required TarotCard this.card,
+    required this.optionTexts,
+    required this.correctIndex,
+  }) : prompt = null;
+
+  const _QuizQuestion.concept({
+    required String this.prompt,
+    required this.optionTexts,
+    required this.correctIndex,
+  }) : card = null;
 }
+
+/// Perguntas conceituais sobre a prática da tiragem (a alternativa correta
+/// é sempre a primeira; as opções são embaralhadas ao montar a sessão).
+const List<(String, List<String>)> _conceptQuestions = [
+  (
+    'Na tiragem de Três Cartas, a primeira posição representa…',
+    [
+      'O passado da questão',
+      'O conselho final',
+      'O obstáculo oculto',
+      'A energia do dia',
+    ]
+  ),
+  (
+    'Na Cruz de Cinco, a posição "Conselho" serve para…',
+    [
+      'Indicar um caminho de ação para a situação',
+      'Mostrar quem causou o problema',
+      'Prever uma data exata',
+      'Substituir a pergunta original',
+    ]
+  ),
+  (
+    'Uma carta invertida geralmente sugere…',
+    [
+      'A energia da carta bloqueada, internalizada ou em excesso',
+      'Que a tiragem deve ser descartada',
+      'O oposto literal e absoluto da carta',
+      'Um erro ao embaralhar',
+    ]
+  ),
+  (
+    'Antes de embaralhar, é recomendado…',
+    [
+      'Respirar fundo e se concentrar na pergunta',
+      'Escolher as cartas de propósito',
+      'Fazer a mesma pergunta várias vezes seguidas',
+      'Evitar pensar no assunto',
+    ]
+  ),
+  (
+    'A Carta do Dia serve para…',
+    [
+      'Sintonizar a energia que acompanha o seu dia',
+      'Decidir questões definitivas',
+      'Prever tudo o que vai acontecer',
+      'Substituir tiragens maiores',
+    ]
+  ),
+  (
+    'Um baralho completo de tarot tem…',
+    [
+      '78 cartas: 22 arcanos maiores e 56 menores',
+      '52 cartas, como o baralho comum',
+      '64 cartas divididas em 4 naipes',
+      '90 cartas numeradas',
+    ]
+  ),
+  (
+    'Os arcanos maiores falam principalmente de…',
+    [
+      'Grandes temas e lições da jornada da vida',
+      'Detalhes práticos do cotidiano',
+      'Apenas acontecimentos negativos',
+      'Datas e horários',
+    ]
+  ),
+  (
+    'Os arcanos menores falam principalmente de…',
+    [
+      'Situações do cotidiano e suas nuances',
+      'Vidas passadas',
+      'Somente questões amorosas',
+      'O destino imutável',
+    ]
+  ),
+  (
+    'O naipe de Copas está ligado a…',
+    [
+      'Emoções, relações e intuição',
+      'Trabalho e dinheiro',
+      'Conflitos e ideias',
+      'Ação e criatividade',
+    ]
+  ),
+  (
+    'O naipe de Espadas está ligado a…',
+    [
+      'Mente, palavras e conflitos',
+      'Colheitas e prosperidade',
+      'Sonhos e maternidade',
+      'Festas e celebrações',
+    ]
+  ),
+  (
+    'O naipe de Ouros está ligado a…',
+    [
+      'Corpo, trabalho e vida material',
+      'Espíritos e ancestrais',
+      'Viagens astrais',
+      'Apenas sorte no jogo',
+    ]
+  ),
+  (
+    'Ao interpretar uma tiragem, o mais importante é…',
+    [
+      'Ler as cartas em conjunto, no contexto da pergunta',
+      'Considerar cada carta isoladamente',
+      'Repetir até vir uma resposta boa',
+      'Usar somente o significado invertido',
+    ]
+  ),
+];
 
 /// Sessão de quiz: "o que representa esta carta?" com 4 alternativas.
 class TarotQuizPage extends StatefulWidget {
@@ -163,34 +330,57 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
   int _index = 0;
   int _combo = 0;
   int _sessionCorrect = 0;
-  TarotCard? _selected;
+  int? _selectedIndex;
+
+  static const int _conceptPerSession = 3;
 
   @override
   void initState() {
     super.initState();
     final random = Random();
     final deck = List<TarotCard>.from(tarotCards)..shuffle(random);
+    final concepts =
+        List<(String, List<String>)>.from(_conceptQuestions)..shuffle(random);
     _questions = [
-      for (var i = 0; i < _sessionLength; i++)
-        _buildQuestion(deck[i], random),
-    ];
+      for (var i = 0; i < _sessionLength - _conceptPerSession; i++)
+        _buildCardQuestion(deck[i], random),
+      for (var i = 0; i < _conceptPerSession; i++)
+        _buildConceptQuestion(concepts[i], random),
+    ]..shuffle(random);
   }
 
-  _QuizQuestion _buildQuestion(TarotCard card, Random random) {
+  _QuizQuestion _buildCardQuestion(TarotCard card, Random random) {
     final distractors = List<TarotCard>.from(tarotCards)
       ..remove(card)
       ..shuffle(random);
     final options = [card, ...distractors.take(3)]..shuffle(random);
-    return _QuizQuestion(card: card, options: options);
+    return _QuizQuestion.card(
+      card: card,
+      optionTexts: [
+        for (final o in options) '${o.keywords.join(', ')} — ${o.upright}',
+      ],
+      correctIndex: options.indexOf(card),
+    );
   }
 
-  Future<void> _answer(TarotCard option) async {
-    if (_selected != null) return;
+  _QuizQuestion _buildConceptQuestion(
+      (String, List<String>) data, Random random) {
+    final correct = data.$2.first;
+    final options = List<String>.from(data.$2)..shuffle(random);
+    return _QuizQuestion.concept(
+      prompt: data.$1,
+      optionTexts: options,
+      correctIndex: options.indexOf(correct),
+    );
+  }
+
+  Future<void> _answer(int optionIndex) async {
+    if (_selectedIndex != null) return;
     final question = _questions[_index];
-    final isCorrect = option == question.card;
+    final isCorrect = optionIndex == question.correctIndex;
 
     setState(() {
-      _selected = option;
+      _selectedIndex = optionIndex;
       if (isCorrect) {
         _combo++;
         _sessionCorrect++;
@@ -221,7 +411,7 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
     if (_index < _questions.length - 1) {
       setState(() {
         _index++;
-        _selected = null;
+        _selectedIndex = null;
       });
     } else {
       _showResult();
@@ -309,10 +499,20 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
               borderRadius: BorderRadius.circular(4),
             ),
             const SizedBox(height: 20),
-            Center(child: TarotCardView(card: question.card, width: 130)),
-            const SizedBox(height: 16),
+            if (question.card != null) ...[
+              Center(child: TarotCardView(card: question.card!, width: 130)),
+              const SizedBox(height: 16),
+            ] else ...[
+              const Center(
+                child: Text('🃏', style: TextStyle(fontSize: 48)),
+              ),
+              const SizedBox(height: 12),
+            ],
             Text(
-              AppLocalizations.of(context)!.tarotQuizQuestion(question.card.name),
+              question.card != null
+                  ? AppLocalizations.of(context)!
+                      .tarotQuizQuestion(question.card!.name)
+                  : question.prompt!,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: context.gc.textPrimary,
@@ -320,10 +520,10 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
                   ),
             ),
             const SizedBox(height: 16),
-            for (final option in question.options)
+            for (var i = 0; i < question.optionTexts.length; i++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _optionTile(context, question, option),
+                child: _optionTile(context, question, i),
               ),
           ],
         ),
@@ -332,10 +532,10 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
   }
 
   Widget _optionTile(
-      BuildContext context, _QuizQuestion question, TarotCard option) {
-    final answered = _selected != null;
-    final isCorrect = option == question.card;
-    final isChosen = option == _selected;
+      BuildContext context, _QuizQuestion question, int optionIndex) {
+    final answered = _selectedIndex != null;
+    final isCorrect = optionIndex == question.correctIndex;
+    final isChosen = optionIndex == _selectedIndex;
 
     Color border = context.gc.surfaceBorder;
     Color? tint;
@@ -348,7 +548,7 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
     }
 
     return InkWell(
-      onTap: answered ? null : () => _answer(option),
+      onTap: answered ? null : () => _answer(optionIndex),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -358,7 +558,7 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
           border: Border.all(color: border),
         ),
         child: Text(
-          '${option.keywords.join(', ')} — ${option.upright}',
+          question.optionTexts[optionIndex],
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context)

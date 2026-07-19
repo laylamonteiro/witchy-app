@@ -1014,5 +1014,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "tarotLibraryTitle": "Biblioteca de Cartas",
+  "tarotLibraryDesc": "As 78 cartas com imagem, significado e leitura invertida",
+  "tarotFlipCard": "Inverter carta",
+  "tarotUnflipCard": "Posição normal",
+  "tarotUprightMeaning": "Significado",
+  "tarotReversedMeaning": "Significado invertido"
 }
