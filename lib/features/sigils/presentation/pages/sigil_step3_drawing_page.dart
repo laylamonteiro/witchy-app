@@ -127,6 +127,9 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       size: const Size(360, 360),
                       painter: _showWheel
                           ? WitchWheelPainter(
+                              borderColor: context.gc.surfaceBorder,
+                              starColor: context.gc.starYellow,
+                              accentColor: context.gc.lilac,
                               showLetters: true,
                               highlightedLetters: widget.sigil.processedLetters
                                   .split('')
@@ -135,6 +138,8 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                             )
                           : null,
                       foregroundPainter: SigilDrawingPainter(
+                        lineColor: context.gc.starYellow,
+                        pointColor: context.gc.lilac,
                         intention: widget.sigil.intention,
                         showStartEnd: _showStartEnd,
                         customPositions: _shuffledPositions,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/grimoire_colors.dart';
 
 /// Poses do mascote baseadas nos novos SVG assets
 enum MascotPose {
@@ -461,8 +461,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
     // Partículas mágicas com cores fofas (reduzido para 12)
     for (int i = 0; i < 12; i++) {
       final colors = [
-        AppColors.lilac,
-        AppColors.starYellow,
+        context.gc.lilac,
+        context.gc.starYellow,
         const Color(0xFFFFB6C1), // Rosa fofo
         const Color(0xFFFFE4E1), // Rosa claro
       ];
@@ -498,8 +498,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
         y: y + widget.size / 2 + (random.nextDouble() - 0.5) * 10,
         size: random.nextDouble() * 3 + 1.5,
         color: random.nextBool()
-          ? AppColors.lilac.withValues(alpha: 0.7)
-          : AppColors.starYellow.withValues(alpha: 0.7),
+          ? context.gc.lilac.withValues(alpha: 0.7)
+          : context.gc.starYellow.withValues(alpha: 0.7),
         opacity: 1.0,
         rotation: random.nextDouble() * math.pi * 2,
       ));
@@ -588,7 +588,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                     // Sombra lilás sempre visível
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.lilac.withValues(
+                        color: context.gc.lilac.withValues(
                           alpha: _shadowOpacityAnimation.value
                         ),
                         blurRadius: _shadowBlurAnimation.value,
@@ -598,7 +598,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                       // Segunda sombra para efeito de brilho
                       if (_isDragging)
                         BoxShadow(
-                          color: AppColors.starYellow.withValues(alpha: 0.2),
+                          color: context.gc.starYellow.withValues(alpha: 0.2),
                           blurRadius: 15,
                           spreadRadius: 3,
                           offset: const Offset(0, 5),
@@ -751,11 +751,11 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
     final sparkleSymbols = ['✦', '✧', '✦', '✧', '⋆'];
     final sparkleColors = [
-      AppColors.starYellow,
-      AppColors.lilac,
-      AppColors.starYellow,
-      AppColors.lilac,
-      AppColors.starYellow,
+      context.gc.starYellow,
+      context.gc.lilac,
+      context.gc.starYellow,
+      context.gc.lilac,
+      context.gc.starYellow,
     ];
 
     return List.generate(sparklePositions.length, (index) {
