@@ -7,6 +7,11 @@ import 'metals_list_page.dart';
 import 'altar_page.dart';
 import 'elements_page.dart';
 import 'goddesses_list_page.dart';
+import 'arcane_list_page.dart';
+import '../../data/data_sources/archetypes_data.dart';
+import '../../data/data_sources/angels_data.dart';
+import '../../data/data_sources/demons_data.dart';
+import '../../data/data_sources/sacred_symbols_data.dart';
 import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
 import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
@@ -37,7 +42,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 10, vsync: this);
+    _tabController = TabController(length: 14, vsync: this);
     _tabController.addListener(_onTabChanged);
     widget.resetNotifier?.addListener(_onResetRequested);
     _loadLastTab();
@@ -115,6 +120,10 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
                 Tab(text: 'Elementos'),
                 Tab(text: 'Altar'),
                 Tab(text: 'Runas'),
+                Tab(text: 'Arquétipos'),
+                Tab(text: 'Anjos'),
+                Tab(text: 'Demônios'),
+                Tab(text: 'Símbolos'),
               ],
             ),
           ),
@@ -133,6 +142,30 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
           ElementsPage(),
           AltarPage(),
           RunesListPage(),
+          ArcaneListPage(
+            categoryTitle: 'Arquétipos',
+            intro:
+                'Figuras universais dos mitos e da psique — espelhos para o autoconhecimento no caminho mágico.',
+            entries: archetypesData,
+          ),
+          ArcaneListPage(
+            categoryTitle: 'Anjos',
+            intro:
+                'Abordagem histórica e informativa: como diferentes tradições — religiosas, ocultistas, folclóricas e literárias — enxergam essas figuras.',
+            entries: angelsData,
+          ),
+          ArcaneListPage(
+            categoryTitle: 'Demônios',
+            intro:
+                'Estudo histórico e simbólico, sem sensacionalismo: goécia, folclore e literatura, diferenciando as tradições sem verdade única.',
+            entries: demonsData,
+          ),
+          ArcaneListPage(
+            categoryTitle: 'Símbolos Sagrados',
+            intro:
+                'A origem e o poder dos símbolos usados na bruxaria — do pentagrama ao ouroboros.',
+            entries: sacredSymbolsData,
+          ),
         ],
       ),
     );
