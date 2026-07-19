@@ -616,5 +616,168 @@
         "type": "String"
       }
     }
+  },
+  "sigilCreateTitle": "Criar Sigilo",
+  "sigilWhatIs": "O que é um Sigilo?",
+  "sigilWhatIsDesc": "Sigilos são símbolos mágicos criados para manifestar intenções. Ao transformar palavras em símbolos abstratos, você cria uma marca energética que carrega o poder da sua vontade, sem revelar sua intenção para outras pessoas.",
+  "sigilHowIntro": "Defina sua intenção, escolha uma palavra que a represente, e o app criará automaticamente seu sigilo único.",
+  "sigilSetIntention": "Defina sua Intenção",
+  "sigilIntentionWord": "Sua palavra de intenção",
+  "sigilTypeWord": "Digite uma palavra...",
+  "sigilOneWordWarning": "⚠️ Use apenas UMA palavra, sem espaços",
+  "sigilExamplesHeader": "💡 Exemplos de palavras",
+  "sigilExample1": "Prosperidade",
+  "sigilExample2": "Proteção",
+  "sigilExample3": "Cura",
+  "sigilExample4": "Confiança",
+  "sigilExample5": "Intuição",
+  "sigilWordTip": "Dica: Escolha palavras positivas e específicas que ressoem com você.",
+  "commonContinue": "Continuar",
+  "sigilMagicLetters": "Letras Mágicas",
+  "sigilYourLetters": "Letras do seu Sigilo",
+  "sigilEssence": "A essência mágica da sua intenção",
+  "sigilYourIntention": "Sua intenção:",
+  "sigilTransformedInto": "Transformada em:",
+  "sigilWhatHappened": "O que aconteceu?",
+  "sigilSimplified": "Sua palavra foi simplificada seguindo a tradição dos sigilos:",
+  "sigilStepAccents": "1. Acentos foram normalizados",
+  "sigilStepSpaces": "2. Espaços e símbolos foram removidos",
+  "sigilStepDupes": "3. Letras duplicadas foram eliminadas (mantém apenas a primeira ocorrência)",
+  "sigilWheelNote": "Esta sequência simplificada será conectada na Roda das Bruxas para formar o símbolo mágico do seu sigilo.",
+  "sigilSeeDrawing": "Ver Desenho do Sigilo",
+  "sigilSaveError": "Não foi possível salvar o sigilo",
+  "sigilDrawingNotReady": "Desenho ainda não está pronto",
+  "sigilImageError": "Falha ao gerar a imagem",
+  "sigilSavedToGallery": "Sigilo salvo na galeria! ✨",
+  "sigilGalleryPermission": "Permita o acesso à galeria para salvar o sigilo.",
+  "sigilImageSaveError": "Não foi possível salvar a imagem.",
+  "sigilYourSigil": "Seu Sigilo",
+  "sigilYourDrawing": "Desenho do seu Sigilo",
+  "sigilLegendStart": "Início",
+  "sigilLegendLetters": "Letras",
+  "sigilLegendEnd": "Fim",
+  "sigilWheel": "Roda",
+  "sigilPoints": "Pontos",
+  "sigilShuffle": "Embaralhar letras",
+  "sigilSaveImage": "Salvar imagem na galeria",
+  "sigilRestore": "Restaurar posições",
+  "sigilHowToUse": "Como usar seu sigilo",
+  "sigilUse1Title": "1. Copie este desenho",
+  "sigilUse1Desc": "Reproduza o traçado em seu caderno, altar, vela, ou papel ritual.",
+  "sigilUse2Title": "2. Personalize",
+  "sigilUse2Desc": "Simplifique, gire, ou adicione detalhes. Torná-lo seu faz parte da magia.",
+  "sigilUse3Title": "3. Ative o sigilo",
+  "sigilUse3Desc": "Use em meditação, queime em ritual, ou carregue consigo para focar sua intenção.",
+  "sigilRemember": "Lembre-se: a magia está na sua intenção e no ato de criar, não apenas no desenho final.",
+  "commonSaving": "Salvando...",
+  "commonFinish": "Finalizar",
+  "advisorAskFirst": "Faça sua pergunta primeiro",
+  "advisorDailyLimit": "Você já consultou o Conselheiro hoje. Volte amanhã ou seja Premium!",
+  "advisorGenericError": "O conselheiro não pôde responder agora. Tente novamente mais tarde.",
+  "advisorRateLimited": "O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos.",
+  "advisorTempError": "Erro temporário no serviço místico. Tente novamente em instantes.",
+  "advisorConnectionError": "Erro de conexão. Verifique sua internet e tente novamente.",
+  "advisorPortalClosed": "O portal místico está temporariamente fechado. Tente novamente em alguns minutos.",
+  "advisorWisdomTitle": "Sabedoria do Conselheiro",
+  "advisorIntro": "Faça uma pergunta sobre bruxaria, magia ou misticismo, e o conselheiro compartilhará sua sabedoria ancestral 🪄",
+  "advisorQuestionHint": "Ex: Qual a melhor fase da lua para um ritual de proteção?",
+  "advisorConsultingStars": "Consultando os astros...",
+  "advisorConsult": "Consultar o Conselheiro",
+  "advisorRemainingToday": "Consultas restantes hoje: {used}",
+  "advisorAnswers": "O Conselheiro responde",
+  "spellGroupProtection": "Proteção & Limpeza",
+  "spellGroupProtectionSub": "Defesa, banimento e purificação",
+  "spellGroupLove": "Amor & Laços",
+  "spellGroupLoveSub": "Amor, autoestima e amizade",
+  "spellGroupProsperity": "Prosperidade & Caminhos",
+  "spellGroupProsperitySub": "Abundância, sorte, trabalho e estudos",
+  "spellGroupDreams": "Sonhos & Visões",
+  "spellGroupDreamsSub": "Adivinhação, sonhos e sabedoria",
+  "spellGroupEnergy": "Energia & Cura",
+  "spellGroupEnergySub": "Vitalidade, cura e coragem",
+  "spellGroupCreation": "Criação & Palavra",
+  "spellGroupCreationSub": "Criatividade e comunicação",
+  "spellGroupHome": "Lar & Cotidiano",
+  "spellGroupHomeSub": "Casa, família e o dia a dia",
+  "grimoireSearchSpells": "Buscar feitiços...",
+  "grimoireMySpells": "Meus Feitiços",
+  "grimoireMySpellsSub": "Criações e registros pessoais",
+  "grimoireNoSpellsFound": "Nenhum feitiço encontrado 🔍",
+  "grimoireAncestral": "Ancestral",
+  "@advisorRemainingToday": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      }
+    }
+  },
+  "spellNew": "Novo Feitiço",
+  "spellEdit": "Editar Feitiço",
+  "spellNameLabel": "Nome do Feitiço *",
+  "spellNameHint": "Ex: Proteção de Lar",
+  "commonRequired": "Campo obrigatório",
+  "spellPurposeLabel": "Propósito *",
+  "spellPurposeHint": "Ex: Proteção, Amor Próprio, Prosperidade",
+  "spellTypeLabel": "Tipo de Feitiço *",
+  "spellCategoryLabel": "Categoria *",
+  "spellMoonPhaseLabel": "Fase da Lua (Opcional)",
+  "commonNone": "Nenhuma",
+  "spellIngredientsLabel": "Ingredientes",
+  "spellIngredientsHint": "Digite um ingrediente por linha",
+  "spellHowToLabel": "Como Realizar *",
+  "spellHowToHint": "Descreva os passos do ritual",
+  "spellDurationLabel": "Duração (em dias)",
+  "spellDurationHint": "Ex: 3",
+  "spellNotesLabel": "Observações",
+  "spellNotesHint": "Resultados, sensações, anotações...",
+  "spellAdd": "Adicionar Feitiço",
+  "spellFilterByCategory": "Filtrar por categoria",
+  "spellAllCategories": "Todas Categorias",
+  "spellSourceAll": "Todos",
+  "spellSourceMine": "Meus",
+  "spellSourceAncestral": "Ancestrais",
+  "spellLoading": "Carregando feitiços...",
+  "spellNoneFound": "Nenhum feitiço encontrado",
+  "spellNoAncestral": "Nenhum feitiço ancestral disponível",
+  "spellEmptyGrimoire": "Seu grimório está vazio.\nComece adicionando seu primeiro feitiço!",
+  "spellMoonPrefix": "Lua",
+  "spellSavedToGrimoire": "Feitiço salvo no seu grimório! ✨",
+  "spellDetails": "Detalhes",
+  "spellSaveToGrimoire": "Salvar no Grimório",
+  "spellRecommendedMoon": "Fase Lunar Recomendada",
+  "spellHowTo": "Como Realizar",
+  "spellDurationDays": "Duração: {duration}",
+  "spellDay": "dia",
+  "spellDays": "dias",
+  "spellCreatedAt": "Criado em: {date}",
+  "spellUpdatedAt": "Atualizado em: {date}",
+  "spellDeleteConfirm": "Deseja realmente excluir o feitiço \"{name}\"?",
+  "@spellDurationDays": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@spellCreatedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@spellUpdatedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@spellDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

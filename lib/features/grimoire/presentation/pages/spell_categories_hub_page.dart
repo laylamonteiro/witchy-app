@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -24,12 +25,12 @@ class _SpellGroup {
   });
 }
 
-const List<_SpellGroup> _spellGroups = [
+List<_SpellGroup> _spellGroups(AppLocalizations l10n) => [
   _SpellGroup(
     emoji: '🛡️',
-    title: 'Proteção & Limpeza',
-    subtitle: 'Defesa, banimento e purificação',
-    categories: {
+    title: l10n.spellGroupProtection,
+    subtitle: l10n.spellGroupProtectionSub,
+    categories: const {
       SpellCategory.protection,
       SpellCategory.cleansing,
       SpellCategory.banishing,
@@ -37,9 +38,9 @@ const List<_SpellGroup> _spellGroups = [
   ),
   _SpellGroup(
     emoji: '💗',
-    title: 'Amor & Laços',
-    subtitle: 'Amor, autoestima e amizade',
-    categories: {
+    title: l10n.spellGroupLove,
+    subtitle: l10n.spellGroupLoveSub,
+    categories: const {
       SpellCategory.love,
       SpellCategory.selfLove,
       SpellCategory.friendship,
@@ -47,9 +48,9 @@ const List<_SpellGroup> _spellGroups = [
   ),
   _SpellGroup(
     emoji: '🍀',
-    title: 'Prosperidade & Caminhos',
-    subtitle: 'Abundância, sorte, trabalho e estudos',
-    categories: {
+    title: l10n.spellGroupProsperity,
+    subtitle: l10n.spellGroupProsperitySub,
+    categories: const {
       SpellCategory.prosperity,
       SpellCategory.luck,
       SpellCategory.work,
@@ -58,9 +59,9 @@ const List<_SpellGroup> _spellGroups = [
   ),
   _SpellGroup(
     emoji: '🌙',
-    title: 'Sonhos & Visões',
-    subtitle: 'Adivinhação, sonhos e sabedoria',
-    categories: {
+    title: l10n.spellGroupDreams,
+    subtitle: l10n.spellGroupDreamsSub,
+    categories: const {
       SpellCategory.dreams,
       SpellCategory.divination,
       SpellCategory.wisdom,
@@ -68,9 +69,9 @@ const List<_SpellGroup> _spellGroups = [
   ),
   _SpellGroup(
     emoji: '🔥',
-    title: 'Energia & Cura',
-    subtitle: 'Vitalidade, cura e coragem',
-    categories: {
+    title: l10n.spellGroupEnergy,
+    subtitle: l10n.spellGroupEnergySub,
+    categories: const {
       SpellCategory.healing,
       SpellCategory.energy,
       SpellCategory.courage,
@@ -78,18 +79,18 @@ const List<_SpellGroup> _spellGroups = [
   ),
   _SpellGroup(
     emoji: '🗣️',
-    title: 'Criação & Palavra',
-    subtitle: 'Criatividade e comunicação',
-    categories: {
+    title: l10n.spellGroupCreation,
+    subtitle: l10n.spellGroupCreationSub,
+    categories: const {
       SpellCategory.creativity,
       SpellCategory.communication,
     },
   ),
   _SpellGroup(
     emoji: '🏠',
-    title: 'Lar & Cotidiano',
-    subtitle: 'Casa, família e o dia a dia',
-    categories: {
+    title: l10n.spellGroupHome,
+    subtitle: l10n.spellGroupHomeSub,
+    categories: const {
       SpellCategory.home,
       SpellCategory.other,
     },
@@ -136,7 +137,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Buscar feitiços...',
+                  hintText: AppLocalizations.of(context)!.grimoireSearchSpells,
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _searchQuery.isEmpty
                       ? null
@@ -187,20 +188,20 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
         _buildHubCard(
           context,
           emoji: '✨',
-          title: 'Meus Feitiços',
-          subtitle: 'Criações e registros pessoais',
+          title: AppLocalizations.of(context)!.grimoireMySpells,
+          subtitle: AppLocalizations.of(context)!.grimoireMySpellsSub,
           count: userCount,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const UserSpellsListPage(
-                title: 'Meus Feitiços',
+              builder: (_) => UserSpellsListPage(
+                title: AppLocalizations.of(context)!.grimoireMySpells,
                 initialSource: SpellSource.mine,
               ),
             ),
           ),
         ),
-        for (final group in _spellGroups)
+        for (final group in _spellGroups(AppLocalizations.of(context)!))
           _buildHubCard(
             context,
             emoji: group.emoji,
@@ -300,7 +301,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
     if (results.isEmpty) {
       return Center(
         child: Text(
-          'Nenhum feitiço encontrado 🔍',
+          AppLocalizations.of(context)!.grimoireNoSpellsFound,
           style: TextStyle(color: context.gc.textSecondary),
         ),
       );
@@ -336,7 +337,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
                     const SizedBox(height: 2),
                     Text(
                       spell.isPreloaded
-                          ? 'Ancestral · ${spell.category.displayName}'
+                          ? '${AppLocalizations.of(context)!.grimoireAncestral} · ${spell.category.displayName}'
                           : spell.category.displayName,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.textSecondary,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -59,7 +60,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Criar Sigilo'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.sigilCreateTitle),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -77,24 +78,21 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                       const SigilIcon(size: 32),
                       const SizedBox(width: 12),
                       Text(
-                        'O que é um Sigilo?',
+                        AppLocalizations.of(context)!.sigilWhatIs,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Sigilos são símbolos mágicos criados para manifestar intenções. '
-                    'Ao transformar palavras em símbolos abstratos, você cria uma marca energética '
-                    'que carrega o poder da sua vontade, sem revelar sua intenção para outras pessoas.',
+                    AppLocalizations.of(context)!.sigilWhatIsDesc,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Defina sua intenção, escolha uma palavra que a represente, '
-                    'e o app criará automaticamente seu sigilo único.',
+                    AppLocalizations.of(context)!.sigilHowIntro,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -107,7 +105,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
 
             // Título da etapa - DEPOIS
             Text(
-              'Defina sua Intenção',
+              AppLocalizations.of(context)!.sigilSetIntention,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
@@ -119,14 +117,14 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Sua palavra de intenção',
+                    AppLocalizations.of(context)!.sigilIntentionWord,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _intentionController,
                     decoration: InputDecoration(
-                      hintText: 'Digite uma palavra...',
+                      hintText: AppLocalizations.of(context)!.sigilTypeWord,
                       hintStyle: TextStyle(
                         color: context.gc.textSecondary.withOpacity(0.5),
                       ),
@@ -156,7 +154,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '⚠️ Use apenas UMA palavra, sem espaços',
+                    AppLocalizations.of(context)!.sigilOneWordWarning,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: _intentionController.text.contains(' ')
                               ? Colors.red.shade300
@@ -174,18 +172,18 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '💡 Exemplos de palavras',
+                    AppLocalizations.of(context)!.sigilExamplesHeader,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 12),
-                  _buildExample('Prosperidade'),
-                  _buildExample('Proteção'),
-                  _buildExample('Cura'),
-                  _buildExample('Confiança'),
-                  _buildExample('Intuição'),
+                  _buildExample(AppLocalizations.of(context)!.sigilExample1),
+                  _buildExample(AppLocalizations.of(context)!.sigilExample2),
+                  _buildExample(AppLocalizations.of(context)!.sigilExample3),
+                  _buildExample(AppLocalizations.of(context)!.sigilExample4),
+                  _buildExample(AppLocalizations.of(context)!.sigilExample5),
                   const SizedBox(height: 8),
                   Text(
-                    'Dica: Escolha palavras positivas e específicas que ressoem com você.',
+                    AppLocalizations.of(context)!.sigilWordTip,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -199,7 +197,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
             // Botão continuar
             if (_canContinue)
               MagicalButton(
-                text: 'Continuar',
+                text: AppLocalizations.of(context)!.commonContinue,
                 onPressed: _continue,
               )
             else
@@ -209,7 +207,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
-                  'Continuar',
+                  AppLocalizations.of(context)!.commonContinue,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.textSecondary,
                       ),

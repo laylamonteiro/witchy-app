@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/spell_model.dart';
@@ -28,7 +29,7 @@ class SpellDetailPage extends StatelessWidget {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Feitiço salvo no seu grimório! ✨'),
+        content: Text(AppLocalizations.of(context)!.spellSavedToGrimoire),
         backgroundColor: context.gc.success,
       ),
     );
@@ -44,12 +45,12 @@ class SpellDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Detalhes'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.spellDetails),
         actions: [
           if (showSaveButton) ...[
             IconButton(
               icon: const Icon(Icons.save),
-              tooltip: 'Salvar no Grimório',
+              tooltip: AppLocalizations.of(context)!.spellSaveToGrimoire,
               onPressed: () => _saveSpell(context),
             ),
           ] else if (!spell.isPreloaded) ...[
@@ -113,7 +114,7 @@ class SpellDetailPage extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Fase Lunar Recomendada',
+                      AppLocalizations.of(context)!.spellRecommendedMoon,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
@@ -133,7 +134,7 @@ class SpellDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ingredientes',
+                      AppLocalizations.of(context)!.spellIngredientsLabel,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
@@ -169,7 +170,7 @@ class SpellDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Como Realizar',
+                    AppLocalizations.of(context)!.spellHowTo,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -189,7 +190,7 @@ class SpellDetailPage extends StatelessWidget {
                     Icon(Icons.timer, color: context.gc.lilac),
                     const SizedBox(width: 12),
                     Text(
-                      'Duração: ${spell.duration} ${spell.duration == 1 ? "dia" : "dias"}',
+                      AppLocalizations.of(context)!.spellDurationDays('${spell.duration} ${spell.duration == 1 ? AppLocalizations.of(context)!.spellDay : AppLocalizations.of(context)!.spellDays}'),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ],
@@ -203,7 +204,7 @@ class SpellDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Observações',
+                      AppLocalizations.of(context)!.spellNotesLabel,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
@@ -221,12 +222,12 @@ class SpellDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Criado em: ${dateFormat.format(spell.createdAt)}',
+                    AppLocalizations.of(context)!.spellCreatedAt(dateFormat.format(spell.createdAt)),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   if (spell.updatedAt != spell.createdAt)
                     Text(
-                      'Atualizado em: ${dateFormat.format(spell.updatedAt)}',
+                      AppLocalizations.of(context)!.spellUpdatedAt(dateFormat.format(spell.updatedAt)),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                 ],
@@ -250,19 +251,19 @@ class SpellDetailPage extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: Text('Deseja realmente excluir o feitiço "${spell.name}"?'),
+        title: Text(AppLocalizations.of(context)!.commonConfirmDelete),
+        content: Text(AppLocalizations.of(context)!.spellDeleteConfirm(spell.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: context.gc.alert,
             ),
-            child: const Text('Excluir'),
+            child: Text(AppLocalizations.of(context)!.commonDelete),
           ),
         ],
       ),

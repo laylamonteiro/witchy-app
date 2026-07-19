@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/rendering.dart';
 import 'package:gal/gal.dart';
 import 'package:provider/provider.dart';
@@ -70,7 +71,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível salvar o sigilo: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.sigilSaveError}: $e')),
       );
     }
   }
@@ -95,12 +96,12 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       final boundary = _drawingKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) {
-        throw Exception('Desenho ainda não está pronto');
+        throw Exception(AppLocalizations.of(context)!.sigilDrawingNotReady);
       }
       final image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
-        throw Exception('Falha ao gerar a imagem');
+        throw Exception(AppLocalizations.of(context)!.sigilImageError);
       }
 
       final name =
@@ -113,7 +114,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Sigilo salvo na galeria! ✨'),
+          content: Text(AppLocalizations.of(context)!.sigilSavedToGallery),
           backgroundColor: context.gc.success,
         ),
       );
@@ -123,8 +124,8 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
         SnackBar(
           content: Text(
             e.type == GalExceptionType.accessDenied
-                ? 'Permita o acesso à galeria para salvar o sigilo.'
-                : 'Não foi possível salvar a imagem.',
+                ? AppLocalizations.of(context)!.sigilGalleryPermission
+                : AppLocalizations.of(context)!.sigilImageSaveError,
           ),
           backgroundColor: context.gc.alert,
         ),
@@ -163,7 +164,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Seu Sigilo'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.sigilYourSigil),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -173,7 +174,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
           children: [
             // Título
             Text(
-              'Desenho do seu Sigilo',
+              AppLocalizations.of(context)!.sigilYourDrawing,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
@@ -232,11 +233,11 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildLegendItem(Colors.green.shade300, 'Início'),
+                        _buildLegendItem(Colors.green.shade300, AppLocalizations.of(context)!.sigilLegendStart),
                         const SizedBox(width: 16),
-                        _buildLegendItem(context.gc.lilac, 'Letras'),
+                        _buildLegendItem(context.gc.lilac, AppLocalizations.of(context)!.sigilLegendLetters),
                         const SizedBox(width: 16),
-                        _buildLegendItem(Colors.red.shade300, 'Fim'),
+                        _buildLegendItem(Colors.red.shade300, AppLocalizations.of(context)!.sigilLegendEnd),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -260,7 +261,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                                   : context.gc.textSecondary,
                             ),
                             const SizedBox(width: 4),
-                            const Text('Roda'),
+                            Text(AppLocalizations.of(context)!.sigilWheel),
                           ],
                         ),
                         selected: _showWheel,
@@ -298,7 +299,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                                   : context.gc.textSecondary,
                             ),
                             const SizedBox(width: 4),
-                            const Text('Pontos'),
+                            Text(AppLocalizations.of(context)!.sigilPoints),
                           ],
                         ),
                         selected: _showStartEnd,
@@ -326,7 +327,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       IconButton(
                         onPressed: _shuffleLetters,
                         icon: const Icon(Icons.shuffle, size: 20),
-                        tooltip: 'Embaralhar letras',
+                        tooltip: AppLocalizations.of(context)!.sigilShuffle,
                         style: IconButton.styleFrom(
                           backgroundColor: _isShuffled
                               ? context.gc.mint.withOpacity(0.3)
@@ -349,7 +350,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                                 ),
                               )
                             : const Icon(Icons.download, size: 20),
-                        tooltip: 'Salvar imagem na galeria',
+                        tooltip: AppLocalizations.of(context)!.sigilSaveImage,
                         style: IconButton.styleFrom(
                           backgroundColor: context.gc.surface,
                           foregroundColor: context.gc.textSecondary,
@@ -360,7 +361,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         IconButton(
                           onPressed: _resetLetters,
                           icon: const Icon(Icons.restart_alt, size: 20),
-                          tooltip: 'Restaurar posições',
+                          tooltip: AppLocalizations.of(context)!.sigilRestore,
                           style: IconButton.styleFrom(
                             backgroundColor: context.gc.surface,
                             foregroundColor: context.gc.textSecondary,
@@ -384,23 +385,23 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       const Text('🎨', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        'Como usar seu sigilo',
+                        AppLocalizations.of(context)!.sigilHowToUse,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   _buildStep(
-                    '1. Copie este desenho',
-                    'Reproduza o traçado em seu caderno, altar, vela, ou papel ritual.',
+                    AppLocalizations.of(context)!.sigilUse1Title,
+                    AppLocalizations.of(context)!.sigilUse1Desc,
                   ),
                   _buildStep(
-                    '2. Personalize',
-                    'Simplifique, gire, ou adicione detalhes. Torná-lo seu faz parte da magia.',
+                    AppLocalizations.of(context)!.sigilUse2Title,
+                    AppLocalizations.of(context)!.sigilUse2Desc,
                   ),
                   _buildStep(
-                    '3. Ative o sigilo',
-                    'Use em meditação, queime em ritual, ou carregue consigo para focar sua intenção.',
+                    AppLocalizations.of(context)!.sigilUse3Title,
+                    AppLocalizations.of(context)!.sigilUse3Desc,
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -418,8 +419,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Lembre-se: a magia está na sua intenção e no ato de criar, '
-                            'não apenas no desenho final.',
+                            AppLocalizations.of(context)!.sigilRemember,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: context.gc.textSecondary,
@@ -437,7 +437,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
 
             // Botão finalizar
             MagicalButton(
-              text: _isSaving ? 'Salvando...' : 'Finalizar',
+              text: _isSaving ? AppLocalizations.of(context)!.commonSaving : AppLocalizations.of(context)!.commonFinish,
               onPressed: _saveAndFinish,
             ),
             const SizedBox(height: 16),

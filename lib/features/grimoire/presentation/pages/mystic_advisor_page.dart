@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -52,7 +53,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
     if (_questionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Faça sua pergunta primeiro'),
+          content: Text(AppLocalizations.of(context)!.advisorAskFirst),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -65,7 +66,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Você já consultou o Conselheiro hoje. Volte amanhã ou seja Premium!'),
+              AppLocalizations.of(context)!.advisorDailyLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -103,27 +104,27 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
       if (!mounted) return;
 
       String errorMessage =
-          'O conselheiro não pôde responder agora. Tente novamente mais tarde.';
+          AppLocalizations.of(context)!.advisorGenericError;
 
       if (e.toString().contains('limit') ||
           e.toString().contains('quota') ||
           e.toString().contains('usage') ||
           e.toString().contains('429')) {
         errorMessage =
-            'O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos.';
+            AppLocalizations.of(context)!.advisorRateLimited;
       } else if (e.toString().contains('autenticação') ||
           e.toString().contains('authentication') ||
           e.toString().contains('401')) {
         errorMessage =
-            'Erro temporário no serviço místico. Tente novamente em instantes.';
+            AppLocalizations.of(context)!.advisorTempError;
       } else if (e.toString().contains('network') ||
           e.toString().contains('connection') ||
           e.toString().contains('timeout')) {
         errorMessage =
-            'Erro de conexão. Verifique sua internet e tente novamente.';
+            AppLocalizations.of(context)!.advisorConnectionError;
       } else if (e.toString().contains('503')) {
         errorMessage =
-            'O portal místico está temporariamente fechado. Tente novamente em alguns minutos.';
+            AppLocalizations.of(context)!.advisorPortalClosed;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +158,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Conselheiro Místico'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.profileMysticAdvisor),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -178,7 +179,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Sabedoria do Conselheiro',
+                    AppLocalizations.of(context)!.advisorWisdomTitle,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
@@ -186,8 +187,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Faça uma pergunta sobre bruxaria, magia ou misticismo, '
-                    'e o conselheiro compartilhará sua sabedoria ancestral 🪄',
+                    AppLocalizations.of(context)!.advisorIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -204,8 +204,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                 controller: _questionController,
                 style: TextStyle(color: context.gc.softWhite),
                 decoration: InputDecoration(
-                  hintText: 'Ex: Qual a melhor fase da lua para um ritual '
-                      'de proteção?',
+                  hintText: AppLocalizations.of(context)!.advisorQuestionHint,
                   hintStyle: TextStyle(
                     color: context.gc.softWhite.withOpacity(0.5),
                   ),
@@ -249,7 +248,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                     )
                   : const Icon(Icons.auto_stories),
               label: Text(
-                  _isAsking ? 'Consultando os astros...' : 'Consultar o Conselheiro'),
+                  _isAsking ? AppLocalizations.of(context)!.advisorConsultingStars : AppLocalizations.of(context)!.advisorConsult),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.darkBackground,
@@ -270,7 +269,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    'Consultas restantes hoje: $remaining/${UserModel.freeAdvisorConsultationsLimit}',
+                    AppLocalizations.of(context)!.advisorRemainingToday('$remaining/${UserModel.freeAdvisorConsultationsLimit}'),
                     style: TextStyle(
                       color: remaining > 0
                           ? context.gc.softWhite.withOpacity(0.6)
@@ -294,7 +293,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                         const Text('🌙', style: TextStyle(fontSize: 28)),
                         const SizedBox(width: 12),
                         Text(
-                          'O Conselheiro responde',
+                          AppLocalizations.of(context)!.advisorAnswers,
                           style: TextStyle(
                             color: context.gc.lilac,
                             fontSize: 20,
