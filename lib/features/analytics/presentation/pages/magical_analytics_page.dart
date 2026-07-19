@@ -570,7 +570,9 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               _stats['spells'] ?? 0,
               Icons.auto_fix_high,
               Colors.purple,
-              onTap: () => _openAndReload(const UserSpellsListPage()),
+              onTap: () => _openAndReload(
+                const UserSpellsListPage(title: 'Meu Grimório'),
+              ),
             ),
             _buildCategoryCard(
               'Sonhos',

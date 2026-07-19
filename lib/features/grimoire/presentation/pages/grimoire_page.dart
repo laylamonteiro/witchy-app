@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
-import 'user_spells_list_page.dart';
+import 'spell_categories_hub_page.dart';
 import 'mystic_advisor_page.dart';
 import '../../../astrology/presentation/pages/astrology_tab.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
@@ -96,7 +96,7 @@ class _GrimoirePageState extends State<GrimoirePage>
         children: const [
           AstrologyTab(),
           _ToolsTab(),
-          UserSpellsListPage(),
+          SpellCategoriesHubPage(),
         ],
       ),
     );
