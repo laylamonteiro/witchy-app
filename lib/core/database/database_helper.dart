@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 15,
+      version: 16,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -173,6 +173,20 @@ class DatabaseHelper {
         synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
+
+    // Progresso do Grimório Vivo (lições concluídas, sincronizável)
+    await db.execute('''
+      CREATE TABLE learning_progress (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        lesson_id TEXT NOT NULL,
+        completed_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute(
+        'CREATE INDEX idx_learning_progress_user_id ON learning_progress(user_id)');
 
     // Tabela de Mapas Astrais
     await db.execute('''
@@ -905,6 +919,28 @@ class DatabaseHelper {
         """,
       );
     }
+
+    // Migração v16: progresso do Grimório Vivo passa a viver no banco
+    // (antes ficava só em SharedPreferences) para sincronizar entre
+    // dispositivos como os demais registros.
+    if (oldVersion < 16) {
+      final tables = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='learning_progress'");
+      if (tables.isEmpty) {
+        await db.execute('''
+          CREATE TABLE learning_progress (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL DEFAULT 'local_user',
+            lesson_id TEXT NOT NULL,
+            completed_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            synced INTEGER NOT NULL DEFAULT 0
+          )
+        ''');
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_learning_progress_user_id ON learning_progress(user_id)');
+      }
+    }
   }
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
@@ -928,6 +964,7 @@ class DatabaseHelper {
       'pendulum_consultations',
       'oracle_readings',
       'daily_magical_weather',
+      'learning_progress',
     ];
 
     await db.transaction((txn) async {
@@ -1021,6 +1058,7 @@ class DatabaseHelper {
       'pendulum_consultations',
       'oracle_readings',
       'daily_magical_weather',
+      'learning_progress',
     ];
 
     for (final table in tables) {

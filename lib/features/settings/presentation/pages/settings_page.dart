@@ -25,6 +25,10 @@ import 'theme_picker_page.dart';
 import '../../../../core/legal/legal_document_page.dart';
 
 class SettingsPage extends StatelessWidget {
+  /// Seletor de idioma oculto enquanto a tradução total (F4) não termina.
+  /// Quando todo o app estiver traduzido, basta voltar para true.
+  static const bool _showLanguageOption = false;
+
   const SettingsPage({super.key});
 
   @override
@@ -564,8 +568,10 @@ class SettingsPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildLanguageOptionTile(context),
-          _buildDivider(context),
+          if (_showLanguageOption) ...[
+            _buildLanguageOptionTile(context),
+            _buildDivider(context),
+          ],
           _buildOptionTile(
             context,
             icon: Icons.person_outline,

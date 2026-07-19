@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/data_sources/trails_data.dart';
 import '../../data/models/trail_model.dart';
+import '../../data/repositories/learning_progress_repository.dart';
 
 /// Nível do Grimório Vivo — gamificação no espírito das Jornadas Mágicas
 /// (XP e títulos), aplicada ao aprendizado.
@@ -13,9 +14,12 @@ class LearningLevel {
   const LearningLevel(this.title, this.emoji, this.minXp);
 }
 
-/// Progresso do Grimório Vivo (local, por aparelho).
+/// Progresso do Grimório Vivo — persistido no banco e sincronizado na
+/// nuvem como os demais registros (antes vivia só em SharedPreferences).
 class LearningProvider with ChangeNotifier {
-  static const _completedKey = 'learning_completed_lessons';
+  static const _legacyCompletedKey = 'learning_completed_lessons';
+
+  final LearningProgressRepository _repository = LearningProgressRepository();
 
   /// XP por página escrita e bônus por trilha encadernada.
   static const int xpPerPage = 25;
@@ -32,14 +36,30 @@ class LearningProvider with ChangeNotifier {
 
   Set<String> _completed = {};
   bool _loaded = false;
+  String _currentUserId = 'local_user';
 
   bool get isLoaded => _loaded;
 
+  Future<void> setUserId(String userId) async {
+    if (_currentUserId == userId && _loaded) return;
+    _currentUserId = userId;
+    await load();
+  }
+
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    _completed = (prefs.getStringList(_completedKey) ?? []).toSet();
+    await _migrateLegacyPrefs();
+    _completed = await _repository.completedLessonIds(_currentUserId);
     _loaded = true;
     notifyListeners();
+  }
+
+  /// Progresso antigo (SharedPreferences) vira linhas no banco uma única vez.
+  Future<void> _migrateLegacyPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final legacy = prefs.getStringList(_legacyCompletedKey);
+    if (legacy == null || legacy.isEmpty) return;
+    await _repository.importLegacy(_currentUserId, legacy.toSet());
+    await prefs.remove(_legacyCompletedKey);
   }
 
   bool isLessonCompleted(String lessonId) => _completed.contains(lessonId);
@@ -99,8 +119,7 @@ class LearningProvider with ChangeNotifier {
     final wasComplete = isTrailComplete(trail);
 
     _completed.add(lessonId);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_completedKey, _completed.toList());
+    await _repository.markCompleted(_currentUserId, lessonId);
 
     final nowComplete = isTrailComplete(trail);
     final reward = LessonReward(

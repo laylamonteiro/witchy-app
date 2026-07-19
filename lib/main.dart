@@ -225,7 +225,13 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(widget.prefs)),
-        ChangeNotifierProvider(create: (_) => LearningProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, LearningProvider>(
+          create: (_) => LearningProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider.value(value: PaymentService()),
         ChangeNotifierProvider(create: (_) => LanguageProvider(widget.prefs)),

@@ -48,5 +48,6 @@ class SupabaseTables {
   static const String pendulumConsultations = 'pendulum_consultations';
   static const String oracleReadings = 'oracle_readings';
   static const String dailyMagicalWeather = 'daily_magical_weather';
+  static const String learningProgress = 'learning_progress';
   static const String betaCodes = 'beta_codes';
 }
