@@ -639,6 +639,79 @@ Diretrizes Sagradas:
     }
   }
 
+  /// Leitura de mãos por imagem (Premium). Usa o modelo de visão do Groq;
+  /// a imagem é enviada em memória e não é armazenada.
+  Future<String> analyzePalm({
+    required List<int> jpegBytes,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final base64Image = base64Encode(jpegBytes);
+      final requestData = {
+        'model': 'meta-llama/llama-4-scout-17b-16e-instruct',
+        'messages': [
+          {
+            'role': 'system',
+            'content': '''${_localizedInstruction()}
+
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, quiromante experiente na tradição popular e simbólica.
+
+Analise a palma da mão na imagem: linhas principais (vida, cabeça, coração, destino quando visível), montes e formato geral. Faça uma leitura simbólica, acolhedora e específica ao que você VÊ — não invente linhas que não aparecem. Se a imagem não mostrar uma palma legível, diga isso gentilmente e oriente uma nova foto.
+
+Formato: texto puro (sem markdown/JSON), 3 a 4 parágrafos.
+Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de saúde, previsões de morte ou promessas absolutas.
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''',
+          },
+          {
+            'role': 'user',
+            'content': [
+              {
+                'type': 'text',
+                'text':
+                    'Esta é a palma da minha mão. Faça minha leitura de quiromancia.',
+              },
+              {
+                'type': 'image_url',
+                'image_url': {
+                  'url': 'data:image/jpeg;base64,$base64Image',
+                },
+              },
+            ],
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 1200,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 60),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Imagem muito grande. Tente novamente.');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
   /// Interpretar uma tiragem de tarot já sorteada no app (Premium).
   Future<String> interpretTarotSpread({
     required String summary,
