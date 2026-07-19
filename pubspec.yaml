@@ -114,6 +114,10 @@ flutter:
     - assets/images/herbs/
     - assets/images/deusas/
     - assets/images/metais/
+    - assets/images/arquetipos/
+    - assets/images/anjos/
+    - assets/images/demonios/
+    - assets/images/simbolos/
     - assets/icons/
     - assets/icons/new_cat/
     - assets/icons/old_cat/

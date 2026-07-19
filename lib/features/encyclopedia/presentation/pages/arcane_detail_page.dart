@@ -18,7 +18,7 @@ class ArcaneDetailPage extends StatelessWidget {
   });
 
   /// Caminho da imagem do verbete:
-  /// assets/images/arcanos/<categoria>/<slug>.webp
+  /// assets/images/<categoria>/<slug>.webp
   String get imageAsset {
     const folders = {
       'Arquétipos': 'arquetipos',
@@ -33,7 +33,7 @@ class ArcaneDetailPage extends StatelessWidget {
       slug = slug.replaceAll(accents[i], plain[i]);
     }
     slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-    return 'assets/images/arcanos/${folders[categoryTitle] ?? 'outros'}/$slug.webp';
+    return 'assets/images/${folders[categoryTitle] ?? 'outros'}/$slug.webp';
   }
 
   @override
