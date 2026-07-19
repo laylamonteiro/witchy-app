@@ -55,9 +55,6 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 20),
                 ],
 
-                _buildLanguageCard(context),
-                const SizedBox(height: 20),
-
                 // Opções de conta
                 _buildAccountOptions(context, authProvider),
 
@@ -74,7 +71,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLanguageCard(BuildContext context) {
+  Widget _buildLanguageOptionTile(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final languageProvider = context.watch<LanguageProvider>();
 
@@ -90,45 +87,40 @@ class SettingsPage extends StatelessWidget {
       }
     }
 
-    return MagicalCard(
-      child: ListTile(
-        leading: const Icon(Icons.language, color: Color(0xFF9C27B0)),
-        title: Text(
-          l10n.settingsLanguageTitle,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        trailing: DropdownButton<Locale>(
-          value: languageProvider.locale,
-          dropdownColor: const Color(0xFF1A1A2E),
-          underline: const SizedBox.shrink(),
-          style: const TextStyle(color: Colors.white),
-          items: LanguageProvider.supportedLocales
-              .map(
-                (locale) => DropdownMenuItem<Locale>(
-                  value: locale,
-                  child: Text(labelFor(locale)),
-                ),
-              )
-              .toList(),
-          onChanged: (locale) async {
-            if (locale == null) return;
-
-            await context.read<LanguageProvider>().setLocale(locale);
-
-            if (!context.mounted) return;
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  l10n.settingsLanguageChanged(labelFor(locale)),
-                ),
+    return ListTile(
+      leading: const Icon(Icons.language, color: Colors.white70),
+      title: Text(
+        l10n.settingsLanguageTitle,
+        style: const TextStyle(color: Colors.white),
+      ),
+      trailing: DropdownButton<Locale>(
+        value: languageProvider.locale,
+        dropdownColor: const Color(0xFF1A1A2E),
+        underline: const SizedBox.shrink(),
+        style: const TextStyle(color: Colors.white),
+        items: LanguageProvider.supportedLocales
+            .map(
+              (locale) => DropdownMenuItem<Locale>(
+                value: locale,
+                child: Text(labelFor(locale)),
               ),
-            );
-          },
-        ),
+            )
+            .toList(),
+        onChanged: (locale) async {
+          if (locale == null) return;
+
+          await context.read<LanguageProvider>().setLocale(locale);
+
+          if (!context.mounted) return;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.settingsLanguageChanged(labelFor(locale)),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -564,6 +556,8 @@ class SettingsPage extends StatelessWidget {
       ),
       child: Column(
         children: [
+          _buildLanguageOptionTile(context),
+          _buildDivider(),
           _buildOptionTile(
             icon: Icons.person_outline,
             title: 'Editar Perfil',
