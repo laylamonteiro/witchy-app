@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 14,
+      version: 15,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -881,6 +881,29 @@ class DatabaseHelper {
       if (!hasInterpretation) {
         await db.execute('ALTER TABLE dreams ADD COLUMN interpretation TEXT');
       }
+    }
+
+    // Migração v15: remove feitiços ancestrais duplicados. O seed antigo
+    // comparava por id (que era regenerado a cada execução) e re-inseria os
+    // precarregados a cada abertura do app. Mantém o registro mais antigo de
+    // cada nome e normaliza o dono global.
+    if (oldVersion < 15) {
+      await db.execute('''
+        DELETE FROM spells
+        WHERE is_preloaded = 1
+          AND rowid NOT IN (
+            SELECT MIN(rowid) FROM spells
+            WHERE is_preloaded = 1
+            GROUP BY LOWER(TRIM(name))
+          )
+      ''');
+      await db.execute(
+        """
+        UPDATE spells
+        SET user_id = '${SpellModel.globalUserId}', synced = 1
+        WHERE is_preloaded = 1
+        """,
+      );
     }
   }
 

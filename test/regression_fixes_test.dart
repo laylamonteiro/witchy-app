@@ -1063,6 +1063,26 @@ Outro conteúdo secreto.''';
       expect(restoredIds, hasLength(preloadedSpells.length));
       expect(restoredIds.toSet(), hasLength(preloadedSpells.length));
     });
+
+    test('seed é idempotente: recarregar não duplica os ancestrais', () async {
+      // Regressão: preloadedSpells gera UUID novo a cada execução; o seed
+      // comparava por id e re-inseria os 65 feitiços a cada load.
+      final db = await DatabaseHelper.instance.database;
+      await db.delete('spells');
+
+      final provider = SpellProvider();
+      await provider.loadSpells();
+      await provider.loadSpells();
+      await provider.loadSpells();
+
+      final count = Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM spells WHERE is_preloaded = 1',
+        ),
+      );
+      expect(count, preloadedSpells.length);
+      expect(provider.appSpells, hasLength(preloadedSpells.length));
+    });
   });
 
 }

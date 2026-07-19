@@ -36,30 +36,34 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
 
   /// Garante que os feitiços ancestrais do app existam no banco.
   ///
-  /// A verificação consulta apenas registros pré-carregados para manter o seed
-  /// idempotente e evitar depender de dados criados pelo usuário.
+  /// A comparação é por NOME normalizado (não por id): os objetos de
+  /// `preloadedSpells` recebem um UUID novo a cada execução, então comparar
+  /// por id re-inseria os 65 feitiços a cada abertura, duplicando o grimório.
+  /// Novos registros ganham id determinístico derivado do nome.
   @override
   Future<void> ensurePreloadedSpells() async {
     final db = await _dbHelper.database;
     final existingPreloadedRows = await db.query(
       'spells',
-      columns: ['id'],
+      columns: ['name'],
       where: 'is_preloaded = ?',
       whereArgs: [1],
     );
-    final existingPreloadedIds = existingPreloadedRows
-        .map((row) => row['id'] as String)
+    final existingNames = existingPreloadedRows
+        .map((row) => _normalizeName(row['name'] as String))
         .toSet();
 
     final batch = db.batch();
     var hasMissingSeed = false;
 
     for (final spell in preloadedSpells) {
-      if (!existingPreloadedIds.contains(spell.id)) {
+      if (!existingNames.contains(_normalizeName(spell.name))) {
         hasMissingSeed = true;
+        final map = spell.toMap();
+        map['id'] = preloadedSpellId(spell.name);
         batch.insert(
           'spells',
-          spell.toMap(),
+          map,
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
@@ -68,6 +72,20 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
     if (hasMissingSeed) {
       await batch.commit(noResult: true);
     }
+  }
+
+  static String _normalizeName(String name) => name.trim().toLowerCase();
+
+  /// Id estável de um feitiço precarregado (slug do nome).
+  static String preloadedSpellId(String name) {
+    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+    const plain = 'aaaaaeeeeiiiiooooouuuucn';
+    var slug = _normalizeName(name);
+    for (var i = 0; i < accents.length; i++) {
+      slug = slug.replaceAll(accents[i], plain[i]);
+    }
+    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    return 'preloaded_$slug';
   }
 
   /// Retorna feitiços do usuário + pré-carregados (excluindo feitiços de outros usuários)
