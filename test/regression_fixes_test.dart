@@ -24,12 +24,19 @@ import 'package:grimorio_de_bolso/features/settings/presentation/pages/settings_
 import 'package:grimorio_de_bolso/features/subscription/presentation/pages/subscription_page.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/widgets/pro_feature_gate.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/widgets/subscription_offer_widgets.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/features/grimoire/data/data_sources/spells_data.dart';
+import 'package:grimorio_de_bolso/features/grimoire/presentation/providers/spell_provider.dart';
 
 void _ignoreSubscriptionSelection(SubscriptionType _) {}
 void _ignoreTap() {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
 
   group('Feitiços globais multiusuário', () {
     Map<String, dynamic> spellRow({
@@ -1017,4 +1024,45 @@ Outro conteúdo secreto.''';
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('SpellProvider preloaded seed', () {
+    test('restaura feitiços ancestrais mesmo após inicialização prévia', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.delete('spells');
+
+      final provider = SpellProvider();
+      await provider.loadSpells();
+
+      expect(provider.error, isNull);
+      expect(provider.appSpells, hasLength(preloadedSpells.length));
+
+      await db.delete('spells', where: 'is_preloaded = ?', whereArgs: [1]);
+      expect(
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM spells WHERE is_preloaded = 1',
+          ),
+        ),
+        0,
+      );
+
+      await provider.loadSpells();
+
+      final restoredPreloadedRows = await db.query(
+        'spells',
+        columns: ['id'],
+        where: 'is_preloaded = ?',
+        whereArgs: [1],
+      );
+      final restoredIds = restoredPreloadedRows
+          .map((row) => row['id'] as String)
+          .toList();
+
+      expect(provider.error, isNull);
+      expect(provider.appSpells, hasLength(preloadedSpells.length));
+      expect(restoredIds, hasLength(preloadedSpells.length));
+      expect(restoredIds.toSet(), hasLength(preloadedSpells.length));
+    });
+  });
+
 }

@@ -1,9 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
+import '../data_sources/spells_data.dart';
 import '../models/spell_model.dart';
 
 abstract class SpellLocalStore {
+  Future<void> ensurePreloadedSpells();
   Future<List<SpellModel>> getAll();
   Future<List<SpellModel>> getForUser(String userId);
   Future<SpellModel?> getById(String id);
@@ -31,6 +33,44 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
   }
 
+
+  /// Garante que os feitiços ancestrais do app existam no banco.
+  ///
+  /// A verificação consulta apenas registros pré-carregados para manter o seed
+  /// idempotente e evitar depender de dados criados pelo usuário.
+  @override
+  Future<void> ensurePreloadedSpells() async {
+    final db = await _dbHelper.database;
+    final existingPreloadedRows = await db.query(
+      'spells',
+      columns: ['id'],
+      where: 'is_preloaded = ?',
+      whereArgs: [1],
+    );
+    final existingPreloadedIds = existingPreloadedRows
+        .map((row) => row['id'] as String)
+        .toSet();
+
+    final batch = db.batch();
+    var hasMissingSeed = false;
+
+    for (final spell in preloadedSpells) {
+      if (!existingPreloadedIds.contains(spell.id)) {
+        hasMissingSeed = true;
+        batch.insert(
+          'spells',
+          spell.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+
+    if (hasMissingSeed) {
+      await batch.commit(noResult: true);
+    }
+  }
+
+  /// Retorna feitiços do usuário + pré-carregados (excluindo feitiços de outros usuários)
   @override
   Future<List<SpellModel>> getForUser(String userId) async {
     final db = await _dbHelper.database;
@@ -145,6 +185,9 @@ class SpellRepository {
 
   final SpellLocalStore _localStore;
   final SpellSyncGateway _syncGateway;
+
+  /// Garante que os feitiços ancestrais do app existam no banco (seed idempotente).
+  Future<void> ensurePreloadedSpells() => _localStore.ensurePreloadedSpells();
 
   /// Retorna todos os feitiços (sem filtro de usuário) - usado apenas para admin/debug
   Future<List<SpellModel>> getAll() => _localStore.getAll();
