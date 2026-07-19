@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/desire_model.dart';
 import '../providers/desire_provider.dart';
@@ -46,7 +47,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-          widget.desire == null ? 'Novo Desejo' : 'Editar Desejo',
+          widget.desire == null ? AppLocalizations.of(context)!.diaryNewDesire : AppLocalizations.of(context)!.diaryEditDesire,
         ),
         actions: widget.desire != null
             ? [
@@ -65,16 +66,16 @@ class _DesireFormPageState extends State<DesireFormPage> {
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'Título',
-                hintText: 'Ex: Viajar para o exterior',
+                labelText: AppLocalizations.of(context)!.diaryTitleLabel,
+                hintText: AppLocalizations.of(context)!.diaryDesireTitleHint,
               ),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
-                labelText: 'Descrição',
-                hintText: 'Descreva seu desejo em detalhes',
+                labelText: AppLocalizations.of(context)!.diaryDescLabel,
+                hintText: AppLocalizations.of(context)!.diaryDesireDescHint,
               ),
               maxLines: 5,
             ),
@@ -82,7 +83,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
             DropdownButtonFormField<DesireStatus>(
               value: _selectedStatus,
               decoration: const InputDecoration(
-                labelText: 'Status',
+                labelText: AppLocalizations.of(context)!.diaryStatusLabel,
               ),
               items: DesireStatus.values.map((status) {
                 return DropdownMenuItem(
@@ -106,14 +107,14 @@ class _DesireFormPageState extends State<DesireFormPage> {
             TextFormField(
               controller: _evolutionController,
               decoration: const InputDecoration(
-                labelText: 'O que se movimentou?',
-                hintText: 'Registre a evolução do seu desejo',
+                labelText: AppLocalizations.of(context)!.diaryDesireProgressLabel,
+                hintText: AppLocalizations.of(context)!.diaryDesireProgressHint,
               ),
               maxLines: 5,
             ),
             const SizedBox(height: 32),
             MagicalButton(
-              text: widget.desire == null ? 'Salvar Desejo' : 'Atualizar',
+              text: widget.desire == null ? AppLocalizations.of(context)!.diarySaveDesire : AppLocalizations.of(context)!.commonUpdate,
               icon: Icons.save,
               onPressed: _saveDesire,
             ),
@@ -128,7 +129,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
     if (_titleController.text.isEmpty && _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Preencha pelo menos o título ou a descrição'),
+          content: Text(AppLocalizations.of(context)!.diaryFillTitleOrDesc),
           backgroundColor: Colors.orange,
         ),
       );
@@ -137,7 +138,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
 
     final desire = widget.desire?.copyWith(
           title: _titleController.text.isEmpty
-              ? 'Sem título'
+              ? AppLocalizations.of(context)!.commonNoTitle
               : _titleController.text,
           description: _descriptionController.text,
           status: _selectedStatus,
@@ -147,7 +148,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
         ) ??
         DesireModel(
           title: _titleController.text.isEmpty
-              ? 'Sem título'
+              ? AppLocalizations.of(context)!.commonNoTitle
               : _titleController.text,
           description: _descriptionController.text,
           status: _selectedStatus,
@@ -169,19 +170,19 @@ class _DesireFormPageState extends State<DesireFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: const Text('Deseja realmente excluir este desejo?'),
+        title: Text(AppLocalizations.of(context)!.commonConfirmDelete),
+        content: Text(AppLocalizations.of(context)!.diaryDeleteDesireConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: context.gc.alert,
             ),
-            child: const Text('Excluir'),
+            child: Text(AppLocalizations.of(context)!.commonDelete),
           ),
         ],
       ),

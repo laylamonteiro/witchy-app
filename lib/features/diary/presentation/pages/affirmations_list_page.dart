@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/affirmation_provider.dart';
 import '../../data/models/affirmation_model.dart';
@@ -32,7 +33,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
       body: Consumer<AffirmationProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const LoadingWidget(message: 'Carregando afirmações...');
+            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingAffirmations);
           }
 
           return Column(
@@ -46,7 +47,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                     children: [
                       _buildCategoryChip(
                         context,
-                        'Todas',
+                        AppLocalizations.of(context)!.diaryAllCategories,
                         null,
                         provider.selectedCategory == null,
                       ),
@@ -72,9 +73,9 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                 child: provider.affirmations.isEmpty
                     ? EmptyStateWidget(
                         message:
-                            'Nenhuma afirmação nesta categoria.\nAdicione suas próprias afirmações!',
+                            AppLocalizations.of(context)!.diaryEmptyAffirmationsCategory,
                         icon: Icons.auto_awesome,
-                        actionText: 'Adicionar Afirmação',
+                        actionText: AppLocalizations.of(context)!.diaryAddAffirmation,
                         onAction: () => _navigateToForm(context),
                       )
                     : ListView.builder(

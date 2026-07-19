@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/gratitude_model.dart';
 import '../providers/gratitude_provider.dart';
@@ -47,7 +48,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-            widget.gratitude == null ? 'Nova Gratidão' : 'Editar Gratidão'),
+            widget.gratitude == null ? AppLocalizations.of(context)!.diaryNewGratitude : AppLocalizations.of(context)!.diaryEditGratitude),
         actions: widget.gratitude != null
             ? [
                 IconButton(
@@ -65,14 +66,14 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                labelText: 'Título',
-                hintText: 'Ex: Gratidão pelo dia de hoje',
+                labelText: AppLocalizations.of(context)!.diaryTitleLabel,
+                hintText: AppLocalizations.of(context)!.diaryGratitudeTitleHint,
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Data'),
+              title: Text(AppLocalizations.of(context)!.commonDate),
               subtitle: Text(
                 '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
               ),
@@ -95,8 +96,8 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _contentController,
               decoration: const InputDecoration(
-                labelText: 'Pelo que você é grato(a) hoje?',
-                hintText: 'Descreva suas gratidões...',
+                labelText: AppLocalizations.of(context)!.diaryGratitudeLabel,
+                hintText: AppLocalizations.of(context)!.diaryGratitudeHint,
               ),
               maxLines: 10,
             ),
@@ -104,14 +105,14 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _tagsController,
               decoration: const InputDecoration(
-                labelText: 'Tags',
-                hintText: 'Ex: família, saúde, trabalho',
-                helperText: 'Separe as tags por vírgula',
+                labelText: AppLocalizations.of(context)!.diaryTagsLabel,
+                hintText: AppLocalizations.of(context)!.diaryGratitudeTagsHint,
+                helperText: AppLocalizations.of(context)!.diaryTagsHelper,
               ),
             ),
             const SizedBox(height: 32),
             MagicalButton(
-              text: widget.gratitude == null ? 'Salvar Gratidão' : 'Atualizar',
+              text: widget.gratitude == null ? AppLocalizations.of(context)!.diarySaveGratitude : AppLocalizations.of(context)!.commonUpdate,
               icon: Icons.favorite,
               onPressed: _saveGratitude,
             ),
@@ -126,7 +127,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     if (_titleController.text.isEmpty && _contentController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Preencha pelo menos o título ou o conteúdo'),
+          content: Text(AppLocalizations.of(context)!.diaryFillTitleOrContent),
           backgroundColor: Colors.orange,
         ),
       );
@@ -142,7 +143,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     final gratitude = GratitudeModel(
       id: widget.gratitude?.id,
       title:
-          _titleController.text.isEmpty ? 'Sem título' : _titleController.text,
+          _titleController.text.isEmpty ? AppLocalizations.of(context)!.commonNoTitle : _titleController.text,
       content: _contentController.text,
       tags: tags,
       date: _selectedDate,
@@ -162,12 +163,12 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir Gratidão'),
-        content: const Text('Tem certeza que deseja excluir esta gratidão?'),
+        title: Text(AppLocalizations.of(context)!.diaryDeleteGratitudeTitle),
+        content: Text(AppLocalizations.of(context)!.diaryDeleteGratitudeConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () {
@@ -178,7 +179,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
               Navigator.pop(context); // Close form
             },
             style: TextButton.styleFrom(foregroundColor: context.gc.alert),
-            child: const Text('Excluir'),
+            child: Text(AppLocalizations.of(context)!.commonDelete),
           ),
         ],
       ),

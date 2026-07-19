@@ -69,7 +69,7 @@ class _DiaryPageState extends State<DiaryPage>
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
-            tooltip: 'Configurações',
+            tooltip: AppLocalizations.of(context)!.settingsTitle,
           ),
         ],
         bottom: TabBar(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/free_writing_provider.dart';
 import '../../data/models/free_writing_model.dart';
@@ -113,9 +114,9 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
 
   String get _greeting {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Bom dia ✨';
-    if (hour < 18) return 'Boa tarde ✨';
-    return 'Boa noite ✨';
+    if (hour < 12) return AppLocalizations.of(context)!.commonGoodMorning;
+    if (hour < 18) return AppLocalizations.of(context)!.commonGoodAfternoon;
+    return AppLocalizations.of(context)!.commonGoodEvening;
   }
 
   @override
@@ -149,7 +150,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                           Icons.arrow_back,
                           color: context.gc.lilac,
                         ),
-                        tooltip: 'Voltar',
+                        tooltip: AppLocalizations.of(context)!.commonBack,
                         onPressed: () async {
                           if (await _handleBack() && context.mounted) {
                             Navigator.of(context).pop();
@@ -158,7 +159,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                       ),
                     IconButton(
                       icon: Icon(Icons.history, color: context.gc.lilac),
-                      tooltip: 'Reflexões anteriores',
+                      tooltip: AppLocalizations.of(context)!.diaryPreviousReflections,
                       onPressed: _openHistory,
                     ),
                     if (hasText)
@@ -167,7 +168,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                           Icons.save_outlined,
                           color: context.gc.lilac,
                         ),
-                        tooltip: 'Salvar reflexão',
+                        tooltip: AppLocalizations.of(context)!.diarySaveReflection,
                         onPressed: _save,
                       ),
                   ],
@@ -190,7 +191,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                     ),
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: 'O que está na sua mente hoje?',
+                      hintText: AppLocalizations.of(context)!.diaryFreeWritingHint,
                       hintStyle: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.4),
                         fontSize: 17,

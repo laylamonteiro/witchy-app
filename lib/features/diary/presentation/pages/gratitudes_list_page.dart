@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/gratitude_provider.dart';
@@ -34,15 +35,15 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
       body: Consumer<GratitudeProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const LoadingWidget(message: 'Carregando gratidões...');
+            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingGratitudes);
           }
 
           if (provider.gratitudes.isEmpty) {
             return EmptyStateWidget(
               message:
-                  'Você ainda não registrou nenhuma gratidão.\nComece a cultivar abundância em sua vida!',
+                  AppLocalizations.of(context)!.diaryEmptyGratitudes,
               icon: Icons.favorite,
-              actionText: 'Adicionar Gratidão',
+              actionText: AppLocalizations.of(context)!.diaryAddGratitude,
               onAction: () => _navigateToForm(context),
             );
           }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/free_writing_provider.dart';
@@ -35,18 +36,18 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Reflexões'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryReflections),
       ),
       body: Consumer<FreeWritingProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const LoadingWidget(message: 'Carregando reflexões...');
+            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingReflections);
           }
 
           if (provider.freeWritings.isEmpty) {
             return const EmptyStateWidget(
               message:
-                  'Suas reflexões aparecerão aqui.\nEscreva o que estiver na sua mente. ✨',
+                  AppLocalizations.of(context)!.diaryEmptyReflections,
               icon: Icons.auto_stories,
             );
           }
@@ -105,12 +106,12 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Excluir reflexão'),
-        content: const Text('Tem certeza que deseja excluir esta reflexão?'),
+        title: Text(AppLocalizations.of(context)!.diaryDeleteReflectionTitle),
+        content: Text(AppLocalizations.of(context)!.diaryDeleteReflectionConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () {
@@ -118,7 +119,7 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
               Navigator.pop(dialogContext);
             },
             style: TextButton.styleFrom(foregroundColor: context.gc.alert),
-            child: const Text('Excluir'),
+            child: Text(AppLocalizations.of(context)!.commonDelete),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -12,7 +13,7 @@ class DreamThemesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Temas Oníricos'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryDreamThemes),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -20,8 +21,7 @@ class DreamThemesPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
             child: Text(
-              'Cada símbolo carrega muitas leituras possíveis. Explore os '
-              'temas mais comuns e compare com o que você sentiu no sonho.',
+              AppLocalizations.of(context)!.diaryDreamThemesIntro,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.gc.textSecondary,
                   ),

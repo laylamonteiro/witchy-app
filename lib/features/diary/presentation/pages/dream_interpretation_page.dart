@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -47,7 +48,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
     if (text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Descreva seu sonho primeiro'),
+          content: Text(AppLocalizations.of(context)!.dreamDescribeFirst),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -110,11 +111,11 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
     final notes = _notesController.text.trim();
     final dream = DreamModel(
       title: _titleController.text.trim().isEmpty
-          ? 'Sonho interpretado'
+          ? AppLocalizations.of(context)!.dreamInterpretedTitle
           : _titleController.text.trim(),
       content: notes.isEmpty
           ? _dreamController.text.trim()
-          : '${_dreamController.text.trim()}\n\nObservações: $notes',
+          : '${_dreamController.text.trim()}\n\n${AppLocalizations.of(context)!.dreamNotesPrefix}: $notes',
       tags: const ['interpretado'],
       feeling: _feelingsController.text.trim().isEmpty
           ? null
@@ -129,7 +130,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
     setState(() => _saved = true);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Sonho e interpretação salvos no Diário! 🌙'),
+        content: Text(AppLocalizations.of(context)!.dreamSavedToDiary),
         backgroundColor: context.gc.success,
       ),
     );
@@ -144,7 +145,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Interpretar Sonho'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryInterpretDream),
       ),
       body: !access.hasFullAccess
           ? _buildPremiumInvite(access.message)
@@ -162,7 +163,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
             const Text('🔮', style: TextStyle(fontSize: 56)),
             const SizedBox(height: 16),
             Text(
-              'Interpretação de Sonhos',
+              AppLocalizations.of(context)!.dreamInterpretationTitle,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: context.gc.lilac,
                   ),
@@ -171,7 +172,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
             const SizedBox(height: 12),
             Text(
               message ??
-                  'A interpretação personalizada de sonhos é exclusiva do plano Premium.',
+                  AppLocalizations.of(context)!.dreamPremiumOnly,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.gc.textSecondary,
                   ),
@@ -186,7 +187,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                 builder: (context) => const PremiumUpgradeSheet(),
               ),
               icon: const Icon(Icons.star, size: 18),
-              label: const Text('Seja Premium'),
+              label: Text(AppLocalizations.of(context)!.premiumBePremium),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.onPrimary,
@@ -211,7 +212,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Conte seu sonho',
+                  AppLocalizations.of(context)!.dreamTellYourDream,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.lilac,
                         fontWeight: FontWeight.bold,
@@ -219,8 +220,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Descreva com o máximo de detalhes: lugares, pessoas, '
-                  'símbolos, sensações e o que mais lembrar.',
+                  AppLocalizations.of(context)!.dreamTellHelp,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
                       ),
@@ -232,7 +232,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                   minLines: 4,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                    hintText: 'Eu estava em uma floresta e…',
+                    hintText: AppLocalizations.of(context)!.dreamTextHint,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -242,7 +242,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                   minLines: 1,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                    labelText: 'Como você se sentiu ao acordar? (opcional)',
+                    labelText: AppLocalizations.of(context)!.dreamFeelingOptional,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -262,10 +262,10 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                         : const Icon(Icons.auto_awesome, size: 18),
                     label: Text(
                       _isInterpreting
-                          ? 'Interpretando…'
+                          ? AppLocalizations.of(context)!.dreamInterpreting
                           : (_interpretation == null
-                              ? 'Interpretar Sonho'
-                              : 'Interpretar novamente'),
+                              ? AppLocalizations.of(context)!.diaryInterpretDream
+                              : AppLocalizations.of(context)!.dreamInterpretAgain),
                     ),
                   ),
                 ),
@@ -282,7 +282,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                       Text('🌙 ',
                           style: TextStyle(color: context.gc.starYellow)),
                       Text(
-                        'Interpretação',
+                        AppLocalizations.of(context)!.dreamInterpretationLabel,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: context.gc.lilac,
@@ -306,7 +306,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Salvar no Diário de Sonhos',
+                    AppLocalizations.of(context)!.dreamSaveToDiary,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -316,7 +316,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                   TextField(
                     controller: _titleController,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(labelText: 'Título'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.diaryTitleLabel),
                   ),
                   const SizedBox(height: 12),
                   InkWell(
@@ -330,7 +330,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                               size: 18, color: context.gc.lilac),
                           const SizedBox(width: 8),
                           Text(
-                            'Data do sonho: '
+                            '${AppLocalizations.of(context)!.dreamDateLabel}: '
                             '${_dreamDate.day.toString().padLeft(2, '0')}/'
                             '${_dreamDate.month.toString().padLeft(2, '0')}/'
                             '${_dreamDate.year}',
@@ -347,7 +347,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                     minLines: 1,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: const InputDecoration(
-                      labelText: 'Observações (opcional)',
+                      labelText: AppLocalizations.of(context)!.dreamNotesOptional,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -359,7 +359,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                         _saved ? Icons.check : Icons.bookmark_add_outlined,
                         size: 18,
                       ),
-                      label: Text(_saved ? 'Salvo no Diário' : 'Salvar'),
+                      label: Text(_saved ? AppLocalizations.of(context)!.dreamSavedShort : AppLocalizations.of(context)!.commonSave),
                     ),
                   ),
                 ],

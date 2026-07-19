@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/desire_provider.dart';
@@ -35,15 +36,15 @@ class _DesiresListPageState extends State<DesiresListPage> {
       body: Consumer<DesireProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const LoadingWidget(message: 'Carregando desejos...');
+            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingDesires);
           }
 
           if (provider.desires.isEmpty) {
             return EmptyStateWidget(
               message:
-                  'Você ainda não registrou nenhum desejo.\nComece a manifestar seus sonhos!',
+                  AppLocalizations.of(context)!.diaryEmptyDesires,
               icon: Icons.auto_awesome,
-              actionText: 'Adicionar Desejo',
+              actionText: AppLocalizations.of(context)!.diaryAddDesire,
               onAction: () => _navigateToForm(context),
             );
           }

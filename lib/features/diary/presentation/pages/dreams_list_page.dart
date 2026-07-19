@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/dream_provider.dart';
@@ -36,7 +37,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
       body: Consumer<DreamProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const LoadingWidget(message: 'Carregando sonhos...');
+            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingDreams);
           }
 
           if (provider.dreams.isEmpty) {
@@ -46,9 +47,9 @@ class _DreamsListPageState extends State<DreamsListPage> {
                 Expanded(
                   child: EmptyStateWidget(
                     message:
-                        'Você ainda não registrou nenhum sonho.\nComece seu diário onírico!',
+                        AppLocalizations.of(context)!.diaryEmptyDreams,
                     icon: Icons.nightlight,
-                    actionText: 'Registrar Sonho',
+                    actionText: AppLocalizations.of(context)!.diaryRegisterDream,
                     onAction: () => _navigateToForm(context),
                   ),
                 ),
@@ -151,7 +152,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
             child: _buildToolChip(
               context,
               emoji: '🔮',
-              label: 'Interpretar Sonho',
+              label: AppLocalizations.of(context)!.diaryInterpretDream,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DreamInterpretationPage(),
@@ -164,7 +165,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
             child: _buildToolChip(
               context,
               emoji: '🌙',
-              label: 'Temas Oníricos',
+              label: AppLocalizations.of(context)!.diaryDreamThemes,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DreamThemesPage(),
