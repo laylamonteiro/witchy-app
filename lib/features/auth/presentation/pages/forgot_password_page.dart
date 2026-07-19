@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -90,7 +91,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         const SizedBox(height: 32),
         // Título
         Text(
-          'Email Enviado!',
+          AppLocalizations.of(context)!.forgotEmailSent,
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -101,7 +102,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         const SizedBox(height: 16),
         // Descrição
         Text(
-          'Enviamos um link de recuperação para\n${_emailController.text}',
+          AppLocalizations.of(context)!.forgotEmailSentTo(_emailController.text),
           style: GoogleFonts.nunito(
             fontSize: 16,
             color: context.gc.textSecondary,
@@ -111,7 +112,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Verifique sua caixa de entrada e spam.',
+          AppLocalizations.of(context)!.forgotCheckInbox,
           style: GoogleFonts.nunito(
             fontSize: 14,
             color: context.gc.textSecondary,
@@ -134,7 +135,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
           ),
           child: Text(
-            'Voltar ao Login',
+            AppLocalizations.of(context)!.forgotBackToLogin,
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -146,7 +147,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         TextButton(
           onPressed: _isLoading ? null : _handleResend,
           child: Text(
-            'Não recebeu? Enviar novamente',
+            AppLocalizations.of(context)!.forgotResend,
             style: GoogleFonts.nunito(
               fontSize: 14,
               color: context.gc.lilac,
@@ -174,7 +175,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Esqueceu a senha?',
+          AppLocalizations.of(context)!.forgotTitle,
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -183,7 +184,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Sem problemas! Digite seu email e enviaremos um link para criar uma nova senha.',
+          AppLocalizations.of(context)!.forgotSubtitle,
           style: GoogleFonts.nunito(
             fontSize: 15,
             color: context.gc.textSecondary,
@@ -201,16 +202,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       keyboardType: TextInputType.emailAddress,
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'seu@email.com',
+        labelText: AppLocalizations.of(context)!.authEmailLabel,
+        hintText: AppLocalizations.of(context)!.authEmailHint,
         prefixIcon: Icon(Icons.email_outlined, color: context.gc.lilac),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, insira seu email';
+          return AppLocalizations.of(context)!.authEmailRequired;
         }
         if (!value.contains('@') || !value.contains('.')) {
-          return 'Por favor, insira um email válido';
+          return AppLocalizations.of(context)!.authEmailInvalid;
         }
         return null;
       },
@@ -239,7 +240,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
             )
           : Text(
-              'Enviar Link de Recuperação',
+              AppLocalizations.of(context)!.forgotSendLink,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -253,7 +254,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Lembrou a senha? ',
+          AppLocalizations.of(context)!.forgotRemembered,
           style: GoogleFonts.nunito(
             fontSize: 14,
             color: context.gc.textSecondary,
@@ -267,7 +268,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
-            'Voltar ao login',
+            AppLocalizations.of(context)!.forgotBackToLoginLower,
             style: GoogleFonts.nunito(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -293,7 +294,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         final result = await authRepo.sendPasswordResetEmail(email);
 
         if (!result.success) {
-          throw Exception(result.errorMessage ?? 'Erro ao enviar email');
+          throw Exception(result.errorMessage ?? AppLocalizations.of(context)!.forgotSendError);
         }
       } else {
         // Simular envio se Supabase não configurado
@@ -311,7 +312,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao enviar email: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text('${AppLocalizations.of(context)!.forgotSendError}: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: context.gc.alert,
           ),
         );
@@ -331,7 +332,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         final result = await authRepo.sendPasswordResetEmail(email);
 
         if (!result.success) {
-          throw Exception(result.errorMessage ?? 'Erro ao reenviar email');
+          throw Exception(result.errorMessage ?? AppLocalizations.of(context)!.forgotResendError);
         }
       } else {
         await Future.delayed(const Duration(seconds: 2));
@@ -341,7 +342,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Email reenviado com sucesso!'),
+            content: Text(AppLocalizations.of(context)!.forgotResendSuccess),
             backgroundColor: context.gc.success,
           ),
         );
@@ -351,7 +352,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao reenviar: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text('${AppLocalizations.of(context)!.forgotResendErrorPrefix}: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: context.gc.alert,
           ),
         );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -24,7 +25,7 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Meu Perfil'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.profileTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -88,7 +89,7 @@ class ProfilePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              user.displayName ?? 'Bruxa Anônima',
+              user.displayName ?? AppLocalizations.of(context)!.profileAnonymous,
               style: TextStyle(
                 color: context.gc.textPrimary,
                 fontSize: 22,
@@ -138,7 +139,7 @@ class ProfilePage extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text(
-          'Editar Nome',
+          AppLocalizations.of(context)!.profileEditName,
           style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
@@ -146,7 +147,7 @@ class ProfilePage extends StatelessWidget {
           autofocus: true,
           style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Seu nome mágico',
+            hintText: AppLocalizations.of(context)!.authNameHint,
             hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -163,7 +164,7 @@ class ProfilePage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancelar',
+              AppLocalizations.of(context)!.commonCancel,
               style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
@@ -180,7 +181,7 @@ class ProfilePage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9C27B0),
             ),
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.commonSave),
           ),
         ],
       ),
@@ -224,7 +225,7 @@ class ProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isFree ? 'Plano Gratuito' : 'Plano Premium',
+                      isFree ? AppLocalizations.of(context)!.profileFreePlan : AppLocalizations.of(context)!.profilePremiumPlan,
                       style: TextStyle(
                         color: context.gc.textPrimary,
                         fontSize: 18,
@@ -233,8 +234,8 @@ class ProfilePage extends StatelessWidget {
                     ),
                     Text(
                       isFree
-                          ? 'Algumas funcionalidades são limitadas'
-                          : 'Acesso completo a todas as funcionalidades',
+                          ? AppLocalizations.of(context)!.profileFreePlanDesc
+                          : AppLocalizations.of(context)!.profilePremiumPlanDesc,
                       style: TextStyle(
                         color: context.gc.textPrimary.withValues(alpha: 0.7),
                         fontSize: 12,
@@ -265,7 +266,7 @@ class ProfilePage extends StatelessWidget {
                     Icon(Icons.auto_awesome, size: 18),
                     SizedBox(width: 8),
                     Text(
-                      'Fazer Upgrade',
+                      AppLocalizations.of(context)!.profileUpgrade,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -292,7 +293,7 @@ class ProfilePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Uso do Plano Gratuito',
+            AppLocalizations.of(context)!.profileFreeUsage,
             style: TextStyle(
               color: context.gc.textPrimary,
               fontSize: 16,
@@ -302,7 +303,7 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 16),
           _buildUsageRow(
             context,
-            'Feitiços',
+            AppLocalizations.of(context)!.profileSpells,
             user.spellsCount,
             UserModel.freeSpellsLimit,
             Icons.auto_fix_high,
@@ -310,20 +311,20 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            'Entradas de Diário',
+            AppLocalizations.of(context)!.profileDiaryEntries,
             user.diaryEntriesThisMonth,
             UserModel.freeDiaryEntriesLimit,
             Icons.book,
-            subtitle: 'este mês',
+            subtitle: AppLocalizations.of(context)!.profileThisMonth,
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            'Conselheiro Místico',
+            AppLocalizations.of(context)!.profileMysticAdvisor,
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
             Icons.psychology,
-            subtitle: 'hoje',
+            subtitle: AppLocalizations.of(context)!.profileToday,
           ),
         ],
       ),
@@ -414,7 +415,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.person_outline,
-            title: 'Editar Perfil',
+            title: AppLocalizations.of(context)!.profileEditProfile,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const EditProfilePage()),
@@ -425,7 +426,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.card_membership,
-            title: 'Gerenciar Assinatura',
+            title: AppLocalizations.of(context)!.profileManageSubscription,
             onTap: () => _handleManageSubscription(context, paymentService),
           ),
           _buildDivider(context),
@@ -433,7 +434,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.analytics_outlined,
-            title: 'Estatísticas Mágicas',
+            title: AppLocalizations.of(context)!.profileMagicalStats,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
@@ -444,7 +445,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.explore_outlined,
-            title: 'Jornadas Mágicas',
+            title: AppLocalizations.of(context)!.profileMagicalJourneys,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),
@@ -454,28 +455,28 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.notifications_outlined,
-            title: 'Notificações',
+            title: AppLocalizations.of(context)!.profileNotifications,
             onTap: () => _showNotificationsDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.help_outline,
-            title: 'Ajuda & Suporte',
+            title: AppLocalizations.of(context)!.profileHelpSupport,
             onTap: () => _showHelpDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.info_outline,
-            title: 'Sobre o App',
+            title: AppLocalizations.of(context)!.profileAboutApp,
             onTap: () => _showAboutDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.logout,
-            title: 'Sair da Conta',
+            title: AppLocalizations.of(context)!.profileLogout,
             textColor: const Color(0xFFF44336),
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
@@ -491,18 +492,18 @@ class ProfilePage extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text(
-          'Sair da Conta',
+          AppLocalizations.of(context)!.profileLogout,
           style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
-          'Tem certeza que deseja sair?\nSeus dados locais serão mantidos.',
+          AppLocalizations.of(context)!.profileLogoutConfirm,
           style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              'Cancelar',
+              AppLocalizations.of(context)!.commonCancel,
               style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
@@ -519,7 +520,7 @@ class ProfilePage extends StatelessWidget {
               backgroundColor: const Color(0xFFF44336),
             ),
             child: Text(
-              'Sair',
+              AppLocalizations.of(context)!.profileLogoutAction,
               style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
@@ -698,13 +699,13 @@ class ProfilePage extends StatelessWidget {
             Icon(Icons.notifications_outlined, color: Color(0xFF9C27B0)),
             SizedBox(width: 8),
             Text(
-              'Notificações',
+              AppLocalizations.of(context)!.profileNotifications,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
         content: Text(
-          'As configurações de notificações estarão disponíveis em breve!\n\nVocê poderá personalizar alertas para:\n• Lembretes de rituais\n• Fases da lua\n• Datas mágicas especiais',
+          AppLocalizations.of(context)!.profileNotificationsSoon,
           style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
@@ -730,7 +731,7 @@ class ProfilePage extends StatelessWidget {
             Icon(Icons.help_outline, color: Color(0xFF9C27B0)),
             SizedBox(width: 8),
             Text(
-              'Ajuda & Suporte',
+              AppLocalizations.of(context)!.profileHelpSupport,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
@@ -742,7 +743,7 @@ class ProfilePage extends StatelessWidget {
             _buildHelpItem(
               context,
               icon: Icons.email_outlined,
-              title: 'Email de Suporte',
+              title: AppLocalizations.of(context)!.profileSupportEmail,
               subtitle: 'suporte@grimoriodebolso.com',
               onTap: () => _launchEmail(),
             ),
@@ -751,15 +752,15 @@ class ProfilePage extends StatelessWidget {
               context,
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
-              subtitle: 'Perguntas frequentes',
+              subtitle: AppLocalizations.of(context)!.profileFaq,
               onTap: () => _launchFaq(),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
               context,
               icon: Icons.policy_outlined,
-              title: 'Política de Privacidade',
-              subtitle: 'Seus dados estão seguros',
+              title: AppLocalizations.of(context)!.authPrivacyPolicy,
+              subtitle: AppLocalizations.of(context)!.profilePrivacySafe,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
               ),
@@ -769,8 +770,8 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Fechar',
+            child: Text(
+              AppLocalizations.of(context)!.commonClose,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
           ),
@@ -868,17 +869,17 @@ class ProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Versão ${packageInfo.version} (${packageInfo.buildNumber})',
+              AppLocalizations.of(context)!.aboutVersion(packageInfo.version, packageInfo.buildNumber),
               style: TextStyle(color: context.gc.textSecondary),
             ),
             const SizedBox(height: 16),
             Text(
-              'Seu companheiro para práticas mágicas, rituais e autoconhecimento através da astrologia e bruxaria moderna.',
+              AppLocalizations.of(context)!.aboutDescription,
               style: TextStyle(color: context.gc.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Desenvolvido com 🔮 e ✨',
+            Text(
+              AppLocalizations.of(context)!.aboutMadeWith,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
             const SizedBox(height: 8),
@@ -891,8 +892,8 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Fechar',
+            child: Text(
+              AppLocalizations.of(context)!.commonClose,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
           ),
