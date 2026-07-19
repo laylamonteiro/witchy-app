@@ -639,6 +639,62 @@ Diretrizes Sagradas:
     }
   }
 
+  /// Explicar (nunca calcular) um perfil numerológico já computado no app.
+  Future<String> explainNumerology({
+    required String summary,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final requestData = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': '''${_localizedInstruction()}
+
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, especialista em numerologia pitagórica.
+
+Os números abaixo JÁ FORAM CALCULADOS pelo aplicativo — não recalcule nem questione os valores. Sua missão é tecer uma síntese personalizada: como essas energias conversam entre si, os pontos de harmonia e de tensão, e um conselho prático para o momento.
+
+Formato: texto puro (sem markdown/JSON), 2 a 3 parágrafos acolhedores e objetivos.
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''',
+          },
+          {
+            'role': 'user',
+            'content': summary,
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 900,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
   /// Interpretar um sonho descrito pela pessoa (recurso Premium)
   Future<String> interpretDream({
     required String dreamDescription,
