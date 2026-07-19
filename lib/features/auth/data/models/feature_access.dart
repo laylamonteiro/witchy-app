@@ -33,6 +33,7 @@ enum AppFeature {
   encyclopediaGoddessesDetails,
   encyclopediaElementsDetails,
   encyclopediaAltarDetails,
+  encyclopediaArcaneDetails,
 
   // Astrologia
   astrologyBasic,
@@ -386,6 +387,7 @@ class FeatureAccessService {
       case AppFeature.encyclopediaGoddessesDetails:
       case AppFeature.encyclopediaElementsDetails:
       case AppFeature.encyclopediaAltarDetails:
+      case AppFeature.encyclopediaArcaneDetails:
         return 'Desbloqueie detalhes completos da enciclopédia com o plano Premium.';
       case AppFeature.lunarCalendarDetails:
         return 'Informações detalhadas das fases lunares são exclusivas Premium.';

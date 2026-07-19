@@ -118,6 +118,7 @@ flutter:
     - assets/icons/new_cat/
     - assets/icons/old_cat/
     - assets/tarot/rw/
+    - assets/legal/
     - assets/ephe/
     - assets/premium/
 

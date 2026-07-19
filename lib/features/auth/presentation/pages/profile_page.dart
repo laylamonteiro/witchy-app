@@ -11,6 +11,7 @@ import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/legal/legal_document_page.dart';
 import '../widgets/premium_blur_widget.dart';
 import '../widgets/profile_avatar_picker.dart';
 import 'edit_profile_page.dart';
@@ -759,7 +760,9 @@ class ProfilePage extends StatelessWidget {
               icon: Icons.policy_outlined,
               title: 'Política de Privacidade',
               subtitle: 'Seus dados estão seguros',
-              onTap: () => _launchPrivacyPolicy(),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
+              ),
             ),
           ],
         ),
@@ -834,12 +837,6 @@ class ProfilePage extends StatelessWidget {
     }
   }
 
-  Future<void> _launchPrivacyPolicy() async {
-    final uri = Uri.parse('https://grimoriodebolso.com/privacidade');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
 
   void _handleManageSubscription(
       BuildContext context, PaymentService paymentService) {

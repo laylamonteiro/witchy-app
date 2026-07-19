@@ -22,6 +22,7 @@ import '../../../subscription/presentation/pages/subscription_page.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
 import 'theme_picker_page.dart';
+import '../../../../core/legal/legal_document_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -1118,7 +1119,17 @@ class SettingsPage extends StatelessWidget {
               icon: Icons.policy_outlined,
               title: 'Política de Privacidade',
               subtitle: 'Seus dados estão seguros',
-              onTap: () => _launchPrivacyPolicy(),
+              onTap: () => _openPrivacyPolicy(context),
+            ),
+            const SizedBox(height: 16),
+            _buildHelpItem(
+              context,
+              icon: Icons.gavel_outlined,
+              title: 'Termos de Uso',
+              subtitle: 'As regras do nosso círculo',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => LegalDocumentPage.terms),
+              ),
             ),
           ],
         ),
@@ -1193,11 +1204,10 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
-  Future<void> _launchPrivacyPolicy() async {
-    final uri = Uri.parse('https://grimoriodebolso.com/privacidade');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+  void _openPrivacyPolicy(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
+    );
   }
 
   void _showAboutDialog(BuildContext context) async {

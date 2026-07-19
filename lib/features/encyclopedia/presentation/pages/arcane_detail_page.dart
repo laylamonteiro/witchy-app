@@ -3,6 +3,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/arcane_entry_model.dart';
+import '../../../auth/data/models/feature_access.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
 /// Detalhe genérico de uma entrada arcana da Enciclopédia.
 class ArcaneDetailPage extends StatelessWidget {
@@ -14,6 +16,25 @@ class ArcaneDetailPage extends StatelessWidget {
     required this.entry,
     required this.categoryTitle,
   });
+
+  /// Caminho da imagem do verbete:
+  /// assets/images/arcanos/<categoria>/<slug>.webp
+  String get imageAsset {
+    const folders = {
+      'Arquétipos': 'arquetipos',
+      'Anjos': 'anjos',
+      'Demônios': 'demonios',
+      'Símbolos Sagrados': 'simbolos',
+    };
+    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+    const plain = 'aaaaaeeeeiiiiooooouuuucn';
+    var slug = entry.name.trim().toLowerCase();
+    for (var i = 0; i < accents.length; i++) {
+      slug = slug.replaceAll(accents[i], plain[i]);
+    }
+    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    return 'assets/images/arcanos/${folders[categoryTitle] ?? 'outros'}/$slug.webp';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +49,32 @@ class ArcaneDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      imageAsset,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, _, __) => Container(
+                        width: 200,
+                        height: 200,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: context.gc.lilac.withOpacity(0.10),
+                          border: Border.all(
+                            color: context.gc.lilac.withOpacity(0.35),
+                          ),
+                        ),
+                        child: Text(entry.emoji,
+                            style: const TextStyle(fontSize: 72)),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
                 Text(
                   entry.summary,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -97,13 +144,27 @@ class ArcaneDetailPage extends StatelessWidget {
           if (entry.symbolism.isNotEmpty)
             _bulletSection(context, '🔯 Simbolismos', entry.symbolism),
           if (entry.correspondences.isNotEmpty)
-            _chipSection(
-                context, '🕯️ Correspondências', entry.correspondences),
+            _premiumSection(
+              context,
+              title: '🕯️ Correspondências',
+              subtitle:
+                  'Cores, ervas, astros e dias associados a esta figura.',
+              content: _chipContent(context, entry.correspondences),
+            ),
           if (entry.studyPractices.isNotEmpty)
-            _bulletSection(
-                context, '📖 Estudo & Contemplação', entry.studyPractices),
+            _premiumSection(
+              context,
+              title: '📖 Estudo & Contemplação',
+              subtitle: 'Práticas de aprofundamento e meditação.',
+              content: _bulletContent(context, entry.studyPractices),
+            ),
           if (entry.magicalUses.isNotEmpty)
-            _bulletSection(context, '🪄 Usos Mágicos', entry.magicalUses),
+            _premiumSection(
+              context,
+              title: '🪄 Usos Mágicos',
+              subtitle: 'Aplicações rituais e energéticas.',
+              content: _bulletContent(context, entry.magicalUses),
+            ),
           if (entry.cautions.isNotEmpty)
             _section(
               context,
@@ -121,6 +182,86 @@ class ArcaneDetailPage extends StatelessWidget {
           const SizedBox(height: 24),
         ],
       ),
+    );
+  }
+
+  /// Seção com conteúdo de bruxaria atrás do gate Premium (mesmo padrão
+  /// das demais abas da Enciclopédia: título visível, conteúdo com blur).
+  Widget _premiumSection(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required Widget content,
+  }) {
+    return MagicalCard(
+      child: PremiumContentSection(
+        feature: AppFeature.encyclopediaArcaneDetails,
+        title: Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: context.gc.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        subtitle: subtitle,
+        content: Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: content,
+        ),
+      ),
+    );
+  }
+
+  Widget _bulletContent(BuildContext context, List<String> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('• ', style: TextStyle(color: context.gc.lilac)),
+                Expanded(
+                  child: Text(
+                    item,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _chipContent(BuildContext context, List<String> items) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items
+          .map(
+            (item) => Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: context.gc.lilac.withOpacity(0.12),
+                border: Border.all(
+                  color: context.gc.lilac.withOpacity(0.35),
+                ),
+              ),
+              child: Text(
+                item,
+                style: TextStyle(color: context.gc.lilac, fontSize: 13),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 

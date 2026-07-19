@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/legal/legal_document_page.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -279,6 +281,12 @@ class _SignupPageState extends State<SignupPage> {
                       color: context.gc.lilac,
                       fontWeight: FontWeight.bold,
                     ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => LegalDocumentPage.terms,
+                            ),
+                          ),
                   ),
                   const TextSpan(text: ' e a '),
                   TextSpan(
@@ -287,6 +295,12 @@ class _SignupPageState extends State<SignupPage> {
                       color: context.gc.lilac,
                       fontWeight: FontWeight.bold,
                     ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => LegalDocumentPage.privacy,
+                            ),
+                          ),
                   ),
                 ],
               ),
