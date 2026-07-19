@@ -226,9 +226,11 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                     final hasActiveFilter =
                         _searchQuery.isNotEmpty || _filterCategory != null;
                     // Ação "Adicionar Feitiço" só faz sentido quando não há
-                    // filtro ativo e não estamos vendo apenas os ancestrais.
-                    final showAddAction =
-                        !hasActiveFilter && _source != SpellSource.ancestral;
+                    // filtro ativo e não estamos vendo apenas os ancestrais;
+                    // registros nascem das lições do Grimório Vivo.
+                    final showAddAction = !widget.recordsOnly &&
+                        !hasActiveFilter &&
+                        _source != SpellSource.ancestral;
                     return EmptyStateWidget(
                       message: hasActiveFilter
                           ? AppLocalizations.of(context)!.spellNoneFound
@@ -298,12 +300,13 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                                   spell.category.displayName,
                                   context.gc.lilac,
                                 ),
-                                _buildChip(
-                                  spell.type.displayName,
-                                  spell.type == SpellType.attraction
-                                      ? context.gc.mint
-                                      : context.gc.pink,
-                                ),
+                                if (!spell.isRecord)
+                                  _buildChip(
+                                    spell.type.displayName,
+                                    spell.type == SpellType.attraction
+                                        ? context.gc.mint
+                                        : context.gc.pink,
+                                  ),
                               ],
                             ),
                             if (showMoon) ...[
@@ -323,14 +326,16 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
             ),
           ],
         ),
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: MagicalFAB(
-            onPressed: () => _navigateToForm(context),
-            icon: Icons.auto_fix_high,
+        // Registros nascem das lições do Grimório Vivo — sem botão de criar.
+        if (!widget.recordsOnly)
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: MagicalFAB(
+              onPressed: () => _navigateToForm(context),
+              icon: Icons.auto_fix_high,
+            ),
           ),
-        ),
       ],
     );
   }

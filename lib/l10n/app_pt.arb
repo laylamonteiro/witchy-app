@@ -752,6 +752,14 @@
   "spellCreatedAt": "Criado em: {date}",
   "spellUpdatedAt": "Atualizado em: {date}",
   "spellDeleteConfirm": "Deseja realmente excluir o feitiço \"{name}\"?",
+  "recordDetails": "Registro",
+  "recordEditTitle": "Editar Registro",
+  "recordTitleLabel": "Título *",
+  "recordContentLabel": "Sua página",
+  "recordTitleRequired": "Dê um título ao registro",
+  "recordContentRequired": "Escreva algo antes de salvar",
+  "recordUpdated": "Registro atualizado! ✨",
+  "recordDeleteConfirm": "Deseja realmente excluir o registro \"{name}\"?",
   "@spellDurationDays": {
     "placeholders": {
       "duration": {
@@ -774,6 +782,13 @@
     }
   },
   "@spellDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@recordDeleteConfirm": {
     "placeholders": {
       "name": {
         "type": "String"
