@@ -44,7 +44,7 @@ class _TarotPageState extends State<TarotPage>
           isScrollable: true,
           tabAlignment: TabAlignment.center,
           labelPadding: const EdgeInsets.symmetric(horizontal: 24),
-          tabs: const [
+          tabs: [
             Tab(text: AppLocalizations.of(context)!.tarotTabDraw),
             Tab(text: AppLocalizations.of(context)!.tarotTabLearn),
           ],

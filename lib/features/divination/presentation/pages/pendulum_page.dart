@@ -241,6 +241,9 @@ class _PendulumPageState extends State<PendulumPage>
                   builder: (context, child) {
                     return CustomPaint(
                       painter: PendulumPainter(
+                        yesLabel: AppLocalizations.of(context)!.pendulumYes,
+                        noLabel: AppLocalizations.of(context)!.pendulumNo,
+                        maybeLabel: AppLocalizations.of(context)!.pendulumMaybe,
                         accentColor: context.gc.lilac,
                         successColor: context.gc.success,
                         alertColor: context.gc.alert,
@@ -396,6 +399,9 @@ class PendulumPainter extends CustomPainter {
   final Color successColor;
   final Color alertColor;
   final Color starColor;
+  final String yesLabel;
+  final String noLabel;
+  final String maybeLabel;
 
   PendulumPainter({
     required this.swingAngle,
@@ -403,6 +409,9 @@ class PendulumPainter extends CustomPainter {
     required this.successColor,
     required this.alertColor,
     required this.starColor,
+    required this.yesLabel,
+    required this.noLabel,
+    required this.maybeLabel,
     this.answer,
   });
 
@@ -461,7 +470,7 @@ class PendulumPainter extends CustomPainter {
     _drawAnswerText(
       canvas,
       size,
-      AppLocalizations.of(context)!.pendulumYes,
+      yesLabel,
       Offset(size.width * 0.2, size.height * 0.5),
       successColor,
       isSelected: answer == PendulumAnswer.yes,
@@ -469,7 +478,7 @@ class PendulumPainter extends CustomPainter {
     _drawAnswerText(
       canvas,
       size,
-      AppLocalizations.of(context)!.pendulumNo,
+      noLabel,
       Offset(size.width * 0.8, size.height * 0.5),
       alertColor,
       isSelected: answer == PendulumAnswer.no,
@@ -477,7 +486,7 @@ class PendulumPainter extends CustomPainter {
     _drawAnswerText(
       canvas,
       size,
-      AppLocalizations.of(context)!.pendulumMaybe,
+      maybeLabel,
       Offset(size.width * 0.5, size.height * 0.8),
       starColor,
       isSelected: answer == PendulumAnswer.maybe,

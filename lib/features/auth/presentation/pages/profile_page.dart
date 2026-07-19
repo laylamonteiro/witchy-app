@@ -492,18 +492,18 @@ class ProfilePage extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text(
-          AppLocalizations.of(context)!.profileLogout,
+          AppLocalizations.of(dialogContext)!.profileLogout,
           style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
-          AppLocalizations.of(context)!.profileLogoutConfirm,
+          AppLocalizations.of(dialogContext)!.profileLogoutConfirm,
           style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              AppLocalizations.of(context)!.commonCancel,
+              AppLocalizations.of(dialogContext)!.commonCancel,
               style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
@@ -520,7 +520,7 @@ class ProfilePage extends StatelessWidget {
               backgroundColor: const Color(0xFFF44336),
             ),
             child: Text(
-              AppLocalizations.of(context)!.profileLogoutAction,
+              AppLocalizations.of(dialogContext)!.profileLogoutAction,
               style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
