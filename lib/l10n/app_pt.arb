@@ -988,5 +988,6 @@
   "chartTypeToSearch": "Digite pelo menos 3 caracteres para buscar",
   "chartPlaceHint": "Ex: São Paulo, Brasil",
   "chartCalculate": "Calcular Mapa Astral ✨",
-  "chartNoonNote": "Sem a hora exata, usaremos meio-dia (12:00) e o sistema de casas iguais."
+  "chartNoonNote": "Sem a hora exata, usaremos meio-dia (12:00) e o sistema de casas iguais.",
+  "settingsLanguageSubtitle": "Escolha manualmente o idioma do app"
 }
