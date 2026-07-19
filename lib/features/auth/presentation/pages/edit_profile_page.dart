@@ -151,7 +151,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           Text(
                             'Como o app deve se dirigir a você? Usamos essa '
                             'escolha nos textos personalizados e nas respostas '
-                            'da IA.',
+                            'do Conselheiro Místico.',
                             style: TextStyle(
                               color: context.gc.textSecondary,
                               fontSize: 13,

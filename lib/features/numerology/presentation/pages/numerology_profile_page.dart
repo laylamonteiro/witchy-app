@@ -236,7 +236,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                           : const Icon(Icons.auto_awesome, size: 18),
                       label: Text(_isExplaining
                           ? 'Tecendo a síntese…'
-                          : 'Explicação da IA'),
+                          : 'Explicação do Conselheiro Místico'),
                     ),
                     if (_aiText != null) ...[
                       const SizedBox(height: 16),

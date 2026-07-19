@@ -171,7 +171,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
             const SizedBox(height: 12),
             Text(
               message ??
-                  'A interpretação personalizada de sonhos por IA é exclusiva do plano Premium.',
+                  'A interpretação personalizada de sonhos é exclusiva do plano Premium.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.gc.textSecondary,
                   ),

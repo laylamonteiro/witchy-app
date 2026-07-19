@@ -472,7 +472,7 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            'Consultas IA',
+            'Conselheiro Místico',
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
             Icons.psychology,

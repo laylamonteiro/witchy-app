@@ -234,9 +234,9 @@ class FeatureAccessService {
     limit: UserModel.freeAiConsultationsLimit,
     window: LimitWindow.daily,
     used: (user) => user.aiConsultationsToday,
-    availableMessage: 'consulta(s) de IA hoje',
+    availableMessage: 'consulta(s) mística(s) hoje',
     blockedMessage:
-        'Você usou suas ${UserModel.freeAiConsultationsLimit} consultas de IA hoje. Assine Premium para acesso ilimitado.',
+        'Você usou suas ${UserModel.freeAiConsultationsLimit} consultas místicas hoje. Assine Premium para acesso ilimitado.',
   );
 
   static final Map<AppFeature, FeatureUsageLimit> limits = {
@@ -404,9 +404,9 @@ class FeatureAccessService {
       case AppFeature.sigilsView:
         return 'Criação de sigilos é uma funcionalidade Premium.';
       case AppFeature.aiPersonalizedDreamInterpretation:
-        return 'A interpretação personalizada de sonhos por IA é exclusiva do plano Premium.';
+        return 'A interpretação personalizada de sonhos é exclusiva do plano Premium.';
       case AppFeature.aiPalmistry:
-        return 'A leitura de mãos por IA é exclusiva do plano Premium.';
+        return 'A leitura de mãos é exclusiva do plano Premium.';
       default:
         return FeatureAccessMessages.preview;
     }
