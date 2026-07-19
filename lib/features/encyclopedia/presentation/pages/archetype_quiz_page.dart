@@ -27,30 +27,40 @@ const List<_Question> _questions = [
     _QuizOption('Preparar um chá, um banho, cuidar do corpo', 'A Curandeira'),
     _QuizOption('Sair para a natureza, caminhar sem rumo', 'A Caçadora'),
     _QuizOption('Organizar minha casa e meus planos', 'A Guardiã'),
+    _QuizOption('Criar algo novo: cozinhar, desenhar, inventar', 'A Alquimista'),
+    _QuizOption('Colocar uma música e dançar como ninguém está vendo', 'A Donzela'),
   ]),
   _Question('Qual destes presentes te encantaria mais?', [
     _QuizOption('Um baralho de tarot antigo', 'A Vidente'),
     _QuizOption('Um caderno em branco encadernado à mão', 'A Tecelã'),
     _QuizOption('Um kit de ervas e óleos essenciais', 'A Curandeira'),
     _QuizOption('Um livro raro de mistérios', 'A Alquimista'),
+    _QuizOption('Uma capa preta que arrasta no chão', 'A Bruxa'),
+    _QuizOption('Um álbum de fotografias antigas da família', 'A Mãe'),
   ]),
   _Question('Como você reage quando alguém que ama é ameaçado?', [
     _QuizOption('Viro uma muralha: ninguém passa por mim', 'A Guardiã'),
     _QuizOption('Acolho e cuido das feridas primeiro', 'A Mãe'),
     _QuizOption('Enfrento de frente, sem hesitar', 'A Caçadora'),
     _QuizOption('Percebo a ameaça antes de todo mundo', 'A Vidente'),
+    _QuizOption('Encaro o agressor com uma verdade que ninguém disse', 'A Rainha Sombria'),
+    _QuizOption('Amarro as pontas: descubro quem, como e por quê', 'A Tecelã'),
   ]),
   _Question('O que mais te atrai no caminho da bruxaria?', [
     _QuizOption('A liberdade de ser quem eu sou', 'A Bruxa'),
     _QuizOption('Transformar dor em sabedoria', 'A Alquimista'),
     _QuizOption('Os sonhos, sinais e presságios', 'A Vidente'),
     _QuizOption('Os ciclos, padrões e conexões de tudo', 'A Tecelã'),
+    _QuizOption('O poder de curar a mim e aos meus', 'A Curandeira'),
+    _QuizOption('Proteger quem amo com algo maior que eu', 'A Guardiã'),
   ]),
   _Question('Qual frase soa mais como você?', [
     _QuizOption('"Eu começo de novo quantas vezes precisar"', 'A Donzela'),
     _QuizOption('"Eu faço crescer tudo o que toco"', 'A Mãe'),
     _QuizOption('"Eu não devo satisfações a ninguém"', 'A Bruxa'),
     _QuizOption('"Eu já vi essa história antes"', 'A Sábia'),
+    _QuizOption('"Eu vou aonde ninguém teve coragem de ir"', 'A Caçadora'),
+    _QuizOption('"Eu enxergo o que ainda não aconteceu"', 'A Vidente'),
   ]),
   _Question('Diante da própria sombra, você…', [
     _QuizOption('Desço até ela: quero conhecê-la inteira', 'A Rainha Sombria'),
@@ -59,18 +69,24 @@ const List<_Question> _questions = [
     _QuizOption('Escuto o que ela tem a dizer, sem pressa', 'A Sábia'),
     _QuizOption('Ilumino com práticas de cura e autocompaixão',
         'A Curandeira'),
+    _QuizOption('Enfrento como caça: olho nos olhos até ela recuar', 'A Caçadora'),
+    _QuizOption('Rio dela: sombra também é parte da minha liberdade', 'A Bruxa'),
   ]),
   _Question('Seu lugar favorito num festival místico seria…', [
     _QuizOption('A roda de dança, no meio da alegria', 'A Donzela'),
     _QuizOption('A tenda de leituras e oráculos', 'A Vidente'),
     _QuizOption('A fogueira, contando histórias antigas', 'A Sábia'),
     _QuizOption('A barraca de artesanato: nós, fios e amuletos', 'A Tecelã'),
+    _QuizOption('A cozinha comunitária, alimentando todo mundo', 'A Mãe'),
+    _QuizOption('O ritual de meia-noite, longe das luzes', 'A Rainha Sombria'),
   ]),
   _Question('O que as pessoas mais buscam em você?', [
     _QuizOption('Proteção: comigo elas se sentem seguras', 'A Guardiã'),
     _QuizOption('Colo: acolhimento e incentivo', 'A Mãe'),
     _QuizOption('Coragem: eu vou na frente', 'A Caçadora'),
     _QuizOption('Verdade: falo o que ninguém ousa', 'A Rainha Sombria'),
+    _QuizOption('Leveza: eu lembro a elas que recomeçar é possível', 'A Donzela'),
+    _QuizOption('Transformação: saio melhor de tudo que me atravessa', 'A Alquimista'),
   ]),
 ];
 
@@ -85,6 +101,7 @@ class ArchetypeQuizPage extends StatefulWidget {
 class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   int _index = 0;
   final Map<String, int> _scores = {};
+  List<MapEntry<String, int>> _topThree = [];
   ArcaneEntry? _result;
 
   void _answer(_QuizOption option) {
@@ -95,10 +112,15 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
       return;
     }
 
-    // Resultado: maior pontuação; empate resolvido pela ordem das respostas.
+    // Cada resposta soma 1 ponto ao arquétipo correspondente; vence o de
+    // maior pontuação (empate: o que atingiu a pontuação primeiro).
     final winner = _scores.entries
         .reduce((a, b) => b.value > a.value ? b : a)
         .key;
+    _topThree = (_scores.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value)))
+        .take(3)
+        .toList();
     setState(() {
       _result = archetypesData.firstWhere(
         (e) => e.name == winner,
@@ -111,6 +133,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     setState(() {
       _index = 0;
       _scores.clear();
+      _topThree = [];
       _result = null;
     });
   }
@@ -235,6 +258,58 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
               ],
             ),
           ),
+          if (_topThree.length > 1)
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Suas energias mais fortes',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: context.gc.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (final entry in _topThree)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              entry.key,
+                              style: TextStyle(
+                                color: context.gc.textPrimary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: LinearProgressIndicator(
+                              value: entry.value / _questions.length,
+                              backgroundColor: context.gc.surfaceBorder,
+                              valueColor: AlwaysStoppedAnimation(
+                                  context.gc.lilac),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${entry.value}',
+                            style: TextStyle(
+                              color: context.gc.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
           MagicalCard(
             child: Text(
               'Arquétipos são espelhos, não gavetas: você carrega vários — '
