@@ -82,8 +82,8 @@ class SubscriptionHero extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0E0E19), Color(0xFF151020)],
+            gradient: LinearGradient(
+              colors: [context.gc.background, context.gc.surface],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -130,19 +130,19 @@ class _CatHeroArt extends StatelessWidget {
             right: -height * 0.12,
             top: -height * 0.08,
             bottom: -height * 0.06,
-            child: const DecoratedBox(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment(0, 0.02),
+                  center: const Alignment(0, 0.02),
                   radius: 0.62,
                   colors: [
-                    Color(0xE8C69ADB),
-                    Color(0xD18D58AD),
-                    Color(0xA25E2F80),
-                    Color(0x53351B50),
-                    Color(0x00351B50),
+                    context.gc.lilac.withValues(alpha: 0.91),
+                    context.gc.lilac.withValues(alpha: 0.72),
+                    context.gc.lilac.withValues(alpha: 0.45),
+                    context.gc.lilac.withValues(alpha: 0.20),
+                    context.gc.lilac.withValues(alpha: 0),
                   ],
-                  stops: [0, 0.28, 0.55, 0.78, 1],
+                  stops: const [0, 0.28, 0.55, 0.78, 1],
                 ),
               ),
             ),
@@ -152,12 +152,15 @@ class _CatHeroArt extends StatelessWidget {
             width: height * 0.68,
             top: height * 0.02,
             height: height * 0.48,
-            child: const DecoratedBox(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment(0.05, 0.08),
+                  center: const Alignment(0.05, 0.08),
                   radius: 0.52,
-                  colors: [Color(0xC89566AD), Color(0x007A4899)],
+                  colors: [
+                    context.gc.lilac.withValues(alpha: 0.78),
+                    context.gc.lilac.withValues(alpha: 0),
+                  ],
                 ),
               ),
             ),
@@ -167,12 +170,15 @@ class _CatHeroArt extends StatelessWidget {
             width: height * 0.68,
             top: height * 0.18,
             height: height * 0.5,
-            child: const DecoratedBox(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment(-0.06, 0),
+                  center: const Alignment(-0.06, 0),
                   radius: 0.52,
-                  colors: [Color(0xBE8755A5), Color(0x006E3F8E)],
+                  colors: [
+                    context.gc.lilac.withValues(alpha: 0.74),
+                    context.gc.lilac.withValues(alpha: 0),
+                  ],
                 ),
               ),
             ),
@@ -182,17 +188,17 @@ class _CatHeroArt extends StatelessWidget {
             right: -height * 0.05,
             bottom: -height * 0.12,
             height: height * 0.56,
-            child: const DecoratedBox(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment(0, -0.12),
+                  center: const Alignment(0, -0.12),
                   radius: 0.58,
                   colors: [
-                    Color(0xD79462B0),
-                    Color(0x985D3478),
-                    Color(0x005D3478),
+                    context.gc.lilac.withValues(alpha: 0.84),
+                    context.gc.lilac.withValues(alpha: 0.55),
+                    context.gc.lilac.withValues(alpha: 0),
                   ],
-                  stops: [0, 0.52, 1],
+                  stops: const [0, 0.52, 1],
                 ),
               ),
             ),
@@ -239,8 +245,11 @@ class _HeroCopy extends StatelessWidget {
         ),
         const SizedBox(height: 3),
         ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFD8B8FF), Color(0xFFA54CDC)],
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [
+              Color.lerp(context.gc.lilac, context.gc.textPrimary, 0.55)!,
+              context.gc.lilac,
+            ],
           ).createShader(bounds),
           child: FittedBox(
             fit: BoxFit.scaleDown,
@@ -300,7 +309,7 @@ class PremiumOfferDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(child: Divider(color: Color(0xFF33283F))),
+        Expanded(child: Divider(color: context.gc.surfaceBorder)),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 9),
           width: 8,
@@ -308,10 +317,16 @@ class PremiumOfferDivider extends StatelessWidget {
           transform: Matrix4.rotationZ(0.78),
           decoration: BoxDecoration(
             color: context.gc.lilac,
-            border: Border.all(color: const Color(0xFFE0C8F7)),
+            border: Border.all(
+              color: Color.lerp(
+                context.gc.lilac,
+                context.gc.textPrimary,
+                0.55,
+              )!,
+            ),
           ),
         ),
-        const Expanded(child: Divider(color: Color(0xFF33283F))),
+        Expanded(child: Divider(color: context.gc.surfaceBorder)),
       ],
     );
   }
@@ -328,7 +343,7 @@ class PremiumBenefitsSection extends StatelessWidget {
         for (var index = 0; index < premiumBenefitItems.length; index++) ...[
           _PremiumBenefitRow(item: premiumBenefitItems[index]),
           if (index != premiumBenefitItems.length - 1)
-            const Divider(height: 10, color: Color(0xFF292735)),
+            Divider(height: 10, color: context.gc.surfaceBorder),
         ],
       ],
     );
@@ -356,8 +371,11 @@ class _PremiumBenefitRow extends StatelessWidget {
               border: Border.all(
                 color: context.gc.lilac.withValues(alpha: 0.30),
               ),
-              boxShadow: const [
-                BoxShadow(color: Color(0x332B0A3F), blurRadius: 12),
+              boxShadow: [
+                BoxShadow(
+                  color: context.gc.lilac.withValues(alpha: 0.20),
+                  blurRadius: 12,
+                ),
               ],
             ),
             child: Image.asset(
@@ -425,9 +443,9 @@ class PremiumOfferPanel extends StatelessWidget {
             14,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFF10111D),
+            color: context.gc.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFF343342)),
+            border: Border.all(color: context.gc.surfaceBorder),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x33000000),
@@ -552,7 +570,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = selected ? const Color(0xFFA934C4) : context.gc.surfaceBorder;
+    final accent = selected ? context.gc.lilac : context.gc.surfaceBorder;
     final tag = selected ? 'SELECIONADO' : (popular ? 'POPULAR' : null);
 
     return Semantics(
@@ -572,7 +590,9 @@ class _SubscriptionPlanCard extends StatelessWidget {
             constraints: BoxConstraints(minHeight: emphasized ? 152 : 136),
             padding: EdgeInsets.fromLTRB(10, emphasized ? 12 : 10, 10, 10),
             decoration: BoxDecoration(
-              color: selected ? const Color(0xFF2A1938) : context.gc.surface,
+              color: selected
+                  ? Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!
+                  : context.gc.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: accent,
@@ -581,7 +601,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
               boxShadow: selected
                   ? [
                       BoxShadow(
-                        color: const Color(0xFFA934C4).withValues(alpha: 0.17),
+                        color: context.gc.lilac.withValues(alpha: 0.17),
                         blurRadius: 16,
                       ),
                     ]
@@ -596,7 +616,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
                       ? null
                       : DecoratedBox(
                           decoration: BoxDecoration(
-                            color: const Color(0xFF8E24AA),
+                            color: context.gc.lilac,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Padding(
@@ -696,14 +716,18 @@ class SubscriptionPurchaseButton extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF8E1FB8), Color(0xFFB32CC9), Color(0xFF7C2AAA)],
+            gradient: LinearGradient(
+              colors: [
+                Color.lerp(context.gc.lilac, context.gc.background, 0.22)!,
+                context.gc.lilac,
+                Color.lerp(context.gc.lilac, context.gc.background, 0.30)!,
+              ],
             ),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x449E2BC6),
+                color: context.gc.lilac.withValues(alpha: 0.27),
                 blurRadius: 16,
-                offset: Offset(0, 5),
+                offset: const Offset(0, 5),
               ),
             ],
           ),

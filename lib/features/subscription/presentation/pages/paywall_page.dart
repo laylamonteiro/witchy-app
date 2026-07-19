@@ -16,9 +16,9 @@ class PaywallPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF090A12),
-      body: SafeArea(child: PremiumUpgradeSheet()),
+    return Scaffold(
+      backgroundColor: context.gc.background,
+      body: const SafeArea(child: PremiumUpgradeSheet()),
     );
   }
 

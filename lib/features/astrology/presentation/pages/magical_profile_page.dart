@@ -583,8 +583,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       icon: const Icon(Icons.star, size: 18),
                       label: const Text('Seja Premium'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF9C27B0),
-                        foregroundColor: context.gc.textPrimary,
+                        backgroundColor: context.gc.lilac,
+                        foregroundColor: context.gc.onPrimary,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(

@@ -283,7 +283,7 @@ class _PersonalizedSuggestionsPageState
               label: const Text('Seja Premium'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
-                foregroundColor: context.gc.darkBackground,
+                foregroundColor: context.gc.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),

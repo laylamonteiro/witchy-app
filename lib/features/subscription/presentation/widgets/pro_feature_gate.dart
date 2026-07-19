@@ -119,8 +119,11 @@ class ProBadge extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+            gradient: LinearGradient(
+              colors: [
+                context.gc.gold,
+                Color.lerp(context.gc.gold, context.gc.pink, 0.35)!,
+              ],
             ),
             borderRadius: BorderRadius.circular(4),
           ),

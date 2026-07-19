@@ -221,8 +221,8 @@ class PremiumContentSection extends StatelessWidget {
         icon: const Icon(Icons.star, size: 18),
         label: const Text('Seja Premium'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF9C27B0),
-          foregroundColor: context.gc.textPrimary,
+          backgroundColor: context.gc.lilac,
+          foregroundColor: context.gc.onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -357,9 +357,9 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
           maxHeight: MediaQuery.sizeOf(context).height * 0.96,
         ),
         padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + bottomPadding),
-        decoration: const BoxDecoration(
-          color: Color(0xFF090A12),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        decoration: BoxDecoration(
+          color: context.gc.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
         ),
         child: Column(
           children: [
@@ -529,8 +529,8 @@ class PremiumPreviewWrapper extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF9C27B0).withValues(alpha: 0.8),
-                      const Color(0xFFE91E63).withValues(alpha: 0.8),
+                      context.gc.lilac.withValues(alpha: 0.8),
+                      context.gc.pink.withValues(alpha: 0.8),
                     ],
                   ),
                 ),

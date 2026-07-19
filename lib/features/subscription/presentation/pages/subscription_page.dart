@@ -689,11 +689,11 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: context.gc.surface,
         title: Row(
           children: [
-            Icon(Icons.warning_amber, color: Color(0xFFFFC107)),
-            SizedBox(width: 8),
+            Icon(Icons.warning_amber, color: context.gc.gold),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Pagamentos Não Configurados',

@@ -403,8 +403,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     icon: const Icon(Icons.star, size: 18),
                     label: const Text('Seja Premium'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: context.gc.gold,
-                      foregroundColor: Colors.black,
+                      backgroundColor: context.gc.lilac,
+                      foregroundColor: context.gc.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
