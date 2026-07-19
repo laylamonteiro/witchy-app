@@ -149,8 +149,8 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira seu email';
         }
-        // Permitir login admin (debug local ou env)
-        if (value == 'admin' || value == AdminConfig.email) return null;
+        // Permitir login admin (credenciais injetadas via --dart-define)
+        if (AdminConfig.isEnabled && value == AdminConfig.email) return null;
         if (!value.contains('@') || !value.contains('.')) {
           return 'Por favor, insira um email válido';
         }
@@ -184,11 +184,13 @@ class _LoginPageState extends State<LoginPage> {
         if (value == null || value.isEmpty) {
           return 'Por favor, insira sua senha';
         }
-        // Admin bypass temporário
+        // Senha do admin vinda do ambiente (--dart-define)
         final email = _emailController.text.trim();
-        if (email == 'admin' && value == 'admin') return null;
-        // Senha de env
-        if (email == AdminConfig.email && value == AdminConfig.password) return null;
+        if (AdminConfig.isEnabled &&
+            email == AdminConfig.email &&
+            value == AdminConfig.password) {
+          return null;
+        }
         if (value.length < 6) {
           return 'A senha deve ter pelo menos 6 caracteres';
         }
@@ -359,22 +361,8 @@ class _LoginPageState extends State<LoginPage> {
 
       final authProvider = context.read<AuthProvider>();
 
-      // Admin bypass temporário: admin/admin (REMOVER EM PRODUÇÃO)
-      if (email == 'admin' && password == 'admin') {
-        await authProvider.activateAdminMode();
-        await authProvider.updateProfile(
-          email: 'admin@grimorio.app',
-          displayName: 'Administrador',
-        );
-        await authProvider.markOnboardingSeen();
-
-        if (mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
-        }
-        return;
-      }
-
-      // Admin produção: credenciais vindas do ambiente (.env)
+      // Admin: credenciais injetadas no build via --dart-define
+      // (ADMIN_EMAIL/ADMIN_PASSWORD, secrets do GitHub Actions)
       if (AdminConfig.isEnabled &&
           email == AdminConfig.email &&
           password == AdminConfig.password) {
