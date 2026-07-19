@@ -14,6 +14,7 @@ import '../../../sigils/presentation/widgets/sigil_icon.dart';
 import '../../../numerology/presentation/pages/numerology_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
+import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 
@@ -186,6 +187,19 @@ class _ToolsTab extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const TarotPage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text('🎭', style: TextStyle(fontSize: 40)),
+            title: 'Teste de Arquétipo',
+            description: 'Descubra qual arquétipo vibra mais alto em você',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ArchetypeQuizPage(),
                 ),
               );
             },
