@@ -830,5 +830,22 @@
   "learnSection1": "Fundamento",
   "learnSection2": "Profundizando",
   "learnSection3": "En la práctica",
-  "learnSection4": "Para llevar contigo"
+  "learnSection4": "Para llevar contigo",
+  "notifChannelMoonName": "Fases de la Luna",
+  "notifChannelMoonDesc": "Notificaciones sobre fases lunares importantes",
+  "notifChannelSabbatName": "Sabbats",
+  "notifChannelSabbatDesc": "Recordatorios de celebraciones de la Rueda del Año",
+  "notifChannelDebugName": "Pruebas de notificación",
+  "notifChannelDebugDesc": "Notificaciones enviadas por el diagnóstico de la aplicación",
+  "notifDebugTitle": "🔮 Mensaje de tu Grimorio",
+  "notifDebugBody": "Tu Grimorio está listo para acompañar tu viaje mágico.",
+  "notifFullMoonTitle": "🌕 ¡Se acerca la Luna Llena!",
+  "notifFullMoonBody": "¡Mañana es Luna Llena! Prepárate para rituales de manifestación y gratitud.",
+  "notifNewMoonTitle": "🌑 ¡Se acerca la Luna Nueva!",
+  "notifNewMoonBody": "¡Mañana es Luna Nueva! El momento perfecto para definir intenciones y nuevos comienzos.",
+  "notifSabbatTitle": "{emoji} ¡Se acerca {name}!",
+  "notifSabbatBody": "En 3 días celebramos {name}. ¡Prepara tus rituales!",
+  "notifErrPermissionDenied": "Permiso de notificaciones no concedido",
+  "notifErrTestFailed": "Error al enviar la notificación de prueba: {error}",
+  "notifErrScheduleFailed": "Error al programar las notificaciones: {error}"
 }

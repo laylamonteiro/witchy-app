@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -117,6 +119,10 @@ class SettingsPage extends StatelessWidget {
           await context.read<LanguageProvider>().setLocale(locale);
 
           if (!context.mounted) return;
+
+          // Reagenda as notificações pendentes para re-assar os textos no
+          // idioma recém-selecionado (agendamento é idempotente).
+          unawaited(_scheduleNotifications(context));
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

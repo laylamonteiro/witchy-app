@@ -4,6 +4,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../theme/grimoire_colors.dart';
 import '../widgets/magical_card.dart';
@@ -1101,12 +1102,12 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                               ],
                             ),
                             SizedBox(height: 5),
-                            Text(NotificationService.debugNotificationTitle,
+                            Text(AppLocalizations.of(context).notifDebugTitle,
                                 style: TextStyle(
                                     color: context.gc.softWhite,
                                     fontWeight: FontWeight.bold)),
                             SizedBox(height: 2),
-                            Text(NotificationService.debugNotificationBody,
+                            Text(AppLocalizations.of(context).notifDebugBody,
                                 style: TextStyle(
                                     color: context.gc.softWhite,
                                     fontSize: 12,

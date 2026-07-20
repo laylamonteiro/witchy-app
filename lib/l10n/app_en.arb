@@ -830,5 +830,22 @@
   "learnSection1": "Foundation",
   "learnSection2": "Going deeper",
   "learnSection3": "In practice",
-  "learnSection4": "To carry with you"
+  "learnSection4": "To carry with you",
+  "notifChannelMoonName": "Moon Phases",
+  "notifChannelMoonDesc": "Notifications about important lunar phases",
+  "notifChannelSabbatName": "Sabbats",
+  "notifChannelSabbatDesc": "Reminders for Wheel of the Year celebrations",
+  "notifChannelDebugName": "Notification tests",
+  "notifChannelDebugDesc": "Notifications sent by the app diagnostics",
+  "notifDebugTitle": "🔮 Message from your Grimoire",
+  "notifDebugBody": "Your Grimoire is ready to accompany your magical journey.",
+  "notifFullMoonTitle": "🌕 Full Moon is coming!",
+  "notifFullMoonBody": "Tomorrow is the Full Moon! Get ready for manifestation and gratitude rituals.",
+  "notifNewMoonTitle": "🌑 New Moon is coming!",
+  "notifNewMoonBody": "Tomorrow is the New Moon! The perfect moment to set intentions and new beginnings.",
+  "notifSabbatTitle": "{emoji} {name} is coming!",
+  "notifSabbatBody": "In 3 days we celebrate {name}. Prepare your rituals!",
+  "notifErrPermissionDenied": "Notification permission not granted",
+  "notifErrTestFailed": "Failed to send test notification: {error}",
+  "notifErrScheduleFailed": "Failed to schedule notifications: {error}"
 }

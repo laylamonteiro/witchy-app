@@ -1093,5 +1093,26 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notifChannelMoonName": "Fases da Lua",
+  "notifChannelMoonDesc": "Notificações sobre fases lunares importantes",
+  "notifChannelSabbatName": "Sabbats",
+  "notifChannelSabbatDesc": "Lembretes de celebrações da Roda do Ano",
+  "notifChannelDebugName": "Testes de notificação",
+  "notifChannelDebugDesc": "Notificações enviadas pelo diagnóstico do aplicativo",
+  "notifDebugTitle": "🔮 Mensagem do Grimório",
+  "notifDebugBody": "Seu Grimório está pronto para acompanhar sua jornada mágica.",
+  "notifFullMoonTitle": "🌕 Lua Cheia se aproxima!",
+  "notifFullMoonBody": "Amanhã é Lua Cheia! Prepare-se para rituais de manifestação e gratidão.",
+  "notifNewMoonTitle": "🌑 Lua Nova se aproxima!",
+  "notifNewMoonBody": "Amanhã é Lua Nova! Momento perfeito para definir intenções e novos começos.",
+  "notifSabbatTitle": "{emoji} {name} se aproxima!",
+  "@notifSabbatTitle": {"placeholders": {"emoji": {"type": "String"}, "name": {"type": "String"}}},
+  "notifSabbatBody": "Em 3 dias celebramos {name}. Prepare seus rituais!",
+  "@notifSabbatBody": {"placeholders": {"name": {"type": "String"}}},
+  "notifErrPermissionDenied": "Permissão de notificações não concedida",
+  "notifErrTestFailed": "Falha ao enviar notificação de teste: {error}",
+  "@notifErrTestFailed": {"placeholders": {"error": {"type": "String"}}},
+  "notifErrScheduleFailed": "Falha ao agendar notificações: {error}",
+  "@notifErrScheduleFailed": {"placeholders": {"error": {"type": "String"}}}
 }
