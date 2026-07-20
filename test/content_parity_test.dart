@@ -5,6 +5,9 @@ import 'package:grimorio_de_bolso/features/divination/data/data_sources/oracle_c
 import 'package:grimorio_de_bolso/features/runes/data/data_sources/runes_data_en.dart';
 import 'package:grimorio_de_bolso/features/runes/data/data_sources/runes_data_es.dart';
 import 'package:grimorio_de_bolso/features/runes/data/data_sources/runes_data_pt.dart';
+import 'package:grimorio_de_bolso/features/tarot/data/data_sources/tarot_cards_data_en.dart';
+import 'package:grimorio_de_bolso/features/tarot/data/data_sources/tarot_cards_data_es.dart';
+import 'package:grimorio_de_bolso/features/tarot/data/data_sources/tarot_cards_data_pt.dart';
 
 /// Garante que as variantes pt/en/es da camada de conteúdo estático têm o
 /// mesmo número de itens, as mesmas chaves estáveis e a mesma ordem — a
@@ -63,6 +66,43 @@ void main() {
           expect(card.keywords.length, 3, reason: 'id ${card.id}');
           for (final keyword in card.keywords) {
             expect(keyword.trim(), isNotEmpty, reason: 'id ${card.id}');
+          }
+        }
+      }
+    });
+  });
+
+  group('Tarot', () {
+    test('as três línguas têm 78 cartas com os mesmos (suit, number) na mesma ordem',
+        () {
+      expect(tarotCardsPt.length, 78);
+      expect(tarotCardsEn.length, tarotCardsPt.length);
+      expect(tarotCardsEs.length, tarotCardsPt.length);
+
+      for (var i = 0; i < tarotCardsPt.length; i++) {
+        // Naipe e número são a identidade estável, invariante entre idiomas.
+        expect(tarotCardsEn[i].suit, tarotCardsPt[i].suit,
+            reason: 'índice $i (${tarotCardsPt[i].name})');
+        expect(tarotCardsEs[i].suit, tarotCardsPt[i].suit,
+            reason: 'índice $i (${tarotCardsPt[i].name})');
+        expect(tarotCardsEn[i].number, tarotCardsPt[i].number,
+            reason: 'índice $i (${tarotCardsPt[i].name})');
+        expect(tarotCardsEs[i].number, tarotCardsPt[i].number,
+            reason: 'índice $i (${tarotCardsPt[i].name})');
+      }
+    });
+
+    test('todas as cartas têm campos não vazios e 3 keywords', () {
+      for (final list in [tarotCardsPt, tarotCardsEn, tarotCardsEs]) {
+        for (final card in list) {
+          final id = '${card.suit} ${card.number} (${card.name})';
+          expect(card.name.trim(), isNotEmpty, reason: id);
+          expect(card.upright.trim(), isNotEmpty, reason: id);
+          expect(card.reversed.trim(), isNotEmpty, reason: id);
+          expect(card.keywords, isNotEmpty, reason: id);
+          expect(card.keywords.length, 3, reason: id);
+          for (final keyword in card.keywords) {
+            expect(keyword.trim(), isNotEmpty, reason: id);
           }
         }
       }
