@@ -101,16 +101,13 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Diagnóstico de configuração acessível SEM login (toque longo no
-  /// cadeado). Mostra se as credenciais foram embutidas no build atual —
-  /// a URL do Supabase e o comprimento da anon key (ambos são valores de
-  /// cliente, públicos por design; a anon key nunca é exibida na íntegra).
+  /// Status técnico acessível SEM login (toque longo no cadeado). Mostra
+  /// apenas indicadores genéricos (versão, ambiente e se o serviço de
+  /// autenticação está disponível) — nunca dados sensíveis como a URL do
+  /// banco ou a chave, para não vazar nada caso um usuário comum descubra.
   Future<void> _showConfigDiagnostic() async {
     final info = await PackageInfo.fromPlatform();
     if (!mounted) return;
-
-    final url = SupabaseConfig.url;
-    final anonLen = SupabaseConfig.anonKey.length;
 
     Widget row(String label, String value, bool ok) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -128,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                         color: context.gc.textSecondary, fontSize: 12)),
               ),
               Expanded(
-                child: SelectableText(value,
+                child: Text(value,
                     style: TextStyle(
                         color: context.gc.textPrimary,
                         fontSize: 12,
@@ -142,25 +139,24 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: dialogContext.gc.surface,
-        title: Text('Diagnóstico de configuração',
+        title: Text('Status técnico',
             style: TextStyle(color: dialogContext.gc.lilac, fontSize: 16)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              row('App', 'v${info.version}+${info.buildNumber}', true),
-              row('Modo', kReleaseMode ? 'release' : 'debug', true),
+              row('Versão', 'v${info.version}+${info.buildNumber}', true),
+              row('Ambiente', kReleaseMode ? 'produção' : 'desenvolvimento',
+                  true),
               const Divider(),
-              row('Supabase pronto', SupabaseConfig.isConfigured ? 'SIM' : 'NAO',
-                  SupabaseConfig.isConfigured),
-              row('SUPABASE_URL', url.isEmpty ? '(vazio)' : url,
-                  url.isNotEmpty),
-              row('ANON_KEY', anonLen == 0 ? '(vazio)' : '$anonLen chars',
-                  anonLen > 0),
-              const Divider(),
-              row('Admin habilitado', AdminConfig.isEnabled ? 'SIM' : 'NAO',
-                  AdminConfig.isEnabled),
+              // Indicador genérico: só diz se o serviço de login responde,
+              // sem expor endpoint nem credenciais.
+              row(
+                'Serviço de login',
+                SupabaseConfig.isConfigured ? 'Disponível' : 'Indisponível',
+                SupabaseConfig.isConfigured,
+              ),
             ],
           ),
         ),

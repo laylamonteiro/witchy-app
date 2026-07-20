@@ -31,6 +31,22 @@ class _PalmistryPageState extends State<PalmistryPage> {
   String? _reading;
   bool _saved = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Funcionalidade 100% Premium: sem acesso, sobe o paywall direto
+    // (sem tela intermediária de "Seja Premium") e volta.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
+  }
+
+  Future<void> _ensureAccess() async {
+    final access =
+        context.read<AuthProvider>().checkFeatureAccess(AppFeature.aiPalmistry);
+    if (!access.hasFullAccess && mounted) {
+      await showPaywallThenPop(context);
+    }
+  }
+
   static const int _maxUploadBytes = 4 * 1024 * 1024; // limite Groq ~4MB base64
 
   Future<void> _pick(ImageSource source) async {
@@ -118,56 +134,8 @@ class _PalmistryPageState extends State<PalmistryPage> {
         title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.toolPalmistryTitle),
       ),
       body: !access.hasFullAccess
-          ? _buildPremiumInvite(access.message)
+          ? const SizedBox.shrink()
           : _buildFlow(),
-    );
-  }
-
-  Widget _buildPremiumInvite(String? message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('🖐️', style: TextStyle(fontSize: 56)),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.palmistryTitle,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: context.gc.lilac,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message ??
-                  AppLocalizations.of(context)!.palmPremiumOnly,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => const PremiumUpgradeSheet(),
-              ),
-              icon: const Icon(Icons.star, size: 18),
-              label: Text(AppLocalizations.of(context)!.premiumBePremium),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.gc.lilac,
-                foregroundColor: context.gc.onPrimary,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
