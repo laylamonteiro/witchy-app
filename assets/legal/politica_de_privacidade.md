@@ -1,6 +1,6 @@
 # Política de Privacidade — Grimório de Bolso
 
-Última atualização: [AJUSTAR DATA]
+Última atualização: 19 de julho 2026
 
 Sua intimidade espiritual é sagrada — e seus dados também. Esta política explica, em linguagem direta, o que coletamos, por quê, e o que NUNCA fazemos.
 
@@ -78,4 +78,4 @@ Publicaremos atualizações no próprio aplicativo, com data de revisão. Mudan�
 
 ## 11. Contato e encarregado (DPO)
 
-Dúvidas ou solicitações sobre dados pessoais: [AJUSTAR E-MAIL DE CONTATO]
+Dúvidas ou solicitações sobre dados pessoais: suporte@grimoriodebolso.com

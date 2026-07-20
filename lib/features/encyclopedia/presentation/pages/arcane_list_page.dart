@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/arcane_entry_model.dart';
@@ -51,6 +52,31 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
     super.dispose();
   }
 
+  String _displayCardTitle(ArcaneEntry entry) {
+    if (widget.categoryTitle == 'Arquétipos') {
+      return entry.name.replaceFirst(RegExp(r'^A\s+', caseSensitive: false), '');
+    }
+    return entry.name;
+  }
+
+  String _imageAssetForEntry(ArcaneEntry entry) {
+    const folders = {
+      'Arquétipos': 'arquetipos',
+      'Anjos': 'anjos',
+      'Demônios': 'demonios',
+      'Símbolos Sagrados': 'simbolos',
+    };
+    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+    const plain = 'aaaaaeeeeiiiiooooouuuucn';
+
+    var slug = entry.name.trim().toLowerCase();
+    for (var i = 0; i < accents.length; i++) {
+      slug = slug.replaceAll(accents[i], plain[i]);
+    }
+    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    return 'assets/images/${folders[widget.categoryTitle] ?? 'outros'}/$slug.webp';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -61,7 +87,22 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Buscar em ${widget.categoryTitle}...',
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: Icon(Icons.search, color: context.gc.lilac),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        _filter('');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: context.gc.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
             onChanged: _filter,
           ),
@@ -99,22 +140,41 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                       ),
                       child: Row(
                         children: [
-                          Text(entry.emoji,
-                              style: const TextStyle(fontSize: 28)),
-                          const SizedBox(width: 14),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              _imageAssetForEntry(entry),
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, _, __) => Container(
+                                width: 60,
+                                height: 60,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: context.gc.lilac.withAlpha((0.12 * 255).round()),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: context.gc.lilac.withAlpha((0.3 * 255).round()),
+                                  ),
+                                ),
+                                child: Text(entry.emoji,
+                                    style: const TextStyle(fontSize: 24)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  entry.name,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        color: context.gc.textPrimary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  _displayCardTitle(entry),
+                                  style: GoogleFonts.cinzelDecorative(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: context.gc.lilac,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(

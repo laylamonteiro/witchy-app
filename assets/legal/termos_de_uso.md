@@ -1,6 +1,6 @@
 # Termos de Uso — Grimório de Bolso
 
-Última atualização: [AJUSTAR DATA]
+Última atualização: 19 de julho 2026
 
 Bem-vinda(o) ao Grimório de Bolso. Ao usar o aplicativo, você concorda com estes Termos. Leia com atenção.
 
@@ -63,7 +63,7 @@ Na máxima extensão permitida pela lei, o Grimório de Bolso não se responsabi
 
 ## 11. Contato
 
-Dúvidas sobre estes Termos: [AJUSTAR E-MAIL DE CONTATO]
+Dúvidas sobre estes Termos: suporte@grimoriodebolso.com
 
 ## 12. Lei aplicável
 

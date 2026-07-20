@@ -36,11 +36,18 @@ class ArcaneDetailPage extends StatelessWidget {
     return 'assets/images/${folders[categoryTitle] ?? 'outros'}/$slug.webp';
   }
 
+  String get displayTitle {
+    if (categoryTitle == 'Arquétipos') {
+      return entry.name.replaceFirst(RegExp(r'^A\s+', caseSensitive: false), '');
+    }
+    return entry.name;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle('${entry.emoji} ${entry.name}'),
+        title: ResponsiveAppBarTitle('${entry.emoji} $displayTitle'),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
