@@ -309,6 +309,7 @@ class AuthProvider extends ChangeNotifier {
           runeReadingsToday: 0,
           oracleReadingsToday: 0,
           advisorConsultationsToday: 0,
+          palmistryReadingsToday: 0,
         );
         await prefs.setString(dailyLimitsKey, now.toIso8601String());
         needsSave = true;
@@ -391,6 +392,21 @@ class AuthProvider extends ChangeNotifier {
   Future<void> incrementPendulumUses() async {
     _currentUser = _currentUser.copyWith(
       pendulumUsesToday: _currentUser.pendulumUsesToday + 1,
+    );
+    await _saveUser();
+    notifyListeners();
+  }
+
+  /// Verifica se pode fazer leitura de mãos hoje (limite Premium; admin livre)
+  bool get canUsePalmistry => _currentUser.canUsePalmistry;
+
+  /// Quantas leituras de mãos restam hoje
+  int get remainingPalmistryReadings => _currentUser.remainingPalmistryReadings;
+
+  /// Incrementa contador de leituras de mãos (Premium — protege a cota da API)
+  Future<void> incrementPalmistryReadings() async {
+    _currentUser = _currentUser.copyWith(
+      palmistryReadingsToday: _currentUser.palmistryReadingsToday + 1,
     );
     await _saveUser();
     notifyListeners();

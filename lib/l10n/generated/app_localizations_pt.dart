@@ -1495,6 +1495,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   @override
+  String get palmDailyLimitReached =>
+      'Você já fez suas leituras de mãos de hoje. Volte amanhã para mais. ✨';
+
+  @override
   String get palmRateLimit =>
       'Muitas leituras em pouco tempo. Aguarde alguns instantes e envie a foto novamente.';
 
@@ -4125,6 +4129,10 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   }
 
   @override
+  @override
+  String get palmDailyLimitReached =>
+      'Você já fez suas leituras de mãos de hoje. Volte amanhã para mais. ✨';
+
   @override
   String get palmRateLimit =>
       'Muitas leituras em pouco tempo. Aguarde alguns instantes e envie a foto novamente.';

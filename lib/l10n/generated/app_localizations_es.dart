@@ -1498,6 +1498,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   @override
+  String get palmDailyLimitReached =>
+      'Ya hiciste tus lecturas de manos de hoy. Vuelve mañana para más. ✨';
+
+  @override
   String get palmRateLimit =>
       'Demasiadas lecturas en poco tiempo. Espera unos instantes y envía la foto de nuevo.';
 

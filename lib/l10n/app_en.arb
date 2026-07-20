@@ -478,6 +478,7 @@
   "tarotQuizQuestion": "What does {card} represent?",
   "palmImageTooLarge": "The image is too large. Try less zoom or another photo.",
   "palmRateLimit": "Too many readings in a short time. Please wait a moment and send the photo again.",
+  "palmDailyLimitReached": "You've used your palm readings for today. Come back tomorrow for more. ✨",
   "palmImageTooSmall": "The image looks too small or dark to read. Photograph your palm well lit, filling the screen.",
   "palmReadingHeader": "Palm Reading",
   "palmSavedToReflections": "Reading saved to your Reflections! ✨",

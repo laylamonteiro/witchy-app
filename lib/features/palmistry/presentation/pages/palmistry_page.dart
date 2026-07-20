@@ -52,6 +52,17 @@ class _PalmistryPageState extends State<PalmistryPage> {
   Future<void> _pick(ImageSource source) async {
     if (_isAnalyzing) return;
 
+    // Limite diário (protege a cota compartilhada da API de visão do Groq).
+    if (!context.read<AuthProvider>().canUsePalmistry) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.palmDailyLimitReached),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+      return;
+    }
+
     try {
       final picked = await _picker.pickImage(
         source: source,
@@ -91,6 +102,8 @@ class _PalmistryPageState extends State<PalmistryPage> {
       final reading = await AIService.instance.analyzePalm(jpegBytes: bytes);
       if (!mounted) return;
       setState(() => _reading = reading);
+      // Só conta quando a leitura foi gerada com sucesso.
+      await context.read<AuthProvider>().incrementPalmistryReadings();
     } catch (e) {
       if (!mounted) return;
       final message = e is AiRateLimitException
