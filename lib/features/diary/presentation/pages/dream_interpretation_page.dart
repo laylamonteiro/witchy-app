@@ -10,6 +10,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/dream_model.dart';
 import '../providers/dream_provider.dart';
+import '../widgets/dream_interpretation_text.dart';
 
 /// Interpretação personalizada de sonhos por IA (exclusiva Premium).
 ///
@@ -292,12 +293,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    _interpretation!,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.6,
-                        ),
-                  ),
+                  DreamInterpretationText(_interpretation!),
                 ],
               ),
             ),

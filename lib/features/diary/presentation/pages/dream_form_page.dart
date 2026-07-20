@@ -6,6 +6,7 @@ import '../providers/dream_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../widgets/dream_interpretation_text.dart';
 
 class DreamFormPage extends StatefulWidget {
   final DreamModel? dream;
@@ -146,13 +147,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      widget.dream!.interpretation!,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(height: 1.5),
-                    ),
+                    DreamInterpretationText(widget.dream!.interpretation!),
                   ],
                 ),
               ),

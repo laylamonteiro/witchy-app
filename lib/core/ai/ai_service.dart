@@ -707,7 +707,9 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
       );
 
       final content = response.data['choices'][0]['message']['content'];
-      return content.toString().trim();
+      // O modelo de visão é um modelo de raciocínio (Qwen3): remove o bloco
+      // <think>...</think> para entregar só a leitura final.
+      return _stripReasoning(content.toString());
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
         throw Exception('Limite de uso excedido');
@@ -722,6 +724,24 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
     } catch (e) {
       throw Exception('Erro ao processar resposta: $e');
     }
+  }
+
+  /// Remove o raciocínio de modelos "reasoning" (Qwen3, DeepSeek-R1 etc.),
+  /// que emitem o processo de pensamento dentro de <think>...</think> antes
+  /// da resposta final. Devolve apenas o texto final.
+  static String _stripReasoning(String text) {
+    var t = text;
+    final closeIdx = t.lastIndexOf('</think>');
+    if (closeIdx != -1) {
+      // Tudo depois do último </think> é a resposta final.
+      t = t.substring(closeIdx + '</think>'.length);
+    } else if (t.trimLeft().startsWith('<think>')) {
+      // Abriu o raciocínio e não fechou: descarta a marca de abertura.
+      t = t.replaceFirst('<think>', '');
+    }
+    // Remove quaisquer tags soltas remanescentes.
+    t = t.replaceAll('<think>', '').replaceAll('</think>', '');
+    return t.trim();
   }
 
   /// Nome do modelo de visão em uso (exposto para o diagnóstico admin).
