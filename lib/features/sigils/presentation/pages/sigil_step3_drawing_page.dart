@@ -18,6 +18,8 @@ import '../widgets/witch_wheel_painter.dart';
 import '../widgets/sigil_drawing_painter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../diary/data/models/desire_model.dart';
+import '../../../diary/presentation/providers/desire_provider.dart';
 
 /// Etapa 3: Mostrar desenho do sigilo com a Roda das Bruxas
 class SigilStep3DrawingPage extends StatefulWidget {
@@ -141,6 +143,35 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
+  }
+
+  /// Salva a intenção do sigilo no Diário de Desejos (Premium, sincroniza
+  /// na nuvem via DesireProvider/DataSyncService).
+  Future<void> _saveToDesires() async {
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.isPremiumEffective) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
+      );
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final desire = DesireModel(
+      title: widget.sigil.intention,
+      description: l10n.sigilDesireDescription(widget.sigil.intention),
+    );
+    await context.read<DesireProvider>().addDesire(desire);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.sigilSavedToDesires),
+        backgroundColor: context.gc.success,
+      ),
+    );
   }
 
   /// Embaralha as posições das letras na roda (como no "Sigilo Nada" do livro)
@@ -433,7 +464,20 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+
+            // Salvar a intenção no Diário de Desejos (Premium, sincroniza)
+            OutlinedButton.icon(
+              onPressed: _saveToDesires,
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text(AppLocalizations.of(context)!.sigilSaveToDesires),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: context.gc.lilac,
+                side: BorderSide(color: context.gc.lilac.withOpacity(0.5)),
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: 12),
 
             // Botão finalizar
             MagicalButton(

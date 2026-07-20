@@ -555,6 +555,16 @@
   "sigilDrawingNotReady": "Desenho ainda não está pronto",
   "sigilImageError": "Falha ao gerar a imagem",
   "sigilSavedToGallery": "Sigilo salvo na galeria! ✨",
+  "sigilSaveToDesires": "Salvar no Diário de Desejos",
+  "sigilSavedToDesires": "Sigilo salvo no Diário de Desejos! ✨",
+  "sigilDesireDescription": "Sigilo criado para manifestar esta intenção: {intention}",
+  "@sigilDesireDescription": {
+    "placeholders": {
+      "intention": {
+        "type": "String"
+      }
+    }
+  },
   "sigilGalleryPermission": "Permita o acesso à galeria para salvar o sigilo.",
   "sigilImageSaveError": "Não foi possível salvar a imagem.",
   "sigilYourSigil": "Seu Sigilo",

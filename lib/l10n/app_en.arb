@@ -555,6 +555,16 @@
   "sigilDrawingNotReady": "Drawing is not ready yet",
   "sigilImageError": "Failed to generate the image",
   "sigilSavedToGallery": "Sigil saved to gallery! ✨",
+  "sigilSaveToDesires": "Save to Wishes Journal",
+  "sigilSavedToDesires": "Sigil saved to your Wishes Journal! ✨",
+  "sigilDesireDescription": "Sigil created to manifest this intention: {intention}",
+  "@sigilDesireDescription": {
+    "placeholders": {
+      "intention": {
+        "type": "String"
+      }
+    }
+  },
   "sigilGalleryPermission": "Allow gallery access to save the sigil.",
   "sigilImageSaveError": "Could not save the image.",
   "sigilYourSigil": "Your Sigil",
