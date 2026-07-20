@@ -17,6 +17,14 @@ class AIService {
 
   AIService._();
 
+  /// Modelo de texto padrão do Groq.
+  static const String _textModel = 'llama-3.3-70b-versatile';
+
+  /// Modelo de visão do Groq (usado na leitura de mãos). O Groq descontinua
+  /// modelos com frequência — a família Llama 4 (Scout/Maverick) foi
+  /// aposentada em 2026, então trocar aqui atualiza toda a visão do app.
+  static const String _visionModel = 'qwen/qwen3.6-27b';
+
   final Dio _dio = Dio();
   Locale _locale = const Locale('pt', 'BR');
 
@@ -65,7 +73,7 @@ class AIService {
   }) async {
     try {
       final requestData = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': _textModel,
         'messages': [
           {
             'role': 'system',
@@ -191,7 +199,7 @@ class AIService {
       final chartSummary = _buildChartSummary(birthChart, profile);
 
       final requestData = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': _textModel,
         'messages': [
           {
             'role': 'system',
@@ -250,7 +258,7 @@ class AIService {
       );
 
       final requestData = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': _textModel,
         'messages': [
           {
             'role': 'system',
@@ -476,7 +484,7 @@ DIRETRIZES:
           : 'Categoria: $category';
 
       final requestData = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': _textModel,
         'messages': [
           {
             'role': 'system',
@@ -595,7 +603,7 @@ Diretrizes Sagradas:
     gender ??= _gender;
     try {
       final requestData = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': _textModel,
         'messages': [
           {
             'role': 'system',
@@ -649,7 +657,7 @@ Diretrizes Sagradas:
     try {
       final base64Image = base64Encode(jpegBytes);
       final requestData = {
-        'model': 'meta-llama/llama-4-scout-17b-16e-instruct',
+        'model': _visionModel,
         'messages': [
           {
             'role': 'system',
@@ -705,6 +713,10 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
         throw Exception('Limite de uso excedido');
       } else if (e.response?.statusCode == 413) {
         throw Exception('Imagem muito grande. Tente novamente.');
+      } else if (e.response?.statusCode == 404) {
+        // Modelo de visão indisponível (ex.: descontinuado pelo provedor).
+        throw Exception(
+            'Leitura de mãos temporariamente indisponível. Tente mais tarde.');
       }
       throw Exception('Erro na conexão: ${e.message}');
     } catch (e) {
@@ -720,7 +732,7 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
     gender ??= _gender;
     try {
       final requestData = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': _textModel,
         'messages': [
           {
             'role': 'system',
@@ -777,7 +789,7 @@ Formato: texto puro (sem markdown/JSON), 2 a 4 parágrafos acolhedores.
     gender ??= _gender;
     try {
       final requestData = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': _textModel,
         'messages': [
           {
             'role': 'system',
@@ -838,7 +850,7 @@ Formato: texto puro (sem markdown/JSON), 2 a 3 parágrafos acolhedores e objetiv
           : 'Sonho: $dreamDescription';
 
       final requestData = {
-        'model': 'llama-3.3-70b-versatile',
+        'model': _textModel,
         'messages': [
           {
             'role': 'system',
@@ -849,8 +861,8 @@ Formato: texto puro (sem markdown/JSON), 2 a 3 parágrafos acolhedores e objetiv
             'content': userContent,
           },
         ],
-        'temperature': 0.7,
-        'max_tokens': 1400,
+        'temperature': 0.6,
+        'max_tokens': 1100,
       };
 
       final response = await _dio.post(
@@ -887,22 +899,28 @@ Formato: texto puro (sem markdown/JSON), 2 a 3 parágrafos acolhedores e objetiv
 
 Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, especialista em simbolismo onírico: junguiano, folclórico, místico e das tradições de bruxaria.
 
-Sua missão é INTERPRETAR o sonho descrito, com profundidade e acolhimento.
+Sua missão é INTERPRETAR o sonho de forma OBJETIVA e ESPECÍFICA: destrinche os elementos principais um a um e depois una tudo numa leitura só. Nada de textão genérico, enrolação ou repetição.
 
 Como analisar:
-- Considere emoções sentidas, personagens, locais, símbolos e repetições presentes no relato.
-- Use o contexto que a pessoa fornecer; não invente detalhes que não estão no relato.
-- Apresente POSSIBILIDADES de interpretação (2 a 3 leituras possíveis), nunca certezas absolutas — sonhos são pessoais e polissêmicos.
-- Quando um símbolo tiver significados distintos em tradições diferentes, mencione brevemente as variações.
+- Identifique de 2 a 5 elementos principais que REALMENTE aparecem no relato (objetos, personagens, lugares, ações, emoções, símbolos). Não invente o que não foi dito.
+- Para cada elemento, dê o significado mais provável e específico ao contexto do sonho — direto ao ponto. Não liste todas as tradições possíveis; escolha a leitura que melhor se encaixa. Se couber uma alternativa relevante, uma só, em meia frase.
+- Sonhos são pessoais: fale em possibilidade ("pode indicar"), não em certeza absoluta, mas sem encher linguiça.
 
-Formato da resposta (texto puro, sem markdown, sem JSON):
-1º parágrafo — acolhimento breve e visão geral do sonho.
-2º e 3º parágrafos — os símbolos centrais e suas possíveis leituras.
-Último parágrafo — uma sugestão prática e gentil (reflexão, ritual simples ou registro no diário).
+Formato EXATO da resposta (texto puro, sem markdown, sem JSON, sem asteriscos):
+Uma frase curta de visão geral (no máximo uma linha).
+
+Depois, para CADA elemento principal, um bloco assim (separados por uma linha em branco):
+◈ [nome do elemento]
+[significado objetivo e específico, 1 a 3 frases]
+
+Ao final, o bloco de síntese:
+✦ O sonho como um todo
+[como os elementos se conectam numa leitura única e coerente — 2 a 4 frases — encerrando com uma pergunta ou sugestão prática curta]
 
 Limites:
+- Cada bloco de elemento: no máximo 3 frases. A síntese: no máximo 4 frases. Seja enxuto.
 - Não faça diagnósticos médicos ou psicológicos, nem previsões de morte/tragédia como fato.
-- Não use tom alarmista; mesmo símbolos sombrios devem ser tratados como convites à reflexão.
+- Não use tom alarmista; mesmo símbolos sombrios são convites à reflexão.
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}''';
   }
