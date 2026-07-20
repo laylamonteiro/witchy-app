@@ -9,10 +9,12 @@ import '../../data/data_sources/herbs_data.dart';
 import '../../data/data_sources/metals_data.dart';
 
 class EncyclopediaProvider with ChangeNotifier {
-  final List<CrystalModel> _crystals = crystalsData;
-  final List<ColorModel> _colors = colorsData;
-  final List<HerbModel> _herbs = herbsData;
-  final List<MetalModel> _metals = metalsData;
+  // Getters diretos (não campos) para que a troca de idioma em runtime
+  // reflita imediatamente o conteúdo do locale atual via ContentLocale.
+  List<CrystalModel> get _crystals => crystalsData;
+  List<ColorModel> get _colors => colorsData;
+  List<HerbModel> get _herbs => herbsData;
+  List<MetalModel> get _metals => metalsData;
 
   List<CrystalModel> get crystals => _crystals;
   List<ColorModel> get colors => _colors;
