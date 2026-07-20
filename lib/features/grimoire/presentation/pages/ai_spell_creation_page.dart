@@ -92,7 +92,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       setState(() {
         _generatedSpell = spell;
       });
-    } catch (e, stackTrace) {
+    } catch (e) {
       if (!mounted) return;
 
       String errorMessage =
@@ -133,24 +133,6 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
         });
       }
     }
-  }
-
-  Future<void> _saveSpell() async {
-    if (_generatedSpell == null) return;
-
-    final provider = context.read<SpellProvider>();
-    await provider.addSpell(_generatedSpell!);
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).spellSavedToGrimoire),
-        backgroundColor: context.gc.success,
-      ),
-    );
-
-    Navigator.pop(context);
   }
 
   @override

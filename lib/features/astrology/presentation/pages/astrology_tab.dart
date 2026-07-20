@@ -3,7 +3,6 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_input_page.dart';

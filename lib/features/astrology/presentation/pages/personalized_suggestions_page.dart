@@ -10,7 +10,6 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/birth_chart_model.dart';
-import '../../data/models/planet_position_model.dart';
 import '../../data/models/enums.dart';
 import '../../data/services/transit_interpreter.dart';
 import '../../data/services/transit_calculator.dart';
@@ -165,14 +164,6 @@ class _PersonalizedSuggestionsPageState
         ),
       );
     }
-  }
-
-  void _changeDate(int days) {
-    setState(() {
-      _selectedDate = _selectedDate.add(Duration(days: days));
-      _suggestions = null;
-    });
-    _loadSuggestions();
   }
 
   @override

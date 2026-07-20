@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
 import '../../../../core/services/payment_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../subscription/presentation/widgets/subscription_offer_widgets.dart';
 

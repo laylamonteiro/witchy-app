@@ -128,8 +128,10 @@ class _SpreadTabState extends State<_SpreadTab> {
   /// Serve para reconhecer a MESMA tiragem — inclusive a carta do dia, que é
   /// determinística — e não deixar regerar a interpretação.
   String _signature(TarotSpread spread, List<TarotDrawnCard> drawn) {
+    // Usa (naipe, número) — chaves estáveis entre idiomas — para que a
+    // interpretação salva sobreviva à troca de idioma do app.
     return '${spread.name}|'
-        '${drawn.map((d) => '${d.card.name}:${d.isReversed ? 'R' : 'U'}').join('|')}';
+        '${drawn.map((d) => '${d.card.suit.name}${d.card.number}:${d.isReversed ? 'R' : 'U'}').join('|')}';
   }
 
   /// Interpretação salva para exatamente esta assinatura (ou null).

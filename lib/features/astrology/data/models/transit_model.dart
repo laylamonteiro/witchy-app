@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'enums.dart';
-import 'planet_position_model.dart';
 
 /// Representa a posição atual de um planeta em trânsito
 class Transit {

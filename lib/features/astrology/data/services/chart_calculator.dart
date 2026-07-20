@@ -437,7 +437,6 @@ class ChartCalculator {
     final houses = <House>[];
 
     // Calcular RAMC (Right Ascension of Medium Coeli) em graus
-    final T = (julianDay - 2451545.0) / 36525.0;
     final gmst = _calculateGMST(julianDay);
     var lst = gmst + longitude / 15.0; // LST em horas
 

@@ -31,10 +31,6 @@ class DateInputFormatter extends TextInputFormatter {
 
     // Se o usuário está editando no meio, manter posição proporcional
     if (newValue.selection.baseOffset < newValue.text.length) {
-      final oldDigitsBeforeCursor = oldValue.text
-          .substring(0, oldValue.selection.baseOffset)
-          .replaceAll(RegExp(r'[^\d]'), '')
-          .length;
       final newDigitsBeforeCursor = newValue.text
           .substring(0, newValue.selection.baseOffset)
           .replaceAll(RegExp(r'[^\d]'), '')

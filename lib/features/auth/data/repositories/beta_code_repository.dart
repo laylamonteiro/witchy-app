@@ -259,7 +259,6 @@ class BetaCodeRepository {
     if (validation != null) return validation;
 
     final currentUses = (codeData!['current_uses'] ?? 0) as int;
-    final maxUses = (codeData['max_uses'] ?? 1) as int;
     final newCurrentUses = currentUses + 1;
 
     await _updateCodeLocal(cleanCode, userId, DateTime.now(),
@@ -282,7 +281,6 @@ class BetaCodeRepository {
     }
 
     final currentUses = (codeData['current_uses'] ?? 0) as int;
-    final maxUses = (codeData['max_uses'] ?? 1) as int;
     if (currentUses >= maxUses) {
       return {
         'success': false,

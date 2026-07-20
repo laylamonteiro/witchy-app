@@ -1079,18 +1079,18 @@ class SettingsPage extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: dialogContext.gc.surface,
         title: Text(
-          AppLocalizations.of(dialogContext)!.profileLogout,
+          AppLocalizations.of(dialogContext).profileLogout,
           style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
-          AppLocalizations.of(dialogContext)!.profileLogoutConfirm,
+          AppLocalizations.of(dialogContext).profileLogoutConfirm,
           style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              AppLocalizations.of(dialogContext)!.commonCancel,
+              AppLocalizations.of(dialogContext).commonCancel,
               style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
@@ -1107,7 +1107,7 @@ class SettingsPage extends StatelessWidget {
               backgroundColor: dialogContext.gc.alert,
             ),
             child: Text(
-              AppLocalizations.of(dialogContext)!.profileLogoutAction,
+              AppLocalizations.of(dialogContext).profileLogoutAction,
               style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/i18n/gender.dart';
 import '../../../../core/services/debug_log_service.dart';

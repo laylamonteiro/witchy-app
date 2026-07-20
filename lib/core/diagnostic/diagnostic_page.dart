@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -536,7 +535,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
 
       _addLog('✅ CLIMA CALCULADO!');
       _addLog('   Trânsitos: ${weather.transits.length}');
-      _addLog('   Lua: ${weather.moonPhase ?? "N/A"}');
+      _addLog('   Lua: ${weather.moonPhase}');
       _addLog('   Energia: ${weather.overallEnergy.name}');
       _addLog('   Palavras-chave: ${weather.energyKeywords.join(", ")}');
 
@@ -597,7 +596,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
       _addLog('✅ SUGESTÕES GERADAS!');
       _addLog('   Total: ${suggestions.length}');
       for (final suggestion in suggestions.take(3)) {
-        _addLog('   • ${suggestion.title ?? "Sugestão sem título"}');
+        _addLog('   • ${suggestion.title}');
       }
 
       setState(() {

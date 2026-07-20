@@ -5,7 +5,6 @@ import '../providers/encyclopedia_provider.dart';
 import '../../data/models/color_model.dart';
 import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'color_detail_page.dart';
 import '../widgets/entry_pager.dart';

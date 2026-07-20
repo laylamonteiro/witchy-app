@@ -388,7 +388,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
     // Detectar método de autenticação
     AuthMethod authMethod = AuthMethod.emailPassword; // Padrão
-    final appMetadata = supabaseUser.appMetadata ?? {};
+    final appMetadata = supabaseUser.appMetadata;
     final provider = appMetadata['provider'] as String?;
 
     if (provider == 'google') {

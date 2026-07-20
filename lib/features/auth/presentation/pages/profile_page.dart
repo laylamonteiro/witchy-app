@@ -7,13 +7,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
-import '../../../settings/settings.dart';
 import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/legal/legal_document_page.dart';
-import '../widgets/premium_blur_widget.dart';
 import '../widgets/profile_avatar_picker.dart';
 import 'edit_profile_page.dart';
 
@@ -492,18 +490,18 @@ class ProfilePage extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text(
-          AppLocalizations.of(dialogContext)!.profileLogout,
+          AppLocalizations.of(dialogContext).profileLogout,
           style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
-          AppLocalizations.of(dialogContext)!.profileLogoutConfirm,
+          AppLocalizations.of(dialogContext).profileLogoutConfirm,
           style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              AppLocalizations.of(dialogContext)!.commonCancel,
+              AppLocalizations.of(dialogContext).commonCancel,
               style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
@@ -520,7 +518,7 @@ class ProfilePage extends StatelessWidget {
               backgroundColor: const Color(0xFFF44336),
             ),
             child: Text(
-              AppLocalizations.of(dialogContext)!.profileLogoutAction,
+              AppLocalizations.of(dialogContext).profileLogoutAction,
               style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
@@ -664,17 +662,6 @@ class ProfilePage extends StatelessWidget {
         return [const Color(0xFF9C27B0), const Color(0xFFE91E63)];
       case UserRole.free:
         return [const Color(0xFF3F51B5), const Color(0xFF2196F3)];
-    }
-  }
-
-  IconData _getRoleIcon(UserRole role) {
-    switch (role) {
-      case UserRole.admin:
-        return Icons.shield;
-      case UserRole.premium:
-        return Icons.star;
-      case UserRole.free:
-        return Icons.person;
     }
   }
 
@@ -837,7 +824,6 @@ class ProfilePage extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
-
 
   void _handleManageSubscription(
       BuildContext context, PaymentService paymentService) {

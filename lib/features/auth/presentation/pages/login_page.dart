@@ -4,7 +4,6 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:package_info_plus/package_info_plus.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/config/admin_config.dart';
