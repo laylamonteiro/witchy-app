@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -19,6 +20,7 @@ class GoddessDetailPage extends StatelessWidget {
       ),
       backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -44,7 +46,11 @@ class GoddessDetailPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     goddess.name,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: GoogleFonts.cinzelDecorative(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: context.gc.lilac,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   if (goddess.alternateNames != null) ...[
@@ -95,6 +101,7 @@ class GoddessDetailPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
 
             // Aspects
             MagicalCard(
@@ -141,6 +148,7 @@ class GoddessDetailPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
 
             // Correspondences
             MagicalCard(
@@ -161,6 +169,7 @@ class GoddessDetailPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
 
             // Symbols, Animals, Plants, Colors
             MagicalCard(
@@ -180,6 +189,7 @@ class GoddessDetailPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
 
             // Mythology
             MagicalCard(
@@ -200,6 +210,7 @@ class GoddessDetailPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
 
             // Ritual Uses
             MagicalCard(
@@ -236,6 +247,7 @@ class GoddessDetailPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
 
             // Invocation Tips
             MagicalCard(
