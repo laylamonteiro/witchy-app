@@ -487,8 +487,8 @@ jobs:
         # caracteres especiais de shell (;, &, $, quebras de linha) nao
         # quebram o script nem vazam no log.
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
           REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
           REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
@@ -794,9 +794,9 @@ jobs:
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
             --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD"
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
 
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
 
           REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
 
