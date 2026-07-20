@@ -148,17 +148,19 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                           subtitle: isPremium
                               ? 'Manter seus dados protegidos e sincronizados entre dispositivos'
                               : 'Recurso exclusivo Premium',
-                          value: _cloudSyncEnabled,
+                          value: isPremium && _cloudSyncEnabled,
                           onChanged: (value) {
-                            if (!isPremium && value) {
+                            // Free não altera o toggle: qualquer toque abre
+                            // o convite Premium.
+                            if (!isPremium) {
                               _showUpgradeDialog();
-                            } else {
-                              setState(() => _cloudSyncEnabled = value);
-                              _saveSetting(
-                                DataSyncService.cloudSyncPreferenceKey,
-                                value,
-                              );
+                              return;
                             }
+                            setState(() => _cloudSyncEnabled = value);
+                            _saveSetting(
+                              DataSyncService.cloudSyncPreferenceKey,
+                              value,
+                            );
                           },
                         ),
                       ]);
