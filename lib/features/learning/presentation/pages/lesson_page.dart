@@ -506,42 +506,46 @@ class _LessonPageState extends State<LessonPage> {
           for (var i = 0; i < paragraphs.length; i++)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color.lerp(
-                    context.gc.surface, accents[i % accents.length], 0.07),
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                border: Border(
-                  left: BorderSide(
-                    color: accents[i % accents.length],
-                    width: 3,
-                  ),
-                  top: BorderSide(color: context.gc.surfaceBorder),
-                  right: BorderSide(color: context.gc.surfaceBorder),
-                  bottom: BorderSide(color: context.gc.surfaceBorder),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${sectionEmojis[i % sectionEmojis.length]} '
-                    '${sectionTitles[i % sectionTitles.length]}',
-                    style: TextStyle(
-                      color: accents[i % accents.length],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Color.lerp(
+                        context.gc.surface, accents[i % accents.length], 0.07),
+                    border: Border(
+                      left: BorderSide(
+                        color: accents[i % accents.length],
+                        width: 3,
+                      ),
+                      top: BorderSide(color: context.gc.surfaceBorder),
+                      right: BorderSide(color: context.gc.surfaceBorder),
+                      bottom: BorderSide(color: context.gc.surfaceBorder),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    paragraphs[i],
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.6, fontSize: 15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${sectionEmojis[i % sectionEmojis.length]} '
+                        '${sectionTitles[i % sectionTitles.length]}',
+                        style: TextStyle(
+                          color: accents[i % accents.length],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        paragraphs[i],
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(height: 1.6, fontSize: 15),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           const SizedBox(height: 8),
@@ -569,31 +573,35 @@ class _LessonPageState extends State<LessonPage> {
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color.lerp(context.gc.surface, accent, 0.07),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
-        border: Border(
-          left: BorderSide(color: accent, width: 3),
-          top: BorderSide(color: context.gc.surfaceBorder),
-          right: BorderSide(color: context.gc.surfaceBorder),
-          bottom: BorderSide(color: context.gc.surfaceBorder),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: accent,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Color.lerp(context.gc.surface, accent, 0.07),
+            border: Border(
+              left: BorderSide(color: accent, width: 3),
+              top: BorderSide(color: context.gc.surfaceBorder),
+              right: BorderSide(color: context.gc.surfaceBorder),
+              bottom: BorderSide(color: context.gc.surfaceBorder),
             ),
           ),
-          const SizedBox(height: 8),
-          child,
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: accent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 8),
+              child,
+            ],
+          ),
+        ),
       ),
     );
   }
