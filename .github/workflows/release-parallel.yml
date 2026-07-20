@@ -325,6 +325,16 @@ jobs:
 
           name: pubspec-yaml
 
+      - name: 🧹 Free runner disk space
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo apt-get clean
+          df -h
+
 
 
       - name: ☕ Setup Java
@@ -336,16 +346,6 @@ jobs:
           distribution: temurin
 
           java-version: ${{ env.JAVA_VERSION }}
-
-      - name: ♻️ Prepare Gradle (cache + distribution)
-
-        uses: gradle/gradle-build-action@v2
-
-        with:
-
-          gradle-version: 8.9
-
-          cache-read-only: false
 
 
       - name: 🐦 Setup Flutter
@@ -603,6 +603,16 @@ jobs:
 
           name: pubspec-yaml
 
+      - name: 🧹 Free runner disk space
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo apt-get clean
+          df -h
+
 
 
       - name: ☕ Setup Java
@@ -614,16 +624,6 @@ jobs:
           distribution: temurin
 
           java-version: ${{ env.JAVA_VERSION }}
-
-      - name: ♻️ Prepare Gradle (cache + distribution)
-
-        uses: gradle/gradle-build-action@v2
-
-        with:
-
-          gradle-version: 8.9
-
-          cache-read-only: false
 
 
       - name: 🐦 Setup Flutter
