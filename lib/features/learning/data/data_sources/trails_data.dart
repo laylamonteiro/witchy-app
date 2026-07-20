@@ -972,6 +972,7 @@ const List<LearningTrail> learningTrails = [
       TrailLesson(
         id: 'ta_01',
         recordKind: LessonRecordKind.tarot,
+        tool: LessonTool.tarotLibrary,
         title: 'O baralho: mapa em 78 cartas',
         teaching:
             'O tarot é um mapa da experiência humana em 78 cartas: 22 Arcanos Maiores (as grandes forças e passagens da vida) e 56 Menores em quatro naipes — Paus/fogo (ação), Copas/água (emoção), Espadas/ar (mente) e Ouros/terra (matéria).\n\nAntes de decorar: manuseie. O tarot se aprende pelas mãos e pelos olhos.',
@@ -990,6 +991,7 @@ const List<LearningTrail> learningTrails = [
       TrailLesson(
         id: 'ta_02',
         recordKind: LessonRecordKind.tarot,
+        tool: LessonTool.tarotTutor,
         title: 'A Jornada do Louco (0-VII)',
         teaching:
             'Os Arcanos Maiores contam uma história: o Louco (0) parte em jornada e encontra os primeiros mestres — Mago (vontade), Sacerdotisa (intuição), Imperatriz (criação), Imperador (estrutura), Hierofante (tradição), Enamorados (escolha) e Carro (vitória da vontade).\n\nÉ o primeiro terço: aprender as forças básicas do mundo.',
@@ -1008,6 +1010,7 @@ const List<LearningTrail> learningTrails = [
       TrailLesson(
         id: 'ta_03',
         recordKind: LessonRecordKind.tarot,
+        tool: LessonTool.tarotTutor,
         title: 'As provas da alma (VIII-XIV)',
         teaching:
             'O segundo terço da Jornada são as provas internas: Força (coragem gentil), Eremita (recolhimento), Roda (ciclos), Justiça (consequência), Enforcado (nova perspectiva), Morte (transformação) e Temperança (síntese).\n\nSão as cartas que assustam os iniciantes e sustentam os leitores: aqui mora a maturidade.',
@@ -1026,6 +1029,7 @@ const List<LearningTrail> learningTrails = [
       TrailLesson(
         id: 'ta_04',
         recordKind: LessonRecordKind.tarot,
+        tool: LessonTool.tarotTutor,
         title: 'A noite escura e o amanhecer (XV-XXI)',
         teaching:
             'O terço final atravessa a noite: Diabo (apegos), Torre (ruptura), Estrela (esperança), Lua (ilusões) — e amanhece: Sol (alegria), Julgamento (chamado) e Mundo (completude).\n\nA Jornada inteira agora é sua: do salto do Louco à dança do Mundo. E ela recomeça sempre, em espiral.',
@@ -1044,6 +1048,7 @@ const List<LearningTrail> learningTrails = [
       TrailLesson(
         id: 'ta_05',
         recordKind: LessonRecordKind.tarot,
+        tool: LessonTool.tarotTutor,
         title: 'Paus e Copas: fogo e água',
         teaching:
             'Os naipes falam do cotidiano. PAUS é fogo: projetos, paixão, movimento — do Ás (faísca) ao Dez (sobrecarga). COPAS é água: vínculos, emoções, intuição — do transbordar do Ás à plenitude do Dez.\n\nDica de leitura: número + naipe = frase. Três (expansão) de Copas (afeto) = celebração entre amigas.',
@@ -1062,6 +1067,7 @@ const List<LearningTrail> learningTrails = [
       TrailLesson(
         id: 'ta_06',
         recordKind: LessonRecordKind.tarot,
+        tool: LessonTool.tarotTutor,
         title: 'Espadas e Ouros: ar e terra',
         teaching:
             'ESPADAS é ar: a mente — clareza que corta e ansiedade que fere. O naipe mais "difícil" do baralho é também o mais honesto. OUROS é terra: corpo, trabalho, dinheiro — a magia da matéria bem cuidada.\n\nComplete a lógica: agora você lê qualquer menor por número + elemento.',
@@ -1080,6 +1086,7 @@ const List<LearningTrail> learningTrails = [
       TrailLesson(
         id: 'ta_07',
         recordKind: LessonRecordKind.tarot,
+        tool: LessonTool.tarotTutor,
         title: 'A corte: as dezesseis pessoas',
         teaching:
             'Valete, Cavaleiro, Rainha e Rei de cada naipe: as cartas de corte são PESSOAS e POSTURAS — o Valete aprende, o Cavaleiro age, a Rainha domina por dentro, o Rei governa por fora.\n\nNa leitura, corte pode ser alguém na situação OU um papel que você está vestindo. Pergunte sempre: quem é — ou o que estou sendo?',

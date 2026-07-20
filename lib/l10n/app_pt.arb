@@ -823,6 +823,9 @@
   "learnChapterBound": "O capítulo \"{title}\" agora é um livro encadernado no seu grimório — escrito por você.",
   "learnNewTitle": "Novo título",
   "learnSoBeIt": "Que assim seja ✨",
+  "learnPracticeGoal": "Objetivo",
+  "learnPracticeHow": "Como fazer",
+  "learnPracticeThen": "Depois da prática",
   "learnStepTeaching": "📜 Ensino",
   "learnStepPractice": "🕯️ Prática",
   "learnStepPage": "✍️ A Página",
@@ -1038,6 +1041,7 @@
     }
   },
   "tarotLibraryTitle": "Biblioteca de Cartas",
+  "tarotTutorTitle": "Tutor de Tarot",
   "tarotLibraryDesc": "As 78 cartas com imagem, significado e leitura invertida",
   "tarotFlipCard": "Inverter carta",
   "tarotUnflipCard": "Posição normal",
