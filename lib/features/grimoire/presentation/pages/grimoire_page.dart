@@ -208,19 +208,6 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: const Text('🎭', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolArchetypeTitle,
-            description: AppLocalizations.of(context)!.toolArchetypeDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const ArchetypeQuizPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
             icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
             title: AppLocalizations.of(context)!.toolPalmistryTitle,
             description: AppLocalizations.of(context)!.toolPalmistryDesc,
@@ -234,13 +221,13 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: const Text('🃏', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolOracleTitle,
-            description: AppLocalizations.of(context)!.toolOracleDesc,
+            icon: const Text('🎭', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolArchetypeTitle,
+            description: AppLocalizations.of(context)!.toolArchetypeDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const OracleCardsPage(),
+                  builder: (_) => const ArchetypeQuizPage(),
                 ),
               );
             },
@@ -260,6 +247,19 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
+            icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolPendulumTitle,
+            description: AppLocalizations.of(context)!.toolPendulumDesc,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const PendulumPage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
             icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
             title: AppLocalizations.of(context)!.toolRunesTitle,
             description: AppLocalizations.of(context)!.toolRunesDesc,
@@ -273,13 +273,13 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolPendulumTitle,
-            description: AppLocalizations.of(context)!.toolPendulumDesc,
+            icon: const Text('🃏', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolOracleTitle,
+            description: AppLocalizations.of(context)!.toolOracleDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const PendulumPage(),
+                  builder: (_) => const OracleCardsPage(),
                 ),
               );
             },
