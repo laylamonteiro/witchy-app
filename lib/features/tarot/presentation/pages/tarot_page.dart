@@ -147,10 +147,12 @@ class _SpreadTabState extends State<_SpreadTab> {
     await prefs.setString('tarot_ai_$_userId', reading);
   }
 
-  /// Carta do dia: determinística pela data (mesma carta o dia todo).
+  /// Carta do dia: determinística pela data E pelo usuário (mesma carta o dia
+  /// todo, mas diferente para cada pessoa — não é a mesma para todo mundo).
   TarotDrawnCard _dailyCard() {
     final now = DateTime.now();
-    final seed = now.year * 10000 + now.month * 100 + now.day;
+    final seed =
+        (now.year * 10000 + now.month * 100 + now.day) ^ _userId.hashCode;
     final random = Random(seed);
     final card = tarotCards[random.nextInt(tarotCards.length)];
     return TarotDrawnCard(
