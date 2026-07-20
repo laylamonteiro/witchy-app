@@ -51,6 +51,24 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
     super.dispose();
   }
 
+  String _imageAssetForEntry(ArcaneEntry entry) {
+    const folders = {
+      'Arquétipos': 'arquetipos',
+      'Anjos': 'anjos',
+      'Demônios': 'demonios',
+      'Símbolos Sagrados': 'simbolos',
+    };
+    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+    const plain = 'aaaaaeeeeiiiiooooouuuucn';
+
+    var slug = entry.name.trim().toLowerCase();
+    for (var i = 0; i < accents.length; i++) {
+      slug = slug.replaceAll(accents[i], plain[i]);
+    }
+    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    return 'assets/images/${folders[widget.categoryTitle] ?? 'outros'}/$slug.webp';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -99,8 +117,29 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                       ),
                       child: Row(
                         children: [
-                          Text(entry.emoji,
-                              style: const TextStyle(fontSize: 28)),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              _imageAssetForEntry(entry),
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, _, __) => Container(
+                                width: 48,
+                                height: 48,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: context.gc.lilac.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: context.gc.lilac.withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Text(entry.emoji,
+                                    style: const TextStyle(fontSize: 24)),
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Column(
