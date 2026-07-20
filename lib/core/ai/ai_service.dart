@@ -724,6 +724,83 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
     }
   }
 
+  /// Nome do modelo de visão em uso (exposto para o diagnóstico admin).
+  String get visionModel => _visionModel;
+
+  /// Diagnóstico admin da leitura de mãos: executa a chamada de visão e
+  /// devolve os detalhes CRUS (modelo, status HTTP, corpo do erro, tempo)
+  /// em vez das mensagens amigáveis — útil para depurar casos como modelo
+  /// de visão descontinuado (404).
+  Future<Map<String, dynamic>> analyzePalmDebug({
+    required List<int> jpegBytes,
+  }) async {
+    final sw = Stopwatch()..start();
+    final base64Image = base64Encode(jpegBytes);
+    try {
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 60),
+        ),
+        data: {
+          'model': _visionModel,
+          'messages': [
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'text',
+                  'text': 'Descreva brevemente esta palma da mão.',
+                },
+                {
+                  'type': 'image_url',
+                  'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
+                },
+              ],
+            },
+          ],
+          'max_tokens': 300,
+        },
+      );
+      sw.stop();
+      final content =
+          response.data['choices'][0]['message']['content'].toString().trim();
+      return {
+        'ok': true,
+        'model': _visionModel,
+        'statusCode': response.statusCode,
+        'elapsedMs': sw.elapsedMilliseconds,
+        'imageBytes': jpegBytes.length,
+        'body': content,
+      };
+    } on DioException catch (e) {
+      sw.stop();
+      return {
+        'ok': false,
+        'model': _visionModel,
+        'statusCode': e.response?.statusCode,
+        'elapsedMs': sw.elapsedMilliseconds,
+        'imageBytes': jpegBytes.length,
+        'body': e.response?.data?.toString() ?? e.message ?? 'erro desconhecido',
+      };
+    } catch (e) {
+      sw.stop();
+      return {
+        'ok': false,
+        'model': _visionModel,
+        'statusCode': null,
+        'elapsedMs': sw.elapsedMilliseconds,
+        'imageBytes': jpegBytes.length,
+        'body': '$e',
+      };
+    }
+  }
+
   /// Interpretar uma tiragem de tarot já sorteada no app (Premium).
   Future<String> interpretTarotSpread({
     required String summary,

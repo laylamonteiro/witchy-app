@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/grimoire_colors.dart';
@@ -102,6 +104,11 @@ class _DiagnosticPageState extends State<DiagnosticPage>
   bool _isTesting = false;
   String? _result;
 
+  // Diagnóstico de Quiromancia (visão)
+  final _palmPicker = ImagePicker();
+  bool _isTestingPalm = false;
+  Map<String, dynamic>? _palmResult;
+
   // Controllers para input manual do mapa astral
   final _dateController = TextEditingController(text: 'dd/mm/aaaa');
   final _timeController = TextEditingController(text: 'HH:MM');
@@ -120,7 +127,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 8, vsync: this);
+    _tabController = TabController(length: 9, vsync: this);
   }
 
   @override
@@ -634,6 +641,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             Tab(text: 'Mapa Astral'),
             Tab(text: 'Clima Mágico'),
             Tab(text: 'Sugestões'),
+            Tab(text: 'Quiromancia'),
           ],
         ),
         actions: [
@@ -685,6 +693,233 @@ class _DiagnosticPageState extends State<DiagnosticPage>
             description: 'Testa sugestões personalizadas',
             onTest: _testSuggestions,
           ),
+          _buildPalmistryDiagnosticSection(),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // SEÇÃO DE DIAGNÓSTICO DE QUIROMANCIA (visão Groq)
+  // ============================================================
+  Future<void> _testPalmistry(ImageSource source) async {
+    if (_isTestingPalm) return;
+    try {
+      final picked = await _palmPicker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+      );
+      if (picked == null || !mounted) return;
+
+      setState(() {
+        _isTestingPalm = true;
+        _palmResult = null;
+      });
+
+      // Mesmo pipeline da Quiromancia real: comprime, corrige EXIF, remove
+      // metadados.
+      final compressed = await FlutterImageCompress.compressWithFile(
+        picked.path,
+        minWidth: 1024,
+        minHeight: 1024,
+        quality: 82,
+        format: CompressFormat.jpeg,
+      );
+      final bytes = compressed ?? await picked.readAsBytes();
+
+      final result =
+          await AIService.instance.analyzePalmDebug(jpegBytes: bytes);
+      if (!mounted) return;
+      setState(() => _palmResult = result);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _palmResult = {
+            'ok': false,
+            'model': AIService.instance.visionModel,
+            'statusCode': null,
+            'elapsedMs': 0,
+            'imageBytes': 0,
+            'body': '$e',
+          });
+    } finally {
+      if (mounted) setState(() => _isTestingPalm = false);
+    }
+  }
+
+  Widget _buildPalmistryDiagnosticSection() {
+    final r = _palmResult;
+    final ok = r?['ok'] == true;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              children: [
+                Icon(Icons.back_hand, size: 64, color: context.gc.lilac),
+                const SizedBox(height: 16),
+                Text(
+                  'Diagnóstico de Quiromancia',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(color: context.gc.lilac),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Envia uma foto ao modelo de visão do Groq e mostra a '
+                  'resposta crua (modelo, status HTTP, tempo e corpo/erro).',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.gc.softWhite.withOpacity(0.8),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDiagnosticRow(
+                  'Modelo de visão',
+                  AIService.instance.visionModel,
+                  true,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _isTestingPalm
+                      ? null
+                      : () => _testPalmistry(ImageSource.camera),
+                  icon: const Icon(Icons.camera_alt, size: 18),
+                  label: const Text('Câmera'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.gc.lilac,
+                    foregroundColor: context.gc.darkBackground,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isTestingPalm
+                      ? null
+                      : () => _testPalmistry(ImageSource.gallery),
+                  icon: const Icon(Icons.photo_library, size: 18),
+                  label: const Text('Galeria'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_isTestingPalm)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: CircularProgressIndicator(color: context.gc.lilac),
+              ),
+            ),
+          if (r != null && !_isTestingPalm) ...[
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(ok ? Icons.check_circle : Icons.cancel,
+                          color: ok ? context.gc.success : context.gc.alert),
+                      const SizedBox(width: 8),
+                      Text(
+                        ok ? 'Sucesso' : 'Falhou',
+                        style: TextStyle(
+                          color: ok ? context.gc.success : context.gc.alert,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDiagnosticRow('Modelo', '${r['model']}', true),
+                  _buildDiagnosticRow(
+                    'Status HTTP',
+                    '${r['statusCode'] ?? 'sem resposta'}',
+                    ok,
+                  ),
+                  _buildDiagnosticRow('Tempo', '${r['elapsedMs']} ms', true),
+                  _buildDiagnosticRow(
+                    'Imagem enviada',
+                    '${((r['imageBytes'] as int) / 1024).toStringAsFixed(0)} KB',
+                    true,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    ok ? 'Resposta:' : 'Erro (corpo cru):',
+                    style: TextStyle(
+                      color: context.gc.lilac,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(maxHeight: 320),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.gc.softWhite.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: SingleChildScrollView(
+                      child: SelectableText(
+                        '${r['body']}',
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: context.gc.softWhite,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(
+                          text: 'Quiromancia debug\n'
+                              'model: ${r['model']}\n'
+                              'status: ${r['statusCode']}\n'
+                              'elapsedMs: ${r['elapsedMs']}\n'
+                              'imageBytes: ${r['imageBytes']}\n\n'
+                              '${r['body']}'));
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Diagnóstico copiado!'),
+                            backgroundColor: context.gc.success,
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.copy, size: 18),
+                    label: const Text('Copiar diagnóstico'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.gc.lilac,
+                      foregroundColor: context.gc.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
