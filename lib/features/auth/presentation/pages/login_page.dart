@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
@@ -100,19 +101,98 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// Diagnóstico de configuração acessível SEM login (toque longo no
+  /// cadeado). Mostra se as credenciais foram embutidas no build atual —
+  /// a URL do Supabase e o comprimento da anon key (ambos são valores de
+  /// cliente, públicos por design; a anon key nunca é exibida na íntegra).
+  Future<void> _showConfigDiagnostic() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+
+    final url = SupabaseConfig.url;
+    final anonLen = SupabaseConfig.anonKey.length;
+
+    Widget row(String label, String value, bool ok) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(ok ? Icons.check_circle : Icons.cancel,
+                  size: 16,
+                  color: ok ? context.gc.success : context.gc.alert),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 120,
+                child: Text(label,
+                    style: TextStyle(
+                        color: context.gc.textSecondary, fontSize: 12)),
+              ),
+              Expanded(
+                child: SelectableText(value,
+                    style: TextStyle(
+                        color: context.gc.textPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        );
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.gc.surface,
+        title: Text('Diagnóstico de configuração',
+            style: TextStyle(color: dialogContext.gc.lilac, fontSize: 16)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              row('App', 'v${info.version}+${info.buildNumber}', true),
+              row('Modo', kReleaseMode ? 'release' : 'debug', true),
+              const Divider(),
+              row('Supabase pronto', SupabaseConfig.isConfigured ? 'SIM' : 'NAO',
+                  SupabaseConfig.isConfigured),
+              row('SUPABASE_URL', url.isEmpty ? '(vazio)' : url,
+                  url.isNotEmpty),
+              row('ANON_KEY', anonLen == 0 ? '(vazio)' : '$anonLen chars',
+                  anonLen > 0),
+              const Divider(),
+              row('Admin habilitado', AdminConfig.isEnabled ? 'SIM' : 'NAO',
+                  AdminConfig.isEnabled),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('Fechar',
+                style: TextStyle(color: dialogContext.gc.lilac)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.gc.lilac.withValues(alpha: 0.2),
-          ),
-          child: Icon(
-            Icons.lock_outline,
-            size: 40,
-            color: context.gc.lilac,
+        // Toque longo no cadeado abre o diagnóstico de configuração (sem
+        // precisar logar): revela se as credenciais foram embutidas no build.
+        GestureDetector(
+          onLongPress: _showConfigDiagnostic,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: context.gc.lilac.withValues(alpha: 0.2),
+            ),
+            child: Icon(
+              Icons.lock_outline,
+              size: 40,
+              color: context.gc.lilac,
+            ),
           ),
         ),
         const SizedBox(height: 24),
