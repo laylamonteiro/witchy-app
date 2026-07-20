@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -115,6 +116,37 @@ class _SpreadTabState extends State<_SpreadTab> {
   String? _aiReading;
   bool _isReadingAI = false;
 
+  late final String _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _userId = context.read<AuthProvider>().currentUser.id;
+  }
+
+  /// Assinatura única das cartas tiradas (tipo de tiragem + cartas + invertida).
+  /// Serve para reconhecer a MESMA tiragem — inclusive a carta do dia, que é
+  /// determinística — e não deixar regerar a interpretação.
+  String _signature(TarotSpread spread, List<TarotDrawnCard> drawn) {
+    return '${spread.name}|'
+        '${drawn.map((d) => '${d.card.name}:${d.isReversed ? 'R' : 'U'}').join('|')}';
+  }
+
+  /// Interpretação salva para exatamente esta assinatura (ou null).
+  Future<String?> _savedReadingFor(String signature) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('tarot_sig_$_userId') == signature) {
+      return prefs.getString('tarot_ai_$_userId');
+    }
+    return null;
+  }
+
+  Future<void> _persistReading(String signature, String reading) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('tarot_sig_$_userId', signature);
+    await prefs.setString('tarot_ai_$_userId', reading);
+  }
+
   /// Carta do dia: determinística pela data (mesma carta o dia todo).
   TarotDrawnCard _dailyCard() {
     final now = DateTime.now();
@@ -178,9 +210,17 @@ class _SpreadTabState extends State<_SpreadTab> {
       _aiReading = null;
     });
 
+    // Se estas MESMAS cartas já têm uma interpretação salva, restaura — assim
+    // o usuário não fica regerando a resposta (ex.: a carta do dia).
+    final saved = await _savedReadingFor(_signature(spread, drawn));
+
     // Pequena pausa de "embaralhamento" antes de revelar.
     await Future.delayed(const Duration(milliseconds: 700));
-    if (mounted) setState(() => _revealed = true);
+    if (!mounted) return;
+    setState(() {
+      _revealed = true;
+      if (saved != null) _aiReading = saved;
+    });
   }
 
   Future<void> _askCounselor() async {
@@ -212,6 +252,8 @@ class _SpreadTabState extends State<_SpreadTab> {
           .interpretTarotSpread(summary: summary.toString());
       if (!mounted) return;
       setState(() => _aiReading = reading);
+      // Guarda a interpretação atrelada a estas cartas para não regerar.
+      await _persistReading(_signature(_activeSpread!, _drawn), reading);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -392,26 +434,39 @@ class _SpreadTabState extends State<_SpreadTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: _isReadingAI ? null : _askCounselor,
-                      icon: _isReadingAI
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: context.gc.onPrimary,
-                              ),
-                            )
-                          : const Icon(Icons.auto_awesome, size: 18),
-                      label: Text(
-                        _isReadingAI
-                            ? AppLocalizations.of(context)!.tarotConsultingCards
-                            : AppLocalizations.of(context)!.tarotAdvisorInterpretation,
+                    if (_aiReading == null)
+                      // Sem interpretação para estas cartas: mostra o botão.
+                      ElevatedButton.icon(
+                        onPressed: _isReadingAI ? null : _askCounselor,
+                        icon: _isReadingAI
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.gc.onPrimary,
+                                ),
+                              )
+                            : const Icon(Icons.auto_awesome, size: 18),
+                        label: Text(
+                          _isReadingAI
+                              ? AppLocalizations.of(context)!.tarotConsultingCards
+                              : AppLocalizations.of(context)!
+                                  .tarotAdvisorInterpretation,
+                        ),
+                      )
+                    else ...[
+                      // Já interpretado: mostra só o texto. O botão volta apenas
+                      // em uma nova tiragem (cartas diferentes).
+                      Text(
+                        AppLocalizations.of(context)!.tarotAdvisorInterpretation,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: context.gc.lilac,
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
-                    ),
-                    if (_aiReading != null) ...[
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       Text(
                         _aiReading!,
                         style: Theme.of(context)
