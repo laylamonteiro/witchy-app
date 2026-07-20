@@ -2351,6 +2351,48 @@ abstract class AppLocalizations {
   /// **'Temas Oníricos'**
   String get diaryDreamThemes;
 
+  /// No description provided for @toolDreamsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Interpretar Sonho'**
+  String get toolDreamsTitle;
+
+  /// No description provided for @toolDreamsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desvende as mensagens dos seus sonhos e explore significados'**
+  String get toolDreamsDesc;
+
+  /// No description provided for @dreamToolsIntro.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os sonhos falam em símbolos. Interprete o seu com o Conselheiro Místico ou explore os significados dos temas mais comuns.'**
+  String get dreamToolsIntro;
+
+  /// No description provided for @dreamInterpretMyDream.
+  ///
+  /// In pt, this message translates to:
+  /// **'Interpretar meu Sonho'**
+  String get dreamInterpretMyDream;
+
+  /// No description provided for @dreamInterpretMyDreamDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conte seu sonho e receba uma leitura do Conselheiro Místico'**
+  String get dreamInterpretMyDreamDesc;
+
+  /// No description provided for @dreamMeaningsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Significados dos Sonhos'**
+  String get dreamMeaningsTitle;
+
+  /// No description provided for @dreamMeaningsDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Água, queda, voo, dentes e outros temas oníricos — e suas possíveis leituras'**
+  String get dreamMeaningsDesc;
+
   /// No description provided for @diaryLoadingGratitudes.
   ///
   /// In pt, this message translates to:
@@ -4049,6 +4091,24 @@ abstract class AppLocalizations {
   /// **'Que assim seja ✨'**
   String get learnSoBeIt;
 
+  /// No description provided for @learnPracticeGoal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Objetivo'**
+  String get learnPracticeGoal;
+
+  /// No description provided for @learnPracticeHow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como fazer'**
+  String get learnPracticeHow;
+
+  /// No description provided for @learnPracticeThen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Depois da prática'**
+  String get learnPracticeThen;
+
   /// No description provided for @learnStepTeaching.
   ///
   /// In pt, this message translates to:
@@ -4708,6 +4768,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Biblioteca de Cartas'**
   String get tarotLibraryTitle;
+
+  /// No description provided for @tarotTutorTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tutor de Tarot'**
+  String get tarotTutorTitle;
 
   /// No description provided for @tarotLibraryDesc.
   ///

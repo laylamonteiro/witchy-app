@@ -208,6 +208,11 @@ class DataSyncService {
     SharedPreferences prefs, {
     required bool isPremium,
   }) {
+    // Sincronização é recurso exclusivo Premium: para Free o valor efetivo
+    // é sempre desligado, mesmo que exista preferência antiga gravada
+    // (ex.: assinatura que expirou com o toggle ligado).
+    if (!isPremium) return false;
+
     final configured = prefs.getBool(cloudSyncPreferenceKey);
     final userConfigured = prefs.getBool(cloudSyncUserConfiguredKey) ?? false;
     final hasLegacyPreference = prefs.containsKey('privacy_sync') ||
@@ -216,15 +221,11 @@ class DataSyncService {
     // Versões anteriores chegaram a persistir `false` automaticamente para
     // usuários Free. Ao se tornarem Premium, esse valor não representa uma
     // escolha do usuário e deve assumir o default Premium ligado.
-    if (isPremium &&
-        configured == false &&
-        !userConfigured &&
-        !hasLegacyPreference) {
+    if (configured == false && !userConfigured && !hasLegacyPreference) {
       return true;
     }
     if (configured != null) return configured;
 
-    if (!isPremium) return false;
     return (prefs.getBool('privacy_sync') ?? true) &&
         (prefs.getBool('privacy_backup') ?? true);
   }
@@ -234,7 +235,9 @@ class DataSyncService {
     required bool isPremium,
   }) async {
     final enabled = resolveCloudSyncPreference(prefs, isPremium: isPremium);
-    if (prefs.getBool(cloudSyncPreferenceKey) != enabled) {
+    // O "desligado" forçado do Free não é persistido: se a assinatura
+    // voltar, a escolha feita enquanto Premium volta a valer.
+    if (isPremium && prefs.getBool(cloudSyncPreferenceKey) != enabled) {
       await prefs.setBool(cloudSyncPreferenceKey, enabled);
     }
     return enabled;

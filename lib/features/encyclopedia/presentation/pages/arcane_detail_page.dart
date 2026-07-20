@@ -17,24 +17,8 @@ class ArcaneDetailPage extends StatelessWidget {
     required this.categoryTitle,
   });
 
-  /// Caminho da imagem do verbete:
-  /// assets/images/<categoria>/<slug>.webp
-  String get imageAsset {
-    const folders = {
-      'Arquétipos': 'arquetipos',
-      'Anjos': 'anjos',
-      'Demônios': 'demonios',
-      'Símbolos Sagrados': 'simbolos',
-    };
-    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
-    const plain = 'aaaaaeeeeiiiiooooouuuucn';
-    var slug = entry.name.trim().toLowerCase();
-    for (var i = 0; i < accents.length; i++) {
-      slug = slug.replaceAll(accents[i], plain[i]);
-    }
-    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-    return 'assets/images/${folders[categoryTitle] ?? 'outros'}/$slug.webp';
-  }
+  /// Caminho da imagem do verbete (helper compartilhado com a lista).
+  String get imageAsset => arcaneImageAsset(categoryTitle, entry.name);
 
   String get displayTitle {
     if (categoryTitle == 'Arquétipos') {
@@ -82,6 +66,14 @@ class ArcaneDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
+                Center(
+                  child: Text(
+                    displayTitle,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Text(
                   entry.summary,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -205,10 +197,7 @@ class ArcaneDetailPage extends StatelessWidget {
         feature: AppFeature.encyclopediaArcaneDetails,
         title: Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: context.gc.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         subtitle: subtitle,
         content: Padding(
@@ -280,10 +269,7 @@ class ArcaneDetailPage extends StatelessWidget {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: context.gc.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 10),
           child,

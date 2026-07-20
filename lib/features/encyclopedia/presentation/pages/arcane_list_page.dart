@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/arcane_entry_model.dart';
 import 'arcane_detail_page.dart';
+import '../widgets/entry_pager.dart';
 
 /// Lista genérica para as categorias arcanas (Arquétipos, Anjos,
 /// Demônios, Símbolos Sagrados) — busca + cards no padrão da Enciclopédia.
@@ -29,7 +31,8 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
 
   List<ArcaneEntry> _sorted(List<ArcaneEntry> list) {
     final copy = List<ArcaneEntry>.from(list)
-      ..sort((a, b) => a.name.toUpperCase().compareTo(b.name.toUpperCase()));
+      ..sort((a, b) => removeAccents(a.name.toUpperCase())
+          .compareTo(removeAccents(b.name.toUpperCase())));
     return copy;
   }
 
@@ -59,30 +62,15 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
     return entry.name;
   }
 
-  String _imageAssetForEntry(ArcaneEntry entry) {
-    const folders = {
-      'Arquétipos': 'arquetipos',
-      'Anjos': 'anjos',
-      'Demônios': 'demonios',
-      'Símbolos Sagrados': 'simbolos',
-    };
-    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
-    const plain = 'aaaaaeeeeiiiiooooouuuucn';
-
-    var slug = entry.name.trim().toLowerCase();
-    for (var i = 0; i < accents.length; i++) {
-      slug = slug.replaceAll(accents[i], plain[i]);
-    }
-    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-    return 'assets/images/${folders[widget.categoryTitle] ?? 'outros'}/$slug.webp';
-  }
+  String _imageAssetForEntry(ArcaneEntry entry) =>
+      arcaneImageAsset(widget.categoryTitle, entry.name);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+          padding: const EdgeInsets.all(16),
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -108,7 +96,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Text(
             widget.intro,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -129,12 +117,18 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                   itemCount: _filtered.length,
                   itemBuilder: (context, index) {
                     final entry = _filtered[index];
+                    // Lista exibida no momento do toque, para o swipe lateral.
+                    final entries = List<ArcaneEntry>.from(_filtered);
                     return MagicalCard(
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => ArcaneDetailPage(
-                            entry: entry,
-                            categoryTitle: widget.categoryTitle,
+                          builder: (_) => EntryPager(
+                            itemCount: entries.length,
+                            initialIndex: index,
+                            itemBuilder: (_, i) => ArcaneDetailPage(
+                              entry: entries[i],
+                              categoryTitle: widget.categoryTitle,
+                            ),
                           ),
                         ),
                       ),
@@ -176,7 +170,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                     color: context.gc.lilac,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 4),
                                 Text(
                                   entry.summary,
                                   maxLines: 2,

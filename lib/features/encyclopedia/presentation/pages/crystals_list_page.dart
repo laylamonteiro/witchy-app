@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
 import '../../data/models/crystal_model.dart';
+import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../widgets/entry_pager.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'crystal_detail_page.dart';
 
@@ -24,23 +26,11 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
     super.dispose();
   }
 
-  // Remove acentos para ordenação alfabética correta
-  String _removeAccents(String str) {
-    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
-    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
-
-    String result = str;
-    for (int i = 0; i < withAccents.length; i++) {
-      result = result.replaceAll(withAccents[i], withoutAccents[i]);
-    }
-    return result;
-  }
-
   // Ordena lista de cristais alfabeticamente
   List<CrystalModel> _sortCrystals(List<CrystalModel> crystals) {
     final sorted = List<CrystalModel>.from(crystals);
     sorted.sort((a, b) =>
-      _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+      removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
     );
     return sorted;
   }
@@ -81,6 +71,15 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
             },
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text(
+            'Aliados minerais da prática — com propriedades, limpeza e recarga de cada cristal.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                ),
+          ),
+        ),
         Expanded(
           child: Consumer<EncyclopediaProvider>(
             builder: (context, provider, _) {
@@ -100,7 +99,12 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => CrystalDetailPage(crystal: crystal),
+                          builder: (_) => EntryPager(
+                            itemCount: crystals.length,
+                            initialIndex: index,
+                            itemBuilder: (_, i) =>
+                                CrystalDetailPage(crystal: crystals[i]),
+                          ),
                         ),
                       );
                     },

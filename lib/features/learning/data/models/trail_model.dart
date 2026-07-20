@@ -65,6 +65,22 @@ extension LessonRecordKindX on LessonRecordKind {
       };
 }
 
+/// Ferramenta exata aberta pelo atalho da Prática de uma lição.
+///
+/// Permite que a lição leve direto à funcionalidade necessária (ex.: a
+/// primeira lição de Tarot abre a Biblioteca de Cartas, as de fixação
+/// abrem o Tutor). Quando a lição não define, o destino padrão vem do
+/// [LessonRecordKind].
+enum LessonTool {
+  sigils,
+  runes,
+  oracle,
+  pendulum,
+  tarot,
+  tarotLibrary,
+  tarotTutor,
+}
+
 /// Trilha de aprendizado do Grimório Vivo.
 ///
 /// Conceito: aprender FAZENDO o próprio grimório — cada lição termina com a
@@ -112,6 +128,10 @@ class TrailLesson {
   /// Onde esta página é registrada (feitiço, registro, diário, ferramenta).
   final LessonRecordKind recordKind;
 
+  /// Ferramenta específica que o atalho da Prática abre. Nulo = destino
+  /// padrão derivado do [recordKind].
+  final LessonTool? tool;
+
   const TrailLesson({
     required this.id,
     required this.title,
@@ -124,5 +144,18 @@ class TrailLesson {
     this.pageIngredients = const [],
     required this.pagePrompts,
     this.recordKind = LessonRecordKind.spell,
+    this.tool,
   });
+
+  /// Ferramenta que a Prática desta lição abre, quando houver.
+  LessonTool? get toolTarget =>
+      tool ??
+      switch (recordKind) {
+        LessonRecordKind.sigil => LessonTool.sigils,
+        LessonRecordKind.rune => LessonTool.runes,
+        LessonRecordKind.oracle => LessonTool.oracle,
+        LessonRecordKind.pendulum => LessonTool.pendulum,
+        LessonRecordKind.tarot => LessonTool.tarot,
+        _ => null,
+      };
 }

@@ -1203,6 +1203,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryDreamThemes => 'Dream Themes';
 
   @override
+  String get toolDreamsTitle => 'Dream Interpretation';
+
+  @override
+  String get toolDreamsDesc =>
+      'Unveil the messages of your dreams and explore meanings';
+
+  @override
+  String get dreamToolsIntro =>
+      'Dreams speak in symbols. Interpret yours with the Mystic Advisor or explore the meanings of the most common themes.';
+
+  @override
+  String get dreamInterpretMyDream => 'Interpret my Dream';
+
+  @override
+  String get dreamInterpretMyDreamDesc =>
+      'Tell your dream and receive a reading from the Mystic Advisor';
+
+  @override
+  String get dreamMeaningsTitle => 'Dream Meanings';
+
+  @override
+  String get dreamMeaningsDesc =>
+      'Water, falling, flying, teeth and other dream themes — and their possible readings';
+
+  @override
   String get diaryLoadingGratitudes => 'Loading gratitudes...';
 
   @override
@@ -2144,6 +2169,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get learnSoBeIt => 'So be it ✨';
 
   @override
+  String get learnPracticeGoal => 'Goal';
+
+  @override
+  String get learnPracticeHow => 'How to do it';
+
+  @override
+  String get learnPracticeThen => 'After the practice';
+
+  @override
   String get learnStepTeaching => '📜 Teaching';
 
   @override
@@ -2507,6 +2541,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tarotLibraryTitle => 'Card Library';
+
+  @override
+  String get tarotTutorTitle => 'Tarot Tutor';
 
   @override
   String get tarotLibraryDesc =>

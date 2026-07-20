@@ -24,6 +24,8 @@ import '../../../grimoire/presentation/pages/spell_detail_page.dart';
 import '../../../grimoire/presentation/providers/spell_provider.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
+import '../../../tarot/presentation/pages/tarot_learn_tab.dart';
+import '../../../tarot/presentation/pages/tarot_library_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../data/models/trail_model.dart';
 import '../providers/learning_provider.dart';
@@ -101,29 +103,41 @@ class _LessonPageState extends State<LessonPage> {
       };
 
   /// Nome e página da ferramenta usada na lição (quando houver).
+  ///
+  /// O destino vem de [TrailLesson.toolTarget]: a lição pode apontar para
+  /// a funcionalidade exata de que a prática precisa (ex.: Biblioteca de
+  /// Cartas, Tutor de Tarot) em vez da página genérica da ferramenta.
   (String, WidgetBuilder)? _toolFor(AppLocalizations l10n) =>
-      switch (widget.lesson.recordKind) {
-        LessonRecordKind.sigil => (
+      switch (widget.lesson.toolTarget) {
+        LessonTool.sigils => (
             l10n.toolSigilsTitle,
             (_) => const SigilStep1IntentionPage()
           ),
-        LessonRecordKind.rune => (
+        LessonTool.runes => (
             l10n.toolRunesTitle,
             (_) => const RuneReadingPage()
           ),
-        LessonRecordKind.oracle => (
+        LessonTool.oracle => (
             l10n.toolOracleTitle,
             (_) => const OracleCardsPage()
           ),
-        LessonRecordKind.pendulum => (
+        LessonTool.pendulum => (
             l10n.toolPendulumTitle,
             (_) => const PendulumPage()
           ),
-        LessonRecordKind.tarot => (
+        LessonTool.tarot => (
             l10n.toolTarotTitle,
             (_) => const TarotPage()
           ),
-        _ => null,
+        LessonTool.tarotLibrary => (
+            l10n.tarotLibraryTitle,
+            (_) => const TarotLibraryPage()
+          ),
+        LessonTool.tarotTutor => (
+            l10n.tarotTutorTitle,
+            (_) => const TarotQuizPage()
+          ),
+        null => null,
       };
 
   /// Salva a página no destino certo e devolve o builder da tela do registro.
@@ -492,42 +506,46 @@ class _LessonPageState extends State<LessonPage> {
           for (var i = 0; i < paragraphs.length; i++)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color.lerp(
-                    context.gc.surface, accents[i % accents.length], 0.07),
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                border: Border(
-                  left: BorderSide(
-                    color: accents[i % accents.length],
-                    width: 3,
-                  ),
-                  top: BorderSide(color: context.gc.surfaceBorder),
-                  right: BorderSide(color: context.gc.surfaceBorder),
-                  bottom: BorderSide(color: context.gc.surfaceBorder),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${sectionEmojis[i % sectionEmojis.length]} '
-                    '${sectionTitles[i % sectionTitles.length]}',
-                    style: TextStyle(
-                      color: accents[i % accents.length],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Color.lerp(
+                        context.gc.surface, accents[i % accents.length], 0.07),
+                    border: Border(
+                      left: BorderSide(
+                        color: accents[i % accents.length],
+                        width: 3,
+                      ),
+                      top: BorderSide(color: context.gc.surfaceBorder),
+                      right: BorderSide(color: context.gc.surfaceBorder),
+                      bottom: BorderSide(color: context.gc.surfaceBorder),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    paragraphs[i],
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.6, fontSize: 15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${sectionEmojis[i % sectionEmojis.length]} '
+                        '${sectionTitles[i % sectionTitles.length]}',
+                        style: TextStyle(
+                          color: accents[i % accents.length],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        paragraphs[i],
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(height: 1.6, fontSize: 15),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           const SizedBox(height: 8),
@@ -545,6 +563,49 @@ class _LessonPageState extends State<LessonPage> {
     );
   }
 
+  /// Seção destacada do passo Prática, no mesmo padrão visual das seções
+  /// do Ensino (borda lateral colorida + título com emoji).
+  Widget _practiceSection(
+    BuildContext context, {
+    required Color accent,
+    required String title,
+    required Widget child,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Color.lerp(context.gc.surface, accent, 0.07),
+            border: Border(
+              left: BorderSide(color: accent, width: 3),
+              top: BorderSide(color: context.gc.surfaceBorder),
+              right: BorderSide(color: context.gc.surfaceBorder),
+              bottom: BorderSide(color: context.gc.surfaceBorder),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: accent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 8),
+              child,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPractice(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final tool = _toolFor(l10n);
@@ -555,17 +616,33 @@ class _LessonPageState extends State<LessonPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MagicalCard(
+          // 🎯 Objetivo: o que esta prática quer alcançar.
+          _practiceSection(
+            context,
+            accent: context.gc.lilac,
+            title: '🎯 ${l10n.learnPracticeGoal}',
+            child: Text(
+              widget.lesson.pagePurpose,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(height: 1.5, fontSize: 15),
+            ),
+          ),
+          // 🕯️ Como fazer: a prática em si (+ atalho da ferramenta).
+          _practiceSection(
+            context,
+            accent: context.gc.mint,
+            title: '🕯️ ${l10n.learnPracticeHow}',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   widget.lesson.practice,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.6,
-                        fontSize: 15,
-                        fontStyle: FontStyle.italic,
-                      ),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(height: 1.6, fontSize: 15),
                 ),
                 if (tool != null) ...[
                   const SizedBox(height: 14),
@@ -601,23 +678,60 @@ class _LessonPageState extends State<LessonPage> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
-                CheckboxListTile(
-                  value: _practiceDone,
-                  onChanged: (v) =>
-                      setState(() => _practiceDone = v ?? false),
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: context.gc.lilac,
-                  title: Text(
-                    AppLocalizations.of(context)!.learnDidPractice,
-                    style: TextStyle(
-                      color: context.gc.textPrimary,
-                      fontSize: 14,
+              ],
+            ),
+          ),
+          // ✍️ Depois: a página que a lição cria e onde ela fica guardada.
+          _practiceSection(
+            context,
+            accent: context.gc.pink,
+            title: '✍️ ${l10n.learnPracticeThen}',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.learnCreatesPage(widget.lesson.pageTitle),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(height: 1.5),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.bookmark_border,
+                        size: 15, color: context.gc.mint),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.learnSavesTo(_placeName(l10n)),
+                        style: TextStyle(
+                          color: context.gc.mint,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                  controlAffinity: ListTileControlAffinity.leading,
+                  ],
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: CheckboxListTile(
+              value: _practiceDone,
+              onChanged: (v) => setState(() => _practiceDone = v ?? false),
+              contentPadding: EdgeInsets.zero,
+              activeColor: context.gc.lilac,
+              title: Text(
+                l10n.learnDidPractice,
+                style: TextStyle(
+                  color: context.gc.textPrimary,
+                  fontSize: 14,
+                ),
+              ),
+              controlAffinity: ListTileControlAffinity.leading,
             ),
           ),
           Padding(
@@ -626,7 +740,7 @@ class _LessonPageState extends State<LessonPage> {
               onPressed:
                   _practiceDone ? () => setState(() => _step = 2) : null,
               icon: const Icon(Icons.edit, size: 18),
-              label: Text(AppLocalizations.of(context)!.learnWriteMyPage),
+              label: Text(l10n.learnWriteMyPage),
             ),
           ),
           const SizedBox(height: 24),

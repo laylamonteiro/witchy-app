@@ -55,7 +55,7 @@ class ColorDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Intenções',
+                    'Propriedades Mágicas',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -79,7 +79,7 @@ class ColorDetailPage extends StatelessWidget {
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaColorsDetails,
                 title: Text(
-                  'Como Usar na Magia',
+                  'Usos Mágicos',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 subtitle:

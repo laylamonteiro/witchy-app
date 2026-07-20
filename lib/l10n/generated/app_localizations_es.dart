@@ -1214,6 +1214,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diaryDreamThemes => 'Temas Oníricos';
 
   @override
+  String get toolDreamsTitle => 'Interpretar Sueño';
+
+  @override
+  String get toolDreamsDesc =>
+      'Desvela los mensajes de tus sueños y explora significados';
+
+  @override
+  String get dreamToolsIntro =>
+      'Los sueños hablan en símbolos. Interpreta el tuyo con el Consejero Místico o explora los significados de los temas más comunes.';
+
+  @override
+  String get dreamInterpretMyDream => 'Interpretar mi Sueño';
+
+  @override
+  String get dreamInterpretMyDreamDesc =>
+      'Cuenta tu sueño y recibe una lectura del Consejero Místico';
+
+  @override
+  String get dreamMeaningsTitle => 'Significados de los Sueños';
+
+  @override
+  String get dreamMeaningsDesc =>
+      'Agua, caída, vuelo, dientes y otros temas oníricos — y sus posibles lecturas';
+
+  @override
   String get diaryLoadingGratitudes => 'Cargando gratitudes...';
 
   @override
@@ -2157,6 +2182,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get learnSoBeIt => 'Que así sea ✨';
 
   @override
+  String get learnPracticeGoal => 'Objetivo';
+
+  @override
+  String get learnPracticeHow => 'Cómo hacerlo';
+
+  @override
+  String get learnPracticeThen => 'Después de la práctica';
+
+  @override
   String get learnStepTeaching => '📜 Enseñanza';
 
   @override
@@ -2520,6 +2554,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tarotLibraryTitle => 'Biblioteca de Cartas';
+
+  @override
+  String get tarotTutorTitle => 'Tutor de Tarot';
 
   @override
   String get tarotLibraryDesc =>

@@ -260,17 +260,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           subtitle: isPremium
                               ? AppLocalizations.of(context)!.editSyncBackupOn
                               : AppLocalizations.of(context)!.editSyncPremiumOnly,
-                          value: _cloudSyncEnabled,
+                          value: isPremium && _cloudSyncEnabled,
                           onChanged: (value) {
-                            if (!isPremium && value) {
+                            // Free não altera o toggle: qualquer toque abre
+                            // o convite Premium.
+                            if (!isPremium) {
                               _showUpgradeDialog();
-                            } else {
-                              setState(() => _cloudSyncEnabled = value);
-                              _saveSetting(
-                                DataSyncService.cloudSyncPreferenceKey,
-                                value,
-                              );
+                              return;
                             }
+                            setState(() => _cloudSyncEnabled = value);
+                            _saveSetting(
+                              DataSyncService.cloudSyncPreferenceKey,
+                              value,
+                            );
                           },
                         ),
                       ]);

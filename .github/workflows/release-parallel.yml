@@ -483,14 +483,24 @@ jobs:
 
 
       - name: 📱 Build APK
+        # Secrets entram via env e expandem entre aspas: valores com
+        # caracteres especiais de shell (;, &, $, quebras de linha) nao
+        # quebram o script nem vazam no log.
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+          REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: |
           flutter build apk --release \
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-            --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
-            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
-            --dart-define=ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }} \
-            --dart-define=ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
+            --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
+            --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD"
 
 
 
@@ -772,15 +782,29 @@ jobs:
  
 
       - name: 📦 Build AAB
+        # Secrets entram via env e expandem entre aspas: valores com
+        # caracteres especiais de shell (;, &, $, quebras de linha) nao
+        # quebram o script nem vazam no log.
         run: |
           flutter build appbundle --release \
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-            --dart-define=REVENUECAT_ANDROID_KEY=${{ secrets.REVENUECAT_ANDROID_KEY }} \
-            --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
-            --dart-define=ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }} \
-            --dart-define=ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
+            --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
+            --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD"
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+          REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+
+          REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
+
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
 
           ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
 

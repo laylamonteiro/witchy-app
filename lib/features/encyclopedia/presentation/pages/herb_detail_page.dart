@@ -276,7 +276,7 @@ class HerbDetailPage extends StatelessWidget {
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaHerbsDetails,
                 title: Text(
-                  'Usos Rituais',
+                  'Usos Mágicos',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 subtitle:

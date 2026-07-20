@@ -193,7 +193,7 @@ class MetalDetailPage extends StatelessWidget {
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaMetalsDetails,
                 title: Text(
-                  'Usos Rituais',
+                  'Usos Mágicos',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 subtitle:
@@ -276,7 +276,7 @@ class MetalDetailPage extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Tradição e História',
+                          'Contexto Histórico',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ],
