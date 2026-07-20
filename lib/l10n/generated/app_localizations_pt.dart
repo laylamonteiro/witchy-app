@@ -1494,6 +1494,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  @override
+  String get palmRateLimit =>
+      'Muitas leituras em pouco tempo. Aguarde alguns instantes e envie a foto novamente.';
+
   String get palmImageTooLarge =>
       'A imagem ficou grande demais. Tente com menos zoom ou outra foto.';
 
@@ -4121,6 +4125,10 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   }
 
   @override
+  @override
+  String get palmRateLimit =>
+      'Muitas leituras em pouco tempo. Aguarde alguns instantes e envie a foto novamente.';
+
   String get palmImageTooLarge =>
       'A imagem ficou grande demais. Tente com menos zoom ou outra foto.';
 

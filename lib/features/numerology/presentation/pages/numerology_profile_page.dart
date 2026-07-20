@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -28,13 +29,60 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
   String? _aiText;
   bool _isExplaining = false;
 
+  // Dados (nome + nascimento) aos quais a explicação salva corresponde.
+  // Usados para só reabilitar o botão quando os dados forem alterados.
+  String? _explainedName;
+  DateTime? _explainedBirthDate;
+
+  late final String _userId;
+
   @override
   void initState() {
     super.initState();
-    // Pré-preenche com os dados do perfil quando existirem.
     final user = context.read<AuthProvider>().currentUser;
+    _userId = user.id;
+    // Pré-preenche com os dados do perfil quando existirem.
     _nameController.text = user.displayName ?? '';
     _birthDate = user.birthDate;
+    _loadSaved();
+  }
+
+  String get _prefsBase => 'num_profile_${_userId}_';
+
+  /// Restaura o último cálculo salvo (nome, data e a explicação do
+  /// Conselheiro Místico), para não refazer a leitura a cada visita.
+  Future<void> _loadSaved() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('${_prefsBase}name');
+    final dateMs = prefs.getInt('${_prefsBase}date');
+    final aiText = prefs.getString('${_prefsBase}ai');
+    if (name == null || name.isEmpty || dateMs == null || !mounted) return;
+
+    final date = DateTime.fromMillisecondsSinceEpoch(dateMs);
+    setState(() {
+      _nameController.text = name;
+      _birthDate = date;
+      _profile = NumerologyCalculator.profile(fullName: name, birthDate: date);
+      if (aiText != null && aiText.isNotEmpty) {
+        _aiText = aiText;
+        _explainedName = name;
+        _explainedBirthDate = date;
+      }
+    });
+  }
+
+  /// Persiste o último cálculo com a explicação para reabrir igual.
+  Future<void> _persist() async {
+    if (_aiText == null ||
+        _explainedName == null ||
+        _explainedBirthDate == null) {
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('${_prefsBase}name', _explainedName!);
+    await prefs.setInt(
+        '${_prefsBase}date', _explainedBirthDate!.millisecondsSinceEpoch);
+    await prefs.setString('${_prefsBase}ai', _aiText!);
   }
 
   @override
@@ -66,12 +114,21 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
       );
       return;
     }
+    // Mantém a explicação apenas se os dados forem exatamente os mesmos já
+    // explicados; qualquer alteração de nome/data reabilita o botão.
+    final sameAsExplained = _aiText != null &&
+        name == _explainedName &&
+        _birthDate == _explainedBirthDate;
     setState(() {
       _profile = NumerologyCalculator.profile(
         fullName: name,
         birthDate: _birthDate!,
       );
-      _aiText = null;
+      if (!sameAsExplained) {
+        _aiText = null;
+        _explainedName = null;
+        _explainedBirthDate = null;
+      }
     });
   }
 
@@ -110,7 +167,13 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
       final text = await AIService.instance.explainNumerology(summary: summary);
       await authProvider.incrementAiConsultations();
       if (!mounted) return;
-      setState(() => _aiText = text);
+      setState(() {
+        _aiText = text;
+        _explainedName = _nameController.text.trim();
+        _explainedBirthDate = _birthDate;
+      });
+      // Guarda o cálculo + explicação para reabrir sem refazer a leitura.
+      await _persist();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -213,32 +276,46 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.numSynthesisQuestion,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: context.gc.textSecondary,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: _isExplaining ? null : _explainWithAI,
-                      icon: _isExplaining
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: context.gc.onPrimary,
-                              ),
-                            )
-                          : const Icon(Icons.auto_awesome, size: 18),
-                      label: Text(_isExplaining
-                          ? AppLocalizations.of(context)!.numWeavingSynthesis
-                          : AppLocalizations.of(context)!.numAdvisorExplanation),
-                    ),
-                    if (_aiText != null) ...[
-                      const SizedBox(height: 16),
+                    if (_aiText == null) ...[
+                      // Ainda sem explicação para estes dados: mostra o botão.
+                      Text(
+                        AppLocalizations.of(context)!.numSynthesisQuestion,
+                        style:
+                            Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: context.gc.textSecondary,
+                                ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: _isExplaining ? null : _explainWithAI,
+                        icon: _isExplaining
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.gc.onPrimary,
+                                ),
+                              )
+                            : const Icon(Icons.auto_awesome, size: 18),
+                        label: Text(_isExplaining
+                            ? AppLocalizations.of(context)!.numWeavingSynthesis
+                            : AppLocalizations.of(context)!
+                                .numAdvisorExplanation),
+                      ),
+                    ] else ...[
+                      // Explicação já gerada e persistida: mostra só o texto.
+                      // O botão volta ao alterar nome ou data de nascimento.
+                      Text(
+                        AppLocalizations.of(context)!.numAdvisorExplanation,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: context.gc.lilac,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 12),
                       Text(
                         _aiText!,
                         style: Theme.of(context)

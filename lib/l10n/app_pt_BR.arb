@@ -477,6 +477,7 @@
   "tarotQuizFinish": "Concluir",
   "tarotQuizQuestion": "O que representa {card}?",
   "palmImageTooLarge": "A imagem ficou grande demais. Tente com menos zoom ou outra foto.",
+  "palmRateLimit": "Muitas leituras em pouco tempo. Aguarde alguns instantes e envie a foto novamente.",
   "palmImageTooSmall": "A imagem parece pequena ou escura demais para leitura. Fotografe a palma bem iluminada, preenchendo a tela.",
   "palmReadingHeader": "Leitura de Mãos",
   "palmSavedToReflections": "Leitura salva nas suas Reflexões! ✨",

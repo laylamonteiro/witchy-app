@@ -93,9 +93,12 @@ class _PalmistryPageState extends State<PalmistryPage> {
       setState(() => _reading = reading);
     } catch (e) {
       if (!mounted) return;
+      final message = e is AiRateLimitException
+          ? AppLocalizations.of(context)!.palmRateLimit
+          : '$e'.replaceAll('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$e'.replaceAll('Exception: ', '')),
+          content: Text(message),
           backgroundColor: context.gc.alert,
         ),
       );
