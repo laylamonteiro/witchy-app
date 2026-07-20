@@ -5,7 +5,6 @@ import '../../data/models/herb_model.dart';
 import '../providers/encyclopedia_provider.dart';
 import 'herb_detail_page.dart';
 import '../../../../core/widgets/magical_card.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 
 class HerbsListPage extends StatefulWidget {
@@ -16,7 +15,14 @@ class HerbsListPage extends StatefulWidget {
 }
 
 class _HerbsListPageState extends State<HerbsListPage> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   // Remove acentos para ordenação alfabética correta
   String _removeAccents(String str) {
@@ -54,9 +60,27 @@ class _HerbsListPageState extends State<HerbsListPage> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: TextField(
-            decoration: const InputDecoration(
+            controller: _searchController,
+            decoration: InputDecoration(
               hintText: 'Buscar ervas...',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(Icons.search, color: context.gc.lilac),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {
+                          _searchQuery = '';
+                        });
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: context.gc.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
             onChanged: (value) {
               setState(() {
@@ -94,7 +118,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    color: context.gc.mint.withOpacity(0.2),
+                                    color: context.gc.mint.withAlpha((0.2 * 255).round()),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Center(
@@ -110,7 +134,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
                               width: 60,
                               height: 60,
                               decoration: BoxDecoration(
-                                color: context.gc.mint.withOpacity(0.2),
+                                color: context.gc.mint.withAlpha((0.2 * 255).round()),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(

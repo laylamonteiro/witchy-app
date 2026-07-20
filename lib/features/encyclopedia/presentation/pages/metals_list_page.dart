@@ -6,7 +6,6 @@ import '../../data/models/metal_model.dart';
 import '../../data/models/crystal_model.dart'; // Para ElementExtension
 import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'metal_detail_page.dart';
 
@@ -18,7 +17,14 @@ class MetalsListPage extends StatefulWidget {
 }
 
 class _MetalsListPageState extends State<MetalsListPage> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   // Remove acentos para ordenação alfabética correta
   String _removeAccents(String str) {
@@ -48,9 +54,27 @@ class _MetalsListPageState extends State<MetalsListPage> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: TextField(
-            decoration: const InputDecoration(
+            controller: _searchController,
+            decoration: InputDecoration(
               hintText: 'Buscar metais...',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(Icons.search, color: context.gc.lilac),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {
+                          _searchQuery = '';
+                        });
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: context.gc.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
             onChanged: (value) {
               setState(() {
@@ -97,10 +121,10 @@ class _MetalsListPageState extends State<MetalsListPage> {
                                       width: 60,
                                       height: 60,
                                       decoration: BoxDecoration(
-                                        color: context.gc.starYellow.withOpacity(0.2),
+                                        color: context.gc.starYellow.withAlpha((0.2 * 255).round()),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: context.gc.starYellow.withOpacity(0.5),
+                                          color: context.gc.starYellow.withAlpha((0.5 * 255).round()),
                                           width: 2,
                                         ),
                                       ),
@@ -116,10 +140,10 @@ class _MetalsListPageState extends State<MetalsListPage> {
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    color: context.gc.starYellow.withOpacity(0.2),
+                                    color: context.gc.starYellow.withAlpha((0.2 * 255).round()),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: context.gc.starYellow.withOpacity(0.5),
+                                      color: context.gc.starYellow.withAlpha((0.5 * 255).round()),
                                       width: 2,
                                     ),
                                   ),

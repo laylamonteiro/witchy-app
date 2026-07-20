@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/arcane_entry_model.dart';
@@ -51,6 +52,13 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
     super.dispose();
   }
 
+  String _displayCardTitle(ArcaneEntry entry) {
+    if (widget.categoryTitle == 'Arquétipos') {
+      return entry.name.replaceFirst(RegExp(r'^A\s+', caseSensitive: false), '');
+    }
+    return entry.name;
+  }
+
   String _imageAssetForEntry(ArcaneEntry entry) {
     const folders = {
       'Arquétipos': 'arquetipos',
@@ -79,7 +87,22 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Buscar em ${widget.categoryTitle}...',
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: Icon(Icons.search, color: context.gc.lilac),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        _filter('');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: context.gc.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
             onChanged: _filter,
           ),
@@ -121,18 +144,18 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                             borderRadius: BorderRadius.circular(12),
                             child: Image.asset(
                               _imageAssetForEntry(entry),
-                              width: 48,
-                              height: 48,
+                              width: 60,
+                              height: 60,
                               fit: BoxFit.cover,
                               errorBuilder: (context, _, __) => Container(
-                                width: 48,
-                                height: 48,
+                                width: 60,
+                                height: 60,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: context.gc.lilac.withOpacity(0.12),
+                                  color: context.gc.lilac.withAlpha((0.12 * 255).round()),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: context.gc.lilac.withOpacity(0.3),
+                                    color: context.gc.lilac.withAlpha((0.3 * 255).round()),
                                   ),
                                 ),
                                 child: Text(entry.emoji,
@@ -140,20 +163,18 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  entry.name,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        color: context.gc.textPrimary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  _displayCardTitle(entry),
+                                  style: GoogleFonts.cinzelDecorative(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: context.gc.lilac,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
