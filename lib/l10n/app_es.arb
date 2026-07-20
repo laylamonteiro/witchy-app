@@ -479,6 +479,7 @@
   "palmImageTooLarge": "La imagen es demasiado grande. Prueba con menos zoom u otra foto.",
   "palmRateLimit": "Demasiadas lecturas en poco tiempo. Espera unos instantes y envía la foto de nuevo.",
   "palmDailyLimitReached": "Ya hiciste tus lecturas de manos de hoy. Vuelve mañana para más. ✨",
+  "palmRemainingToday": "Lecturas restantes hoy",
   "palmImageTooSmall": "La imagen parece demasiado pequeña u oscura para leerla. Fotografía la palma bien iluminada, llenando la pantalla.",
   "palmReadingHeader": "Lectura de Manos",
   "palmSavedToReflections": "¡Lectura guardada en tus Reflexiones! ✨",

@@ -151,11 +151,11 @@ class _PalmistryPageState extends State<PalmistryPage> {
       ),
       body: !access.hasFullAccess
           ? const SizedBox.shrink()
-          : _buildFlow(),
+          : _buildFlow(authProvider.remainingPalmistryReadings),
     );
   }
 
-  Widget _buildFlow() {
+  Widget _buildFlow(int remainingReadings) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
@@ -215,6 +215,19 @@ class _PalmistryPageState extends State<PalmistryPage> {
               ],
             ),
           ),
+          // Saldo de leituras do dia (oculto para admin/ilimitado).
+          if (remainingReadings >= 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+              child: Text(
+                '${AppLocalizations.of(context)!.palmRemainingToday}: '
+                '$remainingReadings',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.gc.textSecondary,
+                    ),
+              ),
+            ),
           if (_isAnalyzing)
             MagicalCard(
               child: Column(

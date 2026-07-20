@@ -28,21 +28,32 @@ class DreamThemesPage extends StatelessWidget {
                   ),
             ),
           ),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+          // Grade de 2 colunas com altura por conteúdo: cada par de cards
+          // usa IntrinsicHeight para igualar a altura sem cortar o texto
+          // (evita overflow e o "…" quando o título/subtítulo quebra linha).
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.35,
+            child: Column(
+              children: [
+                for (int i = 0; i < dreamThemes.length; i += 2) ...[
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: _DreamThemeCard(theme: dreamThemes[i])),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: i + 1 < dreamThemes.length
+                              ? _DreamThemeCard(theme: dreamThemes[i + 1])
+                              : const SizedBox(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
             ),
-            itemCount: dreamThemes.length,
-            itemBuilder: (context, index) {
-              final theme = dreamThemes[index];
-              return _DreamThemeCard(theme: theme);
-            },
           ),
           const SizedBox(height: 24),
         ],
@@ -90,8 +101,6 @@ class _DreamThemeCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 theme.summary,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: context.gc.textSecondary,
                     ),

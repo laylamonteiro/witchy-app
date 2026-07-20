@@ -1495,6 +1495,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   @override
+  String get palmRemainingToday => 'Leituras restantes hoje';
+
+  @override
   String get palmDailyLimitReached =>
       'Você já fez suas leituras de mãos de hoje. Volte amanhã para mais. ✨';
 
@@ -4129,6 +4132,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   }
 
   @override
+  @override
+  String get palmRemainingToday => 'Leituras restantes hoje';
+
   @override
   String get palmDailyLimitReached =>
       'Você já fez suas leituras de mãos de hoje. Volte amanhã para mais. ✨';
