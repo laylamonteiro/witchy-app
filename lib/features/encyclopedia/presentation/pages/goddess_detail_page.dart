@@ -20,7 +20,9 @@ class GoddessDetailPage extends StatelessWidget {
       ),
       backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // Sem padding horizontal: o MagicalCard já traz margem lateral de 16,
+        // igual às demais enciclopédias. Evita cards mais estreitos aqui.
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
