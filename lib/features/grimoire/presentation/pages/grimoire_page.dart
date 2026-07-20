@@ -14,6 +14,7 @@ import '../../../sigils/presentation/widgets/sigil_icon.dart';
 import '../../../numerology/presentation/pages/numerology_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
+import '../../../diary/presentation/pages/dream_tools_page.dart';
 import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
 import '../../../learning/presentation/pages/learning_home_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
@@ -227,6 +228,19 @@ class _ToolsTab extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const PalmistryPage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text('🌙', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolDreamsTitle,
+            description: AppLocalizations.of(context)!.toolDreamsDesc,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DreamToolsPage(),
                 ),
               );
             },

@@ -59,23 +59,8 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
     return entry.name;
   }
 
-  String _imageAssetForEntry(ArcaneEntry entry) {
-    const folders = {
-      'Arquétipos': 'arquetipos',
-      'Anjos': 'anjos',
-      'Demônios': 'demonios',
-      'Símbolos Sagrados': 'simbolos',
-    };
-    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
-    const plain = 'aaaaaeeeeiiiiooooouuuucn';
-
-    var slug = entry.name.trim().toLowerCase();
-    for (var i = 0; i < accents.length; i++) {
-      slug = slug.replaceAll(accents[i], plain[i]);
-    }
-    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-    return 'assets/images/${folders[widget.categoryTitle] ?? 'outros'}/$slug.webp';
-  }
+  String _imageAssetForEntry(ArcaneEntry entry) =>
+      arcaneImageAsset(widget.categoryTitle, entry.name);
 
   @override
   Widget build(BuildContext context) {

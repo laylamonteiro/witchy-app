@@ -17,24 +17,8 @@ class ArcaneDetailPage extends StatelessWidget {
     required this.categoryTitle,
   });
 
-  /// Caminho da imagem do verbete:
-  /// assets/images/<categoria>/<slug>.webp
-  String get imageAsset {
-    const folders = {
-      'Arquétipos': 'arquetipos',
-      'Anjos': 'anjos',
-      'Demônios': 'demonios',
-      'Símbolos Sagrados': 'simbolos',
-    };
-    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
-    const plain = 'aaaaaeeeeiiiiooooouuuucn';
-    var slug = entry.name.trim().toLowerCase();
-    for (var i = 0; i < accents.length; i++) {
-      slug = slug.replaceAll(accents[i], plain[i]);
-    }
-    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-    return 'assets/images/${folders[categoryTitle] ?? 'outros'}/$slug.webp';
-  }
+  /// Caminho da imagem do verbete (helper compartilhado com a lista).
+  String get imageAsset => arcaneImageAsset(categoryTitle, entry.name);
 
   String get displayTitle {
     if (categoryTitle == 'Arquétipos') {

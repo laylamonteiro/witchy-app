@@ -66,3 +66,23 @@ class ArcanePerspective {
 
   const ArcanePerspective({required this.tradition, required this.view});
 }
+
+/// Caminho da imagem de um verbete arcano:
+/// assets/images/<categoria>/<slug>.webp (slug = nome minúsculo sem acento).
+/// Usado pela lista e pelo detalhe — fallback visual é o emoji do verbete.
+String arcaneImageAsset(String categoryTitle, String name) {
+  const folders = {
+    'Arquétipos': 'arquetipos',
+    'Anjos': 'anjos',
+    'Demônios': 'demonios',
+    'Símbolos Sagrados': 'simbolos',
+  };
+  const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+  const plain = 'aaaaaeeeeiiiiooooouuuucn';
+  var slug = name.trim().toLowerCase();
+  for (var i = 0; i < accents.length; i++) {
+    slug = slug.replaceAll(accents[i], plain[i]);
+  }
+  slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+  return 'assets/images/${folders[categoryTitle] ?? 'outros'}/$slug.webp';
+}

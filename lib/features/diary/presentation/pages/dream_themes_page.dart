@@ -5,7 +5,8 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/data_sources/dream_themes_data.dart';
 
-/// Lista visual de temas e simbolismos oníricos (conteúdo gratuito).
+/// Biblioteca de significados dos sonhos: temas e simbolismos oníricos
+/// (conteúdo gratuito, acessível pelo hub de Sonhos nas Ferramentas).
 class DreamThemesPage extends StatelessWidget {
   const DreamThemesPage({super.key});
 
@@ -13,7 +14,7 @@ class DreamThemesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryDreamThemes),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.dreamMeaningsTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),

@@ -11,7 +11,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'dream_form_page.dart';
 import 'dream_interpretation_page.dart';
-import 'dream_themes_page.dart';
 
 class DreamsListPage extends StatefulWidget {
   const DreamsListPage({super.key});
@@ -142,7 +141,9 @@ class _DreamsListPageState extends State<DreamsListPage> {
     );
   }
 
-  /// Atalhos da seção de Interpretação de Sonhos: IA (Premium) e temas (Free).
+  /// Atalho para interpretar um sonho com o Conselheiro (Premium).
+  /// Os Significados dos Sonhos moraram aqui, mas agora vivem no hub de
+  /// Sonhos da aba Ferramentas.
   Widget _buildDreamToolsHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -156,19 +157,6 @@ class _DreamsListPageState extends State<DreamsListPage> {
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DreamInterpretationPage(),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildToolChip(
-              context,
-              emoji: '🌙',
-              label: AppLocalizations.of(context)!.diaryDreamThemes,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const DreamThemesPage(),
                 ),
               ),
             ),

@@ -331,4 +331,204 @@ const List<DreamTheme> dreamThemes = [
     reflection:
         'O que mudou nas últimas versões do sonho? A variação é o termômetro do seu processo.',
   ),
+  DreamTheme(
+    id: 'fogo',
+    emoji: '🔥',
+    title: 'Fogo',
+    summary: 'Paixão, raiva e transformação intensa',
+    readings: [
+      DreamThemeReading(
+        title: 'Energia vital em movimento',
+        content:
+            'O fogo é o elemento da vontade e da paixão. Chamas controladas — uma vela, uma fogueira acolhedora — costumam falar de entusiasmo, desejo e força criativa em boa medida.',
+      ),
+      DreamThemeReading(
+        title: 'Raiva e sobrecarga',
+        content:
+            'Incêndios fora de controle podem espelhar emoções quentes represadas: raiva engolida, estresse acumulado, um limite prestes a estourar. O sonho mostra o tamanho da fervura interna.',
+      ),
+      DreamThemeReading(
+        title: 'Purificação pela queima',
+        content:
+            'Em muitas tradições mágicas, queimar é transmutar: o que o fogo consome no sonho pode indicar o que precisa ser destruído para virar adubo — um hábito, um vínculo, uma versão de si.',
+      ),
+    ],
+    reflection:
+        'O fogo do seu sonho aquecia ou destruía? Observe onde essa mesma energia aparece na sua vida desperta.',
+  ),
+  DreamTheme(
+    id: 'serpente',
+    emoji: '🐍',
+    title: 'Serpente',
+    summary: 'Transformação, cura e energia vital',
+    readings: [
+      DreamThemeReading(
+        title: 'Troca de pele',
+        content:
+            'A serpente é o grande símbolo da renovação: ela troca de pele para crescer. Sonhar com cobras costuma acompanhar fases de transformação profunda — desconfortáveis, mas necessárias.',
+      ),
+      DreamThemeReading(
+        title: 'Cura e sabedoria',
+        content:
+            'Do bastão de Asclépio à kundalini, a serpente também representa cura e energia vital ascendente. Uma cobra tranquila pode indicar poder pessoal e intuição despertando.',
+      ),
+      DreamThemeReading(
+        title: 'Alerta e traição',
+        content:
+            'No imaginário popular, a cobra escondida fala de perigos silenciosos: situações ou pessoas que pedem atenção. O medo sentido no sonho é a pista — pavor e fascínio contam histórias diferentes.',
+      ),
+    ],
+    reflection:
+        'A serpente atacava, observava ou apenas seguia o caminho dela? Sua reação no sonho diz tanto quanto o símbolo.',
+  ),
+  DreamTheme(
+    id: 'bebe',
+    emoji: '👶',
+    title: 'Bebê',
+    summary: 'Começos, vulnerabilidade e cuidado',
+    readings: [
+      DreamThemeReading(
+        title: 'Algo recém-nascido',
+        content:
+            'Um bebê em sonho costuma representar o que acabou de nascer na sua vida: um projeto, uma relação, uma fase. O estado do bebê — saudável, chorando, esquecido — espelha como esse começo está sendo cuidado.',
+      ),
+      DreamThemeReading(
+        title: 'A criança interior',
+        content:
+            'O bebê também pode ser a sua própria parte mais vulnerável pedindo colo: necessidades básicas de afeto, descanso e acolhimento que a vida adulta atropelou.',
+      ),
+      DreamThemeReading(
+        title: 'Responsabilidade nova',
+        content:
+            'Sonhar que precisa cuidar de um bebê que não é seu pode falar de responsabilidades recém-assumidas — e do medo de não dar conta delas.',
+      ),
+    ],
+    reflection:
+        'O que na sua vida está em fase de recém-nascido agora — e que cuidado ele está (ou não está) recebendo?',
+  ),
+  DreamTheme(
+    id: 'dinheiro',
+    emoji: '💰',
+    title: 'Dinheiro',
+    summary: 'Valor pessoal, troca e energia de abundância',
+    readings: [
+      DreamThemeReading(
+        title: 'O seu próprio valor',
+        content:
+            'Dinheiro em sonho raramente é só dinheiro: encontrar moedas ou notas costuma falar de recursos internos descobertos — talentos, tempo, energia — e de quanto você se sente valiosa.',
+      ),
+      DreamThemeReading(
+        title: 'Perda e medo de faltar',
+        content:
+            'Perder dinheiro, ser roubada ou não conseguir pagar algo pode espelhar insegurança material real ou a sensação de estar gastando energia com o que não retorna.',
+      ),
+      DreamThemeReading(
+        title: 'Fluxo de troca',
+        content:
+            'Na leitura mágica, o dinheiro é um símbolo de fluxo: o que você dá e o que recebe. Sonhos de abundância podem confirmar que o fluxo está aberto — ou compensar uma fase de aperto.',
+      ),
+    ],
+    reflection:
+        'No sonho, o dinheiro chegava ou escapava? Compare com o que você anda dando e recebendo — em todas as moedas, não só a financeira.',
+  ),
+  DreamTheme(
+    id: 'nudez',
+    emoji: '🙈',
+    title: 'Nudez em Público',
+    summary: 'Exposição, vergonha e autenticidade',
+    readings: [
+      DreamThemeReading(
+        title: 'Medo de ser vista de verdade',
+        content:
+            'Estar nua em público é o clássico sonho da exposição: costuma surgir quando algo íntimo — um erro, um sentimento, um projeto pessoal — está prestes a ficar visível, e há medo do julgamento.',
+      ),
+      DreamThemeReading(
+        title: 'Vergonha que só é sua',
+        content:
+            'Um detalhe revelador: em muitos desses sonhos, ninguém repara na nudez. O inconsciente sugere que a vergonha é maior por dentro do que aos olhos dos outros.',
+      ),
+      DreamThemeReading(
+        title: 'Convite à autenticidade',
+        content:
+            'Em leituras mais luminosas, a nudez fala de se mostrar sem máscaras. Sentir-se livre no sonho, mesmo nua, pode indicar uma fase de aceitação e verdade consigo mesma.',
+      ),
+    ],
+    reflection:
+        'O que você teme que descubram sobre você — e o que aconteceria, de verdade, se descobrissem?',
+  ),
+  DreamTheme(
+    id: 'provas-atrasos',
+    emoji: '⏰',
+    title: 'Provas e Atrasos',
+    summary: 'Cobrança, preparo e medo de não dar conta',
+    readings: [
+      DreamThemeReading(
+        title: 'Sensação de despreparo',
+        content:
+            'Chegar atrasada, perder o voo, fazer uma prova sem ter estudado: são variações do mesmo tema — a sensação de que a vida cobra mais do que você conseguiu preparar.',
+      ),
+      DreamThemeReading(
+        title: 'Autoexigência em excesso',
+        content:
+            'Curiosamente, esse sonho é comum em pessoas muito responsáveis. A "prova" é o tribunal interno: uma régua alta demais aplicada a si mesma, não uma avaliação real.',
+      ),
+      DreamThemeReading(
+        title: 'Revisão de prioridades',
+        content:
+            'O atraso também pode indicar que você está correndo atrás de um horário que não é o seu — prazos e marcos definidos por outras pessoas. Talvez o relógio do sonho não deva mandar na sua vida.',
+      ),
+    ],
+    reflection:
+        'Que prova você sente que está fazendo na vida real agora — e quem foi que marcou essa prova?',
+  ),
+  DreamTheme(
+    id: 'traicao',
+    emoji: '💔',
+    title: 'Traição',
+    summary: 'Confiança, insegurança e lealdade consigo',
+    readings: [
+      DreamThemeReading(
+        title: 'Insegurança, não profecia',
+        content:
+            'Sonhar com traição do par raramente denuncia um fato: costuma espelhar insegurança no vínculo, carência de atenção ou feridas antigas de confiança pedindo cuidado.',
+      ),
+      DreamThemeReading(
+        title: 'Traição de si mesma',
+        content:
+            'Vale virar o espelho: em que área você tem se traído — engolindo o que sente, adiando o que importa, dizendo sim quando era não? O sonho empresta o rosto de outra pessoa para uma dor interna.',
+      ),
+      DreamThemeReading(
+        title: 'Quebra de expectativa',
+        content:
+            'Ser traída por amigos ou colegas no sonho pode falar de expectativas não ditas: acordos que só existiam na sua cabeça e que a outra pessoa nem sabia que assinou.',
+      ),
+    ],
+    reflection:
+        'A dor do sonho aponta para a outra pessoa ou para um acordo que você fez sozinha? Conversar desfaz metade dessas tramas.',
+  ),
+  DreamTheme(
+    id: 'espelho',
+    emoji: '🪞',
+    title: 'Espelho',
+    summary: 'Identidade, autoimagem e verdade interior',
+    readings: [
+      DreamThemeReading(
+        title: 'Encontro com a própria imagem',
+        content:
+            'O espelho confronta: ver-se diferente, mais velha, mais jovem ou irreconhecível costuma acompanhar fases de mudança de identidade — quando a imagem interna ainda não alcançou a nova vida.',
+      ),
+      DreamThemeReading(
+        title: 'O que o reflexo esconde',
+        content:
+            'Espelhos vazios, embaçados ou quebrados podem falar de desconexão consigo mesma: cansaço de se performar, dificuldade de saber o que se quer e o que se sente.',
+      ),
+      DreamThemeReading(
+        title: 'Portal e adivinhação',
+        content:
+            'Na bruxaria, o espelho é ferramenta de vidência e portal simbólico. Atravessá-lo ou ver outra cena refletida pode indicar intuição aguçada e convite a olhar além da superfície.',
+      ),
+    ],
+    reflection:
+        'Se você se olhasse no espelho agora, por dentro: a imagem que veria combina com a vida que está vivendo?',
+  ),
 ];
