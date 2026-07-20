@@ -175,12 +175,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                   entry.summary,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: context.gc.textSecondary,
-                                      ),
+                                  style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ],
                             ),

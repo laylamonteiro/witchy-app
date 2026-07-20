@@ -92,7 +92,7 @@ class ArcaneDetailPage extends StatelessWidget {
           ),
           _section(
             context,
-            title: '📜 Contexto Histórico',
+            title: 'Contexto Histórico',
             child: Text(
               entry.history,
               style:
@@ -102,7 +102,7 @@ class ArcaneDetailPage extends StatelessWidget {
           if (entry.perspectives.isNotEmpty)
             _section(
               context,
-              title: '🗺️ Olhares das Tradições',
+              title: 'Olhares das Tradições',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -139,13 +139,13 @@ class ArcaneDetailPage extends StatelessWidget {
             ),
           if (entry.characteristics.isNotEmpty)
             _bulletSection(
-                context, '✨ Características', entry.characteristics),
+                context, 'Características', entry.characteristics),
           if (entry.symbolism.isNotEmpty)
-            _bulletSection(context, '🔯 Simbolismos', entry.symbolism),
+            _bulletSection(context, 'Simbolismos', entry.symbolism),
           if (entry.correspondences.isNotEmpty)
             _premiumSection(
               context,
-              title: '🕯️ Correspondências',
+              title: 'Correspondências',
               subtitle:
                   'Cores, ervas, astros e dias associados a esta figura.',
               content: _chipContent(context, entry.correspondences),
@@ -153,21 +153,21 @@ class ArcaneDetailPage extends StatelessWidget {
           if (entry.studyPractices.isNotEmpty)
             _premiumSection(
               context,
-              title: '📖 Estudo & Contemplação',
+              title: 'Estudo & Contemplação',
               subtitle: 'Práticas de aprofundamento e meditação.',
               content: _bulletContent(context, entry.studyPractices),
             ),
           if (entry.magicalUses.isNotEmpty)
             _premiumSection(
               context,
-              title: '🪄 Usos Mágicos',
+              title: 'Usos Mágicos',
               subtitle: 'Aplicações rituais e energéticas.',
               content: _bulletContent(context, entry.magicalUses),
             ),
           if (entry.cautions.isNotEmpty)
             _section(
               context,
-              title: '⚠️ Cuidados & Observações',
+              title: 'Cuidados & Observações',
               child: Text(
                 entry.cautions,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -177,7 +177,7 @@ class ArcaneDetailPage extends StatelessWidget {
               ),
             ),
           if (entry.related.isNotEmpty)
-            _chipSection(context, '🔗 Veja também', entry.related),
+            _chipSection(context, 'Veja também', entry.related),
           const SizedBox(height: 24),
         ],
       ),

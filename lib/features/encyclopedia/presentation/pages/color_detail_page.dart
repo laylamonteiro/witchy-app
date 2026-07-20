@@ -24,8 +24,8 @@ class ColorDetailPage extends StatelessWidget {
               child: Column(
                 children: [
                   Container(
-                    width: 100,
-                    height: 100,
+                    width: 200,
+                    height: 200,
                     decoration: BoxDecoration(
                       color: colorModel.color,
                       borderRadius: BorderRadius.circular(20),

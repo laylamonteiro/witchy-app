@@ -50,9 +50,8 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.gc.darkBackground,
-      body: Column(
+    // Sem Scaffold próprio: herda o da Enciclopédia, como as demais abas.
+    return Column(
         children: [
           // Search bar com filtro ao lado (igual Grimório Ancestral)
           Padding(
@@ -196,7 +195,6 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
             ),
           ),
         ],
-      ),
     );
   }
 
