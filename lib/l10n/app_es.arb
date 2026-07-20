@@ -48,6 +48,7 @@
   "encyTabSymbols": "Símbolos",
   "commonSave": "Guardar",
   "commonCancel": "Cancelar",
+  "commonBackAgainToExit": "Toca atrás de nuevo para salir",
   "commonDelete": "Eliminar",
   "commonBack": "Volver",
   "commonEdit": "Editar",
@@ -357,6 +358,8 @@
   "diaryEditDesire": "Editar Deseo",
   "diaryDesireTitleHint": "Ej.: Viajar al extranjero",
   "diaryDescLabel": "Descripción",
+  "diaryDesireSigilImage": "Imagen del sigilo",
+  "diaryDesireSigilTitle": "Sigilo 🔐",
   "diaryDesireDescHint": "Describe tu deseo en detalle",
   "diaryStatusLabel": "Estado",
   "diaryDesireProgressLabel": "¿Qué ha avanzado?",
@@ -390,7 +393,7 @@
   "diaryRegisterDream": "Registrar Sueño",
   "diaryInterpretDream": "Interpretar Sueño",
   "diaryDreamThemes": "Temas Oníricos",
-  "toolDreamsTitle": "Interpretar Sueño",
+  "toolDreamsTitle": "Interpretación de Sueños",
   "toolDreamsDesc": "Desvela los mensajes de tus sueños y explora significados",
   "dreamToolsIntro": "Los sueños hablan en símbolos. Interpreta el tuyo con el Consejero Místico o explora los significados de los temas más comunes.",
   "dreamInterpretMyDream": "Interpretar mi Sueño",
@@ -555,6 +558,16 @@
   "sigilDrawingNotReady": "El dibujo aún no está listo",
   "sigilImageError": "Error al generar la imagen",
   "sigilSavedToGallery": "¡Sigilo guardado en la galería! ✨",
+  "sigilSaveToDesires": "Guardar en el Diario de Deseos",
+  "sigilSavedToDesires": "¡Sigilo guardado en el Diario de Deseos! ✨",
+  "sigilDesireDescription": "Sigilo creado para manifestar esta intención: {intention}",
+  "@sigilDesireDescription": {
+    "placeholders": {
+      "intention": {
+        "type": "String"
+      }
+    }
+  },
   "sigilGalleryPermission": "Permite el acceso a la galería para guardar el sigilo.",
   "sigilImageSaveError": "No se pudo guardar la imagen.",
   "sigilYourSigil": "Tu Sigilo",
@@ -606,6 +619,7 @@
   "spellGroupHome": "Hogar y Cotidiano",
   "spellGroupHomeSub": "Casa, familia y el día a día",
   "grimoireSearchSpells": "Buscar hechizos...",
+  "grimoireSearchRecords": "Buscar registros...",
   "grimoireMySpells": "Mis Hechizos",
   "grimoireMySpellsSub": "Creaciones y registros personales",
   "grimoireNoSpellsFound": "No se encontraron hechizos 🔍",

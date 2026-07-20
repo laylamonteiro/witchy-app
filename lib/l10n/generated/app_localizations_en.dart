@@ -161,6 +161,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCancel => 'Cancel';
 
   @override
+  String get commonBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get commonDelete => 'Delete';
 
   @override
@@ -1090,6 +1093,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diaryDescLabel => 'Description';
+
+  @override
+  String get diaryDesireSigilImage => 'Sigil image';
+
+  @override
+  String get diaryDesireSigilTitle => 'Sigil 🔐';
 
   @override
   String get diaryDesireDescHint => 'Describe your desire in detail';

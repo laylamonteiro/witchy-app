@@ -21,6 +21,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _selectedIndex = 0;
   static const String _lastTabKey = 'last_selected_tab';
+
+  /// Momento do último toque em "voltar" na raiz de uma aba — usado para o
+  /// padrão de sair do app apenas com dois toques seguidos.
+  DateTime? _lastBackPress;
   final ValueNotifier<Offset> _mascotPosition =
       ValueNotifier(const Offset(20, 120));
 
@@ -102,15 +106,39 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _saveLastTab(index);
   }
 
-  /// Botão voltar do Android: primeiro desempilha o Navigator da aba ativa;
-  /// se já estiver na raiz, sai do app.
+  /// Gesto/botão de voltar: SEMPRE prioriza voltar de página em vez de sair.
+  /// Ordem: 1) fluxos de tela cheia sobre a home (Configurações, Assinatura);
+  /// 2) páginas de detalhe empilhadas dentro da aba ativa; 3) só na raiz de
+  /// uma aba, exige um segundo toque em 2s para de fato sair do app.
   void _handleSystemBack() {
-    final navigator = _navigatorKeys[_selectedIndex].currentState;
-    if (navigator != null && navigator.canPop()) {
-      navigator.pop();
-    } else {
-      SystemNavigator.pop();
+    // 1. Rotas empilhadas no Navigator raiz (tela cheia sobre a home).
+    final rootNavigator = Navigator.of(context);
+    if (rootNavigator.canPop()) {
+      rootNavigator.pop();
+      return;
     }
+
+    // 2. Páginas de detalhe dentro da aba ativa.
+    final tabNavigator = _navigatorKeys[_selectedIndex].currentState;
+    if (tabNavigator != null && tabNavigator.canPop()) {
+      tabNavigator.pop();
+      return;
+    }
+
+    // 3. Raiz de uma aba: sair só com toque duplo.
+    final now = DateTime.now();
+    if (_lastBackPress == null ||
+        now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
+      _lastBackPress = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.commonBackAgainToExit),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    SystemNavigator.pop();
   }
 
   Widget _buildTabNavigator(int index) {

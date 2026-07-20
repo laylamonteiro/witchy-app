@@ -383,6 +383,12 @@ abstract class AppLocalizations {
   /// **'Cancelar'**
   String get commonCancel;
 
+  /// No description provided for @commonBackAgainToExit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque em voltar novamente para sair'**
+  String get commonBackAgainToExit;
+
   /// No description provided for @commonDelete.
   ///
   /// In pt, this message translates to:
@@ -2152,6 +2158,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Descrição'**
   String get diaryDescLabel;
+
+  /// No description provided for @diaryDesireSigilImage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imagem do sigilo'**
+  String get diaryDesireSigilImage;
+
+  /// No description provided for @diaryDesireSigilTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sigilo 🔐'**
+  String get diaryDesireSigilTitle;
 
   /// No description provided for @diaryDesireDescHint.
   ///

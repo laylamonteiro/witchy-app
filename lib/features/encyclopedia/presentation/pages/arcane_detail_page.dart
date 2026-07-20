@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -36,63 +37,77 @@ class ArcaneDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
+          // Cabeçalho no mesmo padrão da página de Deusas: imagem, nome em
+          // Cinzel lilás, pílula de origem e resumo centralizado.
           MagicalCard(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(
-                      imageAsset,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    imageAsset,
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, _, __) => Container(
                       width: 200,
                       height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, _, __) => Container(
-                        width: 200,
-                        height: 200,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: context.gc.lilac.withOpacity(0.10),
-                          border: Border.all(
-                            color: context.gc.lilac.withOpacity(0.35),
-                          ),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: context.gc.lilac.withOpacity(0.10),
+                        border: Border.all(
+                          color: context.gc.lilac.withOpacity(0.35),
                         ),
-                        child: Text(entry.emoji,
-                            style: const TextStyle(fontSize: 72)),
                       ),
+                      child: Text(entry.emoji,
+                          style: const TextStyle(fontSize: 72)),
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                Center(
+                const SizedBox(height: 16),
+                Text(
+                  displayTitle,
+                  style: GoogleFonts.cinzelDecorative(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: context.gc.lilac,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                // Pílula de origem (mesmo estilo do badge das Deusas).
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: context.gc.surface,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Text(
-                    displayTitle,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
+                    '${entry.emoji} ${entry.origin}',
+                    style: TextStyle(
+                      color: context.gc.softWhite,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 Text(
                   entry.summary,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: context.gc.lilac,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Origem: ${entry.origin}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.gc.textSecondary,
-                      ),
+                  style: TextStyle(
+                    color: context.gc.softWhite,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
           _section(
             context,
-            title: '📜 Contexto Histórico',
+            title: 'Contexto Histórico',
             child: Text(
               entry.history,
               style:
@@ -102,7 +117,7 @@ class ArcaneDetailPage extends StatelessWidget {
           if (entry.perspectives.isNotEmpty)
             _section(
               context,
-              title: '🗺️ Olhares das Tradições',
+              title: 'Olhares das Tradições',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -139,13 +154,13 @@ class ArcaneDetailPage extends StatelessWidget {
             ),
           if (entry.characteristics.isNotEmpty)
             _bulletSection(
-                context, '✨ Características', entry.characteristics),
+                context, 'Características', entry.characteristics),
           if (entry.symbolism.isNotEmpty)
-            _bulletSection(context, '🔯 Simbolismos', entry.symbolism),
+            _bulletSection(context, 'Simbolismos', entry.symbolism),
           if (entry.correspondences.isNotEmpty)
             _premiumSection(
               context,
-              title: '🕯️ Correspondências',
+              title: 'Correspondências',
               subtitle:
                   'Cores, ervas, astros e dias associados a esta figura.',
               content: _chipContent(context, entry.correspondences),
@@ -153,21 +168,21 @@ class ArcaneDetailPage extends StatelessWidget {
           if (entry.studyPractices.isNotEmpty)
             _premiumSection(
               context,
-              title: '📖 Estudo & Contemplação',
+              title: 'Estudo & Contemplação',
               subtitle: 'Práticas de aprofundamento e meditação.',
               content: _bulletContent(context, entry.studyPractices),
             ),
           if (entry.magicalUses.isNotEmpty)
             _premiumSection(
               context,
-              title: '🪄 Usos Mágicos',
+              title: 'Usos Mágicos',
               subtitle: 'Aplicações rituais e energéticas.',
               content: _bulletContent(context, entry.magicalUses),
             ),
           if (entry.cautions.isNotEmpty)
             _section(
               context,
-              title: '⚠️ Cuidados & Observações',
+              title: 'Cuidados & Observações',
               child: Text(
                 entry.cautions,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -177,7 +192,7 @@ class ArcaneDetailPage extends StatelessWidget {
               ),
             ),
           if (entry.related.isNotEmpty)
-            _chipSection(context, '🔗 Veja também', entry.related),
+            _chipSection(context, 'Veja também', entry.related),
           const SizedBox(height: 24),
         ],
       ),

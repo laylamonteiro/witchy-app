@@ -18,6 +18,8 @@ import '../widgets/witch_wheel_painter.dart';
 import '../widgets/sigil_drawing_painter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../diary/data/models/desire_model.dart';
+import '../../../diary/presentation/providers/desire_provider.dart';
 
 /// Etapa 3: Mostrar desenho do sigilo com a Roda das Bruxas
 class SigilStep3DrawingPage extends StatefulWidget {
@@ -140,6 +142,60 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       );
     } finally {
       if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  /// Salva o sigilo no Diário de Desejos como IMAGEM (Premium, sincroniza na
+  /// nuvem via DesireProvider/DataSyncService). Guardamos o PNG do desenho —
+  /// não um texto — justamente por se tratar de um sigilo.
+  Future<void> _saveToDesires() async {
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.isPremiumEffective) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
+      );
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final boundary = _drawingKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) {
+        throw Exception(l10n.sigilDrawingNotReady);
+      }
+      // Mesma captura da exportação para galeria: gera a imagem exatamente
+      // como o usuário deixou (roda, letras e pontos visíveis ou não).
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception(l10n.sigilImageError);
+      }
+      // Título fixo — a intenção do sigilo é secreta e não pode aparecer.
+      final desire = DesireModel(
+        title: l10n.diaryDesireSigilTitle,
+        description:
+            DesireModel.encodeSigilImage(byteData.buffer.asUint8List()),
+      );
+      await context.read<DesireProvider>().addDesire(desire);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.sigilSavedToDesires),
+          backgroundColor: context.gc.success,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$e'.replaceAll('Exception: ', '')),
+          backgroundColor: context.gc.alert,
+        ),
+      );
     }
   }
 
@@ -433,12 +489,33 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+
+            // Salvar o sigilo no Diário de Desejos (Premium, sincroniza).
+            // Padding horizontal de 16 para acompanhar a largura dos cards
+            // (o MagicalCard tem margem lateral própria de 16).
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: OutlinedButton.icon(
+                onPressed: _saveToDesires,
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: Text(AppLocalizations.of(context)!.sigilSaveToDesires),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.gc.lilac,
+                  side: BorderSide(color: context.gc.lilac.withOpacity(0.5)),
+                  minimumSize: const Size.fromHeight(48),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
 
             // Botão finalizar
-            MagicalButton(
-              text: _isSaving ? AppLocalizations.of(context)!.commonSaving : AppLocalizations.of(context)!.commonFinish,
-              onPressed: _saveAndFinish,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: MagicalButton(
+                text: _isSaving ? AppLocalizations.of(context)!.commonSaving : AppLocalizations.of(context)!.commonFinish,
+                onPressed: _saveAndFinish,
+              ),
             ),
             const SizedBox(height: 16),
           ],

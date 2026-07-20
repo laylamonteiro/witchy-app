@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
 
 enum DesireStatus {
@@ -62,6 +64,28 @@ class DesireModel {
       synced: map['synced'] == 1,
     );
   }
+
+  /// Prefixo que marca uma descrição que, na verdade, guarda a imagem PNG
+  /// (base64) de um sigilo salvo no Diário de Desejos. Fica no próprio campo
+  /// `description` para sincronizar como texto, sem alterar o schema.
+  static const String sigilImagePrefix = 'sigilimg::';
+
+  /// Indica se este desejo guarda a imagem de um sigilo em vez de texto.
+  bool get hasSigilImage => description.startsWith(sigilImagePrefix);
+
+  /// Bytes PNG do sigilo quando [hasSigilImage]; null caso contrário.
+  Uint8List? get sigilImageBytes {
+    if (!hasSigilImage) return null;
+    try {
+      return base64Decode(description.substring(sigilImagePrefix.length));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Codifica os bytes PNG de um sigilo para armazenar em `description`.
+  static String encodeSigilImage(Uint8List bytes) =>
+      '$sigilImagePrefix${base64Encode(bytes)}';
 
   DesireModel copyWith({
     String? userId,

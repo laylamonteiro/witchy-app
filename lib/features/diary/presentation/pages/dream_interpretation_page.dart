@@ -36,6 +36,23 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
   bool _saved = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Funcionalidade 100% Premium: se não houver acesso, sobe o paywall
+    // direto (sem tela intermediária de "Seja Premium") e volta.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
+  }
+
+  Future<void> _ensureAccess() async {
+    final access = context.read<AuthProvider>().checkFeatureAccess(
+          AppFeature.aiPersonalizedDreamInterpretation,
+        );
+    if (!access.hasFullAccess && mounted) {
+      await showPaywallThenPop(context);
+    }
+  }
+
+  @override
   void dispose() {
     _dreamController.dispose();
     _feelingsController.dispose();
@@ -148,57 +165,11 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
       appBar: AppBar(
         title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryInterpretDream),
       ),
+      // Sem acesso: corpo vazio enquanto o paywall (subido no initState)
+      // aparece por cima e a tela se fecha ao dispensar.
       body: !access.hasFullAccess
-          ? _buildPremiumInvite(access.message)
+          ? const SizedBox.shrink()
           : _buildInterpretFlow(),
-    );
-  }
-
-  Widget _buildPremiumInvite(String? message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('🔮', style: TextStyle(fontSize: 56)),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.dreamInterpretationTitle,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: context.gc.lilac,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message ??
-                  AppLocalizations.of(context)!.dreamPremiumOnly,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => const PremiumUpgradeSheet(),
-              ),
-              icon: const Icon(Icons.star, size: 18),
-              label: Text(AppLocalizations.of(context)!.premiumBePremium),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.gc.lilac,
-                foregroundColor: context.gc.onPrimary,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

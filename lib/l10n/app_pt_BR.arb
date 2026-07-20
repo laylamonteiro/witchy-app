@@ -48,6 +48,7 @@
   "encyTabSymbols": "Símbolos",
   "commonSave": "Salvar",
   "commonCancel": "Cancelar",
+  "commonBackAgainToExit": "Toque em voltar novamente para sair",
   "commonDelete": "Excluir",
   "commonBack": "Voltar",
   "commonEdit": "Editar",
@@ -357,6 +358,8 @@
   "diaryEditDesire": "Editar Desejo",
   "diaryDesireTitleHint": "Ex: Viajar para o exterior",
   "diaryDescLabel": "Descrição",
+  "diaryDesireSigilImage": "Imagem do sigilo",
+  "diaryDesireSigilTitle": "Sigilo 🔐",
   "diaryDesireDescHint": "Descreva seu desejo em detalhes",
   "diaryStatusLabel": "Status",
   "diaryDesireProgressLabel": "O que se movimentou?",
@@ -390,7 +393,7 @@
   "diaryRegisterDream": "Registrar Sonho",
   "diaryInterpretDream": "Interpretar Sonho",
   "diaryDreamThemes": "Temas Oníricos",
-  "toolDreamsTitle": "Interpretar Sonho",
+  "toolDreamsTitle": "Interpretação de Sonhos",
   "toolDreamsDesc": "Desvende as mensagens dos seus sonhos e explore significados",
   "dreamToolsIntro": "Os sonhos falam em símbolos. Interprete o seu com o Conselheiro Místico ou explore os significados dos temas mais comuns.",
   "dreamInterpretMyDream": "Interpretar meu Sonho",
@@ -555,6 +558,16 @@
   "sigilDrawingNotReady": "Desenho ainda não está pronto",
   "sigilImageError": "Falha ao gerar a imagem",
   "sigilSavedToGallery": "Sigilo salvo na galeria! ✨",
+  "sigilSaveToDesires": "Salvar no Diário de Desejos",
+  "sigilSavedToDesires": "Sigilo salvo no Diário de Desejos! ✨",
+  "sigilDesireDescription": "Sigilo criado para manifestar esta intenção: {intention}",
+  "@sigilDesireDescription": {
+    "placeholders": {
+      "intention": {
+        "type": "String"
+      }
+    }
+  },
   "sigilGalleryPermission": "Permita o acesso à galeria para salvar o sigilo.",
   "sigilImageSaveError": "Não foi possível salvar a imagem.",
   "sigilYourSigil": "Seu Sigilo",
@@ -606,6 +619,7 @@
   "spellGroupHome": "Lar & Cotidiano",
   "spellGroupHomeSub": "Casa, família e o dia a dia",
   "grimoireSearchSpells": "Buscar feitiços...",
+  "grimoireSearchRecords": "Buscar registros...",
   "grimoireMySpells": "Meus Feitiços",
   "grimoireMySpellsSub": "Criações e registros pessoais",
   "grimoireNoSpellsFound": "Nenhum feitiço encontrado 🔍",

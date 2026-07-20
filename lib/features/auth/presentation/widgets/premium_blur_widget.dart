@@ -299,6 +299,22 @@ class PremiumBlurText extends StatelessWidget {
   }
 }
 
+/// Sobe o paywall ([PremiumUpgradeSheet]) direto sobre a tela anterior e,
+/// quando a pessoa dispensa, fecha a tela atual — evitando telas
+/// intermediárias de "Seja Premium" nas funcionalidades 100% Premium.
+///
+/// Uso: numa página exclusiva Premium, chame no primeiro frame quando o
+/// acesso for negado. O corpo pode ficar vazio enquanto o paywall sobe.
+Future<void> showPaywallThenPop(BuildContext context) async {
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const PremiumUpgradeSheet(),
+  );
+  if (context.mounted) Navigator.of(context).maybePop();
+}
+
 /// Sheet de upgrade para Premium
 class PremiumUpgradeSheet extends StatefulWidget {
   const PremiumUpgradeSheet({super.key});

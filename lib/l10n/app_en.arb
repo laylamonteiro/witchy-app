@@ -48,6 +48,7 @@
   "encyTabSymbols": "Symbols",
   "commonSave": "Save",
   "commonCancel": "Cancel",
+  "commonBackAgainToExit": "Press back again to exit",
   "commonDelete": "Delete",
   "commonBack": "Back",
   "commonEdit": "Edit",
@@ -357,6 +358,8 @@
   "diaryEditDesire": "Edit Desire",
   "diaryDesireTitleHint": "E.g.: Travel abroad",
   "diaryDescLabel": "Description",
+  "diaryDesireSigilImage": "Sigil image",
+  "diaryDesireSigilTitle": "Sigil 🔐",
   "diaryDesireDescHint": "Describe your desire in detail",
   "diaryStatusLabel": "Status",
   "diaryDesireProgressLabel": "What has moved forward?",
@@ -555,6 +558,16 @@
   "sigilDrawingNotReady": "Drawing is not ready yet",
   "sigilImageError": "Failed to generate the image",
   "sigilSavedToGallery": "Sigil saved to gallery! ✨",
+  "sigilSaveToDesires": "Save to Wishes Journal",
+  "sigilSavedToDesires": "Sigil saved to your Wishes Journal! ✨",
+  "sigilDesireDescription": "Sigil created to manifest this intention: {intention}",
+  "@sigilDesireDescription": {
+    "placeholders": {
+      "intention": {
+        "type": "String"
+      }
+    }
+  },
   "sigilGalleryPermission": "Allow gallery access to save the sigil.",
   "sigilImageSaveError": "Could not save the image.",
   "sigilYourSigil": "Your Sigil",
@@ -606,6 +619,7 @@
   "spellGroupHome": "Home & Everyday",
   "spellGroupHomeSub": "House, family and daily life",
   "grimoireSearchSpells": "Search spells...",
+  "grimoireSearchRecords": "Search records...",
   "grimoireMySpells": "My Spells",
   "grimoireMySpellsSub": "Personal creations and records",
   "grimoireNoSpellsFound": "No spells found 🔍",

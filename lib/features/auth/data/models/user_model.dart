@@ -87,7 +87,7 @@ class UserModel {
     required this.createdAt,
     required this.lastLoginAt,
     this.settings,
-    this.gender = Gender.fallback,
+    this.gender = Gender.feminine,
     this.authMethod = AuthMethod.local,
     this.spellsCount = 0,
     this.diaryEntriesThisMonth = 0,
@@ -341,7 +341,10 @@ class UserModel {
           ? DateTime.parse(json['lastLoginAt'])
           : DateTime.now(),
       settings: json['settings'],
-      gender: Gender.fromJson(json['gender']),
+      // Default do app é tratamento feminino quando nao ha valor salvo.
+      gender: json['gender'] != null
+          ? Gender.fromJson(json['gender'])
+          : Gender.feminine,
       authMethod: json['authMethod'] != null
           ? AuthMethod.values.firstWhere(
               (e) => e.name == json['authMethod'],

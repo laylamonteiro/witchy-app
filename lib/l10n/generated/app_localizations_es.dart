@@ -161,6 +161,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonCancel => 'Cancelar';
 
   @override
+  String get commonBackAgainToExit => 'Toca atrás de nuevo para salir';
+
+  @override
   String get commonDelete => 'Eliminar';
 
   @override
@@ -1103,6 +1106,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diaryDescLabel => 'Descripción';
 
   @override
+  String get diaryDesireSigilImage => 'Imagen del sigilo';
+
+  @override
+  String get diaryDesireSigilTitle => 'Sigilo 🔐';
+
+  @override
   String get diaryDesireDescHint => 'Describe tu deseo en detalle';
 
   @override
@@ -1214,7 +1223,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diaryDreamThemes => 'Temas Oníricos';
 
   @override
-  String get toolDreamsTitle => 'Interpretar Sueño';
+  String get toolDreamsTitle => 'Interpretación de Sueños';
 
   @override
   String get toolDreamsDesc =>

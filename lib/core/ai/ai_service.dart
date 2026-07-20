@@ -691,6 +691,9 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
         ],
         'temperature': 0.7,
         'max_tokens': 1200,
+        // qwen3 é modelo de raciocínio: desliga o "pensamento" para vir só
+        // a leitura final (uma leitura simbólica não precisa de reasoning).
+        'reasoning_effort': 'none',
       };
 
       final response = await _dio.post(
@@ -785,6 +788,7 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
             },
           ],
           'max_tokens': 300,
+          'reasoning_effort': 'none',
         },
       );
       sw.stop();

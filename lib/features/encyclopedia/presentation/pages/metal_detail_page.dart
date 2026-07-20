@@ -181,8 +181,8 @@ class MetalDetailPage extends StatelessWidget {
                     children: metal.magicalProperties
                         .map((property) => Chip(
                               label: Text(property),
-                              backgroundColor: context.gc.lilac.withOpacity(0.2),
-                              side: BorderSide(color: context.gc.lilac),
+                              backgroundColor: context.gc.mint.withOpacity(0.2),
+                              side: BorderSide(color: context.gc.mint),
                             ))
                         .toList(),
                   ),

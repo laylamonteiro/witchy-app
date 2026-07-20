@@ -161,6 +161,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commonCancel => 'Cancelar';
 
   @override
+  String get commonBackAgainToExit => 'Toque em voltar novamente para sair';
+
+  @override
   String get commonDelete => 'Excluir';
 
   @override
@@ -1101,6 +1104,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diaryDescLabel => 'Descrição';
 
   @override
+  String get diaryDesireSigilImage => 'Imagem do sigilo';
+
+  @override
+  String get diaryDesireSigilTitle => 'Sigilo 🔐';
+
+  @override
   String get diaryDesireDescHint => 'Descreva seu desejo em detalhes';
 
   @override
@@ -1212,7 +1221,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diaryDreamThemes => 'Temas Oníricos';
 
   @override
-  String get toolDreamsTitle => 'Interpretar Sonho';
+  String get toolDreamsTitle => 'Interpretação de Sonhos';
 
   @override
   String get toolDreamsDesc =>
@@ -2779,6 +2788,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get commonCancel => 'Cancelar';
 
   @override
+  String get commonBackAgainToExit => 'Toque em voltar novamente para sair';
+
+  @override
   String get commonDelete => 'Excluir';
 
   @override
@@ -3719,6 +3731,12 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get diaryDescLabel => 'Descrição';
 
   @override
+  String get diaryDesireSigilImage => 'Imagem do sigilo';
+
+  @override
+  String get diaryDesireSigilTitle => 'Sigilo 🔐';
+
+  @override
   String get diaryDesireDescHint => 'Descreva seu desejo em detalhes';
 
   @override
@@ -3830,7 +3848,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get diaryDreamThemes => 'Temas Oníricos';
 
   @override
-  String get toolDreamsTitle => 'Interpretar Sonho';
+  String get toolDreamsTitle => 'Interpretação de Sonhos';
 
   @override
   String get toolDreamsDesc =>
