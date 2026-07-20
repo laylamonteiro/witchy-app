@@ -1212,7 +1212,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diaryDreamThemes => 'Temas Oníricos';
 
   @override
-  String get toolDreamsTitle => 'Interpretar Sonho';
+  String get toolDreamsTitle => 'Interpretação de Sonhos';
 
   @override
   String get toolDreamsDesc =>
@@ -3830,7 +3830,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get diaryDreamThemes => 'Temas Oníricos';
 
   @override
-  String get toolDreamsTitle => 'Interpretar Sonho';
+  String get toolDreamsTitle => 'Interpretação de Sonhos';
 
   @override
   String get toolDreamsDesc =>

@@ -1214,7 +1214,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diaryDreamThemes => 'Temas Oníricos';
 
   @override
-  String get toolDreamsTitle => 'Interpretar Sueño';
+  String get toolDreamsTitle => 'Interpretación de Sueños';
 
   @override
   String get toolDreamsDesc =>
