@@ -14,6 +14,7 @@ import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
 import '../widgets/tarot_card_view.dart';
 import 'tarot_learn_tab.dart';
+import 'tarot_library_page.dart';
 
 /// Tarot: tiragens com significados + tutor de aprendizado.
 class TarotPage extends StatefulWidget {
@@ -284,6 +285,46 @@ class _SpreadTabState extends State<_SpreadTab> {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: context.gc.textSecondary,
                     ),
+              ),
+            ),
+            // Biblioteca de Cartas: acesso rápido a partir da Tiragem.
+            MagicalCard(
+              child: InkWell(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const TarotLibraryPage()),
+                ),
+                borderRadius: BorderRadius.circular(12),
+                child: Row(
+                  children: [
+                    const Text('📚', style: TextStyle(fontSize: 32)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.tarotLibraryTitle,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: context.gc.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          Text(
+                            AppLocalizations.of(context)!.tarotLibraryDesc,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: context.gc.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: context.gc.textSecondary),
+                  ],
+                ),
               ),
             ),
             for (final spread in TarotSpread.values)
