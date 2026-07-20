@@ -161,6 +161,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCancel => 'Cancel';
 
   @override
+  String get commonBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get commonDelete => 'Delete';
 
   @override

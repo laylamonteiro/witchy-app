@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/i18n/gender.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -988,55 +989,120 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+  String _genderLabel(BuildContext context, Gender pref) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (pref) {
+      case Gender.feminine:
+        return l10n.genderFeminine;
+      case Gender.masculine:
+        return l10n.genderMasculine;
+      case Gender.neutral:
+        return l10n.genderNeutral;
+    }
+  }
+
   void _showEditProfileDialog(BuildContext context, AuthProvider authProvider) {
     final nameController =
         TextEditingController(text: authProvider.currentUser.displayName);
+    Gender selectedGender = authProvider.currentUser.gender;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.gc.surface,
-        title: Text(
-          AppLocalizations.of(context)!.profileEditProfile,
-          style: TextStyle(color: context.gc.textPrimary),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: context.gc.surface,
+          title: Text(
+            AppLocalizations.of(context)!.profileEditProfile,
+            style: TextStyle(color: context.gc.textPrimary),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: nameController,
+                style: TextStyle(color: context.gc.textPrimary),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.authNameLabel,
+                  labelStyle: TextStyle(color: context.gc.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: context.gc.textPrimary.withValues(alpha: 0.3)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: context.gc.lilac),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                AppLocalizations.of(context)!.editGenderSection,
+                style: TextStyle(
+                  color: context.gc.lilac,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                AppLocalizations.of(context)!.editGenderHelp,
+                style: TextStyle(
+                  color: context.gc.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                children: Gender.values.map((pref) {
+                  final selected = selectedGender == pref;
+                  return ChoiceChip(
+                    label: Text(_genderLabel(context, pref)),
+                    selected: selected,
+                    selectedColor: context.gc.lilac.withValues(alpha: 0.25),
+                    labelStyle: TextStyle(
+                      color: selected
+                          ? context.gc.lilac
+                          : context.gc.textSecondary,
+                      fontWeight:
+                          selected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    side: BorderSide(
+                      color:
+                          selected ? context.gc.lilac : context.gc.surfaceBorder,
+                    ),
+                    backgroundColor: context.gc.surface,
+                    onSelected: (_) =>
+                        setDialogState(() => selectedGender = pref),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(AppLocalizations.of(context)!.commonCancel,
+                  style: TextStyle(color: context.gc.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                authProvider.updateProfile(displayName: nameController.text);
+                authProvider.setGender(selectedGender);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.gc.lilac,
+              ),
+              child: Text(
+                AppLocalizations.of(context)!.commonSave,
+                style: TextStyle(color: context.gc.textPrimary),
+              ),
+            ),
+          ],
         ),
-        content: TextField(
-          controller: nameController,
-          style: TextStyle(color: context.gc.textPrimary),
-          decoration: InputDecoration(
-            labelText: AppLocalizations.of(context)!.authNameLabel,
-            labelStyle: TextStyle(color: context.gc.textSecondary),
-            enabledBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: context.gc.lilac),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child:
-                Text(AppLocalizations.of(context)!.commonCancel, style: TextStyle(color: context.gc.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              authProvider.updateProfile(displayName: nameController.text);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.gc.lilac,
-            ),
-            child: Text(
-              AppLocalizations.of(context)!.commonSave,
-              style: TextStyle(color: context.gc.textPrimary),
-            ),
-          ),
-        ],
       ),
     );
   }

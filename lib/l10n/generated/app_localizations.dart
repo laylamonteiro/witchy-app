@@ -383,6 +383,12 @@ abstract class AppLocalizations {
   /// **'Cancelar'**
   String get commonCancel;
 
+  /// No description provided for @commonBackAgainToExit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque em voltar novamente para sair'**
+  String get commonBackAgainToExit;
+
   /// No description provided for @commonDelete.
   ///
   /// In pt, this message translates to:

@@ -161,6 +161,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonCancel => 'Cancelar';
 
   @override
+  String get commonBackAgainToExit => 'Toca atrás de nuevo para salir';
+
+  @override
   String get commonDelete => 'Eliminar';
 
   @override

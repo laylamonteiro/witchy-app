@@ -161,6 +161,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commonCancel => 'Cancelar';
 
   @override
+  String get commonBackAgainToExit => 'Toque em voltar novamente para sair';
+
+  @override
   String get commonDelete => 'Excluir';
 
   @override
@@ -2777,6 +2780,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get commonCancel => 'Cancelar';
+
+  @override
+  String get commonBackAgainToExit => 'Toque em voltar novamente para sair';
 
   @override
   String get commonDelete => 'Excluir';
