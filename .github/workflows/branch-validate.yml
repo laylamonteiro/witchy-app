@@ -1,0 +1,80 @@
+name: ✅ Branch Validation
+
+# Validação bloqueante para branches de trabalho (analyze + test + build debug).
+# Diferente do release (push em main), aqui análise e testes FALHAM o job —
+# é o gate de qualidade usado durante o desenvolvimento.
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.24.5'
+  JAVA_VERSION: '17'
+
+jobs:
+  validate:
+    name: 🔍 Analyze, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 🔐 Create credential stubs (analyze/test não usam APIs reais)
+        run: |
+          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Groq API.
+          ///
+          class GroqCredentials {
+            static const apiKey = '';
+          }
+          CREDENTIALS
+          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Prokerala API.
+          ///
+          class ProkeralaCredentials {
+            static const String clientId = '';
+            static const String clientSecret = '';
+          }
+          CREDENTIALS
+
+      - name: 📦 Install dependencies
+        run: flutter pub get
+
+      - name: 🌐 Generate localizations
+        run: flutter gen-l10n
+
+      - name: 🔍 Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+        continue-on-error: true
+
+      - name: 🧭 Analyze (bloqueante)
+        run: flutter analyze
+
+      - name: 🧪 Run tests (bloqueante)
+        run: flutter test
+
+      - name: 🔤 ARB key parity
+        run: bash scripts/check_arb_sync.sh
+
+      - name: 🔎 Hardcoded PT scan (informativo até o gate final da i18n)
+        run: bash scripts/check_hardcoded_pt.sh
+        continue-on-error: true
+
+      - name: 📱 Build debug APK
+        run: flutter build apk --debug

@@ -1,0 +1,6 @@
+# Allowlist do scanner de strings hardcoded (scripts/check_hardcoded_pt.sh).
+# Um padrão (regex estendida, aplicada à linha inteira "arquivo:linha:conteúdo")
+# por linha. Linhas em branco e iniciadas por # são ignoradas.
+#
+# Use apenas para nomes próprios e termos intencionalmente invariantes
+# entre idiomas — nunca para adiar tradução de texto de interface.
