@@ -2049,6 +2049,32 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get recordDetails => 'Registro';
+
+  @override
+  String get recordEditTitle => 'Editar Registro';
+
+  @override
+  String get recordTitleLabel => 'Título *';
+
+  @override
+  String get recordContentLabel => 'Sua página';
+
+  @override
+  String get recordTitleRequired => 'Dê um título ao registro';
+
+  @override
+  String get recordContentRequired => 'Escreva algo antes de salvar';
+
+  @override
+  String get recordUpdated => 'Registro atualizado! ✨';
+
+  @override
+  String recordDeleteConfirm(String name) {
+    return 'Deseja realmente excluir o registro \"$name\"?';
+  }
+
+  @override
   String get aiSpellDescribeFirst => 'Descreva sua intenção primeiro';
 
   @override
@@ -4601,6 +4627,32 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String spellDeleteConfirm(String name) {
     return 'Deseja realmente excluir o feitiço \"$name\"?';
+  }
+
+  @override
+  String get recordDetails => 'Registro';
+
+  @override
+  String get recordEditTitle => 'Editar Registro';
+
+  @override
+  String get recordTitleLabel => 'Título *';
+
+  @override
+  String get recordContentLabel => 'Sua página';
+
+  @override
+  String get recordTitleRequired => 'Dê um título ao registro';
+
+  @override
+  String get recordContentRequired => 'Escreva algo antes de salvar';
+
+  @override
+  String get recordUpdated => 'Registro atualizado! ✨';
+
+  @override
+  String recordDeleteConfirm(String name) {
+    return 'Deseja realmente excluir o registro \"$name\"?';
   }
 
   @override

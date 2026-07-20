@@ -3875,6 +3875,54 @@ abstract class AppLocalizations {
   /// **'Deseja realmente excluir o feitiço \"{name}\"?'**
   String spellDeleteConfirm(String name);
 
+  /// No description provided for @recordDetails.
+  ///
+  /// In pt, this message translates to:
+  /// **'Registro'**
+  String get recordDetails;
+
+  /// No description provided for @recordEditTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar Registro'**
+  String get recordEditTitle;
+
+  /// No description provided for @recordTitleLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título *'**
+  String get recordTitleLabel;
+
+  /// No description provided for @recordContentLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sua página'**
+  String get recordContentLabel;
+
+  /// No description provided for @recordTitleRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dê um título ao registro'**
+  String get recordTitleRequired;
+
+  /// No description provided for @recordContentRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escreva algo antes de salvar'**
+  String get recordContentRequired;
+
+  /// No description provided for @recordUpdated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Registro atualizado! ✨'**
+  String get recordUpdated;
+
+  /// No description provided for @recordDeleteConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deseja realmente excluir o registro \"{name}\"?'**
+  String recordDeleteConfirm(String name);
+
   /// No description provided for @aiSpellDescribeFirst.
   ///
   /// In pt, this message translates to:

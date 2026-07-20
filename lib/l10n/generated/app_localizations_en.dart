@@ -2040,6 +2040,32 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get recordDetails => 'Record';
+
+  @override
+  String get recordEditTitle => 'Edit Record';
+
+  @override
+  String get recordTitleLabel => 'Title *';
+
+  @override
+  String get recordContentLabel => 'Your page';
+
+  @override
+  String get recordTitleRequired => 'Give your record a title';
+
+  @override
+  String get recordContentRequired => 'Write something before saving';
+
+  @override
+  String get recordUpdated => 'Record updated! ✨';
+
+  @override
+  String recordDeleteConfirm(String name) {
+    return 'Do you really want to delete the record \"$name\"?';
+  }
+
+  @override
   String get aiSpellDescribeFirst => 'Describe your intention first';
 
   @override

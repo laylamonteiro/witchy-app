@@ -2053,6 +2053,32 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get recordDetails => 'Registro';
+
+  @override
+  String get recordEditTitle => 'Editar Registro';
+
+  @override
+  String get recordTitleLabel => 'Título *';
+
+  @override
+  String get recordContentLabel => 'Tu página';
+
+  @override
+  String get recordTitleRequired => 'Dale un título al registro';
+
+  @override
+  String get recordContentRequired => 'Escribe algo antes de guardar';
+
+  @override
+  String get recordUpdated => '¡Registro actualizado! ✨';
+
+  @override
+  String recordDeleteConfirm(String name) {
+    return '¿Realmente quieres eliminar el registro \"$name\"?';
+  }
+
+  @override
   String get aiSpellDescribeFirst => 'Describe tu intención primero';
 
   @override
