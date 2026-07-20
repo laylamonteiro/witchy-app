@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ai/ai_service.dart';
+import '../content/content_locale.dart';
 
 class LanguageProvider extends ChangeNotifier {
   static const String preferencesKey = 'selected_locale';
@@ -18,6 +19,7 @@ class LanguageProvider extends ChangeNotifier {
   LanguageProvider(this._prefs) {
     _locale = _localeFromTag(_prefs.getString(preferencesKey));
     AIService.instance.setLocale(_locale);
+    ContentLocale.instance.setLocale(_locale);
   }
 
   Locale get locale => _locale;
@@ -29,6 +31,7 @@ class LanguageProvider extends ChangeNotifier {
 
     _locale = normalized;
     AIService.instance.setLocale(_locale);
+    ContentLocale.instance.setLocale(_locale);
     await _prefs.setString(preferencesKey, _languageTag(_locale));
     notifyListeners();
   }
