@@ -81,7 +81,9 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.grimoireSearchSpells,
+                        hintText: widget.recordsOnly
+                            ? AppLocalizations.of(context)!.grimoireSearchRecords
+                            : AppLocalizations.of(context)!.grimoireSearchSpells,
                         prefixIcon: Icon(Icons.search),
                       ),
                       onChanged: (value) {
@@ -91,6 +93,9 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                       },
                     ),
                   ),
+                  // Filtro por categoria de feitiço não faz sentido nos
+                  // registros do Grimório Vivo.
+                  if (!widget.recordsOnly) ...[
                   const SizedBox(width: 8),
                   PopupMenuButton<String>(
                     icon: Icon(
@@ -160,6 +165,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                           )),
                     ],
                   ),
+                  ],
                 ],
               ),
             ),
