@@ -174,9 +174,14 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       if (boundary == null) {
         throw Exception(l10n.sigilDrawingNotReady);
       }
-      // Mesma captura da exportação para galeria: gera a imagem exatamente
-      // como o usuário deixou (roda, letras e pontos visíveis ou não).
-      final image = await boundary.toImage(pixelRatio: 3.0);
+      // Miniatura leve (~320px): guardamos a imagem como base64 na descrição
+      // do desejo, que sincroniza como texto. Uma resolução menor mantém o
+      // sigilo legível no card e evita payloads grandes que falham no sync.
+      // (A exportação para a galeria continua em alta resolução.)
+      const targetWidth = 320.0;
+      final logicalWidth = boundary.size.width;
+      final ratio = logicalWidth > 0 ? targetWidth / logicalWidth : 1.0;
+      final image = await boundary.toImage(pixelRatio: ratio);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         throw Exception(l10n.sigilImageError);
