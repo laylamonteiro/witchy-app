@@ -1109,6 +1109,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diaryDesireSigilImage => 'Imagen del sigilo';
 
   @override
+  String get diaryDesireSigilTitle => 'Sigilo 🔐';
+
+  @override
   String get diaryDesireDescHint => 'Describe tu deseo en detalle';
 
   @override

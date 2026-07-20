@@ -359,6 +359,7 @@
   "diaryDesireTitleHint": "E.g.: Travel abroad",
   "diaryDescLabel": "Description",
   "diaryDesireSigilImage": "Sigil image",
+  "diaryDesireSigilTitle": "Sigil 🔐",
   "diaryDesireDescHint": "Describe your desire in detail",
   "diaryStatusLabel": "Status",
   "diaryDesireProgressLabel": "What has moved forward?",

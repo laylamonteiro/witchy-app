@@ -1098,6 +1098,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryDesireSigilImage => 'Sigil image';
 
   @override
+  String get diaryDesireSigilTitle => 'Sigil 🔐';
+
+  @override
   String get diaryDesireDescHint => 'Describe your desire in detail';
 
   @override

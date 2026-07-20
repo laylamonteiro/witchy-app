@@ -62,7 +62,11 @@ class _DesiresListPageState extends State<DesiresListPage> {
                       children: [
                         Expanded(
                           child: Text(
-                            desire.title,
+                            // Sigilos nunca revelam a intenção — título fixo.
+                            desire.hasSigilImage
+                                ? AppLocalizations.of(context)!
+                                    .diaryDesireSigilTitle
+                                : desire.title,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                         ),

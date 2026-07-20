@@ -167,13 +167,16 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       if (boundary == null) {
         throw Exception(l10n.sigilDrawingNotReady);
       }
-      final image = await boundary.toImage(pixelRatio: 2.0);
+      // Mesma captura da exportação para galeria: gera a imagem exatamente
+      // como o usuário deixou (roda, letras e pontos visíveis ou não).
+      final image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         throw Exception(l10n.sigilImageError);
       }
+      // Título fixo — a intenção do sigilo é secreta e não pode aparecer.
       final desire = DesireModel(
-        title: widget.sigil.intention,
+        title: l10n.diaryDesireSigilTitle,
         description:
             DesireModel.encodeSigilImage(byteData.buffer.asUint8List()),
       );

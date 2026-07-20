@@ -2165,6 +2165,12 @@ abstract class AppLocalizations {
   /// **'Imagem do sigilo'**
   String get diaryDesireSigilImage;
 
+  /// No description provided for @diaryDesireSigilTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sigilo 🔐'**
+  String get diaryDesireSigilTitle;
+
   /// No description provided for @diaryDesireDescHint.
   ///
   /// In pt, this message translates to:

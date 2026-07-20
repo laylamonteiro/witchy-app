@@ -63,13 +63,25 @@ class _DesireFormPageState extends State<DesireFormPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryTitleLabel,
-                hintText: AppLocalizations.of(context)!.diaryDesireTitleHint,
+            // Sigilos têm título fixo (a intenção é secreta) — campo somente
+            // leitura; os demais desejos mantêm o título editável.
+            if (widget.desire?.hasSigilImage == true)
+              TextFormField(
+                enabled: false,
+                initialValue:
+                    AppLocalizations.of(context)!.diaryDesireSigilTitle,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.diaryTitleLabel,
+                ),
+              )
+            else
+              TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.diaryTitleLabel,
+                  hintText: AppLocalizations.of(context)!.diaryDesireTitleHint,
+                ),
               ),
-            ),
             const SizedBox(height: 16),
             // Desejos criados a partir de um Sigilo guardam a imagem do
             // desenho em vez de descrição em texto — mostramos o sigilo.
@@ -173,10 +185,16 @@ class _DesireFormPageState extends State<DesireFormPage> {
       return;
     }
 
+    // Sigilo mantém sempre o título fixo, nunca a intenção secreta.
+    final isSigil = widget.desire?.hasSigilImage == true;
+    final resolvedTitle = isSigil
+        ? AppLocalizations.of(context)!.diaryDesireSigilTitle
+        : (_titleController.text.isEmpty
+            ? AppLocalizations.of(context)!.commonNoTitle
+            : _titleController.text);
+
     final desire = widget.desire?.copyWith(
-          title: _titleController.text.isEmpty
-              ? AppLocalizations.of(context)!.commonNoTitle
-              : _titleController.text,
+          title: resolvedTitle,
           description: _descriptionController.text,
           status: _selectedStatus,
           evolution: _evolutionController.text.isEmpty
