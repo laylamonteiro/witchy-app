@@ -79,6 +79,7 @@ enum LessonTool {
   tarot,
   tarotLibrary,
   tarotTutor,
+  palmistry,
 }
 
 /// Trilha de aprendizado do Grimório Vivo.

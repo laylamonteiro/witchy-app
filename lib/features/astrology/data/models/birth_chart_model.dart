@@ -81,22 +81,30 @@ class BirthChartModel {
       Element.water: 0,
     };
 
-    // Contar apenas planetas pessoais + sociais para elemento dominante
-    final relevantPlanets = planets.where((p) =>
-        p.planet == Planet.sun ||
-        p.planet == Planet.moon ||
-        p.planet == Planet.mercury ||
-        p.planet == Planet.venus ||
-        p.planet == Planet.mars ||
-        p.planet == Planet.jupiter ||
-        p.planet == Planet.saturn);
-
-    for (final planet in relevantPlanets) {
-      distribution[planet.sign.element] = (distribution[planet.sign.element] ?? 0) + 1;
+    // Conta todos os planetas do mapa (inclusive Urano, Netuno e Plutão),
+    // para que a distribuição seja coerente com a lista "Ver todos os
+    // planetas" — evita mostrar "0 em Terra" tendo um planeta em signo de Terra.
+    for (final planet in planets.where(_isCountablePlanet)) {
+      distribution[planet.sign.element] =
+          (distribution[planet.sign.element] ?? 0) + 1;
     }
 
     return distribution;
   }
+
+  /// Planetas considerados na contagem de elementos/modalidades — os 10 astros,
+  /// excluindo pontos calculados (Ascendente, Meio do Céu, nodos etc.).
+  static bool _isCountablePlanet(PlanetPosition p) =>
+      p.planet == Planet.sun ||
+      p.planet == Planet.moon ||
+      p.planet == Planet.mercury ||
+      p.planet == Planet.venus ||
+      p.planet == Planet.mars ||
+      p.planet == Planet.jupiter ||
+      p.planet == Planet.saturn ||
+      p.planet == Planet.uranus ||
+      p.planet == Planet.neptune ||
+      p.planet == Planet.pluto;
 
   Map<Modality, int> getModalityDistribution() {
     final distribution = <Modality, int>{
@@ -105,17 +113,9 @@ class BirthChartModel {
       Modality.mutable: 0,
     };
 
-    final relevantPlanets = planets.where((p) =>
-        p.planet == Planet.sun ||
-        p.planet == Planet.moon ||
-        p.planet == Planet.mercury ||
-        p.planet == Planet.venus ||
-        p.planet == Planet.mars ||
-        p.planet == Planet.jupiter ||
-        p.planet == Planet.saturn);
-
-    for (final planet in relevantPlanets) {
-      distribution[planet.sign.modality] = (distribution[planet.sign.modality] ?? 0) + 1;
+    for (final planet in planets.where(_isCountablePlanet)) {
+      distribution[planet.sign.modality] =
+          (distribution[planet.sign.modality] ?? 0) + 1;
     }
 
     return distribution;

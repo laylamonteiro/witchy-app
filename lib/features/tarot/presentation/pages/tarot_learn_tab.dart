@@ -8,7 +8,6 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
 import '../widgets/tarot_card_view.dart';
-import 'tarot_library_page.dart';
 
 /// Tutor de Tarot: quiz de significados com combo e sequência de dias.
 class TarotLearnTab extends StatefulWidget {
@@ -83,45 +82,6 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                       ),
                 ),
               ],
-            ),
-          ),
-          MagicalCard(
-            child: InkWell(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const TarotLibraryPage()),
-              ),
-              borderRadius: BorderRadius.circular(12),
-              child: Row(
-                children: [
-                  const Text('📚', style: TextStyle(fontSize: 32)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.tarotLibraryTitle,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                color: context.gc.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        Text(
-                          AppLocalizations.of(context)!.tarotLibraryDesc,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: context.gc.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, color: context.gc.textSecondary),
-                ],
-              ),
             ),
           ),
           MagicalCard(

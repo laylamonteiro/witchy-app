@@ -346,30 +346,31 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     Navigator.pop(context);
   }
 
-  void _confirmDelete(BuildContext context) {
-    showDialog(
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.diaryDeleteAffirmationTitle),
         content: Text(AppLocalizations.of(context)!.diaryDeleteAffirmationConfirm),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
-            onPressed: () {
-              context
-                  .read<AffirmationProvider>()
-                  .deleteAffirmation(widget.affirmation!.id);
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close form
-            },
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: context.gc.alert),
             child: Text(AppLocalizations.of(context)!.commonDelete),
           ),
         ],
       ),
     );
+
+    if (confirmed == true && context.mounted) {
+      await context
+          .read<AffirmationProvider>()
+          .deleteAffirmation(widget.affirmation!.id);
+      if (context.mounted) Navigator.pop(context);
+    }
   }
 }
