@@ -1,5 +1,6 @@
 # Grimório de Bolso
 
+
 Um grimório vivo, agenda mágica e companheiro de jornada para bruxas e bruxos iniciantes.
 
 ## Sobre o App
