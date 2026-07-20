@@ -660,6 +660,7 @@
   "sigilImageError": "Falha ao gerar a imagem",
   "sigilSavedToGallery": "Sigilo salvo na galeria! ✨",
   "sigilSaveToDesires": "Salvar no Diário de Desejos",
+  "sigilSavedToDesiresShort": "Salvo no Diário de Desejos",
   "sigilSavedToDesires": "Sigilo salvo no Diário de Desejos! ✨",
   "sigilDesireDescription": "Sigilo criado para manifestar esta intenção: {intention}",
   "@sigilDesireDescription": {

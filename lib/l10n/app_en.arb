@@ -559,6 +559,7 @@
   "sigilImageError": "Failed to generate the image",
   "sigilSavedToGallery": "Sigil saved to gallery! ✨",
   "sigilSaveToDesires": "Save to Wishes Journal",
+  "sigilSavedToDesiresShort": "Saved to Wishes Journal",
   "sigilSavedToDesires": "Sigil saved to your Wishes Journal! ✨",
   "sigilDesireDescription": "Sigil created to manifest this intention: {intention}",
   "@sigilDesireDescription": {
