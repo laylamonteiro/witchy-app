@@ -7,6 +7,7 @@ import '../../data/models/goddess_model.dart';
 import '../../../../core/utils/accents.dart';
 import '../../data/data_sources/goddesses_data.dart';
 import 'goddess_detail_page.dart';
+import '../widgets/entry_pager.dart';
 
 class GoddessesListPage extends StatefulWidget {
   const GoddessesListPage({super.key});
@@ -190,7 +191,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
               itemCount: _filteredGoddesses.length,
               itemBuilder: (context, index) {
                 final goddess = _filteredGoddesses[index];
-                return _buildGoddessCard(goddess);
+                return _buildGoddessCard(goddess, index);
               },
             ),
           ),
@@ -199,13 +200,19 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
     );
   }
 
-  Widget _buildGoddessCard(GoddessModel goddess) {
+  Widget _buildGoddessCard(GoddessModel goddess, int index) {
+    // Captura a lista exibida no momento do toque para o swipe lateral.
+    final entries = List<GoddessModel>.from(_filteredGoddesses);
     return MagicalCard(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => GoddessDetailPage(goddess: goddess),
+            builder: (_) => EntryPager(
+              itemCount: entries.length,
+              initialIndex: index,
+              itemBuilder: (_, i) => GoddessDetailPage(goddess: entries[i]),
+            ),
           ),
         );
       },

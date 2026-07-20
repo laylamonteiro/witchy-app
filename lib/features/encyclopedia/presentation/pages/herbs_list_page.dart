@@ -5,6 +5,7 @@ import '../../data/models/herb_model.dart';
 import '../../../../core/utils/accents.dart';
 import '../providers/encyclopedia_provider.dart';
 import 'herb_detail_page.dart';
+import '../widgets/entry_pager.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 
@@ -98,7 +99,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => HerbDetailPage(herb: herb),
+                      builder: (context) => EntryPager(
+                        itemCount: herbs.length,
+                        initialIndex: index,
+                        itemBuilder: (_, i) => HerbDetailPage(herb: herbs[i]),
+                      ),
                     ),
                   );
                 },

@@ -5,6 +5,7 @@ import '../providers/encyclopedia_provider.dart';
 import '../../data/models/crystal_model.dart';
 import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../widgets/entry_pager.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'crystal_detail_page.dart';
 
@@ -98,7 +99,12 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => CrystalDetailPage(crystal: crystal),
+                          builder: (_) => EntryPager(
+                            itemCount: crystals.length,
+                            initialIndex: index,
+                            itemBuilder: (_, i) =>
+                                CrystalDetailPage(crystal: crystals[i]),
+                          ),
                         ),
                       );
                     },

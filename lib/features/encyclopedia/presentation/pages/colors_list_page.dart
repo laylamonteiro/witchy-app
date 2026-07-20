@@ -8,6 +8,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'color_detail_page.dart';
+import '../widgets/entry_pager.dart';
 
 class ColorsListPage extends StatefulWidget {
   const ColorsListPage({super.key});
@@ -97,8 +98,12 @@ class _ColorsListPageState extends State<ColorsListPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              ColorDetailPage(colorModel: colorModel),
+                          builder: (_) => EntryPager(
+                            itemCount: colors.length,
+                            initialIndex: index,
+                            itemBuilder: (_, i) =>
+                                ColorDetailPage(colorModel: colors[i]),
+                          ),
                         ),
                       );
                     },

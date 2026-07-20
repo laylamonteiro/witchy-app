@@ -5,6 +5,7 @@ import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/arcane_entry_model.dart';
 import 'arcane_detail_page.dart';
+import '../widgets/entry_pager.dart';
 
 /// Lista genérica para as categorias arcanas (Arquétipos, Anjos,
 /// Demônios, Símbolos Sagrados) — busca + cards no padrão da Enciclopédia.
@@ -116,12 +117,18 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                   itemCount: _filtered.length,
                   itemBuilder: (context, index) {
                     final entry = _filtered[index];
+                    // Lista exibida no momento do toque, para o swipe lateral.
+                    final entries = List<ArcaneEntry>.from(_filtered);
                     return MagicalCard(
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => ArcaneDetailPage(
-                            entry: entry,
-                            categoryTitle: widget.categoryTitle,
+                          builder: (_) => EntryPager(
+                            itemCount: entries.length,
+                            initialIndex: index,
+                            itemBuilder: (_, i) => ArcaneDetailPage(
+                              entry: entries[i],
+                              categoryTitle: widget.categoryTitle,
+                            ),
                           ),
                         ),
                       ),

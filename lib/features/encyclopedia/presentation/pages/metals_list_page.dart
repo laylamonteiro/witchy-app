@@ -9,6 +9,7 @@ import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'metal_detail_page.dart';
+import '../widgets/entry_pager.dart';
 
 class MetalsListPage extends StatefulWidget {
   const MetalsListPage({super.key});
@@ -101,7 +102,12 @@ class _MetalsListPageState extends State<MetalsListPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => MetalDetailPage(metal: metal),
+                          builder: (_) => EntryPager(
+                            itemCount: metals.length,
+                            initialIndex: index,
+                            itemBuilder: (_, i) =>
+                                MetalDetailPage(metal: metals[i]),
+                          ),
                         ),
                       );
                     },
