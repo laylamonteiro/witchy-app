@@ -22,6 +22,7 @@ import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../grimoire/presentation/pages/spell_detail_page.dart';
 import '../../../grimoire/presentation/providers/spell_provider.dart';
+import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 import '../../../tarot/presentation/pages/tarot_learn_tab.dart';
@@ -136,6 +137,10 @@ class _LessonPageState extends State<LessonPage> {
         LessonTool.tarotTutor => (
             l10n.tarotTutorTitle,
             (_) => const TarotQuizPage()
+          ),
+        LessonTool.palmistry => (
+            l10n.toolPalmistryTitle,
+            (_) => const PalmistryPage()
           ),
         null => null,
       };
