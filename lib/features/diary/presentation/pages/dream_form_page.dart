@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/dream_model.dart';
 import '../providers/dream_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 class DreamFormPage extends StatefulWidget {
   final DreamModel? dream;
@@ -49,7 +51,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-          widget.dream == null ? 'Novo Sonho' : 'Editar Sonho',
+          widget.dream == null ? AppLocalizations.of(context)!.diaryNewDream : AppLocalizations.of(context)!.diaryEditDream,
         ),
         actions: widget.dream != null
             ? [
@@ -67,15 +69,15 @@ class _DreamFormPageState extends State<DreamFormPage> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Título',
-                hintText: 'Ex: Sonho com borboletas',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.diaryTitleLabel,
+                hintText: AppLocalizations.of(context)!.diaryDreamTitleHint,
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Data do Sonho'),
+              title: Text(AppLocalizations.of(context)!.diaryDreamDate),
               subtitle: Text(
                 '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
               ),
@@ -97,32 +99,67 @@ class _DreamFormPageState extends State<DreamFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _contentController,
-              decoration: const InputDecoration(
-                labelText: 'Descrição do Sonho',
-                hintText: 'Descreva seu sonho em detalhes',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.diaryDreamDescLabel,
+                hintText: AppLocalizations.of(context)!.diaryDreamDescHint,
               ),
               maxLines: 10,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _tagsController,
-              decoration: const InputDecoration(
-                labelText: 'Tags',
-                hintText: 'Ex: pesadelo, recorrente, lúcido',
-                helperText: 'Separe as tags por vírgula',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.diaryTagsLabel,
+                hintText: AppLocalizations.of(context)!.diaryDreamTagsHint,
+                helperText: AppLocalizations.of(context)!.diaryTagsHelper,
               ),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _feelingController,
-              decoration: const InputDecoration(
-                labelText: 'Como você se sentiu ao acordar?',
-                hintText: 'Ex: Paz, medo, alegria, confusão',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.diaryDreamFeelingLabel,
+                hintText: AppLocalizations.of(context)!.diaryDreamFeelingHint,
               ),
             ),
+            // Interpretação por IA já salva: somente leitura, nunca editada.
+            if (widget.dream?.interpretation != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.gc.lilac.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.gc.lilac.withOpacity(0.4),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.diaryInterpretationHeader,
+                      style: TextStyle(
+                        color: context.gc.lilac,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.dream!.interpretation!,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 32),
             MagicalButton(
-              text: widget.dream == null ? 'Salvar Sonho' : 'Atualizar',
+              text: widget.dream == null ? AppLocalizations.of(context)!.diarySaveDream : AppLocalizations.of(context)!.commonUpdate,
               icon: Icons.save,
               onPressed: _saveDream,
             ),
@@ -136,8 +173,8 @@ class _DreamFormPageState extends State<DreamFormPage> {
     // Verificar se pelo menos um campo foi preenchido
     if (_titleController.text.isEmpty && _contentController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preencha pelo menos o título ou a descrição'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.diaryFillTitleOrDesc),
           backgroundColor: Colors.orange,
         ),
       );
@@ -152,7 +189,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
 
     final dream = widget.dream?.copyWith(
           title: _titleController.text.isEmpty
-              ? 'Sem título'
+              ? AppLocalizations.of(context)!.commonNoTitle
               : _titleController.text,
           content: _contentController.text,
           tags: tags,
@@ -162,7 +199,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
         ) ??
         DreamModel(
           title: _titleController.text.isEmpty
-              ? 'Sem título'
+              ? AppLocalizations.of(context)!.commonNoTitle
               : _titleController.text,
           content: _contentController.text,
           tags: tags,
@@ -184,19 +221,19 @@ class _DreamFormPageState extends State<DreamFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: const Text('Deseja realmente excluir este sonho?'),
+        title: Text(AppLocalizations.of(context)!.commonConfirmDelete),
+        content: Text(AppLocalizations.of(context)!.diaryDeleteDreamConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.alert,
+              foregroundColor: context.gc.alert,
             ),
-            child: const Text('Excluir'),
+            child: Text(AppLocalizations.of(context)!.commonDelete),
           ),
         ],
       ),

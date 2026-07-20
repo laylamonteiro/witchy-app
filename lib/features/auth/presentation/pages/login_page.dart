@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/config/admin_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -39,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.lilac),
+          icon: Icon(Icons.arrow_back, color: context.gc.lilac),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -69,10 +71,10 @@ class _LoginPageState extends State<LoginPage> {
                       MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
                     ),
                     child: Text(
-                      'Esqueci minha senha',
+                      AppLocalizations.of(context)!.authForgotPassword,
                       style: GoogleFonts.nunito(
                         fontSize: 14,
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                     ),
                   ),
@@ -105,29 +107,29 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.lilac.withValues(alpha: 0.2),
+            color: context.gc.lilac.withValues(alpha: 0.2),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.lock_outline,
             size: 40,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 24),
         Text(
-          'Bem-vinda de volta!',
+          AppLocalizations.of(context)!.authWelcomeBack,
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Entre para acessar seu grimório',
+          AppLocalizations.of(context)!.authLoginSubtitle,
           style: GoogleFonts.nunito(
             fontSize: 16,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
         ),
       ],
@@ -138,20 +140,20 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'seu@email.com',
-        prefixIcon: const Icon(Icons.email_outlined, color: AppColors.lilac),
+        labelText: AppLocalizations.of(context)!.authEmailLabel,
+        hintText: AppLocalizations.of(context)!.authEmailHint,
+        prefixIcon: Icon(Icons.email_outlined, color: context.gc.lilac),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, insira seu email';
+          return AppLocalizations.of(context)!.authEmailRequired;
         }
-        // Permitir login admin (debug local ou env)
-        if (value == 'admin' || value == AdminConfig.email) return null;
+        // Permitir login admin (credenciais injetadas via --dart-define)
+        if (AdminConfig.isEnabled && value == AdminConfig.email) return null;
         if (!value.contains('@') || !value.contains('.')) {
-          return 'Por favor, insira um email válido';
+          return AppLocalizations.of(context)!.authEmailInvalid;
         }
         return null;
       },
@@ -162,15 +164,15 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Senha',
+        labelText: AppLocalizations.of(context)!.authPasswordLabel,
         hintText: '••••••',
-        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.lilac),
+        prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -181,15 +183,17 @@ class _LoginPageState extends State<LoginPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, insira sua senha';
+          return AppLocalizations.of(context)!.authPasswordRequired;
         }
-        // Admin bypass temporário
+        // Senha do admin vinda do ambiente (--dart-define)
         final email = _emailController.text.trim();
-        if (email == 'admin' && value == 'admin') return null;
-        // Senha de env
-        if (email == AdminConfig.email && value == AdminConfig.password) return null;
+        if (AdminConfig.isEnabled &&
+            email == AdminConfig.email &&
+            value == AdminConfig.password) {
+          return null;
+        }
         if (value.length < 6) {
-          return 'A senha deve ter pelo menos 6 caracteres';
+          return AppLocalizations.of(context)!.authPasswordMinLength;
         }
         return null;
       },
@@ -200,13 +204,13 @@ class _LoginPageState extends State<LoginPage> {
     return ElevatedButton(
       onPressed: _isLoading ? null : _handleLogin,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.lilac,
+        backgroundColor: context.gc.lilac,
         foregroundColor: const Color(0xFF2B2143),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        disabledBackgroundColor: AppColors.lilac.withValues(alpha: 0.5),
+        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
       ),
       child: _isLoading
           ? const SizedBox(
@@ -218,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             )
           : Text(
-              'Entrar',
+              AppLocalizations.of(context)!.authLogin,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -232,23 +236,23 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         Expanded(
           child: Divider(
-            color: AppColors.surfaceBorder,
+            color: context.gc.surfaceBorder,
             thickness: 1,
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'ou continue com',
+            AppLocalizations.of(context)!.authOrContinueWith,
             style: GoogleFonts.nunito(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: context.gc.textSecondary,
             ),
           ),
         ),
         Expanded(
           child: Divider(
-            color: AppColors.surfaceBorder,
+            color: context.gc.surfaceBorder,
             thickness: 1,
           ),
         ),
@@ -279,8 +283,8 @@ class _LoginPageState extends State<LoginPage> {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.textPrimary,
-        side: const BorderSide(color: AppColors.surfaceBorder),
+        foregroundColor: context.gc.textPrimary,
+        side: BorderSide(color: context.gc.surfaceBorder),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -297,7 +301,7 @@ class _LoginPageState extends State<LoginPage> {
               style: GoogleFonts.nunito(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: context.gc.textPrimary,
               ),
             ),
           const SizedBox(width: 8),
@@ -318,10 +322,10 @@ class _LoginPageState extends State<LoginPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Não tem uma conta? ',
+          AppLocalizations.of(context)!.authNoAccount,
           style: GoogleFonts.nunito(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
         ),
         TextButton(
@@ -335,11 +339,11 @@ class _LoginPageState extends State<LoginPage> {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
-            'Criar conta',
+            AppLocalizations.of(context)!.authCreateAccount,
             style: GoogleFonts.nunito(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
         ),
@@ -358,22 +362,8 @@ class _LoginPageState extends State<LoginPage> {
 
       final authProvider = context.read<AuthProvider>();
 
-      // Admin bypass temporário: admin/admin (REMOVER EM PRODUÇÃO)
-      if (email == 'admin' && password == 'admin') {
-        await authProvider.activateAdminMode();
-        await authProvider.updateProfile(
-          email: 'admin@grimorio.app',
-          displayName: 'Administrador',
-        );
-        await authProvider.markOnboardingSeen();
-
-        if (mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
-        }
-        return;
-      }
-
-      // Admin produção: credenciais vindas do ambiente (.env)
+      // Admin: credenciais injetadas no build via --dart-define
+      // (ADMIN_EMAIL/ADMIN_PASSWORD, secrets do GitHub Actions)
       if (AdminConfig.isEnabled &&
           email == AdminConfig.email &&
           password == AdminConfig.password) {
@@ -392,14 +382,14 @@ class _LoginPageState extends State<LoginPage> {
 
       // Validação obrigatória com Supabase
       if (!SupabaseConfig.isConfigured) {
-        throw Exception('Sistema de autenticação não configurado. Entre em contato com o suporte.');
+        throw Exception(AppLocalizations.of(context)!.authSystemNotConfigured);
       }
 
       final authRepo = SupabaseAuthRepository();
       final result = await authRepo.signInWithEmail(email, password);
 
       if (!result.success) {
-        throw Exception(result.errorMessage ?? 'Erro ao fazer login');
+        throw Exception(result.errorMessage ?? AppLocalizations.of(context)!.authLoginError);
       }
 
       await authProvider.syncAuthenticatedUser(result.user!);
@@ -413,7 +403,7 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$e'.replaceAll('Exception: ', '')),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -427,9 +417,9 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _handleGoogleLogin() async {
     if (!SupabaseConfig.isConfigured) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login social não disponível no momento'),
-          backgroundColor: AppColors.info,
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.authSocialUnavailable),
+          backgroundColor: context.gc.info,
         ),
       );
       return;
@@ -453,8 +443,8 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.errorMessage ?? 'Erro no login com Google'),
-            backgroundColor: AppColors.alert,
+            content: Text(result.errorMessage ?? AppLocalizations.of(context)!.authGoogleError),
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -462,8 +452,8 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro no login com Google: $e'),
-            backgroundColor: AppColors.alert,
+            content: Text('${AppLocalizations.of(context)!.authGoogleError}: $e'),
+            backgroundColor: context.gc.alert,
           ),
         );
       }

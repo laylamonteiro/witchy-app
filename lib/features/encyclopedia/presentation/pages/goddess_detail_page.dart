@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/goddess_model.dart';
 import '../../../auth/auth.dart';
@@ -15,9 +16,9 @@ class GoddessDetailPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(goddess.name),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -36,19 +37,19 @@ class GoddessDetailPage extends StatelessWidget {
                         height: 200,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return _buildPlaceholderImage();
+                          return _buildPlaceholderImage(context);
                         },
                       ),
                     )
                   else
-                    _buildPlaceholderImage(),
+                    _buildPlaceholderImage(context),
                   const SizedBox(height: 16),
                   Text(
                     goddess.name,
                     style: GoogleFonts.cinzelDecorative(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -57,7 +58,7 @@ class GoddessDetailPage extends StatelessWidget {
                     Text(
                       goddess.alternateNames!,
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withOpacity(0.7),
                         fontSize: 14,
                         fontStyle: FontStyle.italic,
                       ),
@@ -68,7 +69,7 @@ class GoddessDetailPage extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: context.gc.surface,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -78,8 +79,8 @@ class GoddessDetailPage extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           goddess.origin.displayName,
-                          style: const TextStyle(
-                            color: AppColors.softWhite,
+                          style: TextStyle(
+                            color: context.gc.softWhite,
                             fontSize: 14,
                           ),
                         ),
@@ -89,8 +90,8 @@ class GoddessDetailPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     goddess.description,
-                    style: const TextStyle(
-                      color: AppColors.softWhite,
+                    style: TextStyle(
+                      color: context.gc.softWhite,
                       fontSize: 15,
                       height: 1.5,
                     ),
@@ -107,7 +108,7 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Aspectos & Domínios'),
+                  _buildSectionTitle(context, 'Aspectos & Domínios'),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
@@ -119,10 +120,10 @@ class GoddessDetailPage extends StatelessWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.lilac.withOpacity(0.2),
+                          color: context.gc.lilac.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: AppColors.lilac.withOpacity(0.5),
+                            color: context.gc.lilac.withOpacity(0.5),
                           ),
                         ),
                         child: Row(
@@ -133,8 +134,8 @@ class GoddessDetailPage extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               aspect.displayName,
-                              style: const TextStyle(
-                                color: AppColors.lilac,
+                              style: TextStyle(
+                                color: context.gc.lilac,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -154,12 +155,12 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Correspondências'),
+                  _buildSectionTitle(context, 'Correspondências'),
                   const SizedBox(height: 12),
                   Text(
                     goddess.correspondences,
-                    style: const TextStyle(
-                      color: AppColors.softWhite,
+                    style: TextStyle(
+                      color: context.gc.softWhite,
                       fontSize: 14,
                       height: 1.6,
                     ),
@@ -175,15 +176,15 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Símbolos & Associações'),
+                  _buildSectionTitle(context, 'Símbolos & Associações'),
                   const SizedBox(height: 12),
-                  _buildChipSection('Símbolos', goddess.symbols, '✨'),
+                  _buildChipSection(context, 'Símbolos', goddess.symbols, '✨'),
                   const SizedBox(height: 12),
-                  _buildChipSection('Animais Sagrados', goddess.animals, '🐾'),
+                  _buildChipSection(context, 'Animais Sagrados', goddess.animals, '🐾'),
                   const SizedBox(height: 12),
-                  _buildChipSection('Plantas', goddess.plants, '🌿'),
+                  _buildChipSection(context, 'Plantas', goddess.plants, '🌿'),
                   const SizedBox(height: 12),
-                  _buildChipSection('Cores', goddess.colors, '🎨'),
+                  _buildChipSection(context, 'Cores', goddess.colors, '🎨'),
                 ],
               ),
             ),
@@ -195,12 +196,12 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Mitologia'),
+                  _buildSectionTitle(context, 'Mitologia'),
                   const SizedBox(height: 12),
                   Text(
                     goddess.mythology,
-                    style: const TextStyle(
-                      color: AppColors.softWhite,
+                    style: TextStyle(
+                      color: context.gc.softWhite,
                       fontSize: 14,
                       height: 1.6,
                     ),
@@ -215,7 +216,7 @@ class GoddessDetailPage extends StatelessWidget {
             MagicalCard(
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaGoddessesDetails,
-                title: _buildSectionTitle('Usos Rituais'),
+                title: _buildSectionTitle(context, 'Usos Rituais'),
                 subtitle:
                     'Práticas devocionais e rituais associados a esta divindade.',
                 content: Column(
@@ -231,8 +232,8 @@ class GoddessDetailPage extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   use,
-                                  style: const TextStyle(
-                                    color: AppColors.softWhite,
+                                  style: TextStyle(
+                                    color: context.gc.softWhite,
                                     fontSize: 14,
                                     height: 1.4,
                                   ),
@@ -252,7 +253,7 @@ class GoddessDetailPage extends StatelessWidget {
             MagicalCard(
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaGoddessesDetails,
-                title: _buildSectionTitle('Como Invocar'),
+                title: _buildSectionTitle(context, 'Como Invocar'),
                 subtitle:
                     'Orientações para conexão, invocação e trabalho devocional.',
                 content: Column(
@@ -268,8 +269,8 @@ class GoddessDetailPage extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   tip,
-                                  style: const TextStyle(
-                                    color: AppColors.softWhite,
+                                  style: TextStyle(
+                                    color: context.gc.softWhite,
                                     fontSize: 14,
                                     height: 1.4,
                                   ),
@@ -290,25 +291,25 @@ class GoddessDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
       style: GoogleFonts.cinzelDecorative(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: AppColors.lilac,
+        color: context.gc.lilac,
       ),
     );
   }
 
-  Widget _buildChipSection(String title, List<String> items, String emoji) {
+  Widget _buildChipSection(BuildContext context, String title, List<String> items, String emoji) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '$emoji $title',
           style: TextStyle(
-            color: AppColors.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withOpacity(0.8),
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
@@ -324,13 +325,13 @@ class GoddessDetailPage extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.gc.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 item,
-                style: const TextStyle(
-                  color: AppColors.softWhite,
+                style: TextStyle(
+                  color: context.gc.softWhite,
                   fontSize: 12,
                 ),
               ),
@@ -341,12 +342,12 @@ class GoddessDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderImage() {
+  Widget _buildPlaceholderImage(BuildContext context) {
     return Container(
       width: 200,
       height: 200,
       decoration: BoxDecoration(
-        color: AppColors.lilac.withOpacity(0.2),
+        color: context.gc.lilac.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -81,17 +82,17 @@ class ProFeatureGate extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black26,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: context.gc.textSecondary),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock, color: Colors.white54, size: 20),
+          Icon(Icons.lock, color: context.gc.textSecondary, size: 20),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
               message ?? FeatureAccessMessages.preview,
-              style: const TextStyle(color: Colors.white54),
+              style: TextStyle(color: context.gc.textSecondary),
               textAlign: TextAlign.center,
             ),
           ),
@@ -118,8 +119,11 @@ class ProBadge extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+            gradient: LinearGradient(
+              colors: [
+                context.gc.gold,
+                Color.lerp(context.gc.gold, context.gc.pink, 0.35)!,
+              ],
             ),
             borderRadius: BorderRadius.circular(4),
           ),

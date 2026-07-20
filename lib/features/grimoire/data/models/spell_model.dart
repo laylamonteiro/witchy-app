@@ -40,6 +40,9 @@ enum MoonPhase {
 }
 
 class SpellModel {
+  /// Marcador persistido em `spells.user_id` para feitiços globais/precarregados.
+  static const String globalUserId = 'global';
+
   final String id;
   final String? userId;
   final String name;
@@ -76,10 +79,14 @@ class SpellModel {
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
+  /// Páginas de registro do Grimório Vivo (aba "Meus Registros"):
+  /// gravadas como feitiço, mas separadas dos feitiços de verdade.
+  bool get isRecord => id.startsWith('registro_');
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'user_id': userId ?? 'local_user',
+      'user_id': isPreloaded ? globalUserId : (userId ?? 'local_user'),
       'name': name,
       'purpose': purpose,
       'type': type.name,

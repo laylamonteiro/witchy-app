@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/spell_model.dart';
@@ -7,7 +8,9 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/moon_phase_widget.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'spell_form_page.dart';
+import 'record_form_page.dart';
 
 class SpellDetailPage extends StatelessWidget {
   final SpellModel spell;
@@ -26,9 +29,9 @@ class SpellDetailPage extends StatelessWidget {
     if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Feitiço salvo no seu grimório! ✨'),
-        backgroundColor: AppColors.success,
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.spellSavedToGrimoire),
+        backgroundColor: context.gc.success,
       ),
     );
 
@@ -43,12 +46,14 @@ class SpellDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Detalhes'),
+        title: ResponsiveAppBarTitle(spell.isRecord
+            ? AppLocalizations.of(context)!.recordDetails
+            : AppLocalizations.of(context)!.spellDetails),
         actions: [
           if (showSaveButton) ...[
             IconButton(
               icon: const Icon(Icons.save),
-              tooltip: 'Salvar no Grimório',
+              tooltip: AppLocalizations.of(context)!.spellSaveToGrimoire,
               onPressed: () => _saveSpell(context),
             ),
           ] else if (!spell.isPreloaded) ...[
@@ -59,7 +64,9 @@ class SpellDetailPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => SpellFormPage(spell: spell),
+                    builder: (_) => spell.isRecord
+                        ? RecordFormPage(record: spell)
+                        : SpellFormPage(spell: spell),
                   ),
                 );
               },
@@ -71,7 +78,9 @@ class SpellDetailPage extends StatelessWidget {
           ],
         ],
       ),
-      body: SingleChildScrollView(
+      body: spell.isRecord
+          ? _buildRecordBody(context, dateFormat)
+          : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -92,12 +101,12 @@ class SpellDetailPage extends StatelessWidget {
                       _buildChip(
                         spell.type.displayName,
                         spell.type == SpellType.attraction
-                            ? AppColors.mint
-                            : AppColors.pink,
+                            ? context.gc.mint
+                            : context.gc.pink,
                       ),
                       _buildChip(
                         spell.purpose,
-                        AppColors.lilac,
+                        context.gc.lilac,
                       ),
                     ],
                   ),
@@ -112,7 +121,7 @@ class SpellDetailPage extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Fase Lunar Recomendada',
+                      AppLocalizations.of(context)!.spellRecommendedMoon,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
@@ -132,7 +141,7 @@ class SpellDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ingredientes',
+                      AppLocalizations.of(context)!.spellIngredientsLabel,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
@@ -142,10 +151,10 @@ class SpellDetailPage extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.fiber_manual_record,
                               size: 12,
-                              color: AppColors.lilac,
+                              color: context.gc.lilac,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -168,7 +177,7 @@ class SpellDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Como Realizar',
+                    AppLocalizations.of(context)!.spellHowTo,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -185,10 +194,10 @@ class SpellDetailPage extends StatelessWidget {
               MagicalCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.timer, color: AppColors.lilac),
+                    Icon(Icons.timer, color: context.gc.lilac),
                     const SizedBox(width: 12),
                     Text(
-                      'Duração: ${spell.duration} ${spell.duration == 1 ? "dia" : "dias"}',
+                      AppLocalizations.of(context)!.spellDurationDays('${spell.duration} ${spell.duration == 1 ? AppLocalizations.of(context)!.spellDay : AppLocalizations.of(context)!.spellDays}'),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ],
@@ -202,7 +211,7 @@ class SpellDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Observações',
+                      AppLocalizations.of(context)!.spellNotesLabel,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
@@ -215,24 +224,122 @@ class SpellDetailPage extends StatelessWidget {
               ),
 
             // Data de criação
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Criado em: ${dateFormat.format(spell.createdAt)}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  if (spell.updatedAt != spell.createdAt)
-                    Text(
-                      'Atualizado em: ${dateFormat.format(spell.updatedAt)}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                ],
-              ),
-            ),
+            _dateCard(context, dateFormat),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Corpo próprio das páginas de registro do Grimório Vivo: só o que faz
+  /// sentido para um registro (título, origem, conteúdo escrito e datas) —
+  /// sem ingredientes, fase lunar ou passos de feitiço.
+  Widget _buildRecordBody(BuildContext context, DateFormat dateFormat) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  spell.name,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                if (spell.purpose.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    spell.purpose,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: context.gc.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                  ),
+                ],
+                if (spell.observations != null &&
+                    spell.observations!.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.auto_stories,
+                          size: 16, color: context.gc.lilac),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          spell.observations!,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: context.gc.lilac,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _recordContentLines(context),
+            ),
+          ),
+          _dateCard(context, dateFormat),
+        ],
+      ),
+    );
+  }
+
+  /// O conteúdo da página vem como "✦ pergunta \n resposta": destaca as
+  /// perguntas e mantém as respostas como texto corrido.
+  List<Widget> _recordContentLines(BuildContext context) {
+    final widgets = <Widget>[];
+    for (final line in spell.steps.split('\n')) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) {
+        widgets.add(const SizedBox(height: 14));
+      } else if (trimmed.startsWith('✦')) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text(
+            trimmed,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.gc.lilac,
+                  fontWeight: FontWeight.bold,
+                  height: 1.4,
+                ),
+          ),
+        ));
+      } else {
+        widgets.add(Text(
+          line,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+        ));
+      }
+    }
+    return widgets;
+  }
+
+  Widget _dateCard(BuildContext context, DateFormat dateFormat) {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppLocalizations.of(context)!
+                .spellCreatedAt(dateFormat.format(spell.createdAt)),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (spell.updatedAt != spell.createdAt)
+            Text(
+              AppLocalizations.of(context)!
+                  .spellUpdatedAt(dateFormat.format(spell.updatedAt)),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+        ],
       ),
     );
   }
@@ -249,19 +356,21 @@ class SpellDetailPage extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: Text('Deseja realmente excluir o feitiço "${spell.name}"?'),
+        title: Text(AppLocalizations.of(context)!.commonConfirmDelete),
+        content: Text(spell.isRecord
+            ? AppLocalizations.of(context)!.recordDeleteConfirm(spell.name)
+            : AppLocalizations.of(context)!.spellDeleteConfirm(spell.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.alert,
+              foregroundColor: context.gc.alert,
             ),
-            child: const Text('Excluir'),
+            child: Text(AppLocalizations.of(context)!.commonDelete),
           ),
         ],
       ),

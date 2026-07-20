@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 
 class MagicalButton extends StatefulWidget {
   final String text;
@@ -60,7 +60,7 @@ class _MagicalButtonState extends State<MagicalButton>
         _particles.add(_Particle(
           angle: (i / count) * 2 * math.pi,
           distance: 40.0 + _random.nextDouble() * 20,
-          color: i % 2 == 0 ? AppColors.starYellow : AppColors.lilac,
+          color: i % 2 == 0 ? context.gc.starYellow : context.gc.lilac,
         ));
       }
     });

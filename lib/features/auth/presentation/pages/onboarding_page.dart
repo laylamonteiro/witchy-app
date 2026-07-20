@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/auth_provider.dart';
 
 /// Tela de onboarding com slides explicando funcionalidades do app
@@ -16,13 +18,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingSlide> _slides = [
+  // Getter (e não campo) porque as cores do tema dependem do context.
+  List<OnboardingSlide> get _slides => [
     OnboardingSlide(
       icon: Icons.auto_stories,
-      iconColor: AppColors.lilac,
-      title: 'Seu Grimório Digital',
+      iconColor: context.gc.lilac,
+      title: AppLocalizations.of(context)!.onbSlide1Title,
       description:
-          'Guarde seus feitiços, rituais e receitas mágicas em um só lugar. Organize por fase lunar, ingredientes e muito mais.',
+          AppLocalizations.of(context)!.onbSlide1Desc,
       gradient: [
         const Color(0xFF1A1033),
         const Color(0xFF2D1B4E),
@@ -30,10 +33,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     OnboardingSlide(
       icon: Icons.nightlight_round,
-      iconColor: AppColors.starYellow,
-      title: 'Calendário Lunar',
+      iconColor: context.gc.starYellow,
+      title: AppLocalizations.of(context)!.onbSlide2Title,
       description:
-          'Acompanhe as fases da lua e descubra o melhor momento para cada tipo de magia. Receba notificações em luas cheias e novas.',
+          AppLocalizations.of(context)!.onbSlide2Desc,
       gradient: [
         const Color(0xFF1A2033),
         const Color(0xFF1B3D4E),
@@ -41,10 +44,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     OnboardingSlide(
       icon: Icons.book,
-      iconColor: AppColors.pink,
-      title: 'Diários Mágicos',
+      iconColor: context.gc.pink,
+      title: AppLocalizations.of(context)!.onbSlide3Title,
       description:
-          'Registre sonhos, desejos, gratidão e afirmações. Acompanhe sua evolução espiritual dia após dia.',
+          AppLocalizations.of(context)!.onbSlide3Desc,
       gradient: [
         const Color(0xFF331A2A),
         const Color(0xFF4E1B3D),
@@ -52,10 +55,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     OnboardingSlide(
       icon: Icons.stars,
-      iconColor: AppColors.mint,
-      title: 'Astrologia Completa',
+      iconColor: context.gc.mint,
+      title: AppLocalizations.of(context)!.onbSlide4Title,
       description:
-          'Descubra seu mapa astral, perfil mágico personalizado e receba previsões diárias baseadas nos trânsitos planetários.',
+          AppLocalizations.of(context)!.onbSlide4Desc,
       gradient: [
         const Color(0xFF1A3320),
         const Color(0xFF1B4E2D),
@@ -63,10 +66,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     OnboardingSlide(
       icon: Icons.auto_awesome,
-      iconColor: AppColors.lilac,
-      title: 'Pronta para Começar?',
+      iconColor: context.gc.lilac,
+      title: AppLocalizations.of(context)!.onbSlide5Title,
       description:
-          'Crie sua conta para sincronizar seus dados em todos os dispositivos e ter acesso completo às funcionalidades.',
+          AppLocalizations.of(context)!.onbSlide5Desc,
       gradient: [
         const Color(0xFF1A1033),
         const Color(0xFF2D1B4E),
@@ -105,10 +108,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: TextButton(
                 onPressed: _skipOnboarding,
                 child: Text(
-                  'Pular',
+                  AppLocalizations.of(context)!.onbSkip,
                   style: GoogleFonts.nunito(
                     fontSize: 16,
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                   ),
                 ),
               ),
@@ -173,7 +176,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 style: GoogleFonts.cinzelDecorative(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: context.gc.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -183,7 +186,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 slide.description,
                 style: GoogleFonts.nunito(
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                   height: 1.6,
                 ),
                 textAlign: TextAlign.center,
@@ -208,8 +211,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
           end: Alignment.bottomCenter,
           colors: [
             Colors.transparent,
-            AppColors.background.withValues(alpha: 0.9),
-            AppColors.background,
+            context.gc.background.withValues(alpha: 0.9),
+            context.gc.background,
           ],
         ),
       ),
@@ -229,8 +232,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4),
                   color: isActive
-                      ? AppColors.lilac
-                      : AppColors.surfaceBorder,
+                      ? context.gc.lilac
+                      : context.gc.surfaceBorder,
                 ),
               );
             }),
@@ -244,7 +247,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: ElevatedButton(
                 onPressed: () => _finishOnboarding(createAccount: true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
+                  backgroundColor: context.gc.lilac,
                   foregroundColor: const Color(0xFF2B2143),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -252,7 +255,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ),
                 ),
                 child: Text(
-                  'Criar Conta',
+                  AppLocalizations.of(context)!.authCreateAccount,
                   style: GoogleFonts.nunito(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -267,11 +270,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: TextButton(
                 onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
                 child: Text(
-                  'Já tenho uma conta',
+                  AppLocalizations.of(context)!.onbHaveAccount,
                   style: GoogleFonts.nunito(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                   ),
                 ),
               ),
@@ -283,7 +286,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: ElevatedButton(
                 onPressed: _nextPage,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
+                  backgroundColor: context.gc.lilac,
                   foregroundColor: const Color(0xFF2B2143),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -294,7 +297,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Próximo',
+                      AppLocalizations.of(context)!.onbNext,
                       style: GoogleFonts.nunito(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

@@ -24,6 +24,7 @@ enum SyncEntity {
   pendulumConsultations,
   oracleReadings,
   dailyMagicalWeather,
+  learningProgress,
 }
 
 /// Status de sincronização
@@ -559,6 +560,8 @@ class DataSyncService {
         return SupabaseTables.oracleReadings;
       case SyncEntity.dailyMagicalWeather:
         return SupabaseTables.dailyMagicalWeather;
+      case SyncEntity.learningProgress:
+        return SupabaseTables.learningProgress;
     }
   }
 
@@ -595,6 +598,8 @@ class DataSyncService {
         return 'oracle_readings';
       case SyncEntity.dailyMagicalWeather:
         return 'daily_magical_weather';
+      case SyncEntity.learningProgress:
+        return 'learning_progress';
     }
   }
 
@@ -670,6 +675,7 @@ class DataSyncService {
     'pendulum_consultations': {'date', 'created_at', 'updated_at'},
     'oracle_readings': {'date', 'created_at', 'updated_at'},
     'daily_magical_weather': {'created_at', 'updated_at'},
+    'learning_progress': {'completed_at', 'updated_at'},
   };
 
   @visibleForTesting

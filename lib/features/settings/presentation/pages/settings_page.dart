@@ -7,6 +7,7 @@ import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/diagnostic/diagnostic_page.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
@@ -20,14 +21,20 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
+import 'theme_picker_page.dart';
+import '../../../../core/legal/legal_document_page.dart';
 
 class SettingsPage extends StatelessWidget {
+  /// Seletor de idioma oculto enquanto a tradução total (F4) não termina.
+  /// Quando todo o app estiver traduzido, basta voltar para true.
+  static const bool _showLanguageOption = false;
+
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         title:
             ResponsiveAppBarTitle(AppLocalizations.of(context)!.settingsTitle),
@@ -88,16 +95,16 @@ class SettingsPage extends StatelessWidget {
     }
 
     return ListTile(
-      leading: const Icon(Icons.language, color: Colors.white70),
+      leading: Icon(Icons.language, color: context.gc.textSecondary),
       title: Text(
         l10n.settingsLanguageTitle,
-        style: const TextStyle(color: Colors.white),
+        style: TextStyle(color: context.gc.textPrimary),
       ),
       trailing: DropdownButton<Locale>(
         value: languageProvider.locale,
-        dropdownColor: const Color(0xFF1A1A2E),
+        dropdownColor: context.gc.surface,
         underline: const SizedBox.shrink(),
-        style: const TextStyle(color: Colors.white),
+        style: TextStyle(color: context.gc.textPrimary),
         items: LanguageProvider.supportedLocales
             .map(
               (locale) => DropdownMenuItem<Locale>(
@@ -136,7 +143,7 @@ class SettingsPage extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: _getRoleColors(user.role),
+              colors: _getRoleColors(context, user.role),
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -144,8 +151,8 @@ class SettingsPage extends StatelessWidget {
           child: Center(
             child: Text(
               _getInitials(user.displayName ?? user.email ?? 'User'),
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.gc.textPrimary,
                 fontSize: 36,
                 fontWeight: FontWeight.bold,
               ),
@@ -163,12 +170,12 @@ class SettingsPage extends StatelessWidget {
             Flexible(
               fit: FlexFit.loose,
               child: Text(
-                user.displayName ?? 'Bruxa Anônima',
+                user.displayName ?? AppLocalizations.of(context)!.profileAnonymous,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.gc.textPrimary,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -178,9 +185,9 @@ class SettingsPage extends StatelessWidget {
             SizedBox(
               width: 20,
               child: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.edit,
-                  color: Color(0xFF9C27B0),
+                  color: context.gc.lilac,
                   size: 20,
                 ),
                 onPressed: () => _showEditNameDialog(context, authProvider),
@@ -196,14 +203,14 @@ class SettingsPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: _getRoleColors(user.role),
+              colors: _getRoleColors(context, user.role),
             ),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             _getRoleLabel(user.role),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.gc.textPrimary,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -221,35 +228,35 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
-          'Editar Nome',
-          style: TextStyle(color: Colors.white),
+        backgroundColor: context.gc.surface,
+        title: Text(
+          AppLocalizations.of(context)!.profileEditName,
+          style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Seu nome mágico',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+            hintText: AppLocalizations.of(context)!.authNameHint,
+            hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide:
-                  BorderSide(color: const Color(0xFF9C27B0).withOpacity(0.5)),
+                  BorderSide(color: context.gc.lilac.withOpacity(0.5)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF9C27B0)),
+              borderSide: BorderSide(color: context.gc.lilac),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white70),
+            child: Text(
+              AppLocalizations.of(context)!.commonCancel,
+              style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -263,9 +270,9 @@ class SettingsPage extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9C27B0),
+              backgroundColor: context.gc.lilac,
             ),
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.commonSave),
           ),
         ],
       ),
@@ -283,16 +290,16 @@ class SettingsPage extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isFree
-              ? [const Color(0xFF2D2D44), const Color(0xFF1A1A2E)]
-              : [const Color(0xFF9C27B0), const Color(0xFFE91E63)],
+              ? [context.gc.surfaceBorder, context.gc.surface]
+              : [context.gc.lilac, context.gc.pink],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isFree
-              ? const Color(0xFF9C27B0).withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.2),
+              ? context.gc.lilac.withValues(alpha: 0.3)
+              : context.gc.textPrimary.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -302,7 +309,7 @@ class SettingsPage extends StatelessWidget {
             children: [
               Icon(
                 isFree ? Icons.workspace_premium_outlined : Icons.star,
-                color: Colors.white,
+                color: context.gc.textPrimary,
                 size: 32,
               ),
               const SizedBox(width: 12),
@@ -311,19 +318,19 @@ class SettingsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isFree ? 'Plano Gratuito' : 'Plano Premium',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      isFree ? AppLocalizations.of(context)!.profileFreePlan : AppLocalizations.of(context)!.profilePremiumPlan,
+                      style: TextStyle(
+                        color: context.gc.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       isFree
-                          ? 'Algumas funcionalidades são limitadas'
-                          : 'Acesso completo a todas as funcionalidades',
+                          ? AppLocalizations.of(context)!.profileFreePlanDesc
+                          : AppLocalizations.of(context)!.profilePremiumPlanDesc,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: context.gc.textPrimary.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -337,17 +344,17 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 12),
             if (paymentService.isLifetime)
               Text(
-                'Assinatura Vitalícia',
+                AppLocalizations.of(context)!.settingsLifetime,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: context.gc.textPrimary.withValues(alpha: 0.9),
                   fontSize: 13,
                 ),
               )
             else if (paymentService.subscriptionExpirationDate != null)
               Text(
-                'Renova em: ${_formatDate(paymentService.subscriptionExpirationDate!)}',
+                AppLocalizations.of(context)!.settingsRenewsOn(_formatDate(context, paymentService.subscriptionExpirationDate!)),
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: context.gc.textPrimary.withValues(alpha: 0.9),
                   fontSize: 13,
                 ),
               ),
@@ -357,16 +364,16 @@ class SettingsPage extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => _manageSubscription(context),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 1.5),
+                  foregroundColor: context.gc.textPrimary,
+                  side: BorderSide(color: context.gc.textPrimary, width: 1.5),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
                 icon: const Icon(Icons.settings, size: 18),
-                label: const Text(
-                  'Gerenciar Assinatura',
+                label: Text(
+                  AppLocalizations.of(context)!.profileManageSubscription,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -381,20 +388,20 @@ class SettingsPage extends StatelessWidget {
                 key: const ValueKey('settings_upgrade_button'),
                 onPressed: () => _showUpgradeSheet(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9C27B0),
-                  foregroundColor: Colors.white,
+                  backgroundColor: context.gc.lilac,
+                  foregroundColor: context.gc.textPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.auto_awesome, size: 18),
                     SizedBox(width: 8),
                     Text(
-                      'Fazer Upgrade',
+                      AppLocalizations.of(context)!.profileUpgrade,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -407,20 +414,21 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     final months = [
-      'Jan',
-      'Fev',
-      'Mar',
-      'Abr',
-      'Mai',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Set',
-      'Out',
-      'Nov',
-      'Dez'
+      l10n.monthJanShort,
+      l10n.monthFebShort,
+      l10n.monthMarShort,
+      l10n.monthAprShort,
+      l10n.monthMayShort,
+      l10n.monthJunShort,
+      l10n.monthJulShort,
+      l10n.monthAugShort,
+      l10n.monthSepShort,
+      l10n.monthOctShort,
+      l10n.monthNovShort,
+      l10n.monthDecShort,
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -433,45 +441,48 @@ class SettingsPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.gc.textPrimary.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Uso do Plano Gratuito',
+          Text(
+            AppLocalizations.of(context)!.profileFreeUsage,
             style: TextStyle(
-              color: Colors.white,
+              color: context.gc.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
           _buildUsageRow(
-            'Feitiços',
+            context,
+            AppLocalizations.of(context)!.profileSpells,
             user.spellsCount,
             UserModel.freeSpellsLimit,
             Icons.auto_fix_high,
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
-            'Entradas de Diário',
+            context,
+            AppLocalizations.of(context)!.profileDiaryEntries,
             user.diaryEntriesThisMonth,
             UserModel.freeDiaryEntriesLimit,
             Icons.book,
-            subtitle: 'este mês',
+            subtitle: AppLocalizations.of(context)!.profileThisMonth,
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
-            'Consultas IA',
+            context,
+            AppLocalizations.of(context)!.profileMysticAdvisor,
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
             Icons.psychology,
-            subtitle: 'hoje',
+            subtitle: AppLocalizations.of(context)!.profileToday,
           ),
         ],
       ),
@@ -479,6 +490,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildUsageRow(
+    BuildContext context,
     String label,
     int used,
     int limit,
@@ -488,16 +500,16 @@ class SettingsPage extends StatelessWidget {
     final percentage = used / limit;
     Color progressColor;
     if (percentage < 0.5) {
-      progressColor = const Color(0xFF4CAF50);
+      progressColor = context.gc.success;
     } else if (percentage < 0.8) {
-      progressColor = const Color(0xFFFFC107);
+      progressColor = context.gc.gold;
     } else {
-      progressColor = const Color(0xFFF44336);
+      progressColor = context.gc.alert;
     }
 
     return Row(
       children: [
-        Icon(icon, color: Colors.white54, size: 20),
+        Icon(icon, color: context.gc.textSecondary, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -508,8 +520,8 @@ class SettingsPage extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
                       fontSize: 14,
                     ),
                   ),
@@ -526,15 +538,15 @@ class SettingsPage extends StatelessWidget {
               if (subtitle != null)
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: Colors.white38,
+                  style: TextStyle(
+                    color: context.gc.textSecondary,
                     fontSize: 11,
                   ),
                 ),
               const SizedBox(height: 4),
               LinearProgressIndicator(
                 value: percentage.clamp(0, 1),
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: context.gc.textPrimary.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation(progressColor),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -548,84 +560,105 @@ class SettingsPage extends StatelessWidget {
   Widget _buildAccountOptions(BuildContext context, AuthProvider authProvider) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.gc.textPrimary.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         children: [
-          _buildLanguageOptionTile(context),
-          _buildDivider(),
+          if (_showLanguageOption) ...[
+            _buildLanguageOptionTile(context),
+            _buildDivider(context),
+          ],
           _buildOptionTile(
+            context,
             icon: Icons.person_outline,
-            title: 'Editar Perfil',
+            title: AppLocalizations.of(context)!.profileEditProfile,
             onTap: () => _showEditProfileDialog(context, authProvider),
           ),
           // Só mostra "Alterar Senha" para usuários que usam email/senha
           // Usuários OAuth (Google) não podem alterar senha no app
           if (authProvider.currentUser.usesEmailPassword) ...[
-            _buildDivider(),
+            _buildDivider(context),
             _buildOptionTile(
+              context,
               icon: Icons.lock_outline,
-              title: 'Alterar Senha',
+              title: AppLocalizations.of(context)!.changePasswordTitle,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
               ),
             ),
           ],
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.analytics_outlined,
-            title: 'Estatísticas Mágicas',
+            title: AppLocalizations.of(context)!.profileMagicalStats,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.explore_outlined,
-            title: 'Jornadas Mágicas',
+            title: AppLocalizations.of(context)!.profileMagicalJourneys,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
+            icon: Icons.palette_outlined,
+            title: AppLocalizations.of(context)!.settingsAppearance,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ThemePickerPage()),
+            ),
+          ),
+          _buildDivider(context),
+          _buildOptionTile(
+            context,
             icon: Icons.notifications_outlined,
-            title: 'Notificações',
+            title: AppLocalizations.of(context)!.profileNotifications,
             onTap: () => _showNotificationsBottomSheet(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.privacy_tip_outlined,
-            title: 'Privacidade',
+            title: AppLocalizations.of(context)!.settingsPrivacy,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PrivacySettingsPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.help_outline,
-            title: 'Ajuda & Suporte',
+            title: AppLocalizations.of(context)!.profileHelpSupport,
             onTap: () => _showHelpDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.info_outline,
-            title: 'Sobre o App',
+            title: AppLocalizations.of(context)!.profileAboutApp,
             onTap: () => _showAboutDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.logout,
-            title: 'Sair da Conta',
-            textColor: const Color(0xFFF44336),
+            title: AppLocalizations.of(context)!.profileLogout,
+            textColor: context.gc.alert,
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
         ],
@@ -636,7 +669,7 @@ class SettingsPage extends StatelessWidget {
   void _showNotificationsBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: context.gc.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -653,32 +686,32 @@ class SettingsPage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.notifications_active,
-                    color: Color(0xFFFFC107),
+                    color: context.gc.gold,
                     size: 28,
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Notificações',
+                  Text(
+                    AppLocalizations.of(context)!.profileNotifications,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.gc.textPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white54),
+                    icon: Icon(Icons.close, color: context.gc.textSecondary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Configure lembretes para eventos mágicos importantes',
+              Text(
+                AppLocalizations.of(context)!.settingsNotifDesc,
                 style: TextStyle(
-                  color: Colors.white54,
+                  color: context.gc.textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -689,8 +722,8 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       _NotificationTile(
                         icon: '🌕',
-                        title: 'Lua Cheia',
-                        subtitle: 'Lembrete 1 dia antes da Lua Cheia',
+                        title: AppLocalizations.of(context)!.settingsFullMoon,
+                        subtitle: AppLocalizations.of(context)!.settingsFullMoonDesc,
                         value: notificationProvider.fullMoonNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -700,11 +733,11 @@ class SettingsPage extends StatelessWidget {
                           }
                         },
                       ),
-                      const Divider(color: Colors.white10),
+                      Divider(color: context.gc.textPrimary10),
                       _NotificationTile(
                         icon: '🌑',
-                        title: 'Lua Nova',
-                        subtitle: 'Lembrete 1 dia antes da Lua Nova',
+                        title: AppLocalizations.of(context)!.settingsNewMoon,
+                        subtitle: AppLocalizations.of(context)!.settingsNewMoonDesc,
                         value: notificationProvider.newMoonNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -714,11 +747,11 @@ class SettingsPage extends StatelessWidget {
                           }
                         },
                       ),
-                      const Divider(color: Colors.white10),
+                      Divider(color: context.gc.textPrimary10),
                       _NotificationTile(
                         icon: '🎃',
-                        title: 'Sabbats',
-                        subtitle: 'Lembrete 3 dias antes de cada Sabbat',
+                        title: AppLocalizations.of(context)!.settingsSabbats,
+                        subtitle: AppLocalizations.of(context)!.settingsSabbatsDesc,
                         value: notificationProvider.sabbatNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -741,7 +774,7 @@ class SettingsPage extends StatelessWidget {
                   border: Border.all(
                       color: const Color(0xFF2196F3).withOpacity(0.3)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,
@@ -751,7 +784,7 @@ class SettingsPage extends StatelessWidget {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'As notificações serão enviadas apenas em dispositivos móveis',
+                        AppLocalizations.of(context)!.settingsNotifMobileOnly,
                         style: TextStyle(
                           color: Color(0xFF2196F3),
                           fontSize: 12,
@@ -785,10 +818,10 @@ class SettingsPage extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            result.error ?? 'Não foi possível atualizar as notificações',
+            result.error ?? AppLocalizations.of(context)!.settingsNotifUpdateError,
           ),
           duration: const Duration(seconds: 2),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
         ),
       );
     }
@@ -801,7 +834,7 @@ class SettingsPage extends StatelessWidget {
         color: const Color(0xFF2D1B3D),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF9C27B0).withValues(alpha: 0.5),
+          color: context.gc.lilac.withValues(alpha: 0.5),
         ),
       ),
       child: Column(
@@ -824,22 +857,22 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(
+            leading: Icon(
               Icons.bug_report,
-              color: Color(0xFF9C27B0),
+              color: context.gc.lilac,
             ),
-            title: const Text(
+            title: Text(
               'Diagnóstico & Debug',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Testes, alternância de roles e mais',
               style: TextStyle(
-                color: Colors.white54,
+                color: context.gc.textSecondary,
                 fontSize: 12,
               ),
             ),
-            trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+            trailing: Icon(Icons.chevron_right, color: context.gc.textSecondary),
             onTap: () {
               Navigator.push(
                 context,
@@ -849,25 +882,25 @@ class SettingsPage extends StatelessWidget {
               );
             },
           ),
-          const Divider(color: Colors.white12),
+          Divider(color: context.gc.textSecondary),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(
+            leading: Icon(
               Icons.card_giftcard,
-              color: Color(0xFF9C27B0),
+              color: context.gc.lilac,
             ),
-            title: const Text(
+            title: Text(
               'Gerenciar Códigos Premium',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Criar e invalidar códigos promocionais',
               style: TextStyle(
-                color: Colors.white54,
+                color: context.gc.textSecondary,
                 fontSize: 12,
               ),
             ),
-            trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+            trailing: Icon(Icons.chevron_right, color: context.gc.textSecondary),
             onTap: () {
               Navigator.push(
                 context,
@@ -882,31 +915,32 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionTile({
+  Widget _buildOptionTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
     Color? textColor,
   }) {
-    final color = textColor ?? Colors.white;
+    final color = textColor ?? context.gc.textPrimary;
     return ListTile(
-      leading: Icon(icon, color: textColor ?? Colors.white70),
+      leading: Icon(icon, color: textColor ?? context.gc.textSecondary),
       title: Text(
         title,
         style: TextStyle(color: color),
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: textColor?.withValues(alpha: 0.5) ?? Colors.white38,
+        color: textColor?.withValues(alpha: 0.5) ?? context.gc.textSecondary,
       ),
       onTap: onTap,
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Divider(
       height: 1,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: context.gc.textPrimary.withValues(alpha: 0.1),
     );
   }
 
@@ -926,28 +960,27 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        backgroundColor: context.gc.surface,
+        title: Row(
           children: [
-            Icon(Icons.warning_amber, color: Color(0xFFFFC107)),
+            Icon(Icons.warning_amber, color: context.gc.gold),
             SizedBox(width: 8),
             Text(
-              'Pagamentos Não Configurados',
-              style: TextStyle(color: Colors.white, fontSize: 18),
+              AppLocalizations.of(context)!.settingsPaymentsNotConfigured,
+              style: TextStyle(color: context.gc.textPrimary, fontSize: 18),
             ),
           ],
         ),
-        content: const Text(
-          'O sistema de pagamentos ainda não foi configurado nesta versão do app.\n\n'
-          'Se você é desenvolvedor, verifique os logs do console para mais detalhes.',
-          style: TextStyle(color: Colors.white70, height: 1.5),
+        content: Text(
+          AppLocalizations.of(context)!.settingsPaymentsNotConfiguredDesc,
+          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Entendi',
-              style: TextStyle(color: Color(0xFF9C27B0)),
+            child: Text(
+              AppLocalizations.of(context)!.commonUnderstood,
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
         ],
@@ -962,24 +995,24 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
-          'Editar Perfil',
-          style: TextStyle(color: Colors.white),
+        backgroundColor: context.gc.surface,
+        title: Text(
+          AppLocalizations.of(context)!.profileEditProfile,
+          style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
           controller: nameController,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
-            labelText: 'Nome',
-            labelStyle: const TextStyle(color: Colors.white54),
+            labelText: AppLocalizations.of(context)!.authNameLabel,
+            labelStyle: TextStyle(color: context.gc.textSecondary),
             enabledBorder: OutlineInputBorder(
               borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
               borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Color(0xFF9C27B0)),
+              borderSide: BorderSide(color: context.gc.lilac),
               borderRadius: BorderRadius.circular(8),
             ),
           ),
@@ -988,7 +1021,7 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child:
-                const Text('Cancelar', style: TextStyle(color: Colors.white54)),
+                Text(AppLocalizations.of(context)!.commonCancel, style: TextStyle(color: context.gc.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -996,11 +1029,11 @@ class SettingsPage extends StatelessWidget {
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9C27B0),
+              backgroundColor: context.gc.lilac,
             ),
-            child: const Text(
-              'Salvar',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              AppLocalizations.of(context)!.commonSave,
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -1013,21 +1046,21 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: pageContext,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
-          'Sair da Conta',
-          style: TextStyle(color: Colors.white),
+        backgroundColor: dialogContext.gc.surface,
+        title: Text(
+          AppLocalizations.of(dialogContext)!.profileLogout,
+          style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
-        content: const Text(
-          'Tem certeza que deseja sair?\nSeus dados locais serão mantidos.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          AppLocalizations.of(dialogContext)!.profileLogoutConfirm,
+          style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white70),
+            child: Text(
+              AppLocalizations.of(dialogContext)!.commonCancel,
+              style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1040,11 +1073,11 @@ class SettingsPage extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF44336),
+              backgroundColor: dialogContext.gc.alert,
             ),
-            child: const Text(
-              'Sair',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              AppLocalizations.of(dialogContext)!.profileLogoutAction,
+              style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
         ],
@@ -1056,14 +1089,14 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        backgroundColor: context.gc.surface,
+        title: Row(
           children: [
-            Icon(Icons.help_outline, color: Color(0xFF9C27B0)),
+            Icon(Icons.help_outline, color: context.gc.lilac),
             SizedBox(width: 8),
             Text(
-              'Ajuda & Suporte',
-              style: TextStyle(color: Colors.white),
+              AppLocalizations.of(context)!.profileHelpSupport,
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
@@ -1072,33 +1105,46 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHelpItem(
+              context,
               icon: Icons.email_outlined,
-              title: 'Email de Suporte',
+              title: AppLocalizations.of(context)!.profileSupportEmail,
               subtitle: 'suporte@grimoriodebolso.com',
               onTap: () => _launchEmail(),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
+              context,
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
-              subtitle: 'Perguntas frequentes',
+              subtitle: AppLocalizations.of(context)!.profileFaq,
               onTap: () => _launchFaq(),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
+              context,
               icon: Icons.policy_outlined,
-              title: 'Política de Privacidade',
-              subtitle: 'Seus dados estão seguros',
-              onTap: () => _launchPrivacyPolicy(),
+              title: AppLocalizations.of(context)!.authPrivacyPolicy,
+              subtitle: AppLocalizations.of(context)!.profilePrivacySafe,
+              onTap: () => _openPrivacyPolicy(context),
+            ),
+            const SizedBox(height: 16),
+            _buildHelpItem(
+              context,
+              icon: Icons.gavel_outlined,
+              title: AppLocalizations.of(context)!.authTermsOfUse,
+              subtitle: AppLocalizations.of(context)!.settingsTermsSubtitle,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => LegalDocumentPage.terms),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Fechar',
-              style: TextStyle(color: Color(0xFF9C27B0)),
+            child: Text(
+              AppLocalizations.of(context)!.commonClose,
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
         ],
@@ -1106,7 +1152,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHelpItem({
+  Widget _buildHelpItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -1119,7 +1166,7 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF9C27B0), size: 24),
+            Icon(icon, color: context.gc.lilac, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -1127,22 +1174,22 @@ class SettingsPage extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Colors.white54,
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white38),
+            Icon(Icons.chevron_right, color: context.gc.textSecondary),
           ],
         ),
       ),
@@ -1163,11 +1210,10 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
-  Future<void> _launchPrivacyPolicy() async {
-    final uri = Uri.parse('https://grimoriodebolso.com/privacidade');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+  void _openPrivacyPolicy(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
+    );
   }
 
   void _showAboutDialog(BuildContext context) async {
@@ -1178,14 +1224,14 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        backgroundColor: context.gc.surface,
+        title: Row(
           children: [
             Text('✨', style: TextStyle(fontSize: 24)),
             SizedBox(width: 8),
             Text(
               'Grimório de Bolso',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
@@ -1194,32 +1240,32 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Versão ${packageInfo.version} (${packageInfo.buildNumber})',
-              style: const TextStyle(color: Colors.white70),
+              AppLocalizations.of(context)!.aboutVersion(packageInfo.version, packageInfo.buildNumber),
+              style: TextStyle(color: context.gc.textSecondary),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Seu companheiro para práticas mágicas, rituais e autoconhecimento através da astrologia e bruxaria moderna.',
-              style: TextStyle(color: Colors.white70, height: 1.5),
+            Text(
+              AppLocalizations.of(context)!.aboutDescription,
+              style: TextStyle(color: context.gc.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Desenvolvido com 🔮 e ✨',
-              style: TextStyle(color: Color(0xFF9C27B0)),
+            Text(
+              AppLocalizations.of(context)!.aboutMadeWith,
+              style: TextStyle(color: context.gc.lilac),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '© 2024 Grimório de Bolso',
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Fechar',
-              style: TextStyle(color: Color(0xFF9C27B0)),
+            child: Text(
+              AppLocalizations.of(context)!.commonClose,
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
         ],
@@ -1227,12 +1273,12 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  List<Color> _getRoleColors(UserRole role) {
+  List<Color> _getRoleColors(BuildContext context, UserRole role) {
     switch (role) {
       case UserRole.admin:
         return [const Color(0xFFFFD700), const Color(0xFFFF8C00)];
       case UserRole.premium:
-        return [const Color(0xFF9C27B0), const Color(0xFFE91E63)];
+        return [context.gc.lilac, context.gc.pink];
       case UserRole.free:
         return [const Color(0xFF3F51B5), const Color(0xFF2196F3)];
     }
@@ -1275,23 +1321,23 @@ class _NotificationTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: context.gc.textPrimary,
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          color: Colors.white54,
+        style: TextStyle(
+          color: context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: const Color(0xFF4CAF50),
+        activeColor: context.gc.success,
       ),
     );
   }

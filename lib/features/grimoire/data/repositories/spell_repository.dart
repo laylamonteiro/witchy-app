@@ -1,9 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
+import '../data_sources/spells_data.dart';
 import '../models/spell_model.dart';
 
 abstract class SpellLocalStore {
+  Future<void> ensurePreloadedSpells();
   Future<List<SpellModel>> getAll();
   Future<List<SpellModel>> getForUser(String userId);
   Future<SpellModel?> getById(String id);
@@ -31,6 +33,62 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
   }
 
+
+  /// Garante que os feitiços ancestrais do app existam no banco.
+  ///
+  /// A comparação é por NOME normalizado (não por id): os objetos de
+  /// `preloadedSpells` recebem um UUID novo a cada execução, então comparar
+  /// por id re-inseria os 65 feitiços a cada abertura, duplicando o grimório.
+  /// Novos registros ganham id determinístico derivado do nome.
+  @override
+  Future<void> ensurePreloadedSpells() async {
+    final db = await _dbHelper.database;
+    final existingPreloadedRows = await db.query(
+      'spells',
+      columns: ['name'],
+      where: 'is_preloaded = ?',
+      whereArgs: [1],
+    );
+    final existingNames = existingPreloadedRows
+        .map((row) => _normalizeName(row['name'] as String))
+        .toSet();
+
+    final batch = db.batch();
+    var hasMissingSeed = false;
+
+    for (final spell in preloadedSpells) {
+      if (!existingNames.contains(_normalizeName(spell.name))) {
+        hasMissingSeed = true;
+        final map = spell.toMap();
+        map['id'] = preloadedSpellId(spell.name);
+        batch.insert(
+          'spells',
+          map,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+
+    if (hasMissingSeed) {
+      await batch.commit(noResult: true);
+    }
+  }
+
+  static String _normalizeName(String name) => name.trim().toLowerCase();
+
+  /// Id estável de um feitiço precarregado (slug do nome).
+  static String preloadedSpellId(String name) {
+    const accents = 'áàâãäéèêëíìîïóòôõöúùûüçñ';
+    const plain = 'aaaaaeeeeiiiiooooouuuucn';
+    var slug = _normalizeName(name);
+    for (var i = 0; i < accents.length; i++) {
+      slug = slug.replaceAll(accents[i], plain[i]);
+    }
+    slug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    return 'preloaded_$slug';
+  }
+
+  /// Retorna feitiços do usuário + pré-carregados (excluindo feitiços de outros usuários)
   @override
   Future<List<SpellModel>> getForUser(String userId) async {
     final db = await _dbHelper.database;
@@ -38,7 +96,7 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
       'spells',
       where: 'user_id = ? OR is_preloaded = 1',
       whereArgs: [userId],
-      orderBy: 'created_at DESC',
+      orderBy: 'is_preloaded ASC, created_at DESC, name COLLATE NOCASE ASC, id ASC',
     );
     return List.generate(maps.length, (i) => SpellModel.fromMap(maps[i]));
   }
@@ -91,6 +149,11 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
 
   @override
   Future<int> update(SpellModel spell) async {
+    final existingSpell = await getById(spell.id);
+    if (existingSpell?.isPreloaded ?? false) {
+      return 0;
+    }
+
     final db = await _dbHelper.database;
     return db.update(
       'spells',
@@ -102,6 +165,11 @@ class SqfliteSpellLocalStore implements SpellLocalStore {
 
   @override
   Future<int> delete(String id) async {
+    final existingSpell = await getById(id);
+    if (existingSpell?.isPreloaded ?? false) {
+      return 0;
+    }
+
     final db = await _dbHelper.database;
     return db.delete(
       'spells',
@@ -145,6 +213,9 @@ class SpellRepository {
 
   final SpellLocalStore _localStore;
   final SpellSyncGateway _syncGateway;
+
+  /// Garante que os feitiços ancestrais do app existam no banco (seed idempotente).
+  Future<void> ensurePreloadedSpells() => _localStore.ensurePreloadedSpells();
 
   /// Retorna todos os feitiços (sem filtro de usuário) - usado apenas para admin/debug
   Future<List<SpellModel>> getAll() => _localStore.getAll();

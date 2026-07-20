@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../data/models/spell_model.dart';
 import '../../data/repositories/spell_repository.dart';
-import '../../data/data_sources/spells_data.dart';
 
 class SpellProvider with ChangeNotifier {
   final SpellRepository _repository = SpellRepository();
@@ -9,7 +8,6 @@ class SpellProvider with ChangeNotifier {
   List<SpellModel> _spells = [];
   bool _isLoading = false;
   String? _error;
-  bool _preloadedSpellsInitialized = false;
   String _currentUserId = 'local_user';
 
   List<SpellModel> get spells => _spells;
@@ -38,11 +36,7 @@ class SpellProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Carregar feitiços pré-carregados pela primeira vez
-      if (!_preloadedSpellsInitialized) {
-        await _loadPreloadedSpells();
-        _preloadedSpellsInitialized = true;
-      }
+      await _repository.ensurePreloadedSpells();
 
       // Carregar apenas os feitiços do usuário atual + pré-carregados
       _spells = await _repository.getForUser(_currentUserId);
@@ -55,23 +49,6 @@ class SpellProvider with ChangeNotifier {
     }
   }
 
-  // Carregar feitiços pré-carregados no banco pela primeira vez
-  Future<void> _loadPreloadedSpells() async {
-    try {
-      // Verifica se já existem feitiços pré-carregados
-      final existingSpells = await _repository.getAll();
-      final hasPreloaded = existingSpells.any((s) => s.isPreloaded);
-
-      if (!hasPreloaded) {
-        // Insere todos os feitiços pré-carregados
-        for (final spell in preloadedSpells) {
-          await _repository.insert(spell);
-        }
-      }
-    } catch (e) {
-      // Erro silencioso - feitiços pré-carregados são opcionais
-    }
-  }
 
   Future<void> addSpell(SpellModel spell) async {
     try {
@@ -87,6 +64,10 @@ class SpellProvider with ChangeNotifier {
 
   Future<void> updateSpell(SpellModel spell) async {
     try {
+      if (spell.isPreloaded) {
+        return;
+      }
+
       await _repository.update(spell.copyWith(userId: _currentUserId));
       await loadSpells();
     } catch (e) {
@@ -97,6 +78,11 @@ class SpellProvider with ChangeNotifier {
 
   Future<void> deleteSpell(String id) async {
     try {
+      final spell = await _repository.getById(id);
+      if (spell?.isPreloaded ?? false) {
+        return;
+      }
+
       await _repository.delete(id);
       await loadSpells();
     } catch (e) {

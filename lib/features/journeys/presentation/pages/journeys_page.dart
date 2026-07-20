@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/journey_model.dart';
@@ -190,27 +191,27 @@ class _JourneysPageState extends State<JourneysPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const ResponsiveAppBarTitle(
+        title: ResponsiveAppBarTitle(
           'Jornadas Mágicas',
           style: TextStyle(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          indicatorColor: AppColors.lilac,
-          labelColor: AppColors.lilac,
-          unselectedLabelColor: Colors.white54,
+          indicatorColor: context.gc.lilac,
+          labelColor: context.gc.lilac,
+          unselectedLabelColor: context.gc.textSecondary,
           tabs: const [
             Tab(text: 'Todas'),
             Tab(text: 'Iniciante'),
@@ -220,8 +221,8 @@ class _JourneysPageState extends State<JourneysPage>
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.lilac))
+          ? Center(
+              child: CircularProgressIndicator(color: context.gc.lilac))
           : Column(
               children: [
                 // XP Header
@@ -265,12 +266,12 @@ class _JourneysPageState extends State<JourneysPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.lilac.withValues(alpha: 0.3),
-            AppColors.pink.withValues(alpha: 0.3),
+            context.gc.lilac.withValues(alpha: 0.3),
+            context.gc.pink.withValues(alpha: 0.3),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.5)),
+        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -280,14 +281,14 @@ class _JourneysPageState extends State<JourneysPage>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [AppColors.lilac, AppColors.pink],
+                colors: [context.gc.lilac, context.gc.pink],
               ),
             ),
             child: Center(
               child: Text(
                 '$level',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.gc.textPrimary,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
@@ -301,8 +302,8 @@ class _JourneysPageState extends State<JourneysPage>
               children: [
                 Text(
                   'Nivel $level - ${_getLevelTitle(level)}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -310,8 +311,8 @@ class _JourneysPageState extends State<JourneysPage>
                 const SizedBox(height: 4),
                 Text(
                   '$_totalXp XP total',
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: context.gc.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -320,17 +321,17 @@ class _JourneysPageState extends State<JourneysPage>
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: xpInLevel / xpForNextLevel,
-                    backgroundColor: Colors.white24,
+                    backgroundColor: context.gc.textSecondary,
                     valueColor:
-                        const AlwaysStoppedAnimation(AppColors.starYellow),
+                        AlwaysStoppedAnimation(context.gc.starYellow),
                     minHeight: 6,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$xpInLevel / $xpForNextLevel XP para o proximo nivel',
-                  style: const TextStyle(
-                    color: Colors.white54,
+                  style: TextStyle(
+                    color: context.gc.textSecondary,
                     fontSize: 10,
                   ),
                 ),
@@ -353,17 +354,17 @@ class _JourneysPageState extends State<JourneysPage>
 
   Widget _buildJourneysList(List<JourneyModel> journeys) {
     if (journeys.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'Nenhuma jornada disponivel',
-          style: TextStyle(color: Colors.white54),
+          style: TextStyle(color: context.gc.textSecondary),
         ),
       );
     }
 
     return RefreshIndicator(
       onRefresh: _loadUserStats,
-      color: AppColors.lilac,
+      color: context.gc.lilac,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: journeys.length,
@@ -393,12 +394,12 @@ class _JourneysPageState extends State<JourneysPage>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCompleted
               ? journey.color.withValues(alpha: 0.7)
-              : Colors.white10,
+              : context.gc.textPrimary10,
           width: isCompleted ? 2 : 1,
         ),
       ),
@@ -431,8 +432,8 @@ class _JourneysPageState extends State<JourneysPage>
                             children: [
                               Text(
                                 journey.title,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: context.gc.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -450,8 +451,8 @@ class _JourneysPageState extends State<JourneysPage>
                           const SizedBox(height: 4),
                           Text(
                             journey.description,
-                            style: const TextStyle(
-                              color: Colors.white54,
+                            style: TextStyle(
+                              color: context.gc.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -471,7 +472,7 @@ class _JourneysPageState extends State<JourneysPage>
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
                               value: progress,
-                              backgroundColor: Colors.white10,
+                              backgroundColor: context.gc.textPrimary10,
                               valueColor: AlwaysStoppedAnimation(journey.color),
                               minHeight: 6,
                             ),
@@ -479,8 +480,8 @@ class _JourneysPageState extends State<JourneysPage>
                           const SizedBox(height: 8),
                           Text(
                             '$completedSteps de ${journey.totalSteps} etapas',
-                            style: const TextStyle(
-                              color: Colors.white54,
+                            style: TextStyle(
+                              color: context.gc.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -492,19 +493,19 @@ class _JourneysPageState extends State<JourneysPage>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.starYellow.withValues(alpha: 0.2),
+                        color: context.gc.starYellow.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star,
-                              color: AppColors.starYellow, size: 14),
+                          Icon(Icons.star,
+                              color: context.gc.starYellow, size: 14),
                           const SizedBox(width: 4),
                           Text(
                             '$earnedXp/${journey.xpReward} XP',
-                            style: const TextStyle(
-                              color: AppColors.starYellow,
+                            style: TextStyle(
+                              color: context.gc.starYellow,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -533,8 +534,8 @@ class _JourneysPageState extends State<JourneysPage>
         maxChildSize: 0.95,
         expand: false,
         builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
+          decoration: BoxDecoration(
+            color: context.gc.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -544,7 +545,7 @@ class _JourneysPageState extends State<JourneysPage>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: context.gc.textSecondary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -572,8 +573,8 @@ class _JourneysPageState extends State<JourneysPage>
                             children: [
                               Text(
                                 journey.title,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: context.gc.textPrimary,
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -581,8 +582,8 @@ class _JourneysPageState extends State<JourneysPage>
                               const SizedBox(height: 4),
                               Text(
                                 journey.description,
-                                style: const TextStyle(
-                                  color: Colors.white70,
+                                style: TextStyle(
+                                  color: context.gc.textSecondary,
                                   fontSize: 14,
                                 ),
                               ),
@@ -594,10 +595,10 @@ class _JourneysPageState extends State<JourneysPage>
                     const SizedBox(height: 24),
 
                     // Etapas
-                    const Text(
+                    Text(
                       'Etapas da Jornada',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.gc.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -619,10 +620,10 @@ class _JourneysPageState extends State<JourneysPage>
                         decoration: BoxDecoration(
                           color: isCompleted
                               ? Colors.green.withValues(alpha: 0.1)
-                              : Colors.white.withValues(alpha: 0.05),
+                              : context.gc.textPrimary.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isCompleted ? Colors.green : Colors.white10,
+                            color: isCompleted ? Colors.green : context.gc.textPrimary10,
                           ),
                         ),
                         child: Row(
@@ -638,8 +639,8 @@ class _JourneysPageState extends State<JourneysPage>
                               ),
                               child: Center(
                                 child: isCompleted
-                                    ? const Icon(Icons.check,
-                                        color: Colors.white, size: 18)
+                                    ? Icon(Icons.check,
+                                        color: context.gc.textPrimary, size: 18)
                                     : Text(
                                         '${index + 1}',
                                         style: TextStyle(
@@ -659,15 +660,15 @@ class _JourneysPageState extends State<JourneysPage>
                                     style: TextStyle(
                                       color: isCompleted
                                           ? Colors.green
-                                          : Colors.white,
+                                          : context.gc.textPrimary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     step.description,
-                                    style: const TextStyle(
-                                      color: Colors.white54,
+                                    style: TextStyle(
+                                      color: context.gc.textSecondary,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -680,7 +681,7 @@ class _JourneysPageState extends State<JourneysPage>
                                               BorderRadius.circular(2),
                                           child: LinearProgressIndicator(
                                             value: progressPercent,
-                                            backgroundColor: Colors.white10,
+                                            backgroundColor: context.gc.textPrimary10,
                                             valueColor: AlwaysStoppedAnimation(
                                               isCompleted
                                                   ? Colors.green
@@ -696,7 +697,7 @@ class _JourneysPageState extends State<JourneysPage>
                                         style: TextStyle(
                                           color: isCompleted
                                               ? Colors.green
-                                              : Colors.white54,
+                                              : context.gc.textSecondary,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -711,13 +712,13 @@ class _JourneysPageState extends State<JourneysPage>
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 color:
-                                    AppColors.starYellow.withValues(alpha: 0.2),
+                                    context.gc.starYellow.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 '+${step.xpReward} XP',
-                                style: const TextStyle(
-                                  color: AppColors.starYellow,
+                                style: TextStyle(
+                                  color: context.gc.starYellow,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),

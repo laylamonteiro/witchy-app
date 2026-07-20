@@ -9,6 +9,11 @@
     <!-- Permissão para Advertising ID (necessária para RevenueCat analytics) -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
+    <!-- Salvar sigilos na galeria (necessária apenas até Android 9 / API 28) -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
     <application
         android:label="Grimório de Bolso"
         android:name="${applicationName}"

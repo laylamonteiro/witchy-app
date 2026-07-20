@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS dreams (
   content TEXT NOT NULL,
   tags TEXT,
   feeling TEXT,
+  interpretation TEXT,
   date TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -125,6 +126,15 @@ CREATE TABLE IF NOT EXISTS free_writings (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   content TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Progresso do Grimório Vivo (lições concluídas)
+CREATE TABLE IF NOT EXISTS learning_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  lesson_id TEXT NOT NULL,
+  completed_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -231,9 +241,11 @@ CREATE TABLE IF NOT EXISTS daily_magical_weather (
 -- `updated_at` em TODO upsert e usa a coluna na resolução de conflitos.
 -- Sem ela o PostgREST rejeita o upsert ("column not found in schema cache").
 ALTER TABLE dreams                 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE dreams                 ADD COLUMN IF NOT EXISTS interpretation TEXT;
 ALTER TABLE gratitudes             ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE affirmations           ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE free_writings          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE learning_progress      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE daily_rituals          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE ritual_logs            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE sigils                 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
@@ -253,6 +265,7 @@ CREATE INDEX IF NOT EXISTS idx_desires_user_id           ON desires(user_id);
 CREATE INDEX IF NOT EXISTS idx_gratitudes_user_id        ON gratitudes(user_id);
 CREATE INDEX IF NOT EXISTS idx_affirmations_user_id      ON affirmations(user_id);
 CREATE INDEX IF NOT EXISTS idx_free_writings_user_id     ON free_writings(user_id);
+CREATE INDEX IF NOT EXISTS idx_learning_progress_user_id ON learning_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_daily_rituals_user_id     ON daily_rituals(user_id);
 CREATE INDEX IF NOT EXISTS idx_ritual_logs_user_id       ON ritual_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_sigils_user_id            ON sigils(user_id);
@@ -273,6 +286,7 @@ ALTER TABLE desires                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gratitudes             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE affirmations           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE free_writings          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_progress      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_rituals          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ritual_logs            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sigils                 ENABLE ROW LEVEL SECURITY;
@@ -312,6 +326,7 @@ SELECT create_user_policy('desires');
 SELECT create_user_policy('gratitudes');
 SELECT create_user_policy('affirmations');
 SELECT create_user_policy('free_writings');
+SELECT create_user_policy('learning_progress');
 SELECT create_user_policy('daily_rituals');
 SELECT create_user_policy('ritual_logs');
 SELECT create_user_policy('sigils');

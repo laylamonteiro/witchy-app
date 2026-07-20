@@ -18,17 +18,237 @@ import 'package:grimorio_de_bolso/features/astrology/presentation/pages/daily_ma
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/widgets/premium_blur_widget.dart';
+import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
 import 'package:grimorio_de_bolso/features/settings/presentation/pages/privacy_settings_page.dart';
 import 'package:grimorio_de_bolso/features/settings/presentation/pages/settings_page.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/pages/subscription_page.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/widgets/pro_feature_gate.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/widgets/subscription_offer_widgets.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:grimorio_de_bolso/core/database/database_helper.dart';
+import 'package:grimorio_de_bolso/features/grimoire/data/data_sources/spells_data.dart';
+import 'package:grimorio_de_bolso/features/grimoire/presentation/providers/spell_provider.dart';
 
 void _ignoreSubscriptionSelection(SubscriptionType _) {}
 void _ignoreTap() {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+
+  group('Feitiços globais multiusuário', () {
+    Map<String, dynamic> spellRow({
+      required String id,
+      required String userId,
+      required bool isPreloaded,
+      required int createdAt,
+      String name = 'Feitiço',
+      int synced = 0,
+    }) {
+      return {
+        'id': id,
+        'user_id': userId,
+        'name': name,
+        'purpose': 'Teste',
+        'type': SpellType.attraction.name,
+        'category': SpellCategory.other.name,
+        'moon_phase': null,
+        'ingredients': '',
+        'steps': 'Passo',
+        'duration': null,
+        'observations': null,
+        'is_preloaded': isPreloaded ? 1 : 0,
+        'created_at': createdAt,
+        'updated_at': createdAt,
+        'synced': synced,
+      };
+    }
+
+    List<Map<String, dynamic>> migratePreloadedSpellRows(
+      List<Map<String, dynamic>> rows,
+    ) {
+      return rows.map((row) {
+        final copy = Map<String, dynamic>.from(row);
+        if (copy['is_preloaded'] == 1 &&
+            (copy['user_id'] == 'local_user' ||
+                copy['user_id'] == 'current_user')) {
+          copy['user_id'] = SpellModel.globalUserId;
+          copy['synced'] = 1;
+        }
+        return copy;
+      }).toList();
+    }
+
+    List<Map<String, dynamic>> claimLegacySpellRows(
+      List<Map<String, dynamic>> rows,
+      String userId,
+    ) {
+      return rows.map((row) {
+        final copy = Map<String, dynamic>.from(row);
+        if (copy['is_preloaded'] != 1 &&
+            (copy['user_id'] == 'local_user' ||
+                copy['user_id'] == 'current_user')) {
+          copy['user_id'] = userId;
+          copy['synced'] = 0;
+        }
+        return copy;
+      }).toList();
+    }
+
+    List<Map<String, dynamic>> visibleForUser(
+      List<Map<String, dynamic>> rows,
+      String userId,
+    ) {
+      final visible = rows
+          .where((row) => row['user_id'] == userId || row['is_preloaded'] == 1)
+          .map(Map<String, dynamic>.from)
+          .toList();
+      visible.sort((a, b) {
+        final preloaded =
+            (a['is_preloaded'] as int).compareTo(b['is_preloaded'] as int);
+        if (preloaded != 0) return preloaded;
+        final created =
+            (b['created_at'] as int).compareTo(a['created_at'] as int);
+        if (created != 0) return created;
+        final name = (a['name'] as String)
+            .toLowerCase()
+            .compareTo((b['name'] as String).toLowerCase());
+        if (name != 0) return name;
+        return (a['id'] as String).compareTo(b['id'] as String);
+      });
+      return visible;
+    }
+
+    test('login inicial reivindica apenas feitiços pessoais legados', () {
+      final rows = claimLegacySpellRows(migratePreloadedSpellRows([
+        spellRow(
+          id: 'global-1',
+          userId: 'local_user',
+          isPreloaded: true,
+          createdAt: 1,
+        ),
+        spellRow(
+          id: 'personal-1',
+          userId: 'local_user',
+          isPreloaded: false,
+          createdAt: 2,
+        ),
+      ]), 'user-a');
+
+      expect(
+        rows.singleWhere((row) => row['id'] == 'global-1')['user_id'],
+        SpellModel.globalUserId,
+      );
+      expect(rows.singleWhere((row) => row['id'] == 'personal-1')['user_id'],
+          'user-a');
+    });
+
+    test('logout/login mantém globais compartilhados e pessoais isolados', () {
+      final rows = [
+        spellRow(
+          id: 'global-1',
+          userId: SpellModel.globalUserId,
+          isPreloaded: true,
+          createdAt: 4,
+        ),
+        spellRow(
+          id: 'user-a-1',
+          userId: 'user-a',
+          isPreloaded: false,
+          createdAt: 3,
+        ),
+        spellRow(
+          id: 'user-b-1',
+          userId: 'user-b',
+          isPreloaded: false,
+          createdAt: 2,
+        ),
+      ];
+
+      expect(visibleForUser(rows, 'user-a').map((row) => row['id']),
+          ['user-a-1', 'global-1']);
+      expect(visibleForUser(rows, 'user-b').map((row) => row['id']),
+          ['user-b-1', 'global-1']);
+    });
+
+    test('troca entre dois userId não reassocia feitiços globais', () {
+      final afterUserA = claimLegacySpellRows([
+        spellRow(
+          id: 'global-1',
+          userId: SpellModel.globalUserId,
+          isPreloaded: true,
+          createdAt: 1,
+        ),
+        spellRow(
+          id: 'legacy-personal',
+          userId: 'local_user',
+          isPreloaded: false,
+          createdAt: 2,
+        ),
+      ], 'user-a');
+      final afterUserB = claimLegacySpellRows(afterUserA, 'user-b');
+
+      expect(
+        afterUserB.singleWhere((row) => row['id'] == 'global-1')['user_id'],
+        SpellModel.globalUserId,
+      );
+      expect(
+        afterUserB
+            .singleWhere((row) => row['id'] == 'legacy-personal')['user_id'],
+        'user-a',
+      );
+    });
+
+    test('limpeza/reinstalação local grava precarregados com marcador global', () {
+      final map = SpellModel(
+        id: 'preloaded-fresh-install',
+        name: 'Global',
+        purpose: 'Teste',
+        type: SpellType.attraction,
+        category: SpellCategory.other,
+        ingredients: const [],
+        steps: 'Passo',
+        isPreloaded: true,
+      ).toMap();
+
+      expect(map['user_id'], SpellModel.globalUserId);
+      expect(map['user_id'], isNot('local_user'));
+    });
+
+    test('modo offline e sync após novo login preservam globais fora da conta', () {
+      final offlineRows = [
+        spellRow(
+          id: 'global-offline',
+          userId: SpellModel.globalUserId,
+          isPreloaded: true,
+          createdAt: 1,
+          synced: 1,
+        ),
+        spellRow(
+          id: 'offline-personal',
+          userId: 'local_user',
+          isPreloaded: false,
+          createdAt: 2,
+          synced: 0,
+        ),
+      ];
+      final afterLogin = claimLegacySpellRows(offlineRows, 'new-user');
+      final syncable = afterLogin.where(
+        (row) => row['synced'] == 0 &&
+            row['user_id'] == 'new-user' &&
+            row['is_preloaded'] != 1,
+      );
+
+      expect(
+        afterLogin
+            .singleWhere((row) => row['id'] == 'global-offline')['user_id'],
+        SpellModel.globalUserId,
+      );
+      expect(syncable.map((row) => row['id']), ['offline-personal']);
+    });
+  });
 
   group('DataSyncService converters', () {
     final service = DataSyncService();
@@ -804,4 +1024,65 @@ Outro conteúdo secreto.''';
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('SpellProvider preloaded seed', () {
+    test('restaura feitiços ancestrais mesmo após inicialização prévia', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.delete('spells');
+
+      final provider = SpellProvider();
+      await provider.loadSpells();
+
+      expect(provider.error, isNull);
+      expect(provider.appSpells, hasLength(preloadedSpells.length));
+
+      await db.delete('spells', where: 'is_preloaded = ?', whereArgs: [1]);
+      expect(
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM spells WHERE is_preloaded = 1',
+          ),
+        ),
+        0,
+      );
+
+      await provider.loadSpells();
+
+      final restoredPreloadedRows = await db.query(
+        'spells',
+        columns: ['id'],
+        where: 'is_preloaded = ?',
+        whereArgs: [1],
+      );
+      final restoredIds = restoredPreloadedRows
+          .map((row) => row['id'] as String)
+          .toList();
+
+      expect(provider.error, isNull);
+      expect(provider.appSpells, hasLength(preloadedSpells.length));
+      expect(restoredIds, hasLength(preloadedSpells.length));
+      expect(restoredIds.toSet(), hasLength(preloadedSpells.length));
+    });
+
+    test('seed é idempotente: recarregar não duplica os ancestrais', () async {
+      // Regressão: preloadedSpells gera UUID novo a cada execução; o seed
+      // comparava por id e re-inseria os 65 feitiços a cada load.
+      final db = await DatabaseHelper.instance.database;
+      await db.delete('spells');
+
+      final provider = SpellProvider();
+      await provider.loadSpells();
+      await provider.loadSpells();
+      await provider.loadSpells();
+
+      final count = Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM spells WHERE is_preloaded = 1',
+        ),
+      );
+      expect(count, preloadedSpells.length);
+      expect(provider.appSpells, hasLength(preloadedSpells.length));
+    });
+  });
+
 }

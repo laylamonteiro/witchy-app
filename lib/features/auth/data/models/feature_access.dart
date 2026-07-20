@@ -33,6 +33,7 @@ enum AppFeature {
   encyclopediaGoddessesDetails,
   encyclopediaElementsDetails,
   encyclopediaAltarDetails,
+  encyclopediaArcaneDetails,
 
   // Astrologia
   astrologyBasic,
@@ -234,9 +235,9 @@ class FeatureAccessService {
     limit: UserModel.freeAiConsultationsLimit,
     window: LimitWindow.daily,
     used: (user) => user.aiConsultationsToday,
-    availableMessage: 'consulta(s) de IA hoje',
+    availableMessage: 'consulta(s) mística(s) hoje',
     blockedMessage:
-        'Você usou suas ${UserModel.freeAiConsultationsLimit} consultas de IA hoje. Assine Premium para acesso ilimitado.',
+        'Você usou suas ${UserModel.freeAiConsultationsLimit} consultas místicas hoje. Assine Premium para acesso ilimitado.',
   );
 
   static final Map<AppFeature, FeatureUsageLimit> limits = {
@@ -278,13 +279,8 @@ class FeatureAccessService {
       availableMessage: 'leitura(s) gratuita(s) de tarot hoje',
       blockedMessage: FeatureAccessMessages.limitReached,
     ),
-    AppFeature.numerologyReadings: FeatureUsageLimit(
-      limit: UserModel.freeAiConsultationsLimit,
-      window: LimitWindow.daily,
-      used: (user) => user.aiConsultationsToday,
-      availableMessage: 'consulta(s) gratuita(s) de numerologia hoje',
-      blockedMessage: FeatureAccessMessages.limitReached,
-    ),
+    // numerologyReadings (explicação do Conselheiro Místico) é exclusiva
+    // Premium: fora do mapa de limites, o plano Free recebe preview -> paywall.
     AppFeature.aiMysticCounselor: FeatureUsageLimit(
       limit: UserModel.freeAdvisorConsultationsLimit,
       window: LimitWindow.daily,
@@ -293,11 +289,12 @@ class FeatureAccessService {
       blockedMessage: 'Você usou sua consulta ao Conselheiro Místico hoje. Assine Premium para consultas ilimitadas.',
     ),
     AppFeature.aiDreamAnalysis: _aiLimit,
-    AppFeature.aiPalmistry: _aiLimit,
-    AppFeature.aiPersonalizedDreamInterpretation: _aiLimit,
+    // aiPalmistry e aiPersonalizedDreamInterpretation são exclusivas Premium:
+    // fora do mapa de limites, o plano Free recebe preview -> paywall.
     AppFeature.aiSpellSuggestions: _aiLimit,
     AppFeature.aiMagicalWeather: _aiLimit,
-    AppFeature.interactiveMagicalLearning: _aiLimit,
+    // interactiveMagicalLearning (Grimorio Vivo alem da licao 1) e exclusiva
+    // Premium: fora do mapa, o Free recebe preview -> paywall.
   };
 
   AccessResult checkAccess(
@@ -390,6 +387,7 @@ class FeatureAccessService {
       case AppFeature.encyclopediaGoddessesDetails:
       case AppFeature.encyclopediaElementsDetails:
       case AppFeature.encyclopediaAltarDetails:
+      case AppFeature.encyclopediaArcaneDetails:
         return 'Desbloqueie detalhes completos da enciclopédia com o plano Premium.';
       case AppFeature.lunarCalendarDetails:
         return 'Informações detalhadas das fases lunares são exclusivas Premium.';
@@ -403,6 +401,14 @@ class FeatureAccessService {
       case AppFeature.sigilsCreate:
       case AppFeature.sigilsView:
         return 'Criação de sigilos é uma funcionalidade Premium.';
+      case AppFeature.aiPersonalizedDreamInterpretation:
+        return 'A interpretação personalizada de sonhos é exclusiva do plano Premium.';
+      case AppFeature.numerologyReadings:
+        return 'A explicação do Conselheiro Místico é exclusiva do plano Premium.';
+      case AppFeature.interactiveMagicalLearning:
+        return 'As trilhas completas do Grimório Vivo são exclusivas do plano Premium.';
+      case AppFeature.aiPalmistry:
+        return 'A leitura de mãos é exclusiva do plano Premium.';
       default:
         return FeatureAccessMessages.preview;
     }

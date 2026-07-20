@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/gratitude_provider.dart';
@@ -7,6 +8,7 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'gratitude_form_page.dart';
 
 class GratitudesListPage extends StatefulWidget {
@@ -33,15 +35,15 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
       body: Consumer<GratitudeProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const LoadingWidget(message: 'Carregando gratidões...');
+            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingGratitudes);
           }
 
           if (provider.gratitudes.isEmpty) {
             return EmptyStateWidget(
               message:
-                  'Você ainda não registrou nenhuma gratidão.\nComece a cultivar abundância em sua vida!',
+                  AppLocalizations.of(context)!.diaryEmptyGratitudes,
               icon: Icons.favorite,
-              actionText: 'Adicionar Gratidão',
+              actionText: AppLocalizations.of(context)!.diaryAddGratitude,
               onAction: () => _navigateToForm(context),
             );
           }
@@ -67,7 +69,7 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
                           dateFormat.format(gratitude.date),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: context.gc.textSecondary,
                                   ),
                         ),
                       ],
@@ -87,8 +89,8 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
                             .map((tag) => Chip(
                                   label: Text(tag, style: const TextStyle(fontSize: 12)),
                                   backgroundColor:
-                                      AppColors.mint.withOpacity(0.2),
-                                  side: const BorderSide(color: AppColors.mint),
+                                      context.gc.mint.withOpacity(0.2),
+                                  side: BorderSide(color: context.gc.mint),
                                 ))
                             .toList(),
                       ),

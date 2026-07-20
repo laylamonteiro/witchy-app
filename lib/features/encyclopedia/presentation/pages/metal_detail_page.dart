@@ -4,6 +4,7 @@ import '../../data/models/crystal_model.dart'; // Para ElementExtension
 import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/auth.dart';
 
 class MetalDetailPage extends StatelessWidget {
@@ -33,12 +34,12 @@ class MetalDetailPage extends StatelessWidget {
                         height: 200,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return _buildPlaceholderImage();
+                          return _buildPlaceholderImage(context);
                         },
                       ),
                     )
                   else
-                    _buildPlaceholderImage(),
+                    _buildPlaceholderImage(context),
                   const SizedBox(height: 16),
                   Text(
                     metal.name,
@@ -71,13 +72,13 @@ class MetalDetailPage extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: metal.conductsPower
-                          ? AppColors.success.withOpacity(0.2)
-                          : AppColors.info.withOpacity(0.2),
+                          ? context.gc.success.withOpacity(0.2)
+                          : context.gc.info.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: metal.conductsPower
-                            ? AppColors.success
-                            : AppColors.info,
+                            ? context.gc.success
+                            : context.gc.info,
                       ),
                     ),
                     child: Text(
@@ -86,8 +87,8 @@ class MetalDetailPage extends StatelessWidget {
                           : '🛡️ Protetor',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: metal.conductsPower
-                                ? AppColors.success
-                                : AppColors.info,
+                                ? context.gc.success
+                                : context.gc.info,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -106,9 +107,9 @@ class MetalDetailPage extends StatelessWidget {
               MagicalCard(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.alert.withOpacity(0.1),
+                    color: context.gc.alert.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.alert, width: 2),
+                    border: Border.all(color: context.gc.alert, width: 2),
                   ),
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -116,9 +117,9 @@ class MetalDetailPage extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.warning_amber_rounded,
-                            color: AppColors.alert,
+                            color: context.gc.alert,
                             size: 28,
                           ),
                           const SizedBox(width: 8),
@@ -128,7 +129,7 @@ class MetalDetailPage extends StatelessWidget {
                                 .textTheme
                                 .titleLarge
                                 ?.copyWith(
-                                  color: AppColors.alert,
+                                  color: context.gc.alert,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -180,8 +181,8 @@ class MetalDetailPage extends StatelessWidget {
                     children: metal.magicalProperties
                         .map((property) => Chip(
                               label: Text(property),
-                              backgroundColor: AppColors.lilac.withOpacity(0.2),
-                              side: const BorderSide(color: AppColors.lilac),
+                              backgroundColor: context.gc.lilac.withOpacity(0.2),
+                              side: BorderSide(color: context.gc.lilac),
                             ))
                         .toList(),
                   ),
@@ -207,10 +208,10 @@ class MetalDetailPage extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.auto_awesome,
                               size: 16,
-                              color: AppColors.starYellow,
+                              color: context.gc.starYellow,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -242,10 +243,10 @@ class MetalDetailPage extends StatelessWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.star,
                             size: 16,
-                            color: AppColors.mint,
+                            color: context.gc.mint,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -268,9 +269,9 @@ class MetalDetailPage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.history_edu,
-                          color: AppColors.pinkWitch,
+                          color: context.gc.pinkWitch,
                           size: 24,
                         ),
                         const SizedBox(width: 8),
@@ -296,21 +297,21 @@ class MetalDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderImage() {
+  Widget _buildPlaceholderImage(BuildContext context) {
     return Container(
       width: 200,
       height: 200,
       decoration: BoxDecoration(
-        color: AppColors.starYellow.withOpacity(0.2),
+        color: context.gc.starYellow.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.starYellow,
+          color: context.gc.starYellow,
           width: 3,
         ),
       ),
       child: Icon(
         _getMetalIcon(metal.name),
-        color: AppColors.starYellow,
+        color: context.gc.starYellow,
         size: 80,
       ),
     );

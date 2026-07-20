@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
 
@@ -12,13 +14,13 @@ class WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
               Color(0xFF1A1033), // Roxo mais escuro no topo
-              AppColors.background,
+              context.gc.background,
             ],
           ),
         ),
@@ -29,7 +31,7 @@ class WelcomePage extends StatelessWidget {
               children: [
                 const Spacer(flex: 2),
                 // Logo/Ícone
-                _buildLogo(),
+                _buildLogo(context),
                 const SizedBox(height: 32),
                 // Título
                 Text(
@@ -37,23 +39,23 @@ class WelcomePage extends StatelessWidget {
                   style: GoogleFonts.cinzelDecorative(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 // Subtítulo
                 Text(
-                  'Sua jornada mágica começa aqui',
+                  AppLocalizations.of(context)!.welcomeSubtitle,
                   style: GoogleFonts.nunito(
                     fontSize: 16,
-                    color: AppColors.textSecondary,
+                    color: context.gc.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const Spacer(flex: 2),
                 // Features preview
-                _buildFeaturesList(),
+                _buildFeaturesList(context),
                 const Spacer(flex: 2),
                 // Botões
                 _buildButtons(context),
@@ -66,7 +68,7 @@ class WelcomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLogo() {
+  Widget _buildLogo(BuildContext context) {
     return Container(
       width: 120,
       height: 120,
@@ -76,45 +78,46 @@ class WelcomePage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.lilac.withValues(alpha: 0.3),
-            AppColors.pink.withValues(alpha: 0.3),
+            context.gc.lilac.withValues(alpha: 0.3),
+            context.gc.pink.withValues(alpha: 0.3),
           ],
         ),
         border: Border.all(
-          color: AppColors.lilac.withValues(alpha: 0.5),
+          color: context.gc.lilac.withValues(alpha: 0.5),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.lilac.withValues(alpha: 0.3),
+            color: context.gc.lilac.withValues(alpha: 0.3),
             blurRadius: 30,
             spreadRadius: 5,
           ),
         ],
       ),
-      child: const Icon(
+      child: Icon(
         Icons.auto_stories,
         size: 56,
-        color: AppColors.lilac,
+        color: context.gc.lilac,
       ),
     );
   }
 
-  Widget _buildFeaturesList() {
+  Widget _buildFeaturesList(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final features = [
-      ('Calendário Lunar', Icons.nightlight_round),
-      ('Grimório Digital', Icons.menu_book),
-      ('Diários Mágicos', Icons.book),
-      ('Astrologia', Icons.stars),
+      (l10n.welcomeFeatureLunar, Icons.nightlight_round),
+      (l10n.welcomeFeatureGrimoire, Icons.menu_book),
+      (l10n.welcomeFeatureDiaries, Icons.book),
+      (l10n.welcomeFeatureAstrology, Icons.stars),
     ];
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.5),
+        color: context.gc.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.surfaceBorder,
+          color: context.gc.surfaceBorder,
         ),
       ),
       child: Column(
@@ -126,12 +129,12 @@ class WelcomePage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.lilac.withValues(alpha: 0.2),
+                    color: context.gc.lilac.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     feature.$2,
-                    color: AppColors.lilac,
+                    color: context.gc.lilac,
                     size: 20,
                   ),
                 ),
@@ -140,7 +143,7 @@ class WelcomePage extends StatelessWidget {
                   feature.$1,
                   style: GoogleFonts.nunito(
                     fontSize: 15,
-                    color: AppColors.textPrimary,
+                    color: context.gc.textPrimary,
                   ),
                 ),
               ],
@@ -163,7 +166,7 @@ class WelcomePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const SignupPage()),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: context.gc.lilac,
               foregroundColor: const Color(0xFF2B2143),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -171,7 +174,7 @@ class WelcomePage extends StatelessWidget {
               ),
             ),
             child: Text(
-              'Criar Conta',
+              AppLocalizations.of(context)!.authCreateAccount,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -189,15 +192,15 @@ class WelcomePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const LoginPage()),
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.lilac,
-              side: const BorderSide(color: AppColors.lilac, width: 2),
+              foregroundColor: context.gc.lilac,
+              side: BorderSide(color: context.gc.lilac, width: 2),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: Text(
-              'Já tenho conta',
+              AppLocalizations.of(context)!.welcomeHaveAccount,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

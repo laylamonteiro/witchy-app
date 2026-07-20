@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 
@@ -37,15 +39,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.lilac),
+          icon: Icon(Icons.arrow_back, color: context.gc.lilac),
           onPressed: () => Navigator.pop(context),
         ),
         title: ResponsiveAppBarTitle(
-          'Alterar Senha',
+          AppLocalizations.of(context)!.changePasswordTitle,
           style: GoogleFonts.cinzelDecorative(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         centerTitle: true,
@@ -89,29 +91,29 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.lilac.withValues(alpha: 0.2),
+            color: context.gc.lilac.withValues(alpha: 0.2),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.password_outlined,
             size: 40,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 24),
         Text(
-          'Nova Senha',
+          AppLocalizations.of(context)!.changePasswordHeader,
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Digite sua senha atual e escolha uma nova senha',
+          AppLocalizations.of(context)!.changePasswordSubtitle,
           style: GoogleFonts.nunito(
             fontSize: 15,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -124,15 +126,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _currentPasswordController,
       obscureText: _obscureCurrentPassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Senha Atual',
+        labelText: AppLocalizations.of(context)!.changePasswordCurrentLabel,
         hintText: '••••••••',
-        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.lilac),
+        prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -143,10 +145,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, insira sua senha atual';
+          return AppLocalizations.of(context)!.changePasswordCurrentRequired;
         }
         if (value.length < 6) {
-          return 'A senha deve ter pelo menos 6 caracteres';
+          return AppLocalizations.of(context)!.authPasswordMinLength;
         }
         return null;
       },
@@ -157,15 +159,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _newPasswordController,
       obscureText: _obscureNewPassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Nova Senha',
-        hintText: 'Mínimo 6 caracteres',
-        prefixIcon: const Icon(Icons.lock_open_outlined, color: AppColors.mint),
+        labelText: AppLocalizations.of(context)!.changePasswordNewLabel,
+        hintText: AppLocalizations.of(context)!.authPasswordHintMin,
+        prefixIcon: Icon(Icons.lock_open_outlined, color: context.gc.mint),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -176,13 +178,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, insira uma nova senha';
+          return AppLocalizations.of(context)!.changePasswordNewRequired;
         }
         if (value.length < 6) {
-          return 'A senha deve ter pelo menos 6 caracteres';
+          return AppLocalizations.of(context)!.authPasswordMinLength;
         }
         if (value == _currentPasswordController.text) {
-          return 'A nova senha deve ser diferente da atual';
+          return AppLocalizations.of(context)!.changePasswordMustDiffer;
         }
         return null;
       },
@@ -193,15 +195,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: _obscureConfirmPassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Confirmar Nova Senha',
-        hintText: 'Digite a nova senha novamente',
-        prefixIcon: const Icon(Icons.lock_open_outlined, color: AppColors.mint),
+        labelText: AppLocalizations.of(context)!.changePasswordConfirmLabel,
+        hintText: AppLocalizations.of(context)!.changePasswordConfirmHint,
+        prefixIcon: Icon(Icons.lock_open_outlined, color: context.gc.mint),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -212,10 +214,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, confirme sua nova senha';
+          return AppLocalizations.of(context)!.changePasswordConfirmRequired;
         }
         if (value != _newPasswordController.text) {
-          return 'As senhas não coincidem';
+          return AppLocalizations.of(context)!.authPasswordsDontMatch;
         }
         return null;
       },
@@ -226,13 +228,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return ElevatedButton(
       onPressed: _isLoading ? null : _handleChangePassword,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.lilac,
+        backgroundColor: context.gc.lilac,
         foregroundColor: const Color(0xFF2B2143),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        disabledBackgroundColor: AppColors.lilac.withValues(alpha: 0.5),
+        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
       ),
       child: _isLoading
           ? const SizedBox(
@@ -244,7 +246,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               ),
             )
           : Text(
-              'Alterar Senha',
+              AppLocalizations.of(context)!.changePasswordTitle,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -271,7 +273,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         );
 
         if (!result.success) {
-          throw Exception(result.errorMessage ?? 'Erro ao alterar senha');
+          throw Exception(result.errorMessage ?? AppLocalizations.of(context)!.changePasswordError);
         }
       } else {
         // Simular alteração se Supabase não configurado
@@ -281,9 +283,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (mounted) {
         // Mostrar sucesso
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Senha alterada com sucesso!'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.changePasswordSuccess),
+            backgroundColor: context.gc.success,
           ),
         );
 
@@ -294,11 +296,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (mounted) {
         setState(() => _isLoading = false);
 
-        String errorMessage = 'Erro ao alterar senha';
+        String errorMessage = AppLocalizations.of(context)!.changePasswordError;
         if (e.toString().contains('Invalid login') ||
             e.toString().contains('credentials') ||
             e.toString().contains('password')) {
-          errorMessage = 'Senha atual incorreta';
+          errorMessage = AppLocalizations.of(context)!.changePasswordWrongCurrent;
         } else {
           errorMessage = e.toString().replaceAll('Exception: ', '');
         }
@@ -306,7 +308,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }

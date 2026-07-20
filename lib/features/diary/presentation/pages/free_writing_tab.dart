@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/free_writing_provider.dart';
 import '../../data/models/free_writing_model.dart';
 import '../../../../core/widgets/magical_fab.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'free_writings_list_page.dart';
 
 /// Aba 💡 de Diários: canvas de escrita livre.
@@ -113,9 +114,9 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
 
   String get _greeting {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Bom dia ✨';
-    if (hour < 18) return 'Boa tarde ✨';
-    return 'Boa noite ✨';
+    if (hour < 12) return AppLocalizations.of(context)!.commonGoodMorning;
+    if (hour < 18) return AppLocalizations.of(context)!.commonGoodAfternoon;
+    return AppLocalizations.of(context)!.commonGoodEvening;
   }
 
   @override
@@ -139,17 +140,17 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                     Text(
                       _greeting,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                     ),
                     const Spacer(),
                     if (Navigator.of(context).canPop())
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
-                        tooltip: 'Voltar',
+                        tooltip: AppLocalizations.of(context)!.commonBack,
                         onPressed: () async {
                           if (await _handleBack() && context.mounted) {
                             Navigator.of(context).pop();
@@ -157,17 +158,17 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                         },
                       ),
                     IconButton(
-                      icon: const Icon(Icons.history, color: AppColors.lilac),
-                      tooltip: 'Reflexões anteriores',
+                      icon: Icon(Icons.history, color: context.gc.lilac),
+                      tooltip: AppLocalizations.of(context)!.diaryPreviousReflections,
                       onPressed: _openHistory,
                     ),
                     if (hasText)
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.save_outlined,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
-                        tooltip: 'Salvar reflexão',
+                        tooltip: AppLocalizations.of(context)!.diarySaveReflection,
                         onPressed: _save,
                       ),
                   ],
@@ -182,17 +183,17 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                     textAlignVertical: TextAlignVertical.top,
                     keyboardType: TextInputType.multiline,
                     textCapitalization: TextCapitalization.sentences,
-                    cursorColor: AppColors.lilac,
-                    style: const TextStyle(
-                      color: AppColors.softWhite,
+                    cursorColor: context.gc.lilac,
+                    style: TextStyle(
+                      color: context.gc.softWhite,
                       fontSize: 17,
                       height: 1.5,
                     ),
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: 'O que está na sua mente hoje?',
+                      hintText: AppLocalizations.of(context)!.diaryFreeWritingHint,
                       hintStyle: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.4),
+                        color: context.gc.softWhite.withOpacity(0.4),
                         fontSize: 17,
                         height: 1.5,
                       ),

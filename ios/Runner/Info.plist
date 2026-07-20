@@ -6,6 +6,12 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Grimório de Bolso</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Permite salvar a imagem do seu sigilo na galeria.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Permite fotografar a palma da mão para a leitura de quiromancia.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Permite escolher uma foto da palma da mão para a leitura de quiromancia.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

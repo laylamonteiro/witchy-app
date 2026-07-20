@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
@@ -128,7 +129,7 @@ class InlineUpgradeButton extends StatelessWidget {
               children: [
                 Icon(
                   Icons.star,
-                  color: Colors.white,
+                  color: context.gc.textPrimary,
                   size: compact ? 12 : 14,
                 ),
                 if (label != null || !compact) ...[
@@ -136,7 +137,7 @@ class InlineUpgradeButton extends StatelessWidget {
                   Text(
                     label ?? 'Premium',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.gc.textPrimary,
                       fontSize: compact ? 10 : 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -205,9 +206,9 @@ class FeatureGate extends StatelessWidget {
                     color: Color(0xFF9C27B0),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.lock,
-                    color: Colors.white,
+                    color: context.gc.textPrimary,
                     size: 12,
                   ),
                 ),
@@ -239,7 +240,7 @@ class FeatureGate extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: context.gc.textSecondary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -253,8 +254,8 @@ class FeatureGate extends StatelessWidget {
               Text(
                 blockedMessage ?? access.message ?? 'Funcionalidade Premium',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.gc.textPrimary,
                   fontSize: 16,
                 ),
               ),
@@ -278,10 +279,10 @@ class FeatureGate extends StatelessWidget {
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Desbloquear com Premium',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.gc.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -290,9 +291,9 @@ class FeatureGate extends StatelessWidget {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(
+                child: Text(
                   'Agora não',
-                  style: TextStyle(color: Colors.white54),
+                  style: TextStyle(color: context.gc.textSecondary),
                 ),
               ),
             ],
@@ -345,8 +346,8 @@ class LimitReachedBanner extends StatelessWidget {
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
                     fontSize: 14,
                   ),
                 ),
@@ -372,9 +373,9 @@ class LimitReachedBanner extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'Remover Limites',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.gc.textPrimary),
               ),
             ),
           ),

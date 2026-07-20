@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/input_formatters.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_view_page.dart';
@@ -138,7 +140,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
           _dateError = null;
         } else {
           _birthDate = null;
-          _dateError = 'Data inválida';
+          _dateError = AppLocalizations.of(context)!.chartInvalidDate;
         }
       } else {
         _birthDate = null;
@@ -156,7 +158,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
           _timeError = null;
         } else {
           _birthTime = null;
-          _timeError = 'Hora inválida';
+          _timeError = AppLocalizations.of(context)!.chartInvalidTime;
         }
       } else {
         _birthTime = null;
@@ -389,7 +391,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
         final locations = await locationFromAddress(_birthPlace!);
 
         if (locations.isEmpty) {
-          throw Exception('Local não encontrado');
+          throw Exception(AppLocalizations.of(context)!.chartPlaceNotFound);
         }
 
         final location = locations.first;
@@ -420,8 +422,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(provider.error ?? 'Erro ao calcular mapa'),
-            backgroundColor: AppColors.alert,
+            content: Text(provider.error ?? AppLocalizations.of(context)!.chartCalcError),
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -430,8 +432,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro: $e'),
-          backgroundColor: AppColors.alert,
+          content: Text('${AppLocalizations.of(context)!.editErrorPrefix}: $e'),
+          backgroundColor: context.gc.alert,
         ),
       );
     } finally {
@@ -447,10 +449,10 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Criar Mapa Astral'),
-        backgroundColor: AppColors.darkBackground,
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.chartCreateTitle),
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -465,18 +467,17 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     const Text('🌟', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      'Seu Mapa Astral',
+                      AppLocalizations.of(context)!.chartYourChart,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: AppColors.softWhite,
+                                color: context.gc.softWhite,
                               ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Para calcular seu mapa natal preciso, precisamos de sua data, '
-                      'hora e local de nascimento. Quanto mais preciso, melhor!',
+                      AppLocalizations.of(context)!.chartIntro,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.softWhite,
+                            color: context.gc.softWhite,
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -492,22 +493,22 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Data de Nascimento',
+                      AppLocalizations.of(context)!.chartBirthDate,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Digite no formato dd/mm/aaaa',
+                      AppLocalizations.of(context)!.chartDateFormat,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.softWhite.withOpacity(0.7),
+                            color: context.gc.softWhite.withOpacity(0.7),
                           ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _dateController,
-                      style: const TextStyle(color: AppColors.softWhite),
+                      style: TextStyle(color: context.gc.softWhite),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
@@ -515,31 +516,31 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       ],
                       onChanged: _onDateChanged,
                       decoration: InputDecoration(
-                        hintText: 'dd/mm/aaaa',
+                        hintText: AppLocalizations.of(context)!.chartDateHint,
                         hintStyle: TextStyle(
-                          color: AppColors.softWhite.withOpacity(0.4),
+                          color: context.gc.softWhite.withOpacity(0.4),
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.calendar_today,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                         suffixIcon: _birthDate != null
-                            ? const Icon(
+                            ? Icon(
                                 Icons.check_circle,
-                                color: AppColors.success,
+                                color: context.gc.success,
                               )
                             : null,
                         errorText: _dateError,
                         filled: true,
-                        fillColor: AppColors.cardBackground,
+                        fillColor: context.gc.cardBackground,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.lilac,
+                          borderSide: BorderSide(
+                            color: context.gc.lilac,
                             width: 1,
                           ),
                         ),
@@ -557,16 +558,16 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hora de Nascimento',
+                      AppLocalizations.of(context)!.chartBirthTime,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'A hora exata é importante para calcular o Ascendente e as Casas.',
+                      AppLocalizations.of(context)!.chartTimeImportant,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.softWhite.withOpacity(0.7),
+                            color: context.gc.softWhite.withOpacity(0.7),
                           ),
                     ),
                     const SizedBox(height: 12),
@@ -575,8 +576,8 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       enabled: !_unknownBirthTime,
                       style: TextStyle(
                         color: _unknownBirthTime
-                            ? AppColors.softWhite.withOpacity(0.3)
-                            : AppColors.softWhite,
+                            ? context.gc.softWhite.withOpacity(0.3)
+                            : context.gc.softWhite,
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
@@ -587,31 +588,31 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       decoration: InputDecoration(
                         hintText: 'HH:MM',
                         hintStyle: TextStyle(
-                          color: AppColors.softWhite.withOpacity(0.4),
+                          color: context.gc.softWhite.withOpacity(0.4),
                         ),
                         prefixIcon: Icon(
                           Icons.access_time,
                           color: _unknownBirthTime
-                              ? AppColors.lilac.withOpacity(0.3)
-                              : AppColors.lilac,
+                              ? context.gc.lilac.withOpacity(0.3)
+                              : context.gc.lilac,
                         ),
                         suffixIcon: _birthTime != null && !_unknownBirthTime
-                            ? const Icon(
+                            ? Icon(
                                 Icons.check_circle,
-                                color: AppColors.success,
+                                color: context.gc.success,
                               )
                             : null,
                         errorText: _timeError,
                         filled: true,
-                        fillColor: AppColors.cardBackground,
+                        fillColor: context.gc.cardBackground,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.lilac,
+                          borderSide: BorderSide(
+                            color: context.gc.lilac,
                             width: 1,
                           ),
                         ),
@@ -634,11 +635,11 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           }
                         });
                       },
-                      title: const Text(
-                        'Não sei a hora exata',
-                        style: TextStyle(color: AppColors.softWhite),
+                      title: Text(
+                        AppLocalizations.of(context)!.chartDontKnowTime,
+                        style: TextStyle(color: context.gc.softWhite),
                       ),
-                      activeColor: AppColors.lilac,
+                      activeColor: context.gc.lilac,
                       contentPadding: EdgeInsets.zero,
                     ),
                   ],
@@ -653,34 +654,34 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Local de Nascimento',
+                      AppLocalizations.of(context)!.chartBirthPlace,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Digite pelo menos 3 caracteres para buscar',
+                      AppLocalizations.of(context)!.chartTypeToSearch,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.softWhite.withOpacity(0.7),
+                            color: context.gc.softWhite.withOpacity(0.7),
                           ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _birthPlaceController,
                       focusNode: _birthPlaceFocusNode,
-                      style: const TextStyle(color: AppColors.softWhite),
+                      style: TextStyle(color: context.gc.softWhite),
                       decoration: InputDecoration(
-                        hintText: 'Ex: São Paulo, Brasil',
+                        hintText: AppLocalizations.of(context)!.chartPlaceHint,
                         hintStyle: TextStyle(
-                          color: AppColors.softWhite.withOpacity(0.5),
+                          color: context.gc.softWhite.withOpacity(0.5),
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.location_on,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                         suffixIcon: _isSearchingLocation
-                            ? const Padding(
+                            ? Padding(
                                 padding: EdgeInsets.all(12.0),
                                 child: SizedBox(
                                   width: 20,
@@ -688,20 +689,20 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.lilac,
+                                      context.gc.lilac,
                                     ),
                                   ),
                                 ),
                               )
                             : (_selectedLatitude != null &&
                                     _selectedLongitude != null)
-                                ? const Icon(
+                                ? Icon(
                                     Icons.check_circle,
-                                    color: AppColors.success,
+                                    color: context.gc.success,
                                   )
                                 : null,
                         filled: true,
-                        fillColor: AppColors.cardBackground,
+                        fillColor: context.gc.cardBackground,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -721,10 +722,10 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
-                          color: AppColors.cardBackground,
+                          color: context.gc.cardBackground,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.lilac.withOpacity(0.3),
+                            color: context.gc.lilac.withOpacity(0.3),
                           ),
                         ),
                         child: ListView.separated(
@@ -732,7 +733,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _locationSuggestions.length,
                           separatorBuilder: (context, index) => Divider(
-                            color: AppColors.lilac.withOpacity(0.2),
+                            color: context.gc.lilac.withOpacity(0.2),
                             height: 1,
                           ),
                           itemBuilder: (context, index) {
@@ -776,22 +777,22 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
 
                             return ListTile(
                               dense: true,
-                              leading: const Icon(
+                              leading: Icon(
                                 Icons.place,
-                                color: AppColors.lilac,
+                                color: context.gc.lilac,
                                 size: 20,
                               ),
                               title: Text(
                                 displayText,
-                                style: const TextStyle(
-                                  color: AppColors.softWhite,
+                                style: TextStyle(
+                                  color: context.gc.softWhite,
                                   fontSize: 14,
                                 ),
                               ),
                               subtitle: Text(
                                 coordsText,
                                 style: TextStyle(
-                                  color: AppColors.softWhite.withOpacity(0.6),
+                                  color: context.gc.softWhite.withOpacity(0.6),
                                   fontSize: 11,
                                 ),
                               ),
@@ -807,17 +808,17 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
+                          color: context.gc.success.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: AppColors.success.withOpacity(0.3),
+                            color: context.gc.success.withOpacity(0.3),
                           ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.check_circle,
-                              color: AppColors.success,
+                              color: context.gc.success,
                               size: 18,
                             ),
                             const SizedBox(width: 8),
@@ -826,7 +827,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                 '✓ $_birthPlace\n'
                                 'Lat: ${_selectedLatitude!.toStringAsFixed(4)}, Lon: ${_selectedLongitude!.toStringAsFixed(4)}',
                                 style: TextStyle(
-                                  color: AppColors.success,
+                                  color: context.gc.success,
                                   fontSize: 12,
                                   height: 1.4,
                                 ),
@@ -847,24 +848,24 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                 onPressed:
                     _isCalculating || !_canCalculate() ? null : _calculateChart,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: AppColors.darkBackground,
+                  backgroundColor: context.gc.lilac,
+                  foregroundColor: context.gc.darkBackground,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
+                  disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
                 ),
                 child: _isCalculating
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.darkBackground,
+                            context.gc.darkBackground,
                           ),
                         ),
                       )
-                    : const Text(
-                        'Calcular Mapa Astral ✨',
+                    : Text(
+                        AppLocalizations.of(context)!.chartCalculate,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -877,17 +878,17 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                 MagicalCard(
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.info_outline,
-                        color: AppColors.starYellow,
+                        color: context.gc.starYellow,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Sem a hora exata, usaremos meio-dia (12:00) e o sistema de casas iguais.',
+                          AppLocalizations.of(context)!.chartNoonNote,
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.softWhite.withOpacity(0.8),
+                                    color: context.gc.softWhite.withOpacity(0.8),
                                   ),
                         ),
                       ),

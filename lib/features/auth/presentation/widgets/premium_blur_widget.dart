@@ -1,11 +1,13 @@
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../subscription/presentation/widgets/subscription_offer_widgets.dart';
 
 Future<void> showPremiumUpgradePaywall(BuildContext context) {
@@ -218,10 +220,10 @@ class PremiumContentSection extends StatelessWidget {
           showPremiumUpgradePaywall(context);
         },
         icon: const Icon(Icons.star, size: 18),
-        label: const Text('Seja Premium'),
+        label: Text(AppLocalizations.of(context)!.premiumBePremium),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF9C27B0),
-          foregroundColor: Colors.white,
+          backgroundColor: context.gc.lilac,
+          foregroundColor: context.gc.onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -356,9 +358,9 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
           maxHeight: MediaQuery.sizeOf(context).height * 0.96,
         ),
         padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + bottomPadding),
-        decoration: const BoxDecoration(
-          color: Color(0xFF090A12),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        decoration: BoxDecoration(
+          color: context.gc.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
         ),
         child: Column(
           children: [
@@ -369,7 +371,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: context.gc.textSecondary,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -378,9 +380,9 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                     alignment: Alignment.centerRight,
                     child: IconButton(
                       key: const ValueKey('close_premium_paywall'),
-                      tooltip: 'Fechar',
+                      tooltip: AppLocalizations.of(context)!.commonClose,
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Colors.white54),
+                      icon: Icon(Icons.close, color: context.gc.textSecondary),
                     ),
                   ),
                 ),
@@ -391,8 +393,8 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                 listenable: _paymentService,
                 builder: (context, _) {
                   if (_isInitializing) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: AppColors.lilac),
+                    return Center(
+                      child: CircularProgressIndicator(color: context.gc.lilac),
                     );
                   }
 
@@ -436,10 +438,10 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                 purchaseEnabled: selectedAvailable && !noProducts,
                                 onPurchase: _purchaseSelectedPlan,
                                 unavailableNotice: noProducts
-                                    ? const Text(
-                                        'Os planos estão temporariamente indisponíveis',
+                                    ? Text(
+                                        AppLocalizations.of(context)!.premiumPlansUnavailable,
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: AppColors.warning),
+                                        style: TextStyle(color: context.gc.warning),
                                       )
                                     : null,
                               ),
@@ -473,8 +475,8 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
         if (!mounted) return;
         Navigator.pop(context);
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Premium ativado com sucesso!'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.premiumActivated),
             backgroundColor: Colors.green,
           ),
         );
@@ -482,7 +484,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              result.errorMessage ?? 'Não foi possível concluir a compra',
+              result.errorMessage ?? AppLocalizations.of(context)!.premiumPurchaseFailed,
             ),
             backgroundColor: Colors.red,
           ),
@@ -528,20 +530,20 @@ class PremiumPreviewWrapper extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF9C27B0).withValues(alpha: 0.8),
-                      const Color(0xFFE91E63).withValues(alpha: 0.8),
+                      context.gc.lilac.withValues(alpha: 0.8),
+                      context.gc.pink.withValues(alpha: 0.8),
                     ],
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.lock, color: Colors.white, size: 16),
+                    Icon(Icons.lock, color: context.gc.textPrimary, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        previewMessage ?? access.message ?? 'Conteúdo Premium',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        previewMessage ?? access.message ?? AppLocalizations.of(context)!.premiumContentLabel,
+                        style: TextStyle(
+                          color: context.gc.textPrimary,
                           fontSize: 12,
                         ),
                       ),
@@ -553,10 +555,10 @@ class PremiumPreviewWrapper extends StatelessWidget {
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: const Text(
-                        'Upgrade',
+                      child: Text(
+                        AppLocalizations.of(context)!.premiumUpgradeAction,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.gc.textPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),

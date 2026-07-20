@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../data/models/oracle_card_model.dart';
@@ -46,10 +48,10 @@ class _OracleCardsPageState extends State<OracleCardsPage>
     final authProvider = context.read<AuthProvider>();
     if (!authProvider.canUseOracle) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-              'Você atingiu o limite diário de leituras. Volte amanhã ou seja Premium!'),
-          backgroundColor: AppColors.alert,
+              AppLocalizations.of(context)!.oracleDailyLimit),
+          backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
       );
@@ -128,10 +130,10 @@ class _OracleCardsPageState extends State<OracleCardsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Cartas do Oráculo'),
-        backgroundColor: AppColors.darkBackground,
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.oracleTitle),
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -144,17 +146,17 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                     const Text('🔮', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      'Cartas do Oráculo',
+                      AppLocalizations.of(context)!.oracleTitle,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: AppColors.lilac,
+                                color: context.gc.lilac,
                               ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Receba orientação e mensagens do universo',
+                      AppLocalizations.of(context)!.oracleSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.softWhite.withOpacity(0.8),
+                            color: context.gc.softWhite.withOpacity(0.8),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -175,26 +177,26 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               ElevatedButton.icon(
                 onPressed: _isDrawing ? null : _drawCards,
                 icon: _isDrawing
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.darkBackground,
+                            context.gc.darkBackground,
                           ),
                         ),
                       )
                     : const Icon(Icons.auto_awesome),
-                label: Text(_isDrawing ? 'Tirando cartas...' : 'Tirar Cartas'),
+                label: Text(_isDrawing ? AppLocalizations.of(context)!.oracleDrawing : AppLocalizations.of(context)!.oracleDraw),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: AppColors.darkBackground,
+                  backgroundColor: context.gc.lilac,
+                  foregroundColor: context.gc.darkBackground,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 16,
                   ),
-                  disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
+                  disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
                 ),
               ),
 
@@ -207,11 +209,11 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      'Leituras restantes hoje: $remaining/${UserModel.freeOracleReadingsLimit}',
+                      AppLocalizations.of(context)!.oracleRemainingToday('$remaining/${UserModel.freeOracleReadingsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
-                            ? AppColors.softWhite.withOpacity(0.6)
-                            : AppColors.alert,
+                            ? context.gc.softWhite.withOpacity(0.6)
+                            : context.gc.alert,
                         fontSize: 12,
                       ),
                       textAlign: TextAlign.center,
@@ -231,10 +233,10 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Nova Leitura'),
+                label: Text(AppLocalizations.of(context)!.oracleNewReading),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.lilac,
-                  side: const BorderSide(color: AppColors.lilac),
+                  foregroundColor: context.gc.lilac,
+                  side: BorderSide(color: context.gc.lilac),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -259,19 +261,19 @@ class _OracleCardsPageState extends State<OracleCardsPage>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.lilac.withOpacity(0.2)
-              : AppColors.cardBackground,
+              ? context.gc.lilac.withOpacity(0.2)
+              : context.gc.cardBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.lilac : AppColors.surfaceBorder,
+            color: isSelected ? context.gc.lilac : context.gc.surfaceBorder,
             width: 2,
           ),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.style,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               size: 32,
             ),
             const SizedBox(width: 16),
@@ -282,7 +284,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   Text(
                     spread.displayName,
                     style: TextStyle(
-                      color: isSelected ? AppColors.lilac : AppColors.softWhite,
+                      color: isSelected ? context.gc.lilac : context.gc.softWhite,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -291,7 +293,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   Text(
                     spread.description,
                     style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.7),
+                      color: context.gc.softWhite.withOpacity(0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -299,9 +301,9 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               ),
             ),
             if (isSelected)
-              const Icon(
+              Icon(
                 Icons.check_circle,
-                color: AppColors.lilac,
+                color: context.gc.lilac,
               ),
           ],
         ),
@@ -319,9 +321,9 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               const Text('✨', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 16),
               Text(
-                'Sua Leitura',
+                AppLocalizations.of(context)!.oracleYourReading,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
               ),
             ],
@@ -360,8 +362,8 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                AppColors.lilac,
-                                AppColors.lilac.withOpacity(0.5),
+                                context.gc.lilac,
+                                context.gc.lilac.withOpacity(0.5),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -383,7 +385,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                               Text(
                                 position.positionMeaning,
                                 style: TextStyle(
-                                  color: AppColors.softWhite.withOpacity(0.7),
+                                  color: context.gc.softWhite.withOpacity(0.7),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -391,8 +393,8 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                               const SizedBox(height: 4),
                               Text(
                                 position.card.name,
-                                style: const TextStyle(
-                                  color: AppColors.lilac,
+                                style: TextStyle(
+                                  color: context.gc.lilac,
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -401,7 +403,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                               Text(
                                 position.card.message,
                                 style: TextStyle(
-                                  color: AppColors.softWhite.withOpacity(0.8),
+                                  color: context.gc.softWhite.withOpacity(0.8),
                                   fontSize: 14,
                                   fontStyle: FontStyle.italic,
                                 ),
@@ -412,12 +414,12 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Divider(color: AppColors.lilac),
+                    Divider(color: context.gc.lilac),
                     const SizedBox(height: 8),
                     Text(
                       position.card.guidance,
-                      style: const TextStyle(
-                        color: AppColors.softWhite,
+                      style: TextStyle(
+                        color: context.gc.softWhite,
                         height: 1.5,
                       ),
                     ),
@@ -432,16 +434,16 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.lilac.withOpacity(0.2),
+                            color: context.gc.lilac.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.lilac.withOpacity(0.5),
+                              color: context.gc.lilac.withOpacity(0.5),
                             ),
                           ),
                           child: Text(
                             keyword,
-                            style: const TextStyle(
-                              color: AppColors.lilac,
+                            style: TextStyle(
+                              color: context.gc.lilac,
                               fontSize: 12,
                             ),
                           ),

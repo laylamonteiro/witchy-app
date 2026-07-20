@@ -7,6 +7,7 @@ import '../../data/models/crystal_model.dart'; // Para ElementExtension
 import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'metal_detail_page.dart';
 
 class MetalsListPage extends StatefulWidget {
@@ -96,16 +97,16 @@ class _MetalsListPageState extends State<MetalsListPage> {
                                       width: 60,
                                       height: 60,
                                       decoration: BoxDecoration(
-                                        color: AppColors.starYellow.withOpacity(0.2),
+                                        color: context.gc.starYellow.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: AppColors.starYellow.withOpacity(0.5),
+                                          color: context.gc.starYellow.withOpacity(0.5),
                                           width: 2,
                                         ),
                                       ),
                                       child: Icon(
                                         _getMetalIcon(metal.name),
-                                        color: AppColors.starYellow,
+                                        color: context.gc.starYellow,
                                         size: 32,
                                       ),
                                     );
@@ -115,16 +116,16 @@ class _MetalsListPageState extends State<MetalsListPage> {
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    color: AppColors.starYellow.withOpacity(0.2),
+                                    color: context.gc.starYellow.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: AppColors.starYellow.withOpacity(0.5),
+                                      color: context.gc.starYellow.withOpacity(0.5),
                                       width: 2,
                                     ),
                                   ),
                                   child: Icon(
                                     _getMetalIcon(metal.name),
-                                    color: AppColors.starYellow,
+                                    color: context.gc.starYellow,
                                     size: 32,
                                   ),
                                 ),
@@ -142,7 +143,7 @@ class _MetalsListPageState extends State<MetalsListPage> {
                                       style: GoogleFonts.cinzelDecorative(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.lilac,
+                                        color: context.gc.lilac,
                                       ),
                                     ),
                                   ),
@@ -176,9 +177,9 @@ class _MetalsListPageState extends State<MetalsListPage> {
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.chevron_right,
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                       ],
                     ),

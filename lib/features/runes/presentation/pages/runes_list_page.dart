@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/rune_model.dart';
 import 'rune_detail_page.dart';
@@ -13,10 +15,10 @@ class RunesListPage extends StatelessWidget {
     final runes = Rune.getAllRunes();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Runas'),
-        backgroundColor: AppColors.surface,
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.runesListTitle),
+        backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -35,7 +37,7 @@ class RunesListPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Sobre as Runas',
+                          AppLocalizations.of(context)!.runesAbout,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                       ),
@@ -43,20 +45,16 @@ class RunesListPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'As runas são um alfabeto antigo usado pelos povos germânicos '
-                    'e nórdicos. Além de escrita, cada runa carrega significados '
-                    'simbólicos profundos e pode ser usada para reflexão, '
-                    'autoconhecimento e leitura oracular.',
+                    AppLocalizations.of(context)!.runesAboutText,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Explore as 24 runas do Futhark Antigo abaixo. '
-                    'Toque em cada uma para conhecer seu significado.',
+                    AppLocalizations.of(context)!.runesExplore,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
                   ),
@@ -67,7 +65,7 @@ class RunesListPage extends StatelessWidget {
 
             // Título da lista
             Text(
-              'Futhark Antigo',
+              AppLocalizations.of(context)!.runesElderFuthark,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
@@ -118,9 +116,9 @@ class RunesListPage extends StatelessWidget {
               // Símbolo da runa
               Text(
                 rune.symbol,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 42, // Reduzido de 48 para 42
-                  color: AppColors.starYellow,
+                  color: context.gc.starYellow,
                 ),
               ),
               const SizedBox(height: 8),
@@ -129,7 +127,7 @@ class RunesListPage extends StatelessWidget {
               Text(
                 rune.name,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                       fontSize: 16, // Tamanho fixo para consistência
                     ),
                 textAlign: TextAlign.center,
@@ -144,7 +142,7 @@ class RunesListPage extends StatelessWidget {
                   child: Text(
                     rune.keywords.first,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           fontSize: 12, // Tamanho fixo
                         ),
                     textAlign: TextAlign.center,

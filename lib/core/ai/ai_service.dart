@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:uuid/uuid.dart';
 
-import '../i18n/treatment_preference.dart';
+import '../i18n/gender.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../features/astrology/data/models/enums.dart';
 import '../../features/astrology/data/models/magical_profile_model.dart';
@@ -22,6 +22,13 @@ class AIService {
 
   void setLocale(Locale locale) {
     _locale = locale;
+  }
+
+  Gender _gender = Gender.fallback;
+
+  /// Gênero/forma de tratamento da pessoa logada (fonte: AuthProvider).
+  void setGender(Gender preference) {
+    _gender = preference;
   }
 
   String get currentLanguageTag {
@@ -44,17 +51,17 @@ class AIService {
   /// Gerar feitiço com IA usando Groq
   Future<SpellModel> generateSpell(
     String userIntention, {
-    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+    Gender? gender,
   }) async {
     return _generateWithGroq(
       userIntention,
-      treatmentPreference: treatmentPreference,
+      gender: gender ?? _gender,
     );
   }
 
   Future<SpellModel> _generateWithGroq(
     String intention, {
-    required TreatmentPreference treatmentPreference,
+    required Gender gender,
   }) async {
     try {
       final requestData = {
@@ -62,7 +69,7 @@ class AIService {
         'messages': [
           {
             'role': 'system',
-            'content': _buildSystemPrompt(treatmentPreference),
+            'content': _buildSystemPrompt(gender),
           },
           {
             'role': 'user',
@@ -178,7 +185,7 @@ class AIService {
   Future<String> generateMagicalProfileText({
     required BirthChartModel birthChart,
     required MagicalProfile profile,
-    TreatmentPreference? treatmentPreference,
+    Gender? gender,
   }) async {
     try {
       final chartSummary = _buildChartSummary(birthChart, profile);
@@ -189,7 +196,7 @@ class AIService {
           {
             'role': 'system',
             'content': _buildMagicalProfileSystemPrompt(
-              treatmentPreference ?? profile.treatmentPreference,
+              gender ?? _gender,
             ),
           },
           {
@@ -229,8 +236,9 @@ class AIService {
     required List<String> energyKeywords,
     required List<Map<String, String>> transits,
     required List<Map<String, String>> aspects,
-    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+    Gender? gender,
   }) async {
+    gender ??= _gender;
     try {
       final weatherSummary = _buildWeatherSummary(
         moonPhase: moonPhase,
@@ -246,7 +254,7 @@ class AIService {
         'messages': [
           {
             'role': 'system',
-            'content': _buildDailyWeatherSystemPrompt(treatmentPreference),
+            'content': _buildDailyWeatherSystemPrompt(gender),
           },
           {
             'role': 'user',
@@ -350,7 +358,7 @@ class AIService {
   }
 
   String _buildMagicalProfileSystemPrompt(
-    TreatmentPreference treatmentPreference,
+    Gender gender,
   ) {
     return '''${_localizedInstruction()}
 
@@ -402,16 +410,16 @@ DIRETRIZES:
 - Seja específica nas interpretações, não genérica
 - Conecte cada posição planetária com práticas mágicas concretas
 - Mencione fases lunares, sabbats e momentos propícios quando relevante
-- O tom deve ser de ${TreatmentText.wiseGuide(treatmentPreference)}
+- O tom deve ser de ${GenderText.wiseGuide(gender)}
 - Use "você" para se dirigir à pessoa
-- ${TreatmentText.aiInstruction(treatmentPreference)}
-- ${TreatmentText.preservationInstruction()}
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}
 - Não repita informações genéricas sobre signos - seja específica para esta configuração única
 - Total: aproximadamente 800-1000 palavras''';
   }
 
   String _buildDailyWeatherSystemPrompt(
-    TreatmentPreference treatmentPreference,
+    Gender gender,
   ) {
     return '''${_localizedInstruction()}
 
@@ -445,8 +453,8 @@ FORMATO DA RESPOSTA (use exatamente esta estrutura):
 DIRETRIZES:
 - Seja específica para os trânsitos e aspectos fornecidos
 - Use linguagem acolhedora e acessível
-- ${TreatmentText.aiInstruction(treatmentPreference)}
-- ${TreatmentText.preservationInstruction()}
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}
 - Sugira práticas simples que qualquer pessoa pode fazer
 - Conecte as energias astrológicas com práticas mágicas concretas
 - O tom deve ser de guia diária, prática e inspiradora
@@ -459,8 +467,9 @@ DIRETRIZES:
   Future<String> generateAffirmation({
     required String category,
     String? userContext,
-    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+    Gender? gender,
   }) async {
+    gender ??= _gender;
     try {
       final prompt = userContext != null && userContext.isNotEmpty
           ? 'Categoria: $category\nContexto do usuário: $userContext'
@@ -471,7 +480,7 @@ DIRETRIZES:
         'messages': [
           {
             'role': 'system',
-            'content': _buildAffirmationSystemPrompt(treatmentPreference),
+            'content': _buildAffirmationSystemPrompt(gender),
           },
           {
             'role': 'user',
@@ -504,13 +513,13 @@ DIRETRIZES:
   }
 
   String _buildAffirmationSystemPrompt(
-    TreatmentPreference treatmentPreference,
+    Gender gender,
   ) {
     return '''${_localizedInstruction()}
 
 Você é o Conselheiro Místico, guardião da sabedoria ancestral do Grimório de Bolso.
 
-Sua missão é criar afirmações poderosas e transformadoras para ${TreatmentText.practitioner(treatmentPreference)} de magia moderna.
+Sua missão é criar afirmações poderosas e transformadoras para ${GenderText.practitioner(gender)} de magia moderna.
 
 REGRAS PARA CRIAR AFIRMAÇÕES:
 1. Sempre escreva no tempo PRESENTE (nunca futuro)
@@ -518,8 +527,8 @@ REGRAS PARA CRIAR AFIRMAÇÕES:
 3. Seja ESPECÍFICO mas não muito longo (máximo 2 frases)
 4. Use linguagem mística mas acessível
 5. A afirmação deve ser empoderadora e acolhedora, respeitando a preferência de tratamento
-6. ${TreatmentText.aiInstruction(treatmentPreference)}
-7. ${TreatmentText.preservationInstruction()}
+6. ${GenderText.aiInstruction(gender)}
+7. ${GenderText.preservationInstruction()}
 8. Conecte com elementos mágicos quando apropriado (lua, estrelas, elementos, etc.)
 
 CATEGORIAS E EXEMPLOS:
@@ -536,10 +545,10 @@ RETORNE APENAS A AFIRMAÇÃO, sem explicações, aspas ou formatação adicional
 Se o usuário forneceu um contexto, personalize a afirmação para a situação específica.''';
   }
 
-  String _buildSystemPrompt(TreatmentPreference treatmentPreference) {
+  String _buildSystemPrompt(Gender gender) {
     return '''${_localizedInstruction()}
 
-Você é o ${TreatmentText.advisorTitle(treatmentPreference)}, guardião da sabedoria arcana do Grimório de Bolso.
+Você é o ${GenderText.advisorTitle(gender)}, guardião da sabedoria arcana do Grimório de Bolso.
 
 Você habita um grimório digital mágico onde bruxas e praticantes modernos registram seus feitiços, estudam os trânsitos planetários e o clima mágico diário, consultam runas e oráculos, acompanham as fases lunares, e exploram seus mapas astrais personalizados.
 
@@ -568,8 +577,8 @@ Diretrizes Sagradas:
 - Seja específico e poético nos passos (enumere de 1 a X, separados por \\n)
 - Escolha a fase lunar mais apropriada para o tipo de magia
 - Tom: Acolhedor, místico, evocativo, mas sempre prático e aterrado
-- ${TreatmentText.aiInstruction(treatmentPreference)}
-- ${TreatmentText.preservationInstruction()}
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}
 - Nunca oriente magia que cause dano ou práticas criminosas.
 - Em feitiços de amor, SEMPRE incluir "respeitando o livre arbítrio de todos os envolvidos"
 - Use entre 3-7 ingredientes (nunca menos de 5, nunca mais de 7)
@@ -581,15 +590,16 @@ Diretrizes Sagradas:
   /// Responder perguntas sobre bruxaria, magia e misticismo (Conselheiro Místico)
   Future<String> answerMysticQuestion(
     String question, {
-    TreatmentPreference treatmentPreference = TreatmentPreference.fallback,
+    Gender? gender,
   }) async {
+    gender ??= _gender;
     try {
       final requestData = {
         'model': 'llama-3.3-70b-versatile',
         'messages': [
           {
             'role': 'system',
-            'content': _buildMysticAdvisorSystemPrompt(treatmentPreference),
+            'content': _buildMysticAdvisorSystemPrompt(gender),
           },
           {
             'role': 'user',
@@ -629,12 +639,280 @@ Diretrizes Sagradas:
     }
   }
 
+  /// Leitura de mãos por imagem (Premium). Usa o modelo de visão do Groq;
+  /// a imagem é enviada em memória e não é armazenada.
+  Future<String> analyzePalm({
+    required List<int> jpegBytes,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final base64Image = base64Encode(jpegBytes);
+      final requestData = {
+        'model': 'meta-llama/llama-4-scout-17b-16e-instruct',
+        'messages': [
+          {
+            'role': 'system',
+            'content': '''${_localizedInstruction()}
+
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, quiromante experiente na tradição popular e simbólica.
+
+Analise a palma da mão na imagem: linhas principais (vida, cabeça, coração, destino quando visível), montes e formato geral. Faça uma leitura simbólica, acolhedora e específica ao que você VÊ — não invente linhas que não aparecem. Se a imagem não mostrar uma palma legível, diga isso gentilmente e oriente uma nova foto.
+
+Formato: texto puro (sem markdown/JSON), 3 a 4 parágrafos.
+Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de saúde, previsões de morte ou promessas absolutas.
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''',
+          },
+          {
+            'role': 'user',
+            'content': [
+              {
+                'type': 'text',
+                'text':
+                    'Esta é a palma da minha mão. Faça minha leitura de quiromancia.',
+              },
+              {
+                'type': 'image_url',
+                'image_url': {
+                  'url': 'data:image/jpeg;base64,$base64Image',
+                },
+              },
+            ],
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 1200,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 60),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Imagem muito grande. Tente novamente.');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
+  /// Interpretar uma tiragem de tarot já sorteada no app (Premium).
+  Future<String> interpretTarotSpread({
+    required String summary,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final requestData = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': '''${_localizedInstruction()}
+
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, taróloga experiente na tradição Rider-Waite.
+
+As cartas abaixo JÁ FORAM SORTEADAS pelo aplicativo, com posição, orientação e significado base — não sorteie outras nem contradiga o sorteio. Sua missão é TECER a leitura: como as cartas conversam entre si nas posições, a narrativa que formam e um conselho prático final.
+
+Formato: texto puro (sem markdown/JSON), 2 a 4 parágrafos acolhedores.
+- Trate cartas "difíceis" (Morte, Torre, Diabo...) como convites à transformação, nunca como presságios de tragédia.
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''',
+          },
+          {
+            'role': 'user',
+            'content': summary,
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 1100,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 40),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
+  /// Explicar (nunca calcular) um perfil numerológico já computado no app.
+  Future<String> explainNumerology({
+    required String summary,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final requestData = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': '''${_localizedInstruction()}
+
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, especialista em numerologia pitagórica.
+
+Os números abaixo JÁ FORAM CALCULADOS pelo aplicativo — não recalcule nem questione os valores. Sua missão é tecer uma síntese personalizada: como essas energias conversam entre si, os pontos de harmonia e de tensão, e um conselho prático para o momento.
+
+Formato: texto puro (sem markdown/JSON), 2 a 3 parágrafos acolhedores e objetivos.
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''',
+          },
+          {
+            'role': 'user',
+            'content': summary,
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 900,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
+  /// Interpretar um sonho descrito pela pessoa (recurso Premium)
+  Future<String> interpretDream({
+    required String dreamDescription,
+    String? feelings,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final userContent = feelings != null && feelings.trim().isNotEmpty
+          ? 'Sonho: $dreamDescription\n\nEmoções ao acordar: $feelings'
+          : 'Sonho: $dreamDescription';
+
+      final requestData = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {
+            'role': 'system',
+            'content': _buildDreamInterpreterSystemPrompt(gender),
+          },
+          {
+            'role': 'user',
+            'content': userContent,
+          },
+        ],
+        'temperature': 0.7,
+        'max_tokens': 1400,
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 45),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return content.toString().trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Erro de autenticação');
+      } else if (e.response?.statusCode == 429) {
+        throw Exception('Limite de uso excedido');
+      } else if (e.response?.statusCode == 503) {
+        throw Exception('Serviço temporariamente indisponível');
+      }
+      throw Exception('Erro na conexão: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro ao processar resposta: $e');
+    }
+  }
+
+  String _buildDreamInterpreterSystemPrompt(Gender gender) {
+    return '''${_localizedInstruction()}
+
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, especialista em simbolismo onírico: junguiano, folclórico, místico e das tradições de bruxaria.
+
+Sua missão é INTERPRETAR o sonho descrito, com profundidade e acolhimento.
+
+Como analisar:
+- Considere emoções sentidas, personagens, locais, símbolos e repetições presentes no relato.
+- Use o contexto que a pessoa fornecer; não invente detalhes que não estão no relato.
+- Apresente POSSIBILIDADES de interpretação (2 a 3 leituras possíveis), nunca certezas absolutas — sonhos são pessoais e polissêmicos.
+- Quando um símbolo tiver significados distintos em tradições diferentes, mencione brevemente as variações.
+
+Formato da resposta (texto puro, sem markdown, sem JSON):
+1º parágrafo — acolhimento breve e visão geral do sonho.
+2º e 3º parágrafos — os símbolos centrais e suas possíveis leituras.
+Último parágrafo — uma sugestão prática e gentil (reflexão, ritual simples ou registro no diário).
+
+Limites:
+- Não faça diagnósticos médicos ou psicológicos, nem previsões de morte/tragédia como fato.
+- Não use tom alarmista; mesmo símbolos sombrios devem ser tratados como convites à reflexão.
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''';
+  }
+
   String _buildMysticAdvisorSystemPrompt(
-    TreatmentPreference treatmentPreference,
+    Gender gender,
   ) {
     return '''${_localizedInstruction()}
 
-Você é o ${TreatmentText.advisorTitle(treatmentPreference)}, guardião ancião da sabedoria arcana do Grimório de Bolso.
+Você é o ${GenderText.advisorTitle(gender)}, guardião ancião da sabedoria arcana do Grimório de Bolso.
 
 Ao longo de incontáveis luas você acumulou o conhecimento das tradições mágicas — bruxaria moderna e ancestral, fases lunares, cristais, ervas, runas, oráculos, tarô, numerologia, astrologia mágica, sabás e a Roda do Ano, altares, elementos, deuses e deusas, anjos e demônios, tarot, sigilos, divinação, quiromancia, proteção, limpeza energética e manifestação.
 
@@ -648,7 +926,7 @@ Diretrizes:
 - Nunca oriente magia que cause dano ou práticas criminosas.
 - Segurança: nunca sugira ingredientes ou práticas perigosas, tóxicas ou ilegais; inclua avisos quando pertinente (ex: cuidado com fogo de velas).
 - Escreva em texto puro, sem markdown, sem JSON e sem títulos.
-- ${TreatmentText.aiInstruction(treatmentPreference)}
-- ${TreatmentText.preservationInstruction()}''';
+- ${GenderText.aiInstruction(gender)}
+- ${GenderText.preservationInstruction()}''';
   }
 }

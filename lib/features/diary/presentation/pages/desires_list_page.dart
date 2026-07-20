@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/desire_provider.dart';
@@ -8,6 +9,7 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'desire_form_page.dart';
 
 class DesiresListPage extends StatefulWidget {
@@ -34,15 +36,15 @@ class _DesiresListPageState extends State<DesiresListPage> {
       body: Consumer<DesireProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const LoadingWidget(message: 'Carregando desejos...');
+            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingDesires);
           }
 
           if (provider.desires.isEmpty) {
             return EmptyStateWidget(
               message:
-                  'Você ainda não registrou nenhum desejo.\nComece a manifestar seus sonhos!',
+                  AppLocalizations.of(context)!.diaryEmptyDesires,
               icon: Icons.auto_awesome,
-              actionText: 'Adicionar Desejo',
+              actionText: AppLocalizations.of(context)!.diaryAddDesire,
               onAction: () => _navigateToForm(context),
             );
           }
@@ -68,7 +70,7 @@ class _DesiresListPageState extends State<DesiresListPage> {
                           dateFormat.format(desire.createdAt),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: context.gc.textSecondary,
                                   ),
                         ),
                       ],
@@ -114,13 +116,13 @@ class _DesiresListPageState extends State<DesiresListPage> {
   Color _getStatusColor(DesireStatus status) {
     switch (status) {
       case DesireStatus.open:
-        return AppColors.info;
+        return context.gc.info;
       case DesireStatus.manifesting:
-        return AppColors.lilac;
+        return context.gc.lilac;
       case DesireStatus.manifested:
-        return AppColors.success;
+        return context.gc.success;
       case DesireStatus.released:
-        return AppColors.textSecondary;
+        return context.gc.textSecondary;
     }
   }
 

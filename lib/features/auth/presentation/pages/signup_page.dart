@@ -1,7 +1,11 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import '../../../../core/legal/legal_document_page.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -43,7 +47,7 @@ class _SignupPageState extends State<SignupPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.lilac),
+          icon: Icon(Icons.arrow_back, color: context.gc.lilac),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -98,29 +102,29 @@ class _SignupPageState extends State<SignupPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.mint.withValues(alpha: 0.2),
+            color: context.gc.mint.withValues(alpha: 0.2),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.person_add_outlined,
             size: 40,
-            color: AppColors.mint,
+            color: context.gc.mint,
           ),
         ),
         const SizedBox(height: 24),
         Text(
-          'Criar Conta',
+          AppLocalizations.of(context)!.authCreateAccount,
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.lilac,
+            color: context.gc.lilac,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Inicie sua jornada mágica',
+          AppLocalizations.of(context)!.authSignupSubtitle,
           style: GoogleFonts.nunito(
             fontSize: 16,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
         ),
       ],
@@ -131,18 +135,18 @@ class _SignupPageState extends State<SignupPage> {
     return TextFormField(
       controller: _nameController,
       textCapitalization: TextCapitalization.words,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Nome',
-        hintText: 'Seu nome mágico',
-        prefixIcon: const Icon(Icons.person_outline, color: AppColors.lilac),
+        labelText: AppLocalizations.of(context)!.authNameLabel,
+        hintText: AppLocalizations.of(context)!.authNameHint,
+        prefixIcon: Icon(Icons.person_outline, color: context.gc.lilac),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, insira seu nome';
+          return AppLocalizations.of(context)!.authNameRequired;
         }
         if (value.length < 2) {
-          return 'O nome deve ter pelo menos 2 caracteres';
+          return AppLocalizations.of(context)!.authNameMinLength;
         }
         return null;
       },
@@ -153,18 +157,18 @@ class _SignupPageState extends State<SignupPage> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'seu@email.com',
-        prefixIcon: const Icon(Icons.email_outlined, color: AppColors.lilac),
+        labelText: AppLocalizations.of(context)!.authEmailLabel,
+        hintText: AppLocalizations.of(context)!.authEmailHint,
+        prefixIcon: Icon(Icons.email_outlined, color: context.gc.lilac),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, insira seu email';
+          return AppLocalizations.of(context)!.authEmailRequired;
         }
         if (!value.contains('@') || !value.contains('.')) {
-          return 'Por favor, insira um email válido';
+          return AppLocalizations.of(context)!.authEmailInvalid;
         }
         return null;
       },
@@ -175,15 +179,15 @@ class _SignupPageState extends State<SignupPage> {
     return TextFormField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Senha',
-        hintText: 'Mínimo 6 caracteres',
-        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.lilac),
+        labelText: AppLocalizations.of(context)!.authPasswordLabel,
+        hintText: AppLocalizations.of(context)!.authPasswordHintMin,
+        prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -194,10 +198,10 @@ class _SignupPageState extends State<SignupPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, insira uma senha';
+          return AppLocalizations.of(context)!.authPasswordCreateRequired;
         }
         if (value.length < 6) {
-          return 'A senha deve ter pelo menos 6 caracteres';
+          return AppLocalizations.of(context)!.authPasswordMinLength;
         }
         return null;
       },
@@ -208,15 +212,15 @@ class _SignupPageState extends State<SignupPage> {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: _obscureConfirmPassword,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+      style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: 'Confirmar Senha',
-        hintText: 'Digite a senha novamente',
-        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.lilac),
+        labelText: AppLocalizations.of(context)!.authConfirmPasswordLabel,
+        hintText: AppLocalizations.of(context)!.authConfirmPasswordHint,
+        prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -227,10 +231,10 @@ class _SignupPageState extends State<SignupPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Por favor, confirme sua senha';
+          return AppLocalizations.of(context)!.authConfirmPasswordRequired;
         }
         if (value != _passwordController.text) {
-          return 'As senhas não coincidem';
+          return AppLocalizations.of(context)!.authPasswordsDontMatch;
         }
         return null;
       },
@@ -251,9 +255,9 @@ class _SignupPageState extends State<SignupPage> {
                 _acceptedTerms = value ?? false;
               });
             },
-            activeColor: AppColors.lilac,
+            activeColor: context.gc.lilac,
             checkColor: const Color(0xFF2B2143),
-            side: const BorderSide(color: AppColors.surfaceBorder),
+            side: BorderSide(color: context.gc.surfaceBorder),
           ),
         ),
         const SizedBox(width: 12),
@@ -268,24 +272,36 @@ class _SignupPageState extends State<SignupPage> {
               text: TextSpan(
                 style: GoogleFonts.nunito(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                 ),
                 children: [
-                  const TextSpan(text: 'Li e aceito os '),
+                  TextSpan(text: AppLocalizations.of(context)!.authTermsPrefix),
                   TextSpan(
-                    text: 'Termos de Uso',
+                    text: AppLocalizations.of(context)!.authTermsOfUse,
                     style: TextStyle(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                       fontWeight: FontWeight.bold,
                     ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => LegalDocumentPage.terms,
+                            ),
+                          ),
                   ),
-                  const TextSpan(text: ' e a '),
+                  TextSpan(text: AppLocalizations.of(context)!.authTermsAnd),
                   TextSpan(
-                    text: 'Política de Privacidade',
+                    text: AppLocalizations.of(context)!.authPrivacyPolicy,
                     style: TextStyle(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                       fontWeight: FontWeight.bold,
                     ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => LegalDocumentPage.privacy,
+                            ),
+                          ),
                   ),
                 ],
               ),
@@ -300,13 +316,13 @@ class _SignupPageState extends State<SignupPage> {
     return ElevatedButton(
       onPressed: (_isLoading || !_acceptedTerms) ? null : _handleSignup,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.lilac,
+        backgroundColor: context.gc.lilac,
         foregroundColor: const Color(0xFF2B2143),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        disabledBackgroundColor: AppColors.lilac.withValues(alpha: 0.3),
+        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
       ),
       child: _isLoading
           ? const SizedBox(
@@ -318,7 +334,7 @@ class _SignupPageState extends State<SignupPage> {
               ),
             )
           : Text(
-              'Criar Conta',
+              AppLocalizations.of(context)!.authCreateAccount,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -332,23 +348,23 @@ class _SignupPageState extends State<SignupPage> {
       children: [
         Expanded(
           child: Divider(
-            color: AppColors.surfaceBorder,
+            color: context.gc.surfaceBorder,
             thickness: 1,
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'ou cadastre-se com',
+            AppLocalizations.of(context)!.authOrSignupWith,
             style: GoogleFonts.nunito(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: context.gc.textSecondary,
             ),
           ),
         ),
         Expanded(
           child: Divider(
-            color: AppColors.surfaceBorder,
+            color: context.gc.surfaceBorder,
             thickness: 1,
           ),
         ),
@@ -379,8 +395,8 @@ class _SignupPageState extends State<SignupPage> {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.textPrimary,
-        side: const BorderSide(color: AppColors.surfaceBorder),
+        foregroundColor: context.gc.textPrimary,
+        side: BorderSide(color: context.gc.surfaceBorder),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -397,7 +413,7 @@ class _SignupPageState extends State<SignupPage> {
               style: GoogleFonts.nunito(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: context.gc.textPrimary,
               ),
             ),
           const SizedBox(width: 8),
@@ -418,10 +434,10 @@ class _SignupPageState extends State<SignupPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Já tem uma conta? ',
+          AppLocalizations.of(context)!.authHaveAccount,
           style: GoogleFonts.nunito(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: context.gc.textSecondary,
           ),
         ),
         TextButton(
@@ -435,11 +451,11 @@ class _SignupPageState extends State<SignupPage> {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
-            'Entrar',
+            AppLocalizations.of(context)!.authLogin,
             style: GoogleFonts.nunito(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
         ),
@@ -452,9 +468,9 @@ class _SignupPageState extends State<SignupPage> {
 
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Você precisa aceitar os termos de uso'),
-          backgroundColor: AppColors.alert,
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.authMustAcceptTerms),
+          backgroundColor: context.gc.alert,
         ),
       );
       return;
@@ -478,7 +494,7 @@ class _SignupPageState extends State<SignupPage> {
         );
 
         if (!result.success) {
-          throw Exception(result.errorMessage ?? 'Erro ao criar conta');
+          throw Exception(result.errorMessage ?? AppLocalizations.of(context)!.authSignupError);
         }
         authenticatedUser = result.user;
       }
@@ -501,9 +517,9 @@ class _SignupPageState extends State<SignupPage> {
       if (mounted) {
         // Mostrar sucesso
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Conta criada com sucesso! Bem-vinda ao Grimório!'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.authSignupSuccess),
+            backgroundColor: context.gc.success,
           ),
         );
 
@@ -512,13 +528,13 @@ class _SignupPageState extends State<SignupPage> {
       }
     } catch (e) {
       if (mounted) {
-        String errorMessage = 'Erro ao criar conta';
+        String errorMessage = AppLocalizations.of(context)!.authSignupError;
         if (e.toString().contains('already')) {
-          errorMessage = 'Este email já está em uso';
+          errorMessage = AppLocalizations.of(context)!.authEmailInUse;
         } else if (e.toString().contains('password')) {
-          errorMessage = 'A senha deve ter pelo menos 6 caracteres';
+          errorMessage = AppLocalizations.of(context)!.authPasswordMinLength;
         } else if (e.toString().contains('email')) {
-          errorMessage = 'Email inválido';
+          errorMessage = AppLocalizations.of(context)!.authEmailInvalidShort;
         } else {
           errorMessage = e.toString().replaceAll('Exception: ', '');
         }
@@ -526,7 +542,7 @@ class _SignupPageState extends State<SignupPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -540,9 +556,9 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> _handleGoogleSignup() async {
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Você precisa aceitar os termos de uso'),
-          backgroundColor: AppColors.alert,
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.authMustAcceptTerms),
+          backgroundColor: context.gc.alert,
         ),
       );
       return;
@@ -550,9 +566,9 @@ class _SignupPageState extends State<SignupPage> {
 
     if (!SupabaseConfig.isConfigured) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cadastro com Google não disponível no momento'),
-          backgroundColor: AppColors.info,
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.authGoogleSignupUnavailable),
+          backgroundColor: context.gc.info,
         ),
       );
       return;
@@ -577,8 +593,8 @@ class _SignupPageState extends State<SignupPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.errorMessage ?? 'Erro no cadastro com Google'),
-            backgroundColor: AppColors.alert,
+            content: Text(result.errorMessage ?? AppLocalizations.of(context)!.authGoogleSignupError),
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -586,8 +602,8 @@ class _SignupPageState extends State<SignupPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro no cadastro com Google: $e'),
-            backgroundColor: AppColors.alert,
+            content: Text('${AppLocalizations.of(context)!.authGoogleSignupError}: $e'),
+            backgroundColor: context.gc.alert,
           ),
         );
       }

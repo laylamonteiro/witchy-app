@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
 
@@ -10,10 +11,10 @@ class ElementsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Os Quatro Elementos'),
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -44,14 +45,14 @@ class ElementsPage extends StatelessWidget {
                     'são forças fundamentais da natureza e da existência. Eles não são apenas substâncias físicas, '
                     'mas energias primordiais que compõem toda a criação.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'Explore cada elemento abaixo para compreender suas qualidades, correspondências e como trabalhar com eles.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
                   ),
@@ -360,24 +361,26 @@ class ElementsPage extends StatelessWidget {
                     'Na prática da bruxaria, buscar o equilíbrio dos quatro elementos é essencial. '
                     'Cada elemento representa aspectos diferentes de nossa vida e personalidade:',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 16),
                   _buildBalanceItem(
+                      context,
                       '🌍 Terra', 'Nosso corpo físico e recursos materiais'),
                   _buildBalanceItem(
+                      context,
                       '🌊 Água', 'Nossas emoções e relacionamentos'),
-                  _buildBalanceItem('🔥 Fogo', 'Nossa energia e poder pessoal'),
-                  _buildBalanceItem('💨 Ar', 'Nossa mente e comunicação'),
+                  _buildBalanceItem(context, '🔥 Fogo', 'Nossa energia e poder pessoal'),
+                  _buildBalanceItem(context, '💨 Ar', 'Nossa mente e comunicação'),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.lilac.withOpacity(0.1),
+                      color: context.gc.lilac.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: AppColors.lilac.withOpacity(0.3)),
+                          Border.all(color: context.gc.lilac.withOpacity(0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,7 +400,7 @@ class ElementsPage extends StatelessWidget {
                           '• Ar em excesso: Distração, falta de praticidade, desconexão',
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: context.gc.textSecondary,
                                   ),
                         ),
                       ],
@@ -463,7 +466,7 @@ class ElementsPage extends StatelessWidget {
                     'Com o tempo, você desenvolverá uma relação profunda com cada elemento, reconhecendo sua presença '
                     'tanto no mundo exterior quanto dentro de si mesmo.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -492,14 +495,14 @@ class ElementsPage extends StatelessWidget {
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                 ),
           ),
           const SizedBox(height: 4),
           Text(
             content,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                 ),
           ),
         ],
@@ -507,7 +510,7 @@ class ElementsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceItem(String element, String description) {
+  Widget _buildBalanceItem(BuildContext context, String element, String description) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
@@ -520,9 +523,9 @@ class ElementsPage extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             description,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: context.gc.textSecondary,
             ),
           ),
         ],
@@ -537,7 +540,7 @@ class ElementsPage extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_awesome, color: AppColors.starYellow, size: 20),
+          Icon(Icons.auto_awesome, color: context.gc.starYellow, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -553,7 +556,7 @@ class ElementsPage extends StatelessWidget {
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.gc.textSecondary,
                       ),
                 ),
               ],

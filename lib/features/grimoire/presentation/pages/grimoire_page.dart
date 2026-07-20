@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
-import 'user_spells_list_page.dart';
+import 'spell_categories_hub_page.dart';
 import 'mystic_advisor_page.dart';
 import '../../../astrology/presentation/pages/astrology_tab.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
+import '../../../sigils/presentation/widgets/sigil_icon.dart';
+import '../../../numerology/presentation/pages/numerology_page.dart';
+import '../../../tarot/presentation/pages/tarot_page.dart';
+import '../../../palmistry/presentation/pages/palmistry_page.dart';
+import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
+import '../../../learning/presentation/pages/learning_home_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 
@@ -62,7 +70,7 @@ class _GrimoirePageState extends State<GrimoirePage>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Grimório Digital'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.grimoirePageTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -70,21 +78,21 @@ class _GrimoirePageState extends State<GrimoirePage>
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
-            tooltip: 'Configurações',
+            tooltip: AppLocalizations.of(context)!.settingsTitle,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.lilac,
+          indicatorColor: context.gc.lilac,
           isScrollable: true,
           tabAlignment: TabAlignment.center,
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-          tabs: const [
-            Tab(text: 'Astrologia'),
-            Tab(text: 'Ferramentas'),
-            Tab(text: 'Meu Grimório'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.grimoireTabAstrology),
+            Tab(text: AppLocalizations.of(context)!.grimoireTabTools),
+            Tab(text: AppLocalizations.of(context)!.grimoireTabMyGrimoire),
           ],
         ),
       ),
@@ -93,7 +101,7 @@ class _GrimoirePageState extends State<GrimoirePage>
         children: const [
           AstrologyTab(),
           _ToolsTab(),
-          UserSpellsListPage(),
+          SpellCategoriesHubPage(),
         ],
       ),
     );
@@ -116,16 +124,16 @@ class _ToolsTab extends StatelessWidget {
                 const Text('‧ ⛦ ‧', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 Text(
-                  'Ferramentas Mágicas',
+                  AppLocalizations.of(context)!.toolsHeaderTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Recursos para auxiliar em suas práticas de magia e manifestação',
+                  AppLocalizations.of(context)!.toolsHeaderSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -134,10 +142,22 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '🔮',
-            title: 'Conselheiro Místico',
-            description:
-                'Sabedoria ancestral para suas dúvidas de bruxaria e magia',
+            icon: const Text('📖', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolLivingGrimoireTitle,
+            description: AppLocalizations.of(context)!.toolLivingGrimoireDesc,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const LearningHomePage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text('🔮', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolMysticAdvisorTitle,
+            description: AppLocalizations.of(context)!.toolMysticAdvisorDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -148,22 +168,22 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: '🃏',
-            title: 'Cartas do Oráculo',
-            description: 'Mensagens e orientação do universo',
+            icon: const Text('🎴', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolTarotTitle,
+            description: AppLocalizations.of(context)!.toolTarotDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const OracleCardsPage(),
+                  builder: (_) => const TarotPage(),
                 ),
               );
             },
           ),
           _buildToolCard(
             context,
-            icon: ' ⛤',
-            title: 'Sigilos',
-            description: 'Crie símbolos mágicos para suas intenções',
+            icon: const SigilIcon(size: 40),
+            title: AppLocalizations.of(context)!.toolSigilsTitle,
+            description: AppLocalizations.of(context)!.toolSigilsDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -174,9 +194,61 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: ' ᚱ ',
-            title: 'Leitura de Runas',
-            description: 'Consulte as antigas runas nórdicas',
+            icon: const Text('🃏', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolOracleTitle,
+            description: AppLocalizations.of(context)!.toolOracleDesc,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const OracleCardsPage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text('🎭', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolArchetypeTitle,
+            description: AppLocalizations.of(context)!.toolArchetypeDesc,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ArchetypeQuizPage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolPalmistryTitle,
+            description: AppLocalizations.of(context)!.toolPalmistryDesc,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const PalmistryPage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text('🔢', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolNumerologyTitle,
+            description: AppLocalizations.of(context)!.toolNumerologyDesc,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const NumerologyPage(),
+                ),
+              );
+            },
+          ),
+          _buildToolCard(
+            context,
+            icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolRunesTitle,
+            description: AppLocalizations.of(context)!.toolRunesDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -187,9 +259,9 @@ class _ToolsTab extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            icon: ' ⟟ ',
-            title: 'Pêndulo',
-            description: 'Perguntas de sim ou não',
+            icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
+            title: AppLocalizations.of(context)!.toolPendulumTitle,
+            description: AppLocalizations.of(context)!.toolPendulumDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -205,7 +277,7 @@ class _ToolsTab extends StatelessWidget {
 
   Widget _buildToolCard(
     BuildContext context, {
-    required String icon,
+    required Widget icon,
     required String title,
     required String description,
     required VoidCallback onTap,
@@ -216,10 +288,7 @@ class _ToolsTab extends StatelessWidget {
       child: MagicalCard(
         child: Row(
           children: [
-            Text(
-              icon,
-              style: const TextStyle(fontSize: 40),
-            ),
+            icon,
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -228,7 +297,7 @@ class _ToolsTab extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.softWhite,
+                          color: context.gc.softWhite,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -236,15 +305,15 @@ class _ToolsTab extends StatelessWidget {
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.7),
+                          color: context.gc.softWhite.withOpacity(0.7),
                         ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               size: 16,
             ),
           ],

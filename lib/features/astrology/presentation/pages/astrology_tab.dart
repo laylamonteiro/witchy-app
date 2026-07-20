@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_input_page.dart';
 import 'birth_chart_view_page.dart';
@@ -37,9 +40,9 @@ class _AstrologyTabState extends State<AstrologyTab> {
     return Consumer<AstrologyProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.lilac),
+              valueColor: AlwaysStoppedAnimation<Color>(context.gc.lilac),
             ),
           );
         }
@@ -56,16 +59,16 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     const Text('‧ ☽◯☾ ‧', style: TextStyle(fontSize: 45)),
                     const SizedBox(height: 16),
                     Text(
-                      'Astrologia Mística',
+                      AppLocalizations.of(context)!.astroMysticTitle,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Descubra seu mapa astral e perfil mágico personalizado',
+                      AppLocalizations.of(context)!.astroMysticSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.softWhite.withOpacity(0.8),
+                            color: context.gc.softWhite.withOpacity(0.8),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -77,9 +80,9 @@ class _AstrologyTabState extends State<AstrologyTab> {
               _buildOption(
                 context,
                 icon: '🌌',
-                title: 'Signos do Zodíaco',
+                title: AppLocalizations.of(context)!.astroZodiacSigns,
                 description:
-                    'Conheça os 12 signos e seus significados mágicos',
+                    AppLocalizations.of(context)!.astroZodiacSignsDesc,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -93,10 +96,10 @@ class _AstrologyTabState extends State<AstrologyTab> {
               _buildOption(
                 context,
                 icon: '🌟',
-                title: 'Mapa Astral',
+                title: AppLocalizations.of(context)!.astroBirthChart,
                 description: provider.hasBirthChart
-                    ? 'Ver seu mapa astral completo'
-                    : 'Criar seu mapa astral',
+                    ? AppLocalizations.of(context)!.astroSeeChart
+                    : AppLocalizations.of(context)!.astroCreateChart,
                 onTap: () {
                   if (provider.hasBirthChart) {
                     Navigator.of(context).push(
@@ -119,8 +122,14 @@ class _AstrologyTabState extends State<AstrologyTab> {
                 _buildOption(
                   context,
                   icon: '✨',
-                  title: 'Perfil Mágico',
-                  description: 'Interpretação astrológica para bruxaria',
+                  iconWidget: SvgPicture.asset(
+                    'assets/icons/magic_mirror.svg',
+                    width: 40,
+                    height: 40,
+                    semanticsLabel: AppLocalizations.of(context)!.astroMagicMirror,
+                  ),
+                  title: AppLocalizations.of(context)!.astroMagicalProfile,
+                  description: AppLocalizations.of(context)!.astroMagicalProfileDesc,
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -134,8 +143,8 @@ class _AstrologyTabState extends State<AstrologyTab> {
               _buildOption(
                 context,
                 icon: '🪐',
-                title: 'Clima Mágico Diário',
-                description: 'Trânsitos planetários e energia do dia',
+                title: AppLocalizations.of(context)!.astroDailyWeather,
+                description: AppLocalizations.of(context)!.astroDailyWeatherDesc,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -149,8 +158,8 @@ class _AstrologyTabState extends State<AstrologyTab> {
               _buildOption(
                 context,
                 icon: '✨',
-                title: 'Sugestões Personalizadas',
-                description: 'Práticas baseadas nos seus trânsitos',
+                title: AppLocalizations.of(context)!.astroSuggestions,
+                description: AppLocalizations.of(context)!.astroSuggestionsDesc,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -165,8 +174,8 @@ class _AstrologyTabState extends State<AstrologyTab> {
                 _buildOption(
                   context,
                   icon: '🔄',
-                  title: 'Recalcular Mapa',
-                  description: 'Criar novo mapa astral',
+                  title: AppLocalizations.of(context)!.astroRecalculate,
+                  description: AppLocalizations.of(context)!.astroRecalculateDesc,
                   onTap: () {
                     _showRecalculateDialog(context, provider);
                   },
@@ -179,42 +188,40 @@ class _AstrologyTabState extends State<AstrologyTab> {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.info_outline,
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Sobre a Astrologia',
+                          AppLocalizations.of(context)!.astroAbout,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: AppColors.lilac,
+                                color: context.gc.lilac,
                               ),
                         ),
                       ],
                     ),
-                    const Divider(color: AppColors.lilac),
+                    Divider(color: context.gc.lilac),
                     Text(
-                      'Seu mapa astral é calculado com base na posição dos planetas '
-                      'no momento e local do seu nascimento. O perfil mágico interpreta '
-                      'essas posições de forma específica para práticas de bruxaria.',
+                      AppLocalizations.of(context)!.astroAboutText,
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                         height: 1.5,
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Para melhores resultados, tenha em mãos:',
+                      AppLocalizations.of(context)!.astroHaveOnHand,
                       style: TextStyle(
-                        color: AppColors.softWhite,
+                        color: context.gc.softWhite,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildInfoItem('Data de nascimento'),
-                    _buildInfoItem('Hora exata de nascimento'),
-                    _buildInfoItem('Local de nascimento (cidade e país)'),
+                    _buildInfoItem(AppLocalizations.of(context)!.astroBirthDate),
+                    _buildInfoItem(AppLocalizations.of(context)!.astroBirthTime),
+                    _buildInfoItem(AppLocalizations.of(context)!.astroBirthPlace),
                   ],
                 ),
               ),
@@ -227,20 +234,33 @@ class _AstrologyTabState extends State<AstrologyTab> {
 
   Widget _buildOption(
     BuildContext context, {
-    required String icon,
+    String? icon,
+    Widget? iconWidget,
     required String title,
     required String description,
     required VoidCallback onTap,
   }) {
+    assert(icon != null || iconWidget != null,
+        'Informe um emoji em icon ou um widget em iconWidget.');
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: MagicalCard(
         child: Row(
           children: [
-            Text(
-              icon,
-              style: const TextStyle(fontSize: 40),
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: iconWidget ??
+                    Text(
+                      icon!,
+                      // 32 dentro da caixa de 40: o glifo do emoji é mais alto
+                      // que o corpo da fonte e em 40 estourava o padrão visual.
+                      style: const TextStyle(fontSize: 32),
+                    ),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -250,7 +270,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.softWhite,
+                          color: context.gc.softWhite,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -258,15 +278,15 @@ class _AstrologyTabState extends State<AstrologyTab> {
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.7),
+                          color: context.gc.softWhite.withOpacity(0.7),
                         ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               size: 16,
             ),
           ],
@@ -281,10 +301,10 @@ class _AstrologyTabState extends State<AstrologyTab> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '• ',
             style: TextStyle(
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               fontSize: 16,
             ),
           ),
@@ -292,7 +312,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
             child: Text(
               text,
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.8),
+                color: context.gc.softWhite.withOpacity(0.8),
               ),
             ),
           ),
@@ -308,29 +328,28 @@ class _AstrologyTabState extends State<AstrologyTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        title: const Text(
-          'Recalcular Mapa Astral?',
-          style: TextStyle(color: AppColors.softWhite),
+        backgroundColor: context.gc.cardBackground,
+        title: Text(
+          AppLocalizations.of(context)!.astroRecalcTitle,
+          style: TextStyle(color: context.gc.softWhite),
         ),
-        content: const Text(
-          'Isso irá substituir seu mapa astral atual. '
-          'Você tem certeza?',
-          style: TextStyle(color: AppColors.softWhite),
+        content: Text(
+          AppLocalizations.of(context)!.astroRecalcConfirm,
+          style: TextStyle(color: context.gc.softWhite),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.lilac),
+            child: Text(
+              AppLocalizations.of(context)!.commonCancel,
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
-              'Continuar',
-              style: TextStyle(color: AppColors.lilac),
+            child: Text(
+              AppLocalizations.of(context)!.commonContinue,
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
         ],

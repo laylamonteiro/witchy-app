@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/i18n/gender.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/providers/sync_provider.dart';
 import '../../../../core/database/database_helper.dart';
@@ -83,36 +86,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final user = authProvider.currentUser;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: ResponsiveAppBarTitle(
-          'Editar Perfil',
+          AppLocalizations.of(context)!.profileEditProfile,
           style: GoogleFonts.cinzelDecorative(
-            color: Colors.white,
+            color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.lilac))
+          ? Center(
+              child: CircularProgressIndicator(color: context.gc.lilac))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Seção: Informações Básicas
-                  _buildSectionHeader('Informações Básicas'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.editBasicInfo),
                   _buildSettingsCard([
                     _buildTextFieldTile(
                       icon: Icons.person_outline,
-                      title: 'Nome',
+                      title: AppLocalizations.of(context)!.authNameLabel,
                       controller: _nameController,
                       onSave: () async {
                         await authProvider.updateProfile(
@@ -120,9 +123,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         );
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Nome atualizado!'),
-                              backgroundColor: AppColors.success,
+                            SnackBar(
+                              content: Text(AppLocalizations.of(context)!.editNameUpdated),
+                              backgroundColor: context.gc.success,
                             ),
                           );
                         }
@@ -131,8 +134,60 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     _buildDivider(),
                     _buildInfoTile(
                       icon: Icons.email_outlined,
-                      title: 'Email',
+                      title: AppLocalizations.of(context)!.authEmailLabel,
                       value: user.email,
+                    ),
+                  ]),
+
+                  const SizedBox(height: 24),
+
+                  // Seção: Gênero
+                  _buildSectionHeader(AppLocalizations.of(context)!.editGenderSection),
+                  _buildSettingsCard([
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.editGenderHelp,
+                            style: TextStyle(
+                              color: context.gc.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            children: Gender.values.map((pref) {
+                              final selected =
+                                  user.gender == pref;
+                              return ChoiceChip(
+                                label: Text(_genderLabel(pref)),
+                                selected: selected,
+                                selectedColor:
+                                    context.gc.lilac.withOpacity(0.25),
+                                labelStyle: TextStyle(
+                                  color: selected
+                                      ? context.gc.lilac
+                                      : context.gc.textSecondary,
+                                  fontWeight: selected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                side: BorderSide(
+                                  color: selected
+                                      ? context.gc.lilac
+                                      : context.gc.surfaceBorder,
+                                ),
+                                backgroundColor: context.gc.surface,
+                                onSelected: (_) => authProvider
+                                    .setGender(pref),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     ),
                   ]),
 
@@ -140,12 +195,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                   // Seção: Segurança (apenas para não-OAuth)
                   if (!_isOAuthUser(user.email)) ...[
-                    _buildSectionHeader('Segurança'),
+                    _buildSectionHeader(AppLocalizations.of(context)!.editSecurity),
                     _buildSettingsCard([
                       _buildActionTile(
                         icon: Icons.lock_outline,
-                        title: 'Alterar Senha',
-                        subtitle: 'Modificar sua senha de acesso',
+                        title: AppLocalizations.of(context)!.changePasswordTitle,
+                        subtitle: AppLocalizations.of(context)!.editChangePasswordSubtitle,
                         onTap: _showChangePasswordDialog,
                       ),
                     ]),
@@ -153,13 +208,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ],
 
                   // Seção: Coleta de Dados
-                  _buildSectionHeader('Coleta de Dados'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.editDataCollection),
                   _buildSettingsCard([
                     _buildSwitchTile(
                       icon: Icons.analytics_outlined,
-                      title: 'Analytics',
+                      title: AppLocalizations.of(context)!.editAnalytics,
                       subtitle:
-                          'Ajude a melhorar o app compartilhando dados de uso anônimos',
+                          AppLocalizations.of(context)!.editAnalyticsSubtitle,
                       value: _analyticsEnabled,
                       onChanged: (value) {
                         setState(() => _analyticsEnabled = value);
@@ -169,9 +224,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     _buildDivider(),
                     _buildSwitchTile(
                       icon: Icons.bug_report_outlined,
-                      title: 'Relatórios de Erro',
+                      title: AppLocalizations.of(context)!.editCrashReports,
                       subtitle:
-                          'Enviar relatórios automáticos quando o app tiver problemas',
+                          AppLocalizations.of(context)!.editCrashReportsSubtitle,
                       value: _crashReportingEnabled,
                       onChanged: (value) {
                         setState(() => _crashReportingEnabled = value);
@@ -181,8 +236,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     _buildDivider(),
                     _buildSwitchTile(
                       icon: Icons.auto_awesome,
-                      title: 'Conteúdo Personalizado',
-                      subtitle: 'Receber sugestões baseadas no seu uso do app',
+                      title: AppLocalizations.of(context)!.editPersonalizedContent,
+                      subtitle: AppLocalizations.of(context)!.editPersonalizedContentSubtitle,
                       value: _personalizedContent,
                       onChanged: (value) {
                         setState(() => _personalizedContent = value);
@@ -194,17 +249,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 24),
 
                   // Seção: Sincronização e Backup
-                  _buildSectionHeader('Sincronização e Backup'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.editSyncBackup),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
                       final isPremium = authProvider.isPremiumEffective;
                       return _buildSettingsCard([
                         _buildSwitchTile(
                           icon: Icons.sync,
-                          title: 'Sincronização e Backup na Nuvem',
+                          title: AppLocalizations.of(context)!.editSyncBackupCloud,
                           subtitle: isPremium
-                              ? 'Manter seus dados protegidos e sincronizados entre dispositivos'
-                              : 'Recurso exclusivo Premium',
+                              ? AppLocalizations.of(context)!.editSyncBackupOn
+                              : AppLocalizations.of(context)!.editSyncPremiumOnly,
                           value: _cloudSyncEnabled,
                           onChanged: (value) {
                             if (!isPremium && value) {
@@ -225,27 +280,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 24),
 
                   // Seção: Gerenciar Dados
-                  _buildSectionHeader('Gerenciar Seus Dados'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.editManageData),
                   _buildSettingsCard([
                     _buildActionTile(
                       icon: Icons.download_outlined,
-                      title: 'Exportar Meus Dados',
-                      subtitle: 'Baixar uma cópia de todos os seus dados',
+                      title: AppLocalizations.of(context)!.editExportData,
+                      subtitle: AppLocalizations.of(context)!.editExportDataSubtitle,
                       onTap: _exportData,
                     ),
                     _buildDivider(),
                     _buildActionTile(
                       icon: Icons.delete_sweep_outlined,
-                      title: 'Limpar Dados Locais',
-                      subtitle: 'Remover dados salvos neste dispositivo',
+                      title: AppLocalizations.of(context)!.editClearLocal,
+                      subtitle: AppLocalizations.of(context)!.editClearLocalSubtitle,
                       onTap: _clearLocalData,
                       isDestructive: false,
                     ),
                     _buildDivider(),
                     _buildActionTile(
                       icon: Icons.delete_forever_outlined,
-                      title: 'Excluir Minha Conta',
-                      subtitle: 'Remover permanentemente todos os seus dados',
+                      title: AppLocalizations.of(context)!.editDeleteAccount,
+                      subtitle: AppLocalizations.of(context)!.editDeleteAccountSubtitle,
                       onTap: _deleteAccount,
                       isDestructive: true,
                     ),
@@ -271,13 +326,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return false; // Por padrão, assume que todos podem trocar senha
   }
 
+  String _genderLabel(Gender pref) {
+    switch (pref) {
+      case Gender.feminine:
+        return AppLocalizations.of(context)!.genderFeminine;
+      case Gender.masculine:
+        return AppLocalizations.of(context)!.genderMasculine;
+      case Gender.neutral:
+        return AppLocalizations.of(context)!.genderNeutral;
+    }
+  }
+
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
         style: GoogleFonts.nunito(
-          color: AppColors.lilac,
+          color: context.gc.lilac,
           fontSize: 14,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
@@ -289,9 +355,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildSettingsCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.gc.textPrimary10),
       ),
       child: Column(children: children),
     );
@@ -307,24 +373,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.lilac.withValues(alpha: 0.2),
+          color: context.gc.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.lilac, size: 20),
+        child: Icon(icon, color: context.gc.lilac, size: 20),
       ),
       title: TextField(
         controller: controller,
-        style: GoogleFonts.nunito(color: Colors.white),
+        style: GoogleFonts.nunito(color: context.gc.textPrimary),
         decoration: InputDecoration(
           labelText: title,
-          labelStyle: GoogleFonts.nunito(color: Colors.white54),
+          labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
         ),
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.check, color: AppColors.lilac),
+        icon: Icon(Icons.check, color: context.gc.lilac),
         onPressed: onSave,
       ),
     );
@@ -339,22 +405,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.lilac.withValues(alpha: 0.2),
+          color: context.gc.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.lilac, size: 20),
+        child: Icon(icon, color: context.gc.lilac, size: 20),
       ),
       title: Text(
         title,
         style: GoogleFonts.nunito(
-          color: Colors.white54,
+          color: context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
       subtitle: Text(
-        value ?? 'Não informado',
+        value ?? AppLocalizations.of(context)!.editNotInformed,
         style: GoogleFonts.nunito(
-          color: Colors.white,
+          color: context.gc.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -372,29 +438,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.lilac.withValues(alpha: 0.2),
+          color: context.gc.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.lilac, size: 20),
+        child: Icon(icon, color: context.gc.lilac, size: 20),
       ),
       title: Text(
         title,
         style: GoogleFonts.nunito(
-          color: Colors.white,
+          color: context.gc.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
         subtitle,
         style: GoogleFonts.nunito(
-          color: Colors.white54,
+          color: context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: AppColors.lilac,
+        activeColor: context.gc.lilac,
       ),
     );
   }
@@ -406,11 +472,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? Colors.red : Colors.white;
+    final color = isDestructive ? Colors.red : context.gc.textPrimary;
     final iconBgColor = isDestructive
         ? Colors.red.withValues(alpha: 0.2)
-        : AppColors.lilac.withValues(alpha: 0.2);
-    final iconColor = isDestructive ? Colors.red : AppColors.lilac;
+        : context.gc.lilac.withValues(alpha: 0.2);
+    final iconColor = isDestructive ? Colors.red : context.gc.lilac;
 
     return ListTile(
       leading: Container(
@@ -433,7 +499,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         style: GoogleFonts.nunito(
           color: isDestructive
               ? Colors.red.withValues(alpha: 0.7)
-              : Colors.white54,
+              : context.gc.textSecondary,
           fontSize: 12,
         ),
       ),
@@ -446,7 +512,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Divider(
       height: 1,
       indent: 56,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: context.gc.textPrimary.withValues(alpha: 0.1),
     );
   }
 
@@ -454,22 +520,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.lilac.withValues(alpha: 0.1),
+        color: context.gc.lilac.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.lilac.withValues(alpha: 0.3)),
+        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.shield_outlined,
-                  color: AppColors.lilac, size: 20),
+              Icon(Icons.shield_outlined,
+                  color: context.gc.lilac, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Sua Privacidade Importa',
+                AppLocalizations.of(context)!.editPrivacyMatters,
                 style: GoogleFonts.nunito(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -477,10 +543,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Seus dados mágicos são sagrados. Nunca vendemos suas informações pessoais '
-            'e você tem controle total sobre o que é coletado e armazenado.',
+            AppLocalizations.of(context)!.editPrivacyNote,
             style: GoogleFonts.nunito(
-              color: Colors.white70,
+              color: context.gc.textSecondary,
               fontSize: 13,
               height: 1.4,
             ),
@@ -498,10 +563,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Text(
-          'Alterar Senha',
-          style: GoogleFonts.nunito(color: Colors.white),
+          AppLocalizations.of(context)!.changePasswordTitle,
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -509,17 +574,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: currentPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
-                labelText: 'Senha Atual',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelText: AppLocalizations.of(context)!.changePasswordCurrentLabel,
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColors.lilac),
+                  borderSide: BorderSide(color: context.gc.lilac),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -528,17 +593,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: newPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
-                labelText: 'Nova Senha',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelText: AppLocalizations.of(context)!.changePasswordNewLabel,
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColors.lilac),
+                  borderSide: BorderSide(color: context.gc.lilac),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -547,17 +612,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: confirmPasswordController,
               obscureText: true,
-              style: GoogleFonts.nunito(color: Colors.white),
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
               decoration: InputDecoration(
-                labelText: 'Confirmar Nova Senha',
-                labelStyle: GoogleFonts.nunito(color: Colors.white54),
+                labelText: AppLocalizations.of(context)!.changePasswordConfirmLabel,
+                labelStyle: GoogleFonts.nunito(color: context.gc.textSecondary),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: AppColors.lilac),
+                  borderSide: BorderSide(color: context.gc.lilac),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -567,16 +632,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: GoogleFonts.nunito()),
+            child: Text(AppLocalizations.of(context)!.commonCancel, style: GoogleFonts.nunito()),
           ),
           ElevatedButton(
             onPressed: () async {
               if (newPasswordController.text !=
                   confirmPasswordController.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('As senhas não coincidem'),
-                    backgroundColor: AppColors.alert,
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.authPasswordsDontMatch),
+                    backgroundColor: context.gc.alert,
                   ),
                 );
                 return;
@@ -584,10 +649,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
               if (newPasswordController.text.length < 6) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content:
-                        Text('A nova senha deve ter pelo menos 6 caracteres'),
-                    backgroundColor: AppColors.alert,
+                        Text(AppLocalizations.of(context)!.editNewPasswordMin),
+                    backgroundColor: context.gc.alert,
                   ),
                 );
                 return;
@@ -608,11 +673,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(result.success
-                            ? 'Senha alterada com sucesso!'
-                            : result.errorMessage ?? 'Erro ao alterar senha'),
+                            ? AppLocalizations.of(context)!.changePasswordSuccess
+                            : result.errorMessage ?? AppLocalizations.of(context)!.changePasswordError),
                         backgroundColor: result.success
-                            ? AppColors.success
-                            : AppColors.alert,
+                            ? context.gc.success
+                            : context.gc.alert,
                       ),
                     );
                   }
@@ -620,8 +685,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Erro: $e'),
-                        backgroundColor: AppColors.alert,
+                        content: Text('${AppLocalizations.of(context)!.editErrorPrefix}: $e'),
+                        backgroundColor: context.gc.alert,
                       ),
                     );
                   }
@@ -630,20 +695,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Modo local - sempre sucesso (senhas não são armazenadas localmente)
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Senha alterada com sucesso!'),
-                      backgroundColor: AppColors.success,
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.changePasswordSuccess),
+                      backgroundColor: context.gc.success,
                     ),
                   );
                 }
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: context.gc.lilac,
             ),
             child: Text(
-              'Alterar',
-              style: GoogleFonts.nunito(color: Colors.white),
+              AppLocalizations.of(context)!.editChangeAction,
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -655,20 +720,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Text(
-          'Exportar Dados',
-          style: GoogleFonts.nunito(color: Colors.white),
+          AppLocalizations.of(context)!.editExportTitle,
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Text(
-          'Seus dados serão exportados em formato JSON. '
-          'Isso pode levar alguns segundos.',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          AppLocalizations.of(context)!.editExportConfirm,
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: GoogleFonts.nunito()),
+            child: Text(AppLocalizations.of(context)!.commonCancel, style: GoogleFonts.nunito()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -676,10 +740,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
               await _performExport();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lilac,
+              backgroundColor: context.gc.lilac,
             ),
-            child: Text('Exportar',
-                style: GoogleFonts.nunito(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)!.editExportAction,
+                style: GoogleFonts.nunito(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -689,9 +753,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _performExport() async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Exportando dados...'),
-          backgroundColor: AppColors.lilac,
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.editExporting),
+          backgroundColor: context.gc.lilac,
         ),
       );
 
@@ -743,9 +807,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Dados exportados com sucesso!'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.editExportSuccess),
+            backgroundColor: context.gc.success,
           ),
         );
       }
@@ -753,8 +817,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao exportar: $e'),
-            backgroundColor: AppColors.alert,
+            content: Text('${AppLocalizations.of(context)!.editExportError}: $e'),
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -765,20 +829,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Text(
-          'Limpar Dados Locais?',
-          style: GoogleFonts.nunito(color: Colors.white),
+          AppLocalizations.of(context)!.editClearLocalTitle,
+          style: GoogleFonts.nunito(color: context.gc.textPrimary),
         ),
         content: Text(
-          'Isso removerá todos os dados salvos neste dispositivo. '
-          'Se você tem sincronização ativada, seus dados na nuvem serão mantidos.',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          AppLocalizations.of(context)!.editClearLocalConfirm,
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar', style: GoogleFonts.nunito()),
+            child: Text(AppLocalizations.of(context)!.commonCancel, style: GoogleFonts.nunito()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -786,7 +849,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               backgroundColor: Colors.orange,
             ),
             child:
-                Text('Limpar', style: GoogleFonts.nunito(color: Colors.white)),
+                Text(AppLocalizations.of(context)!.editClearAction, style: GoogleFonts.nunito(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -828,9 +891,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Dados locais removidos com sucesso'),
-              backgroundColor: AppColors.success,
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.editClearSuccess),
+              backgroundColor: context.gc.success,
             ),
           );
         }
@@ -838,8 +901,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Erro ao limpar dados: $e'),
-              backgroundColor: AppColors.alert,
+              content: Text('${AppLocalizations.of(context)!.editClearError}: $e'),
+              backgroundColor: context.gc.alert,
             ),
           );
         }
@@ -851,31 +914,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Row(
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.red),
             const SizedBox(width: 8),
             Text(
-              'Excluir Conta',
+              AppLocalizations.of(context)!.editDeleteTitle,
               style: GoogleFonts.nunito(color: Colors.red),
             ),
           ],
         ),
         content: Text(
-          'ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\n'
-          'Todos os seus dados serão permanentemente excluídos, incluindo:\n'
-          '- Feitiços e rituais\n'
-          '- Entradas de diário\n'
-          '- Mapa astral\n'
-          '- Configurações\n\n'
-          'Tem certeza absoluta?',
-          style: GoogleFonts.nunito(color: Colors.white70),
+          AppLocalizations.of(context)!.editDeleteWarning,
+          style: GoogleFonts.nunito(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar', style: GoogleFonts.nunito()),
+            child: Text(AppLocalizations.of(context)!.commonCancel, style: GoogleFonts.nunito()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -883,8 +940,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               backgroundColor: Colors.red,
             ),
             child: Text(
-              'Excluir Permanentemente',
-              style: GoogleFonts.nunito(color: Colors.white),
+              AppLocalizations.of(context)!.editDeletePermanently,
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],
@@ -897,15 +954,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          backgroundColor: AppColors.surface,
+          backgroundColor: context.gc.surface,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(color: AppColors.lilac),
+              CircularProgressIndicator(color: context.gc.lilac),
               const SizedBox(height: 16),
               Text(
-                'Excluindo conta...',
-                style: GoogleFonts.nunito(color: Colors.white70),
+                AppLocalizations.of(context)!.editDeleting,
+                style: GoogleFonts.nunito(color: context.gc.textSecondary),
               ),
             ],
           ),
@@ -918,7 +975,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           final authRepository = SupabaseAuthRepository();
           final result = await authRepository.deleteAccount();
           if (!result.success) {
-            throw Exception(result.errorMessage ?? 'Erro ao deletar conta');
+            throw Exception(result.errorMessage ?? AppLocalizations.of(context)!.editDeleteError);
           }
         }
 
@@ -941,9 +998,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         // Mostrar mensagem de sucesso
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Conta excluída com sucesso'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.editDeleteSuccess),
+            backgroundColor: context.gc.success,
           ),
         );
 
@@ -959,8 +1016,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         // Mostrar erro
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao excluir conta: $e'),
-            backgroundColor: AppColors.alert,
+            content: Text('${AppLocalizations.of(context)!.editDeleteErrorPrefix}: $e'),
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -971,28 +1028,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Row(
           children: [
             const Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
             const SizedBox(width: 8),
             Text(
-              'Recurso Premium',
-              style: GoogleFonts.nunito(color: Colors.white),
+              AppLocalizations.of(context)!.editPremiumFeature,
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ],
         ),
         content: Text(
-          'A sincronização de dados na nuvem é um recurso exclusivo para usuários Premium.\n\n'
-          'Com o Premium, seus dados ficam sempre seguros e sincronizados entre todos os seus dispositivos.',
-          style: GoogleFonts.nunito(color: Colors.white70, height: 1.5),
+          AppLocalizations.of(context)!.editSyncPremiumPitch,
+          style: GoogleFonts.nunito(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Agora Não',
-              style: GoogleFonts.nunito(color: Colors.white54),
+              AppLocalizations.of(context)!.editNotNow,
+              style: GoogleFonts.nunito(color: context.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1004,8 +1060,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               backgroundColor: const Color(0xFF9C27B0),
             ),
             child: Text(
-              'Fazer Upgrade',
-              style: GoogleFonts.nunito(color: Colors.white),
+              AppLocalizations.of(context)!.profileUpgrade,
+              style: GoogleFonts.nunito(color: context.gc.textPrimary),
             ),
           ),
         ],

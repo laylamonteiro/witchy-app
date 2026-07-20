@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/spell_model.dart';
 import '../providers/spell_provider.dart';
@@ -64,7 +65,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-            widget.spell == null ? 'Novo Feitiço' : 'Editar Feitiço'),
+            widget.spell == null ? AppLocalizations.of(context)!.spellNew : AppLocalizations.of(context)!.spellEdit),
       ),
       body: Form(
         key: _formKey,
@@ -73,13 +74,13 @@ class _SpellFormPageState extends State<SpellFormPage> {
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nome do Feitiço *',
-                hintText: 'Ex: Proteção de Lar',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellNameLabel,
+                hintText: AppLocalizations.of(context)!.spellNameHint,
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
+                  return AppLocalizations.of(context)!.commonRequired;
                 }
                 return null;
               },
@@ -87,13 +88,13 @@ class _SpellFormPageState extends State<SpellFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _purposeController,
-              decoration: const InputDecoration(
-                labelText: 'Propósito *',
-                hintText: 'Ex: Proteção, Amor Próprio, Prosperidade',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellPurposeLabel,
+                hintText: AppLocalizations.of(context)!.spellPurposeHint,
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
+                  return AppLocalizations.of(context)!.commonRequired;
                 }
                 return null;
               },
@@ -101,8 +102,8 @@ class _SpellFormPageState extends State<SpellFormPage> {
             const SizedBox(height: 16),
             DropdownButtonFormField<SpellType>(
               value: _selectedType,
-              decoration: const InputDecoration(
-                labelText: 'Tipo de Feitiço *',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellTypeLabel,
               ),
               items: SpellType.values.map((type) {
                 return DropdownMenuItem(
@@ -119,8 +120,8 @@ class _SpellFormPageState extends State<SpellFormPage> {
             const SizedBox(height: 16),
             DropdownButtonFormField<SpellCategory>(
               value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Categoria *',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellCategoryLabel,
               ),
               items: SpellCategory.values.map((category) {
                 return DropdownMenuItem(
@@ -143,13 +144,13 @@ class _SpellFormPageState extends State<SpellFormPage> {
             const SizedBox(height: 16),
             DropdownButtonFormField<MoonPhase?>(
               value: _selectedMoonPhase,
-              decoration: const InputDecoration(
-                labelText: 'Fase da Lua (Opcional)',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellMoonPhaseLabel,
               ),
               items: [
-                const DropdownMenuItem(
+                DropdownMenuItem(
                   value: null,
-                  child: Text('Nenhuma'),
+                  child: Text(AppLocalizations.of(context)!.commonNone),
                 ),
                 ...MoonPhase.values.map((phase) {
                   return DropdownMenuItem(
@@ -173,23 +174,23 @@ class _SpellFormPageState extends State<SpellFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _ingredientsController,
-              decoration: const InputDecoration(
-                labelText: 'Ingredientes',
-                hintText: 'Digite um ingrediente por linha',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellIngredientsLabel,
+                hintText: AppLocalizations.of(context)!.spellIngredientsHint,
               ),
               maxLines: 5,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _stepsController,
-              decoration: const InputDecoration(
-                labelText: 'Como Realizar *',
-                hintText: 'Descreva os passos do ritual',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellHowToLabel,
+                hintText: AppLocalizations.of(context)!.spellHowToHint,
               ),
               maxLines: 8,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
+                  return AppLocalizations.of(context)!.commonRequired;
                 }
                 return null;
               },
@@ -197,24 +198,24 @@ class _SpellFormPageState extends State<SpellFormPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _durationController,
-              decoration: const InputDecoration(
-                labelText: 'Duração (em dias)',
-                hintText: 'Ex: 3',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellDurationLabel,
+                hintText: AppLocalizations.of(context)!.spellDurationHint,
               ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _observationsController,
-              decoration: const InputDecoration(
-                labelText: 'Observações',
-                hintText: 'Resultados, sensações, anotações...',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.spellNotesLabel,
+                hintText: AppLocalizations.of(context)!.spellNotesHint,
               ),
               maxLines: 5,
             ),
             const SizedBox(height: 32),
             MagicalButton(
-              text: widget.spell == null ? 'Adicionar Feitiço' : 'Salvar',
+              text: widget.spell == null ? AppLocalizations.of(context)!.spellAdd : AppLocalizations.of(context)!.commonSave,
               icon: Icons.save,
               onPressed: _saveSpell,
             ),

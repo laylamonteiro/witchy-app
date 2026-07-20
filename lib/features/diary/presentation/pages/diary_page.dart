@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'gratitudes_list_page.dart';
 import 'affirmations_list_page.dart';
 import 'free_writing_tab.dart';
 import 'dreams_list_page.dart';
 import 'desires_list_page.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 
@@ -59,7 +61,7 @@ class _DiaryPageState extends State<DiaryPage>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Diários'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryPageTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -67,23 +69,23 @@ class _DiaryPageState extends State<DiaryPage>
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
-            tooltip: 'Configurações',
+            tooltip: AppLocalizations.of(context)!.settingsTitle,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.lilac,
+          indicatorColor: context.gc.lilac,
           isScrollable: true,
           tabAlignment: TabAlignment.center,
           labelStyle: const TextStyle(fontSize: 14),
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           labelPadding: const EdgeInsets.symmetric(horizontal: 13),
-          tabs: const [
-            Tab(text: 'Gratidão'),
-            Tab(text: 'Afirmações'),
-            Tab(child: Text('💭', style: TextStyle(fontSize: 16))),
-            Tab(text: 'Sonhos'),
-            Tab(text: 'Desejos'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.diaryTabGratitude),
+            Tab(text: AppLocalizations.of(context)!.diaryTabAffirmations),
+            const Tab(child: Text('💭', style: TextStyle(fontSize: 16))),
+            Tab(text: AppLocalizations.of(context)!.diaryTabDreams),
+            Tab(text: AppLocalizations.of(context)!.diaryTabDesires),
           ],
         ),
       ),

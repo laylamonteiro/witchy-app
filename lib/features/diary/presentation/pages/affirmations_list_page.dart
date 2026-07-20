@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/affirmation_provider.dart';
 import '../../data/models/affirmation_model.dart';
@@ -7,6 +8,7 @@ import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'affirmation_form_page.dart';
 
 class AffirmationsListPage extends StatefulWidget {
@@ -31,7 +33,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
       body: Consumer<AffirmationProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const LoadingWidget(message: 'Carregando afirmações...');
+            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingAffirmations);
           }
 
           return Column(
@@ -45,7 +47,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                     children: [
                       _buildCategoryChip(
                         context,
-                        'Todas',
+                        AppLocalizations.of(context)!.diaryAllCategories,
                         null,
                         provider.selectedCategory == null,
                       ),
@@ -71,9 +73,9 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                 child: provider.affirmations.isEmpty
                     ? EmptyStateWidget(
                         message:
-                            'Nenhuma afirmação nesta categoria.\nAdicione suas próprias afirmações!',
+                            AppLocalizations.of(context)!.diaryEmptyAffirmationsCategory,
                         icon: Icons.auto_awesome,
-                        actionText: 'Adicionar Afirmação',
+                        actionText: AppLocalizations.of(context)!.diaryAddAffirmation,
                         onAction: () => _navigateToForm(context),
                       )
                     : ListView.builder(
@@ -115,7 +117,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                                             .textTheme
                                             .bodySmall
                                             ?.copyWith(
-                                              color: AppColors.textSecondary,
+                                              color: context.gc.textSecondary,
                                             ),
                                       ),
                                     ],
@@ -128,8 +130,8 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                                         ? Icons.favorite
                                         : Icons.favorite_border,
                                     color: affirmation.isFavorite
-                                        ? AppColors.pinkWitch
-                                        : AppColors.textSecondary,
+                                        ? context.gc.pinkWitch
+                                        : context.gc.textSecondary,
                                   ),
                                   onPressed: () => provider
                                       .toggleFavorite(affirmation),
@@ -163,11 +165,11 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
       onSelected: (_) {
         context.read<AffirmationProvider>().setCategory(category);
       },
-      backgroundColor: AppColors.surface,
-      selectedColor: AppColors.lilac.withOpacity(0.3),
-      checkmarkColor: AppColors.lilac,
+      backgroundColor: context.gc.surface,
+      selectedColor: context.gc.lilac.withOpacity(0.3),
+      checkmarkColor: context.gc.lilac,
       side: BorderSide(
-        color: isSelected ? AppColors.lilac : AppColors.surfaceBorder,
+        color: isSelected ? context.gc.lilac : context.gc.surfaceBorder,
       ),
     );
   }

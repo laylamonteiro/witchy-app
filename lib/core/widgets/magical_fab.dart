@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 
 /// FloatingActionButton mágico com animação de escala e explosão de partículas
 class MagicalFAB extends StatefulWidget {
@@ -60,7 +60,7 @@ class _MagicalFABState extends State<MagicalFAB>
         _particles.add(_Particle(
           angle: (i / count) * 2 * math.pi + _random.nextDouble() * 0.5,
           distance: 35.0 + _random.nextDouble() * 20,
-          color: i % 2 == 0 ? AppColors.starYellow : AppColors.lilac,
+          color: i % 2 == 0 ? context.gc.starYellow : context.gc.lilac,
         ));
       }
     });
@@ -125,8 +125,8 @@ class _MagicalFABState extends State<MagicalFAB>
           // FloatingActionButton
           FloatingActionButton(
             onPressed: _handleTap,
-            backgroundColor: widget.backgroundColor ?? AppColors.lilac,
-            foregroundColor: widget.foregroundColor ?? const Color(0xFF2B2143),
+            backgroundColor: widget.backgroundColor ?? context.gc.lilac,
+            foregroundColor: widget.foregroundColor ?? context.gc.onPrimary,
             child: Icon(widget.icon),
           ),
         ],

@@ -1,0 +1,730 @@
+import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/magical_card.dart';
+import '../../../diary/data/models/affirmation_model.dart';
+import '../../../diary/data/models/desire_model.dart';
+import '../../../diary/data/models/dream_model.dart';
+import '../../../diary/data/models/gratitude_model.dart';
+import '../../../diary/presentation/pages/affirmation_form_page.dart';
+import '../../../diary/presentation/pages/desire_form_page.dart';
+import '../../../diary/presentation/pages/dream_form_page.dart';
+import '../../../diary/presentation/pages/gratitude_form_page.dart';
+import '../../../diary/presentation/providers/affirmation_provider.dart';
+import '../../../diary/presentation/providers/desire_provider.dart';
+import '../../../diary/presentation/providers/dream_provider.dart';
+import '../../../diary/presentation/providers/gratitude_provider.dart';
+import '../../../divination/presentation/pages/oracle_cards_page.dart';
+import '../../../divination/presentation/pages/pendulum_page.dart';
+import '../../../grimoire/data/models/spell_model.dart';
+import '../../../grimoire/presentation/pages/spell_detail_page.dart';
+import '../../../grimoire/presentation/providers/spell_provider.dart';
+import '../../../runes/presentation/pages/rune_reading_page.dart';
+import '../../../sigils/presentation/pages/sigil_step1_intention_page.dart';
+import '../../../tarot/presentation/pages/tarot_page.dart';
+import '../../data/models/trail_model.dart';
+import '../providers/learning_provider.dart';
+
+/// Uma lição do Grimório Vivo em três atos:
+/// 1) Ensino  2) Prática  3) A Página (preenchimento guiado, campo a campo).
+///
+/// Cada lição registra a página no lugar certo do app (feitiço, registro,
+/// diários ou junto de uma ferramenta), levando a pessoa a usar todas as
+/// funcionalidades naturalmente.
+class LessonPage extends StatefulWidget {
+  final LearningTrail trail;
+  final TrailLesson lesson;
+
+  const LessonPage({super.key, required this.trail, required this.lesson});
+
+  @override
+  State<LessonPage> createState() => _LessonPageState();
+}
+
+class _LessonPageState extends State<LessonPage> {
+  int _step = 0; // 0 ensino · 1 prática · 2 página
+  bool _practiceDone = false;
+  bool _isSaving = false;
+
+  late final _titleController =
+      TextEditingController(text: widget.lesson.pageTitle);
+  late final List<TextEditingController> _promptControllers = [
+    for (final _ in widget.lesson.pagePrompts) TextEditingController(),
+  ];
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    for (final c in _promptControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  /// Monta o conteúdo final da página: pergunta + resposta, na voz da pessoa.
+  String _assemblePage() {
+    final buffer = StringBuffer();
+    for (var i = 0; i < widget.lesson.pagePrompts.length; i++) {
+      final answer = _promptControllers[i].text.trim();
+      buffer.writeln('✦ ${widget.lesson.pagePrompts[i]}');
+      buffer.writeln(
+          answer.isEmpty ? AppLocalizations.of(context)!.learnToFill : answer);
+      if (i != widget.lesson.pagePrompts.length - 1) buffer.writeln();
+    }
+    return buffer.toString();
+  }
+
+  /// Só as respostas, sem as perguntas (para afirmações).
+  String _answersOnly() => [
+        for (final c in _promptControllers)
+          if (c.text.trim().isNotEmpty) c.text.trim(),
+      ].join('\n');
+
+  bool get _hasAnyAnswer =>
+      _promptControllers.any((c) => c.text.trim().isNotEmpty);
+
+  String get _pageTitle => _titleController.text.trim().isEmpty
+      ? widget.lesson.pageTitle
+      : _titleController.text.trim();
+
+  /// Nome do destino da página, para a pessoa saber onde vai encontrá-la.
+  String _placeName(AppLocalizations l10n) => switch (widget.lesson.recordKind) {
+        LessonRecordKind.spell => l10n.grimoireMySpells,
+        LessonRecordKind.dream => l10n.learnPlaceDreams,
+        LessonRecordKind.gratitude => l10n.learnPlaceGratitude,
+        LessonRecordKind.affirmation => l10n.learnPlaceAffirmations,
+        LessonRecordKind.desire => l10n.learnPlaceDesires,
+        _ => l10n.grimoireMyRecords,
+      };
+
+  /// Nome e página da ferramenta usada na lição (quando houver).
+  (String, WidgetBuilder)? _toolFor(AppLocalizations l10n) =>
+      switch (widget.lesson.recordKind) {
+        LessonRecordKind.sigil => (
+            l10n.toolSigilsTitle,
+            (_) => const SigilStep1IntentionPage()
+          ),
+        LessonRecordKind.rune => (
+            l10n.toolRunesTitle,
+            (_) => const RuneReadingPage()
+          ),
+        LessonRecordKind.oracle => (
+            l10n.toolOracleTitle,
+            (_) => const OracleCardsPage()
+          ),
+        LessonRecordKind.pendulum => (
+            l10n.toolPendulumTitle,
+            (_) => const PendulumPage()
+          ),
+        LessonRecordKind.tarot => (
+            l10n.toolTarotTitle,
+            (_) => const TarotPage()
+          ),
+        _ => null,
+      };
+
+  /// Salva a página no destino certo e devolve o builder da tela do registro.
+  Future<WidgetBuilder> _saveRecord() async {
+    final lesson = widget.lesson;
+    final content = _assemblePage();
+
+    switch (lesson.recordKind) {
+      case LessonRecordKind.dream:
+        final dream = DreamModel(
+          title: _pageTitle,
+          content: content,
+          tags: const ['grimório-vivo'],
+          date: DateTime.now(),
+        );
+        await context.read<DreamProvider>().addDream(dream);
+        return (_) => DreamFormPage(dream: dream);
+
+      case LessonRecordKind.gratitude:
+        final gratitude = GratitudeModel(
+          title: _pageTitle,
+          content: content,
+          tags: const ['grimório-vivo'],
+          date: DateTime.now(),
+        );
+        await context.read<GratitudeProvider>().addGratitude(gratitude);
+        return (_) => GratitudeFormPage(gratitude: gratitude);
+
+      case LessonRecordKind.affirmation:
+        final affirmation = AffirmationModel(
+          text: _answersOnly(),
+          category: AffirmationCategory.healing,
+        );
+        await context.read<AffirmationProvider>().addAffirmation(affirmation);
+        return (_) => AffirmationFormPage(affirmation: affirmation);
+
+      case LessonRecordKind.desire:
+        final desire = DesireModel(
+          title: _pageTitle,
+          description: content,
+        );
+        await context.read<DesireProvider>().addDesire(desire);
+        return (_) => DesireFormPage(desire: desire);
+
+      default:
+        // Feitiço de verdade ou página de registro (Meus Registros).
+        final spell = SpellModel(
+          id: lesson.recordKind == LessonRecordKind.spell
+              ? null
+              : 'registro_${const Uuid().v4()}',
+          name: _pageTitle,
+          purpose: lesson.pagePurpose,
+          type: lesson.pageType,
+          category: lesson.pageCategory,
+          ingredients: lesson.pageIngredients,
+          steps: content,
+          observations: AppLocalizations.of(context)!
+              .learnPageNote(widget.trail.title, lesson.title),
+        );
+        await context.read<SpellProvider>().addSpell(spell);
+        return (_) => SpellDetailPage(spell: spell);
+    }
+  }
+
+  Future<void> _writePage() async {
+    if (_isSaving) return;
+    if (!_hasAnyAnswer) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.learnFillAtLeastOne),
+          backgroundColor: context.gc.warning,
+        ),
+      );
+      return;
+    }
+    setState(() => _isSaving = true);
+
+    try {
+      final recordBuilder = await _saveRecord();
+      if (!mounted) return;
+      final reward = await context
+          .read<LearningProvider>()
+          .markCompleted(widget.trail, widget.lesson.id);
+
+      if (!mounted) return;
+      final navigator = Navigator.of(context);
+      await _celebrate(reward);
+      if (!mounted) return;
+      // "Que assim seja" leva direto ao registro criado.
+      navigator.pop();
+      navigator.push(MaterialPageRoute(builder: recordBuilder));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$e'.replaceAll('Exception: ', '')),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  /// Selo de conclusão: XP ganho, subida de nível e encadernação da trilha.
+  Future<void> _celebrate(LessonReward reward) {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: dialogContext.gc.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: reward.trailBound
+                  ? dialogContext.gc.starYellow
+                  : dialogContext.gc.lilac,
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (reward.trailBound
+                        ? dialogContext.gc.starYellow
+                        : dialogContext.gc.lilac)
+                    .withValues(alpha: 0.35),
+                blurRadius: 30,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.4, end: 1),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.elasticOut,
+                builder: (context, value, child) =>
+                    Transform.scale(scale: value, child: child),
+                child: Text(
+                  reward.trailBound ? '📕' : '📜',
+                  style: const TextStyle(fontSize: 64),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                reward.trailBound
+                    ? AppLocalizations.of(context)!.learnTrailBound
+                    : AppLocalizations.of(context)!.learnPageDone,
+                style: Theme.of(dialogContext)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(color: dialogContext.gc.lilac),
+              ),
+              const SizedBox(height: 8),
+              if (reward.xpGained > 0)
+                Text(
+                  '+${reward.xpGained} XP',
+                  style: TextStyle(
+                    color: dialogContext.gc.starYellow,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              if (reward.trailBound) ...[
+                const SizedBox(height: 8),
+                Text(
+                  AppLocalizations.of(context)!
+                      .learnChapterBound(widget.trail.title),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: dialogContext.gc.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+              if (reward.leveledUpTo != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: dialogContext.gc.lilac.withValues(alpha: 0.15),
+                  ),
+                  child: Text(
+                    '${reward.leveledUpTo!.emoji} ${AppLocalizations.of(context)!.learnNewTitle}: '
+                    '${reward.leveledUpTo!.title}',
+                    style: TextStyle(
+                      color: dialogContext.gc.lilac,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(AppLocalizations.of(context)!.learnSoBeIt),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // O gesto de voltar percorre os passos antes de sair da lição.
+    return PopScope(
+      canPop: _step == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _step--);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: ResponsiveAppBarTitle(widget.lesson.title),
+        ),
+        body: Column(
+          children: [
+            _buildStepper(context),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: switch (_step) {
+                  0 => _buildTeaching(context),
+                  1 => _buildPractice(context),
+                  _ => _buildPage(context),
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepper(BuildContext context) {
+    final labels = [
+      AppLocalizations.of(context)!.learnStepTeaching,
+      AppLocalizations.of(context)!.learnStepPractice,
+      AppLocalizations.of(context)!.learnStepPage,
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++) ...[
+            Expanded(
+              child: InkWell(
+                onTap: i < _step ? () => setState(() => _step = i) : null,
+                borderRadius: BorderRadius.circular(8),
+                child: Column(
+                  children: [
+                    Text(
+                      labels[i],
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight:
+                            i == _step ? FontWeight.bold : FontWeight.normal,
+                        color: i <= _step
+                            ? context.gc.lilac
+                            : context.gc.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        color: i <= _step
+                            ? context.gc.lilac
+                            : context.gc.surfaceBorder,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (i != labels.length - 1) const SizedBox(width: 6),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeaching(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final paragraphs = widget.lesson.teaching
+        .split('\n\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+    final sectionTitles = [
+      l10n.learnSection1,
+      l10n.learnSection2,
+      l10n.learnSection3,
+      l10n.learnSection4,
+    ];
+    final accents = [
+      context.gc.lilac,
+      context.gc.mint,
+      context.gc.pink,
+      context.gc.starYellow,
+    ];
+    const sectionEmojis = ['🕯️', '🌙', '✨', '🔮'];
+
+    return SingleChildScrollView(
+      key: const ValueKey('teaching'),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Cabeçalho colorido da lição
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(context.gc.surface, context.gc.lilac, 0.22)!,
+                  Color.lerp(context.gc.surface, context.gc.pink, 0.18)!,
+                ],
+              ),
+              border: Border.all(
+                color: context.gc.lilac.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(widget.trail.emoji,
+                    style: const TextStyle(fontSize: 34)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.lesson.title,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: context.gc.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.lesson.pagePurpose,
+                        style: TextStyle(
+                          color: context.gc.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Parágrafos do ensino em seções coloridas com título
+          for (var i = 0; i < paragraphs.length; i++)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color.lerp(
+                    context.gc.surface, accents[i % accents.length], 0.07),
+                borderRadius: BorderRadius.circular(14),
+                border: Border(
+                  left: BorderSide(
+                    color: accents[i % accents.length],
+                    width: 3,
+                  ),
+                  top: BorderSide(color: context.gc.surfaceBorder),
+                  right: BorderSide(color: context.gc.surfaceBorder),
+                  bottom: BorderSide(color: context.gc.surfaceBorder),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${sectionEmojis[i % sectionEmojis.length]} '
+                    '${sectionTitles[i % sectionTitles.length]}',
+                    style: TextStyle(
+                      color: accents[i % accents.length],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    paragraphs[i],
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(height: 1.6, fontSize: 15),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ElevatedButton.icon(
+              onPressed: () => setState(() => _step = 1),
+              icon: const Icon(Icons.arrow_forward, size: 18),
+              label: Text(AppLocalizations.of(context)!.learnGoToPractice),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPractice(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final tool = _toolFor(l10n);
+
+    return SingleChildScrollView(
+      key: const ValueKey('practice'),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.lesson.practice,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        height: 1.6,
+                        fontSize: 15,
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+                if (tool != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: context.gc.lilac.withValues(alpha: 0.10),
+                      border: Border.all(
+                        color: context.gc.lilac.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.learnToolHint,
+                          style: TextStyle(
+                            color: context.gc.textSecondary,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        OutlinedButton.icon(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: tool.$2),
+                          ),
+                          icon: const Icon(Icons.auto_fix_high, size: 16),
+                          label: Text(l10n.learnOpenTool(tool.$1)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  value: _practiceDone,
+                  onChanged: (v) =>
+                      setState(() => _practiceDone = v ?? false),
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: context.gc.lilac,
+                  title: Text(
+                    AppLocalizations.of(context)!.learnDidPractice,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ElevatedButton.icon(
+              onPressed:
+                  _practiceDone ? () => setState(() => _step = 2) : null,
+              icon: const Icon(Icons.edit, size: 18),
+              label: Text(AppLocalizations.of(context)!.learnWriteMyPage),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return SingleChildScrollView(
+      key: const ValueKey('page'),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.learnAnswerHelp,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.textSecondary,
+                        height: 1.4,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.bookmark_border,
+                        size: 15, color: context.gc.mint),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.learnSavesTo(_placeName(l10n)),
+                        style: TextStyle(
+                          color: context.gc.mint,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _titleController,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                      labelText: l10n.learnPageTitleLabel),
+                ),
+                for (var i = 0; i < widget.lesson.pagePrompts.length; i++) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    '✦ ${widget.lesson.pagePrompts[i]}',
+                    style: TextStyle(
+                      color: context.gc.lilac,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _promptControllers[i],
+                    maxLines: null,
+                    minLines: 2,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(
+                      hintText: l10n.learnWriteHere,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _writePage,
+                    icon: _isSaving
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: context.gc.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.menu_book, size: 18),
+                    label: Text(l10n.learnSealPage),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}

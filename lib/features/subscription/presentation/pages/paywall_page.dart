@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 
@@ -16,9 +18,9 @@ class PaywallPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF090A12),
-      body: SafeArea(child: PremiumUpgradeSheet()),
+    return Scaffold(
+      backgroundColor: context.gc.background,
+      body: const SafeArea(child: PremiumUpgradeSheet()),
     );
   }
 
@@ -57,7 +59,7 @@ class PaywallWidget extends StatelessWidget {
           onDismiss?.call();
           if (PaymentService().isPro) onPurchaseCompleted?.call();
         },
-        child: const Text('Desbloquear Premium'),
+        child: Text(AppLocalizations.of(context)!.premiumUnlock),
       ),
     );
   }

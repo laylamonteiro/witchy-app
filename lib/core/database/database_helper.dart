@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../../features/grimoire/data/models/spell_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -29,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 12,
+      version: 16,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -66,6 +67,7 @@ class DatabaseHelper {
         content TEXT NOT NULL,
         tags TEXT,
         feeling TEXT,
+        interpretation TEXT,
         date INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -171,6 +173,20 @@ class DatabaseHelper {
         synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
+
+    // Progresso do Grimório Vivo (lições concluídas, sincronizável)
+    await db.execute('''
+      CREATE TABLE learning_progress (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        lesson_id TEXT NOT NULL,
+        completed_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute(
+        'CREATE INDEX idx_learning_progress_user_id ON learning_progress(user_id)');
 
     // Tabela de Mapas Astrais
     await db.execute('''
@@ -280,6 +296,10 @@ class DatabaseHelper {
 
     // Criar índices para user_id em todas as tabelas
     await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
+    await db.execute(
+      'CREATE INDEX idx_spells_preloaded_user_id '
+      'ON spells(is_preloaded, user_id)',
+    );
     await db.execute('CREATE INDEX idx_dreams_user_id ON dreams(user_id)');
     await db.execute('CREATE INDEX idx_desires_user_id ON desires(user_id)');
     await db.execute(
@@ -850,6 +870,77 @@ class DatabaseHelper {
             'CREATE INDEX IF NOT EXISTS idx_free_writings_user_id ON free_writings(user_id)');
       }
     }
+
+    // Migração v13: feitiços precarregados são globais e não pertencem a um usuário local.
+    if (oldVersion < 13) {
+      await db.execute(
+        """
+        UPDATE spells
+        SET user_id = '${SpellModel.globalUserId}', synced = 1
+        WHERE is_preloaded = 1
+          AND (user_id IS NULL OR user_id IN ('local_user', 'current_user'))
+        """,
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_spells_preloaded_user_id '
+        'ON spells(is_preloaded, user_id)',
+      );
+    }
+
+    // Migração v14: interpretação de sonhos por IA salva junto do sonho.
+    if (oldVersion < 14) {
+      final dreamCols = await db.rawQuery('PRAGMA table_info(dreams)');
+      final hasInterpretation =
+          dreamCols.any((col) => col['name'] == 'interpretation');
+      if (!hasInterpretation) {
+        await db.execute('ALTER TABLE dreams ADD COLUMN interpretation TEXT');
+      }
+    }
+
+    // Migração v15: remove feitiços ancestrais duplicados. O seed antigo
+    // comparava por id (que era regenerado a cada execução) e re-inseria os
+    // precarregados a cada abertura do app. Mantém o registro mais antigo de
+    // cada nome e normaliza o dono global.
+    if (oldVersion < 15) {
+      await db.execute('''
+        DELETE FROM spells
+        WHERE is_preloaded = 1
+          AND rowid NOT IN (
+            SELECT MIN(rowid) FROM spells
+            WHERE is_preloaded = 1
+            GROUP BY LOWER(TRIM(name))
+          )
+      ''');
+      await db.execute(
+        """
+        UPDATE spells
+        SET user_id = '${SpellModel.globalUserId}', synced = 1
+        WHERE is_preloaded = 1
+        """,
+      );
+    }
+
+    // Migração v16: progresso do Grimório Vivo passa a viver no banco
+    // (antes ficava só em SharedPreferences) para sincronizar entre
+    // dispositivos como os demais registros.
+    if (oldVersion < 16) {
+      final tables = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='learning_progress'");
+      if (tables.isEmpty) {
+        await db.execute('''
+          CREATE TABLE learning_progress (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL DEFAULT 'local_user',
+            lesson_id TEXT NOT NULL,
+            completed_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            synced INTEGER NOT NULL DEFAULT 0
+          )
+        ''');
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_learning_progress_user_id ON learning_progress(user_id)');
+      }
+    }
   }
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
@@ -859,7 +950,6 @@ class DatabaseHelper {
 
     final db = await database;
     const tables = [
-      'spells',
       'dreams',
       'desires',
       'gratitudes',
@@ -874,9 +964,16 @@ class DatabaseHelper {
       'pendulum_consultations',
       'oracle_readings',
       'daily_magical_weather',
+      'learning_progress',
     ];
 
     await db.transaction((txn) async {
+      await txn.update(
+        'spells',
+        {'user_id': userId, 'synced': 0},
+        where: "user_id IN ('local_user', 'current_user') AND is_preloaded = 0",
+      );
+
       for (final table in tables) {
         await txn.update(
           table,
@@ -961,6 +1058,7 @@ class DatabaseHelper {
       'pendulum_consultations',
       'oracle_readings',
       'daily_magical_weather',
+      'learning_progress',
     ];
 
     for (final table in tables) {

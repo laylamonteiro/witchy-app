@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../grimoire/presentation/pages/grimoire_page.dart';
@@ -6,6 +7,7 @@ import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
 
@@ -151,10 +153,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           ],
         ),
         bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: AppColors.surfaceBorder,
+                color: context.gc.surfaceBorder,
                 width: 1,
               ),
             ),
@@ -162,18 +164,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           child: BottomNavigationBar(
             currentIndex: _selectedIndex,
             onTap: _onTabTapped,
-            items: const [
+            items: [
               BottomNavigationBarItem(
-                icon: Icon(Icons.auto_stories),
-                label: 'Enciclopédia',
+                icon: const Icon(Icons.auto_stories),
+                label: AppLocalizations.of(context)!.navEncyclopedia,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.stars_outlined),
-                label: 'Grimório',
+                icon: const Icon(Icons.stars_outlined),
+                label: AppLocalizations.of(context)!.navGrimoire,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.menu_book),
-                label: 'Diários',
+                icon: const Icon(Icons.menu_book),
+                label: AppLocalizations.of(context)!.navDiaries,
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../auth/auth.dart';
 import 'pendulum_page.dart';
@@ -15,9 +16,9 @@ class DivinationHubPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const ResponsiveAppBarTitle('Divinação'),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -31,14 +32,14 @@ class DivinationHubPage extends StatelessWidget {
                   Text(
                     'Artes Divinatórias',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Consulte os oráculos e receba orientação',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withOpacity(0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -133,7 +134,7 @@ class DivinationHubPage extends StatelessWidget {
                                 .textTheme
                                 .titleMedium
                                 ?.copyWith(
-                                  color: AppColors.softWhite,
+                                  color: context.gc.softWhite,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -153,10 +154,10 @@ class DivinationHubPage extends StatelessWidget {
                                 ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'PREMIUM',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: context.gc.textPrimary,
                                   fontSize: 8,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -169,7 +170,7 @@ class DivinationHubPage extends StatelessWidget {
                       Text(
                         description,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.softWhite.withOpacity(0.7),
+                              color: context.gc.softWhite.withOpacity(0.7),
                             ),
                       ),
                     ],
@@ -178,7 +179,7 @@ class DivinationHubPage extends StatelessWidget {
                 Icon(
                   access.hasFullAccess ? Icons.arrow_forward_ios : Icons.lock,
                   color: access.hasFullAccess
-                      ? AppColors.lilac
+                      ? context.gc.lilac
                       : const Color(0xFF9C27B0),
                   size: 16,
                 ),

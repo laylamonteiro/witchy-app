@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/spell_provider.dart';
 import '../../data/models/spell_model.dart';
 import 'spell_detail_page.dart';
@@ -43,9 +45,9 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
 
     if (_intentionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Descreva sua intenção primeiro'),
-          backgroundColor: AppColors.alert,
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.aiSpellDescribeFirst),
+          backgroundColor: context.gc.alert,
         ),
       );
       return;
@@ -55,10 +57,10 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     final authProvider = context.read<AuthProvider>();
     if (!authProvider.currentUser.canUseAi) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-              'Você atingiu o limite diário de consultas. Volte amanhã ou seja Premium!'),
-          backgroundColor: AppColors.alert,
+              AppLocalizations.of(context)!.aiSpellDailyLimit),
+          backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
       );
@@ -94,33 +96,33 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       if (!mounted) return;
 
       String errorMessage =
-          'O conselheiro não pôde manifestar o feitiço. Tente novamente mais tarde.';
+          AppLocalizations.of(context)!.aiSpellGenericError;
 
       if (e.toString().contains('limit') ||
           e.toString().contains('quota') ||
           e.toString().contains('usage') ||
           e.toString().contains('429')) {
         errorMessage =
-            'O conselheiro precisa de descanso. Muitos pedidos foram feitos. Por favor, aguarde alguns minutos.';
+            AppLocalizations.of(context)!.advisorRateLimited;
       } else if (e.toString().contains('autenticação') ||
           e.toString().contains('authentication') ||
           e.toString().contains('401')) {
         errorMessage =
-            'Erro temporário no serviço místico. Tente novamente em instantes.';
+            AppLocalizations.of(context)!.advisorTempError;
       } else if (e.toString().contains('network') ||
           e.toString().contains('connection') ||
           e.toString().contains('timeout')) {
         errorMessage =
-            'Erro de conexão. Verifique sua internet e tente novamente.';
+            AppLocalizations.of(context)!.advisorConnectionError;
       } else if (e.toString().contains('503')) {
         errorMessage =
-            'O portal místico está temporariamente fechado. Tente novamente em alguns minutos.';
+            AppLocalizations.of(context)!.advisorPortalClosed;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
           duration: const Duration(seconds: 5),
         ),
       );
@@ -142,9 +144,9 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Feitiço salvo no seu grimório! ✨'),
-        backgroundColor: AppColors.success,
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.spellSavedToGrimoire),
+        backgroundColor: context.gc.success,
       ),
     );
 
@@ -155,10 +157,10 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Novo Feitiço'),
-        backgroundColor: AppColors.darkBackground,
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.spellNew),
+        backgroundColor: context.gc.darkBackground,
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -170,17 +172,16 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                   const Text('✨', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 16),
                   Text(
-                    'Descreva sua Intenção',
+                    AppLocalizations.of(context)!.aiSpellDescribeIntention,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Compartilhe o que você deseja manifestar. '
-                    'Quanto mais detalhes, mais poderoso será o feitiço!',
+                    AppLocalizations.of(context)!.aiSpellIntentionHelp,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withOpacity(0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -193,26 +194,25 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
             MagicalCard(
               child: TextField(
                 controller: _intentionController,
-                style: const TextStyle(color: AppColors.softWhite),
+                style: TextStyle(color: context.gc.softWhite),
                 decoration: InputDecoration(
-                  hintText: 'Ex: Quero atrair prosperidade financeira para '
-                      'pagar minhas contas e ter mais tranquilidade',
+                  hintText: AppLocalizations.of(context)!.aiSpellIntentionHint,
                   hintStyle: TextStyle(
-                    color: AppColors.softWhite.withOpacity(0.5),
+                    color: context.gc.softWhite.withOpacity(0.5),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.lilac),
+                    borderSide: BorderSide(color: context.gc.lilac),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: AppColors.lilac.withOpacity(0.3),
+                      color: context.gc.lilac.withOpacity(0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.lilac),
+                    borderSide: BorderSide(color: context.gc.lilac),
                   ),
                 ),
                 maxLines: 6,
@@ -228,27 +228,27 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                       ? null
                       : _generateSpell,
               icon: _isGenerating
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.darkBackground,
+                          context.gc.darkBackground,
                         ),
                       ),
                     )
                   : const Icon(Icons.auto_awesome),
               label: Text(
-                  _isGenerating ? 'Manifestando...' : 'Manifestar Feitiço ✨'),
+                  _isGenerating ? AppLocalizations.of(context)!.aiSpellManifesting : AppLocalizations.of(context)!.aiSpellManifest),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.lilac,
-                foregroundColor: AppColors.darkBackground,
+                backgroundColor: context.gc.lilac,
+                foregroundColor: context.gc.darkBackground,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 16,
                 ),
-                disabledBackgroundColor: AppColors.lilac.withOpacity(0.3),
+                disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
               ),
             ),
 
@@ -261,11 +261,11 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    'Consultas restantes hoje: $remaining/${UserModel.freeAiConsultationsLimit}',
+                    AppLocalizations.of(context)!.advisorRemainingToday('$remaining/${UserModel.freeAiConsultationsLimit}'),
                     style: TextStyle(
                       color: remaining > 0
-                          ? AppColors.softWhite.withOpacity(0.6)
-                          : AppColors.alert,
+                          ? context.gc.softWhite.withOpacity(0.6)
+                          : context.gc.alert,
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,
@@ -287,8 +287,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                         Expanded(
                           child: Text(
                             _generatedSpell!.name,
-                            style: const TextStyle(
-                              color: AppColors.lilac,
+                            style: TextStyle(
+                              color: context.gc.lilac,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
@@ -305,13 +305,13 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.lilac.withOpacity(0.2),
+                            color: context.gc.lilac.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
                             _generatedSpell!.category.displayName,
-                            style: const TextStyle(
-                              color: AppColors.lilac,
+                            style: TextStyle(
+                              color: context.gc.lilac,
                               fontSize: 12,
                             ),
                           ),
@@ -324,8 +324,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                           ),
                           decoration: BoxDecoration(
                             color: _generatedSpell!.type == SpellType.attraction
-                                ? AppColors.success.withOpacity(0.2)
-                                : AppColors.alert.withOpacity(0.2),
+                                ? context.gc.success.withOpacity(0.2)
+                                : context.gc.alert.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
@@ -333,8 +333,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                             style: TextStyle(
                               color:
                                   _generatedSpell!.type == SpellType.attraction
-                                      ? AppColors.success
-                                      : AppColors.alert,
+                                      ? context.gc.success
+                                      : context.gc.alert,
                               fontSize: 12,
                             ),
                           ),
@@ -345,7 +345,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                     Text(
                       _generatedSpell!.purpose,
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.9),
+                        color: context.gc.softWhite.withOpacity(0.9),
                         fontSize: 14,
                       ),
                     ),
@@ -363,10 +363,10 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                           );
                         },
                         icon: const Icon(Icons.visibility, size: 18),
-                        label: const Text('Ver Detalhes'),
+                        label: Text(AppLocalizations.of(context)!.aiSpellSeeDetails),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lilac,
-                          foregroundColor: AppColors.darkBackground,
+                          backgroundColor: context.gc.lilac,
+                          foregroundColor: context.gc.darkBackground,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 32, vertical: 14),
                         ),

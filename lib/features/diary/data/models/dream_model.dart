@@ -7,6 +7,9 @@ class DreamModel {
   final String content;
   final List<String> tags;
   final String? feeling;
+
+  /// Interpretação gerada por IA (Premium), salva junto do sonho.
+  final String? interpretation;
   final DateTime date;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -19,6 +22,7 @@ class DreamModel {
     required this.content,
     required this.tags,
     this.feeling,
+    this.interpretation,
     DateTime? date,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -36,6 +40,7 @@ class DreamModel {
       'content': content,
       'tags': tags.join('|||'),
       'feeling': feeling,
+      'interpretation': interpretation,
       'date': date.millisecondsSinceEpoch,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
@@ -53,6 +58,7 @@ class DreamModel {
           ? (map['tags'] as String).split('|||')
           : [],
       feeling: map['feeling'],
+      interpretation: map['interpretation'],
       date: DateTime.fromMillisecondsSinceEpoch(map['date']),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
       updatedAt: map['updated_at'] != null
@@ -68,6 +74,7 @@ class DreamModel {
     String? content,
     List<String>? tags,
     String? feeling,
+    String? interpretation,
     DateTime? date,
     bool? synced,
   }) {
@@ -78,6 +85,7 @@ class DreamModel {
       content: content ?? this.content,
       tags: tags ?? this.tags,
       feeling: feeling ?? this.feeling,
+      interpretation: interpretation ?? this.interpretation,
       date: date ?? this.date,
       createdAt: createdAt,
       updatedAt: DateTime.now(),

@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:grimorio_de_bolso/core/i18n/treatment_preference.dart';
+import 'package:grimorio_de_bolso/core/i18n/gender.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 
 void main() {
-  group('TreatmentText', () {
+  group('GenderText', () {
     test('seleciona variante feminina', () {
       expect(
-        TreatmentText.select(
-          preference: TreatmentPreference.feminine,
+        GenderText.select(
+          preference: Gender.feminine,
           feminine: 'acolhida',
           masculine: 'acolhido',
           neutral: 'em acolhimento',
@@ -18,8 +18,8 @@ void main() {
 
     test('seleciona variante masculina', () {
       expect(
-        TreatmentText.select(
-          preference: TreatmentPreference.masculine,
+        GenderText.select(
+          preference: Gender.masculine,
           feminine: 'acolhida',
           masculine: 'acolhido',
           neutral: 'em acolhimento',
@@ -30,8 +30,8 @@ void main() {
 
     test('seleciona variante neutra', () {
       expect(
-        TreatmentText.select(
-          preference: TreatmentPreference.neutral,
+        GenderText.select(
+          preference: Gender.neutral,
           feminine: 'acolhida',
           masculine: 'acolhido',
           neutral: 'em acolhimento',
@@ -41,21 +41,21 @@ void main() {
     });
 
     test('fallback seguro usa linguagem sem marcação', () {
-      expect(TreatmentPreference.fromJson('invalido'), TreatmentPreference.neutral);
-      expect(TreatmentPreference.fromJson(null), TreatmentPreference.neutral);
+      expect(Gender.fromJson('invalido'), Gender.neutral);
+      expect(Gender.fromJson(null), Gender.neutral);
     });
   });
 
-  group('UserModel treatmentPreference', () {
+  group('UserModel gender', () {
     test('persiste preferência no JSON', () {
       final user = UserModel.defaultUser().copyWith(
-        treatmentPreference: TreatmentPreference.masculine,
+        gender: Gender.masculine,
       );
 
-      expect(user.toJson()['treatmentPreference'], 'masculine');
+      expect(user.toJson()['gender'], 'masculine');
       expect(
-        UserModel.fromJson(user.toJson()).treatmentPreference,
-        TreatmentPreference.masculine,
+        UserModel.fromJson(user.toJson()).gender,
+        Gender.masculine,
       );
     });
 
@@ -66,7 +66,7 @@ void main() {
         'plan': 'free',
       });
 
-      expect(user.treatmentPreference, TreatmentPreference.neutral);
+      expect(user.gender, Gender.neutral);
     });
   });
 }

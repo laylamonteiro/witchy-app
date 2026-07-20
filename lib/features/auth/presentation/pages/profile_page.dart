@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +12,7 @@ import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/legal/legal_document_page.dart';
 import '../widgets/premium_blur_widget.dart';
 import '../widgets/profile_avatar_picker.dart';
 import 'edit_profile_page.dart';
@@ -22,7 +25,7 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Meu Perfil'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.profileTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -86,9 +89,9 @@ class ProfilePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              user.displayName ?? 'Bruxa Anônima',
-              style: const TextStyle(
-                color: Colors.white,
+              user.displayName ?? AppLocalizations.of(context)!.profileAnonymous,
+              style: TextStyle(
+                color: context.gc.textPrimary,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -114,8 +117,8 @@ class ProfilePage extends StatelessWidget {
           ),
           child: Text(
             _getRoleLabel(user.role),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.gc.textPrimary,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -135,17 +138,17 @@ class ProfilePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
-          'Editar Nome',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context)!.profileEditName,
+          style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Seu nome mágico',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+            hintText: AppLocalizations.of(context)!.authNameHint,
+            hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide:
@@ -160,9 +163,9 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white70),
+            child: Text(
+              AppLocalizations.of(context)!.commonCancel,
+              style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -178,7 +181,7 @@ class ProfilePage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9C27B0),
             ),
-            child: const Text('Salvar'),
+            child: Text(AppLocalizations.of(context)!.commonSave),
           ),
         ],
       ),
@@ -204,7 +207,7 @@ class ProfilePage extends StatelessWidget {
         border: Border.all(
           color: isFree
               ? const Color(0xFF9C27B0).withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.2),
+              : context.gc.textPrimary.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -213,7 +216,7 @@ class ProfilePage extends StatelessWidget {
             children: [
               Icon(
                 isFree ? Icons.workspace_premium_outlined : Icons.star,
-                color: Colors.white,
+                color: context.gc.textPrimary,
                 size: 32,
               ),
               const SizedBox(width: 12),
@@ -222,19 +225,19 @@ class ProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isFree ? 'Plano Gratuito' : 'Plano Premium',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      isFree ? AppLocalizations.of(context)!.profileFreePlan : AppLocalizations.of(context)!.profilePremiumPlan,
+                      style: TextStyle(
+                        color: context.gc.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       isFree
-                          ? 'Algumas funcionalidades são limitadas'
-                          : 'Acesso completo a todas as funcionalidades',
+                          ? AppLocalizations.of(context)!.profileFreePlanDesc
+                          : AppLocalizations.of(context)!.profilePremiumPlanDesc,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: context.gc.textPrimary.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -251,19 +254,19 @@ class ProfilePage extends StatelessWidget {
                 onPressed: () => _showUpgradeSheet(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9C27B0),
-                  foregroundColor: Colors.white,
+                  foregroundColor: context.gc.textPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.auto_awesome, size: 18),
                     SizedBox(width: 8),
                     Text(
-                      'Fazer Upgrade',
+                      AppLocalizations.of(context)!.profileUpgrade,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -283,42 +286,45 @@ class ProfilePage extends StatelessWidget {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.gc.textPrimary.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Uso do Plano Gratuito',
+          Text(
+            AppLocalizations.of(context)!.profileFreeUsage,
             style: TextStyle(
-              color: Colors.white,
+              color: context.gc.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
           _buildUsageRow(
-            'Feitiços',
+            context,
+            AppLocalizations.of(context)!.profileSpells,
             user.spellsCount,
             UserModel.freeSpellsLimit,
             Icons.auto_fix_high,
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
-            'Entradas de Diário',
+            context,
+            AppLocalizations.of(context)!.profileDiaryEntries,
             user.diaryEntriesThisMonth,
             UserModel.freeDiaryEntriesLimit,
             Icons.book,
-            subtitle: 'este mês',
+            subtitle: AppLocalizations.of(context)!.profileThisMonth,
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
-            'Consultas IA',
+            context,
+            AppLocalizations.of(context)!.profileMysticAdvisor,
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
             Icons.psychology,
-            subtitle: 'hoje',
+            subtitle: AppLocalizations.of(context)!.profileToday,
           ),
         ],
       ),
@@ -326,6 +332,7 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildUsageRow(
+    BuildContext context,
     String label,
     int used,
     int limit,
@@ -344,7 +351,7 @@ class ProfilePage extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(icon, color: Colors.white54, size: 20),
+        Icon(icon, color: context.gc.textSecondary, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -355,8 +362,8 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
                       fontSize: 14,
                     ),
                   ),
@@ -373,15 +380,15 @@ class ProfilePage extends StatelessWidget {
               if (subtitle != null)
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: Colors.white38,
+                  style: TextStyle(
+                    color: context.gc.textSecondary,
                     fontSize: 11,
                   ),
                 ),
               const SizedBox(height: 4),
               LinearProgressIndicator(
                 value: percentage.clamp(0, 1),
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: context.gc.textPrimary.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation(progressColor),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -400,68 +407,76 @@ class ProfilePage extends StatelessWidget {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.gc.textPrimary.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         children: [
           _buildOptionTile(
+            context,
             icon: Icons.person_outline,
-            title: 'Editar Perfil',
+            title: AppLocalizations.of(context)!.profileEditProfile,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const EditProfilePage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           // Opção de gerenciar assinatura
           _buildOptionTile(
+            context,
             icon: Icons.card_membership,
-            title: 'Gerenciar Assinatura',
+            title: AppLocalizations.of(context)!.profileManageSubscription,
             onTap: () => _handleManageSubscription(context, paymentService),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           // Estatísticas mágicas
           _buildOptionTile(
+            context,
             icon: Icons.analytics_outlined,
-            title: 'Estatísticas Mágicas',
+            title: AppLocalizations.of(context)!.profileMagicalStats,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           // Jornadas gamificadas
           _buildOptionTile(
+            context,
             icon: Icons.explore_outlined,
-            title: 'Jornadas Mágicas',
+            title: AppLocalizations.of(context)!.profileMagicalJourneys,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),
             ),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.notifications_outlined,
-            title: 'Notificações',
+            title: AppLocalizations.of(context)!.profileNotifications,
             onTap: () => _showNotificationsDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.help_outline,
-            title: 'Ajuda & Suporte',
+            title: AppLocalizations.of(context)!.profileHelpSupport,
             onTap: () => _showHelpDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.info_outline,
-            title: 'Sobre o App',
+            title: AppLocalizations.of(context)!.profileAboutApp,
             onTap: () => _showAboutDialog(context),
           ),
-          _buildDivider(),
+          _buildDivider(context),
           _buildOptionTile(
+            context,
             icon: Icons.logout,
-            title: 'Sair da Conta',
+            title: AppLocalizations.of(context)!.profileLogout,
             textColor: const Color(0xFFF44336),
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
@@ -476,20 +491,20 @@ class ProfilePage extends StatelessWidget {
       context: pageContext,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
-          'Sair da Conta',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(dialogContext)!.profileLogout,
+          style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
-        content: const Text(
-          'Tem certeza que deseja sair?\nSeus dados locais serão mantidos.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          AppLocalizations.of(dialogContext)!.profileLogoutConfirm,
+          style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white70),
+            child: Text(
+              AppLocalizations.of(dialogContext)!.commonCancel,
+              style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -504,9 +519,9 @@ class ProfilePage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF44336),
             ),
-            child: const Text(
-              'Sair',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              AppLocalizations.of(dialogContext)!.profileLogoutAction,
+              style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
         ],
@@ -542,9 +557,9 @@ class ProfilePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Simular Plano:',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+            style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Row(
@@ -590,8 +605,8 @@ class ProfilePage extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: isSelected
               ? const Color(0xFF9C27B0)
-              : Colors.white.withValues(alpha: 0.1),
-          foregroundColor: Colors.white,
+              : context.gc.textPrimary.withValues(alpha: 0.1),
+          foregroundColor: context.gc.textPrimary,
           padding: const EdgeInsets.symmetric(vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -608,31 +623,32 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionTile({
+  Widget _buildOptionTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
     Color? textColor,
   }) {
-    final color = textColor ?? Colors.white;
+    final color = textColor ?? context.gc.textPrimary;
     return ListTile(
-      leading: Icon(icon, color: textColor ?? Colors.white70),
+      leading: Icon(icon, color: textColor ?? context.gc.textSecondary),
       title: Text(
         title,
         style: TextStyle(color: color),
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: textColor?.withValues(alpha: 0.5) ?? Colors.white38,
+        color: textColor?.withValues(alpha: 0.5) ?? context.gc.textSecondary,
       ),
       onTap: onTap,
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Divider(
       height: 1,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: context.gc.textPrimary.withValues(alpha: 0.1),
     );
   }
 
@@ -678,19 +694,19 @@ class ProfilePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.notifications_outlined, color: Color(0xFF9C27B0)),
             SizedBox(width: 8),
             Text(
-              'Notificações',
-              style: TextStyle(color: Colors.white),
+              AppLocalizations.of(context)!.profileNotifications,
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
-        content: const Text(
-          'As configurações de notificações estarão disponíveis em breve!\n\nVocê poderá personalizar alertas para:\n• Lembretes de rituais\n• Fases da lua\n• Datas mágicas especiais',
-          style: TextStyle(color: Colors.white70, height: 1.5),
+        content: Text(
+          AppLocalizations.of(context)!.profileNotificationsSoon,
+          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
@@ -710,13 +726,13 @@ class ProfilePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.help_outline, color: Color(0xFF9C27B0)),
             SizedBox(width: 8),
             Text(
-              'Ajuda & Suporte',
-              style: TextStyle(color: Colors.white),
+              AppLocalizations.of(context)!.profileHelpSupport,
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
@@ -725,32 +741,37 @@ class ProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHelpItem(
+              context,
               icon: Icons.email_outlined,
-              title: 'Email de Suporte',
+              title: AppLocalizations.of(context)!.profileSupportEmail,
               subtitle: 'suporte@grimoriodebolso.com',
               onTap: () => _launchEmail(),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
+              context,
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
-              subtitle: 'Perguntas frequentes',
+              subtitle: AppLocalizations.of(context)!.profileFaq,
               onTap: () => _launchFaq(),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
+              context,
               icon: Icons.policy_outlined,
-              title: 'Política de Privacidade',
-              subtitle: 'Seus dados estão seguros',
-              onTap: () => _launchPrivacyPolicy(),
+              title: AppLocalizations.of(context)!.authPrivacyPolicy,
+              subtitle: AppLocalizations.of(context)!.profilePrivacySafe,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Fechar',
+            child: Text(
+              AppLocalizations.of(context)!.commonClose,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
           ),
@@ -759,7 +780,8 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHelpItem({
+  Widget _buildHelpItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -780,22 +802,22 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Colors.white54,
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white38),
+            Icon(Icons.chevron_right, color: context.gc.textSecondary),
           ],
         ),
       ),
@@ -816,12 +838,6 @@ class ProfilePage extends StatelessWidget {
     }
   }
 
-  Future<void> _launchPrivacyPolicy() async {
-    final uri = Uri.parse('https://grimoriodebolso.com/privacidade');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
 
   void _handleManageSubscription(
       BuildContext context, PaymentService paymentService) {
@@ -838,13 +854,13 @@ class ProfilePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Row(
+        title: Row(
           children: [
             Text('✨', style: TextStyle(fontSize: 24)),
             SizedBox(width: 8),
             Text(
               'Grimório de Bolso',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
@@ -853,31 +869,31 @@ class ProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Versão ${packageInfo.version} (${packageInfo.buildNumber})',
-              style: const TextStyle(color: Colors.white70),
+              AppLocalizations.of(context)!.aboutVersion(packageInfo.version, packageInfo.buildNumber),
+              style: TextStyle(color: context.gc.textSecondary),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Seu companheiro para práticas mágicas, rituais e autoconhecimento através da astrologia e bruxaria moderna.',
-              style: TextStyle(color: Colors.white70, height: 1.5),
+            Text(
+              AppLocalizations.of(context)!.aboutDescription,
+              style: TextStyle(color: context.gc.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Desenvolvido com 🔮 e ✨',
+            Text(
+              AppLocalizations.of(context)!.aboutMadeWith,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '© 2024 Grimório de Bolso',
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Fechar',
+            child: Text(
+              AppLocalizations.of(context)!.commonClose,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
           ),

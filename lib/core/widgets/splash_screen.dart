@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   final Widget child;
@@ -74,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.gc.background,
         body: Center(
           child: FadeTransition(
             opacity: _fadeAnimation,
@@ -95,9 +96,9 @@ class _SplashScreenState extends State<SplashScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppColors.lilac.withOpacity(0.4),
-                              AppColors.mint.withOpacity(0.2),
-                              AppColors.background,
+                              context.gc.lilac.withOpacity(0.4),
+                              context.gc.mint.withOpacity(0.2),
+                              context.gc.background,
                             ],
                             stops: const [0.0, 0.5, 1.0],
                           ),
@@ -111,7 +112,7 @@ class _SplashScreenState extends State<SplashScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppColors.lilac.withOpacity(0.2),
+                              context.gc.lilac.withOpacity(0.2),
                               Colors.transparent,
                             ],
                           ),
@@ -171,7 +172,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     'Grimório de Bolso',
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
                         ),
@@ -182,7 +183,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     'Sua jornada mágica começa aqui ✨',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -194,7 +195,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.lilac.withOpacity(0.6),
+                        context.gc.lilac.withOpacity(0.6),
                       ),
                     ),
                   ),
@@ -221,7 +222,7 @@ class _SplashScreenState extends State<SplashScreen>
               fontSize: 16 + (4 * (index % 3)),
               shadows: [
                 Shadow(
-                  color: AppColors.starYellow.withOpacity(0.5),
+                  color: context.gc.starYellow.withOpacity(0.5),
                   blurRadius: 10,
                 ),
               ],

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -91,10 +92,10 @@ class _PersonalizedSuggestionsPageState
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
                 'Erro ao carregar mapa astral. Por favor, crie seu mapa astral primeiro.'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -158,9 +159,9 @@ class _PersonalizedSuggestionsPageState
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Erro ao gerar sugestões. Tente novamente mais tarde.'),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
         ),
       );
     }
@@ -189,12 +190,12 @@ class _PersonalizedSuggestionsPageState
               'Sugestões Personalizadas',
               style: TextStyle(fontSize: 18),
             ),
-            backgroundColor: AppColors.darkBackground,
+            backgroundColor: context.gc.darkBackground,
           ),
-          backgroundColor: AppColors.darkBackground,
+          backgroundColor: context.gc.darkBackground,
           body: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.lilac),
+              ? Center(
+                  child: CircularProgressIndicator(color: context.gc.lilac),
                 )
               : !_hasNatalChart
                   ? _buildNoChartView()
@@ -246,10 +247,10 @@ class _PersonalizedSuggestionsPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Conteúdo Premium',
                       style: TextStyle(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -257,7 +258,7 @@ class _PersonalizedSuggestionsPageState
                     Text(
                       'Desbloqueie sugestões personalizadas completas',
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withOpacity(0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -281,8 +282,8 @@ class _PersonalizedSuggestionsPageState
               icon: const Icon(Icons.star, size: 18),
               label: const Text('Seja Premium'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.lilac,
-                foregroundColor: AppColors.darkBackground,
+                backgroundColor: context.gc.lilac,
+                foregroundColor: context.gc.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
@@ -302,10 +303,10 @@ class _PersonalizedSuggestionsPageState
             children: [
               const Text('🌟', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Mapa Astral Necessário',
                 style: TextStyle(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -315,7 +316,7 @@ class _PersonalizedSuggestionsPageState
               Text(
                 'Para receber sugestões personalizadas baseadas nos trânsitos astrológicos, você precisa criar seu mapa astral primeiro.',
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withOpacity(0.8),
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -335,8 +336,8 @@ class _PersonalizedSuggestionsPageState
                 icon: const Icon(Icons.assignment_ind_outlined),
                 label: const Text('Preencher Mapa Astral'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lilac,
-                  foregroundColor: AppColors.darkBackground,
+                  backgroundColor: context.gc.lilac,
+                  foregroundColor: context.gc.darkBackground,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
@@ -356,8 +357,8 @@ class _PersonalizedSuggestionsPageState
         children: [
           Text(
             'Hoje',
-            style: const TextStyle(
-              color: AppColors.lilac,
+            style: TextStyle(
+              color: context.gc.lilac,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -366,7 +367,7 @@ class _PersonalizedSuggestionsPageState
           Text(
             DateFormat('dd/MM/yyyy - EEEE', 'pt_BR').format(DateTime.now()),
             style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.7),
+              color: context.gc.softWhite.withOpacity(0.7),
               fontSize: 14,
             ),
           ),
@@ -385,7 +386,7 @@ class _PersonalizedSuggestionsPageState
             child: Text(
               'Sugestões baseadas nos trânsitos planetários e seu mapa astral',
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.8),
+                color: context.gc.softWhite.withOpacity(0.8),
                 fontSize: 12,
               ),
             ),
@@ -478,7 +479,7 @@ class _PersonalizedSuggestionsPageState
                           : 'Planetas Retrógrados',
                       style: TextStyle(
                         color:
-                            mercuryRetrograde ? Colors.orange : AppColors.lilac,
+                            mercuryRetrograde ? Colors.orange : context.gc.lilac,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -486,7 +487,7 @@ class _PersonalizedSuggestionsPageState
                     Text(
                       '${_retrogradePlanets!.length} planeta${_retrogradePlanets!.length > 1 ? 's' : ''} em movimento retrógrado',
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withOpacity(0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -496,7 +497,7 @@ class _PersonalizedSuggestionsPageState
             ],
           ),
           const SizedBox(height: 16),
-          const Divider(color: AppColors.lilac),
+          Divider(color: context.gc.lilac),
           const SizedBox(height: 12),
           ..._retrogradePlanets!.map((planet) {
             final info = retrogradeInfo[planet.planet];
@@ -515,8 +516,8 @@ class _PersonalizedSuggestionsPageState
                       Expanded(
                         child: Text(
                           '${info['title']} em ${planet.sign.displayName}',
-                          style: const TextStyle(
-                            color: AppColors.lilac,
+                          style: TextStyle(
+                            color: context.gc.lilac,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -529,7 +530,7 @@ class _PersonalizedSuggestionsPageState
                   Text(
                     'Efeitos:',
                     style: TextStyle(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -540,7 +541,7 @@ class _PersonalizedSuggestionsPageState
                   if (isFree)
                     _blurredPlaceholder(
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                         fontSize: 12,
                         height: 1.4,
                       ),
@@ -549,7 +550,7 @@ class _PersonalizedSuggestionsPageState
                     Text(
                       info['effects']!,
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withOpacity(0.8),
                         fontSize: 12,
                         height: 1.4,
                       ),
@@ -559,7 +560,7 @@ class _PersonalizedSuggestionsPageState
                   Text(
                     'Dicas:',
                     style: TextStyle(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -568,7 +569,7 @@ class _PersonalizedSuggestionsPageState
                   if (isFree)
                     _blurredPlaceholder(
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.6),
+                        color: context.gc.softWhite.withOpacity(0.6),
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                         height: 1.4,
@@ -578,7 +579,7 @@ class _PersonalizedSuggestionsPageState
                     Text(
                       info['tips']!,
                       style: TextStyle(
-                        color: AppColors.softWhite.withOpacity(0.6),
+                        color: context.gc.softWhite.withOpacity(0.6),
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                         height: 1.4,
@@ -614,8 +615,8 @@ class _PersonalizedSuggestionsPageState
     Widget blurIfFree(Widget child) {
       if (isFree) {
         return _blurredPlaceholder(
-          style: const TextStyle(
-            color: AppColors.softWhite,
+          style: TextStyle(
+            color: context.gc.softWhite,
             fontSize: 12,
             height: 1.4,
           ),
@@ -642,8 +643,8 @@ class _PersonalizedSuggestionsPageState
                   children: [
                     Text(
                       suggestion.title,
-                      style: const TextStyle(
-                        color: AppColors.lilac,
+                      style: TextStyle(
+                        color: context.gc.lilac,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -678,14 +679,14 @@ class _PersonalizedSuggestionsPageState
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: AppColors.lilac),
+          Divider(color: context.gc.lilac),
           const SizedBox(height: 8),
           // Descrição - blur apenas no conteúdo
           blurIfFree(
             Text(
               suggestion.description,
-              style: const TextStyle(
-                color: AppColors.softWhite,
+              style: TextStyle(
+                color: context.gc.softWhite,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -693,10 +694,10 @@ class _PersonalizedSuggestionsPageState
           ),
           const SizedBox(height: 12),
           // Título "Práticas Sugeridas" sempre visível
-          const Text(
+          Text(
             'Práticas Sugeridas:',
             style: TextStyle(
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -709,10 +710,10 @@ class _PersonalizedSuggestionsPageState
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '• ',
                     style: TextStyle(
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                       fontSize: 14,
                     ),
                   ),
@@ -721,7 +722,7 @@ class _PersonalizedSuggestionsPageState
                       Text(
                         practice,
                         style: TextStyle(
-                          color: AppColors.softWhite.withOpacity(0.9),
+                          color: context.gc.softWhite.withOpacity(0.9),
                           fontSize: 12,
                           height: 1.4,
                         ),
@@ -734,13 +735,13 @@ class _PersonalizedSuggestionsPageState
           }),
           if (suggestion.relevantAspects.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Divider(color: AppColors.lilac),
+            Divider(color: context.gc.lilac),
             const SizedBox(height: 8),
             // Título "Aspectos Relevantes" sempre visível
-            const Text(
+            Text(
               'Aspectos Relevantes:',
               style: TextStyle(
-                color: AppColors.lilac,
+                color: context.gc.lilac,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -754,7 +755,7 @@ class _PersonalizedSuggestionsPageState
                   Text(
                     aspect.description,
                     style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.7),
+                      color: context.gc.softWhite.withOpacity(0.7),
                       fontSize: 11,
                     ),
                   ),
@@ -792,10 +793,10 @@ class _PersonalizedSuggestionsPageState
         children: [
           const Text('💫', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Sem Sugestões Especiais',
             style: TextStyle(
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -804,7 +805,7 @@ class _PersonalizedSuggestionsPageState
           Text(
             'Não há trânsitos significativos afetando seu mapa natal neste dia. Continue suas práticas regulares.',
             style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.8),
+              color: context.gc.softWhite.withOpacity(0.8),
               fontSize: 14,
               height: 1.5,
             ),

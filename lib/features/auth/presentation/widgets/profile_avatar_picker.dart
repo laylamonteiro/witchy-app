@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 
 /// Widget para selecionar e exibir foto de perfil
 class ProfileAvatarPicker extends StatefulWidget {
@@ -81,19 +82,19 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                       end: Alignment.bottomRight,
                       colors: widget.gradientColors ??
                           [
-                            AppColors.lilac.withValues(alpha: 0.5),
-                            AppColors.pink.withValues(alpha: 0.5),
+                            context.gc.lilac.withValues(alpha: 0.5),
+                            context.gc.pink.withValues(alpha: 0.5),
                           ],
                     )
                   : null,
-              color: widget.backgroundColor ?? AppColors.surface,
+              color: widget.backgroundColor ?? context.gc.surface,
               border: Border.all(
-                color: AppColors.lilac.withValues(alpha: 0.5),
+                color: context.gc.lilac.withValues(alpha: 0.5),
                 width: 3,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.lilac.withValues(alpha: 0.3),
+                  color: context.gc.lilac.withValues(alpha: 0.3),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
@@ -111,10 +112,10 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.background,
+                    color: context.gc.background,
                     width: 2,
                   ),
                 ),
@@ -133,9 +134,9 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                   shape: BoxShape.circle,
                   color: Colors.black.withValues(alpha: 0.5),
                 ),
-                child: const Center(
+                child: Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.lilac),
+                    valueColor: AlwaysStoppedAnimation<Color>(context.gc.lilac),
                   ),
                 ),
               ),
@@ -173,7 +174,7 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
       child: Icon(
         Icons.person,
         size: widget.size * 0.5,
-        color: AppColors.textPrimary.withValues(alpha: 0.8),
+        color: context.gc.textPrimary.withValues(alpha: 0.8),
       ),
     );
   }
@@ -181,7 +182,7 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
   void _showPhotoOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.gc.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -196,7 +197,7 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceBorder,
+                  color: context.gc.surfaceBorder,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -212,10 +213,10 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.lilac.withValues(alpha: 0.2),
+                    color: context.gc.lilac.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.camera_alt, color: AppColors.lilac),
+                  child: Icon(Icons.camera_alt, color: context.gc.lilac),
                 ),
                 title: const Text('Tirar Foto'),
                 subtitle: const Text('Use a câmera do dispositivo'),
@@ -228,10 +229,10 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.mint.withValues(alpha: 0.2),
+                    color: context.gc.mint.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.photo_library, color: AppColors.mint),
+                  child: Icon(Icons.photo_library, color: context.gc.mint),
                 ),
                 title: const Text('Escolher da Galeria'),
                 subtitle: const Text('Selecione uma foto existente'),
@@ -245,10 +246,10 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.alert.withValues(alpha: 0.2),
+                      color: context.gc.alert.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.delete, color: AppColors.alert),
+                    child: Icon(Icons.delete, color: context.gc.alert),
                   ),
                   title: const Text('Remover Foto'),
                   subtitle: const Text('Voltar ao avatar padrão'),
@@ -310,7 +311,7 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao selecionar foto: $e'),
-            backgroundColor: AppColors.alert,
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -324,12 +325,12 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
       uiSettings: [
         AndroidUiSettings(
           toolbarTitle: 'Ajustar Foto',
-          toolbarColor: AppColors.surface,
-          toolbarWidgetColor: AppColors.lilac,
-          backgroundColor: AppColors.background,
-          activeControlsWidgetColor: AppColors.lilac,
-          cropFrameColor: AppColors.lilac,
-          cropGridColor: AppColors.surfaceBorder,
+          toolbarColor: context.gc.surface,
+          toolbarWidgetColor: context.gc.lilac,
+          backgroundColor: context.gc.background,
+          activeControlsWidgetColor: context.gc.lilac,
+          cropFrameColor: context.gc.lilac,
+          cropGridColor: context.gc.surfaceBorder,
           initAspectRatio: CropAspectRatioPreset.square,
           lockAspectRatio: true,
         ),

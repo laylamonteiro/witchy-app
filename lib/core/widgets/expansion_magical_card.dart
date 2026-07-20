@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 
 /// Card expansível com tema mágico
 class ExpansionMagicalCard extends StatefulWidget {
@@ -34,11 +34,11 @@ class _ExpansionMagicalCardState extends State<ExpansionMagicalCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.gc.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.lilac.withOpacity(0.1),
+            color: context.gc.lilac.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -84,12 +84,12 @@ class _ExpansionMagicalCardState extends State<ExpansionMagicalCard> {
           trailing: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.lilac.withOpacity(0.1),
+              color: context.gc.lilac.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
           onExpansionChanged: (expanded) {

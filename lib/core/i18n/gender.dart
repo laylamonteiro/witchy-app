@@ -3,17 +3,17 @@
 /// A preferência deve ser aplicada somente a textos do sistema ou prompts de IA.
 /// Não transforme textos escritos pelo usuário, citações, nomes próprios ou
 /// conteúdo histórico já persistido.
-enum TreatmentPreference {
+enum Gender {
   feminine,
   masculine,
   neutral;
 
-  static const fallback = TreatmentPreference.neutral;
+  static const fallback = Gender.neutral;
 
-  static TreatmentPreference fromJson(Object? value) {
+  static Gender fromJson(Object? value) {
     if (value is! String) return fallback;
 
-    return TreatmentPreference.values.firstWhere(
+    return Gender.values.firstWhere(
       (preference) => preference.name == value,
       orElse: () => fallback,
     );
@@ -23,44 +23,44 @@ enum TreatmentPreference {
 }
 
 /// Conjunto de variantes textuais por preferência de tratamento.
-class TreatmentVariants {
+class GenderVariants {
   final String feminine;
   final String masculine;
   final String neutral;
 
-  const TreatmentVariants({
+  const GenderVariants({
     required this.feminine,
     required this.masculine,
     required this.neutral,
   });
 
-  String resolve(TreatmentPreference preference) {
+  String resolve(Gender preference) {
     return switch (preference) {
-      TreatmentPreference.feminine => feminine,
-      TreatmentPreference.masculine => masculine,
-      TreatmentPreference.neutral => neutral,
+      Gender.feminine => feminine,
+      Gender.masculine => masculine,
+      Gender.neutral => neutral,
     };
   }
 }
 
 /// Helper central para seleção de variantes de linguagem por tratamento.
-class TreatmentText {
-  const TreatmentText._();
+class GenderText {
+  const GenderText._();
 
   static String select({
-    required TreatmentPreference preference,
+    required Gender preference,
     required String feminine,
     required String masculine,
     required String neutral,
   }) {
-    return TreatmentVariants(
+    return GenderVariants(
       feminine: feminine,
       masculine: masculine,
       neutral: neutral,
     ).resolve(preference);
   }
 
-  static String practitioner(TreatmentPreference preference) {
+  static String practitioner(Gender preference) {
     return select(
       preference: preference,
       feminine: 'bruxa e praticante',
@@ -69,7 +69,7 @@ class TreatmentText {
     );
   }
 
-  static String advisorTitle(TreatmentPreference preference) {
+  static String advisorTitle(Gender preference) {
     return select(
       preference: preference,
       feminine: 'Conselheira Mística',
@@ -78,7 +78,7 @@ class TreatmentText {
     );
   }
 
-  static String wiseGuide(TreatmentPreference preference) {
+  static String wiseGuide(Gender preference) {
     return select(
       preference: preference,
       feminine: 'uma mentora sábia e carinhosa',
@@ -87,7 +87,7 @@ class TreatmentText {
     );
   }
 
-  static String aiInstruction(TreatmentPreference preference) {
+  static String aiInstruction(Gender preference) {
     return select(
       preference: preference,
       feminine: 'Use tratamento gramatical feminino para se dirigir à pessoa (ex.: acolhida, conectada, merecedora), quando a frase exigir marcação de gênero.',

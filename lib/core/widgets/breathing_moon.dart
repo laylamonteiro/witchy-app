@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../theme/grimoire_colors.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 
 /// Widget que exibe a lua com animação de "respiração" (pulsação suave)
@@ -84,8 +84,8 @@ class _BreathingMoonState extends State<BreathingMoon>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.lilac.withOpacity(_glowAnimation.value),
-                        AppColors.background.withOpacity(0),
+                        context.gc.lilac.withOpacity(_glowAnimation.value),
+                        context.gc.background.withOpacity(0),
                       ],
                     ),
                   ),
@@ -102,7 +102,7 @@ class _BreathingMoonState extends State<BreathingMoon>
                   fontSize: widget.size,
                   shadows: [
                     Shadow(
-                      color: AppColors.lilac.withOpacity(0.5),
+                      color: context.gc.lilac.withOpacity(0.5),
                       blurRadius: 20,
                     ),
                   ],
@@ -119,7 +119,7 @@ class _BreathingMoonState extends State<BreathingMoon>
           Text(
             widget.phase!.displayName,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -129,7 +129,7 @@ class _BreathingMoonState extends State<BreathingMoon>
           Text(
             widget.phase!.description,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.gc.textSecondary,
                 ),
             textAlign: TextAlign.center,
             maxLines: 2,
@@ -218,7 +218,7 @@ class _BlinkingarState extends State<_BlinkingStar>
           fontSize: 16,
           shadows: [
             Shadow(
-              color: AppColors.starYellow.withOpacity(0.8),
+              color: context.gc.starYellow.withOpacity(0.8),
               blurRadius: 8,
             ),
           ],

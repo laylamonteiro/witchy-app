@@ -6,11 +6,13 @@ Um grimório vivo, agenda mágica e companheiro de jornada para bruxas e bruxos 
 
 **Grimório de Bolso** é um aplicativo móvel desenvolvido especialmente para bruxas e bruxos iniciantes, principalmente no Brasil, que estão estudando sozinhos e desejam organizar sua prática mágica. O app combina:
 
-- Organização de feitiços e rituais
-- Diários de sonhos e desejos
-- Calendário lunar adaptado
-- Enciclopédia de cristais e cores
-- Auto-cuidado e magia natural
+- Organização de feitiços, rituais e registros (Meu Grimório)
+- Diários de sonhos, desejos, gratidão, afirmações e reflexões
+- Calendário lunar adaptado e astrologia completa (mapa astral, clima mágico)
+- Enciclopédia mágica (cristais, ervas, cores, deusas, arquétipos, anjos, demônios, símbolos...)
+- Ferramentas místicas: Tarot, Oráculo, Runas, Pêndulo, Sigilos, Numerologia, Quiromancia
+- Grimório Vivo: trilhas de aprendizado gamificadas que escrevem o próprio grimório
+- Conselheiro Místico (IA) com respostas no idioma e gênero da pessoa usuária
 
 ## Identidade Visual
 
@@ -202,6 +204,56 @@ Para a esteira de build e envio de APK funcionar, configure os secrets do reposi
 > - Gmail / Google Workspace: `EMAIL_SERVER=smtp.gmail.com`, `EMAIL_PORT=587` (requer "App Password" com 2FA ativo).
 > - Outlook/Office 365: `EMAIL_SERVER=smtp.office365.com`, `EMAIL_PORT=587`.
 > - Provedores de hospedagem (cPanel, etc.): procure por "Configurações SMTP" no painel, o host costuma ser `mail.seudominio.com` e a porta 587.
+
+## Diretrizes de Desenvolvimento
+
+### Tradução (i18n) é obrigatória em TODA alteração
+
+O app é multilíngue (pt, pt_BR, en, es). **Nenhum texto visível ao usuário
+pode ser escrito direto no código.** Ao criar ou alterar qualquer elemento
+de interface:
+
+1. **Adicione a chave nos 4 arquivos ARB** em `lib/l10n/`:
+   `app_pt.arb` (template), `app_pt_BR.arb`, `app_en.arb` e `app_es.arb`.
+   Os quatro devem ter sempre o mesmo conjunto de chaves.
+2. **Use no código** via `AppLocalizations.of(context)!.suaChave`
+   (import: `package:grimorio_de_bolso/l10n/generated/app_localizations.dart`).
+   Os getters são gerados automaticamente pelo `flutter run` / `flutter gen-l10n`.
+3. **Placeholders**: valores dinâmicos usam `{nome}` no ARB e exigem um
+   bloco `@suaChave` com `placeholders` no `app_pt.arb` (template).
+4. **Nunca use `const`** em um widget/lista que contenha um valor de
+   `AppLocalizations` — é valor de runtime e quebra o build.
+5. **Widgets sem `BuildContext`** (ex.: `CustomPainter`, helpers estáticos)
+   recebem os textos prontos pelo construtor — nunca chame
+   `AppLocalizations.of(context)` onde não há `context` válido.
+6. **Conteúdo editorial** (verbetes da Enciclopédia, significados de cartas/
+   runas/números, lições das trilhas) permanece em PT por enquanto —
+   a regra acima vale para o *chrome* da interface (títulos, botões,
+   rótulos, diálogos, mensagens, dicas).
+7. A IA (Conselheiro Místico) já responde no idioma ativo: novos prompts
+   devem usar `_localizedInstruction()` e `GenderText`, como os existentes.
+
+> O seletor de idioma está temporariamente oculto nas Configurações
+> (`_showLanguageOption` em `settings_page.dart`) até a tradução total do
+> app ser concluída.
+
+### Outras regras do projeto
+
+- **Cores**: sempre via tema (`context.gc.*`), nunca hardcoded — o app tem
+  presets de tema selecionáveis.
+- **Termos de IA**: na interface o recurso se chama "Conselheiro Místico";
+  nunca exiba "IA/AI" para o usuário (painel de admin pode ser técnico).
+- **Novas funcionalidades místicas/IA**: exclusivas Premium (paywall via
+  `FeatureAccess`/`PremiumUpgradeSheet`); as pré-existentes mantêm limites
+  Free diários.
+- **Banco de dados**: migrações SQLite sempre aditivas (nova versão em
+  `database_helper.dart`) + espelho idempotente em
+  `supabase/restore_database.sql`; novas tabelas sincronizáveis entram em
+  `SyncEntity`/`SupabaseTables` e nas listas de `claimLegacyData`/
+  `clearAllTables`.
+- **Credenciais de admin**: via `--dart-define` (`ADMIN_EMAIL`/
+  `ADMIN_PASSWORD`, secrets do GitHub Actions); em builds de debug
+  `admin`/`admin` funciona automaticamente.
 
 ## Próximas Fases
 

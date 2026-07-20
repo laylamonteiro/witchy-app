@@ -12,7 +12,7 @@ import 'package:sqflite_common/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'core/database/database_helper.dart';
 import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
@@ -34,6 +34,7 @@ import 'features/diary/presentation/providers/desire_provider.dart';
 import 'features/diary/presentation/providers/gratitude_provider.dart';
 import 'features/diary/presentation/providers/affirmation_provider.dart';
 import 'features/diary/presentation/providers/free_writing_provider.dart';
+import 'features/learning/presentation/providers/learning_provider.dart';
 import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart';
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
@@ -145,9 +146,9 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     final lastOpened = widget.prefs.getInt(_lastOpenedKey) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    // Se o app foi aberto nos últimos 5 minutos, não mostrar splash
+    // Se o app foi aberto nos últimos 30 minutos, não mostrar splash
     // (significa que está voltando de background, não de um fechamento completo)
-    if (now - lastOpened < 5 * 60 * 1000) {
+    if (now - lastOpened < 30 * 60 * 1000) {
       setState(() {
         _showSplash = false;
       });
@@ -223,6 +224,14 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider(widget.prefs)),
+        ChangeNotifierProxyProvider<AuthProvider, LearningProvider>(
+          create: (_) => LearningProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider.value(value: PaymentService()),
         ChangeNotifierProvider(create: (_) => LanguageProvider(widget.prefs)),
@@ -299,8 +308,8 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           },
         ),
       ],
-      child: Consumer<LanguageProvider>(
-        builder: (context, languageProvider, _) => MaterialApp(
+      child: Consumer2<LanguageProvider, ThemeProvider>(
+        builder: (context, languageProvider, themeProvider, child) => MaterialApp(
           navigatorKey: _rootNavigatorKey,
           title: 'Grimório de Bolso',
           locale: languageProvider.locale,
@@ -312,8 +321,8 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           ],
           supportedLocales: LanguageProvider.supportedLocales,
           localeResolutionCallback: LanguageProvider.resolve,
-          theme: AppTheme.darkTheme,
-          home: AuthWrapper(showSplash: _showSplash),
+          theme: themeProvider.themeData,
+          home: child,
           routes: {
             '/home': (context) => const HomePage(),
             '/welcome': (context) => const WelcomePage(),
@@ -324,6 +333,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           },
           debugShowCheckedModeBanner: false,
         ),
+        child: AuthWrapper(showSplash: _showSplash),
       ),
     );
   }

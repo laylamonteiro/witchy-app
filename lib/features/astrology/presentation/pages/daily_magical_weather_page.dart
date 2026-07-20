@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/enums.dart';
@@ -101,10 +102,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
               'Erro ao calcular clima mágico. Por favor, tente novamente.'),
-          backgroundColor: AppColors.alert,
+          backgroundColor: context.gc.alert,
         ),
       );
     }
@@ -118,7 +119,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           'Clima Mágico Diário',
           style: TextStyle(fontSize: 18),
         ),
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: context.gc.darkBackground,
         actions: [
           if (_weatherCache != null)
             IconButton(
@@ -128,7 +129,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             ),
         ],
       ),
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: context.gc.darkBackground,
       body: _buildBody(),
     );
   }
@@ -139,20 +140,20 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(color: AppColors.lilac),
+            CircularProgressIndicator(color: context.gc.lilac),
             const SizedBox(height: 24),
             Text(
               'Consultando as estrelas...',
               style: GoogleFonts.cinzelDecorative(
                 fontSize: 18,
-                color: AppColors.lilac,
+                color: context.gc.lilac,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'O Conselheiro Místico está analisando os trânsitos de hoje',
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withOpacity(0.7),
                 fontSize: 14,
               ),
             ),
@@ -166,11 +167,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, color: AppColors.alert, size: 48),
+            Icon(Icons.error_outline, color: context.gc.alert, size: 48),
             const SizedBox(height: 16),
             Text(
               _error!,
-              style: const TextStyle(color: AppColors.softWhite),
+              style: TextStyle(color: context.gc.softWhite),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -179,8 +180,8 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               icon: const Icon(Icons.refresh),
               label: const Text('Tentar novamente'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.lilac,
-                foregroundColor: AppColors.darkBackground,
+                backgroundColor: context.gc.lilac,
+                foregroundColor: context.gc.darkBackground,
               ),
             ),
           ],
@@ -189,10 +190,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     }
 
     if (_weatherCache == null) {
-      return const Center(
+      return Center(
         child: Text(
           'Carregando clima mágico...',
-          style: TextStyle(color: AppColors.softWhite),
+          style: TextStyle(color: context.gc.softWhite),
         ),
       );
     }
@@ -234,7 +235,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             'Hoje',
             style: GoogleFonts.cinzelDecorative(
               fontSize: 24,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -242,7 +243,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           Text(
             DateFormat('dd/MM/yyyy - EEEE', 'pt_BR').format(DateTime.now()),
             style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.7),
+              color: context.gc.softWhite.withOpacity(0.7),
               fontSize: 14,
             ),
           ),
@@ -261,7 +262,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             weather.moonPhase,
             style: GoogleFonts.cinzelDecorative(
               fontSize: 24,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -269,7 +270,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           Text(
             'Lua em ${weather.moonSign.displayName} ${weather.moonSign.symbol}',
             style: TextStyle(
-              color: AppColors.softWhite.withOpacity(0.9),
+              color: context.gc.softWhite.withOpacity(0.9),
               fontSize: 16,
             ),
           ),
@@ -313,18 +314,18 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.surface,
-            foregroundColor: AppColors.softWhite,
+            backgroundColor: context.gc.surface,
+            foregroundColor: context.gc.softWhite,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
             elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
               side: BorderSide(
-                color: AppColors.lilac.withValues(alpha: 0.55),
+                color: context.gc.lilac.withValues(alpha: 0.55),
               ),
             ),
           ),
-          child: const Row(
+          child: Row(
             children: [
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -344,7 +345,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                     Text(
                       'Sugestões Personalizadas',
                       style: TextStyle(
-                        color: AppColors.lilac,
+                        color: context.gc.lilac,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -353,7 +354,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                     Text(
                       'Orientações diárias baseadas no seu mapa astral',
                       style: TextStyle(
-                        color: AppColors.softWhite,
+                        color: context.gc.softWhite,
                         fontSize: 12,
                         height: 1.35,
                       ),
@@ -362,7 +363,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                 ),
               ),
               SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios, color: AppColors.lilac, size: 18),
+              Icon(Icons.arrow_forward_ios, color: context.gc.lilac, size: 18),
             ],
           ),
         ),
@@ -375,10 +376,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Palavras-chave',
             style: TextStyle(
-              color: AppColors.lilac,
+              color: context.gc.lilac,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -394,16 +395,16 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.lilac.withOpacity(0.2),
+                  color: context.gc.lilac.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppColors.lilac.withOpacity(0.5),
+                    color: context.gc.lilac.withOpacity(0.5),
                   ),
                 ),
                 child: Text(
                   keyword,
-                  style: const TextStyle(
-                    color: AppColors.lilac,
+                  style: TextStyle(
+                    color: context.gc.lilac,
                     fontSize: 12,
                   ),
                 ),
@@ -434,7 +435,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                     style: GoogleFonts.cinzelDecorative(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.lilac,
+                      color: context.gc.lilac,
                     ),
                   ),
                 ],
@@ -443,13 +444,13 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               Text(
                 'Criada pelo Conselheiro Místico baseada nos trânsitos astrológicos',
                 style: TextStyle(
-                  color: AppColors.softWhite.withOpacity(0.6),
+                  color: context.gc.softWhite.withOpacity(0.6),
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),
               ),
               const SizedBox(height: 8),
-              const Divider(color: AppColors.lilac),
+              Divider(color: context.gc.lilac),
               const SizedBox(height: 12),
               // FAIL-CLOSED: para free, o texto premium real NUNCA é
               // renderizado (nem com blur) — mostra placeholder desfocado.
@@ -469,8 +470,8 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                     icon: const Icon(Icons.star, size: 18),
                     label: const Text('Seja Premium'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF9C27B0),
-                      foregroundColor: Colors.white,
+                      backgroundColor: context.gc.lilac,
+                      foregroundColor: context.gc.onPrimary,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -505,7 +506,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             style: GoogleFonts.cinzelDecorative(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.lilac,
+              color: context.gc.lilac,
             ),
           ),
           const SizedBox(height: 7),
@@ -524,12 +525,12 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         borderRadius: BorderRadius.circular(4),
         child: ImageFiltered(
           imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-          child: const Text(
+          child: Text(
             'As influências do dia revelam orientações e práticas mágicas personalizadas para este momento.',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: AppColors.softWhite,
+              color: context.gc.softWhite,
               height: 1.55,
               fontSize: 15,
             ),
@@ -544,23 +545,23 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       h2: GoogleFonts.cinzelDecorative(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: AppColors.lilac,
+        color: context.gc.lilac,
       ),
-      p: const TextStyle(
-        color: AppColors.softWhite,
+      p: TextStyle(
+        color: context.gc.softWhite,
         height: 1.6,
         fontSize: 15,
       ),
-      listBullet: const TextStyle(
-        color: AppColors.lilac,
+      listBullet: TextStyle(
+        color: context.gc.lilac,
         fontSize: 15,
       ),
-      strong: const TextStyle(
-        color: AppColors.lilac,
+      strong: TextStyle(
+        color: context.gc.lilac,
         fontWeight: FontWeight.bold,
       ),
       em: TextStyle(
-        color: AppColors.softWhite.withOpacity(0.9),
+        color: context.gc.softWhite.withOpacity(0.9),
         fontStyle: FontStyle.italic,
       ),
     );
@@ -581,14 +582,14 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Text('🪐', style: TextStyle(fontSize: 24)),
               SizedBox(width: 8),
               Text(
                 'Trânsitos Planetários',
                 style: TextStyle(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -603,8 +604,8 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                 children: [
                   Text(
                     transit.planet.symbol,
-                    style: const TextStyle(
-                      color: AppColors.lilac,
+                    style: TextStyle(
+                      color: context.gc.lilac,
                       fontSize: 20,
                     ),
                   ),
@@ -612,8 +613,8 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                   Expanded(
                     child: Text(
                       transit.formattedPosition,
-                      style: const TextStyle(
-                        color: AppColors.softWhite,
+                      style: TextStyle(
+                        color: context.gc.softWhite,
                         fontSize: 14,
                       ),
                     ),
@@ -640,14 +641,14 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Text('⭐', style: TextStyle(fontSize: 24)),
               SizedBox(width: 8),
               Text(
                 'Aspectos Significativos',
                 style: TextStyle(
-                  color: AppColors.lilac,
+                  color: context.gc.lilac,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -663,8 +664,8 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                 children: [
                   Text(
                     aspect.description,
-                    style: const TextStyle(
-                      color: AppColors.lilac,
+                    style: TextStyle(
+                      color: context.gc.lilac,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -673,7 +674,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                   Text(
                     aspect.interpretation,
                     style: TextStyle(
-                      color: AppColors.softWhite.withOpacity(0.8),
+                      color: context.gc.softWhite.withOpacity(0.8),
                       fontSize: 12,
                       height: 1.4,
                     ),
@@ -691,11 +692,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
         title: Text(
           'Sobre o Clima Mágico',
           style: GoogleFonts.cinzelDecorative(
-            color: AppColors.lilac,
+            color: context.gc.lilac,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -706,7 +707,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             Text(
               'O Clima Mágico é calculado diariamente com base nos trânsitos planetários reais e interpretado pelo Conselheiro Místico para práticas mágicas.',
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.9),
+                color: context.gc.softWhite.withOpacity(0.9),
                 height: 1.5,
               ),
             ),
@@ -714,7 +715,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             Text(
               'A previsão é gerada uma vez por dia às 00h e permanece a mesma até a meia-noite seguinte.',
               style: TextStyle(
-                color: AppColors.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withOpacity(0.7),
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
               ),
@@ -724,9 +725,9 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Entendi',
-              style: TextStyle(color: AppColors.lilac),
+              style: TextStyle(color: context.gc.lilac),
             ),
           ),
         ],

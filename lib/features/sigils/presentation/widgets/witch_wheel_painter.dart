@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../data/models/sigil_wheel_model.dart';
 
 /// Painter para desenhar a Roda Alfabética das Bruxas
@@ -9,8 +8,14 @@ class WitchWheelPainter extends CustomPainter {
   final bool showLetters;
   final Set<String> highlightedLetters;
   final Map<String, WheelPosition>? customPositions;
+  final Color borderColor;
+  final Color starColor;
+  final Color accentColor;
 
   WitchWheelPainter({
+    required this.borderColor,
+    required this.starColor,
+    required this.accentColor,
     this.showLetters = true,
     this.highlightedLetters = const {},
     this.customPositions,
@@ -26,13 +31,13 @@ class WitchWheelPainter extends CustomPainter {
 
     // Paint para os círculos principais
     final circlePaint = Paint()
-      ..color = AppColors.surfaceBorder
+      ..color = borderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
     // Paint para círculo externo decorativo
     final outerDecorPaint = Paint()
-      ..color = AppColors.starYellow.withOpacity(0.3)
+      ..color = starColor.withOpacity(0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -49,7 +54,7 @@ class WitchWheelPainter extends CustomPainter {
 
     // Círculo dourado externo único
     final goldOuterPaint = Paint()
-      ..color = AppColors.starYellow.withOpacity(0.6)
+      ..color = starColor.withOpacity(0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
     canvas.drawCircle(center, radius + 4, goldOuterPaint);
@@ -61,12 +66,12 @@ class WitchWheelPainter extends CustomPainter {
 
     // Círculo central (ponto de início/fim)
     final centerPaint = Paint()
-      ..color = AppColors.starYellow
+      ..color = starColor
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius * 0.06, centerPaint);
 
     final centerBorderPaint = Paint()
-      ..color = AppColors.lilac
+      ..color = accentColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     canvas.drawCircle(center, radius * 0.06, centerBorderPaint);
@@ -103,7 +108,7 @@ class WitchWheelPainter extends CustomPainter {
     double radius,
   ) {
     final linePaint = Paint()
-      ..color = AppColors.surfaceBorder.withOpacity(0.5)
+      ..color = borderColor.withOpacity(0.5)
       ..strokeWidth = 1.0;
 
     final angleStep = 360.0 / divisions;
@@ -168,7 +173,7 @@ class WitchWheelPainter extends CustomPainter {
     // Desenhar fundo circular se destacada
     if (isHighlighted) {
       final highlightPaint = Paint()
-        ..color = AppColors.lilac.withOpacity(0.3)
+        ..color = accentColor.withOpacity(0.3)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(x, y), fontSize * 0.8, highlightPaint);
     }
@@ -178,7 +183,7 @@ class WitchWheelPainter extends CustomPainter {
       text: TextSpan(
         text: letter,
         style: TextStyle(
-          color: isHighlighted ? AppColors.starYellow : AppColors.lilac,
+          color: isHighlighted ? starColor : accentColor,
           fontSize: fontSize,
           fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
         ),
@@ -200,6 +205,9 @@ class WitchWheelPainter extends CustomPainter {
   bool shouldRepaint(covariant WitchWheelPainter oldDelegate) {
     return oldDelegate.highlightedLetters != highlightedLetters ||
         oldDelegate.customPositions != customPositions ||
-        oldDelegate.showLetters != showLetters;
+        oldDelegate.showLetters != showLetters ||
+        oldDelegate.borderColor != borderColor ||
+        oldDelegate.starColor != starColor ||
+        oldDelegate.accentColor != accentColor;
   }
 }

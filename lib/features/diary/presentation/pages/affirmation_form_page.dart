@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/affirmation_model.dart';
 import '../providers/affirmation_provider.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -50,7 +52,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-            widget.affirmation == null ? 'Nova Afirmação' : 'Editar Afirmação'),
+            widget.affirmation == null ? AppLocalizations.of(context)!.diaryNewAffirmation : AppLocalizations.of(context)!.diaryEditAffirmation),
         actions: widget.affirmation != null && !isPreloaded
             ? [
                 IconButton(
@@ -70,17 +72,17 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.1),
+                  color: context.gc.info.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.info),
+                  border: Border.all(color: context.gc.info),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: AppColors.info),
+                    Icon(Icons.info_outline, color: context.gc.info),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Afirmações pré-carregadas não podem ser editadas ou excluídas.',
+                        AppLocalizations.of(context)!.diaryPreloadedAffirmationNote,
                         style: TextStyle(fontSize: 12),
                       ),
                     ),
@@ -94,46 +96,46 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.lilac.withOpacity(0.1),
-                      AppColors.lilac.withOpacity(0.05),
+                      context.gc.lilac.withOpacity(0.1),
+                      context.gc.lilac.withOpacity(0.05),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.lilac.withOpacity(0.3)),
+                  border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
                         Text('🧙🏻‍♂️', style: TextStyle(fontSize: 24)),
                         SizedBox(width: 8),
                         Text(
-                          'Conselheiro Místico',
+                          AppLocalizations.of(context)!.profileMysticAdvisor,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.lilac,
+                            color: context.gc.lilac,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Deixe o Conselheiro Místico criar uma afirmação poderosa para você',
+                      AppLocalizations.of(context)!.diaryAdvisorAffirmationPitch,
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withOpacity(0.7),
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _contextController,
-                      decoration: const InputDecoration(
-                        labelText: 'Contexto (opcional)',
-                        hintText: 'Ex: Estou começando um novo emprego...',
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.diaryContextOptional,
+                        hintText: AppLocalizations.of(context)!.diaryContextHint,
                         helperText:
-                            'Descreva sua situação para uma afirmação personalizada',
+                            AppLocalizations.of(context)!.diaryContextHelper,
                       ),
                       maxLines: 2,
                     ),
@@ -143,21 +145,21 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                       child: ElevatedButton.icon(
                         onPressed: _isGenerating ? null : _generateAffirmation,
                         icon: _isGenerating
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 16,
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: AppColors.darkBackground,
+                                  color: context.gc.darkBackground,
                                 ),
                               )
                             : const Icon(Icons.auto_awesome),
                         label: Text(_isGenerating
-                            ? 'Consultando...'
-                            : 'Gerar Afirmação'),
+                            ? AppLocalizations.of(context)!.diaryConsulting
+                            : AppLocalizations.of(context)!.diaryGenerateAffirmation),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.lilac,
-                          foregroundColor: AppColors.darkBackground,
+                          backgroundColor: context.gc.lilac,
+                          foregroundColor: context.gc.darkBackground,
                         ),
                       ),
                     ),
@@ -168,10 +170,10 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
               const Divider(),
               const SizedBox(height: 8),
               Text(
-                'Ou escreva sua própria afirmação:',
+                AppLocalizations.of(context)!.diaryWriteOwnAffirmation,
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.softWhite.withOpacity(0.6),
+                  color: context.gc.softWhite.withOpacity(0.6),
                 ),
               ),
               const SizedBox(height: 8),
@@ -179,18 +181,18 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
             TextFormField(
               controller: _textController,
               enabled: !isPreloaded,
-              decoration: const InputDecoration(
-                labelText: 'Afirmação',
-                hintText: 'Ex: Sou merecedor de abundância e prosperidade',
-                helperText: 'Escreva no presente e de forma positiva',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.diaryAffirmationLabel,
+                hintText: AppLocalizations.of(context)!.diaryAffirmationHint,
+                helperText: AppLocalizations.of(context)!.diaryAffirmationHelper,
               ),
               maxLines: 3,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<AffirmationCategory>(
               value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Categoria',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.diaryCategoryLabel,
               ),
               items: AffirmationCategory.values
                   .map((category) => DropdownMenuItem(
@@ -219,8 +221,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
             if (!isPreloaded)
               MagicalButton(
                 text: widget.affirmation == null
-                    ? 'Salvar Afirmação'
-                    : 'Atualizar',
+                    ? AppLocalizations.of(context)!.diarySaveAffirmation
+                    : AppLocalizations.of(context)!.commonUpdate,
                 icon: Icons.auto_awesome,
                 onPressed: _saveAffirmation,
               ),
@@ -234,11 +236,11 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      'Afirmações restantes hoje: $remaining/${UserModel.freeAffirmationsLimit}',
+                      AppLocalizations.of(context)!.diaryAffirmationsRemaining('$remaining/${UserModel.freeAffirmationsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
-                            ? AppColors.softWhite.withOpacity(0.6)
-                            : AppColors.alert,
+                            ? context.gc.softWhite.withOpacity(0.6)
+                            : context.gc.alert,
                         fontSize: 12,
                       ),
                       textAlign: TextAlign.center,
@@ -270,9 +272,9 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Afirmação criada pelo Conselheiro Místico!'),
-            backgroundColor: AppColors.lilac,
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.diaryAffirmationCreated),
+            backgroundColor: context.gc.lilac,
           ),
         );
       }
@@ -280,8 +282,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao gerar afirmação: $e'),
-            backgroundColor: AppColors.alert,
+            content: Text('${AppLocalizations.of(context)!.diaryAffirmationError}: $e'),
+            backgroundColor: context.gc.alert,
           ),
         );
       }
@@ -297,8 +299,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
   Future<void> _saveAffirmation() async {
     if (_textController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Digite ou gere uma afirmação'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.diaryTypeOrGenerate),
           backgroundColor: Colors.orange,
         ),
       );
@@ -310,10 +312,10 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     if (widget.affirmation == null &&
         !authProvider.currentUser.canUseAffirmations) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-              'Você atingiu o limite diário de afirmações. Volte amanhã ou seja Premium!'),
-          backgroundColor: AppColors.alert,
+              AppLocalizations.of(context)!.diaryAffirmationLimit),
+          backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
       );
@@ -348,12 +350,12 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir Afirmação'),
-        content: const Text('Tem certeza que deseja excluir esta afirmação?'),
+        title: Text(AppLocalizations.of(context)!.diaryDeleteAffirmationTitle),
+        content: Text(AppLocalizations.of(context)!.diaryDeleteAffirmationConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context)!.commonCancel),
           ),
           TextButton(
             onPressed: () {
@@ -363,8 +365,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close form
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.alert),
-            child: const Text('Excluir'),
+            style: TextButton.styleFrom(foregroundColor: context.gc.alert),
+            child: Text(AppLocalizations.of(context)!.commonDelete),
           ),
         ],
       ),

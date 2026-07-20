@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/rune_model.dart';
 
@@ -15,10 +17,10 @@ class RuneDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.gc.background,
       appBar: AppBar(
         title: ResponsiveAppBarTitle(rune.name),
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -33,14 +35,14 @@ class RuneDetailPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: context.gc.background,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       rune.symbol,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 120,
-                        color: AppColors.starYellow,
+                        color: context.gc.starYellow,
                       ),
                     ),
                   ),
@@ -50,7 +52,7 @@ class RuneDetailPage extends StatelessWidget {
                   Text(
                     rune.name,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.lilac,
+                          color: context.gc.lilac,
                         ),
                   ),
                 ],
@@ -68,7 +70,7 @@ class RuneDetailPage extends StatelessWidget {
                       const Text('✨', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        'Palavras-chave',
+                        AppLocalizations.of(context)!.runesKeywords,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -84,17 +86,17 @@ class RuneDetailPage extends StatelessWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.lilac.withOpacity(0.2),
+                          color: context.gc.lilac.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.lilac.withOpacity(0.4),
+                            color: context.gc.lilac.withOpacity(0.4),
                           ),
                         ),
                         child: Text(
                           keyword,
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.lilac,
+                                    color: context.gc.lilac,
                                     fontWeight: FontWeight.w600,
                                   ),
                         ),
@@ -116,7 +118,7 @@ class RuneDetailPage extends StatelessWidget {
                       const Text('📖', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        'Significado',
+                        AppLocalizations.of(context)!.runesMeaning,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -125,7 +127,7 @@ class RuneDetailPage extends StatelessWidget {
                   Text(
                     rune.description,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.gc.textSecondary,
                           height: 1.6,
                         ),
                   ),
@@ -139,10 +141,10 @@ class RuneDetailPage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withOpacity(0.5),
+                  color: context.gc.surface.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: AppColors.starYellow.withOpacity(0.3),
+                    color: context.gc.starYellow.withOpacity(0.3),
                   ),
                 ),
                 child: Row(
@@ -152,11 +154,9 @@ class RuneDetailPage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Lembre-se: as runas são ferramentas de reflexão e '
-                        'autoconhecimento. Use-as como um ponto de partida para '
-                        'explorar suas próprias percepções e intuições.',
+                        AppLocalizations.of(context)!.runesRemember,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.gc.textSecondary,
                               fontStyle: FontStyle.italic,
                             ),
                       ),
