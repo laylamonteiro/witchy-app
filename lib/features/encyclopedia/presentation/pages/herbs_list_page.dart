@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/herb_model.dart';
+import '../../../../core/utils/accents.dart';
 import '../providers/encyclopedia_provider.dart';
 import 'herb_detail_page.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -24,23 +25,12 @@ class _HerbsListPageState extends State<HerbsListPage> {
     super.dispose();
   }
 
-  // Remove acentos para ordenação alfabética correta
-  String _removeAccents(String str) {
-    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
-    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
-
-    String result = str;
-    for (int i = 0; i < withAccents.length; i++) {
-      result = result.replaceAll(withAccents[i], withoutAccents[i]);
-    }
-    return result;
-  }
 
   // Ordena lista de ervas alfabeticamente
   List<HerbModel> _sortHerbs(List<HerbModel> herbs) {
     final sorted = List<HerbModel>.from(herbs);
     sorted.sort((a, b) =>
-      _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+      removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
     );
     return sorted;
   }
@@ -87,6 +77,15 @@ class _HerbsListPageState extends State<HerbsListPage> {
                 _searchQuery = value;
               });
             },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text(
+            'O poder verde das ervas — propriedades mágicas, elementos e avisos de cada planta.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                ),
           ),
         ),
         Expanded(

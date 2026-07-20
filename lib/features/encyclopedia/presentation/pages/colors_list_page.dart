@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
 import '../../data/models/color_model.dart';
+import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -16,25 +17,20 @@ class ColorsListPage extends StatefulWidget {
 }
 
 class _ColorsListPageState extends State<ColorsListPage> {
+  final _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // Remove acentos para ordenação alfabética correta
-  String _removeAccents(String str) {
-    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
-    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
-
-    String result = str;
-    for (int i = 0; i < withAccents.length; i++) {
-      result = result.replaceAll(withAccents[i], withoutAccents[i]);
-    }
-    return result;
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   // Ordena lista de cores alfabeticamente
   List<ColorModel> _sortColors(List<ColorModel> colors) {
     final sorted = List<ColorModel>.from(colors);
     sorted.sort((a, b) =>
-      _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+      removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
     );
     return sorted;
   }
@@ -46,15 +42,40 @@ class _ColorsListPageState extends State<ColorsListPage> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: TextField(
-            decoration: const InputDecoration(
+            controller: _searchController,
+            decoration: InputDecoration(
               hintText: 'Buscar cores...',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(Icons.search, color: context.gc.lilac),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: context.gc.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
             onChanged: (value) {
               setState(() {
                 _searchQuery = value;
               });
             },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text(
+            'A linguagem das cores na magia — significados e formas de aplicar cada tom.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                ),
           ),
         ),
         Expanded(

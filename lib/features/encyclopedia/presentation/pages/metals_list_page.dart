@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
 import '../../data/models/metal_model.dart';
+import '../../../../core/utils/accents.dart';
 import '../../data/models/crystal_model.dart'; // Para ElementExtension
 import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
@@ -26,23 +27,12 @@ class _MetalsListPageState extends State<MetalsListPage> {
     super.dispose();
   }
 
-  // Remove acentos para ordenação alfabética correta
-  String _removeAccents(String str) {
-    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
-    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
-
-    String result = str;
-    for (int i = 0; i < withAccents.length; i++) {
-      result = result.replaceAll(withAccents[i], withoutAccents[i]);
-    }
-    return result;
-  }
 
   // Ordena lista de metais alfabeticamente
   List<MetalModel> _sortMetals(List<MetalModel> metals) {
     final sorted = List<MetalModel>.from(metals);
     sorted.sort((a, b) =>
-      _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+      removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
     );
     return sorted;
   }
@@ -81,6 +71,15 @@ class _MetalsListPageState extends State<MetalsListPage> {
                 _searchQuery = value;
               });
             },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text(
+            'Os metais e sua magia — planetas regentes, condução de energia e usos mágicos.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                ),
           ),
         ),
         Expanded(

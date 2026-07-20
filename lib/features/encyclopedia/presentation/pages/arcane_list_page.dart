@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/arcane_entry_model.dart';
 import 'arcane_detail_page.dart';
@@ -29,7 +30,8 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
 
   List<ArcaneEntry> _sorted(List<ArcaneEntry> list) {
     final copy = List<ArcaneEntry>.from(list)
-      ..sort((a, b) => a.name.toUpperCase().compareTo(b.name.toUpperCase()));
+      ..sort((a, b) => removeAccents(a.name.toUpperCase())
+          .compareTo(removeAccents(b.name.toUpperCase())));
     return copy;
   }
 
@@ -67,7 +69,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+          padding: const EdgeInsets.all(16),
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -93,7 +95,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Text(
             widget.intro,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -161,7 +163,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                     color: context.gc.lilac,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 4),
                                 Text(
                                   entry.summary,
                                   maxLines: 2,

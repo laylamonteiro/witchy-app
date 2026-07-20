@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/goddess_model.dart';
+import '../../../../core/utils/accents.dart';
 import '../../data/data_sources/goddesses_data.dart';
 import 'goddess_detail_page.dart';
 
@@ -19,24 +20,13 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
   List<GoddessModel> _filteredGoddesses = goddessesData;
   GoddessOrigin? _selectedOrigin;
 
-  // Remove acentos para ordenação alfabética correta
-  String _removeAccents(String str) {
-    const withAccents = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
-    const withoutAccents = 'AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz';
-
-    String result = str;
-    for (int i = 0; i < withAccents.length; i++) {
-      result = result.replaceAll(withAccents[i], withoutAccents[i]);
-    }
-    return result;
-  }
 
   @override
   void initState() {
     super.initState();
     _filteredGoddesses = List.from(goddessesData)
       ..sort((a, b) =>
-        _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+        removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
       );
   }
 
@@ -52,7 +42,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
         return matchesSearch && matchesOrigin;
       }).toList()
         ..sort((a, b) =>
-          _removeAccents(a.name.toUpperCase()).compareTo(_removeAccents(b.name.toUpperCase()))
+          removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
         );
     });
   }
@@ -151,6 +141,16 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                   ],
                 ),
               ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text(
+              'Deusas de muitos povos — mitologia, domínios e caminhos de devoção.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.gc.textSecondary,
+                  ),
             ),
           ),
 
@@ -279,10 +279,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                       const SizedBox(width: 4),
                       Text(
                         goddess.origin.displayName,
-                        style: TextStyle(
-                          color: context.gc.softWhite.withOpacity(0.7),
-                          fontSize: 12,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
@@ -291,17 +288,14 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                     goddess.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: context.gc.softWhite.withOpacity(0.7),
-                      fontSize: 12,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
             Icon(
               Icons.chevron_right,
-              color: context.gc.lilac,
+              color: context.gc.textSecondary,
             ),
           ],
         ),

@@ -66,6 +66,14 @@ class ArcaneDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
+                Center(
+                  child: Text(
+                    displayTitle,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Text(
                   entry.summary,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -189,10 +197,7 @@ class ArcaneDetailPage extends StatelessWidget {
         feature: AppFeature.encyclopediaArcaneDetails,
         title: Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: context.gc.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         subtitle: subtitle,
         content: Padding(
@@ -264,10 +269,7 @@ class ArcaneDetailPage extends StatelessWidget {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: context.gc.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 10),
           child,

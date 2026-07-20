@@ -216,7 +216,7 @@ class GoddessDetailPage extends StatelessWidget {
             MagicalCard(
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaGoddessesDetails,
-                title: _buildSectionTitle(context, 'Usos Rituais'),
+                title: _buildSectionTitle(context, 'Usos Mágicos'),
                 subtitle:
                     'Práticas devocionais e rituais associados a esta divindade.',
                 content: Column(
@@ -292,13 +292,11 @@ class GoddessDetailPage extends StatelessWidget {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
+    // Padrão da Enciclopédia: título de seção em titleLarge (a fonte
+    // Cinzel fica reservada ao nome no cabeçalho).
     return Text(
       title,
-      style: GoogleFonts.cinzelDecorative(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: context.gc.lilac,
-      ),
+      style: Theme.of(context).textTheme.titleLarge,
     );
   }
 

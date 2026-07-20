@@ -135,7 +135,7 @@ class CrystalDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Intenções',
+                    'Propriedades Mágicas',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -292,7 +292,7 @@ class CrystalDetailPage extends StatelessWidget {
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaCrystalsDetails,
                 title: Text(
-                  'Como Usar na Magia',
+                  'Usos Mágicos',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 subtitle:
