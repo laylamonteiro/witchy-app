@@ -114,9 +114,9 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
 
   String get _greeting {
     final hour = DateTime.now().hour;
-    if (hour < 12) return AppLocalizations.of(context)!.commonGoodMorning;
-    if (hour < 18) return AppLocalizations.of(context)!.commonGoodAfternoon;
-    return AppLocalizations.of(context)!.commonGoodEvening;
+    if (hour < 12) return AppLocalizations.of(context).commonGoodMorning;
+    if (hour < 18) return AppLocalizations.of(context).commonGoodAfternoon;
+    return AppLocalizations.of(context).commonGoodEvening;
   }
 
   @override
@@ -150,7 +150,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                           Icons.arrow_back,
                           color: context.gc.lilac,
                         ),
-                        tooltip: AppLocalizations.of(context)!.commonBack,
+                        tooltip: AppLocalizations.of(context).commonBack,
                         onPressed: () async {
                           if (await _handleBack() && context.mounted) {
                             Navigator.of(context).pop();
@@ -159,7 +159,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                       ),
                     IconButton(
                       icon: Icon(Icons.history, color: context.gc.lilac),
-                      tooltip: AppLocalizations.of(context)!.diaryPreviousReflections,
+                      tooltip: AppLocalizations.of(context).diaryPreviousReflections,
                       onPressed: _openHistory,
                     ),
                     if (hasText)
@@ -168,7 +168,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                           Icons.save_outlined,
                           color: context.gc.lilac,
                         ),
-                        tooltip: AppLocalizations.of(context)!.diarySaveReflection,
+                        tooltip: AppLocalizations.of(context).diarySaveReflection,
                         onPressed: _save,
                       ),
                   ],
@@ -191,7 +191,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                     ),
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: AppLocalizations.of(context)!.diaryFreeWritingHint,
+                      hintText: AppLocalizations.of(context).diaryFreeWritingHint,
                       hintStyle: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.4),
                         fontSize: 17,

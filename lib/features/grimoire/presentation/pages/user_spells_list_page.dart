@@ -82,8 +82,8 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                     child: TextField(
                       decoration: InputDecoration(
                         hintText: widget.recordsOnly
-                            ? AppLocalizations.of(context)!.grimoireSearchRecords
-                            : AppLocalizations.of(context)!.grimoireSearchSpells,
+                            ? AppLocalizations.of(context).grimoireSearchRecords
+                            : AppLocalizations.of(context).grimoireSearchSpells,
                         prefixIcon: Icon(Icons.search),
                       ),
                       onChanged: (value) {
@@ -102,7 +102,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                       Icons.filter_list,
                       color: _filterCategory != null ? context.gc.lilac : null,
                     ),
-                    tooltip: AppLocalizations.of(context)!.spellFilterByCategory,
+                    tooltip: AppLocalizations.of(context).spellFilterByCategory,
                     onSelected: (value) {
                       setState(() {
                         if (value == 'all') {
@@ -130,7 +130,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              AppLocalizations.of(context)!.spellAllCategories,
+                              AppLocalizations.of(context).spellAllCategories,
                               style: TextStyle(
                                 fontWeight: _filterCategory == null
                                     ? FontWeight.bold
@@ -177,11 +177,11 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    _buildSourceChip(AppLocalizations.of(context)!.spellSourceAll, SpellSource.all),
+                    _buildSourceChip(AppLocalizations.of(context).spellSourceAll, SpellSource.all),
                     const SizedBox(width: 8),
-                    _buildSourceChip(AppLocalizations.of(context)!.spellSourceMine, SpellSource.mine),
+                    _buildSourceChip(AppLocalizations.of(context).spellSourceMine, SpellSource.mine),
                     const SizedBox(width: 8),
-                    _buildSourceChip(AppLocalizations.of(context)!.spellSourceAncestral, SpellSource.ancestral),
+                    _buildSourceChip(AppLocalizations.of(context).spellSourceAncestral, SpellSource.ancestral),
                   ],
                 ),
               ),
@@ -193,7 +193,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
               child: Consumer<SpellProvider>(
                 builder: (context, provider, _) {
                   if (provider.isLoading) {
-                    return LoadingWidget(message: AppLocalizations.of(context)!.spellLoading);
+                    return LoadingWidget(message: AppLocalizations.of(context).spellLoading);
                   }
 
                   final isPremium = context.watch<AuthProvider>().isPremium;
@@ -239,14 +239,14 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                         _source != SpellSource.ancestral;
                     return EmptyStateWidget(
                       message: hasActiveFilter
-                          ? AppLocalizations.of(context)!.spellNoneFound
+                          ? AppLocalizations.of(context).spellNoneFound
                           : widget.recordsOnly
-                              ? AppLocalizations.of(context)!.grimoireNoRecords
+                              ? AppLocalizations.of(context).grimoireNoRecords
                               : _source == SpellSource.ancestral
-                                  ? AppLocalizations.of(context)!.spellNoAncestral
-                                  : AppLocalizations.of(context)!.spellEmptyGrimoire,
+                                  ? AppLocalizations.of(context).spellNoAncestral
+                                  : AppLocalizations.of(context).spellEmptyGrimoire,
                       icon: Icons.auto_stories,
-                      actionText: showAddAction ? AppLocalizations.of(context)!.spellAdd : null,
+                      actionText: showAddAction ? AppLocalizations.of(context).spellAdd : null,
                       onAction:
                           showAddAction ? () => _navigateToForm(context) : null,
                     );
@@ -301,7 +301,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                               runSpacing: 4,
                               children: [
                                 if (spell.isPreloaded)
-                                  _buildChip(AppLocalizations.of(context)!.grimoireAncestral, context.gc.starYellow),
+                                  _buildChip(AppLocalizations.of(context).grimoireAncestral, context.gc.starYellow),
                                 _buildChip(
                                   spell.category.displayName,
                                   context.gc.lilac,
@@ -318,7 +318,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                             if (showMoon) ...[
                               const SizedBox(height: 8),
                               Text(
-                                '${AppLocalizations.of(context)!.spellMoonPrefix}: ${spell.moonPhase!.displayName}',
+                                '${AppLocalizations.of(context).spellMoonPrefix}: ${spell.moonPhase!.displayName}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],

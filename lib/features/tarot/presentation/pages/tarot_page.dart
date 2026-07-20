@@ -38,7 +38,7 @@ class _TarotPageState extends State<TarotPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.toolTarotTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolTarotTitle),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: context.gc.lilac,
@@ -46,8 +46,8 @@ class _TarotPageState extends State<TarotPage>
           tabAlignment: TabAlignment.center,
           labelPadding: const EdgeInsets.symmetric(horizontal: 24),
           tabs: [
-            Tab(text: AppLocalizations.of(context)!.tarotTabDraw),
-            Tab(text: AppLocalizations.of(context)!.tarotTabLearn),
+            Tab(text: AppLocalizations.of(context).tarotTabDraw),
+            Tab(text: AppLocalizations.of(context).tarotTabLearn),
           ],
         ),
       ),
@@ -156,7 +156,7 @@ class _SpreadTabState extends State<_SpreadTab> {
     return TarotDrawnCard(
       card: card,
       isReversed: random.nextInt(4) == 0,
-      positionLabel: AppLocalizations.of(context)!.tarotDailyCard,
+      positionLabel: AppLocalizations.of(context).tarotDailyCard,
     );
   }
 
@@ -169,7 +169,7 @@ class _SpreadTabState extends State<_SpreadTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.tarotFreeLimitReached,
+              AppLocalizations.of(context).tarotFreeLimitReached,
             ),
             backgroundColor: context.gc.alert,
           ),
@@ -185,7 +185,7 @@ class _SpreadTabState extends State<_SpreadTab> {
       await authProvider.incrementOracleReadings();
     }
 
-    final positions = spread.positions(AppLocalizations.of(context)!);
+    final positions = spread.positions(AppLocalizations.of(context));
     List<TarotDrawnCard> drawn;
     if (spread == TarotSpread.daily) {
       drawn = [_dailyCard()];
@@ -241,11 +241,11 @@ class _SpreadTabState extends State<_SpreadTab> {
     setState(() => _isReadingAI = true);
     try {
       final summary = StringBuffer()
-        ..writeln('${AppLocalizations.of(context)!.tarotSpreadLabel}: ${_activeSpread!.displayName(AppLocalizations.of(context)!)}');
+        ..writeln('${AppLocalizations.of(context).tarotSpreadLabel}: ${_activeSpread!.displayName(AppLocalizations.of(context))}');
       for (final drawn in _drawn) {
         summary.writeln(
           '- ${drawn.positionLabel}: ${drawn.card.name}'
-          '${drawn.isReversed ? ' (${AppLocalizations.of(context)!.tarotReversed})' : ''} — ${drawn.meaning}',
+          '${drawn.isReversed ? ' (${AppLocalizations.of(context).tarotReversed})' : ''} — ${drawn.meaning}',
         );
       }
       final reading = await AIService.instance
@@ -278,7 +278,7 @@ class _SpreadTabState extends State<_SpreadTab> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
               child: Text(
-                AppLocalizations.of(context)!.tarotBreathe,
+                AppLocalizations.of(context).tarotBreathe,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: context.gc.textSecondary,
                     ),
@@ -299,7 +299,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              spread.displayName(AppLocalizations.of(context)!),
+                              spread.displayName(AppLocalizations.of(context)),
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -310,7 +310,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              spread.description(AppLocalizations.of(context)!),
+                              spread.description(AppLocalizations.of(context)),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -332,7 +332,7 @@ class _SpreadTabState extends State<_SpreadTab> {
               child: Row(
                 children: [
                   Text(
-                    '${_activeSpread!.emoji} ${_activeSpread!.displayName(AppLocalizations.of(context)!)}',
+                    '${_activeSpread!.emoji} ${_activeSpread!.displayName(AppLocalizations.of(context))}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -346,7 +346,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                       _aiReading = null;
                     }),
                     icon: const Icon(Icons.refresh, size: 16),
-                    label: Text(AppLocalizations.of(context)!.tarotNewSpread),
+                    label: Text(AppLocalizations.of(context).tarotNewSpread),
                   ),
                 ],
               ),
@@ -399,7 +399,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                     children: [
                       Text(
                         '${drawn.positionLabel} — ${drawn.card.name}'
-                        '${drawn.isReversed ? ' (${AppLocalizations.of(context)!.tarotReversed})' : ''}',
+                        '${drawn.isReversed ? ' (${AppLocalizations.of(context).tarotReversed})' : ''}',
                         style:
                             Theme.of(context).textTheme.titleSmall?.copyWith(
                                   color: context.gc.lilac,
@@ -450,8 +450,8 @@ class _SpreadTabState extends State<_SpreadTab> {
                             : const Icon(Icons.auto_awesome, size: 18),
                         label: Text(
                           _isReadingAI
-                              ? AppLocalizations.of(context)!.tarotConsultingCards
-                              : AppLocalizations.of(context)!
+                              ? AppLocalizations.of(context).tarotConsultingCards
+                              : AppLocalizations.of(context)
                                   .tarotAdvisorInterpretation,
                         ),
                       )
@@ -459,7 +459,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                       // Já interpretado: mostra só o texto. O botão volta apenas
                       // em uma nova tiragem (cartas diferentes).
                       Text(
-                        AppLocalizations.of(context)!.tarotAdvisorInterpretation,
+                        AppLocalizations.of(context).tarotAdvisorInterpretation,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: context.gc.lilac,

@@ -80,7 +80,7 @@ class TrailPage extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:
-                  Text(AppLocalizations.of(context)!.learnUnlockPrevious),
+                  Text(AppLocalizations.of(context).learnUnlockPrevious),
               backgroundColor: context.gc.alert,
             ),
           );
@@ -112,7 +112,7 @@ class TrailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.learnLessonN('${index + 1}', lesson.title),
+                    AppLocalizations.of(context).learnLessonN('${index + 1}', lesson.title),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: accessible || completed
                               ? context.gc.textPrimary
@@ -123,10 +123,10 @@ class TrailPage extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     completed
-                        ? AppLocalizations.of(context)!.learnPageWritten(lesson.pageTitle)
+                        ? AppLocalizations.of(context).learnPageWritten(lesson.pageTitle)
                         : needsPremium && unlocked
-                            ? AppLocalizations.of(context)!.learnPremiumLesson
-                            : AppLocalizations.of(context)!.learnCreatesPage(lesson.pageTitle),
+                            ? AppLocalizations.of(context).learnPremiumLesson
+                            : AppLocalizations.of(context).learnCreatesPage(lesson.pageTitle),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),

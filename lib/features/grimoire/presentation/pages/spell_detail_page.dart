@@ -30,7 +30,7 @@ class SpellDetailPage extends StatelessWidget {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context)!.spellSavedToGrimoire),
+        content: Text(AppLocalizations.of(context).spellSavedToGrimoire),
         backgroundColor: context.gc.success,
       ),
     );
@@ -47,13 +47,13 @@ class SpellDetailPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(spell.isRecord
-            ? AppLocalizations.of(context)!.recordDetails
-            : AppLocalizations.of(context)!.spellDetails),
+            ? AppLocalizations.of(context).recordDetails
+            : AppLocalizations.of(context).spellDetails),
         actions: [
           if (showSaveButton) ...[
             IconButton(
               icon: const Icon(Icons.save),
-              tooltip: AppLocalizations.of(context)!.spellSaveToGrimoire,
+              tooltip: AppLocalizations.of(context).spellSaveToGrimoire,
               onPressed: () => _saveSpell(context),
             ),
           ] else if (!spell.isPreloaded) ...[
@@ -121,7 +121,7 @@ class SpellDetailPage extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.spellRecommendedMoon,
+                      AppLocalizations.of(context).spellRecommendedMoon,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
@@ -141,7 +141,7 @@ class SpellDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.spellIngredientsLabel,
+                      AppLocalizations.of(context).spellIngredientsLabel,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
@@ -177,7 +177,7 @@ class SpellDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.spellHowTo,
+                    AppLocalizations.of(context).spellHowTo,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -197,7 +197,7 @@ class SpellDetailPage extends StatelessWidget {
                     Icon(Icons.timer, color: context.gc.lilac),
                     const SizedBox(width: 12),
                     Text(
-                      AppLocalizations.of(context)!.spellDurationDays('${spell.duration} ${spell.duration == 1 ? AppLocalizations.of(context)!.spellDay : AppLocalizations.of(context)!.spellDays}'),
+                      AppLocalizations.of(context).spellDurationDays('${spell.duration} ${spell.duration == 1 ? AppLocalizations.of(context).spellDay : AppLocalizations.of(context).spellDays}'),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ],
@@ -211,7 +211,7 @@ class SpellDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.spellNotesLabel,
+                      AppLocalizations.of(context).spellNotesLabel,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
@@ -329,13 +329,13 @@ class SpellDetailPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!
+            AppLocalizations.of(context)
                 .spellCreatedAt(dateFormat.format(spell.createdAt)),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           if (spell.updatedAt != spell.createdAt)
             Text(
-              AppLocalizations.of(context)!
+              AppLocalizations.of(context)
                   .spellUpdatedAt(dateFormat.format(spell.updatedAt)),
               style: Theme.of(context).textTheme.bodySmall,
             ),
@@ -356,21 +356,21 @@ class SpellDetailPage extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.commonConfirmDelete),
+        title: Text(AppLocalizations.of(context).commonConfirmDelete),
         content: Text(spell.isRecord
-            ? AppLocalizations.of(context)!.recordDeleteConfirm(spell.name)
-            : AppLocalizations.of(context)!.spellDeleteConfirm(spell.name)),
+            ? AppLocalizations.of(context).recordDeleteConfirm(spell.name)
+            : AppLocalizations.of(context).spellDeleteConfirm(spell.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.commonCancel),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: context.gc.alert,
             ),
-            child: Text(AppLocalizations.of(context)!.commonDelete),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),

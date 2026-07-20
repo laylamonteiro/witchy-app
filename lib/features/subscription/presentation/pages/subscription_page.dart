@@ -685,41 +685,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     showPremiumUpgradePaywall(context);
   }
 
-  void _showRevenueCatNotConfiguredDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.gc.surface,
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber, color: context.gc.gold),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Pagamentos Não Configurados',
-                style: TextStyle(color: context.gc.textPrimary, fontSize: 18),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'O sistema de pagamentos ainda não foi configurado nesta versão do app.\n\n'
-          'Se você é desenvolvedor, verifique os logs do console para mais detalhes sobre como configurar o RevenueCat.',
-          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Entendi',
-              style: TextStyle(color: context.gc.lilac),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _openCustomerCenter() async {
     await _paymentService.presentCustomerCenter();
   }

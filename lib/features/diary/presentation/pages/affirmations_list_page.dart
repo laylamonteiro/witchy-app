@@ -33,7 +33,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
       body: Consumer<AffirmationProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingAffirmations);
+            return LoadingWidget(message: AppLocalizations.of(context).diaryLoadingAffirmations);
           }
 
           return Column(
@@ -47,7 +47,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                     children: [
                       _buildCategoryChip(
                         context,
-                        AppLocalizations.of(context)!.diaryAllCategories,
+                        AppLocalizations.of(context).diaryAllCategories,
                         null,
                         provider.selectedCategory == null,
                       ),
@@ -73,9 +73,9 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                 child: provider.affirmations.isEmpty
                     ? EmptyStateWidget(
                         message:
-                            AppLocalizations.of(context)!.diaryEmptyAffirmationsCategory,
+                            AppLocalizations.of(context).diaryEmptyAffirmationsCategory,
                         icon: Icons.auto_awesome,
-                        actionText: AppLocalizations.of(context)!.diaryAddAffirmation,
+                        actionText: AppLocalizations.of(context).diaryAddAffirmation,
                         onAction: () => _navigateToForm(context),
                       )
                     : ListView.builder(

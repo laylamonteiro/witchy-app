@@ -35,12 +35,6 @@ class WitchWheelPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
-    // Paint para círculo externo decorativo
-    final outerDecorPaint = Paint()
-      ..color = starColor.withOpacity(0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
     // Raios dos anéis (posicionamento das letras no meio de cada faixa)
     // IMPORTANTE: Mesmos multiplicadores de SigilWheel.getCanvasPosition
     final innerRingRadius = radius * 0.22; // Centro do anel interno

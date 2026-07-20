@@ -192,45 +192,6 @@ class SigilWheel {
     return result;
   }
   
-  // Remove vogais repetidas mantendo apenas a primeira
-  static String _removeRepeatedVowels(String text) {
-    const vowels = ['A', 'E', 'I', 'O', 'U'];
-    StringBuffer result = StringBuffer();
-    String? lastVowel;
-    
-    for (int i = 0; i < text.length; i++) {
-      String char = text[i];
-      if (vowels.contains(char)) {
-        if (char != lastVowel) {
-          result.write(char);
-          lastVowel = char;
-        }
-      } else {
-        result.write(char);
-        lastVowel = null;
-      }
-    }
-    
-    return result.toString();
-  }
-  
-  // Remove letras duplicadas consecutivas
-  static String _removeDuplicates(String text) {
-    if (text.isEmpty) return text;
-    
-    StringBuffer result = StringBuffer();
-    String lastChar = '';
-    
-    for (int i = 0; i < text.length; i++) {
-      if (text[i] != lastChar) {
-        result.write(text[i]);
-        lastChar = text[i];
-      }
-    }
-    
-    return result.toString();
-  }
-  
   // Calcula posição no canvas baseado na posição da roda
   // IMPORTANTE: Os raios devem ser iguais aos do WitchWheelPainter!
   static Offset getCanvasPosition(

@@ -87,7 +87,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.encyclopediaPageTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).encyclopediaPageTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -111,20 +111,20 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
               labelStyle: const TextStyle(fontSize: 14),
               unselectedLabelStyle: const TextStyle(fontSize: 14),
               tabs: [
-                Tab(text: AppLocalizations.of(context)!.encyTabMoon),
-                Tab(text: AppLocalizations.of(context)!.encyTabSabbats),
-                Tab(text: AppLocalizations.of(context)!.encyTabCrystals),
-                Tab(text: AppLocalizations.of(context)!.encyTabHerbs),
-                Tab(text: AppLocalizations.of(context)!.encyTabMetals),
-                Tab(text: AppLocalizations.of(context)!.encyTabColors),
-                Tab(text: AppLocalizations.of(context)!.encyTabGoddesses),
-                Tab(text: AppLocalizations.of(context)!.encyTabElements),
-                Tab(text: AppLocalizations.of(context)!.encyTabAltar),
-                Tab(text: AppLocalizations.of(context)!.encyTabRunes),
-                Tab(text: AppLocalizations.of(context)!.encyTabArchetypes),
-                Tab(text: AppLocalizations.of(context)!.encyTabAngels),
-                Tab(text: AppLocalizations.of(context)!.encyTabDemons),
-                Tab(text: AppLocalizations.of(context)!.encyTabSymbols),
+                Tab(text: AppLocalizations.of(context).encyTabMoon),
+                Tab(text: AppLocalizations.of(context).encyTabSabbats),
+                Tab(text: AppLocalizations.of(context).encyTabCrystals),
+                Tab(text: AppLocalizations.of(context).encyTabHerbs),
+                Tab(text: AppLocalizations.of(context).encyTabMetals),
+                Tab(text: AppLocalizations.of(context).encyTabColors),
+                Tab(text: AppLocalizations.of(context).encyTabGoddesses),
+                Tab(text: AppLocalizations.of(context).encyTabElements),
+                Tab(text: AppLocalizations.of(context).encyTabAltar),
+                Tab(text: AppLocalizations.of(context).encyTabRunes),
+                Tab(text: AppLocalizations.of(context).encyTabArchetypes),
+                Tab(text: AppLocalizations.of(context).encyTabAngels),
+                Tab(text: AppLocalizations.of(context).encyTabDemons),
+                Tab(text: AppLocalizations.of(context).encyTabSymbols),
               ],
             ),
           ),

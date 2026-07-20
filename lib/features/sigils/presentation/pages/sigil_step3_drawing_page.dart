@@ -77,7 +77,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppLocalizations.of(context)!.sigilSaveError}: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context).sigilSaveError}: $e')),
       );
     }
   }
@@ -102,12 +102,12 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       final boundary = _drawingKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) {
-        throw Exception(AppLocalizations.of(context)!.sigilDrawingNotReady);
+        throw Exception(AppLocalizations.of(context).sigilDrawingNotReady);
       }
       final image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
-        throw Exception(AppLocalizations.of(context)!.sigilImageError);
+        throw Exception(AppLocalizations.of(context).sigilImageError);
       }
 
       final name =
@@ -120,7 +120,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.sigilSavedToGallery),
+          content: Text(AppLocalizations.of(context).sigilSavedToGallery),
           backgroundColor: context.gc.success,
         ),
       );
@@ -130,8 +130,8 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
         SnackBar(
           content: Text(
             e.type == GalExceptionType.accessDenied
-                ? AppLocalizations.of(context)!.sigilGalleryPermission
-                : AppLocalizations.of(context)!.sigilImageSaveError,
+                ? AppLocalizations.of(context).sigilGalleryPermission
+                : AppLocalizations.of(context).sigilImageSaveError,
           ),
           backgroundColor: context.gc.alert,
         ),
@@ -166,7 +166,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       return;
     }
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     setState(() => _isSavingToDesires = true);
     try {
       final boundary = _drawingKey.currentContext?.findRenderObject()
@@ -239,7 +239,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.sigilYourSigil),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).sigilYourSigil),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -249,7 +249,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
           children: [
             // Título
             Text(
-              AppLocalizations.of(context)!.sigilYourDrawing,
+              AppLocalizations.of(context).sigilYourDrawing,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
@@ -308,11 +308,11 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildLegendItem(Colors.green.shade300, AppLocalizations.of(context)!.sigilLegendStart),
+                        _buildLegendItem(Colors.green.shade300, AppLocalizations.of(context).sigilLegendStart),
                         const SizedBox(width: 16),
-                        _buildLegendItem(context.gc.lilac, AppLocalizations.of(context)!.sigilLegendLetters),
+                        _buildLegendItem(context.gc.lilac, AppLocalizations.of(context).sigilLegendLetters),
                         const SizedBox(width: 16),
-                        _buildLegendItem(Colors.red.shade300, AppLocalizations.of(context)!.sigilLegendEnd),
+                        _buildLegendItem(Colors.red.shade300, AppLocalizations.of(context).sigilLegendEnd),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -336,7 +336,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                                   : context.gc.textSecondary,
                             ),
                             const SizedBox(width: 4),
-                            Text(AppLocalizations.of(context)!.sigilWheel),
+                            Text(AppLocalizations.of(context).sigilWheel),
                           ],
                         ),
                         selected: _showWheel,
@@ -374,7 +374,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                                   : context.gc.textSecondary,
                             ),
                             const SizedBox(width: 4),
-                            Text(AppLocalizations.of(context)!.sigilPoints),
+                            Text(AppLocalizations.of(context).sigilPoints),
                           ],
                         ),
                         selected: _showStartEnd,
@@ -402,7 +402,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       IconButton(
                         onPressed: _shuffleLetters,
                         icon: const Icon(Icons.shuffle, size: 20),
-                        tooltip: AppLocalizations.of(context)!.sigilShuffle,
+                        tooltip: AppLocalizations.of(context).sigilShuffle,
                         style: IconButton.styleFrom(
                           backgroundColor: _isShuffled
                               ? context.gc.mint.withOpacity(0.3)
@@ -425,7 +425,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                                 ),
                               )
                             : const Icon(Icons.download, size: 20),
-                        tooltip: AppLocalizations.of(context)!.sigilSaveImage,
+                        tooltip: AppLocalizations.of(context).sigilSaveImage,
                         style: IconButton.styleFrom(
                           backgroundColor: context.gc.surface,
                           foregroundColor: context.gc.textSecondary,
@@ -436,7 +436,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         IconButton(
                           onPressed: _resetLetters,
                           icon: const Icon(Icons.restart_alt, size: 20),
-                          tooltip: AppLocalizations.of(context)!.sigilRestore,
+                          tooltip: AppLocalizations.of(context).sigilRestore,
                           style: IconButton.styleFrom(
                             backgroundColor: context.gc.surface,
                             foregroundColor: context.gc.textSecondary,
@@ -460,23 +460,23 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       const Text('🎨', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        AppLocalizations.of(context)!.sigilHowToUse,
+                        AppLocalizations.of(context).sigilHowToUse,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   _buildStep(
-                    AppLocalizations.of(context)!.sigilUse1Title,
-                    AppLocalizations.of(context)!.sigilUse1Desc,
+                    AppLocalizations.of(context).sigilUse1Title,
+                    AppLocalizations.of(context).sigilUse1Desc,
                   ),
                   _buildStep(
-                    AppLocalizations.of(context)!.sigilUse2Title,
-                    AppLocalizations.of(context)!.sigilUse2Desc,
+                    AppLocalizations.of(context).sigilUse2Title,
+                    AppLocalizations.of(context).sigilUse2Desc,
                   ),
                   _buildStep(
-                    AppLocalizations.of(context)!.sigilUse3Title,
-                    AppLocalizations.of(context)!.sigilUse3Desc,
+                    AppLocalizations.of(context).sigilUse3Title,
+                    AppLocalizations.of(context).sigilUse3Desc,
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -494,7 +494,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            AppLocalizations.of(context)!.sigilRemember,
+                            AppLocalizations.of(context).sigilRemember,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: context.gc.textSecondary,
@@ -536,8 +536,8 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                       ),
                 label: Text(
                   _savedToDesires
-                      ? AppLocalizations.of(context)!.sigilSavedToDesiresShort
-                      : AppLocalizations.of(context)!.sigilSaveToDesires,
+                      ? AppLocalizations.of(context).sigilSavedToDesiresShort
+                      : AppLocalizations.of(context).sigilSaveToDesires,
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor:
@@ -562,7 +562,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: MagicalButton(
-                text: _isSaving ? AppLocalizations.of(context)!.commonSaving : AppLocalizations.of(context)!.commonFinish,
+                text: _isSaving ? AppLocalizations.of(context).commonSaving : AppLocalizations.of(context).commonFinish,
                 onPressed: _saveAndFinish,
               ),
             ),

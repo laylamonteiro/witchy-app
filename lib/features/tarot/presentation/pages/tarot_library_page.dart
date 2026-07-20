@@ -22,7 +22,7 @@ class TarotLibraryPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-            AppLocalizations.of(context)!.tarotLibraryTitle),
+            AppLocalizations.of(context).tarotLibraryTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -134,7 +134,7 @@ class _TarotCardDetailPageState extends State<TarotCardDetailPage> {
   }
 
   Widget _buildCard(BuildContext context, TarotCard card) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),

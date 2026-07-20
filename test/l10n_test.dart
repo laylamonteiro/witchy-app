@@ -45,7 +45,7 @@ void main() {
       ),
     );
 
-    final l10n = AppLocalizations.of(capturedContext)!;
+    final l10n = AppLocalizations.of(capturedContext);
     expect(l10n.itemsCount(0), 'Nenhum item');
     expect(l10n.itemsCount(1), '1 item');
     expect(l10n.itemsCount(2), '2 itens');

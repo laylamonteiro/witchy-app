@@ -46,7 +46,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
     if (_intentionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.aiSpellDescribeFirst),
+          content: Text(AppLocalizations.of(context).aiSpellDescribeFirst),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -59,7 +59,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              AppLocalizations.of(context)!.aiSpellDailyLimit),
+              AppLocalizations.of(context).aiSpellDailyLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -96,27 +96,27 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       if (!mounted) return;
 
       String errorMessage =
-          AppLocalizations.of(context)!.aiSpellGenericError;
+          AppLocalizations.of(context).aiSpellGenericError;
 
       if (e.toString().contains('limit') ||
           e.toString().contains('quota') ||
           e.toString().contains('usage') ||
           e.toString().contains('429')) {
         errorMessage =
-            AppLocalizations.of(context)!.advisorRateLimited;
+            AppLocalizations.of(context).advisorRateLimited;
       } else if (e.toString().contains('autenticação') ||
           e.toString().contains('authentication') ||
           e.toString().contains('401')) {
         errorMessage =
-            AppLocalizations.of(context)!.advisorTempError;
+            AppLocalizations.of(context).advisorTempError;
       } else if (e.toString().contains('network') ||
           e.toString().contains('connection') ||
           e.toString().contains('timeout')) {
         errorMessage =
-            AppLocalizations.of(context)!.advisorConnectionError;
+            AppLocalizations.of(context).advisorConnectionError;
       } else if (e.toString().contains('503')) {
         errorMessage =
-            AppLocalizations.of(context)!.advisorPortalClosed;
+            AppLocalizations.of(context).advisorPortalClosed;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -145,7 +145,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context)!.spellSavedToGrimoire),
+        content: Text(AppLocalizations.of(context).spellSavedToGrimoire),
         backgroundColor: context.gc.success,
       ),
     );
@@ -157,7 +157,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.spellNew),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).spellNew),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -172,14 +172,14 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                   const Text('✨', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 16),
                   Text(
-                    AppLocalizations.of(context)!.aiSpellDescribeIntention,
+                    AppLocalizations.of(context).aiSpellDescribeIntention,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context)!.aiSpellIntentionHelp,
+                    AppLocalizations.of(context).aiSpellIntentionHelp,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -196,7 +196,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                 controller: _intentionController,
                 style: TextStyle(color: context.gc.softWhite),
                 decoration: InputDecoration(
-                  hintText: AppLocalizations.of(context)!.aiSpellIntentionHint,
+                  hintText: AppLocalizations.of(context).aiSpellIntentionHint,
                   hintStyle: TextStyle(
                     color: context.gc.softWhite.withOpacity(0.5),
                   ),
@@ -240,7 +240,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                     )
                   : const Icon(Icons.auto_awesome),
               label: Text(
-                  _isGenerating ? AppLocalizations.of(context)!.aiSpellManifesting : AppLocalizations.of(context)!.aiSpellManifest),
+                  _isGenerating ? AppLocalizations.of(context).aiSpellManifesting : AppLocalizations.of(context).aiSpellManifest),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.darkBackground,
@@ -261,7 +261,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    AppLocalizations.of(context)!.advisorRemainingToday('$remaining/${UserModel.freeAiConsultationsLimit}'),
+                    AppLocalizations.of(context).advisorRemainingToday('$remaining/${UserModel.freeAiConsultationsLimit}'),
                     style: TextStyle(
                       color: remaining > 0
                           ? context.gc.softWhite.withOpacity(0.6)
@@ -363,7 +363,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                           );
                         },
                         icon: const Icon(Icons.visibility, size: 18),
-                        label: Text(AppLocalizations.of(context)!.aiSpellSeeDetails),
+                        label: Text(AppLocalizations.of(context).aiSpellSeeDetails),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: context.gc.lilac,
                           foregroundColor: context.gc.darkBackground,

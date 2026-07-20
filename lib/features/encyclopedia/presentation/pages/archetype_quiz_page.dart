@@ -189,7 +189,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.quizTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).quizTitle),
       ),
       body: _result != null ? _buildResult(_result!) : _buildQuestion(),
     );
@@ -211,7 +211,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            AppLocalizations.of(context)!.quizProgress('${_index + 1}', '${_questions.length}'),
+            AppLocalizations.of(context).quizProgress('${_index + 1}', '${_questions.length}'),
             textAlign: TextAlign.center,
             style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
           ),
@@ -265,7 +265,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                 const SizedBox(height: 12),
                 if (_savedDate != null) ...[
                   Text(
-                    AppLocalizations.of(context)!.quizSavedOn(_savedDate!),
+                    AppLocalizations.of(context).quizSavedOn(_savedDate!),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: context.gc.textSecondary,
@@ -275,7 +275,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                   const SizedBox(height: 6),
                 ],
                 Text(
-                  AppLocalizations.of(context)!.quizYourArchetypeIs,
+                  AppLocalizations.of(context).quizYourArchetypeIs,
                   style: TextStyle(color: context.gc.textSecondary),
                 ),
                 const SizedBox(height: 4),
@@ -305,13 +305,13 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                     ),
                   ),
                   icon: const Icon(Icons.menu_book, size: 18),
-                  label: Text(AppLocalizations.of(context)!.quizSeeInEncyclopedia),
+                  label: Text(AppLocalizations.of(context).quizSeeInEncyclopedia),
                 ),
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: _restart,
                   icon: const Icon(Icons.refresh, size: 16),
-                  label: Text(AppLocalizations.of(context)!.quizRetake),
+                  label: Text(AppLocalizations.of(context).quizRetake),
                 ),
               ],
             ),
@@ -322,7 +322,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.quizStrongestEnergies,
+                    AppLocalizations.of(context).quizStrongestEnergies,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: context.gc.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -370,7 +370,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
             ),
           MagicalCard(
             child: Text(
-              AppLocalizations.of(context)!.quizMirrorNote,
+              AppLocalizations.of(context).quizMirrorNote,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: context.gc.textSecondary,
                     fontStyle: FontStyle.italic,

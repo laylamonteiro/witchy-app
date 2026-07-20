@@ -59,14 +59,14 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     const Text('‧ ☽◯☾ ‧', style: TextStyle(fontSize: 45)),
                     const SizedBox(height: 16),
                     Text(
-                      AppLocalizations.of(context)!.astroMysticTitle,
+                      AppLocalizations.of(context).astroMysticTitle,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.astroMysticSubtitle,
+                      AppLocalizations.of(context).astroMysticSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: context.gc.softWhite.withOpacity(0.8),
                           ),
@@ -80,9 +80,9 @@ class _AstrologyTabState extends State<AstrologyTab> {
               _buildOption(
                 context,
                 icon: '🌌',
-                title: AppLocalizations.of(context)!.astroZodiacSigns,
+                title: AppLocalizations.of(context).astroZodiacSigns,
                 description:
-                    AppLocalizations.of(context)!.astroZodiacSignsDesc,
+                    AppLocalizations.of(context).astroZodiacSignsDesc,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -96,10 +96,10 @@ class _AstrologyTabState extends State<AstrologyTab> {
               _buildOption(
                 context,
                 icon: '🌟',
-                title: AppLocalizations.of(context)!.astroBirthChart,
+                title: AppLocalizations.of(context).astroBirthChart,
                 description: provider.hasBirthChart
-                    ? AppLocalizations.of(context)!.astroSeeChart
-                    : AppLocalizations.of(context)!.astroCreateChart,
+                    ? AppLocalizations.of(context).astroSeeChart
+                    : AppLocalizations.of(context).astroCreateChart,
                 onTap: () {
                   if (provider.hasBirthChart) {
                     Navigator.of(context).push(
@@ -126,10 +126,10 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     'assets/icons/magic_mirror.svg',
                     width: 40,
                     height: 40,
-                    semanticsLabel: AppLocalizations.of(context)!.astroMagicMirror,
+                    semanticsLabel: AppLocalizations.of(context).astroMagicMirror,
                   ),
-                  title: AppLocalizations.of(context)!.astroMagicalProfile,
-                  description: AppLocalizations.of(context)!.astroMagicalProfileDesc,
+                  title: AppLocalizations.of(context).astroMagicalProfile,
+                  description: AppLocalizations.of(context).astroMagicalProfileDesc,
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -143,8 +143,8 @@ class _AstrologyTabState extends State<AstrologyTab> {
               _buildOption(
                 context,
                 icon: '🪐',
-                title: AppLocalizations.of(context)!.astroDailyWeather,
-                description: AppLocalizations.of(context)!.astroDailyWeatherDesc,
+                title: AppLocalizations.of(context).astroDailyWeather,
+                description: AppLocalizations.of(context).astroDailyWeatherDesc,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -158,8 +158,8 @@ class _AstrologyTabState extends State<AstrologyTab> {
               _buildOption(
                 context,
                 icon: '✨',
-                title: AppLocalizations.of(context)!.astroSuggestions,
-                description: AppLocalizations.of(context)!.astroSuggestionsDesc,
+                title: AppLocalizations.of(context).astroSuggestions,
+                description: AppLocalizations.of(context).astroSuggestionsDesc,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -174,8 +174,8 @@ class _AstrologyTabState extends State<AstrologyTab> {
                 _buildOption(
                   context,
                   icon: '🔄',
-                  title: AppLocalizations.of(context)!.astroRecalculate,
-                  description: AppLocalizations.of(context)!.astroRecalculateDesc,
+                  title: AppLocalizations.of(context).astroRecalculate,
+                  description: AppLocalizations.of(context).astroRecalculateDesc,
                   onTap: () {
                     _showRecalculateDialog(context, provider);
                   },
@@ -195,7 +195,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          AppLocalizations.of(context)!.astroAbout,
+                          AppLocalizations.of(context).astroAbout,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 color: context.gc.lilac,
                               ),
@@ -204,7 +204,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     ),
                     Divider(color: context.gc.lilac),
                     Text(
-                      AppLocalizations.of(context)!.astroAboutText,
+                      AppLocalizations.of(context).astroAboutText,
                       style: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.8),
                         height: 1.5,
@@ -212,16 +212,16 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      AppLocalizations.of(context)!.astroHaveOnHand,
+                      AppLocalizations.of(context).astroHaveOnHand,
                       style: TextStyle(
                         color: context.gc.softWhite,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildInfoItem(AppLocalizations.of(context)!.astroBirthDate),
-                    _buildInfoItem(AppLocalizations.of(context)!.astroBirthTime),
-                    _buildInfoItem(AppLocalizations.of(context)!.astroBirthPlace),
+                    _buildInfoItem(AppLocalizations.of(context).astroBirthDate),
+                    _buildInfoItem(AppLocalizations.of(context).astroBirthTime),
+                    _buildInfoItem(AppLocalizations.of(context).astroBirthPlace),
                   ],
                 ),
               ),
@@ -330,25 +330,25 @@ class _AstrologyTabState extends State<AstrologyTab> {
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.cardBackground,
         title: Text(
-          AppLocalizations.of(context)!.astroRecalcTitle,
+          AppLocalizations.of(context).astroRecalcTitle,
           style: TextStyle(color: context.gc.softWhite),
         ),
         content: Text(
-          AppLocalizations.of(context)!.astroRecalcConfirm,
+          AppLocalizations.of(context).astroRecalcConfirm,
           style: TextStyle(color: context.gc.softWhite),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
-              AppLocalizations.of(context)!.commonCancel,
+              AppLocalizations.of(context).commonCancel,
               style: TextStyle(color: context.gc.lilac),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
-              AppLocalizations.of(context)!.commonContinue,
+              AppLocalizations.of(context).commonContinue,
               style: TextStyle(color: context.gc.lilac),
             ),
           ),

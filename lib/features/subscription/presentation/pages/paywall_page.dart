@@ -59,7 +59,7 @@ class PaywallWidget extends StatelessWidget {
           onDismiss?.call();
           if (PaymentService().isPro) onPurchaseCompleted?.call();
         },
-        child: Text(AppLocalizations.of(context)!.premiumUnlock),
+        child: Text(AppLocalizations.of(context).premiumUnlock),
       ),
     );
   }

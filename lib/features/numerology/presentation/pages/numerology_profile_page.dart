@@ -11,7 +11,6 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/numerology_meanings_data.dart';
 import '../../domain/numerology_calculator.dart';
-import 'numerology_page.dart';
 
 /// Perfil pessoal: os 5 números-chave calculados de nome + nascimento.
 class NumerologyProfilePage extends StatefulWidget {
@@ -108,7 +107,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
     if (name.isEmpty || _birthDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.numFillNameAndDate),
+          content: Text(AppLocalizations.of(context).numFillNameAndDate),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -143,7 +142,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(access.message ??
-              AppLocalizations.of(context)!.numDailyLimit),
+              AppLocalizations.of(context).numDailyLimit),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -193,7 +192,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.numPersonalProfile),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).numPersonalProfile),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -205,7 +204,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.numYourBirthData,
+                    AppLocalizations.of(context).numYourBirthData,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -213,7 +212,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    AppLocalizations.of(context)!.numBirthNameHelp,
+                    AppLocalizations.of(context).numBirthNameHelp,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),
@@ -223,7 +222,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                     controller: _nameController,
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.numFullName,
+                      labelText: AppLocalizations.of(context).numFullName,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -239,8 +238,8 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                           const SizedBox(width: 8),
                           Text(
                             _birthDate == null
-                                ? AppLocalizations.of(context)!.numChooseBirthDate
-                                : '${AppLocalizations.of(context)!.numBirthPrefix}: '
+                                ? AppLocalizations.of(context).numChooseBirthDate
+                                : '${AppLocalizations.of(context).numBirthPrefix}: '
                                     '${_birthDate!.day.toString().padLeft(2, '0')}/'
                                     '${_birthDate!.month.toString().padLeft(2, '0')}/'
                                     '${_birthDate!.year}',
@@ -256,7 +255,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                     child: ElevatedButton.icon(
                       onPressed: _calculate,
                       icon: const Icon(Icons.calculate_outlined, size: 18),
-                      label: Text(AppLocalizations.of(context)!.numCalculate),
+                      label: Text(AppLocalizations.of(context).numCalculate),
                     ),
                   ),
                 ],
@@ -279,7 +278,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                     if (_aiText == null) ...[
                       // Ainda sem explicação para estes dados: mostra o botão.
                       Text(
-                        AppLocalizations.of(context)!.numSynthesisQuestion,
+                        AppLocalizations.of(context).numSynthesisQuestion,
                         style:
                             Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: context.gc.textSecondary,
@@ -300,15 +299,15 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                               )
                             : const Icon(Icons.auto_awesome, size: 18),
                         label: Text(_isExplaining
-                            ? AppLocalizations.of(context)!.numWeavingSynthesis
-                            : AppLocalizations.of(context)!
+                            ? AppLocalizations.of(context).numWeavingSynthesis
+                            : AppLocalizations.of(context)
                                 .numAdvisorExplanation),
                       ),
                     ] else ...[
                       // Explicação já gerada e persistida: mostra só o texto.
                       // O botão volta ao alterar nome ou data de nascimento.
                       Text(
-                        AppLocalizations.of(context)!.numAdvisorExplanation,
+                        AppLocalizations.of(context).numAdvisorExplanation,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: context.gc.lilac,

@@ -56,7 +56,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
     if (!context.read<AuthProvider>().canUsePalmistry) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.palmDailyLimitReached),
+          content: Text(AppLocalizations.of(context).palmDailyLimitReached),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -90,12 +90,12 @@ class _PalmistryPageState extends State<PalmistryPage> {
 
       if (bytes.length > _maxUploadBytes) {
         throw Exception(
-          AppLocalizations.of(context)!.palmImageTooLarge,
+          AppLocalizations.of(context).palmImageTooLarge,
         );
       }
       if (bytes.length < 20 * 1024) {
         throw Exception(
-          AppLocalizations.of(context)!.palmImageTooSmall,
+          AppLocalizations.of(context).palmImageTooSmall,
         );
       }
 
@@ -107,7 +107,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
     } catch (e) {
       if (!mounted) return;
       final message = e is AiRateLimitException
-          ? AppLocalizations.of(context)!.palmRateLimit
+          ? AppLocalizations.of(context).palmRateLimit
           : '$e'.replaceAll('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -128,13 +128,13 @@ class _PalmistryPageState extends State<PalmistryPage> {
     final date = '${now.day.toString().padLeft(2, '0')}/'
         '${now.month.toString().padLeft(2, '0')}/${now.year}';
     await context.read<FreeWritingProvider>().save(
-          FreeWritingModel(content: '🖐️ ${AppLocalizations.of(context)!.palmReadingHeader} — $date\n\n$reading'),
+          FreeWritingModel(content: '🖐️ ${AppLocalizations.of(context).palmReadingHeader} — $date\n\n$reading'),
         );
     if (!mounted) return;
     setState(() => _saved = true);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context)!.palmSavedToReflections),
+        content: Text(AppLocalizations.of(context).palmSavedToReflections),
         backgroundColor: context.gc.success,
       ),
     );
@@ -147,7 +147,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.toolPalmistryTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolPalmistryTitle),
       ),
       body: !access.hasFullAccess
           ? const SizedBox.shrink()
@@ -166,20 +166,20 @@ class _PalmistryPageState extends State<PalmistryPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context)!.palmHowTo,
+                  AppLocalizations.of(context).palmHowTo,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.lilac,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(height: 10),
-                _tip(context, AppLocalizations.of(context)!.palmTip1),
-                _tip(context, AppLocalizations.of(context)!.palmTip2),
-                _tip(context, AppLocalizations.of(context)!.palmTip3),
-                _tip(context, AppLocalizations.of(context)!.palmTip4),
+                _tip(context, AppLocalizations.of(context).palmTip1),
+                _tip(context, AppLocalizations.of(context).palmTip2),
+                _tip(context, AppLocalizations.of(context).palmTip3),
+                _tip(context, AppLocalizations.of(context).palmTip4),
                 const SizedBox(height: 10),
                 Text(
-                  AppLocalizations.of(context)!.palmPrivacyNote,
+                  AppLocalizations.of(context).palmPrivacyNote,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
                         fontStyle: FontStyle.italic,
@@ -196,7 +196,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                     onPressed:
                         _isAnalyzing ? null : () => _pick(ImageSource.camera),
                     icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                    label: Text(AppLocalizations.of(context)!.palmCamera),
+                    label: Text(AppLocalizations.of(context).palmCamera),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -205,7 +205,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                     onPressed:
                         _isAnalyzing ? null : () => _pick(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library_outlined, size: 18),
-                    label: Text(AppLocalizations.of(context)!.palmGallery),
+                    label: Text(AppLocalizations.of(context).palmGallery),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: context.gc.lilac,
                       side: BorderSide(color: context.gc.lilac),
@@ -220,7 +220,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
               child: Text(
-                '${AppLocalizations.of(context)!.palmRemainingToday}: '
+                '${AppLocalizations.of(context).palmRemainingToday}: '
                 '$remainingReadings',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -235,7 +235,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                   CircularProgressIndicator(color: context.gc.lilac),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.palmReadingLines,
+                    AppLocalizations.of(context).palmReadingLines,
                     style: TextStyle(color: context.gc.textSecondary),
                   ),
                 ],
@@ -247,7 +247,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.palmYourReading,
+                    AppLocalizations.of(context).palmYourReading,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -263,7 +263,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.palmDisclaimer,
+                    AppLocalizations.of(context).palmDisclaimer,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -279,7 +279,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
                         size: 18,
                       ),
                       label: Text(
-                        _saved ? AppLocalizations.of(context)!.palmSavedShort : AppLocalizations.of(context)!.palmSaveReading,
+                        _saved ? AppLocalizations.of(context).palmSavedShort : AppLocalizations.of(context).palmSaveReading,
                       ),
                     ),
                   ),

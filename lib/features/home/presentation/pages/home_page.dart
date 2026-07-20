@@ -132,7 +132,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       _lastBackPress = now;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.commonBackAgainToExit),
+          content: Text(AppLocalizations.of(context).commonBackAgainToExit),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -195,15 +195,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(Icons.auto_stories),
-                label: AppLocalizations.of(context)!.navEncyclopedia,
+                label: AppLocalizations.of(context).navEncyclopedia,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.stars_outlined),
-                label: AppLocalizations.of(context)!.navGrimoire,
+                label: AppLocalizations.of(context).navGrimoire,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.menu_book),
-                label: AppLocalizations.of(context)!.navDiaries,
+                label: AppLocalizations.of(context).navDiaries,
               ),
             ],
           ),

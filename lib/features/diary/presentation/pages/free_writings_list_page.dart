@@ -36,18 +36,18 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryReflections),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).diaryReflections),
       ),
       body: Consumer<FreeWritingProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingReflections);
+            return LoadingWidget(message: AppLocalizations.of(context).diaryLoadingReflections);
           }
 
           if (provider.freeWritings.isEmpty) {
             return EmptyStateWidget(
               message:
-                  AppLocalizations.of(context)!.diaryEmptyReflections,
+                  AppLocalizations.of(context).diaryEmptyReflections,
               icon: Icons.auto_stories,
             );
           }
@@ -106,12 +106,12 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.diaryDeleteReflectionTitle),
-        content: Text(AppLocalizations.of(context)!.diaryDeleteReflectionConfirm),
+        title: Text(AppLocalizations.of(context).diaryDeleteReflectionTitle),
+        content: Text(AppLocalizations.of(context).diaryDeleteReflectionConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(AppLocalizations.of(context)!.commonCancel),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () {
@@ -119,7 +119,7 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
               Navigator.pop(dialogContext);
             },
             style: TextButton.styleFrom(foregroundColor: context.gc.alert),
-            child: Text(AppLocalizations.of(context)!.commonDelete),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),

@@ -71,7 +71,7 @@ class _GrimoirePageState extends State<GrimoirePage>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.grimoirePageTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).grimoirePageTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -79,7 +79,7 @@ class _GrimoirePageState extends State<GrimoirePage>
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
-            tooltip: AppLocalizations.of(context)!.settingsTitle,
+            tooltip: AppLocalizations.of(context).settingsTitle,
           ),
         ],
         bottom: TabBar(
@@ -91,9 +91,9 @@ class _GrimoirePageState extends State<GrimoirePage>
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           labelPadding: const EdgeInsets.symmetric(horizontal: 16),
           tabs: [
-            Tab(text: AppLocalizations.of(context)!.grimoireTabAstrology),
-            Tab(text: AppLocalizations.of(context)!.grimoireTabTools),
-            Tab(text: AppLocalizations.of(context)!.grimoireTabMyGrimoire),
+            Tab(text: AppLocalizations.of(context).grimoireTabAstrology),
+            Tab(text: AppLocalizations.of(context).grimoireTabTools),
+            Tab(text: AppLocalizations.of(context).grimoireTabMyGrimoire),
           ],
         ),
       ),
@@ -125,14 +125,14 @@ class _ToolsTab extends StatelessWidget {
                 const Text('‧ ⛦ ‧', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 Text(
-                  AppLocalizations.of(context)!.toolsHeaderTitle,
+                  AppLocalizations.of(context).toolsHeaderTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context)!.toolsHeaderSubtitle,
+                  AppLocalizations.of(context).toolsHeaderSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: context.gc.softWhite.withOpacity(0.8),
                       ),
@@ -144,8 +144,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('📖', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolLivingGrimoireTitle,
-            description: AppLocalizations.of(context)!.toolLivingGrimoireDesc,
+            title: AppLocalizations.of(context).toolLivingGrimoireTitle,
+            description: AppLocalizations.of(context).toolLivingGrimoireDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -157,8 +157,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🔮', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolMysticAdvisorTitle,
-            description: AppLocalizations.of(context)!.toolMysticAdvisorDesc,
+            title: AppLocalizations.of(context).toolMysticAdvisorTitle,
+            description: AppLocalizations.of(context).toolMysticAdvisorDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -170,8 +170,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🎴', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolTarotTitle,
-            description: AppLocalizations.of(context)!.toolTarotDesc,
+            title: AppLocalizations.of(context).toolTarotTitle,
+            description: AppLocalizations.of(context).toolTarotDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -183,8 +183,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const SigilIcon(size: 40),
-            title: AppLocalizations.of(context)!.toolSigilsTitle,
-            description: AppLocalizations.of(context)!.toolSigilsDesc,
+            title: AppLocalizations.of(context).toolSigilsTitle,
+            description: AppLocalizations.of(context).toolSigilsDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -196,8 +196,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🌙', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolDreamsTitle,
-            description: AppLocalizations.of(context)!.toolDreamsDesc,
+            title: AppLocalizations.of(context).toolDreamsTitle,
+            description: AppLocalizations.of(context).toolDreamsDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -209,8 +209,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolPalmistryTitle,
-            description: AppLocalizations.of(context)!.toolPalmistryDesc,
+            title: AppLocalizations.of(context).toolPalmistryTitle,
+            description: AppLocalizations.of(context).toolPalmistryDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -222,8 +222,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🎭', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolArchetypeTitle,
-            description: AppLocalizations.of(context)!.toolArchetypeDesc,
+            title: AppLocalizations.of(context).toolArchetypeTitle,
+            description: AppLocalizations.of(context).toolArchetypeDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -235,8 +235,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🔢', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolNumerologyTitle,
-            description: AppLocalizations.of(context)!.toolNumerologyDesc,
+            title: AppLocalizations.of(context).toolNumerologyTitle,
+            description: AppLocalizations.of(context).toolNumerologyDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -248,8 +248,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolPendulumTitle,
-            description: AppLocalizations.of(context)!.toolPendulumDesc,
+            title: AppLocalizations.of(context).toolPendulumTitle,
+            description: AppLocalizations.of(context).toolPendulumDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -261,8 +261,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolRunesTitle,
-            description: AppLocalizations.of(context)!.toolRunesDesc,
+            title: AppLocalizations.of(context).toolRunesTitle,
+            description: AppLocalizations.of(context).toolRunesDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -274,8 +274,8 @@ class _ToolsTab extends StatelessWidget {
           _buildToolCard(
             context,
             icon: const Text('🃏', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context)!.toolOracleTitle,
-            description: AppLocalizations.of(context)!.toolOracleDesc,
+            title: AppLocalizations.of(context).toolOracleTitle,
+            description: AppLocalizations.of(context).toolOracleDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(

@@ -14,7 +14,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/theme_provider.dart';
 import 'core/database/database_helper.dart';
-import 'core/widgets/splash_screen.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/sync_provider.dart';
 import 'core/providers/language_provider.dart';

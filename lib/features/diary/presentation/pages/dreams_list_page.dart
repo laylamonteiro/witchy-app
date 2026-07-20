@@ -36,7 +36,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
       body: Consumer<DreamProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingDreams);
+            return LoadingWidget(message: AppLocalizations.of(context).diaryLoadingDreams);
           }
 
           if (provider.dreams.isEmpty) {
@@ -46,9 +46,9 @@ class _DreamsListPageState extends State<DreamsListPage> {
                 Expanded(
                   child: EmptyStateWidget(
                     message:
-                        AppLocalizations.of(context)!.diaryEmptyDreams,
+                        AppLocalizations.of(context).diaryEmptyDreams,
                     icon: Icons.nightlight,
-                    actionText: AppLocalizations.of(context)!.diaryRegisterDream,
+                    actionText: AppLocalizations.of(context).diaryRegisterDream,
                     onAction: () => _navigateToForm(context),
                   ),
                 ),
@@ -153,7 +153,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
             child: _buildToolChip(
               context,
               emoji: '🔮',
-              label: AppLocalizations.of(context)!.diaryInterpretDream,
+              label: AppLocalizations.of(context).diaryInterpretDream,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DreamInterpretationPage(),

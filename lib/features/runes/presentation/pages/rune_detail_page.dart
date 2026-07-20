@@ -70,7 +70,7 @@ class RuneDetailPage extends StatelessWidget {
                       const Text('✨', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        AppLocalizations.of(context)!.runesKeywords,
+                        AppLocalizations.of(context).runesKeywords,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -118,7 +118,7 @@ class RuneDetailPage extends StatelessWidget {
                       const Text('📖', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        AppLocalizations.of(context)!.runesMeaning,
+                        AppLocalizations.of(context).runesMeaning,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -154,7 +154,7 @@ class RuneDetailPage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        AppLocalizations.of(context)!.runesRemember,
+                        AppLocalizations.of(context).runesRemember,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: context.gc.textSecondary,
                               fontStyle: FontStyle.italic,

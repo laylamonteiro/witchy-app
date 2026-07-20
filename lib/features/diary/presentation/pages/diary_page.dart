@@ -61,7 +61,7 @@ class _DiaryPageState extends State<DiaryPage>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryPageTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).diaryPageTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -69,7 +69,7 @@ class _DiaryPageState extends State<DiaryPage>
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             ),
-            tooltip: AppLocalizations.of(context)!.settingsTitle,
+            tooltip: AppLocalizations.of(context).settingsTitle,
           ),
         ],
         bottom: TabBar(
@@ -81,11 +81,11 @@ class _DiaryPageState extends State<DiaryPage>
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           labelPadding: const EdgeInsets.symmetric(horizontal: 13),
           tabs: [
-            Tab(text: AppLocalizations.of(context)!.diaryTabGratitude),
-            Tab(text: AppLocalizations.of(context)!.diaryTabAffirmations),
+            Tab(text: AppLocalizations.of(context).diaryTabGratitude),
+            Tab(text: AppLocalizations.of(context).diaryTabAffirmations),
             const Tab(child: Text('💭', style: TextStyle(fontSize: 16))),
-            Tab(text: AppLocalizations.of(context)!.diaryTabDreams),
-            Tab(text: AppLocalizations.of(context)!.diaryTabDesires),
+            Tab(text: AppLocalizations.of(context).diaryTabDreams),
+            Tab(text: AppLocalizations.of(context).diaryTabDesires),
           ],
         ),
       ),

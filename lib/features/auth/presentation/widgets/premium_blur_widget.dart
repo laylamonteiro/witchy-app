@@ -220,7 +220,7 @@ class PremiumContentSection extends StatelessWidget {
           showPremiumUpgradePaywall(context);
         },
         icon: const Icon(Icons.star, size: 18),
-        label: Text(AppLocalizations.of(context)!.premiumBePremium),
+        label: Text(AppLocalizations.of(context).premiumBePremium),
         style: ElevatedButton.styleFrom(
           backgroundColor: context.gc.lilac,
           foregroundColor: context.gc.onPrimary,
@@ -396,7 +396,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                     alignment: Alignment.centerRight,
                     child: IconButton(
                       key: const ValueKey('close_premium_paywall'),
-                      tooltip: AppLocalizations.of(context)!.commonClose,
+                      tooltip: AppLocalizations.of(context).commonClose,
                       onPressed: () => Navigator.pop(context),
                       icon: Icon(Icons.close, color: context.gc.textSecondary),
                     ),
@@ -455,7 +455,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                 onPurchase: _purchaseSelectedPlan,
                                 unavailableNotice: noProducts
                                     ? Text(
-                                        AppLocalizations.of(context)!.premiumPlansUnavailable,
+                                        AppLocalizations.of(context).premiumPlansUnavailable,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(color: context.gc.warning),
                                       )
@@ -492,7 +492,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
         Navigator.pop(context);
         messenger.showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.premiumActivated),
+            content: Text(AppLocalizations.of(context).premiumActivated),
             backgroundColor: Colors.green,
           ),
         );
@@ -500,7 +500,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              result.errorMessage ?? AppLocalizations.of(context)!.premiumPurchaseFailed,
+              result.errorMessage ?? AppLocalizations.of(context).premiumPurchaseFailed,
             ),
             backgroundColor: Colors.red,
           ),
@@ -557,7 +557,7 @@ class PremiumPreviewWrapper extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        previewMessage ?? access.message ?? AppLocalizations.of(context)!.premiumContentLabel,
+                        previewMessage ?? access.message ?? AppLocalizations.of(context).premiumContentLabel,
                         style: TextStyle(
                           color: context.gc.textPrimary,
                           fontSize: 12,
@@ -572,7 +572,7 @@ class PremiumPreviewWrapper extends StatelessWidget {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: Text(
-                        AppLocalizations.of(context)!.premiumUpgradeAction,
+                        AppLocalizations.of(context).premiumUpgradeAction,
                         style: TextStyle(
                           color: context.gc.textPrimary,
                           fontWeight: FontWeight.bold,

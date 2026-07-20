@@ -70,14 +70,14 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _stat(context, '🔥', AppLocalizations.of(context)!.tarotBestCombo, '$_bestCombo'),
-                    _stat(context, '📅', AppLocalizations.of(context)!.tarotDayStreak, '$_dayStreak'),
-                    _stat(context, '🎯', AppLocalizations.of(context)!.tarotAccuracy, '$accuracy%'),
+                    _stat(context, '🔥', AppLocalizations.of(context).tarotBestCombo, '$_bestCombo'),
+                    _stat(context, '📅', AppLocalizations.of(context).tarotDayStreak, '$_dayStreak'),
+                    _stat(context, '🎯', AppLocalizations.of(context).tarotAccuracy, '$accuracy%'),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context)!.tarotAnsweredOf('$_answered', '${tarotCards.length}'),
+                  AppLocalizations.of(context).tarotAnsweredOf('$_answered', '${tarotCards.length}'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
                       ),
@@ -100,7 +100,7 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.tarotLibraryTitle,
+                          AppLocalizations.of(context).tarotLibraryTitle,
                           style: Theme.of(context)
                               .textTheme
                               .titleMedium
@@ -110,7 +110,7 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                               ),
                         ),
                         Text(
-                          AppLocalizations.of(context)!.tarotLibraryDesc,
+                          AppLocalizations.of(context).tarotLibraryDesc,
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall
@@ -129,7 +129,7 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  AppLocalizations.of(context)!.tarotQuizTitle,
+                  AppLocalizations.of(context).tarotQuizTitle,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.lilac,
@@ -138,7 +138,7 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context)!.tarotQuizDesc,
+                  AppLocalizations.of(context).tarotQuizDesc,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
@@ -148,7 +148,7 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                 ElevatedButton.icon(
                   onPressed: _startSession,
                   icon: const Icon(Icons.play_arrow, size: 18),
-                  label: Text(AppLocalizations.of(context)!.tarotQuizStart),
+                  label: Text(AppLocalizations.of(context).tarotQuizStart),
                 ),
               ],
             ),
@@ -443,12 +443,12 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: dialogContext.gc.surface,
         title: Text(
-          _sessionCorrect >= 7 ? AppLocalizations.of(context)!.tarotQuizBrilliant : AppLocalizations.of(context)!.tarotQuizDone,
+          _sessionCorrect >= 7 ? AppLocalizations.of(context).tarotQuizBrilliant : AppLocalizations.of(context).tarotQuizDone,
           style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
-          AppLocalizations.of(context)!.tarotQuizScore('$_sessionCorrect', '${_questions.length}') +
-              (_sessionCorrect >= 7 ? AppLocalizations.of(context)!.tarotQuizPraise : AppLocalizations.of(context)!.tarotQuizEncourage),
+          AppLocalizations.of(context).tarotQuizScore('$_sessionCorrect', '${_questions.length}') +
+              (_sessionCorrect >= 7 ? AppLocalizations.of(context).tarotQuizPraise : AppLocalizations.of(context).tarotQuizEncourage),
           style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
@@ -457,7 +457,7 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
               Navigator.pop(dialogContext);
               Navigator.pop(context);
             },
-            child: Text(AppLocalizations.of(context)!.tarotQuizFinish),
+            child: Text(AppLocalizations.of(context).tarotQuizFinish),
           ),
         ],
       ),
@@ -510,7 +510,7 @@ class _TarotQuizPageState extends State<TarotQuizPage> {
             ],
             Text(
               question.card != null
-                  ? AppLocalizations.of(context)!
+                  ? AppLocalizations.of(context)
                       .tarotQuizQuestion(question.card!.name)
                   : question.prompt!,
               textAlign: TextAlign.center,

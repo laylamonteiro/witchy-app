@@ -46,7 +46,7 @@ class _RecordFormPageState extends State<RecordFormPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context)!.recordUpdated),
+        content: Text(AppLocalizations.of(context).recordUpdated),
         backgroundColor: context.gc.success,
       ),
     );
@@ -55,7 +55,7 @@ class _RecordFormPageState extends State<RecordFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(l10n.recordEditTitle),

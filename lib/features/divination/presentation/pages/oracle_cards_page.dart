@@ -50,7 +50,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              AppLocalizations.of(context)!.oracleDailyLimit),
+              AppLocalizations.of(context).oracleDailyLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -130,7 +130,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.oracleTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).oracleTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -146,7 +146,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                     const Text('🔮', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      AppLocalizations.of(context)!.oracleTitle,
+                      AppLocalizations.of(context).oracleTitle,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: context.gc.lilac,
@@ -154,7 +154,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.oracleSubtitle,
+                      AppLocalizations.of(context).oracleSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: context.gc.softWhite.withOpacity(0.8),
                           ),
@@ -188,7 +188,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                         ),
                       )
                     : const Icon(Icons.auto_awesome),
-                label: Text(_isDrawing ? AppLocalizations.of(context)!.oracleDrawing : AppLocalizations.of(context)!.oracleDraw),
+                label: Text(_isDrawing ? AppLocalizations.of(context).oracleDrawing : AppLocalizations.of(context).oracleDraw),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
@@ -209,7 +209,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      AppLocalizations.of(context)!.oracleRemainingToday('$remaining/${UserModel.freeOracleReadingsLimit}'),
+                      AppLocalizations.of(context).oracleRemainingToday('$remaining/${UserModel.freeOracleReadingsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
                             ? context.gc.softWhite.withOpacity(0.6)
@@ -233,7 +233,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: Text(AppLocalizations.of(context)!.oracleNewReading),
+                label: Text(AppLocalizations.of(context).oracleNewReading),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: context.gc.lilac,
                   side: BorderSide(color: context.gc.lilac),
@@ -321,7 +321,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               const Text('✨', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 16),
               Text(
-                AppLocalizations.of(context)!.oracleYourReading,
+                AppLocalizations.of(context).oracleYourReading,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: context.gc.lilac,
                     ),

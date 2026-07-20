@@ -25,7 +25,7 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.profileTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).profileTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -89,7 +89,7 @@ class ProfilePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              user.displayName ?? AppLocalizations.of(context)!.profileAnonymous,
+              user.displayName ?? AppLocalizations.of(context).profileAnonymous,
               style: TextStyle(
                 color: context.gc.textPrimary,
                 fontSize: 22,
@@ -139,7 +139,7 @@ class ProfilePage extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text(
-          AppLocalizations.of(context)!.profileEditName,
+          AppLocalizations.of(context).profileEditName,
           style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
@@ -147,7 +147,7 @@ class ProfilePage extends StatelessWidget {
           autofocus: true,
           style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)!.authNameHint,
+            hintText: AppLocalizations.of(context).authNameHint,
             hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -164,7 +164,7 @@ class ProfilePage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              AppLocalizations.of(context)!.commonCancel,
+              AppLocalizations.of(context).commonCancel,
               style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
@@ -181,7 +181,7 @@ class ProfilePage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF9C27B0),
             ),
-            child: Text(AppLocalizations.of(context)!.commonSave),
+            child: Text(AppLocalizations.of(context).commonSave),
           ),
         ],
       ),
@@ -225,7 +225,7 @@ class ProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isFree ? AppLocalizations.of(context)!.profileFreePlan : AppLocalizations.of(context)!.profilePremiumPlan,
+                      isFree ? AppLocalizations.of(context).profileFreePlan : AppLocalizations.of(context).profilePremiumPlan,
                       style: TextStyle(
                         color: context.gc.textPrimary,
                         fontSize: 18,
@@ -234,8 +234,8 @@ class ProfilePage extends StatelessWidget {
                     ),
                     Text(
                       isFree
-                          ? AppLocalizations.of(context)!.profileFreePlanDesc
-                          : AppLocalizations.of(context)!.profilePremiumPlanDesc,
+                          ? AppLocalizations.of(context).profileFreePlanDesc
+                          : AppLocalizations.of(context).profilePremiumPlanDesc,
                       style: TextStyle(
                         color: context.gc.textPrimary.withValues(alpha: 0.7),
                         fontSize: 12,
@@ -266,7 +266,7 @@ class ProfilePage extends StatelessWidget {
                     Icon(Icons.auto_awesome, size: 18),
                     SizedBox(width: 8),
                     Text(
-                      AppLocalizations.of(context)!.profileUpgrade,
+                      AppLocalizations.of(context).profileUpgrade,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -293,7 +293,7 @@ class ProfilePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!.profileFreeUsage,
+            AppLocalizations.of(context).profileFreeUsage,
             style: TextStyle(
               color: context.gc.textPrimary,
               fontSize: 16,
@@ -303,7 +303,7 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 16),
           _buildUsageRow(
             context,
-            AppLocalizations.of(context)!.profileSpells,
+            AppLocalizations.of(context).profileSpells,
             user.spellsCount,
             UserModel.freeSpellsLimit,
             Icons.auto_fix_high,
@@ -311,20 +311,20 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            AppLocalizations.of(context)!.profileDiaryEntries,
+            AppLocalizations.of(context).profileDiaryEntries,
             user.diaryEntriesThisMonth,
             UserModel.freeDiaryEntriesLimit,
             Icons.book,
-            subtitle: AppLocalizations.of(context)!.profileThisMonth,
+            subtitle: AppLocalizations.of(context).profileThisMonth,
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            AppLocalizations.of(context)!.profileMysticAdvisor,
+            AppLocalizations.of(context).profileMysticAdvisor,
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
             Icons.psychology,
-            subtitle: AppLocalizations.of(context)!.profileToday,
+            subtitle: AppLocalizations.of(context).profileToday,
           ),
         ],
       ),
@@ -415,7 +415,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.person_outline,
-            title: AppLocalizations.of(context)!.profileEditProfile,
+            title: AppLocalizations.of(context).profileEditProfile,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const EditProfilePage()),
@@ -426,7 +426,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.card_membership,
-            title: AppLocalizations.of(context)!.profileManageSubscription,
+            title: AppLocalizations.of(context).profileManageSubscription,
             onTap: () => _handleManageSubscription(context, paymentService),
           ),
           _buildDivider(context),
@@ -434,7 +434,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.analytics_outlined,
-            title: AppLocalizations.of(context)!.profileMagicalStats,
+            title: AppLocalizations.of(context).profileMagicalStats,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
@@ -445,7 +445,7 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.explore_outlined,
-            title: AppLocalizations.of(context)!.profileMagicalJourneys,
+            title: AppLocalizations.of(context).profileMagicalJourneys,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),
@@ -455,28 +455,28 @@ class ProfilePage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.notifications_outlined,
-            title: AppLocalizations.of(context)!.profileNotifications,
+            title: AppLocalizations.of(context).profileNotifications,
             onTap: () => _showNotificationsDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.help_outline,
-            title: AppLocalizations.of(context)!.profileHelpSupport,
+            title: AppLocalizations.of(context).profileHelpSupport,
             onTap: () => _showHelpDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.info_outline,
-            title: AppLocalizations.of(context)!.profileAboutApp,
+            title: AppLocalizations.of(context).profileAboutApp,
             onTap: () => _showAboutDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.logout,
-            title: AppLocalizations.of(context)!.profileLogout,
+            title: AppLocalizations.of(context).profileLogout,
             textColor: const Color(0xFFF44336),
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
@@ -699,13 +699,13 @@ class ProfilePage extends StatelessWidget {
             Icon(Icons.notifications_outlined, color: Color(0xFF9C27B0)),
             SizedBox(width: 8),
             Text(
-              AppLocalizations.of(context)!.profileNotifications,
+              AppLocalizations.of(context).profileNotifications,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
         content: Text(
-          AppLocalizations.of(context)!.profileNotificationsSoon,
+          AppLocalizations.of(context).profileNotificationsSoon,
           style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
@@ -731,7 +731,7 @@ class ProfilePage extends StatelessWidget {
             Icon(Icons.help_outline, color: Color(0xFF9C27B0)),
             SizedBox(width: 8),
             Text(
-              AppLocalizations.of(context)!.profileHelpSupport,
+              AppLocalizations.of(context).profileHelpSupport,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
@@ -743,7 +743,7 @@ class ProfilePage extends StatelessWidget {
             _buildHelpItem(
               context,
               icon: Icons.email_outlined,
-              title: AppLocalizations.of(context)!.profileSupportEmail,
+              title: AppLocalizations.of(context).profileSupportEmail,
               subtitle: 'suporte@grimoriodebolso.com',
               onTap: () => _launchEmail(),
             ),
@@ -752,15 +752,15 @@ class ProfilePage extends StatelessWidget {
               context,
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
-              subtitle: AppLocalizations.of(context)!.profileFaq,
+              subtitle: AppLocalizations.of(context).profileFaq,
               onTap: () => _launchFaq(),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
               context,
               icon: Icons.policy_outlined,
-              title: AppLocalizations.of(context)!.authPrivacyPolicy,
-              subtitle: AppLocalizations.of(context)!.profilePrivacySafe,
+              title: AppLocalizations.of(context).authPrivacyPolicy,
+              subtitle: AppLocalizations.of(context).profilePrivacySafe,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
               ),
@@ -771,7 +771,7 @@ class ProfilePage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              AppLocalizations.of(context)!.commonClose,
+              AppLocalizations.of(context).commonClose,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
           ),
@@ -869,17 +869,17 @@ class ProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppLocalizations.of(context)!.aboutVersion(packageInfo.version, packageInfo.buildNumber),
+              AppLocalizations.of(context).aboutVersion(packageInfo.version, packageInfo.buildNumber),
               style: TextStyle(color: context.gc.textSecondary),
             ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)!.aboutDescription,
+              AppLocalizations.of(context).aboutDescription,
               style: TextStyle(color: context.gc.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)!.aboutMadeWith,
+              AppLocalizations.of(context).aboutMadeWith,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
             const SizedBox(height: 8),
@@ -893,7 +893,7 @@ class ProfilePage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              AppLocalizations.of(context)!.commonClose,
+              AppLocalizations.of(context).commonClose,
               style: TextStyle(color: Color(0xFF9C27B0)),
             ),
           ),

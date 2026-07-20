@@ -36,15 +36,15 @@ class _DesiresListPageState extends State<DesiresListPage> {
       body: Consumer<DesireProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingDesires);
+            return LoadingWidget(message: AppLocalizations.of(context).diaryLoadingDesires);
           }
 
           if (provider.desires.isEmpty) {
             return EmptyStateWidget(
               message:
-                  AppLocalizations.of(context)!.diaryEmptyDesires,
+                  AppLocalizations.of(context).diaryEmptyDesires,
               icon: Icons.auto_awesome,
-              actionText: AppLocalizations.of(context)!.diaryAddDesire,
+              actionText: AppLocalizations.of(context).diaryAddDesire,
               onAction: () => _navigateToForm(context),
             );
           }
@@ -64,7 +64,7 @@ class _DesiresListPageState extends State<DesiresListPage> {
                           child: Text(
                             // Sigilos nunca revelam a intenção — título fixo.
                             desire.hasSigilImage
-                                ? AppLocalizations.of(context)!
+                                ? AppLocalizations.of(context)
                                     .diaryDesireSigilTitle
                                 : desire.title,
                             style: Theme.of(context).textTheme.titleLarge,

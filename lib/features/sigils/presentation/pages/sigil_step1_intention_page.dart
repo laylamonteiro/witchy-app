@@ -60,7 +60,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.sigilCreateTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).sigilCreateTitle),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -78,21 +78,21 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                       const SigilIcon(size: 32),
                       const SizedBox(width: 12),
                       Text(
-                        AppLocalizations.of(context)!.sigilWhatIs,
+                        AppLocalizations.of(context).sigilWhatIs,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.sigilWhatIsDesc,
+                    AppLocalizations.of(context).sigilWhatIsDesc,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.sigilHowIntro,
+                    AppLocalizations.of(context).sigilHowIntro,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -105,7 +105,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
 
             // Título da etapa - DEPOIS
             Text(
-              AppLocalizations.of(context)!.sigilSetIntention,
+              AppLocalizations.of(context).sigilSetIntention,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
@@ -117,14 +117,14 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.sigilIntentionWord,
+                    AppLocalizations.of(context).sigilIntentionWord,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _intentionController,
                     decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.sigilTypeWord,
+                      hintText: AppLocalizations.of(context).sigilTypeWord,
                       hintStyle: TextStyle(
                         color: context.gc.textSecondary.withOpacity(0.5),
                       ),
@@ -154,7 +154,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context)!.sigilOneWordWarning,
+                    AppLocalizations.of(context).sigilOneWordWarning,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: _intentionController.text.contains(' ')
                               ? Colors.red.shade300
@@ -172,18 +172,18 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.sigilExamplesHeader,
+                    AppLocalizations.of(context).sigilExamplesHeader,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 12),
-                  _buildExample(AppLocalizations.of(context)!.sigilExample1),
-                  _buildExample(AppLocalizations.of(context)!.sigilExample2),
-                  _buildExample(AppLocalizations.of(context)!.sigilExample3),
-                  _buildExample(AppLocalizations.of(context)!.sigilExample4),
-                  _buildExample(AppLocalizations.of(context)!.sigilExample5),
+                  _buildExample(AppLocalizations.of(context).sigilExample1),
+                  _buildExample(AppLocalizations.of(context).sigilExample2),
+                  _buildExample(AppLocalizations.of(context).sigilExample3),
+                  _buildExample(AppLocalizations.of(context).sigilExample4),
+                  _buildExample(AppLocalizations.of(context).sigilExample5),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context)!.sigilWordTip,
+                    AppLocalizations.of(context).sigilWordTip,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -197,7 +197,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
             // Botão continuar
             if (_canContinue)
               MagicalButton(
-                text: AppLocalizations.of(context)!.commonContinue,
+                text: AppLocalizations.of(context).commonContinue,
                 onPressed: _continue,
               )
             else
@@ -207,7 +207,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
-                  AppLocalizations.of(context)!.commonContinue,
+                  AppLocalizations.of(context).commonContinue,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.textSecondary,
                       ),

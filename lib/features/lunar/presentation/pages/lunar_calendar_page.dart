@@ -34,7 +34,6 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
     final content = Consumer<LunarProvider>(
       builder: (context, lunarProvider, _) {
         try {
-          final currentPhase = lunarProvider.getCurrentMoonPhase();
           final dateFormat = DateFormat('dd/MM/yyyy');
 
           return SingleChildScrollView(

@@ -35,15 +35,15 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
       body: Consumer<GratitudeProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingGratitudes);
+            return LoadingWidget(message: AppLocalizations.of(context).diaryLoadingGratitudes);
           }
 
           if (provider.gratitudes.isEmpty) {
             return EmptyStateWidget(
               message:
-                  AppLocalizations.of(context)!.diaryEmptyGratitudes,
+                  AppLocalizations.of(context).diaryEmptyGratitudes,
               icon: Icons.favorite,
-              actionText: AppLocalizations.of(context)!.diaryAddGratitude,
+              actionText: AppLocalizations.of(context).diaryAddGratitude,
               onAction: () => _navigateToForm(context),
             );
           }
