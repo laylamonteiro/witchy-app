@@ -145,8 +145,9 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     }
   }
 
-  /// Salva a intenção do sigilo no Diário de Desejos (Premium, sincroniza
-  /// na nuvem via DesireProvider/DataSyncService).
+  /// Salva o sigilo no Diário de Desejos como IMAGEM (Premium, sincroniza na
+  /// nuvem via DesireProvider/DataSyncService). Guardamos o PNG do desenho —
+  /// não um texto — justamente por se tratar de um sigilo.
   Future<void> _saveToDesires() async {
     final authProvider = context.read<AuthProvider>();
     if (!authProvider.isPremiumEffective) {
@@ -160,18 +161,39 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     }
 
     final l10n = AppLocalizations.of(context)!;
-    final desire = DesireModel(
-      title: widget.sigil.intention,
-      description: l10n.sigilDesireDescription(widget.sigil.intention),
-    );
-    await context.read<DesireProvider>().addDesire(desire);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.sigilSavedToDesires),
-        backgroundColor: context.gc.success,
-      ),
-    );
+    try {
+      final boundary = _drawingKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) {
+        throw Exception(l10n.sigilDrawingNotReady);
+      }
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception(l10n.sigilImageError);
+      }
+      final desire = DesireModel(
+        title: widget.sigil.intention,
+        description:
+            DesireModel.encodeSigilImage(byteData.buffer.asUint8List()),
+      );
+      await context.read<DesireProvider>().addDesire(desire);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.sigilSavedToDesires),
+          backgroundColor: context.gc.success,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$e'.replaceAll('Exception: ', '')),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+    }
   }
 
   /// Embaralha as posições das letras na roda (como no "Sigilo Nada" do livro)
@@ -466,23 +488,31 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
             ),
             const SizedBox(height: 24),
 
-            // Salvar a intenção no Diário de Desejos (Premium, sincroniza)
-            OutlinedButton.icon(
-              onPressed: _saveToDesires,
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: Text(AppLocalizations.of(context)!.sigilSaveToDesires),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.gc.lilac,
-                side: BorderSide(color: context.gc.lilac.withOpacity(0.5)),
-                minimumSize: const Size.fromHeight(48),
+            // Salvar o sigilo no Diário de Desejos (Premium, sincroniza).
+            // Padding horizontal de 16 para acompanhar a largura dos cards
+            // (o MagicalCard tem margem lateral própria de 16).
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: OutlinedButton.icon(
+                onPressed: _saveToDesires,
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: Text(AppLocalizations.of(context)!.sigilSaveToDesires),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.gc.lilac,
+                  side: BorderSide(color: context.gc.lilac.withOpacity(0.5)),
+                  minimumSize: const Size.fromHeight(48),
+                ),
               ),
             ),
             const SizedBox(height: 12),
 
             // Botão finalizar
-            MagicalButton(
-              text: _isSaving ? AppLocalizations.of(context)!.commonSaving : AppLocalizations.of(context)!.commonFinish,
-              onPressed: _saveAndFinish,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: MagicalButton(
+                text: _isSaving ? AppLocalizations.of(context)!.commonSaving : AppLocalizations.of(context)!.commonFinish,
+                onPressed: _saveAndFinish,
+              ),
             ),
             const SizedBox(height: 16),
           ],

@@ -1104,6 +1104,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diaryDescLabel => 'Descrição';
 
   @override
+  String get diaryDesireSigilImage => 'Imagem do sigilo';
+
+  @override
   String get diaryDesireDescHint => 'Descreva seu desejo em detalhes';
 
   @override
@@ -3723,6 +3726,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get diaryDescLabel => 'Descrição';
+
+  @override
+  String get diaryDesireSigilImage => 'Imagem do sigilo';
 
   @override
   String get diaryDesireDescHint => 'Descreva seu desejo em detalhes';

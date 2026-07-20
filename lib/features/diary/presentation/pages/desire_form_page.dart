@@ -71,14 +71,19 @@ class _DesireFormPageState extends State<DesireFormPage> {
               ),
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryDescLabel,
-                hintText: AppLocalizations.of(context)!.diaryDesireDescHint,
+            // Desejos criados a partir de um Sigilo guardam a imagem do
+            // desenho em vez de descrição em texto — mostramos o sigilo.
+            if (widget.desire?.hasSigilImage == true)
+              _buildSigilImage(context)
+            else
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.diaryDescLabel,
+                  hintText: AppLocalizations.of(context)!.diaryDesireDescHint,
+                ),
+                maxLines: 5,
               ),
-              maxLines: 5,
-            ),
             const SizedBox(height: 16),
             DropdownButtonFormField<DesireStatus>(
               value: _selectedStatus,
@@ -121,6 +126,38 @@ class _DesireFormPageState extends State<DesireFormPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSigilImage(BuildContext context) {
+    final bytes = widget.desire?.sigilImageBytes;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppLocalizations.of(context)!.diaryDesireSigilImage,
+          style: TextStyle(
+            color: context.gc.textSecondary,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: context.gc.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.gc.surfaceBorder),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: bytes != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(bytes, fit: BoxFit.contain),
+                )
+              : Icon(Icons.broken_image_outlined,
+                  color: context.gc.textSecondary),
+        ),
+      ],
     );
   }
 

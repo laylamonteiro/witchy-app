@@ -76,12 +76,15 @@ class _DesiresListPageState extends State<DesiresListPage> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      desire.description,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                    if (desire.hasSigilImage)
+                      _buildSigilThumb(context, desire)
+                    else
+                      Text(
+                        desire.description,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -109,6 +112,23 @@ class _DesiresListPageState extends State<DesiresListPage> {
       floatingActionButton: MagicalFAB(
         onPressed: () => _navigateToForm(context),
         icon: Icons.auto_awesome,
+      ),
+    );
+  }
+
+  Widget _buildSigilThumb(BuildContext context, DesireModel desire) {
+    final bytes = desire.sigilImageBytes;
+    if (bytes == null) return const SizedBox.shrink();
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          bytes,
+          height: 90,
+          width: 90,
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
