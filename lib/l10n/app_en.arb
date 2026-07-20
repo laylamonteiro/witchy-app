@@ -477,6 +477,9 @@
   "tarotQuizFinish": "Finish",
   "tarotQuizQuestion": "What does {card} represent?",
   "palmImageTooLarge": "The image is too large. Try less zoom or another photo.",
+  "palmRateLimit": "Too many readings in a short time. Please wait a moment and send the photo again.",
+  "palmDailyLimitReached": "You've used your palm readings for today. Come back tomorrow for more. ✨",
+  "palmRemainingToday": "Readings left today",
   "palmImageTooSmall": "The image looks too small or dark to read. Photograph your palm well lit, filling the screen.",
   "palmReadingHeader": "Palm Reading",
   "palmSavedToReflections": "Reading saved to your Reflections! ✨",
@@ -559,6 +562,7 @@
   "sigilImageError": "Failed to generate the image",
   "sigilSavedToGallery": "Sigil saved to gallery! ✨",
   "sigilSaveToDesires": "Save to Wishes Journal",
+  "sigilSavedToDesiresShort": "Saved to Wishes Journal",
   "sigilSavedToDesires": "Sigil saved to your Wishes Journal! ✨",
   "sigilDesireDescription": "Sigil created to manifest this intention: {intention}",
   "@sigilDesireDescription": {

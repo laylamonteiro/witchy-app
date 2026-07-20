@@ -2871,6 +2871,13 @@ abstract class AppLocalizations {
   ///
   /// In pt, this message translates to:
   /// **'A imagem ficou grande demais. Tente com menos zoom ou outra foto.'**
+  /// No description provided for @palmRateLimit.
+  String get palmRemainingToday;
+
+  String get palmDailyLimitReached;
+
+  String get palmRateLimit;
+
   String get palmImageTooLarge;
 
   /// No description provided for @palmImageTooSmall.

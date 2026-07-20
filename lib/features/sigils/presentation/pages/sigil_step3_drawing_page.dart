@@ -46,6 +46,10 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
   Map<String, WheelPosition>? _shuffledPositions;
   bool _isSaving = false;
 
+  /// Estado do salvamento no Diário de Desejos (independente do "Finalizar").
+  bool _isSavingToDesires = false;
+  bool _savedToDesires = false;
+
   Future<void> _saveAndFinish() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
@@ -149,6 +153,8 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
   /// nuvem via DesireProvider/DataSyncService). Guardamos o PNG do desenho —
   /// não um texto — justamente por se tratar de um sigilo.
   Future<void> _saveToDesires() async {
+    if (_isSavingToDesires || _savedToDesires) return;
+
     final authProvider = context.read<AuthProvider>();
     if (!authProvider.isPremiumEffective) {
       showModalBottomSheet(
@@ -161,15 +167,21 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     }
 
     final l10n = AppLocalizations.of(context)!;
+    setState(() => _isSavingToDesires = true);
     try {
       final boundary = _drawingKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) {
         throw Exception(l10n.sigilDrawingNotReady);
       }
-      // Mesma captura da exportação para galeria: gera a imagem exatamente
-      // como o usuário deixou (roda, letras e pontos visíveis ou não).
-      final image = await boundary.toImage(pixelRatio: 3.0);
+      // Miniatura leve (~320px): guardamos a imagem como base64 na descrição
+      // do desejo, que sincroniza como texto. Uma resolução menor mantém o
+      // sigilo legível no card e evita payloads grandes que falham no sync.
+      // (A exportação para a galeria continua em alta resolução.)
+      const targetWidth = 320.0;
+      final logicalWidth = boundary.size.width;
+      final ratio = logicalWidth > 0 ? targetWidth / logicalWidth : 1.0;
+      final image = await boundary.toImage(pixelRatio: ratio);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         throw Exception(l10n.sigilImageError);
@@ -180,8 +192,14 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
         description:
             DesireModel.encodeSigilImage(byteData.buffer.asUint8List()),
       );
+      // Persiste na hora (insere no banco e sincroniza) — não depende de
+      // tocar em "Finalizar".
       await context.read<DesireProvider>().addDesire(desire);
       if (!mounted) return;
+      setState(() {
+        _isSavingToDesires = false;
+        _savedToDesires = true;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.sigilSavedToDesires),
@@ -190,6 +208,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       );
     } catch (e) {
       if (!mounted) return;
+      setState(() => _isSavingToDesires = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$e'.replaceAll('Exception: ', '')),
@@ -497,12 +516,42 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: OutlinedButton.icon(
-                onPressed: _saveToDesires,
-                icon: const Icon(Icons.auto_awesome, size: 18),
-                label: Text(AppLocalizations.of(context)!.sigilSaveToDesires),
+                onPressed: (_isSavingToDesires || _savedToDesires)
+                    ? null
+                    : _saveToDesires,
+                icon: _isSavingToDesires
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: context.gc.lilac,
+                        ),
+                      )
+                    : Icon(
+                        _savedToDesires
+                            ? Icons.check_circle
+                            : Icons.auto_awesome,
+                        size: 18,
+                      ),
+                label: Text(
+                  _savedToDesires
+                      ? AppLocalizations.of(context)!.sigilSavedToDesiresShort
+                      : AppLocalizations.of(context)!.sigilSaveToDesires,
+                ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: context.gc.lilac,
-                  side: BorderSide(color: context.gc.lilac.withOpacity(0.5)),
+                  foregroundColor:
+                      _savedToDesires ? context.gc.success : context.gc.lilac,
+                  // Mantém o verde/lilás mesmo com o botão desabilitado
+                  // (salvo ou salvando).
+                  disabledForegroundColor:
+                      _savedToDesires ? context.gc.success : context.gc.lilac,
+                  side: BorderSide(
+                    color: (_savedToDesires
+                            ? context.gc.success
+                            : context.gc.lilac)
+                        .withOpacity(0.5),
+                  ),
                   minimumSize: const Size.fromHeight(48),
                 ),
               ),

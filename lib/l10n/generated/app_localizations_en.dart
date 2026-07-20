@@ -1486,6 +1486,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  @override
+  String get palmRemainingToday => 'Readings left today';
+
+  @override
+  String get palmDailyLimitReached =>
+      'You\'ve used your palm readings for today. Come back tomorrow for more. ✨';
+
+  @override
+  String get palmRateLimit =>
+      'Too many readings in a short time. Please wait a moment and send the photo again.';
+
   String get palmImageTooLarge =>
       'The image is too large. Try less zoom or another photo.';
 

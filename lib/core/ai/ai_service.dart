@@ -11,6 +11,13 @@ import '../../features/astrology/data/models/magical_profile_model.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 import 'groq_credentials.dart';
 
+/// Erro de limite de uso do provedor de IA (HTTP 429). A chave da Groq é
+/// compartilhada, então o teto é do serviço, não por usuário. A tela decide
+/// a mensagem (para poder localizar e orientar o reenvio).
+class AiRateLimitException implements Exception {
+  const AiRateLimitException();
+}
+
 /// Serviço de IA usando Groq (gratuito, sem API key necessária)
 class AIService {
   static final AIService instance = AIService._();
@@ -715,7 +722,7 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
       return _stripReasoning(content.toString());
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
-        throw Exception('Limite de uso excedido');
+        throw const AiRateLimitException();
       } else if (e.response?.statusCode == 413) {
         throw Exception('Imagem muito grande. Tente novamente.');
       } else if (e.response?.statusCode == 404) {

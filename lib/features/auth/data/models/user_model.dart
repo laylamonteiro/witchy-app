@@ -73,6 +73,7 @@ class UserModel {
   final int runeReadingsToday;  // Limite: 1/dia (cada tipo)
   final int oracleReadingsToday;  // Limite: 1/dia (cada tipo)
   final int advisorConsultationsToday;  // Conselheiro Místico (P&R) - Limite: 1/dia
+  final int palmistryReadingsToday;  // Leitura de mãos (Premium) - Limite: 3/dia
 
   const UserModel({
     required this.id,
@@ -99,6 +100,7 @@ class UserModel {
     this.runeReadingsToday = 0,
     this.oracleReadingsToday = 0,
     this.advisorConsultationsToday = 0,
+    this.palmistryReadingsToday = 0,
   });
 
   /// Usuário padrão (local, sem autenticação)
@@ -158,6 +160,10 @@ class UserModel {
   /// Limite de uso do pêndulo por dia para TODOS os usuários
   static const int dailyPendulumLimit = 3;
 
+  /// Limite de leituras de mãos por dia (Premium; Free já é bloqueado antes).
+  /// Protege a cota compartilhada da API de visão do Groq.
+  static const int dailyPalmistryLimit = 3;
+
   /// Limite de afirmações por dia para free
   static const int freeAffirmationsLimit = 3;
 
@@ -192,6 +198,17 @@ class UserModel {
   int get remainingPendulumUses {
     if (isAdmin) return -1; // ilimitado
     return dailyPendulumLimit - pendulumUsesToday;
+  }
+
+  /// Verifica se pode fazer leitura de mãos hoje (admin ilimitado).
+  bool get canUsePalmistry =>
+      isAdmin || palmistryReadingsToday < dailyPalmistryLimit;
+
+  /// Quantas leituras de mãos restam hoje
+  int get remainingPalmistryReadings {
+    if (isAdmin) return -1; // ilimitado
+    final left = dailyPalmistryLimit - palmistryReadingsToday;
+    return left < 0 ? 0 : left;
   }
 
   /// Verifica se pode usar afirmações hoje
@@ -256,6 +273,7 @@ class UserModel {
     int? runeReadingsToday,
     int? oracleReadingsToday,
     int? advisorConsultationsToday,
+    int? palmistryReadingsToday,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -283,6 +301,8 @@ class UserModel {
       oracleReadingsToday: oracleReadingsToday ?? this.oracleReadingsToday,
       advisorConsultationsToday:
           advisorConsultationsToday ?? this.advisorConsultationsToday,
+      palmistryReadingsToday:
+          palmistryReadingsToday ?? this.palmistryReadingsToday,
     );
   }
 
@@ -312,6 +332,7 @@ class UserModel {
       'runeReadingsToday': runeReadingsToday,
       'oracleReadingsToday': oracleReadingsToday,
       'advisorConsultationsToday': advisorConsultationsToday,
+      'palmistryReadingsToday': palmistryReadingsToday,
     };
   }
 
@@ -365,6 +386,7 @@ class UserModel {
       runeReadingsToday: json['runeReadingsToday'] ?? 0,
       oracleReadingsToday: json['oracleReadingsToday'] ?? 0,
       advisorConsultationsToday: json['advisorConsultationsToday'] ?? 0,
+      palmistryReadingsToday: json['palmistryReadingsToday'] ?? 0,
     );
   }
 }

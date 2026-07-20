@@ -1494,6 +1494,17 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  @override
+  String get palmRemainingToday => 'Leituras restantes hoje';
+
+  @override
+  String get palmDailyLimitReached =>
+      'Você já fez suas leituras de mãos de hoje. Volte amanhã para mais. ✨';
+
+  @override
+  String get palmRateLimit =>
+      'Muitas leituras em pouco tempo. Aguarde alguns instantes e envie a foto novamente.';
+
   String get palmImageTooLarge =>
       'A imagem ficou grande demais. Tente com menos zoom ou outra foto.';
 
@@ -4121,6 +4132,17 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   }
 
   @override
+  @override
+  String get palmRemainingToday => 'Leituras restantes hoje';
+
+  @override
+  String get palmDailyLimitReached =>
+      'Você já fez suas leituras de mãos de hoje. Volte amanhã para mais. ✨';
+
+  @override
+  String get palmRateLimit =>
+      'Muitas leituras em pouco tempo. Aguarde alguns instantes e envie a foto novamente.';
+
   String get palmImageTooLarge =>
       'A imagem ficou grande demais. Tente com menos zoom ou outra foto.';
 
