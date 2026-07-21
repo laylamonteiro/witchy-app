@@ -339,7 +339,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
-        const MaterialApp(
+        const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           home: Scaffold(body: PremiumUpgradeSheet()),
         ),
       );
@@ -370,7 +370,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: authProvider,
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const SettingsPage(),
@@ -403,7 +403,7 @@ void main() {
             ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
             ChangeNotifierProvider<SyncProvider>.value(value: syncProvider),
           ],
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const PrivacySettingsPage(),
@@ -435,7 +435,7 @@ void main() {
               value: PaymentService(),
             ),
           ],
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const Scaffold(
@@ -471,7 +471,7 @@ void main() {
         final (size, textScale) = testCase;
         await tester.binding.setSurfaceSize(size);
         await tester.pumpWidget(
-          MaterialApp(
+          MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             theme: AppTheme.darkTheme,
             home: MediaQuery(
               data: MediaQueryData(
@@ -511,7 +511,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           theme: AppTheme.darkTheme,
           home: const Scaffold(
             body: SingleChildScrollView(
@@ -539,7 +539,7 @@ void main() {
       var selected = SubscriptionType.yearly;
 
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           theme: AppTheme.darkTheme,
           home: Scaffold(
             body: StatefulBuilder(
@@ -591,7 +591,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           theme: AppTheme.darkTheme,
           home: MediaQuery(
             data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
@@ -624,7 +624,7 @@ void main() {
         (tester) async {
       var taps = 0;
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           theme: AppTheme.darkTheme,
           home: Scaffold(
             body: SubscriptionPurchaseButton(
@@ -682,7 +682,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: AuthProvider(),
-          child: const MaterialApp(home: SubscriptionPage()),
+          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
         ),
       );
       await tester.pump();
@@ -737,7 +737,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: AuthProvider(),
-          child: const MaterialApp(home: SubscriptionPage()),
+          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
         ),
       );
       await tester.pump();
@@ -788,7 +788,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: authProvider,
-          child: const MaterialApp(home: SubscriptionPage()),
+          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
         ),
       );
       await tester.pumpAndSettle();
@@ -914,7 +914,7 @@ Outro conteúdo secreto.''';
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: auth,
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Scaffold(
               body: PremiumContentSection(
                 feature: AppFeature.encyclopediaHerbsDetails,
@@ -951,7 +951,7 @@ Outro conteúdo secreto.''';
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: auth,
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: MediaQuery(
               data: MediaQueryData(
                 size: Size(width, 500),
