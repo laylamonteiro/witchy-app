@@ -37,6 +37,9 @@ for line in sys.stdin:
     # Linha inteira de comentário.
     if stripped.startswith('//'):
         continue
+    # Chamadas de log/debug não são texto visível ao usuário.
+    if re.match(r'(print|debugPrint|debugLog|_log|_addLog)\s*\(', stripped):
+        continue
     # Comentário no fim da linha: só conta se houver acento ANTES do '//'
     # (fora de string, aproximado ignorando '//' precedido por ':', ex. URLs).
     m = re.search(r'(?<!:)//', code)
