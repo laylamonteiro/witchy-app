@@ -6,6 +6,8 @@ import '../models/planet_position_model.dart';
 import '../models/house_model.dart';
 import '../models/aspect_model.dart';
 import '../models/enums.dart';
+import 'sweph_service.dart';
+import 'timezone_resolver.dart';
 
 /// Calculadora de Mapa Astral
 ///
@@ -47,24 +49,159 @@ class ChartCalculator {
     try {
       _logCallback = onLog;
 
-      _log('🔧 Calculando mapa astral localmente...');
+      _log('🔧 Calculando mapa astral...');
       _log('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
       _log('   Hora: ${birthTime.hour}:${birthTime.minute}');
       _log('   Local: $birthPlace');
 
-      return await _calculateWithLocalMethod(
-        birthDate: birthDate,
-        userId: userId,
-        birthTime: birthTime,
-        birthPlace: birthPlace,
-        latitude: latitude,
-        longitude: longitude,
-        unknownBirthTime: unknownBirthTime,
-        timezoneOffsetHours: timezoneOffsetHours,
-      );
+      // Caminho preciso: Swiss Ephemeris (Moshier). Se falhar por qualquer
+      // motivo (ex.: init nativa indisponível), cai no método local antigo.
+      try {
+        return await _calculateWithSweph(
+          birthDate: birthDate,
+          userId: userId,
+          birthTime: birthTime,
+          birthPlace: birthPlace,
+          latitude: latitude,
+          longitude: longitude,
+          unknownBirthTime: unknownBirthTime,
+          timezoneOffsetHours: timezoneOffsetHours,
+        );
+      } catch (e) {
+        _log('⚠️ Swiss Ephemeris falhou ($e). Usando método local de fallback.');
+        return await _calculateWithLocalMethod(
+          birthDate: birthDate,
+          userId: userId,
+          birthTime: birthTime,
+          birthPlace: birthPlace,
+          latitude: latitude,
+          longitude: longitude,
+          unknownBirthTime: unknownBirthTime,
+          timezoneOffsetHours: timezoneOffsetHours,
+        );
+      }
     } catch (e) {
       throw Exception('Erro ao calcular mapa natal: $e');
     }
+  }
+
+  /// Offset UTC padrão a partir da longitude (fuso "natural"). Usado quando o
+  /// usuário não informa um offset explícito. Corrige o antigo hardcode Brasil.
+  double _defaultOffsetFromLongitude(double longitude) =>
+      (longitude / 15.0).roundToDouble();
+
+  /// Cálculo preciso via Swiss Ephemeris (Moshier).
+  Future<BirthChartModel> _calculateWithSweph({
+    required String userId,
+    required DateTime birthDate,
+    required TimeOfDay birthTime,
+    required String birthPlace,
+    required double latitude,
+    required double longitude,
+    required bool unknownBirthTime,
+    double? timezoneOffsetHours,
+  }) async {
+    await SwephService.instance.ensureReady();
+
+    // Fuso com horário de verão histórico (banco IANA via pacote timezone).
+    final resolved = TimezoneResolver.resolve(
+      date: birthDate,
+      hour: birthTime.hour,
+      minute: birthTime.minute,
+      latitude: latitude,
+      longitude: longitude,
+      explicitOffsetHours: timezoneOffsetHours,
+    );
+    final utc = resolved.utc;
+    final hourUt = utc.hour + utc.minute / 60.0 + utc.second / 3600.0;
+    final jd = SwephService.instance.julianDayUt(
+      year: utc.year,
+      month: utc.month,
+      day: utc.day,
+      hourUt: hourUt,
+    );
+    _log('   🌍 Fuso aplicado: ${resolved.label}'
+        '${resolved.isDst ? " [horário de verão]" : ""}');
+    _log('   📅 Julian Day (UT): ${jd.toStringAsFixed(5)}');
+
+    // Planetas + Nodo Norte (Sul = oposto).
+    const bodies = <Planet>[
+      Planet.sun,
+      Planet.moon,
+      Planet.mercury,
+      Planet.venus,
+      Planet.mars,
+      Planet.jupiter,
+      Planet.saturn,
+      Planet.uranus,
+      Planet.neptune,
+      Planet.pluto,
+      Planet.northNode,
+    ];
+    final planets = <PlanetPosition>[];
+    for (final planet in bodies) {
+      final pos = SwephService.instance
+          .bodyPosition(jd, SwephService.heavenlyBody(planet));
+      planets.add(_createPlanetPosition(planet, pos.longitude, pos.speed, 0));
+    }
+    final northNode =
+        planets.firstWhere((p) => p.planet == Planet.northNode);
+    planets.add(_createPlanetPosition(
+      Planet.southNode,
+      (northNode.longitude + 180) % 360,
+      northNode.speed,
+      0,
+    ));
+
+    // Casas + ângulos.
+    List<House> houses;
+    PlanetPosition? ascendant;
+    PlanetPosition? midheaven;
+    if (!unknownBirthTime) {
+      final h = SwephService.instance.houses(jd, latitude, longitude);
+      houses = [for (int i = 0; i < 12; i++) _createHouse(i + 1, h.cusps[i])];
+      ascendant = _angleAsPlanet(h.ascendant, 1);
+      midheaven = _angleAsPlanet(h.mc, 10);
+    } else {
+      houses = _calculateHousesEqualSign(planets[0].longitude);
+    }
+
+    final planetsWithHouses = _assignHousesToPlanets(planets, houses);
+    final aspects = _calculateAspects(planetsWithHouses);
+
+    return BirthChartModel(
+      id: const Uuid().v4(),
+      userId: userId,
+      birthDate: birthDate,
+      birthTime: birthTime,
+      birthPlace: birthPlace,
+      latitude: latitude,
+      longitude: longitude,
+      timezone: resolved.label,
+      unknownBirthTime: unknownBirthTime,
+      planets: planetsWithHouses,
+      houses: houses,
+      ascendant: ascendant,
+      midheaven: midheaven,
+      aspects: aspects,
+      calculatedAt: DateTime.now(),
+    );
+  }
+
+  /// Constrói um PlanetPosition para um ângulo (ASC/MC) a partir da longitude.
+  PlanetPosition _angleAsPlanet(double longitude, int houseNumber) {
+    longitude %= 360;
+    if (longitude < 0) longitude += 360;
+    return PlanetPosition(
+      planet: Planet.sun, // placeholder (ângulo, não planeta)
+      sign: ZodiacSign.fromLongitude(longitude),
+      degree: (longitude % 30).floor(),
+      minute: ((longitude % 1) * 60).floor(),
+      houseNumber: houseNumber,
+      isRetrograde: false,
+      longitude: longitude,
+      speed: 0,
+    );
   }
 
   /// Calcula usando método local (VSOP87)
@@ -229,9 +366,10 @@ class ChartCalculator {
     final day = date.day;
 
     // IMPORTANTE: Converter hora local para UTC
-    // Se timezone fornecido, usa ele; senão, detecta automaticamente
+    // Se timezone fornecido, usa ele; senão, deriva do fuso "natural" da
+    // longitude (global) — não mais assume Brasil.
     final timezoneOffset =
-        (timezoneOffsetHours ?? _detectBrazilianTimezone(date, latitude))
+        (timezoneOffsetHours ?? _defaultOffsetFromLongitude(longitude))
             .round();
 
     // Converter hora local para UTC

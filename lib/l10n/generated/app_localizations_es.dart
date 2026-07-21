@@ -2489,6 +2489,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chartInvalidTime => 'Hora inválida';
 
   @override
+  String get chartDstNoticeTitle => 'Horario de verano detectado';
+
+  @override
+  String get chartDstNotice =>
+      'Tu carta fue calculada teniendo en cuenta el horario de verano que estaba vigente en la fecha y el lugar de tu nacimiento.';
+
+  @override
   String get chartPlaceNotFound => 'Lugar no encontrado';
 
   @override

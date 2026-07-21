@@ -1,78 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:geocoding/geocoding.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/input_formatters.dart';
+import '../../data/services/geocoding_service.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_view_page.dart';
-
-// Mapa de capitais brasileiras com coordenadas exatas
-const Map<String, Map<String, dynamic>> _brazilianCapitals = {
-  'sao paulo': {
-    'name': 'São Paulo',
-    'state': 'São Paulo',
-    'lat': -23.5505,
-    'lon': -46.6333,
-  },
-  'rio de janeiro': {
-    'name': 'Rio de Janeiro',
-    'state': 'Rio de Janeiro',
-    'lat': -22.9068,
-    'lon': -43.1729,
-  },
-  'belo horizonte': {
-    'name': 'Belo Horizonte',
-    'state': 'Minas Gerais',
-    'lat': -19.9167,
-    'lon': -43.9345,
-  },
-  'brasilia': {
-    'name': 'Brasília',
-    'state': 'Distrito Federal',
-    'lat': -15.7939,
-    'lon': -47.8828,
-  },
-  'salvador': {
-    'name': 'Salvador',
-    'state': 'Bahia',
-    'lat': -12.9714,
-    'lon': -38.5014,
-  },
-  'fortaleza': {
-    'name': 'Fortaleza',
-    'state': 'Ceará',
-    'lat': -3.7172,
-    'lon': -38.5433,
-  },
-  'recife': {
-    'name': 'Recife',
-    'state': 'Pernambuco',
-    'lat': -8.0476,
-    'lon': -34.8770,
-  },
-  'curitiba': {
-    'name': 'Curitiba',
-    'state': 'Paraná',
-    'lat': -25.4284,
-    'lon': -49.2733,
-  },
-  'porto alegre': {
-    'name': 'Porto Alegre',
-    'state': 'Rio Grande do Sul',
-    'lat': -30.0346,
-    'lon': -51.2177,
-  },
-  'manaus': {
-    'name': 'Manaus',
-    'state': 'Amazonas',
-    'lat': -3.1190,
-    'lon': -60.0217,
-  },
-};
 
 class BirthChartInputPage extends StatefulWidget {
   const BirthChartInputPage({super.key});
@@ -96,12 +34,13 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   String? _dateError;
   String? _timeError;
 
-  List<Location> _locationSuggestions = [];
-  List<Placemark> _placemarkSuggestions = [];
+  List<GeoPlace> _suggestions = [];
   bool _isSearchingLocation = false;
   bool _showSuggestions = false;
   double? _selectedLatitude;
   double? _selectedLongitude;
+  Timer? _searchDebounce;
+  int _searchRequestId = 0;
 
   @override
   void initState() {
@@ -169,6 +108,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _birthPlaceController.dispose();
     _dateController.dispose();
     _timeController.dispose();
@@ -176,192 +116,78 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     super.dispose();
   }
 
-  Future<void> _searchLocation(String query) async {
-    if (query.length < 3) {
+  /// Busca com debounce (respeita a política do Nominatim de ≤1 req/s).
+  void _searchLocation(String query) {
+    _searchDebounce?.cancel();
+    if (query.trim().length < 3) {
       setState(() {
-        _locationSuggestions = [];
-        _placemarkSuggestions = [];
+        _suggestions = [];
         _showSuggestions = false;
+        _isSearchingLocation = false;
       });
       return;
     }
-
     setState(() {
       _isSearchingLocation = true;
       _showSuggestions = true;
     });
+    _searchDebounce = Timer(const Duration(milliseconds: 450), () {
+      _runSearch(query.trim());
+    });
+  }
 
+  Future<void> _runSearch(String query) async {
+    final requestId = ++_searchRequestId;
     try {
-      // Normalizar string para comparação (remover acentos e lowercase)
-      String normalize(String? text) {
-        if (text == null) return '';
-        return text
-            .toLowerCase()
-            .replaceAll('á', 'a')
-            .replaceAll('à', 'a')
-            .replaceAll('ã', 'a')
-            .replaceAll('â', 'a')
-            .replaceAll('é', 'e')
-            .replaceAll('ê', 'e')
-            .replaceAll('í', 'i')
-            .replaceAll('ó', 'o')
-            .replaceAll('ô', 'o')
-            .replaceAll('õ', 'o')
-            .replaceAll('ú', 'u')
-            .replaceAll('ü', 'u')
-            .replaceAll('ç', 'c');
-      }
-
-      final normalizedQuery = normalize(query.trim());
-      final results = <MapEntry<Location, Placemark>>[];
-
-      // PRIORIDADE MÁXIMA: Verificar se é uma capital brasileira conhecida
-      if (_brazilianCapitals.containsKey(normalizedQuery)) {
-        final capital = _brazilianCapitals[normalizedQuery]!;
-        final capitalLocation = Location(
-          latitude: capital['lat'] as double,
-          longitude: capital['lon'] as double,
-          timestamp: DateTime.now(),
-        );
-        final capitalPlacemark = Placemark(
-          locality: capital['name'] as String,
-          administrativeArea: capital['state'] as String,
-          country: 'Brazil',
-        );
-        results.add(MapEntry(capitalLocation, capitalPlacemark));
-      }
-
-      // Buscar outros resultados via API de geocoding
-      String searchQuery = query;
-      if (!query.toLowerCase().contains('brasil') &&
-          !query.toLowerCase().contains('brazil') &&
-          !query.toLowerCase().contains(',')) {
-        searchQuery = '$query, Brasil';
-      }
-
-      try {
-        final locations = await locationFromAddress(searchQuery);
-
-        for (final location in locations.take(10)) {
-          try {
-            final placemark = await placemarkFromCoordinates(
-              location.latitude,
-              location.longitude,
-            );
-            if (placemark.isNotEmpty) {
-              // Evitar duplicar capital se já está nos resultados
-              final isDuplicate = results.any((existing) {
-                final distance =
-                    (existing.key.latitude - location.latitude).abs() +
-                        (existing.key.longitude - location.longitude).abs();
-                return distance < 0.1; // ~10km de tolerância
-              });
-
-              if (!isDuplicate) {
-                results.add(MapEntry(location, placemark.first));
-              }
-            }
-          } catch (e) {
-            // Skip locations that can't be reverse geocoded
-          }
-        }
-      } catch (e) {
-        // Se falhar busca da API mas temos capital, continuar
-        if (results.isEmpty) rethrow;
-      }
-
-      // Ordenar resultados por relevância
-      results.sort((a, b) {
-        final aPlace = a.value;
-        final bPlace = b.value;
-
-        // Prioridade 0: Capitais onde locality == administrativeArea e ambos == query
-        // Ex: São Paulo (cidade) no estado de São Paulo
-        final aIsCapital = normalize(aPlace.locality) == normalizedQuery &&
-            normalize(aPlace.administrativeArea) == normalizedQuery;
-        final bIsCapital = normalize(bPlace.locality) == normalizedQuery &&
-            normalize(bPlace.administrativeArea) == normalizedQuery;
-        if (aIsCapital && !bIsCapital) return -1;
-        if (!aIsCapital && bIsCapital) return 1;
-
-        // Prioridade 1: locality exatamente igual ao termo de busca
-        final aLocalityMatch = normalize(aPlace.locality) == normalizedQuery;
-        final bLocalityMatch = normalize(bPlace.locality) == normalizedQuery;
-        if (aLocalityMatch && !bLocalityMatch) return -1;
-        if (!aLocalityMatch && bLocalityMatch) return 1;
-
-        // Prioridade 2: subAdministrativeArea exatamente igual
-        final aSubMatch =
-            normalize(aPlace.subAdministrativeArea) == normalizedQuery;
-        final bSubMatch =
-            normalize(bPlace.subAdministrativeArea) == normalizedQuery;
-        if (aSubMatch && !bSubMatch) return -1;
-        if (!aSubMatch && bSubMatch) return 1;
-
-        // Prioridade 3: locality contém o termo
-        final aLocalityContains =
-            normalize(aPlace.locality).contains(normalizedQuery);
-        final bLocalityContains =
-            normalize(bPlace.locality).contains(normalizedQuery);
-        if (aLocalityContains && !bLocalityContains) return -1;
-        if (!aLocalityContains && bLocalityContains) return 1;
-
-        return 0;
-      });
-
+      final results = await GeocodingService.instance.search(query);
+      if (!mounted || requestId != _searchRequestId) return;
       setState(() {
-        _locationSuggestions = results.take(5).map((e) => e.key).toList();
-        _placemarkSuggestions = results.take(5).map((e) => e.value).toList();
+        _suggestions = results.take(6).toList();
         _isSearchingLocation = false;
       });
     } catch (e) {
+      if (!mounted || requestId != _searchRequestId) return;
       setState(() {
-        _locationSuggestions = [];
-        _placemarkSuggestions = [];
+        _suggestions = [];
         _isSearchingLocation = false;
       });
     }
   }
 
-  void _selectLocation(int index) {
-    final location = _locationSuggestions[index];
-    final placemark = _placemarkSuggestions.length > index
-        ? _placemarkSuggestions[index]
-        : null;
-
-    String displayName;
-    if (placemark != null) {
-      final parts = <String>[];
-      // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
-      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
-        parts.add(placemark.locality!);
-      } else if (placemark.subAdministrativeArea != null &&
-          placemark.subAdministrativeArea!.isNotEmpty) {
-        parts.add(placemark.subAdministrativeArea!);
-      }
-      if (placemark.administrativeArea != null &&
-          placemark.administrativeArea!.isNotEmpty) {
-        parts.add(placemark.administrativeArea!);
-      }
-      if (placemark.country != null && placemark.country!.isNotEmpty) {
-        parts.add(placemark.country!);
-      }
-      displayName = parts.join(', ');
-    } else {
-      displayName = _birthPlaceController.text;
-    }
-
+  void _selectLocation(GeoPlace place) {
     setState(() {
-      _birthPlace = displayName;
-      _birthPlaceController.text = displayName;
-      _selectedLatitude = location.latitude;
-      _selectedLongitude = location.longitude;
+      _birthPlace = place.displayName;
+      _birthPlaceController.text = place.displayName;
+      _selectedLatitude = place.latitude;
+      _selectedLongitude = place.longitude;
       _showSuggestions = false;
-      _locationSuggestions = [];
-      _placemarkSuggestions = [];
+      _suggestions = [];
     });
-
     _birthPlaceFocusNode.unfocus();
+  }
+
+  Future<void> _showDstNotice(String tzLabel) async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.gc.surface,
+        title: Row(
+          children: [
+            Icon(Icons.wb_sunny_outlined, color: dialogContext.gc.lilac),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.chartDstNoticeTitle)),
+          ],
+        ),
+        content: Text('${l10n.chartDstNotice}\n\n$tzLabel'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonUnderstood),
+          ),
+        ],
+      ),
+    );
   }
 
   bool _canCalculate() {
@@ -387,16 +213,14 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
         latitude = _selectedLatitude!;
         longitude = _selectedLongitude!;
       } else {
-        // Geocodificar local de nascimento
-        final locations = await locationFromAddress(_birthPlace!);
-
-        if (locations.isEmpty) {
+        // Nenhuma sugestão selecionada: resolve pelo Nominatim.
+        final place =
+            await GeocodingService.instance.resolveFirst(_birthPlace!);
+        if (place == null) {
           throw Exception(AppLocalizations.of(context)!.chartPlaceNotFound);
         }
-
-        final location = locations.first;
-        latitude = location.latitude;
-        longitude = location.longitude;
+        latitude = place.latitude;
+        longitude = place.longitude;
       }
 
       // Calcular mapa
@@ -413,6 +237,11 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
       if (!mounted) return;
 
       if (chart != null) {
+        // Avisa quando o mapa usou horário de verão (o rótulo do fuso o indica).
+        if (chart.timezone.contains('verão')) {
+          await _showDstNotice(chart.timezone);
+        }
+        if (!mounted) return;
         // Navegar para visualização
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -717,8 +546,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                         _searchLocation(value);
                       },
                     ),
-                    if (_showSuggestions &&
-                        _locationSuggestions.isNotEmpty) ...[
+                    if (_showSuggestions && _suggestions.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
@@ -731,50 +559,15 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                         child: ListView.separated(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _locationSuggestions.length,
+                          itemCount: _suggestions.length,
                           separatorBuilder: (context, index) => Divider(
                             color: context.gc.lilac.withOpacity(0.2),
                             height: 1,
                           ),
                           itemBuilder: (context, index) {
-                            final placemark =
-                                _placemarkSuggestions.length > index
-                                    ? _placemarkSuggestions[index]
-                                    : null;
-
-                            final loc = _locationSuggestions[index];
-                            String displayText;
-                            String coordsText =
-                                'Lat: ${loc.latitude.toStringAsFixed(4)}, Lon: ${loc.longitude.toStringAsFixed(4)}';
-
-                            if (placemark != null) {
-                              final parts = <String>[];
-
-                              // Priorizar locality (cidade), mas se não tiver, usar subAdministrativeArea
-                              if (placemark.locality != null &&
-                                  placemark.locality!.isNotEmpty) {
-                                parts.add(placemark.locality!);
-                              } else if (placemark.subAdministrativeArea !=
-                                      null &&
-                                  placemark.subAdministrativeArea!.isNotEmpty) {
-                                parts.add(placemark.subAdministrativeArea!);
-                              }
-
-                              if (placemark.administrativeArea != null &&
-                                  placemark.administrativeArea!.isNotEmpty) {
-                                parts.add(placemark.administrativeArea!);
-                              }
-
-                              if (placemark.country != null &&
-                                  placemark.country!.isNotEmpty) {
-                                parts.add(placemark.country!);
-                              }
-
-                              displayText = parts.join(', ');
-                            } else {
-                              displayText = coordsText;
-                            }
-
+                            final place = _suggestions[index];
+                            final coordsText =
+                                'Lat: ${place.latitude.toStringAsFixed(4)}, Lon: ${place.longitude.toStringAsFixed(4)}';
                             return ListTile(
                               dense: true,
                               leading: Icon(
@@ -783,7 +576,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                 size: 20,
                               ),
                               title: Text(
-                                displayText,
+                                place.displayName,
                                 style: TextStyle(
                                   color: context.gc.softWhite,
                                   fontSize: 14,
@@ -796,7 +589,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                                   fontSize: 11,
                                 ),
                               ),
-                              onTap: () => _selectLocation(index),
+                              onTap: () => _selectLocation(place),
                             );
                           },
                         ),
