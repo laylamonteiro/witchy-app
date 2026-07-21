@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../data/data_sources/daily_weather_content.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/enums.dart';
 import '../../data/repositories/daily_weather_repository.dart';
@@ -18,15 +19,8 @@ import 'personalized_suggestions_page.dart';
 /// Extrai somente a estrutura editorial da previsão. O texto Premium não é
 /// exposto ao usuário Free, mas os assuntos continuam legíveis.
 class DailyForecastPreview {
-  static const fallbackHeadings = <String>[
-    'Energia do Dia',
-    'A Lua Hoje',
-    'Oportunidades Mágicas',
-    'Cuidados do Dia',
-    'Ritual Sugerido',
-    'Cristais e Aliados',
-    'Mensagem das Estrelas',
-  ];
+  static List<String> get fallbackHeadings =>
+      DailyWeatherContent.fallbackHeadings;
 
   static List<String> headingsFromMarkdown(String markdown) {
     final heading = RegExp(r'^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$');
@@ -526,7 +520,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         child: ImageFiltered(
           imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
           child: Text(
-            'As influências do dia revelam orientações e práticas mágicas personalizadas para este momento.',
+            DailyWeatherContent.premiumPlaceholder,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/data_sync_service.dart';
+import '../data_sources/daily_weather_content.dart';
 import '../models/enums.dart';
 import '../models/transit_model.dart';
 import '../models/birth_chart_model.dart';
@@ -231,8 +232,8 @@ class DailyWeatherRepository {
         aspects: aspectsForAI.cast<Map<String, String>>(),
       );
     } catch (e) {
-      // Usar interpretação padrão se IA falhar
-      aiText = _generateFallbackText(weatherData);
+      // Usar interpretação padrão se IA falhar (no idioma atual do app)
+      aiText = DailyWeatherContent.fallbackText(weatherData);
     }
 
     // Criar cache
@@ -250,33 +251,6 @@ class DailyWeatherRepository {
     await saveWeatherCache(cache);
 
     return cache;
-  }
-
-  /// Texto fallback se IA falhar
-  String _generateFallbackText(DailyMagicalWeather weather) {
-    return '''## Energia do Dia
-
-${weather.generalInterpretation}
-
-## A Lua Hoje
-
-A Lua está em ${weather.moonSign.displayName}, trazendo energias do elemento ${weather.moonSign.element.displayName}.
-Fase atual: ${weather.moonPhase}.
-
-## Oportunidades Mágicas
-
-${weather.recommendedPractices.map((p) => '- $p').join('\n')}
-
-## Cristais e Aliados
-
-- Quartzo transparente (equilíbrio geral)
-- Ametista (proteção espiritual)
-- Pedra da Lua (conexão lunar)
-
-## Mensagem das Estrelas
-
-Permita que as energias celestiais guiem seu caminho hoje. Confie em sua intuição e siga o fluxo do universo.
-''';
   }
 
   /// Limpa caches antigos (mais de 7 dias)
