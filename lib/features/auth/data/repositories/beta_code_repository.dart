@@ -281,6 +281,7 @@ class BetaCodeRepository {
     }
 
     final currentUses = (codeData['current_uses'] ?? 0) as int;
+    final maxUses = (codeData['max_uses'] ?? 1) as int;
     if (currentUses >= maxUses) {
       return {
         'success': false,

@@ -132,17 +132,17 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          LunarCalendarPage(embedded: true),
-          WheelOfYearPage(embedded: true),
-          CrystalsListPage(),
-          HerbsListPage(),
-          MetalsListPage(),
-          ColorsListPage(),
-          GoddessesListPage(),
-          ElementsPage(),
-          AltarPage(),
-          RunesListPage(),
+        children: [
+          const LunarCalendarPage(embedded: true),
+          const WheelOfYearPage(embedded: true),
+          const CrystalsListPage(),
+          const HerbsListPage(),
+          const MetalsListPage(),
+          const ColorsListPage(),
+          const GoddessesListPage(),
+          const ElementsPage(),
+          const AltarPage(),
+          const RunesListPage(),
           ArcaneListPage(
             categoryTitle: 'Arquétipos',
             intro:

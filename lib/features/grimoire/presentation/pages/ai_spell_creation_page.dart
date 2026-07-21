@@ -5,7 +5,6 @@ import '../../../../core/ai/ai_service.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../providers/spell_provider.dart';
 import '../../data/models/spell_model.dart';
 import 'spell_detail_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
