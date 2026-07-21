@@ -2476,12 +2476,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chartInvalidTime => 'Invalid time';
 
-  @override
-  String get chartDstNoticeTitle => 'Daylight saving time detected';
 
-  @override
-  String get chartDstNotice =>
-      'Your chart was calculated taking into account the daylight saving time that was in effect on your date and place of birth.';
 
   @override
   String get chartPlaceNotFound => 'Place not found';

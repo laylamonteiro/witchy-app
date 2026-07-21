@@ -786,8 +786,6 @@
   "chartInvalidDate": "Invalid date",
   "chartInvalidTime": "Invalid time",
   "chartPlaceNotFound": "Place not found",
-  "chartDstNoticeTitle": "Daylight saving time detected",
-  "chartDstNotice": "Your chart was calculated taking into account the daylight saving time that was in effect on your date and place of birth.",
   "chartCalcError": "Error calculating chart",
   "chartCreateTitle": "Create Birth Chart",
   "chartYourChart": "Your Birth Chart",

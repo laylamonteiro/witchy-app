@@ -82,6 +82,24 @@ class BirthChartViewPage extends StatelessWidget {
                                     color: context.gc.softWhite,
                                   ),
                         ),
+                      if (chart.timezone.trim().isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.schedule,
+                                size: 14, color: context.gc.textSecondary),
+                            const SizedBox(width: 4),
+                            Text(
+                              chart.timezone,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: context.gc.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
