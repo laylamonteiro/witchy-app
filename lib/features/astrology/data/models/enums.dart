@@ -13,7 +13,13 @@ enum Planet {
   neptune,
   pluto,
   northNode,
-  southNode;
+  southNode,
+  midheaven,
+  imumCoeli,
+  descendant,
+  vertex,
+  lilith,
+  partOfFortune;
 
   String get displayName {
     switch (this) {
@@ -41,6 +47,18 @@ enum Planet {
         return 'Nodo Norte';
       case Planet.southNode:
         return 'Nodo Sul';
+      case Planet.midheaven:
+        return 'Meio do Céu';
+      case Planet.imumCoeli:
+        return 'Fundo do Céu';
+      case Planet.descendant:
+        return 'Descendente';
+      case Planet.vertex:
+        return 'Vértex';
+      case Planet.lilith:
+        return 'Lilith';
+      case Planet.partOfFortune:
+        return 'Parte da Fortuna';
     }
   }
 
@@ -70,6 +88,18 @@ enum Planet {
         return '☊';
       case Planet.southNode:
         return '☋';
+      case Planet.midheaven:
+        return 'MC';
+      case Planet.imumCoeli:
+        return 'IC';
+      case Planet.descendant:
+        return 'Dsc';
+      case Planet.vertex:
+        return 'Vx';
+      case Planet.lilith:
+        return '⚸';
+      case Planet.partOfFortune:
+        return '⊗';
     }
   }
 
@@ -99,6 +129,15 @@ enum Planet {
         return 10; // SE_MEAN_NODE
       case Planet.southNode:
         return 10; // Same as north node, calculate opposite
+      case Planet.lilith:
+        return 12; // SE_MEAN_APOG (Lua Negra / apogeu médio)
+      case Planet.midheaven:
+      case Planet.imumCoeli:
+      case Planet.descendant:
+      case Planet.vertex:
+      case Planet.partOfFortune:
+        // Pontos calculados a partir das casas/ângulos — não vêm do sweph.
+        throw StateError('${displayName} é um ponto calculado, não tem swephId');
     }
   }
 }

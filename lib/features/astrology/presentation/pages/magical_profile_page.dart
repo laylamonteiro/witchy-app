@@ -262,7 +262,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
       return const SizedBox.shrink();
     }
 
-    // Mostrar TODOS os planetas + nodos por padrão (cada um com sua explicação).
+    // Mostrar TODOS os planetas + nodos + pontos místicos (cada um com sua
+    // explicação). Só os que estiverem presentes no mapa são exibidos.
     final personalPlanets = [
       Planet.sun,
       Planet.moon,
@@ -274,9 +275,15 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
       Planet.uranus,
       Planet.neptune,
       Planet.pluto,
+      Planet.midheaven,
+      Planet.imumCoeli,
+      Planet.descendant,
+      Planet.vertex,
+      Planet.lilith,
+      Planet.partOfFortune,
       Planet.northNode,
       Planet.southNode,
-    ];
+    ].where((p) => birthChart.planets.any((x) => x.planet == p)).toList();
 
     return MagicalCard(
       child: Column(
@@ -313,10 +320,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
 
           // Lista de planetas pessoais
           ...personalPlanets.map((planet) {
-            final planetPosition = birthChart.planets.firstWhere(
-              (p) => p.planet == planet,
-              orElse: () => birthChart.planets.first,
-            );
+            final planetPosition =
+                birthChart.planets.firstWhere((p) => p.planet == planet);
 
             return _buildPlanetTile(
               planet: planetPosition.planet,

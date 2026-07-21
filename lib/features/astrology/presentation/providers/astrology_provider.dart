@@ -47,6 +47,9 @@ class AstrologyProvider with ChangeNotifier {
       _birthChart = await _repository.getBirthChart(effectiveUserId);
 
       if (_birthChart != null) {
+        // Recalcula silenciosamente se o mapa foi gerado por uma versão antiga
+        // do algoritmo (ex.: antes dos novos pontos místicos).
+        await _recalculateIfOutdated();
         // Carregar perfil mágico também
         _magicalProfile = await _repository.getMagicalProfile(effectiveUserId);
       }
@@ -55,6 +58,32 @@ class AstrologyProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Recalcula um mapa salvo cuja versão de cálculo esteja desatualizada,
+  /// reaproveitando os dados de nascimento originais. Preserva o id (mesma
+  /// linha no banco) e não mexe no perfil mágico/IA. Falha em silêncio,
+  /// mantendo o mapa antigo se o recálculo não for possível.
+  Future<void> _recalculateIfOutdated() async {
+    final chart = _birthChart;
+    if (chart == null || chart.calcVersion >= kChartCalcVersion) return;
+
+    try {
+      final recalculated = await _calculator.calculateBirthChart(
+        userId: chart.userId,
+        birthDate: chart.birthDate,
+        birthTime: chart.birthTime,
+        birthPlace: chart.birthPlace,
+        latitude: chart.latitude,
+        longitude: chart.longitude,
+        unknownBirthTime: chart.unknownBirthTime,
+      );
+      final updated = recalculated.copyWith(id: chart.id, userId: chart.userId);
+      await _repository.updateBirthChart(updated);
+      _birthChart = updated;
+    } catch (e) {
+      debugPrint('Falha ao recalcular mapa desatualizado: $e');
     }
   }
 

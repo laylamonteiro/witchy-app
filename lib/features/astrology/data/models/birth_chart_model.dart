@@ -5,6 +5,13 @@ import 'house_model.dart';
 import 'aspect_model.dart';
 import 'enums.dart';
 
+/// Versão do algoritmo de cálculo do mapa. Incrementada sempre que o cálculo
+/// muda de forma que mapas salvos precisem ser recalculados. Mapas antigos sem
+/// o campo são tratados como versão 1.
+///
+/// v2: adiciona Lilith, MC/IC/DSC, Vértex e Parte da Fortuna.
+const int kChartCalcVersion = 2;
+
 class BirthChartModel {
   final String id;
   final String userId;
@@ -31,6 +38,9 @@ class BirthChartModel {
 
   final DateTime calculatedAt;
 
+  /// Versão do cálculo com que este mapa foi gerado (ver [kChartCalcVersion]).
+  final int calcVersion;
+
   const BirthChartModel({
     required this.id,
     required this.userId,
@@ -47,6 +57,7 @@ class BirthChartModel {
     this.midheaven,
     required this.aspects,
     required this.calculatedAt,
+    this.calcVersion = 1,
   });
 
   // Getters úteis
@@ -139,6 +150,7 @@ class BirthChartModel {
       'midheaven': midheaven?.toJson(),
       'aspects': aspects.map((a) => a.toJson()).toList(),
       'calculatedAt': calculatedAt.toIso8601String(),
+      'calcVersion': calcVersion,
     };
   }
 
@@ -180,10 +192,49 @@ class BirthChartModel {
       calculatedAt: json['calculatedAt'] != null
           ? DateTime.parse(json['calculatedAt'])
           : DateTime.now(),
+      calcVersion: json['calcVersion'] ?? 1,
     );
   }
 
   factory BirthChartModel.fromJsonString(String jsonString) {
     return BirthChartModel.fromJson(jsonDecode(jsonString));
+  }
+
+  BirthChartModel copyWith({
+    String? id,
+    String? userId,
+    DateTime? birthDate,
+    TimeOfDay? birthTime,
+    String? birthPlace,
+    double? latitude,
+    double? longitude,
+    String? timezone,
+    bool? unknownBirthTime,
+    List<PlanetPosition>? planets,
+    List<House>? houses,
+    PlanetPosition? ascendant,
+    PlanetPosition? midheaven,
+    List<Aspect>? aspects,
+    DateTime? calculatedAt,
+    int? calcVersion,
+  }) {
+    return BirthChartModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      birthDate: birthDate ?? this.birthDate,
+      birthTime: birthTime ?? this.birthTime,
+      birthPlace: birthPlace ?? this.birthPlace,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      timezone: timezone ?? this.timezone,
+      unknownBirthTime: unknownBirthTime ?? this.unknownBirthTime,
+      planets: planets ?? this.planets,
+      houses: houses ?? this.houses,
+      ascendant: ascendant ?? this.ascendant,
+      midheaven: midheaven ?? this.midheaven,
+      aspects: aspects ?? this.aspects,
+      calculatedAt: calculatedAt ?? this.calculatedAt,
+      calcVersion: calcVersion ?? this.calcVersion,
+    );
   }
 }

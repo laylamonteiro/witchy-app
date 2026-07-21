@@ -24,7 +24,12 @@ class PlanetSignInterpretations {
       return 'Seu Nodo Sul em ${sign.displayName} revela dons já herdados e a '
           'zona de conforto que você traz $style. $magic';
     }
-    return 'Seu ${planet.displayName} em ${sign.displayName} vive '
+    // Pontos de nome feminino usam o artigo "Sua".
+    final article =
+        (planet == Planet.lilith || planet == Planet.partOfFortune)
+            ? 'Sua'
+            : 'Seu';
+    return '$article ${planet.displayName} em ${sign.displayName} vive '
         '${_planetMeaning(planet)}, $style. $magic';
   }
 
@@ -55,6 +60,18 @@ class PlanetSignInterpretations {
         return 'o caminho de crescimento da alma';
       case Planet.southNode:
         return 'os dons herdados de outras vidas';
+      case Planet.midheaven:
+        return 'a sua vocação, imagem pública e o legado que constrói';
+      case Planet.imumCoeli:
+        return 'as suas raízes, o lar e a base emocional mais íntima';
+      case Planet.descendant:
+        return 'os relacionamentos e o que você busca no outro';
+      case Planet.vertex:
+        return 'os encontros fatídicos e as viradas do destino';
+      case Planet.lilith:
+        return 'o poder instintivo, a sombra e o desejo indomado';
+      case Planet.partOfFortune:
+        return 'a sua sorte, a prosperidade e o bem-estar';
     }
   }
 
@@ -115,6 +132,18 @@ class PlanetSignInterpretations {
         return 'Cultive as qualidades deste signo — é para onde sua alma cresce.';
       case Planet.southNode:
         return 'Reconheça esses dons já naturais e evite se acomodar apenas neles.';
+      case Planet.midheaven:
+        return 'Na magia, oriente rituais de propósito, carreira e reconhecimento.';
+      case Planet.imumCoeli:
+        return 'Na magia, use-o em trabalhos de proteção do lar, ancestralidade e raízes.';
+      case Planet.descendant:
+        return 'Na magia, favorece rituais de parcerias, uniões e harmonia com o outro.';
+      case Planet.vertex:
+        return 'Na magia, marca encontros de destino — trabalhe sincronicidades e portais.';
+      case Planet.lilith:
+        return 'Na magia, é o portal da bruxa selvagem: soberania, sombra e desejo.';
+      case Planet.partOfFortune:
+        return 'Na magia, aponte para cá feitiços de prosperidade, sorte e abundância.';
     }
   }
 

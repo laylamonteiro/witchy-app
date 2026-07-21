@@ -157,17 +157,44 @@ class ChartCalculator {
     List<House> houses;
     PlanetPosition? ascendant;
     PlanetPosition? midheaven;
+    double? vertexLongitude;
     if (!unknownBirthTime) {
       final h = SwephService.instance.houses(jd, latitude, longitude);
       houses = [for (int i = 0; i < 12; i++) _createHouse(i + 1, h.cusps[i])];
-      ascendant = _angleAsPlanet(h.ascendant, 1);
-      midheaven = _angleAsPlanet(h.mc, 10);
+      ascendant = _pointAsPlanet(Planet.sun, h.ascendant, 1); // ASC placeholder
+      midheaven = _pointAsPlanet(Planet.midheaven, h.mc, 10);
+      vertexLongitude = h.vertex;
     } else {
       houses = _calculateHousesEqualSign(planets[0].longitude);
     }
 
     final planetsWithHouses = _assignHousesToPlanets(planets, houses);
     final aspects = _calculateAspects(planetsWithHouses);
+
+    // Pontos místicos (Lilith + eixos + Vértex + Parte da Fortuna). Exigem
+    // casas/ângulos, então só entram quando a hora de nascimento é conhecida.
+    final mysticalPoints = <PlanetPosition>[];
+    if (!unknownBirthTime && ascendant != null && midheaven != null) {
+      final sun = planetsWithHouses.firstWhere((p) => p.planet == Planet.sun);
+      final moon = planetsWithHouses.firstWhere((p) => p.planet == Planet.moon);
+      // Lilith (Lua Negra / apogeu médio) via sweph.
+      final lilith = SwephService.instance
+          .bodyPosition(jd, SwephService.heavenlyBody(Planet.lilith));
+      mysticalPoints.add(_createPlanetPosition(
+        Planet.lilith,
+        lilith.longitude,
+        lilith.speed,
+        _findHouseForLongitude(lilith.longitude, houses),
+      ));
+      mysticalPoints.addAll(_buildCalculatedPoints(
+        ascLongitude: ascendant.longitude,
+        mcLongitude: midheaven.longitude,
+        vertexLongitude: vertexLongitude,
+        sun: sun,
+        moon: moon,
+        houses: houses,
+      ));
+    }
 
     return BirthChartModel(
       id: const Uuid().v4(),
@@ -179,21 +206,23 @@ class ChartCalculator {
       longitude: longitude,
       timezone: resolved.label,
       unknownBirthTime: unknownBirthTime,
-      planets: planetsWithHouses,
+      planets: [...planetsWithHouses, ...mysticalPoints],
       houses: houses,
       ascendant: ascendant,
       midheaven: midheaven,
       aspects: aspects,
       calculatedAt: DateTime.now(),
+      calcVersion: kChartCalcVersion,
     );
   }
 
-  /// Constrói um PlanetPosition para um ângulo (ASC/MC) a partir da longitude.
-  PlanetPosition _angleAsPlanet(double longitude, int houseNumber) {
+  /// Empacota a longitude de um ponto/ângulo (MC, IC, DSC, Vértex, ASC…) em um
+  /// PlanetPosition, com sinal derivado da longitude e velocidade zero.
+  PlanetPosition _pointAsPlanet(Planet planet, double longitude, int houseNumber) {
     longitude %= 360;
     if (longitude < 0) longitude += 360;
     return PlanetPosition(
-      planet: Planet.sun, // placeholder (ângulo, não planeta)
+      planet: planet,
       sign: ZodiacSign.fromLongitude(longitude),
       degree: (longitude % 30).floor(),
       minute: ((longitude % 1) * 60).floor(),
@@ -202,6 +231,45 @@ class ChartCalculator {
       longitude: longitude,
       speed: 0,
     );
+  }
+
+  /// Constrói os pontos calculados a partir dos ângulos: eixos MC/IC e DSC,
+  /// Vértex (se disponível) e Parte da Fortuna (com fórmula diurna/noturna).
+  List<PlanetPosition> _buildCalculatedPoints({
+    required double ascLongitude,
+    required double mcLongitude,
+    required double? vertexLongitude,
+    required PlanetPosition sun,
+    required PlanetPosition moon,
+    required List<House> houses,
+  }) {
+    double norm(double v) {
+      v %= 360;
+      return v < 0 ? v + 360 : v;
+    }
+
+    final points = <PlanetPosition>[
+      _pointAsPlanet(Planet.midheaven, mcLongitude, 10),
+      _pointAsPlanet(Planet.imumCoeli, norm(mcLongitude + 180), 4),
+      _pointAsPlanet(Planet.descendant, norm(ascLongitude + 180), 7),
+    ];
+
+    if (vertexLongitude != null) {
+      final vtx = norm(vertexLongitude);
+      points.add(
+          _pointAsPlanet(Planet.vertex, vtx, _findHouseForLongitude(vtx, houses)));
+    }
+
+    // Parte da Fortuna: mapa diurno (Sol acima do horizonte → casas 7-12) usa
+    // ASC + Lua − Sol; mapa noturno usa ASC + Sol − Lua.
+    final isDiurnal = sun.houseNumber >= 7 && sun.houseNumber <= 12;
+    final pof = isDiurnal
+        ? norm(ascLongitude + moon.longitude - sun.longitude)
+        : norm(ascLongitude + sun.longitude - moon.longitude);
+    points.add(_pointAsPlanet(
+        Planet.partOfFortune, pof, _findHouseForLongitude(pof, houses)));
+
+    return points;
   }
 
   /// Calcula usando método local (VSOP87)
@@ -286,6 +354,22 @@ class ChartCalculator {
     // 5. Calcular aspectos
     final aspects = _calculateAspects(planetsWithHouses);
 
+    // 6. Pontos calculados possíveis no método local: eixos + Parte da Fortuna.
+    // Lilith e Vértex dependem do sweph, então ficam de fora aqui.
+    final mysticalPoints = <PlanetPosition>[];
+    if (!unknownBirthTime && ascendant != null && midheaven != null) {
+      final sun = planetsWithHouses.firstWhere((p) => p.planet == Planet.sun);
+      final moon = planetsWithHouses.firstWhere((p) => p.planet == Planet.moon);
+      mysticalPoints.addAll(_buildCalculatedPoints(
+        ascLongitude: ascendant.longitude,
+        mcLongitude: midheaven.longitude,
+        vertexLongitude: null,
+        sun: sun,
+        moon: moon,
+        houses: houses,
+      ));
+    }
+
     return BirthChartModel(
       id: const Uuid().v4(),
       userId: userId,
@@ -296,12 +380,13 @@ class ChartCalculator {
       longitude: longitude,
       timezone: 'UTC',
       unknownBirthTime: unknownBirthTime,
-      planets: planetsWithHouses,
+      planets: [...planetsWithHouses, ...mysticalPoints],
       houses: houses,
       ascendant: ascendant,
       midheaven: midheaven,
       aspects: aspects,
       calculatedAt: DateTime.now(),
+      calcVersion: kChartCalcVersion,
     );
   }
 
