@@ -10,7 +10,9 @@ import 'enums.dart';
 /// o campo são tratados como versão 1.
 ///
 /// v2: adiciona Lilith, MC/IC/DSC, Vértex e Parte da Fortuna.
-const int kChartCalcVersion = 2;
+/// v3: corrige o caminho gravável do Swiss Ephemeris (antes o sweph falhava e
+///     caía no método local, sem Lilith/Vértex e com posições aproximadas).
+const int kChartCalcVersion = 3;
 
 class BirthChartModel {
   final String id;
