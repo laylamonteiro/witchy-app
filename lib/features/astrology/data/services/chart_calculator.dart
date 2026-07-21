@@ -212,6 +212,7 @@ class ChartCalculator {
       midheaven: midheaven,
       aspects: aspects,
       calculatedAt: DateTime.now(),
+      calcVersion: kChartCalcVersion,
     );
   }
 
@@ -385,6 +386,7 @@ class ChartCalculator {
       midheaven: midheaven,
       aspects: aspects,
       calculatedAt: DateTime.now(),
+      calcVersion: kChartCalcVersion,
     );
   }
 
