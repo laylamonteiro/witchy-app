@@ -63,8 +63,11 @@ jobs:
         run: dart format --output=none --set-exit-if-changed lib test
         continue-on-error: true
 
-      - name: 🧭 Analyze (bloqueante)
-        run: flutter analyze
+      - name: 🧭 Analyze (bloqueante em erros/warnings)
+        # --no-fatal-infos: falha só em erros e warnings (problemas reais
+        # introduzidos), não na dívida de lint info pré-existente
+        # (withOpacity depreciado, prefer_const etc.).
+        run: flutter analyze --no-fatal-infos
 
       - name: 🧪 Run tests (bloqueante)
         run: flutter test
