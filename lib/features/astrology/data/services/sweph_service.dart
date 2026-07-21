@@ -14,7 +14,8 @@ class HousesResult {
   final List<double> cusps; // 12 cúspides (casa 1..12), em graus 0-360
   final double ascendant;
   final double mc;
-  const HousesResult(this.cusps, this.ascendant, this.mc);
+  final double vertex; // ascmc[3], ponto do destino
+  const HousesResult(this.cusps, this.ascendant, this.mc, this.vertex);
 }
 
 /// Fina camada sobre o Swiss Ephemeris (pacote `sweph`).
@@ -62,7 +63,7 @@ class SwephService {
     return BodyPosition(lon, coords.speedInLongitude);
   }
 
-  /// Casas Placidus: 12 cúspides + Ascendente + Meio do Céu.
+  /// Casas Placidus: 12 cúspides + Ascendente + Meio do Céu + Vértex.
   HousesResult houses(double jdUt, double latitude, double longitude) {
     final h = Sweph.swe_houses(jdUt, latitude, longitude, Hsys.P);
     final raw = h.cusps;
@@ -81,7 +82,13 @@ class SwephService {
       return v < 0 ? v + 360 : v;
     }
 
-    return HousesResult(cusps, norm(h.ascmc[0]), norm(h.ascmc[1]));
+    // ascmc: [0]=Ascendente, [1]=MC, [2]=ARMC, [3]=Vértex.
+    return HousesResult(
+      cusps,
+      norm(h.ascmc[0]),
+      norm(h.ascmc[1]),
+      norm(h.ascmc[3]),
+    );
   }
 
   /// Mapeia o [Planet] do app para o corpo do Swiss Ephemeris.
@@ -111,6 +118,15 @@ class SwephService {
       case Planet.northNode:
       case Planet.southNode:
         return HeavenlyBody.SE_MEAN_NODE;
+      case Planet.lilith:
+        return HeavenlyBody.SE_MEAN_APOG; // Lua Negra (apogeu médio)
+      case Planet.midheaven:
+      case Planet.imumCoeli:
+      case Planet.descendant:
+      case Planet.vertex:
+      case Planet.partOfFortune:
+        // Pontos calculados a partir das casas/ângulos, não corpos do sweph.
+        throw ArgumentError('${planet.displayName} não é um corpo do Swiss Ephemeris');
     }
   }
 }
