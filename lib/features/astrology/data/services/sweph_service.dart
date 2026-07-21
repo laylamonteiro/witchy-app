@@ -1,3 +1,4 @@
+import 'package:path_provider/path_provider.dart';
 import 'package:sweph/sweph.dart';
 
 import '../models/enums.dart';
@@ -37,7 +38,11 @@ class SwephService {
   }
 
   Future<void> _init() async {
-    await Sweph.init();
+    // O sweph precisa de um diretório GRAVÁVEL para preparar os arquivos de
+    // efemérides. O padrão ('ephe_files', relativo) falha no Android/iOS, onde
+    // o diretório de trabalho é somente leitura. Usamos o suporte do app.
+    final dir = await getApplicationSupportDirectory();
+    await Sweph.init(epheFilesPath: '${dir.path}/ephe');
     _ready = true;
   }
 
