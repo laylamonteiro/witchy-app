@@ -23,6 +23,18 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 🧹 Free runner disk space
+        # O build debug do APK esgota o disco do runner (Gradle/NDK/SDK).
+        # Mesma mitigação do workflow de release.
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo apt-get clean
+          df -h
+
       - name: ☕ Setup Java
         uses: actions/setup-java@v4
         with:

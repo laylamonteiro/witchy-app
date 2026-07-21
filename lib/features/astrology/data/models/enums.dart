@@ -1,6 +1,8 @@
 // Enums para Astrologia
 import 'package:flutter/material.dart';
 
+import '../../../../core/content/content_locale.dart';
+
 enum Planet {
   sun,
   moon,
@@ -15,34 +17,8 @@ enum Planet {
   northNode,
   southNode;
 
-  String get displayName {
-    switch (this) {
-      case Planet.sun:
-        return 'Sol';
-      case Planet.moon:
-        return 'Lua';
-      case Planet.mercury:
-        return 'Mercúrio';
-      case Planet.venus:
-        return 'Vênus';
-      case Planet.mars:
-        return 'Marte';
-      case Planet.jupiter:
-        return 'Júpiter';
-      case Planet.saturn:
-        return 'Saturno';
-      case Planet.uranus:
-        return 'Urano';
-      case Planet.neptune:
-        return 'Netuno';
-      case Planet.pluto:
-        return 'Plutão';
-      case Planet.northNode:
-        return 'Nodo Norte';
-      case Planet.southNode:
-        return 'Nodo Sul';
-    }
-  }
+  String get displayName => ContentLocale.instance
+      .select(pt: _planetNamesPt, en: _planetNamesEn, es: _planetNamesEs)[this]!;
 
   String get symbol {
     switch (this) {
@@ -117,34 +93,8 @@ enum ZodiacSign {
   aquarius,
   pisces;
 
-  String get displayName {
-    switch (this) {
-      case ZodiacSign.aries:
-        return 'Áries';
-      case ZodiacSign.taurus:
-        return 'Touro';
-      case ZodiacSign.gemini:
-        return 'Gêmeos';
-      case ZodiacSign.cancer:
-        return 'Câncer';
-      case ZodiacSign.leo:
-        return 'Leão';
-      case ZodiacSign.virgo:
-        return 'Virgem';
-      case ZodiacSign.libra:
-        return 'Libra';
-      case ZodiacSign.scorpio:
-        return 'Escorpião';
-      case ZodiacSign.sagittarius:
-        return 'Sagitário';
-      case ZodiacSign.capricorn:
-        return 'Capricórnio';
-      case ZodiacSign.aquarius:
-        return 'Aquário';
-      case ZodiacSign.pisces:
-        return 'Peixes';
-    }
-  }
+  String get displayName => ContentLocale.instance.select(
+      pt: _zodiacNamesPt, en: _zodiacNamesEn, es: _zodiacNamesEs)[this]!;
 
   String get symbol {
     switch (this) {
@@ -221,34 +171,10 @@ enum ZodiacSign {
     return ZodiacSign.values[signIndex % 12];
   }
 
-  String get magicalDescription {
-    switch (this) {
-      case ZodiacSign.aries:
-        return 'corajosas e iniciativas';
-      case ZodiacSign.taurus:
-        return 'estáveis e sensuais';
-      case ZodiacSign.gemini:
-        return 'curiosas e comunicativas';
-      case ZodiacSign.cancer:
-        return 'intuitivas e nutritivas';
-      case ZodiacSign.leo:
-        return 'expressivas e dramáticas';
-      case ZodiacSign.virgo:
-        return 'analíticas e práticas';
-      case ZodiacSign.libra:
-        return 'harmoniosas e diplomáticas';
-      case ZodiacSign.scorpio:
-        return 'profundas e transformadoras';
-      case ZodiacSign.sagittarius:
-        return 'expansivas e filosóficas';
-      case ZodiacSign.capricorn:
-        return 'disciplinadas e estruturadas';
-      case ZodiacSign.aquarius:
-        return 'inovadoras e humanitárias';
-      case ZodiacSign.pisces:
-        return 'místicas e compassivas';
-    }
-  }
+  String get magicalDescription => ContentLocale.instance.select(
+      pt: _zodiacMagicalPt,
+      en: _zodiacMagicalEn,
+      es: _zodiacMagicalEs)[this]!;
 }
 
 enum Element {
@@ -257,18 +183,8 @@ enum Element {
   air,
   water;
 
-  String get displayName {
-    switch (this) {
-      case Element.fire:
-        return 'Fogo';
-      case Element.earth:
-        return 'Terra';
-      case Element.air:
-        return 'Ar';
-      case Element.water:
-        return 'Água';
-    }
-  }
+  String get displayName => ContentLocale.instance.select(
+      pt: _elementNamesPt, en: _elementNamesEn, es: _elementNamesEs)[this]!;
 
   String get symbol {
     switch (this) {
@@ -283,18 +199,10 @@ enum Element {
     }
   }
 
-  String get magicalDescription {
-    switch (this) {
-      case Element.fire:
-        return 'Ação, paixão, transformação. Magia de velas e rituais solares.';
-      case Element.earth:
-        return 'Manifestação, aterramento, prosperidade. Bruxaria verde e cristais.';
-      case Element.air:
-        return 'Comunicação, intelecto, adivinhação. Magia de palavras e incensos.';
-      case Element.water:
-        return 'Intuição, emoção, magia lunar. Banhos rituais e trabalho com sonhos.';
-    }
-  }
+  String get magicalDescription => ContentLocale.instance.select(
+      pt: _elementMagicalPt,
+      en: _elementMagicalEn,
+      es: _elementMagicalEs)[this]!;
 
   Color get color {
     switch (this) {
@@ -315,27 +223,13 @@ enum Modality {
   fixed,
   mutable;
 
-  String get displayName {
-    switch (this) {
-      case Modality.cardinal:
-        return 'Cardinal';
-      case Modality.fixed:
-        return 'Fixo';
-      case Modality.mutable:
-        return 'Mutável';
-    }
-  }
+  String get displayName => ContentLocale.instance.select(
+      pt: _modalityNamesPt, en: _modalityNamesEn, es: _modalityNamesEs)[this]!;
 
-  String get description {
-    switch (this) {
-      case Modality.cardinal:
-        return 'Iniciação, liderança, ação. Você é uma bruxa que inicia mudanças.';
-      case Modality.fixed:
-        return 'Estabilidade, persistência, poder. Você é uma bruxa que mantém e fortalece.';
-      case Modality.mutable:
-        return 'Adaptação, flexibilidade, transformação. Você é uma bruxa que flui e se adapta.';
-    }
-  }
+  String get description => ContentLocale.instance.select(
+      pt: _modalityDescPt,
+      en: _modalityDescEn,
+      es: _modalityDescEs)[this]!;
 }
 
 enum AspectType {
@@ -345,20 +239,8 @@ enum AspectType {
   trine,
   opposition;
 
-  String get displayName {
-    switch (this) {
-      case AspectType.conjunction:
-        return 'Conjunção';
-      case AspectType.sextile:
-        return 'Sextil';
-      case AspectType.square:
-        return 'Quadratura';
-      case AspectType.trine:
-        return 'Trígono';
-      case AspectType.opposition:
-        return 'Oposição';
-    }
-  }
+  String get displayName => ContentLocale.instance.select(
+      pt: _aspectNamesPt, en: _aspectNamesEn, es: _aspectNamesEs)[this]!;
 
   String get symbol {
     switch (this) {
@@ -405,20 +287,8 @@ enum AspectType {
 
   double get maxOrb => orb; // Alias para compatibilidade
 
-  String get description {
-    switch (this) {
-      case AspectType.conjunction:
-        return 'intensificadora';
-      case AspectType.sextile:
-        return 'harmoniosa';
-      case AspectType.square:
-        return 'desafiadora';
-      case AspectType.trine:
-        return 'fluida';
-      case AspectType.opposition:
-        return 'polarizadora';
-    }
-  }
+  String get description => ContentLocale.instance.select(
+      pt: _aspectDescPt, en: _aspectDescEn, es: _aspectDescEs)[this]!;
 
   bool get isHarmonious {
     return this == AspectType.trine || this == AspectType.sextile;
@@ -438,24 +308,8 @@ enum EnergyLevel {
   moderate,
   harmonious;
 
-  String get displayName {
-    switch (this) {
-      case EnergyLevel.high:
-        return 'Alta';
-      case EnergyLevel.medium:
-        return 'Média';
-      case EnergyLevel.low:
-        return 'Baixa';
-      case EnergyLevel.intense:
-        return 'Intensa';
-      case EnergyLevel.challenging:
-        return 'Desafiadora';
-      case EnergyLevel.moderate:
-        return 'Moderada';
-      case EnergyLevel.harmonious:
-        return 'Harmoniosa';
-    }
-  }
+  String get displayName => ContentLocale.instance.select(
+      pt: _energyNamesPt, en: _energyNamesEn, es: _energyNamesEs)[this]!;
 
   String get symbol {
     switch (this) {
@@ -472,3 +326,320 @@ enum EnergyLevel {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Mapas de tradução por locale.
+//
+// Espelham o mecanismo síncrono de `ContentLocale` (sem `BuildContext`), usado
+// também pelos serviços que rodam fora da árvore de widgets
+// (magical_interpreter, transit_interpreter). Cada mapa DEVE cobrir todos os
+// valores do respectivo enum — a paridade é verificada por
+// test/astrology_enums_parity_test.dart.
+// ---------------------------------------------------------------------------
+
+const Map<Planet, String> _planetNamesPt = {
+  Planet.sun: 'Sol',
+  Planet.moon: 'Lua',
+  Planet.mercury: 'Mercúrio',
+  Planet.venus: 'Vênus',
+  Planet.mars: 'Marte',
+  Planet.jupiter: 'Júpiter',
+  Planet.saturn: 'Saturno',
+  Planet.uranus: 'Urano',
+  Planet.neptune: 'Netuno',
+  Planet.pluto: 'Plutão',
+  Planet.northNode: 'Nodo Norte',
+  Planet.southNode: 'Nodo Sul',
+};
+
+const Map<Planet, String> _planetNamesEn = {
+  Planet.sun: 'Sun',
+  Planet.moon: 'Moon',
+  Planet.mercury: 'Mercury',
+  Planet.venus: 'Venus',
+  Planet.mars: 'Mars',
+  Planet.jupiter: 'Jupiter',
+  Planet.saturn: 'Saturn',
+  Planet.uranus: 'Uranus',
+  Planet.neptune: 'Neptune',
+  Planet.pluto: 'Pluto',
+  Planet.northNode: 'North Node',
+  Planet.southNode: 'South Node',
+};
+
+const Map<Planet, String> _planetNamesEs = {
+  Planet.sun: 'Sol',
+  Planet.moon: 'Luna',
+  Planet.mercury: 'Mercurio',
+  Planet.venus: 'Venus',
+  Planet.mars: 'Marte',
+  Planet.jupiter: 'Júpiter',
+  Planet.saturn: 'Saturno',
+  Planet.uranus: 'Urano',
+  Planet.neptune: 'Neptuno',
+  Planet.pluto: 'Plutón',
+  Planet.northNode: 'Nodo Norte',
+  Planet.southNode: 'Nodo Sur',
+};
+
+const Map<ZodiacSign, String> _zodiacNamesPt = {
+  ZodiacSign.aries: 'Áries',
+  ZodiacSign.taurus: 'Touro',
+  ZodiacSign.gemini: 'Gêmeos',
+  ZodiacSign.cancer: 'Câncer',
+  ZodiacSign.leo: 'Leão',
+  ZodiacSign.virgo: 'Virgem',
+  ZodiacSign.libra: 'Libra',
+  ZodiacSign.scorpio: 'Escorpião',
+  ZodiacSign.sagittarius: 'Sagitário',
+  ZodiacSign.capricorn: 'Capricórnio',
+  ZodiacSign.aquarius: 'Aquário',
+  ZodiacSign.pisces: 'Peixes',
+};
+
+const Map<ZodiacSign, String> _zodiacNamesEn = {
+  ZodiacSign.aries: 'Aries',
+  ZodiacSign.taurus: 'Taurus',
+  ZodiacSign.gemini: 'Gemini',
+  ZodiacSign.cancer: 'Cancer',
+  ZodiacSign.leo: 'Leo',
+  ZodiacSign.virgo: 'Virgo',
+  ZodiacSign.libra: 'Libra',
+  ZodiacSign.scorpio: 'Scorpio',
+  ZodiacSign.sagittarius: 'Sagittarius',
+  ZodiacSign.capricorn: 'Capricorn',
+  ZodiacSign.aquarius: 'Aquarius',
+  ZodiacSign.pisces: 'Pisces',
+};
+
+const Map<ZodiacSign, String> _zodiacNamesEs = {
+  ZodiacSign.aries: 'Aries',
+  ZodiacSign.taurus: 'Tauro',
+  ZodiacSign.gemini: 'Géminis',
+  ZodiacSign.cancer: 'Cáncer',
+  ZodiacSign.leo: 'Leo',
+  ZodiacSign.virgo: 'Virgo',
+  ZodiacSign.libra: 'Libra',
+  ZodiacSign.scorpio: 'Escorpio',
+  ZodiacSign.sagittarius: 'Sagitario',
+  ZodiacSign.capricorn: 'Capricornio',
+  ZodiacSign.aquarius: 'Acuario',
+  ZodiacSign.pisces: 'Piscis',
+};
+
+const Map<ZodiacSign, String> _zodiacMagicalPt = {
+  ZodiacSign.aries: 'corajosas e iniciativas',
+  ZodiacSign.taurus: 'estáveis e sensuais',
+  ZodiacSign.gemini: 'curiosas e comunicativas',
+  ZodiacSign.cancer: 'intuitivas e nutritivas',
+  ZodiacSign.leo: 'expressivas e dramáticas',
+  ZodiacSign.virgo: 'analíticas e práticas',
+  ZodiacSign.libra: 'harmoniosas e diplomáticas',
+  ZodiacSign.scorpio: 'profundas e transformadoras',
+  ZodiacSign.sagittarius: 'expansivas e filosóficas',
+  ZodiacSign.capricorn: 'disciplinadas e estruturadas',
+  ZodiacSign.aquarius: 'inovadoras e humanitárias',
+  ZodiacSign.pisces: 'místicas e compassivas',
+};
+
+const Map<ZodiacSign, String> _zodiacMagicalEn = {
+  ZodiacSign.aries: 'courageous and pioneering',
+  ZodiacSign.taurus: 'stable and sensual',
+  ZodiacSign.gemini: 'curious and communicative',
+  ZodiacSign.cancer: 'intuitive and nurturing',
+  ZodiacSign.leo: 'expressive and dramatic',
+  ZodiacSign.virgo: 'analytical and practical',
+  ZodiacSign.libra: 'harmonious and diplomatic',
+  ZodiacSign.scorpio: 'deep and transformative',
+  ZodiacSign.sagittarius: 'expansive and philosophical',
+  ZodiacSign.capricorn: 'disciplined and structured',
+  ZodiacSign.aquarius: 'innovative and humanitarian',
+  ZodiacSign.pisces: 'mystical and compassionate',
+};
+
+const Map<ZodiacSign, String> _zodiacMagicalEs = {
+  ZodiacSign.aries: 'valientes e iniciadoras',
+  ZodiacSign.taurus: 'estables y sensuales',
+  ZodiacSign.gemini: 'curiosas y comunicativas',
+  ZodiacSign.cancer: 'intuitivas y nutritivas',
+  ZodiacSign.leo: 'expresivas y dramáticas',
+  ZodiacSign.virgo: 'analíticas y prácticas',
+  ZodiacSign.libra: 'armoniosas y diplomáticas',
+  ZodiacSign.scorpio: 'profundas y transformadoras',
+  ZodiacSign.sagittarius: 'expansivas y filosóficas',
+  ZodiacSign.capricorn: 'disciplinadas y estructuradas',
+  ZodiacSign.aquarius: 'innovadoras y humanitarias',
+  ZodiacSign.pisces: 'místicas y compasivas',
+};
+
+const Map<Element, String> _elementNamesPt = {
+  Element.fire: 'Fogo',
+  Element.earth: 'Terra',
+  Element.air: 'Ar',
+  Element.water: 'Água',
+};
+
+const Map<Element, String> _elementNamesEn = {
+  Element.fire: 'Fire',
+  Element.earth: 'Earth',
+  Element.air: 'Air',
+  Element.water: 'Water',
+};
+
+const Map<Element, String> _elementNamesEs = {
+  Element.fire: 'Fuego',
+  Element.earth: 'Tierra',
+  Element.air: 'Aire',
+  Element.water: 'Agua',
+};
+
+const Map<Element, String> _elementMagicalPt = {
+  Element.fire: 'Ação, paixão, transformação. Magia de velas e rituais solares.',
+  Element.earth:
+      'Manifestação, aterramento, prosperidade. Bruxaria verde e cristais.',
+  Element.air:
+      'Comunicação, intelecto, adivinhação. Magia de palavras e incensos.',
+  Element.water:
+      'Intuição, emoção, magia lunar. Banhos rituais e trabalho com sonhos.',
+};
+
+const Map<Element, String> _elementMagicalEn = {
+  Element.fire: 'Action, passion, transformation. Candle magic and solar rituals.',
+  Element.earth:
+      'Manifestation, grounding, prosperity. Green witchcraft and crystals.',
+  Element.air: 'Communication, intellect, divination. Word magic and incense.',
+  Element.water: 'Intuition, emotion, lunar magic. Ritual baths and dream work.',
+};
+
+const Map<Element, String> _elementMagicalEs = {
+  Element.fire: 'Acción, pasión, transformación. Magia de velas y rituales solares.',
+  Element.earth:
+      'Manifestación, enraizamiento, prosperidad. Brujería verde y cristales.',
+  Element.air:
+      'Comunicación, intelecto, adivinación. Magia de palabras e inciensos.',
+  Element.water:
+      'Intuición, emoción, magia lunar. Baños rituales y trabajo con sueños.',
+};
+
+const Map<Modality, String> _modalityNamesPt = {
+  Modality.cardinal: 'Cardinal',
+  Modality.fixed: 'Fixo',
+  Modality.mutable: 'Mutável',
+};
+
+const Map<Modality, String> _modalityNamesEn = {
+  Modality.cardinal: 'Cardinal',
+  Modality.fixed: 'Fixed',
+  Modality.mutable: 'Mutable',
+};
+
+const Map<Modality, String> _modalityNamesEs = {
+  Modality.cardinal: 'Cardinal',
+  Modality.fixed: 'Fijo',
+  Modality.mutable: 'Mutable',
+};
+
+const Map<Modality, String> _modalityDescPt = {
+  Modality.cardinal:
+      'Iniciação, liderança, ação. Você é uma bruxa que inicia mudanças.',
+  Modality.fixed:
+      'Estabilidade, persistência, poder. Você é uma bruxa que mantém e fortalece.',
+  Modality.mutable:
+      'Adaptação, flexibilidade, transformação. Você é uma bruxa que flui e se adapta.',
+};
+
+const Map<Modality, String> _modalityDescEn = {
+  Modality.cardinal:
+      'Initiation, leadership, action. You are a witch who starts change.',
+  Modality.fixed:
+      'Stability, persistence, power. You are a witch who sustains and strengthens.',
+  Modality.mutable:
+      'Adaptation, flexibility, transformation. You are a witch who flows and adapts.',
+};
+
+const Map<Modality, String> _modalityDescEs = {
+  Modality.cardinal:
+      'Iniciación, liderazgo, acción. Eres una bruja que inicia cambios.',
+  Modality.fixed:
+      'Estabilidad, persistencia, poder. Eres una bruja que mantiene y fortalece.',
+  Modality.mutable:
+      'Adaptación, flexibilidad, transformación. Eres una bruja que fluye y se adapta.',
+};
+
+const Map<AspectType, String> _aspectNamesPt = {
+  AspectType.conjunction: 'Conjunção',
+  AspectType.sextile: 'Sextil',
+  AspectType.square: 'Quadratura',
+  AspectType.trine: 'Trígono',
+  AspectType.opposition: 'Oposição',
+};
+
+const Map<AspectType, String> _aspectNamesEn = {
+  AspectType.conjunction: 'Conjunction',
+  AspectType.sextile: 'Sextile',
+  AspectType.square: 'Square',
+  AspectType.trine: 'Trine',
+  AspectType.opposition: 'Opposition',
+};
+
+const Map<AspectType, String> _aspectNamesEs = {
+  AspectType.conjunction: 'Conjunción',
+  AspectType.sextile: 'Sextil',
+  AspectType.square: 'Cuadratura',
+  AspectType.trine: 'Trígono',
+  AspectType.opposition: 'Oposición',
+};
+
+const Map<AspectType, String> _aspectDescPt = {
+  AspectType.conjunction: 'intensificadora',
+  AspectType.sextile: 'harmoniosa',
+  AspectType.square: 'desafiadora',
+  AspectType.trine: 'fluida',
+  AspectType.opposition: 'polarizadora',
+};
+
+const Map<AspectType, String> _aspectDescEn = {
+  AspectType.conjunction: 'intensifying',
+  AspectType.sextile: 'harmonious',
+  AspectType.square: 'challenging',
+  AspectType.trine: 'flowing',
+  AspectType.opposition: 'polarizing',
+};
+
+const Map<AspectType, String> _aspectDescEs = {
+  AspectType.conjunction: 'intensificadora',
+  AspectType.sextile: 'armoniosa',
+  AspectType.square: 'desafiante',
+  AspectType.trine: 'fluida',
+  AspectType.opposition: 'polarizadora',
+};
+
+const Map<EnergyLevel, String> _energyNamesPt = {
+  EnergyLevel.high: 'Alta',
+  EnergyLevel.medium: 'Média',
+  EnergyLevel.low: 'Baixa',
+  EnergyLevel.intense: 'Intensa',
+  EnergyLevel.challenging: 'Desafiadora',
+  EnergyLevel.moderate: 'Moderada',
+  EnergyLevel.harmonious: 'Harmoniosa',
+};
+
+const Map<EnergyLevel, String> _energyNamesEn = {
+  EnergyLevel.high: 'High',
+  EnergyLevel.medium: 'Medium',
+  EnergyLevel.low: 'Low',
+  EnergyLevel.intense: 'Intense',
+  EnergyLevel.challenging: 'Challenging',
+  EnergyLevel.moderate: 'Moderate',
+  EnergyLevel.harmonious: 'Harmonious',
+};
+
+const Map<EnergyLevel, String> _energyNamesEs = {
+  EnergyLevel.high: 'Alta',
+  EnergyLevel.medium: 'Media',
+  EnergyLevel.low: 'Baja',
+  EnergyLevel.intense: 'Intensa',
+  EnergyLevel.challenging: 'Desafiante',
+  EnergyLevel.moderate: 'Moderada',
+  EnergyLevel.harmonious: 'Armoniosa',
+};
