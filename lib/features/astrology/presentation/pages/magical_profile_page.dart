@@ -328,18 +328,6 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
 
           const SizedBox(height: 16),
 
-          // Botão para ver todos os planetas
-          Center(
-            child: TextButton.icon(
-              onPressed: () =>
-                  _showAllPlanetsDialog(context, birthChart.planets),
-              icon: Icon(Icons.expand_more, color: context.gc.lilac),
-              label: Text(
-                'Ver todos os planetas',
-                style: TextStyle(color: context.gc.lilac),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -436,71 +424,6 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
   }
 
   /// Mostra dialog com todos os planetas
-  void _showAllPlanetsDialog(BuildContext context, List<dynamic> planets) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.gc.cardBackground,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.gc.lilac.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Título
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Todos os Planetas',
-                style: GoogleFonts.cinzelDecorative(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: context.gc.lilac,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Divider(color: context.gc.lilac),
-            // Lista
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: planets.length,
-                itemBuilder: (context, index) {
-                  final p = planets[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _buildPlanetTile(
-                      planet: p.planet,
-                      sign: p.sign,
-                      houseNumber: p.houseNumber,
-                      isRetrograde: p.isRetrograde,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildAISection(AstrologyProvider provider) {
     final profile = provider.magicalProfile;
 
