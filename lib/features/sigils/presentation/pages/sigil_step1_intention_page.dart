@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
+import '../../data/data_sources/sigil_content.dart';
 import '../../data/models/sigil_model.dart';
 import 'sigil_step2_letters_page.dart';
 import '../widgets/sigil_icon.dart';
@@ -85,14 +86,14 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context).sigilWhatIsDesc,
+                    SigilContent.whatIsDescription,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context).sigilHowIntro,
+                    SigilContent.howIntro,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -176,14 +177,11 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 12),
-                  _buildExample(AppLocalizations.of(context).sigilExample1),
-                  _buildExample(AppLocalizations.of(context).sigilExample2),
-                  _buildExample(AppLocalizations.of(context).sigilExample3),
-                  _buildExample(AppLocalizations.of(context).sigilExample4),
-                  _buildExample(AppLocalizations.of(context).sigilExample5),
+                  for (final example in SigilContent.intentionExamples)
+                    _buildExample(example),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context).sigilWordTip,
+                    SigilContent.wordTip,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,

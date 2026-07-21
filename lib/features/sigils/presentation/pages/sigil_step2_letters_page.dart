@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
+import '../../data/data_sources/sigil_content.dart';
 import '../../data/models/sigil_model.dart';
 import 'sigil_step3_drawing_page.dart';
 
@@ -145,20 +146,17 @@ class SigilStep2LettersPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context).sigilSimplified,
+                    SigilContent.simplifiedIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
-                  _buildStep(context, AppLocalizations.of(context).sigilStepAccents),
-                  _buildStep(context, AppLocalizations.of(context).sigilStepSpaces),
-                  _buildStep(
-                      context,
-                      AppLocalizations.of(context).sigilStepDupes),
+                  for (final step in SigilContent.simplificationSteps)
+                    _buildStep(context, step),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context).sigilWheelNote,
+                    SigilContent.wheelNote,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
