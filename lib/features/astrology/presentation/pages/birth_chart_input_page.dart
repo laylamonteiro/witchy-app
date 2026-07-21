@@ -166,6 +166,30 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     _birthPlaceFocusNode.unfocus();
   }
 
+  Future<void> _showDstNotice(String tzLabel) async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.gc.surface,
+        title: Row(
+          children: [
+            Icon(Icons.wb_sunny_outlined, color: dialogContext.gc.lilac),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.chartDstNoticeTitle)),
+          ],
+        ),
+        content: Text('${l10n.chartDstNotice}\n\n$tzLabel'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonUnderstood),
+          ),
+        ],
+      ),
+    );
+  }
+
   bool _canCalculate() {
     return _birthDate != null &&
         _birthPlace != null &&
@@ -213,6 +237,11 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
       if (!mounted) return;
 
       if (chart != null) {
+        // Avisa quando o mapa usou horário de verão (o rótulo do fuso o indica).
+        if (chart.timezone.contains('verão')) {
+          await _showDstNotice(chart.timezone);
+        }
+        if (!mounted) return;
         // Navegar para visualização
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(

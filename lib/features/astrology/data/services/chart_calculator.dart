@@ -7,6 +7,7 @@ import '../models/house_model.dart';
 import '../models/aspect_model.dart';
 import '../models/enums.dart';
 import 'sweph_service.dart';
+import 'timezone_resolver.dart';
 
 /// Calculadora de Mapa Astral
 ///
@@ -89,16 +90,6 @@ class ChartCalculator {
   double _defaultOffsetFromLongitude(double longitude) =>
       (longitude / 15.0).roundToDouble();
 
-  String _offsetLabel(double offset) {
-    final sign = offset >= 0 ? '+' : '-';
-    final abs = offset.abs();
-    final whole = abs.truncate();
-    final minutes = ((abs - whole) * 60).round();
-    return minutes == 0
-        ? 'UTC$sign$whole'
-        : 'UTC$sign$whole:${minutes.toString().padLeft(2, '0')}';
-  }
-
   /// Cálculo preciso via Swiss Ephemeris (Moshier).
   Future<BirthChartModel> _calculateWithSweph({
     required String userId,
@@ -112,18 +103,16 @@ class ChartCalculator {
   }) async {
     await SwephService.instance.ensureReady();
 
-    final offset =
-        timezoneOffsetHours ?? _defaultOffsetFromLongitude(longitude);
-
-    // Hora local -> UTC (DateTime.utc evita qualquer conversão de fuso do device).
-    final localAsUtc = DateTime.utc(
-      birthDate.year,
-      birthDate.month,
-      birthDate.day,
-      birthTime.hour,
-      birthTime.minute,
+    // Fuso com horário de verão histórico (banco IANA via pacote timezone).
+    final resolved = TimezoneResolver.resolve(
+      date: birthDate,
+      hour: birthTime.hour,
+      minute: birthTime.minute,
+      latitude: latitude,
+      longitude: longitude,
+      explicitOffsetHours: timezoneOffsetHours,
     );
-    final utc = localAsUtc.subtract(Duration(minutes: (offset * 60).round()));
+    final utc = resolved.utc;
     final hourUt = utc.hour + utc.minute / 60.0 + utc.second / 3600.0;
     final jd = SwephService.instance.julianDayUt(
       year: utc.year,
@@ -131,7 +120,8 @@ class ChartCalculator {
       day: utc.day,
       hourUt: hourUt,
     );
-    _log('   🌍 Offset UTC aplicado: ${_offsetLabel(offset)}');
+    _log('   🌍 Fuso aplicado: ${resolved.label}'
+        '${resolved.isDst ? " [horário de verão]" : ""}');
     _log('   📅 Julian Day (UT): ${jd.toStringAsFixed(5)}');
 
     // Planetas + Nodo Norte (Sul = oposto).
@@ -187,7 +177,7 @@ class ChartCalculator {
       birthPlace: birthPlace,
       latitude: latitude,
       longitude: longitude,
-      timezone: _offsetLabel(offset),
+      timezone: resolved.label,
       unknownBirthTime: unknownBirthTime,
       planets: planetsWithHouses,
       houses: houses,
