@@ -420,14 +420,19 @@ class BirthChartViewPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              '${planet.planet.symbol} ${planet.planet.displayName}',
-              style: TextStyle(
-                color: context.gc.softWhite,
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                '${planet.planet.symbol} ${planet.planet.displayName}',
+                style: TextStyle(
+                  color: context.gc.softWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -560,26 +565,30 @@ class BirthChartViewPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                planet,
-                style: TextStyle(
-                  color: context.gc.softWhite,
-                  fontWeight: FontWeight.bold,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  planet,
+                  style: TextStyle(
+                    color: context.gc.softWhite,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              Text(
-                meaning,
-                style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.6),
-                  fontSize: 12,
+                Text(
+                  meaning,
+                  style: TextStyle(
+                    color: context.gc.softWhite.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          const SizedBox(width: 8),
           Text(
             position,
             style: TextStyle(
