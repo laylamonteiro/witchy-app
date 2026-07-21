@@ -262,13 +262,20 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
       return const SizedBox.shrink();
     }
 
-    // Planetas pessoais para mostrar (os mais importantes para iniciantes)
+    // Mostrar TODOS os planetas + nodos por padrão (cada um com sua explicação).
     final personalPlanets = [
       Planet.sun,
       Planet.moon,
       Planet.mercury,
       Planet.venus,
       Planet.mars,
+      Planet.jupiter,
+      Planet.saturn,
+      Planet.uranus,
+      Planet.neptune,
+      Planet.pluto,
+      Planet.northNode,
+      Planet.southNode,
     ];
 
     return MagicalCard(
