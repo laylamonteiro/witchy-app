@@ -786,8 +786,6 @@
   "chartInvalidDate": "Data inválida",
   "chartInvalidTime": "Hora inválida",
   "chartPlaceNotFound": "Local não encontrado",
-  "chartDstNoticeTitle": "Horário de verão detectado",
-  "chartDstNotice": "Seu mapa foi calculado considerando o horário de verão que estava em vigor na data e no local do seu nascimento.",
   "chartCalcError": "Erro ao calcular mapa",
   "chartCreateTitle": "Criar Mapa Astral",
   "chartYourChart": "Seu Mapa Astral",

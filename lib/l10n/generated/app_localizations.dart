@@ -4642,9 +4642,7 @@ abstract class AppLocalizations {
   ///
   /// In pt, this message translates to:
   /// **'Local não encontrado'**
-  String get chartDstNoticeTitle;
 
-  String get chartDstNotice;
 
   String get chartPlaceNotFound;
 
