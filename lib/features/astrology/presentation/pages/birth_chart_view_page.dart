@@ -8,6 +8,8 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../data/models/enums.dart';
+import '../../data/models/planet_position_model.dart';
 import '../providers/astrology_provider.dart';
 import 'magical_profile_page.dart';
 
@@ -171,52 +173,44 @@ class BirthChartViewPage extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // Todos os Planetas - CLICÁVEL
+                // Planetas Sociais (Júpiter, Saturno) - CLICÁVEL
                 _buildClickableCard(
                   context: context,
-                  title: 'Todos os Planetas',
-                  content: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ...chart.planets.map((planet) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${planet.planet.symbol} ${planet.planet.displayName}',
-                                style: TextStyle(
-                                  color: context.gc.softWhite,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    planet.positionString,
-                                    style: TextStyle(
-                                      color: context.gc.lilac,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Casa ${planet.houseNumber}',
-                                    style: TextStyle(
-                                      color:
-                                          context.gc.softWhite.withOpacity(0.6),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
+                  title: 'Planetas Sociais',
+                  content: _buildBodiesList(
+                    context,
+                    chart.planets,
+                    const [Planet.jupiter, Planet.saturn],
                   ),
-                  explanation: _TodosPlanetasExplanation(),
+                  explanation: _PlanetasSociaisExplanation(),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Planetas Transpessoais (Urano, Netuno, Plutão) - CLICÁVEL
+                _buildClickableCard(
+                  context: context,
+                  title: 'Planetas Transpessoais',
+                  content: _buildBodiesList(
+                    context,
+                    chart.planets,
+                    const [Planet.uranus, Planet.neptune, Planet.pluto],
+                  ),
+                  explanation: _PlanetasTranspessoaisExplanation(),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Pontos Astrológicos / Nodos - CLICÁVEL
+                _buildClickableCard(
+                  context: context,
+                  title: 'Pontos Astrológicos',
+                  content: _buildBodiesList(
+                    context,
+                    chart.planets,
+                    const [Planet.northNode, Planet.southNode],
+                  ),
+                  explanation: _NodosExplanation(),
                 ),
 
                 const SizedBox(height: 16),
@@ -399,6 +393,51 @@ class BirthChartViewPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  /// Lista de corpos (na ordem pedida) com posição e casa, para os cards de
+  /// categoria de planetas.
+  Widget _buildBodiesList(
+    BuildContext context,
+    List<PlanetPosition> planets,
+    List<Planet> bodies,
+  ) {
+    final rows = <Widget>[];
+    for (final body in bodies) {
+      final match = planets.where((p) => p.planet == body);
+      if (match.isEmpty) continue;
+      final planet = match.first;
+      rows.add(Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${planet.planet.symbol} ${planet.planet.displayName}',
+              style: TextStyle(
+                color: context.gc.softWhite,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(planet.positionString,
+                    style: TextStyle(color: context.gc.lilac)),
+                Text(
+                  'Casa ${planet.houseNumber}',
+                  style: TextStyle(
+                    color: context.gc.softWhite.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ));
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows);
   }
 
   Widget _buildClickableCard({
@@ -689,15 +728,16 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
   }
 }
 
-class _TodosPlanetasExplanation extends StatelessWidget {
+class _PlanetasSociaisExplanation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Além dos planetas pessoais, existem planetas sociais e geracionais que '
-          'influenciam aspectos mais amplos da sua vida.',
+          'Júpiter e Saturno são os planetas sociais: fazem a ponte entre a sua '
+          'personalidade individual e o mundo coletivo — sua relação com a '
+          'sociedade, o crescimento, as regras, as responsabilidades e o amadurecimento.',
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
@@ -707,31 +747,90 @@ class _TodosPlanetasExplanation extends StatelessWidget {
         _buildSection(
           context,
           '♃ Júpiter - Expansão',
-          'Planeta da sorte, crescimento e abundância. Mostra onde você tem facilidade na vida.',
+          'Expansão, fé, conhecimento, oportunidades e visão de mundo. Mostra onde '
+              'você cresce, confia e encontra facilidade e sorte na vida.',
         ),
         const SizedBox(height: 12),
         _buildSection(
           context,
           '♄ Saturno - Estrutura',
-          'Planeta das lições, responsabilidade e maturidade. Indica onde você enfrenta desafios para crescer.',
+          'Limites, disciplina, dever, medo, estrutura e amadurecimento. Indica onde '
+              'você aprende com desafios, assume responsabilidades e constrói solidez.',
+        ),
+      ],
+    );
+  }
+}
+
+class _PlanetasTranspessoaisExplanation extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Urano, Netuno e Plutão são os planetas transpessoais (ou geracionais). '
+          'Movem-se lentamente e ficam anos em cada signo, então gerações inteiras '
+          'os compartilham — falam de mudanças coletivas, espirituais e profundas.',
+          style: TextStyle(
+            color: context.gc.softWhite.withOpacity(0.8),
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildSection(
+          context,
+          '♅ Urano - Ruptura',
+          'Ruptura, liberdade, inovação e revolução. Onde você quebra padrões, '
+              'busca autenticidade e abre caminhos novos.',
         ),
         const SizedBox(height: 12),
         _buildSection(
           context,
-          '♅ Urano - Revolução',
-          'Planeta da inovação, mudança súbita e originalidade. Mostra onde você quebra padrões.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          '♆ Netuno - Espiritualidade',
-          'Planeta dos sonhos, intuição e transcendência. Indica sua conexão espiritual.',
+          '♆ Netuno - Dissolução',
+          'Sonhos, espiritualidade, idealização, dissolução e ilusão. Sua conexão '
+              'com o transcendente, a imaginação e a compaixão.',
         ),
         const SizedBox(height: 12),
         _buildSection(
           context,
           '♇ Plutão - Transformação',
-          'Planeta do poder, morte e renascimento. Mostra onde você passa por transformações profundas.',
+          'Poder, crise, morte simbólica, transformação e regeneração. Onde você '
+              'se reinventa profundamente e renasce.',
+        ),
+      ],
+    );
+  }
+}
+
+class _NodosExplanation extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Os Nodos Lunares não são planetas: são pontos matemáticos formados pelo '
+          'cruzamento da órbita da Lua com a trajetória aparente do Sol. Marcam a '
+          'direção de desenvolvimento (eixo kármico/evolutivo) e os padrões já conhecidos.',
+          style: TextStyle(
+            color: context.gc.softWhite.withOpacity(0.8),
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildSection(
+          context,
+          '☊ Nodo Norte - Crescimento',
+          'Aponta as experiências que exigem crescimento e desenvolvimento — a '
+              'direção para onde a sua alma caminha nesta vida.',
+        ),
+        const SizedBox(height: 12),
+        _buildSection(
+          context,
+          '☋ Nodo Sul - Bagagem',
+          'Hábitos, talentos e padrões familiares ou automáticos — o repertório que '
+              'você já traz e no qual tende a se acomodar.',
         ),
         const SizedBox(height: 16),
         Container(
@@ -741,26 +840,13 @@ class _TodosPlanetasExplanation extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: context.gc.starYellow.withOpacity(0.3)),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '📚 O que significa "Casa"?',
-                style: TextStyle(
-                  color: context.gc.starYellow,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Cada planeta está posicionado em um signo E em uma casa. O signo mostra COMO '
-                'a energia se expressa, a casa mostra ONDE na sua vida ela atua.',
-                style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.8),
-                  height: 1.5,
-                ),
-              ),
-            ],
+          child: Text(
+            '🔭 Existem outros pontos no mapa (Ascendente, Meio do Céu, Lilith, '
+            'Parte da Fortuna...) que podem entrar aqui no futuro.',
+            style: TextStyle(
+              color: context.gc.softWhite.withOpacity(0.8),
+              height: 1.5,
+            ),
           ),
         ),
       ],
