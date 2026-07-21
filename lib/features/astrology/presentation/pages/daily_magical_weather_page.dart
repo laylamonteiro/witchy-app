@@ -568,15 +568,23 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
   }
 
   Widget _buildTransitsSection(DailyMagicalWeather weather) {
-    // Mostrar apenas planetas lentos + Lua + Sol
-    final importantPlanets = weather.transits.where((t) =>
-        t.planet == Planet.sun ||
-        t.planet == Planet.moon ||
-        t.planet == Planet.jupiter ||
-        t.planet == Planet.saturn ||
-        t.planet == Planet.uranus ||
-        t.planet == Planet.neptune ||
-        t.planet == Planet.pluto);
+    // Ordem astrologica classica: pessoais, sociais e transpessoais.
+    const order = <Planet>[
+      Planet.sun,
+      Planet.moon,
+      Planet.mercury,
+      Planet.venus,
+      Planet.mars,
+      Planet.jupiter,
+      Planet.saturn,
+      Planet.uranus,
+      Planet.neptune,
+      Planet.pluto,
+    ];
+    final importantPlanets = [
+      for (final p in order)
+        ...weather.transits.where((t) => t.planet == p),
+    ];
 
     return MagicalCard(
       child: Column(
