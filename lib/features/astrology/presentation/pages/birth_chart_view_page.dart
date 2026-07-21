@@ -208,7 +208,16 @@ class BirthChartViewPage extends StatelessWidget {
                   content: _buildBodiesList(
                     context,
                     chart.planets,
-                    const [Planet.northNode, Planet.southNode],
+                    const [
+                      Planet.midheaven,
+                      Planet.imumCoeli,
+                      Planet.descendant,
+                      Planet.vertex,
+                      Planet.lilith,
+                      Planet.partOfFortune,
+                      Planet.northNode,
+                      Planet.southNode,
+                    ],
                   ),
                   explanation: _NodosExplanation(),
                 ),
@@ -810,13 +819,57 @@ class _NodosExplanation extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Os Nodos Lunares não são planetas: são pontos matemáticos formados pelo '
-          'cruzamento da órbita da Lua com a trajetória aparente do Sol. Marcam a '
-          'direção de desenvolvimento (eixo kármico/evolutivo) e os padrões já conhecidos.',
+          'Além dos planetas, o mapa tem pontos e eixos calculados — cruzamentos, '
+          'ângulos e apogeus que não são corpos celestes, mas revelam camadas '
+          'profundas do destino, da sombra e da alma.',
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
+        ),
+        const SizedBox(height: 16),
+        _buildSection(
+          context,
+          'MC · Meio do Céu - Vocação',
+          'O ponto mais alto do mapa (cúspide da Casa 10). Mostra a sua vocação, a '
+              'imagem pública, a carreira e o legado que você constrói no mundo.',
+        ),
+        const SizedBox(height: 12),
+        _buildSection(
+          context,
+          'IC · Fundo do Céu - Raízes',
+          'O ponto mais baixo (cúspide da Casa 4), oposto ao MC. Fala das suas '
+              'raízes, do lar, da família e da base emocional mais íntima.',
+        ),
+        const SizedBox(height: 12),
+        _buildSection(
+          context,
+          'Dsc · Descendente - O Outro',
+          'A cúspide da Casa 7, oposta ao Ascendente. Descreve os relacionamentos, '
+              'as parcerias e as qualidades que você busca (ou projeta) no outro.',
+        ),
+        const SizedBox(height: 12),
+        _buildSection(
+          context,
+          'Vx · Vértex - Destino',
+          'Um ponto sensível ligado a encontros fatídicos e viradas do destino — '
+              'situações e pessoas que chegam como se fossem "escritas".',
+        ),
+        const SizedBox(height: 12),
+        _buildSection(
+          context,
+          '⚸ Lilith - Lua Negra',
+          'O apogeu da órbita lunar. Representa o seu poder instintivo, a sombra, o '
+              'desejo indomado e aquilo que se recusa a ser domesticado. Na bruxaria, '
+              'é o portal da bruxa selvagem e da soberania feminina.',
+        ),
+        const SizedBox(height: 12),
+        _buildSection(
+          context,
+          '⊗ Parte da Fortuna - Sorte',
+          'Ponto árabe calculado a partir do Sol, da Lua e do Ascendente. Indica '
+              'onde moram a sua sorte natural, a prosperidade e o bem-estar — o lugar '
+              'de fluidez e alegria no mapa.',
         ),
         const SizedBox(height: 16),
         _buildSection(
@@ -831,23 +884,6 @@ class _NodosExplanation extends StatelessWidget {
           '☋ Nodo Sul - Bagagem',
           'Hábitos, talentos e padrões familiares ou automáticos — o repertório que '
               'você já traz e no qual tende a se acomodar.',
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: context.gc.starYellow.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: context.gc.starYellow.withOpacity(0.3)),
-          ),
-          child: Text(
-            '🔭 Existem outros pontos no mapa (Ascendente, Meio do Céu, Lilith, '
-            'Parte da Fortuna...) que podem entrar aqui no futuro.',
-            style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.8),
-              height: 1.5,
-            ),
-          ),
         ),
       ],
     );
