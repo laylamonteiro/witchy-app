@@ -527,14 +527,15 @@ FORMATO DA RESPOSTA (use exatamente esta estrutura):
 [1 parágrafo curto e inspirador como mensagem de encerramento]
 
 DIRETRIZES:
-- É OBRIGATÓRIO entregar TODAS as 7 seções, completas. Se faltar espaço, encurte cada seção — NUNCA omita nem corte uma seção pela metade.
+- É OBRIGATÓRIO entregar TODAS as 7 seções, completas. NUNCA omita nem corte uma seção pela metade.
 - Seja específica para os trânsitos e aspectos fornecidos (cite-os), sem generalidades.
-- Use linguagem acolhedora e acessível; parágrafos enxutos.
+- Use linguagem acolhedora e acessível.
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}
 - Sugira práticas simples que qualquer pessoa pode fazer
+- Conecte as energias astrológicas com práticas mágicas concretas
 - O tom deve ser de guia diária, prática e inspiradora
-- Total: ~400 palavras (máximo 450)
+- Total: aproximadamente 400-500 palavras
 - Mencione a fase lunar e seus efeitos específicos
 - Se houver aspectos desafiadores, dê orientações práticas para navegar''';
   }

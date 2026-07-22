@@ -318,132 +318,149 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                     const SizedBox(height: 12),
                   ],
 
-                  // Controles de visualização (todos lado a lado)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ChoiceChip(
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _showWheel
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              size: 16,
+                  // Controles de visualização: sempre em uma unica linha,
+                  // centralizados. Se nao couberem, o FittedBox reduz tudo
+                  // proporcionalmente em vez de estourar ou quebrar a linha.
+                  Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ChoiceChip(
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _showWheel
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  size: 16,
+                                  color: _showWheel
+                                      ? context.gc.lilac
+                                      : context.gc.textSecondary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(AppLocalizations.of(context)!.sigilWheel),
+                              ],
+                            ),
+                            selected: _showWheel,
+                            onSelected: (value) {
+                              setState(() {
+                                _showWheel = value;
+                              });
+                            },
+                            selectedColor: context.gc.lilac.withOpacity(0.2),
+                            backgroundColor: context.gc.surface,
+                            labelStyle: TextStyle(
                               color: _showWheel
                                   ? context.gc.lilac
                                   : context.gc.textSecondary,
+                              fontSize: 12,
                             ),
-                            const SizedBox(width: 4),
-                            Text(AppLocalizations.of(context)!.sigilWheel),
-                          ],
-                        ),
-                        selected: _showWheel,
-                        onSelected: (value) {
-                          setState(() {
-                            _showWheel = value;
-                          });
-                        },
-                        selectedColor: context.gc.lilac.withOpacity(0.2),
-                        backgroundColor: context.gc.surface,
-                        labelStyle: TextStyle(
-                          color: _showWheel
-                              ? context.gc.lilac
-                              : context.gc.textSecondary,
-                          fontSize: 12,
-                        ),
-                        side: BorderSide(
-                          color:
-                              _showWheel ? context.gc.lilac : Colors.transparent,
-                        ),
-                        showCheckmark: false,
-                      ),
-                      const SizedBox(width: 8),
-                      ChoiceChip(
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _showStartEnd
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              size: 16,
+                            side: BorderSide(
+                              color: _showWheel
+                                  ? context.gc.lilac
+                                  : Colors.transparent,
+                            ),
+                            showCheckmark: false,
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _showStartEnd
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  size: 16,
+                                  color: _showStartEnd
+                                      ? context.gc.starYellow
+                                      : context.gc.textSecondary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(AppLocalizations.of(context)!.sigilPoints),
+                              ],
+                            ),
+                            selected: _showStartEnd,
+                            onSelected: (value) {
+                              setState(() {
+                                _showStartEnd = value;
+                              });
+                            },
+                            selectedColor:
+                                context.gc.starYellow.withOpacity(0.2),
+                            backgroundColor: context.gc.surface,
+                            labelStyle: TextStyle(
                               color: _showStartEnd
                                   ? context.gc.starYellow
                                   : context.gc.textSecondary,
+                              fontSize: 12,
                             ),
-                            const SizedBox(width: 4),
-                            Text(AppLocalizations.of(context)!.sigilPoints),
-                          ],
-                        ),
-                        selected: _showStartEnd,
-                        onSelected: (value) {
-                          setState(() {
-                            _showStartEnd = value;
-                          });
-                        },
-                        selectedColor: context.gc.starYellow.withOpacity(0.2),
-                        backgroundColor: context.gc.surface,
-                        labelStyle: TextStyle(
-                          color: _showStartEnd
-                              ? context.gc.starYellow
-                              : context.gc.textSecondary,
-                          fontSize: 12,
-                        ),
-                        side: BorderSide(
-                          color: _showStartEnd
-                              ? context.gc.starYellow
-                              : Colors.transparent,
-                        ),
-                        showCheckmark: false,
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: _shuffleLetters,
-                        icon: const Icon(Icons.shuffle, size: 20),
-                        tooltip: AppLocalizations.of(context)!.sigilShuffle,
-                        style: IconButton.styleFrom(
-                          backgroundColor: _isShuffled
-                              ? context.gc.mint.withOpacity(0.3)
-                              : context.gc.surface,
-                          foregroundColor: _isShuffled
-                              ? context.gc.mint
-                              : context.gc.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        onPressed: _isExporting ? null : _exportToGallery,
-                        icon: _isExporting
-                            ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: context.gc.lilac,
-                                ),
-                              )
-                            : const Icon(Icons.download, size: 20),
-                        tooltip: AppLocalizations.of(context)!.sigilSaveImage,
-                        style: IconButton.styleFrom(
-                          backgroundColor: context.gc.surface,
-                          foregroundColor: context.gc.textSecondary,
-                        ),
-                      ),
-                      if (_isShuffled) ...[
-                        const SizedBox(width: 4),
-                        IconButton(
-                          onPressed: _resetLetters,
-                          icon: const Icon(Icons.restart_alt, size: 20),
-                          tooltip: AppLocalizations.of(context)!.sigilRestore,
-                          style: IconButton.styleFrom(
-                            backgroundColor: context.gc.surface,
-                            foregroundColor: context.gc.textSecondary,
+                            side: BorderSide(
+                              color: _showStartEnd
+                                  ? context.gc.starYellow
+                                  : Colors.transparent,
+                            ),
+                            showCheckmark: false,
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
                           ),
-                        ),
-                      ],
-                    ],
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: _shuffleLetters,
+                            icon: const Icon(Icons.shuffle, size: 20),
+                            tooltip: AppLocalizations.of(context)!.sigilShuffle,
+                            style: IconButton.styleFrom(
+                              backgroundColor: _isShuffled
+                                  ? context.gc.mint.withOpacity(0.3)
+                                  : context.gc.surface,
+                              foregroundColor: _isShuffled
+                                  ? context.gc.mint
+                                  : context.gc.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            onPressed: _isExporting ? null : _exportToGallery,
+                            icon: _isExporting
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: context.gc.lilac,
+                                    ),
+                                  )
+                                : const Icon(Icons.download, size: 20),
+                            tooltip:
+                                AppLocalizations.of(context)!.sigilSaveImage,
+                            style: IconButton.styleFrom(
+                              backgroundColor: context.gc.surface,
+                              foregroundColor: context.gc.textSecondary,
+                            ),
+                          ),
+                          if (_isShuffled) ...[
+                            const SizedBox(width: 4),
+                            IconButton(
+                              onPressed: _resetLetters,
+                              icon: const Icon(Icons.restart_alt, size: 20),
+                              tooltip:
+                                  AppLocalizations.of(context)!.sigilRestore,
+                              style: IconButton.styleFrom(
+                                backgroundColor: context.gc.surface,
+                                foregroundColor: context.gc.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

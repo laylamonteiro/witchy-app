@@ -192,9 +192,11 @@ class DailyWeatherRepository {
     final contextKey = natalChart == null
         ? 'general'
         : sha256.convert(utf8.encode(natalChart.toJsonString())).toString();
-    // Verificar cache primeiro
+    // Verificar cache primeiro. Um cache incompleto (ex.: fallback antigo com
+    // menos seções, salvo quando a IA estava indisponível) é tratado como
+    // obsoleto e regerado.
     final cached = await getCachedWeather(date, userId, contextKey);
-    if (cached != null) {
+    if (cached != null && _looksComplete(cached.aiGeneratedText)) {
       return cached;
     }
 
@@ -221,6 +223,7 @@ class DailyWeatherRepository {
 
     // Gerar texto com IA
     String aiText;
+    bool usedFallback = false;
     try {
       aiText = await _aiService.generateDailyMagicalWeatherText(
         moonPhase: weatherData.moonPhase,
@@ -233,6 +236,7 @@ class DailyWeatherRepository {
     } catch (e) {
       // Usar interpretação padrão se IA falhar
       aiText = _generateFallbackText(weatherData);
+      usedFallback = true;
     }
 
     // Criar cache
@@ -246,26 +250,57 @@ class DailyWeatherRepository {
       contextKey: contextKey,
     );
 
-    // Salvar no banco
-    await saveWeatherCache(cache);
+    // Só persiste quando o texto veio da IA. Assim um fallback (ex.: IA fora do
+    // ar por rate limit) não fica preso no cache o dia inteiro — a IA é tentada
+    // novamente na próxima abertura.
+    if (!usedFallback) {
+      await saveWeatherCache(cache);
+    }
 
     return cache;
   }
 
-  /// Texto fallback se IA falhar
+  /// Um texto de clima é considerado completo quando traz as seções que só
+  /// existem na versão nova (IA ou fallback completo).
+  bool _looksComplete(String text) =>
+      text.contains('## Ritual Sugerido') &&
+      text.contains('## Cuidados do Dia');
+
+  /// Texto fallback se IA falhar. Mantém as MESMAS 7 seções do texto da IA
+  /// (Energia, Lua, Oportunidades, Cuidados, Ritual, Cristais, Mensagem) para
+  /// que o clima diário fique completo mesmo sem a IA.
   String _generateFallbackText(DailyMagicalWeather weather) {
+    final elemento = weather.moonSign.element.displayName;
+
+    final desafios = weather.aspects
+        .where((a) => a.energyLevel == EnergyLevel.challenging)
+        .take(2)
+        .map((a) => '- ${a.description}: aja com calma e evite reagir no impulso.')
+        .toList();
+    final cuidados = desafios.isNotEmpty
+        ? desafios.join('\n')
+        : '- Sem tensões marcantes hoje. Ainda assim, evite decisões apressadas e reserve um momento de pausa para se centrar.';
+
     return '''## Energia do Dia
 
 ${weather.generalInterpretation}
 
 ## A Lua Hoje
 
-A Lua está em ${weather.moonSign.displayName}, trazendo energias do elemento ${weather.moonSign.element.displayName}.
+A Lua está em ${weather.moonSign.displayName}, trazendo energias do elemento $elemento.
 Fase atual: ${weather.moonPhase}.
 
 ## Oportunidades Mágicas
 
 ${weather.recommendedPractices.map((p) => '- $p').join('\n')}
+
+## Cuidados do Dia
+
+$cuidados
+
+## Ritual Sugerido
+
+Acenda uma vela e faça três respirações profundas, sintonizando-se com o elemento $elemento da Lua em ${weather.moonSign.displayName}. Formule uma intenção simples e clara para o dia e visualize-a se realizando.
 
 ## Cristais e Aliados
 

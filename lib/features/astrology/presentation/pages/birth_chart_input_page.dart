@@ -37,6 +37,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   List<GeoPlace> _suggestions = [];
   bool _isSearchingLocation = false;
   bool _showSuggestions = false;
+  bool _searchFailed = false; // falha de rede/serviço na última busca
   double? _selectedLatitude;
   double? _selectedLongitude;
   Timer? _searchDebounce;
@@ -130,6 +131,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
     setState(() {
       _isSearchingLocation = true;
       _showSuggestions = true;
+      _searchFailed = false;
     });
     _searchDebounce = Timer(const Duration(milliseconds: 450), () {
       _runSearch(query.trim());
@@ -144,12 +146,16 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
       setState(() {
         _suggestions = results.take(6).toList();
         _isSearchingLocation = false;
+        _searchFailed = false;
       });
     } catch (e) {
+      // Falha de rede/serviço (timeout, 403/429 do Nominatim, sem internet).
+      // Sinaliza para a UI distinguir "sem resultados" de "erro de conexão".
       if (!mounted || requestId != _searchRequestId) return;
       setState(() {
         _suggestions = [];
         _isSearchingLocation = false;
+        _searchFailed = true;
       });
     }
   }
@@ -563,6 +569,66 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                               onTap: () => _selectLocation(place),
                             );
                           },
+                        ),
+                      ),
+                    ],
+                    // Falha de conexão/serviço: distingue de "cidade inexistente".
+                    if (_showSuggestions &&
+                        !_isSearchingLocation &&
+                        _suggestions.isEmpty &&
+                        _searchFailed) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.gc.alert.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.gc.alert.withOpacity(0.4),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.wifi_off,
+                                color: context.gc.alert, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Não foi possível buscar agora. Verifique sua '
+                                'conexão e tente novamente em instantes.',
+                                style: TextStyle(
+                                  color: context.gc.softWhite,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    // Busca ok, porém sem resultados para o texto digitado.
+                    if (_showSuggestions &&
+                        !_isSearchingLocation &&
+                        _suggestions.isEmpty &&
+                        !_searchFailed &&
+                        (_birthPlace?.trim().length ?? 0) >= 3) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.gc.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.gc.lilac.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Text(
+                          'Nenhuma cidade encontrada. Tente outra grafia ou '
+                          'inclua o estado/país (ex.: "Campinas, São Paulo").',
+                          style: TextStyle(
+                            color: context.gc.softWhite.withOpacity(0.8),
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
