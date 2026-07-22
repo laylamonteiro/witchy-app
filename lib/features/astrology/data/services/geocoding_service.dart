@@ -34,13 +34,14 @@ class GeocodingService {
   );
 
   /// Níveis grosseiros que NÃO servem como local de nascimento — descartar
-  /// (é o que gerava o "centroide do Brasil").
+  /// (é o que gerava o "centroide do Brasil"). NÃO inclui 'administrative':
+  /// muitos municípios (ex.: Campinas) voltam do Nominatim com esse tipo e
+  /// seriam descartados indevidamente. País/estado/região já cobrem o coarse.
   static const _coarseTypes = {
     'country',
     'state',
     'region',
     'continent',
-    'administrative',
     'sea',
     'ocean',
     'archipelago',
