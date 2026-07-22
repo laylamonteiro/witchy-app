@@ -318,9 +318,14 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                     const SizedBox(height: 12),
                   ],
 
-                  // Controles de visualização (todos lado a lado)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  // Controles de visualização (quebram para a proxima linha se
+                  // nao couberem, evitando overflow quando o botao de restaurar
+                  // aparece apos embaralhar).
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       ChoiceChip(
                         label: Row(
@@ -359,7 +364,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         ),
                         showCheckmark: false,
                       ),
-                      const SizedBox(width: 8),
                       ChoiceChip(
                         label: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -398,7 +402,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                         ),
                         showCheckmark: false,
                       ),
-                      const SizedBox(width: 8),
                       IconButton(
                         onPressed: _shuffleLetters,
                         icon: const Icon(Icons.shuffle, size: 20),
@@ -412,7 +415,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                               : context.gc.textSecondary,
                         ),
                       ),
-                      const SizedBox(width: 4),
                       IconButton(
                         onPressed: _isExporting ? null : _exportToGallery,
                         icon: _isExporting
@@ -431,8 +433,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                           foregroundColor: context.gc.textSecondary,
                         ),
                       ),
-                      if (_isShuffled) ...[
-                        const SizedBox(width: 4),
+                      if (_isShuffled)
                         IconButton(
                           onPressed: _resetLetters,
                           icon: const Icon(Icons.restart_alt, size: 20),
@@ -442,7 +443,6 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                             foregroundColor: context.gc.textSecondary,
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ],
