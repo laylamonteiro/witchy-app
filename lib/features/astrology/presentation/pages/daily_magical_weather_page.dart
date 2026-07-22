@@ -430,12 +430,14 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                 children: [
                   const Text('✨', style: TextStyle(fontSize: 24)),
                   const SizedBox(width: 8),
-                  Text(
-                    'Previsão Mágica do Dia',
-                    style: GoogleFonts.cinzelDecorative(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: context.gc.lilac,
+                  Expanded(
+                    child: Text(
+                      'Previsão Mágica do Dia',
+                      style: GoogleFonts.cinzelDecorative(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: context.gc.lilac,
+                      ),
                     ),
                   ),
                 ],
