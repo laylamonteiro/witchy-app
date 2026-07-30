@@ -322,39 +322,141 @@ const Map<String, String> planetSignInterpretationsPt = {
           'meditativos são eficazes. Use esta energia para trabalho espiritual ativo.',
 };
 
-/// Interpretação padrão caso não exista uma específica no mapa.
+/// Interpretação padrão (composta) caso não exista uma específica no mapa —
+/// cobre planetas externos, nodos e os pontos místicos (MC/IC/DSC, Vértex,
+/// Lilith, Parte da Fortuna). Junta o tema do planeta com o estilo do signo e
+/// uma dica mágica.
 String planetSignDefaultInterpretationPt(Planet planet, ZodiacSign sign) {
-  return 'Seu ${planet.displayName} em ${sign.displayName} combina a energia '
-      '${_planetEnergyPt(planet)} com as qualidades ${sign.magicalDescription} '
-      'deste signo de ${sign.element.displayName}.';
+  final style = _signStylePt(sign);
+  final magic = _planetMagicPt(planet);
+
+  if (planet == Planet.northNode) {
+    return 'Seu Nodo Norte em ${sign.displayName} aponta o caminho de '
+        'crescimento e propósito desta vida, a ser trilhado $style. $magic';
+  }
+  if (planet == Planet.southNode) {
+    return 'Seu Nodo Sul em ${sign.displayName} revela dons já herdados e a '
+        'zona de conforto que você traz $style. $magic';
+  }
+  // Pontos de nome feminino usam o artigo "Sua".
+  final article = (planet == Planet.lilith || planet == Planet.partOfFortune)
+      ? 'Sua'
+      : 'Seu';
+  return '$article ${planet.displayName} em ${sign.displayName} vive '
+      '${_planetMeaningPt(planet)}, $style. $magic';
 }
 
-String _planetEnergyPt(Planet planet) {
+/// Tema central de cada planeta (frase nominal).
+String _planetMeaningPt(Planet planet) {
   switch (planet) {
     case Planet.sun:
-      return 'da sua essência vital';
+      return 'a sua essência e vitalidade';
     case Planet.moon:
-      return 'das suas emoções e intuição';
+      return 'as suas emoções e o seu mundo interior';
     case Planet.mercury:
-      return 'da sua comunicação e mente';
+      return 'a sua mente e a sua comunicação';
     case Planet.venus:
-      return 'do amor e da beleza';
+      return 'o amor, o prazer e a beleza';
     case Planet.mars:
-      return 'da ação e proteção';
+      return 'a ação, o desejo e a coragem';
     case Planet.jupiter:
-      return 'da expansão e sorte';
+      return 'a expansão, a fé e a abundância';
     case Planet.saturn:
-      return 'da disciplina e estrutura';
+      return 'a disciplina, os limites e a maturidade';
     case Planet.uranus:
-      return 'da inovação e liberdade';
+      return 'a inovação, a ruptura e a liberdade';
     case Planet.neptune:
-      return 'da espiritualidade e sonhos';
+      return 'a espiritualidade, os sonhos e a imaginação';
     case Planet.pluto:
-      return 'da transformação profunda';
+      return 'a transformação profunda e o poder de renascer';
     case Planet.northNode:
-      return 'do seu destino kármico';
+      return 'o caminho de crescimento da alma';
     case Planet.southNode:
-      return 'das suas vidas passadas';
+      return 'os dons herdados de outras vidas';
+    case Planet.midheaven:
+      return 'a sua vocação, imagem pública e o legado que constrói';
+    case Planet.imumCoeli:
+      return 'as suas raízes, o lar e a base emocional mais íntima';
+    case Planet.descendant:
+      return 'os relacionamentos e o que você busca no outro';
+    case Planet.vertex:
+      return 'os encontros fatídicos e as viradas do destino';
+    case Planet.lilith:
+      return 'o poder instintivo, a sombra e o desejo indomado';
+    case Planet.partOfFortune:
+      return 'a sua sorte, a prosperidade e o bem-estar';
+  }
+}
+
+/// Estilo de expressão de cada signo (elemento + qualidade resumidos).
+String _signStylePt(ZodiacSign sign) {
+  switch (sign) {
+    case ZodiacSign.aries:
+      return 'de forma ousada, direta e pioneira';
+    case ZodiacSign.taurus:
+      return 'de forma estável, sensorial e persistente';
+    case ZodiacSign.gemini:
+      return 'de forma curiosa, comunicativa e versátil';
+    case ZodiacSign.cancer:
+      return 'de forma sensível, protetora e acolhedora';
+    case ZodiacSign.leo:
+      return 'de forma expressiva, generosa e criativa';
+    case ZodiacSign.virgo:
+      return 'de forma prática, analítica e cuidadosa';
+    case ZodiacSign.libra:
+      return 'de forma harmoniosa, diplomática e estética';
+    case ZodiacSign.scorpio:
+      return 'de forma intensa, profunda e transformadora';
+    case ZodiacSign.sagittarius:
+      return 'de forma aventureira, filosófica e otimista';
+    case ZodiacSign.capricorn:
+      return 'de forma disciplinada, ambiciosa e responsável';
+    case ZodiacSign.aquarius:
+      return 'de forma original, independente e humanitária';
+    case ZodiacSign.pisces:
+      return 'de forma sensível, imaginativa e compassiva';
+  }
+}
+
+/// Dica mágica curta por planeta.
+String _planetMagicPt(Planet planet) {
+  switch (planet) {
+    case Planet.sun:
+      return 'Na magia, é o seu centro de poder e identidade.';
+    case Planet.moon:
+      return 'Na magia, guia seus ciclos, intuição e trabalhos lunares.';
+    case Planet.mercury:
+      return 'Na magia, favorece feitiços de comunicação, estudo e clareza.';
+    case Planet.venus:
+      return 'Na magia, rege rituais de amor, autoestima e prazer.';
+    case Planet.mars:
+      return 'Na magia, alimenta proteção, coragem e banimento.';
+    case Planet.jupiter:
+      return 'Na magia, use-o em rituais de crescimento, sorte e abundância.';
+    case Planet.saturn:
+      return 'Na magia, use-o em trabalhos de estrutura, proteção e compromissos duradouros.';
+    case Planet.uranus:
+      return 'Na magia, use-o para quebrar padrões e abrir caminhos novos.';
+    case Planet.neptune:
+      return 'Na magia, use-o em sonhos, adivinhação e conexão espiritual.';
+    case Planet.pluto:
+      return 'Na magia, use-o em ritos de transformação, cura profunda e renascimento.';
+    case Planet.northNode:
+      return 'Cultive as qualidades deste signo — é para onde sua alma cresce.';
+    case Planet.southNode:
+      return 'Reconheça esses dons já naturais e evite se acomodar apenas neles.';
+    case Planet.midheaven:
+      return 'Na magia, oriente rituais de propósito, carreira e reconhecimento.';
+    case Planet.imumCoeli:
+      return 'Na magia, use-o em trabalhos de proteção do lar, ancestralidade e raízes.';
+    case Planet.descendant:
+      return 'Na magia, favorece rituais de parcerias, uniões e harmonia com o outro.';
+    case Planet.vertex:
+      return 'Na magia, marca encontros de destino — trabalhe sincronicidades e portais.';
+    case Planet.lilith:
+      return 'Na magia, é o portal da bruxa selvagem: soberania, sombra e desejo.';
+    case Planet.partOfFortune:
+      return 'Na magia, aponte para cá feitiços de prosperidade, sorte e abundância.';
   }
 }
 

@@ -1,10 +1,18 @@
 import 'package:uuid/uuid.dart';
+import '../data_sources/transit_interpreter_texts.dart';
 import '../models/enums.dart';
 import '../models/transit_model.dart';
 import '../models/birth_chart_model.dart';
 import 'transit_calculator.dart';
 
 /// Interpreta trânsitos para contexto de bruxaria e magia
+///
+/// As frases-template vivem em
+/// `data_sources/transit_interpreter_texts_pt/en/es.dart` e são selecionadas
+/// pelo idioma atual via `ContentLocale` (getter [transitInterpreterTexts]) —
+/// o clima diário é gerado (e persistido) no idioma ativo no momento da
+/// geração. Internamente as fases da lua usam as chaves canônicas de
+/// [kMoonPhaseKeys]; apenas o nome exibido é localizado.
 class TransitInterpreter {
   final TransitCalculator _calculator = TransitCalculator();
 
@@ -27,7 +35,7 @@ class TransitInterpreter {
 
       // Agora podemos assumir que a Lua está presente
       final moonTransit = transits.firstWhere((t) => t.planet == Planet.moon);
-      final moonPhase = _calculateMoonPhase(date);
+      final moonPhaseKey = _calculateMoonPhaseKey(date);
 
       // Analisar aspectos entre planetas em trânsito
       final transitAspects = _getSignificantTransitAspects(transits);
@@ -50,7 +58,7 @@ class TransitInterpreter {
       // Gerar interpretação geral
       final interpretation = _generateGeneralInterpretation(
         moonTransit.sign,
-        moonPhase,
+        moonPhaseKey,
         significantAspects,
         overallEnergy,
       );
@@ -58,7 +66,7 @@ class TransitInterpreter {
       // Gerar recomendações de práticas
       final practices = _generateRecommendedPractices(
         moonTransit.sign,
-        moonPhase,
+        moonPhaseKey,
         significantAspects,
         overallEnergy,
       );
@@ -66,7 +74,7 @@ class TransitInterpreter {
       // Extrair palavras-chave de energia
       final keywords = _extractEnergyKeywords(
         moonTransit.sign,
-        moonPhase,
+        moonPhaseKey,
         significantAspects,
       );
 
@@ -79,7 +87,8 @@ class TransitInterpreter {
         energyKeywords: keywords,
         overallEnergy: overallEnergy,
         moonSign: moonTransit.sign,
-        moonPhase: moonPhase,
+        moonPhase: transitInterpreterTexts.phaseNames[moonPhaseKey] ??
+            transitInterpreterTexts.phaseFallback,
       );
     } catch (e) {
       print('Erro em getDailyMagicalWeather: $e');
@@ -145,8 +154,10 @@ class TransitInterpreter {
     return suggestions;
   }
 
-  /// Calcula a fase da lua (sincronizado com LunarProvider)
-  String _calculateMoonPhase(DateTime date) {
+  /// Calcula a fase da lua (sincronizado com LunarProvider), retornando a
+  /// chave canônica de [kMoonPhaseKeys] — o nome exibido vem de
+  /// `transitInterpreterTexts.phaseNames`.
+  String _calculateMoonPhaseKey(DateTime date) {
     // Usar a mesma referência do LunarProvider para consistência
     // Lua nova conhecida: 1 de novembro de 2024, 12:47 UTC
     final knownNewMoon = DateTime.utc(2024, 11, 1, 12, 47);
@@ -161,21 +172,21 @@ class TransitInterpreter {
 
     // Usar os mesmos thresholds do LunarProvider para consistência
     if (phase < 0.017 || phase >= 0.983) {
-      return 'Lua Nova';
+      return 'newMoon';
     } else if (phase < 0.1875) {
-      return 'Lua Crescente';
+      return 'waxingCrescent';
     } else if (phase < 0.3125) {
-      return 'Quarto Crescente';
+      return 'firstQuarter';
     } else if (phase < 0.4375) {
-      return 'Lua Gibosa Crescente';
+      return 'waxingGibbous';
     } else if (phase < 0.5625) {
-      return 'Lua Cheia';
+      return 'fullMoon';
     } else if (phase < 0.6875) {
-      return 'Lua Gibosa Minguante';
+      return 'waningGibbous';
     } else if (phase < 0.8125) {
-      return 'Quarto Minguante';
+      return 'lastQuarter';
     } else {
-      return 'Lua Minguante';
+      return 'waningCrescent';
     }
   }
 
@@ -265,41 +276,22 @@ class TransitInterpreter {
   /// Gera interpretação geral do dia
   String _generateGeneralInterpretation(
     ZodiacSign moonSign,
-    String moonPhase,
+    String moonPhaseKey,
     List<TransitAspect> aspects,
     EnergyLevel energy,
   ) {
+    final texts = transitInterpreterTexts;
     final parts = <String>[];
 
     // Fase lunar
-    final phaseInterpretations = {
-      'Lua Nova': 'Momento ideal para novos começos e intenções mágicas',
-      'Lua Crescente': 'Energia crescente favorece manifestação e crescimento',
-      'Quarto Crescente': 'Ação e movimento são favorecidos',
-      'Lua Gibosa Crescente': 'Refinamento e ajustes antes da culminação',
-      'Lua Cheia': 'Poder máximo para rituais e liberação',
-      'Lua Gibosa Minguante': 'Gratidão e colheita dos frutos',
-      'Quarto Minguante': 'Momento de liberação e limpeza',
-      'Lua Minguante': 'Introspecção e banimento são favorecidos',
-    };
-
-    parts.add(
-        phaseInterpretations[moonPhase] ?? 'A lua guia suas práticas mágicas');
+    parts.add(texts.phaseInterpretations[moonPhaseKey] ?? texts.phaseFallback);
 
     // Lua no signo
     parts.add(
-        'Com a Lua em ${moonSign.displayName}, as emoções estão ${moonSign.magicalDescription}');
+        texts.moonInSign(moonSign.displayName, moonSign.magicalDescription));
 
     // Energia do dia
-    final energyDescriptions = {
-      EnergyLevel.intense: 'O dia traz energia intensa e transformadora',
-      EnergyLevel.challenging:
-          'Desafios planetários pedem atenção e trabalho consciente',
-      EnergyLevel.moderate: 'O fluxo energético está equilibrado e estável',
-      EnergyLevel.harmonious: 'As energias fluem com harmonia e facilidade',
-    };
-
-    parts.add(energyDescriptions[energy]!);
+    parts.add(texts.energyDescriptions[energy]!);
 
     return parts.join('. ') + '.';
   }
@@ -307,28 +299,17 @@ class TransitInterpreter {
   /// Gera recomendações de práticas
   List<String> _generateRecommendedPractices(
     ZodiacSign moonSign,
-    String moonPhase,
+    String moonPhaseKey,
     List<TransitAspect> aspects,
     EnergyLevel energy,
   ) {
+    final texts = transitInterpreterTexts;
     final practices = <String>[];
 
     // Práticas baseadas na fase lunar
-    final phasePractices = {
-      'Lua Nova':
-          'Definir intenções, plantar sementes mágicas, trabalho de manifestação',
-      'Lua Crescente':
-          'Feitiços de atração, crescimento de projetos, magia verde',
-      'Quarto Crescente': 'Rituais de coragem, ação mágica, trabalho com fogo',
-      'Lua Gibosa Crescente': 'Ajuste de feitiços, refinamento de práticas',
-      'Lua Cheia': 'Rituais poderosos, carregamento de ferramentas, água lunar',
-      'Lua Gibosa Minguante': 'Gratidão, reconhecimento, oferendas',
-      'Quarto Minguante': 'Banimento, limpeza energética, corte de cordas',
-      'Lua Minguante': 'Meditação profunda, trabalho de sombra, divinação',
-    };
-
-    if (phasePractices.containsKey(moonPhase)) {
-      practices.add(phasePractices[moonPhase]!);
+    final phasePractice = texts.phasePractices[moonPhaseKey];
+    if (phasePractice != null) {
+      practices.add(phasePractice);
     }
 
     // Práticas baseadas no signo lunar
@@ -336,10 +317,9 @@ class TransitInterpreter {
 
     // Práticas baseadas na energia
     if (energy == EnergyLevel.intense) {
-      practices.add('Aterramento e proteção são essenciais hoje');
+      practices.add(texts.practiceIntenseDay);
     } else if (energy == EnergyLevel.harmonious) {
-      practices
-          .add('Excelente momento para feitiços complexos e trabalho em grupo');
+      practices.add(texts.practiceHarmoniousDay);
     }
 
     return practices.take(4).toList();
@@ -348,24 +328,14 @@ class TransitInterpreter {
   /// Extrai palavras-chave de energia
   List<String> _extractEnergyKeywords(
     ZodiacSign moonSign,
-    String moonPhase,
+    String moonPhaseKey,
     List<TransitAspect> aspects,
   ) {
+    final texts = transitInterpreterTexts;
     final keywords = <String>[];
 
     // Palavras da fase lunar
-    final phaseKeywords = {
-      'Lua Nova': ['renovação', 'intenção', 'início'],
-      'Lua Crescente': ['crescimento', 'expansão', 'manifestação'],
-      'Quarto Crescente': ['ação', 'movimento', 'decisão'],
-      'Lua Gibosa Crescente': ['refinamento', 'paciência', 'preparação'],
-      'Lua Cheia': ['poder', 'culminação', 'plenitude'],
-      'Lua Gibosa Minguante': ['gratidão', 'compartilhamento', 'colheita'],
-      'Quarto Minguante': ['liberação', 'limpeza', 'transformação'],
-      'Lua Minguante': ['introspecção', 'sabedoria', 'descanso'],
-    };
-
-    keywords.addAll(phaseKeywords[moonPhase] ?? []);
+    keywords.addAll(texts.phaseKeywords[moonPhaseKey] ?? []);
 
     // Palavras do elemento lunar
     keywords.add(moonSign.element.displayName.toLowerCase());
@@ -373,9 +343,9 @@ class TransitInterpreter {
     // Palavras dos aspectos
     for (final aspect in aspects.take(2)) {
       if (aspect.energyLevel == EnergyLevel.intense) {
-        keywords.add('intensidade');
+        keywords.add(texts.keywordIntensity);
       } else if (aspect.energyLevel == EnergyLevel.harmonious) {
-        keywords.add('harmonia');
+        keywords.add(texts.keywordHarmony);
       }
     }
 
@@ -384,7 +354,12 @@ class TransitInterpreter {
 
   /// Interpreta um aspecto entre dois planetas em trânsito
   String _interpretTransitAspect(Planet p1, Planet p2, AspectType aspect) {
-    return '${p1.displayName} ${aspect.symbol} ${p2.displayName}: energia ${aspect.description}';
+    return transitInterpreterTexts.transitAspect(
+      p1.displayName,
+      aspect.symbol,
+      p2.displayName,
+      aspect.description,
+    );
   }
 
   /// Determina o nível de energia de um aspecto
@@ -403,21 +378,18 @@ class TransitInterpreter {
     TransitAspect aspect,
     String type,
   ) {
+    final texts = transitInterpreterTexts;
     final uuid = const Uuid();
+    final transitPlanet = aspect.transitPlanet.displayName;
+    final natalPlanet = aspect.natalPlanet.displayName;
 
     if (type == 'conjunction') {
       return PersonalizedSuggestion(
         id: uuid.v4(),
         date: date,
-        title:
-            'Conjunção ${aspect.transitPlanet.displayName}-${aspect.natalPlanet.displayName}',
-        description:
-            'Este aspecto poderoso une as energias de ${aspect.transitPlanet.displayName} e seu ${aspect.natalPlanet.displayName} natal. É momento de integração profunda.',
-        practices: [
-          'Meditação focada nestas energias',
-          'Ritual de integração e alinhamento',
-          'Trabalho com cristais correspondentes',
-        ],
+        title: texts.conjunctionTitle(transitPlanet, natalPlanet),
+        description: texts.conjunctionDescription(transitPlanet, natalPlanet),
+        practices: List.of(texts.conjunctionPractices),
         relevantAspects: [aspect],
         priority: EnergyLevel.intense,
         category: 'ritual',
@@ -426,14 +398,13 @@ class TransitInterpreter {
       return PersonalizedSuggestion(
         id: uuid.v4(),
         date: date,
-        title: 'Energia Harmoniosa Disponível',
-        description:
-            '${aspect.transitPlanet.displayName} ${aspect.aspectType.symbol} seu ${aspect.natalPlanet.displayName} natal cria um fluxo positivo de energia.',
-        practices: [
-          'Feitiços de manifestação e atração',
-          'Trabalho criativo e inspirado',
-          'Conexão com guias espirituais',
-        ],
+        title: texts.harmoniousTitle,
+        description: texts.harmoniousDescription(
+          transitPlanet,
+          aspect.aspectType.symbol,
+          natalPlanet,
+        ),
+        practices: List.of(texts.harmoniousPractices),
         relevantAspects: [aspect],
         priority: EnergyLevel.harmonious,
         category: 'spell',
@@ -442,14 +413,13 @@ class TransitInterpreter {
       return PersonalizedSuggestion(
         id: uuid.v4(),
         date: date,
-        title: 'Desafio para Crescimento',
-        description:
-            'O aspecto ${aspect.aspectType.displayName} entre ${aspect.transitPlanet.displayName} e seu ${aspect.natalPlanet.displayName} natal traz lições importantes.',
-        practices: [
-          'Trabalho de sombra e autoconhecimento',
-          'Banimento de padrões antigos',
-          'Proteção e aterramento',
-        ],
+        title: texts.challengingTitle,
+        description: texts.challengingDescription(
+          aspect.aspectType.displayName,
+          transitPlanet,
+          natalPlanet,
+        ),
+        practices: List.of(texts.challengingPractices),
         relevantAspects: [aspect],
         priority: EnergyLevel.challenging,
         category: 'meditation',
@@ -460,19 +430,18 @@ class TransitInterpreter {
   /// Cria sugestão baseada na posição da Lua
   PersonalizedSuggestion _createMoonSuggestion(
       DateTime date, Transit moonTransit) {
+    final texts = transitInterpreterTexts;
     final uuid = const Uuid();
 
     return PersonalizedSuggestion(
       id: uuid.v4(),
       date: date,
-      title: 'Lua em ${moonTransit.sign.displayName}',
-      description:
-          'A Lua transita por ${moonTransit.sign.displayName}, trazendo energias ${moonTransit.sign.element.displayName} para suas emoções e intuição.',
-      practices: [
-        'Trabalho com água e emoções',
-        'Divinação e leitura intuitiva',
-        'Conexão com a energia lunar',
-      ],
+      title: texts.moonSuggestionTitle(moonTransit.sign.displayName),
+      description: texts.moonSuggestionDescription(
+        moonTransit.sign.displayName,
+        moonTransit.sign.element.displayName,
+      ),
+      practices: List.of(texts.moonSuggestionPractices),
       relevantAspects: [],
       priority: EnergyLevel.moderate,
       category: 'divination',

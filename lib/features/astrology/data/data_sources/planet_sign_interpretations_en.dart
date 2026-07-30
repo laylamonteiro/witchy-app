@@ -329,94 +329,142 @@ const Map<String, String> planetSignInterpretationsEn = {
           'work.',
 };
 
-// Localized names — the enum getters (`displayName`, `magicalDescription`)
-// return Portuguese text, so the English template functions resolve names
-// from these maps keyed by the invariant enum values.
-const Map<Planet, String> _planetNamesEn = {
-  Planet.sun: 'Sun',
-  Planet.moon: 'Moon',
-  Planet.mercury: 'Mercury',
-  Planet.venus: 'Venus',
-  Planet.mars: 'Mars',
-  Planet.jupiter: 'Jupiter',
-  Planet.saturn: 'Saturn',
-  Planet.uranus: 'Uranus',
-  Planet.neptune: 'Neptune',
-  Planet.pluto: 'Pluto',
-  Planet.northNode: 'North Node',
-  Planet.southNode: 'South Node',
-};
+// The enum getters (`displayName`, `magicalDescription`) are already
+// localized via `ContentLocale`, so the template functions below use them
+// directly instead of re-translating planet/sign/element names.
 
-const Map<ZodiacSign, String> _signNamesEn = {
-  ZodiacSign.aries: 'Aries',
-  ZodiacSign.taurus: 'Taurus',
-  ZodiacSign.gemini: 'Gemini',
-  ZodiacSign.cancer: 'Cancer',
-  ZodiacSign.leo: 'Leo',
-  ZodiacSign.virgo: 'Virgo',
-  ZodiacSign.libra: 'Libra',
-  ZodiacSign.scorpio: 'Scorpio',
-  ZodiacSign.sagittarius: 'Sagittarius',
-  ZodiacSign.capricorn: 'Capricorn',
-  ZodiacSign.aquarius: 'Aquarius',
-  ZodiacSign.pisces: 'Pisces',
-};
-
-const Map<ZodiacSign, String> _signQualitiesEn = {
-  ZodiacSign.aries: 'courageous and pioneering',
-  ZodiacSign.taurus: 'stable and sensual',
-  ZodiacSign.gemini: 'curious and communicative',
-  ZodiacSign.cancer: 'intuitive and nurturing',
-  ZodiacSign.leo: 'expressive and dramatic',
-  ZodiacSign.virgo: 'analytical and practical',
-  ZodiacSign.libra: 'harmonious and diplomatic',
-  ZodiacSign.scorpio: 'deep and transformative',
-  ZodiacSign.sagittarius: 'expansive and philosophical',
-  ZodiacSign.capricorn: 'disciplined and structured',
-  ZodiacSign.aquarius: 'innovative and humanitarian',
-  ZodiacSign.pisces: 'mystical and compassionate',
-};
-
-const Map<Element, String> _elementNamesEn = {
-  Element.fire: 'Fire',
-  Element.earth: 'Earth',
-  Element.air: 'Air',
-  Element.water: 'Water',
-};
-
-/// Default interpretation when there is no specific entry in the map.
+/// Default (composed) interpretation when there is no specific entry in the
+/// map — covers outer planets, the nodes and the mystic points (MC/IC/DSC,
+/// Vertex, Lilith, Part of Fortune). Joins the planet's theme with the sign's
+/// style plus a short magical tip.
 String planetSignDefaultInterpretationEn(Planet planet, ZodiacSign sign) {
-  return 'Your ${_planetNamesEn[planet]} in ${_signNamesEn[sign]} combines the '
-      'energy ${_planetEnergyEn(planet)} with the ${_signQualitiesEn[sign]} '
-      'qualities of this ${_elementNamesEn[sign.element]} sign.';
+  final style = _signStyleEn(sign);
+  final magic = _planetMagicEn(planet);
+
+  if (planet == Planet.northNode) {
+    return 'Your North Node in ${sign.displayName} points to this life\'s '
+        'path of growth and purpose, to be walked $style. $magic';
+  }
+  if (planet == Planet.southNode) {
+    return 'Your South Node in ${sign.displayName} reveals gifts already '
+        'earned and the comfort zone you carry $style. $magic';
+  }
+  // English has no gendered article — "Your" covers every point.
+  return 'Your ${planet.displayName} in ${sign.displayName} expresses '
+      '${_planetMeaningEn(planet)}, $style. $magic';
 }
 
-String _planetEnergyEn(Planet planet) {
+/// Core theme of each planet (noun phrase).
+String _planetMeaningEn(Planet planet) {
   switch (planet) {
     case Planet.sun:
-      return 'of your vital essence';
+      return 'your essence and vitality';
     case Planet.moon:
-      return 'of your emotions and intuition';
+      return 'your emotions and inner world';
     case Planet.mercury:
-      return 'of your communication and mind';
+      return 'your mind and communication';
     case Planet.venus:
-      return 'of love and beauty';
+      return 'love, pleasure, and beauty';
     case Planet.mars:
-      return 'of action and protection';
+      return 'action, desire, and courage';
     case Planet.jupiter:
-      return 'of expansion and luck';
+      return 'expansion, faith, and abundance';
     case Planet.saturn:
-      return 'of discipline and structure';
+      return 'discipline, boundaries, and maturity';
     case Planet.uranus:
-      return 'of innovation and freedom';
+      return 'innovation, disruption, and freedom';
     case Planet.neptune:
-      return 'of spirituality and dreams';
+      return 'spirituality, dreams, and imagination';
     case Planet.pluto:
-      return 'of deep transformation';
+      return 'deep transformation and the power of rebirth';
     case Planet.northNode:
-      return 'of your karmic destiny';
+      return 'the soul\'s path of growth';
     case Planet.southNode:
-      return 'of your past lives';
+      return 'gifts inherited from other lives';
+    case Planet.midheaven:
+      return 'your calling, public image, and the legacy you build';
+    case Planet.imumCoeli:
+      return 'your roots, home, and innermost emotional foundation';
+    case Planet.descendant:
+      return 'relationships and what you seek in another';
+    case Planet.vertex:
+      return 'fateful encounters and turns of destiny';
+    case Planet.lilith:
+      return 'instinctive power, shadow, and untamed desire';
+    case Planet.partOfFortune:
+      return 'your luck, prosperity, and well-being';
+  }
+}
+
+/// Each sign's style of expression (element + quality in a nutshell).
+String _signStyleEn(ZodiacSign sign) {
+  switch (sign) {
+    case ZodiacSign.aries:
+      return 'in a bold, direct, pioneering way';
+    case ZodiacSign.taurus:
+      return 'in a steady, sensory, persistent way';
+    case ZodiacSign.gemini:
+      return 'in a curious, communicative, versatile way';
+    case ZodiacSign.cancer:
+      return 'in a sensitive, protective, nurturing way';
+    case ZodiacSign.leo:
+      return 'in an expressive, generous, creative way';
+    case ZodiacSign.virgo:
+      return 'in a practical, analytical, careful way';
+    case ZodiacSign.libra:
+      return 'in a harmonious, diplomatic, aesthetic way';
+    case ZodiacSign.scorpio:
+      return 'in an intense, deep, transformative way';
+    case ZodiacSign.sagittarius:
+      return 'in an adventurous, philosophical, optimistic way';
+    case ZodiacSign.capricorn:
+      return 'in a disciplined, ambitious, responsible way';
+    case ZodiacSign.aquarius:
+      return 'in an original, independent, humanitarian way';
+    case ZodiacSign.pisces:
+      return 'in a sensitive, imaginative, compassionate way';
+  }
+}
+
+/// Short magical tip per planet.
+String _planetMagicEn(Planet planet) {
+  switch (planet) {
+    case Planet.sun:
+      return 'In magic, it is your center of power and identity.';
+    case Planet.moon:
+      return 'In magic, it guides your cycles, intuition, and lunar workings.';
+    case Planet.mercury:
+      return 'In magic, it favors spells of communication, study, and clarity.';
+    case Planet.venus:
+      return 'In magic, it rules rituals of love, self-worth, and pleasure.';
+    case Planet.mars:
+      return 'In magic, it fuels protection, courage, and banishing.';
+    case Planet.jupiter:
+      return 'In magic, use it in rituals of growth, luck, and abundance.';
+    case Planet.saturn:
+      return 'In magic, use it in workings of structure, protection, and lasting commitments.';
+    case Planet.uranus:
+      return 'In magic, use it to break patterns and open new paths.';
+    case Planet.neptune:
+      return 'In magic, use it in dreamwork, divination, and spiritual connection.';
+    case Planet.pluto:
+      return 'In magic, use it in rites of transformation, deep healing, and rebirth.';
+    case Planet.northNode:
+      return 'Cultivate this sign\'s qualities — it is where your soul grows toward.';
+    case Planet.southNode:
+      return 'Honor these already-natural gifts, and avoid settling for them alone.';
+    case Planet.midheaven:
+      return 'In magic, direct rituals of purpose, career, and recognition here.';
+    case Planet.imumCoeli:
+      return 'In magic, use it in workings of home protection, ancestry, and roots.';
+    case Planet.descendant:
+      return 'In magic, it favors rituals of partnership, unions, and harmony with others.';
+    case Planet.vertex:
+      return 'In magic, it marks fated encounters — work with synchronicities and portals.';
+    case Planet.lilith:
+      return 'In magic, it is the wild witch\'s portal: sovereignty, shadow, and desire.';
+    case Planet.partOfFortune:
+      return 'In magic, aim spells of prosperity, luck, and abundance here.';
   }
 }
 
@@ -424,26 +472,26 @@ String _planetEnergyEn(Planet planet) {
 String planetSignShortInterpretationEn(Planet planet, ZodiacSign sign) {
   switch (planet) {
     case Planet.sun:
-      return 'Your magical essence is ${_signQualitiesEn[sign]}';
+      return 'Your magical essence is ${sign.magicalDescription}';
     case Planet.moon:
-      return 'Your emotions and intuition are ${_signQualitiesEn[sign]}';
+      return 'Your emotions and intuition are ${sign.magicalDescription}';
     case Planet.mercury:
-      return 'Your mind and communication are ${_signQualitiesEn[sign]}';
+      return 'Your mind and communication are ${sign.magicalDescription}';
     case Planet.venus:
-      return 'Your love and beauty are ${_signQualitiesEn[sign]}';
+      return 'Your love and beauty are ${sign.magicalDescription}';
     case Planet.mars:
-      return 'Your energy and action are ${_signQualitiesEn[sign]}';
+      return 'Your energy and action are ${sign.magicalDescription}';
     case Planet.jupiter:
-      return 'Your luck and expansion are ${_signQualitiesEn[sign]}';
+      return 'Your luck and expansion are ${sign.magicalDescription}';
     case Planet.saturn:
-      return 'Your discipline and structure are ${_signQualitiesEn[sign]}';
+      return 'Your discipline and structure are ${sign.magicalDescription}';
     case Planet.uranus:
-      return 'Your innovation is ${_signQualitiesEn[sign]}';
+      return 'Your innovation is ${sign.magicalDescription}';
     case Planet.neptune:
-      return 'Your spirituality is ${_signQualitiesEn[sign]}';
+      return 'Your spirituality is ${sign.magicalDescription}';
     case Planet.pluto:
-      return 'Your transformation is ${_signQualitiesEn[sign]}';
+      return 'Your transformation is ${sign.magicalDescription}';
     default:
-      return '${_planetNamesEn[planet]} in ${_signNamesEn[sign]}';
+      return '${planet.displayName} in ${sign.displayName}';
   }
 }
