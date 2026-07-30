@@ -6,6 +6,8 @@ import '../models/planet_position_model.dart';
 import '../models/house_model.dart';
 import '../models/aspect_model.dart';
 import '../models/enums.dart';
+import 'sweph_service.dart';
+import 'timezone_resolver.dart';
 
 /// Calculadora de Mapa Astral
 ///
@@ -47,24 +49,227 @@ class ChartCalculator {
     try {
       _logCallback = onLog;
 
-      _log('🔧 Calculando mapa astral localmente...');
+      _log('🔧 Calculando mapa astral...');
       _log('   Data: ${birthDate.year}-${birthDate.month}-${birthDate.day}');
       _log('   Hora: ${birthTime.hour}:${birthTime.minute}');
       _log('   Local: $birthPlace');
 
-      return await _calculateWithLocalMethod(
-        birthDate: birthDate,
-        userId: userId,
-        birthTime: birthTime,
-        birthPlace: birthPlace,
-        latitude: latitude,
-        longitude: longitude,
-        unknownBirthTime: unknownBirthTime,
-        timezoneOffsetHours: timezoneOffsetHours,
-      );
+      // Caminho preciso: Swiss Ephemeris (Moshier). Se falhar por qualquer
+      // motivo (ex.: init nativa indisponível), cai no método local antigo.
+      try {
+        return await _calculateWithSweph(
+          birthDate: birthDate,
+          userId: userId,
+          birthTime: birthTime,
+          birthPlace: birthPlace,
+          latitude: latitude,
+          longitude: longitude,
+          unknownBirthTime: unknownBirthTime,
+          timezoneOffsetHours: timezoneOffsetHours,
+        );
+      } catch (e) {
+        _log('⚠️ Swiss Ephemeris falhou ($e). Usando método local de fallback.');
+        return await _calculateWithLocalMethod(
+          birthDate: birthDate,
+          userId: userId,
+          birthTime: birthTime,
+          birthPlace: birthPlace,
+          latitude: latitude,
+          longitude: longitude,
+          unknownBirthTime: unknownBirthTime,
+          timezoneOffsetHours: timezoneOffsetHours,
+        );
+      }
     } catch (e) {
       throw Exception('Erro ao calcular mapa natal: $e');
     }
+  }
+
+  /// Offset UTC padrão a partir da longitude (fuso "natural"). Usado quando o
+  /// usuário não informa um offset explícito. Corrige o antigo hardcode Brasil.
+  double _defaultOffsetFromLongitude(double longitude) =>
+      (longitude / 15.0).roundToDouble();
+
+  /// Cálculo preciso via Swiss Ephemeris (Moshier).
+  Future<BirthChartModel> _calculateWithSweph({
+    required String userId,
+    required DateTime birthDate,
+    required TimeOfDay birthTime,
+    required String birthPlace,
+    required double latitude,
+    required double longitude,
+    required bool unknownBirthTime,
+    double? timezoneOffsetHours,
+  }) async {
+    await SwephService.instance.ensureReady();
+
+    // Fuso com horário de verão histórico (banco IANA via pacote timezone).
+    final resolved = TimezoneResolver.resolve(
+      date: birthDate,
+      hour: birthTime.hour,
+      minute: birthTime.minute,
+      latitude: latitude,
+      longitude: longitude,
+      explicitOffsetHours: timezoneOffsetHours,
+    );
+    final utc = resolved.utc;
+    final hourUt = utc.hour + utc.minute / 60.0 + utc.second / 3600.0;
+    final jd = SwephService.instance.julianDayUt(
+      year: utc.year,
+      month: utc.month,
+      day: utc.day,
+      hourUt: hourUt,
+    );
+    _log('   🌍 Fuso aplicado: ${resolved.label}'
+        '${resolved.isDst ? " [horário de verão]" : ""}');
+    _log('   📅 Julian Day (UT): ${jd.toStringAsFixed(5)}');
+
+    // Planetas + Nodo Norte (Sul = oposto).
+    const bodies = <Planet>[
+      Planet.sun,
+      Planet.moon,
+      Planet.mercury,
+      Planet.venus,
+      Planet.mars,
+      Planet.jupiter,
+      Planet.saturn,
+      Planet.uranus,
+      Planet.neptune,
+      Planet.pluto,
+      Planet.northNode,
+    ];
+    final planets = <PlanetPosition>[];
+    for (final planet in bodies) {
+      final pos = SwephService.instance
+          .bodyPosition(jd, SwephService.heavenlyBody(planet));
+      planets.add(_createPlanetPosition(planet, pos.longitude, pos.speed, 0));
+    }
+    final northNode =
+        planets.firstWhere((p) => p.planet == Planet.northNode);
+    planets.add(_createPlanetPosition(
+      Planet.southNode,
+      (northNode.longitude + 180) % 360,
+      northNode.speed,
+      0,
+    ));
+
+    // Casas + ângulos.
+    List<House> houses;
+    PlanetPosition? ascendant;
+    PlanetPosition? midheaven;
+    double? vertexLongitude;
+    if (!unknownBirthTime) {
+      final h = SwephService.instance.houses(jd, latitude, longitude);
+      houses = [for (int i = 0; i < 12; i++) _createHouse(i + 1, h.cusps[i])];
+      ascendant = _pointAsPlanet(Planet.sun, h.ascendant, 1); // ASC placeholder
+      midheaven = _pointAsPlanet(Planet.midheaven, h.mc, 10);
+      vertexLongitude = h.vertex;
+    } else {
+      houses = _calculateHousesEqualSign(planets[0].longitude);
+    }
+
+    final planetsWithHouses = _assignHousesToPlanets(planets, houses);
+    final aspects = _calculateAspects(planetsWithHouses);
+
+    // Pontos místicos (Lilith + eixos + Vértex + Parte da Fortuna). Exigem
+    // casas/ângulos, então só entram quando a hora de nascimento é conhecida.
+    final mysticalPoints = <PlanetPosition>[];
+    if (!unknownBirthTime && ascendant != null && midheaven != null) {
+      final sun = planetsWithHouses.firstWhere((p) => p.planet == Planet.sun);
+      final moon = planetsWithHouses.firstWhere((p) => p.planet == Planet.moon);
+      // Lilith (Lua Negra / apogeu médio) via sweph.
+      final lilith = SwephService.instance
+          .bodyPosition(jd, SwephService.heavenlyBody(Planet.lilith));
+      mysticalPoints.add(_createPlanetPosition(
+        Planet.lilith,
+        lilith.longitude,
+        lilith.speed,
+        _findHouseForLongitude(lilith.longitude, houses),
+      ));
+      mysticalPoints.addAll(_buildCalculatedPoints(
+        ascLongitude: ascendant.longitude,
+        mcLongitude: midheaven.longitude,
+        vertexLongitude: vertexLongitude,
+        sun: sun,
+        moon: moon,
+        houses: houses,
+      ));
+    }
+
+    return BirthChartModel(
+      id: const Uuid().v4(),
+      userId: userId,
+      birthDate: birthDate,
+      birthTime: birthTime,
+      birthPlace: birthPlace,
+      latitude: latitude,
+      longitude: longitude,
+      timezone: resolved.label,
+      unknownBirthTime: unknownBirthTime,
+      planets: [...planetsWithHouses, ...mysticalPoints],
+      houses: houses,
+      ascendant: ascendant,
+      midheaven: midheaven,
+      aspects: aspects,
+      calculatedAt: DateTime.now(),
+      calcVersion: kChartCalcVersion,
+    );
+  }
+
+  /// Empacota a longitude de um ponto/ângulo (MC, IC, DSC, Vértex, ASC…) em um
+  /// PlanetPosition, com sinal derivado da longitude e velocidade zero.
+  PlanetPosition _pointAsPlanet(Planet planet, double longitude, int houseNumber) {
+    longitude %= 360;
+    if (longitude < 0) longitude += 360;
+    return PlanetPosition(
+      planet: planet,
+      sign: ZodiacSign.fromLongitude(longitude),
+      degree: (longitude % 30).floor(),
+      minute: ((longitude % 1) * 60).floor(),
+      houseNumber: houseNumber,
+      isRetrograde: false,
+      longitude: longitude,
+      speed: 0,
+    );
+  }
+
+  /// Constrói os pontos calculados a partir dos ângulos: eixos MC/IC e DSC,
+  /// Vértex (se disponível) e Parte da Fortuna (com fórmula diurna/noturna).
+  List<PlanetPosition> _buildCalculatedPoints({
+    required double ascLongitude,
+    required double mcLongitude,
+    required double? vertexLongitude,
+    required PlanetPosition sun,
+    required PlanetPosition moon,
+    required List<House> houses,
+  }) {
+    double norm(double v) {
+      v %= 360;
+      return v < 0 ? v + 360 : v;
+    }
+
+    final points = <PlanetPosition>[
+      _pointAsPlanet(Planet.midheaven, mcLongitude, 10),
+      _pointAsPlanet(Planet.imumCoeli, norm(mcLongitude + 180), 4),
+      _pointAsPlanet(Planet.descendant, norm(ascLongitude + 180), 7),
+    ];
+
+    if (vertexLongitude != null) {
+      final vtx = norm(vertexLongitude);
+      points.add(
+          _pointAsPlanet(Planet.vertex, vtx, _findHouseForLongitude(vtx, houses)));
+    }
+
+    // Parte da Fortuna: mapa diurno (Sol acima do horizonte → casas 7-12) usa
+    // ASC + Lua − Sol; mapa noturno usa ASC + Sol − Lua.
+    final isDiurnal = sun.houseNumber >= 7 && sun.houseNumber <= 12;
+    final pof = isDiurnal
+        ? norm(ascLongitude + moon.longitude - sun.longitude)
+        : norm(ascLongitude + sun.longitude - moon.longitude);
+    points.add(_pointAsPlanet(
+        Planet.partOfFortune, pof, _findHouseForLongitude(pof, houses)));
+
+    return points;
   }
 
   /// Calcula usando método local (VSOP87)
@@ -149,6 +354,22 @@ class ChartCalculator {
     // 5. Calcular aspectos
     final aspects = _calculateAspects(planetsWithHouses);
 
+    // 6. Pontos calculados possíveis no método local: eixos + Parte da Fortuna.
+    // Lilith e Vértex dependem do sweph, então ficam de fora aqui.
+    final mysticalPoints = <PlanetPosition>[];
+    if (!unknownBirthTime && ascendant != null && midheaven != null) {
+      final sun = planetsWithHouses.firstWhere((p) => p.planet == Planet.sun);
+      final moon = planetsWithHouses.firstWhere((p) => p.planet == Planet.moon);
+      mysticalPoints.addAll(_buildCalculatedPoints(
+        ascLongitude: ascendant.longitude,
+        mcLongitude: midheaven.longitude,
+        vertexLongitude: null,
+        sun: sun,
+        moon: moon,
+        houses: houses,
+      ));
+    }
+
     return BirthChartModel(
       id: const Uuid().v4(),
       userId: userId,
@@ -159,12 +380,13 @@ class ChartCalculator {
       longitude: longitude,
       timezone: 'UTC',
       unknownBirthTime: unknownBirthTime,
-      planets: planetsWithHouses,
+      planets: [...planetsWithHouses, ...mysticalPoints],
       houses: houses,
       ascendant: ascendant,
       midheaven: midheaven,
       aspects: aspects,
       calculatedAt: DateTime.now(),
+      calcVersion: kChartCalcVersion,
     );
   }
 
@@ -229,9 +451,10 @@ class ChartCalculator {
     final day = date.day;
 
     // IMPORTANTE: Converter hora local para UTC
-    // Se timezone fornecido, usa ele; senão, detecta automaticamente
+    // Se timezone fornecido, usa ele; senão, deriva do fuso "natural" da
+    // longitude (global) — não mais assume Brasil.
     final timezoneOffset =
-        (timezoneOffsetHours ?? _detectBrazilianTimezone(date, latitude))
+        (timezoneOffsetHours ?? _defaultOffsetFromLongitude(longitude))
             .round();
 
     // Converter hora local para UTC

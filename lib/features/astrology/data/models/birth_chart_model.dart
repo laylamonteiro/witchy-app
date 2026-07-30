@@ -5,6 +5,15 @@ import 'house_model.dart';
 import 'aspect_model.dart';
 import 'enums.dart';
 
+/// Versão do algoritmo de cálculo do mapa. Incrementada sempre que o cálculo
+/// muda de forma que mapas salvos precisem ser recalculados. Mapas antigos sem
+/// o campo são tratados como versão 1.
+///
+/// v2: adiciona Lilith, MC/IC/DSC, Vértex e Parte da Fortuna.
+/// v3: corrige o caminho gravável do Swiss Ephemeris (antes o sweph falhava e
+///     caía no método local, sem Lilith/Vértex e com posições aproximadas).
+const int kChartCalcVersion = 3;
+
 class BirthChartModel {
   final String id;
   final String userId;
@@ -31,6 +40,9 @@ class BirthChartModel {
 
   final DateTime calculatedAt;
 
+  /// Versão do cálculo com que este mapa foi gerado (ver [kChartCalcVersion]).
+  final int calcVersion;
+
   const BirthChartModel({
     required this.id,
     required this.userId,
@@ -47,6 +59,7 @@ class BirthChartModel {
     this.midheaven,
     required this.aspects,
     required this.calculatedAt,
+    this.calcVersion = 1,
   });
 
   // Getters úteis
@@ -81,22 +94,30 @@ class BirthChartModel {
       Element.water: 0,
     };
 
-    // Contar apenas planetas pessoais + sociais para elemento dominante
-    final relevantPlanets = planets.where((p) =>
-        p.planet == Planet.sun ||
-        p.planet == Planet.moon ||
-        p.planet == Planet.mercury ||
-        p.planet == Planet.venus ||
-        p.planet == Planet.mars ||
-        p.planet == Planet.jupiter ||
-        p.planet == Planet.saturn);
-
-    for (final planet in relevantPlanets) {
-      distribution[planet.sign.element] = (distribution[planet.sign.element] ?? 0) + 1;
+    // Conta todos os planetas do mapa (inclusive Urano, Netuno e Plutão),
+    // para que a distribuição seja coerente com a lista "Ver todos os
+    // planetas" — evita mostrar "0 em Terra" tendo um planeta em signo de Terra.
+    for (final planet in planets.where(_isCountablePlanet)) {
+      distribution[planet.sign.element] =
+          (distribution[planet.sign.element] ?? 0) + 1;
     }
 
     return distribution;
   }
+
+  /// Planetas considerados na contagem de elementos/modalidades — os 10 astros,
+  /// excluindo pontos calculados (Ascendente, Meio do Céu, nodos etc.).
+  static bool _isCountablePlanet(PlanetPosition p) =>
+      p.planet == Planet.sun ||
+      p.planet == Planet.moon ||
+      p.planet == Planet.mercury ||
+      p.planet == Planet.venus ||
+      p.planet == Planet.mars ||
+      p.planet == Planet.jupiter ||
+      p.planet == Planet.saturn ||
+      p.planet == Planet.uranus ||
+      p.planet == Planet.neptune ||
+      p.planet == Planet.pluto;
 
   Map<Modality, int> getModalityDistribution() {
     final distribution = <Modality, int>{
@@ -105,17 +126,9 @@ class BirthChartModel {
       Modality.mutable: 0,
     };
 
-    final relevantPlanets = planets.where((p) =>
-        p.planet == Planet.sun ||
-        p.planet == Planet.moon ||
-        p.planet == Planet.mercury ||
-        p.planet == Planet.venus ||
-        p.planet == Planet.mars ||
-        p.planet == Planet.jupiter ||
-        p.planet == Planet.saturn);
-
-    for (final planet in relevantPlanets) {
-      distribution[planet.sign.modality] = (distribution[planet.sign.modality] ?? 0) + 1;
+    for (final planet in planets.where(_isCountablePlanet)) {
+      distribution[planet.sign.modality] =
+          (distribution[planet.sign.modality] ?? 0) + 1;
     }
 
     return distribution;
@@ -139,6 +152,7 @@ class BirthChartModel {
       'midheaven': midheaven?.toJson(),
       'aspects': aspects.map((a) => a.toJson()).toList(),
       'calculatedAt': calculatedAt.toIso8601String(),
+      'calcVersion': calcVersion,
     };
   }
 
@@ -180,10 +194,49 @@ class BirthChartModel {
       calculatedAt: json['calculatedAt'] != null
           ? DateTime.parse(json['calculatedAt'])
           : DateTime.now(),
+      calcVersion: json['calcVersion'] ?? 1,
     );
   }
 
   factory BirthChartModel.fromJsonString(String jsonString) {
     return BirthChartModel.fromJson(jsonDecode(jsonString));
+  }
+
+  BirthChartModel copyWith({
+    String? id,
+    String? userId,
+    DateTime? birthDate,
+    TimeOfDay? birthTime,
+    String? birthPlace,
+    double? latitude,
+    double? longitude,
+    String? timezone,
+    bool? unknownBirthTime,
+    List<PlanetPosition>? planets,
+    List<House>? houses,
+    PlanetPosition? ascendant,
+    PlanetPosition? midheaven,
+    List<Aspect>? aspects,
+    DateTime? calculatedAt,
+    int? calcVersion,
+  }) {
+    return BirthChartModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      birthDate: birthDate ?? this.birthDate,
+      birthTime: birthTime ?? this.birthTime,
+      birthPlace: birthPlace ?? this.birthPlace,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      timezone: timezone ?? this.timezone,
+      unknownBirthTime: unknownBirthTime ?? this.unknownBirthTime,
+      planets: planets ?? this.planets,
+      houses: houses ?? this.houses,
+      ascendant: ascendant ?? this.ascendant,
+      midheaven: midheaven ?? this.midheaven,
+      aspects: aspects ?? this.aspects,
+      calculatedAt: calculatedAt ?? this.calculatedAt,
+      calcVersion: calcVersion ?? this.calcVersion,
+    );
   }
 }

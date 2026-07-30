@@ -2483,6 +2483,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get chartInvalidTime => 'Hora inválida';
 
+
+
   @override
   String get chartPlaceNotFound => 'Local não encontrado';
 

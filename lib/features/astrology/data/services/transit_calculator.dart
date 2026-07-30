@@ -2,48 +2,105 @@ import '../models/enums.dart';
 import '../models/transit_model.dart';
 import '../models/planet_position_model.dart';
 import '../models/birth_chart_model.dart';
+import 'sweph_service.dart';
 
 /// Calcula trânsitos planetários em tempo real
 class TransitCalculator {
-  /// Calcula as posições dos planetas para uma data específica
+  /// Calcula as posições dos planetas para uma data específica.
+  ///
+  /// Usa o Swiss Ephemeris (Moshier) para precisão de arco-minuto e detecção
+  /// real de retrogradação (velocidade < 0). Se o sweph falhar, cai no método
+  /// linear aproximado antigo.
   Future<List<Transit>> calculateTransits(DateTime date) async {
     print('🌟 Calculando trânsitos para: $date');
-    final transits = <Transit>[];
-
     try {
-      // Calcular posição de cada planeta para a data
+      await SwephService.instance.ensureReady();
+      final utc = date.toUtc();
+      final hourUt = utc.hour + utc.minute / 60.0 + utc.second / 3600.0;
+      final jd = SwephService.instance.julianDayUt(
+        year: utc.year,
+        month: utc.month,
+        day: utc.day,
+        hourUt: hourUt,
+      );
+
+      final transits = <Transit>[];
       for (final planet in Planet.values) {
-        if (planet == Planet.northNode || planet == Planet.southNode) {
-          continue; // Skip nodes for simplicity
-        }
-
+        if (!_isTransitingBody(planet)) continue;
         try {
-          final position = _calculatePlanetPosition(planet, date);
-
-          // Verificar se a posição é válida
-          if (!position.longitude.isNaN && !position.longitude.isInfinite) {
-            transits.add(Transit(
-              planet: planet,
-              sign: position.sign,
-              degree: position.degree.toDouble(),
-              isRetrograde: position.isRetrograde,
-            ));
-            print('  ✓ ${planet.name}: ${position.sign.name} ${position.degree}°');
-          } else {
-            print('  ✗ ${planet.name}: posição inválida (NaN/Infinite)');
-          }
+          final pos = SwephService.instance
+              .bodyPosition(jd, SwephService.heavenlyBody(planet));
+          if (pos.longitude.isNaN || pos.longitude.isInfinite) continue;
+          transits.add(Transit(
+            planet: planet,
+            sign: ZodiacSign.fromLongitude(pos.longitude),
+            degree: pos.longitude % 30,
+            isRetrograde: pos.speed < 0,
+          ));
         } catch (e) {
-          print('  ✗ ${planet.name}: erro - $e');
-          // Continua com os outros planetas
+          print('  ✗ ${planet.name}: erro no sweph - $e');
         }
       }
 
+      if (transits.isEmpty) {
+        throw StateError('Nenhum trânsito calculado via sweph');
+      }
       print('✅ Total de trânsitos calculados: ${transits.length}');
       return transits;
     } catch (e) {
-      print('❌ Erro em calculateTransits: $e');
-      rethrow;
+      print('⚠️ Sweph indisponível ($e). Usando método linear aproximado.');
+      return _calculateTransitsApprox(date);
     }
+  }
+
+  /// Corpos considerados nos trânsitos: os 10 planetas clássicos. Nodos e
+  /// pontos calculados (MC/IC/DSC/Vértex/Lilith/Parte da Fortuna) ficam de fora.
+  /// Switch exaustivo — novos valores do enum exigem uma decisão explícita aqui.
+  bool _isTransitingBody(Planet planet) {
+    switch (planet) {
+      case Planet.sun:
+      case Planet.moon:
+      case Planet.mercury:
+      case Planet.venus:
+      case Planet.mars:
+      case Planet.jupiter:
+      case Planet.saturn:
+      case Planet.uranus:
+      case Planet.neptune:
+      case Planet.pluto:
+        return true;
+      case Planet.northNode:
+      case Planet.southNode:
+      case Planet.midheaven:
+      case Planet.imumCoeli:
+      case Planet.descendant:
+      case Planet.vertex:
+      case Planet.lilith:
+      case Planet.partOfFortune:
+        return false;
+    }
+  }
+
+  /// Fallback linear aproximado (sweph indisponível).
+  List<Transit> _calculateTransitsApprox(DateTime date) {
+    final transits = <Transit>[];
+    for (final planet in Planet.values) {
+      if (!_isTransitingBody(planet)) continue;
+      try {
+        final position = _calculatePlanetPosition(planet, date);
+        if (!position.longitude.isNaN && !position.longitude.isInfinite) {
+          transits.add(Transit(
+            planet: planet,
+            sign: position.sign,
+            degree: position.degree.toDouble(),
+            isRetrograde: position.isRetrograde,
+          ));
+        }
+      } catch (e) {
+        print('  ✗ ${planet.name}: erro - $e');
+      }
+    }
+    return transits;
   }
 
   /// Calcula aspectos entre trânsitos e mapa natal

@@ -5,7 +5,6 @@ import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/data_sync_service.dart';
-import '../data_sources/daily_weather_content.dart';
 import '../models/enums.dart';
 import '../models/transit_model.dart';
 import '../models/birth_chart_model.dart';
@@ -193,9 +192,11 @@ class DailyWeatherRepository {
     final contextKey = natalChart == null
         ? 'general'
         : sha256.convert(utf8.encode(natalChart.toJsonString())).toString();
-    // Verificar cache primeiro
+    // Verificar cache primeiro. Um cache incompleto (ex.: fallback antigo com
+    // menos seções, salvo quando a IA estava indisponível) é tratado como
+    // obsoleto e regerado.
     final cached = await getCachedWeather(date, userId, contextKey);
-    if (cached != null) {
+    if (cached != null && _looksComplete(cached.aiGeneratedText)) {
       return cached;
     }
 
@@ -222,6 +223,7 @@ class DailyWeatherRepository {
 
     // Gerar texto com IA
     String aiText;
+    bool usedFallback = false;
     try {
       aiText = await _aiService.generateDailyMagicalWeatherText(
         moonPhase: weatherData.moonPhase,
@@ -232,8 +234,9 @@ class DailyWeatherRepository {
         aspects: aspectsForAI.cast<Map<String, String>>(),
       );
     } catch (e) {
-      // Usar interpretação padrão se IA falhar (no idioma atual do app)
-      aiText = DailyWeatherContent.fallbackText(weatherData);
+      // Usar interpretação padrão se IA falhar
+      aiText = _generateFallbackText(weatherData);
+      usedFallback = true;
     }
 
     // Criar cache
@@ -247,10 +250,71 @@ class DailyWeatherRepository {
       contextKey: contextKey,
     );
 
-    // Salvar no banco
-    await saveWeatherCache(cache);
+    // Só persiste quando o texto veio da IA. Assim um fallback (ex.: IA fora do
+    // ar por rate limit) não fica preso no cache o dia inteiro — a IA é tentada
+    // novamente na próxima abertura.
+    if (!usedFallback) {
+      await saveWeatherCache(cache);
+    }
 
     return cache;
+  }
+
+  /// Um texto de clima é considerado completo quando traz as seções que só
+  /// existem na versão nova (IA ou fallback completo).
+  bool _looksComplete(String text) =>
+      text.contains('## Ritual Sugerido') &&
+      text.contains('## Cuidados do Dia');
+
+  // TODO(i18n): fallback novo (7 seções, vindo da main) ainda é PT-only —
+  // mover para daily_weather_content_{pt,en,es}.dart substituindo o fallback
+  // antigo e voltar a usar DailyWeatherContent.fallbackText.
+  /// Texto fallback se IA falhar. Mantém as MESMAS 7 seções do texto da IA
+  /// (Energia, Lua, Oportunidades, Cuidados, Ritual, Cristais, Mensagem) para
+  /// que o clima diário fique completo mesmo sem a IA.
+  String _generateFallbackText(DailyMagicalWeather weather) {
+    final elemento = weather.moonSign.element.displayName;
+
+    final desafios = weather.aspects
+        .where((a) => a.energyLevel == EnergyLevel.challenging)
+        .take(2)
+        .map((a) => '- ${a.description}: aja com calma e evite reagir no impulso.')
+        .toList();
+    final cuidados = desafios.isNotEmpty
+        ? desafios.join('\n')
+        : '- Sem tensões marcantes hoje. Ainda assim, evite decisões apressadas e reserve um momento de pausa para se centrar.';
+
+    return '''## Energia do Dia
+
+${weather.generalInterpretation}
+
+## A Lua Hoje
+
+A Lua está em ${weather.moonSign.displayName}, trazendo energias do elemento $elemento.
+Fase atual: ${weather.moonPhase}.
+
+## Oportunidades Mágicas
+
+${weather.recommendedPractices.map((p) => '- $p').join('\n')}
+
+## Cuidados do Dia
+
+$cuidados
+
+## Ritual Sugerido
+
+Acenda uma vela e faça três respirações profundas, sintonizando-se com o elemento $elemento da Lua em ${weather.moonSign.displayName}. Formule uma intenção simples e clara para o dia e visualize-a se realizando.
+
+## Cristais e Aliados
+
+- Quartzo transparente (equilíbrio geral)
+- Ametista (proteção espiritual)
+- Pedra da Lua (conexão lunar)
+
+## Mensagem das Estrelas
+
+Permita que as energias celestiais guiem seu caminho hoje. Confie em sua intuição e siga o fluxo do universo.
+''';
   }
 
   /// Limpa caches antigos (mais de 7 dias)

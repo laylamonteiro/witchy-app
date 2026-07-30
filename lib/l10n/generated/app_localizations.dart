@@ -4642,6 +4642,8 @@ abstract class AppLocalizations {
   ///
   /// In pt, this message translates to:
   /// **'Local não encontrado'**
+
+
   String get chartPlaceNotFound;
 
   /// No description provided for @chartCalcError.

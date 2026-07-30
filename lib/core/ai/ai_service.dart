@@ -236,8 +236,7 @@ class AIService {
         data: requestData,
       );
 
-      final content = response.data['choices'][0]['message']['content'];
-      return content;
+      return _contentFromResponse(response);
     } catch (e) {
       rethrow;
     }
@@ -293,26 +292,80 @@ class AIService {
         data: requestData,
       );
 
-      final content = response.data['choices'][0]['message']['content'];
-      return content;
+      return _contentFromResponse(response);
     } catch (e) {
       rethrow;
     }
   }
 
+  /// Extrai o texto da resposta do Groq. Se a geração foi cortada por limite de
+  /// tokens (`finish_reason == 'length'`), apara o final incompleto até a última
+  /// frase completa para nunca exibir corte no meio da palavra.
+  String _contentFromResponse(Response response) {
+    final choice = response.data['choices'][0];
+    final content = (choice['message']['content'] ?? '') as String;
+    if (choice['finish_reason'] == 'length') {
+      debugPrint('⚠️ AIService: resposta atingiu max_tokens; aparando final incompleto.');
+      return _trimToLastSentence(content);
+    }
+    return content;
+  }
+
+  /// Corta o texto até a última pontuação de fim de frase, evitando cortes no
+  /// meio de uma palavra quando a resposta veio truncada.
+  String _trimToLastSentence(String text) {
+    final trimmed = text.trimRight();
+    int cut = -1;
+    for (final m in RegExp(r'[.!?…\n]').allMatches(trimmed)) {
+      cut = m.end;
+    }
+    return cut > 0 ? trimmed.substring(0, cut).trimRight() : trimmed;
+  }
+
   String _buildChartSummary(BirthChartModel chart, MagicalProfile profile) {
     final buffer = StringBuffer();
 
+    // Formata um corpo/ponto do mapa com signo, grau e casa (se presente).
+    String? body(Planet pl, String label) {
+      final match = chart.planets.where((p) => p.planet == pl);
+      if (match.isEmpty) return null;
+      final p = match.first;
+      final retro = p.isRetrograde ? ' (R)' : '';
+      return '$label: ${p.positionString} - Casa ${p.houseNumber}$retro';
+    }
+
     buffer.writeln('DADOS DO MAPA ASTRAL:');
     buffer.writeln('');
-    buffer.writeln('SOL: ${chart.sun.positionString}');
-    buffer.writeln('LUA: ${chart.moon.positionString}');
+    buffer.writeln(
+        'SOL: ${chart.sun.positionString} - Casa ${chart.sun.houseNumber}');
+    buffer.writeln(
+        'LUA: ${chart.moon.positionString} - Casa ${chart.moon.houseNumber}');
     if (chart.ascendant != null) {
       buffer.writeln('ASCENDENTE: ${chart.ascendant!.positionString}');
     }
-    buffer.writeln('MERCÚRIO: ${chart.mercury.positionString}');
-    buffer.writeln('VÊNUS: ${chart.venus.positionString}');
-    buffer.writeln('MARTE: ${chart.mars.positionString}');
+    if (chart.midheaven != null) {
+      buffer.writeln('MEIO DO CÉU: ${chart.midheaven!.positionString}');
+    }
+    buffer.writeln('MERCÚRIO: ${chart.mercury.positionString}'
+        ' - Casa ${chart.mercury.houseNumber}');
+    buffer.writeln('VÊNUS: ${chart.venus.positionString}'
+        ' - Casa ${chart.venus.houseNumber}');
+    buffer.writeln('MARTE: ${chart.mars.positionString}'
+        ' - Casa ${chart.mars.houseNumber}');
+    // Planetas sociais, transpessoais e pontos místicos (quando presentes).
+    for (final line in [
+      body(Planet.jupiter, 'JÚPITER'),
+      body(Planet.saturn, 'SATURNO'),
+      body(Planet.uranus, 'URANO'),
+      body(Planet.neptune, 'NETUNO'),
+      body(Planet.pluto, 'PLUTÃO'),
+      body(Planet.northNode, 'NODO NORTE'),
+      body(Planet.southNode, 'NODO SUL'),
+      body(Planet.lilith, 'LILITH (LUA NEGRA)'),
+      body(Planet.partOfFortune, 'PARTE DA FORTUNA'),
+    ]) {
+      if (line != null) buffer.writeln(line);
+    }
     buffer.writeln('');
     buffer
         .writeln('ELEMENTO DOMINANTE: ${profile.dominantElement.displayName}');
@@ -324,6 +377,15 @@ class AIService {
     buffer.writeln('Casa 8 (Magia): ${profile.houseOfMagic}');
     buffer.writeln('Casa 12 (Espiritualidade): ${profile.houseOfSpirit}');
     buffer.writeln('');
+    // Aspectos mais exatos (menor orbe) — material único para a interpretação.
+    if (chart.aspects.isNotEmpty) {
+      final sorted = [...chart.aspects]..sort((a, b) => a.orb.compareTo(b.orb));
+      buffer.writeln('ASPECTOS PRINCIPAIS:');
+      for (final a in sorted.take(5)) {
+        buffer.writeln('- ${a.description}');
+      }
+      buffer.writeln('');
+    }
     buffer.writeln('FORÇAS MÁGICAS: ${profile.magicalStrengths.join(", ")}');
     buffer.writeln(
       'PRÁTICAS RECOMENDADAS: ${profile.recommendedPractices.join(", ")}',
@@ -385,52 +447,51 @@ Com base nos dados do mapa astral fornecido, escreva uma análise PERSONALIZADA 
 FORMATO DA RESPOSTA (use exatamente esta estrutura com os títulos):
 
 ## Sua Essência Mágica
-[2-3 parágrafos descrevendo a essência mágica baseada no Sol, como a pessoa expressa sua magia naturalmente, qual é seu propósito mágico]
+[1 parágrafo (3-4 frases) sobre a essência mágica baseada no Sol, como a pessoa expressa sua magia e seu propósito mágico]
 
 ## Seus Dons Intuitivos
-[2-3 parágrafos sobre os dons intuitivos baseados na Lua, como a intuição se manifesta, momentos em que a magia flui naturalmente]
+[1 parágrafo (3-4 frases) sobre os dons intuitivos baseados na Lua e como a intuição se manifesta]
 
 ## Sua Forma de Comunicar Magia
-[1-2 parágrafos sobre como a pessoa se comunica magicamente, baseado em Mercúrio - encantamentos, escritos mágicos, comunicação com o divino]
+[1 parágrafo curto (2-3 frases) sobre Mercúrio - encantamentos, escritos mágicos, comunicação com o divino]
 
 ## Amor, Beleza e Conexões
-[1-2 parágrafos sobre Vênus - como a pessoa conecta amor e magia, estética do altar, relacionamentos mágicos]
+[1 parágrafo curto (2-3 frases) sobre Vênus - amor e magia, estética do altar, relacionamentos mágicos]
 
 ## Sua Energia Protetora
-[1-2 parágrafos sobre Marte - como a pessoa se protege magicamente, estilo de banimentos, energia de ação mágica]
+[1 parágrafo curto (2-3 frases) sobre Marte - proteção mágica, banimentos, energia de ação]
 
 ## O Caminho da Transformação
-[2 parágrafos sobre a Casa 8 - magia profunda, transformação, mistérios, sexualidade mágica]
+[1 parágrafo (2-3 frases) sobre a Casa 8 - magia profunda, transformação, mistérios]
 
 ## O Portal Espiritual
-[2 parágrafos sobre a Casa 12 - conexão com o divino, mediunidade, sonhos proféticos, karma]
+[1 parágrafo (2-3 frases) sobre a Casa 12 - conexão com o divino, mediunidade, sonhos proféticos]
 
 ## Suas Maiores Forças
-[Lista em bullets das principais forças mágicas desta pessoa]
+[3-4 bullets curtos com as principais forças mágicas desta pessoa]
 
 ## Práticas Que Ressoam Com Você
-[Lista em bullets de práticas mágicas específicas recomendadas]
+[3-4 bullets curtos de práticas mágicas específicas recomendadas]
 
 ## Seus Aliados Mágicos
-[Lista em bullets de cristais, ervas, cores e ferramentas que ressoam com este mapa]
+[3-4 bullets curtos de cristais, ervas, cores e ferramentas que ressoam com este mapa]
 
 ## O Trabalho de Sombra
-[1-2 parágrafos sobre desafios a serem trabalhados, pontos de crescimento]
+[1 parágrafo curto (2-3 frases) sobre desafios a trabalhar e pontos de crescimento]
 
 ## Mensagem Final
-[1 parágrafo inspirador e acolhedor, encorajando a jornada mágica]
+[1-2 frases inspiradoras e acolhedoras, encorajando a jornada mágica]
 
 DIRETRIZES:
-- Use linguagem acolhedora, mística mas acessível
-- Seja específica nas interpretações, não genérica
-- Conecte cada posição planetária com práticas mágicas concretas
-- Mencione fases lunares, sabbats e momentos propícios quando relevante
+- É OBRIGATÓRIO entregar TODAS as 12 seções, completas. Se faltar espaço, encurte cada seção — NUNCA omita nem corte uma seção pela metade. Priorize cobrir todas as seções acima de detalhar qualquer uma.
+- Seja concisa: sem enrolação nem frases de efeito genéricas. Cada seção deve ser curta e ir direto ao ponto.
+- Seja MUITO específica para ESTE mapa: cite posicionamentos reais (signo + casa) e aspectos dos dados fornecidos em cada seção. Nada que sirva para qualquer pessoa — este é o perfil único desta pessoa.
+- Conecte cada posição planetária com uma prática mágica concreta.
+- Use linguagem acolhedora, mística mas acessível, e "você" para se dirigir à pessoa.
 - O tom deve ser de ${GenderText.wiseGuide(gender)}
-- Use "você" para se dirigir à pessoa
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}
-- Não repita informações genéricas sobre signos - seja específica para esta configuração única
-- Total: aproximadamente 800-1000 palavras''';
+- Total: ~650 palavras (máximo 700).''';
   }
 
   String _buildDailyWeatherSystemPrompt(
@@ -466,8 +527,9 @@ FORMATO DA RESPOSTA (use exatamente esta estrutura):
 [1 parágrafo curto e inspirador como mensagem de encerramento]
 
 DIRETRIZES:
-- Seja específica para os trânsitos e aspectos fornecidos
-- Use linguagem acolhedora e acessível
+- É OBRIGATÓRIO entregar TODAS as 7 seções, completas. NUNCA omita nem corte uma seção pela metade.
+- Seja específica para os trânsitos e aspectos fornecidos (cite-os), sem generalidades.
+- Use linguagem acolhedora e acessível.
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}
 - Sugira práticas simples que qualquer pessoa pode fazer
@@ -670,12 +732,24 @@ Diretrizes Sagradas:
             'role': 'system',
             'content': '''${_localizedInstruction()}
 
-Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, quiromante experiente na tradição popular e simbólica.
+Você é ${GenderText.wiseGuide(gender)} do Grimório de Bolso, quiromante experiente que combina técnica clássica (quirologia) e leitura simbólica.
 
-Analise a palma da mão na imagem: linhas principais (vida, cabeça, coração, destino quando visível), montes e formato geral. Faça uma leitura simbólica, acolhedora e específica ao que você VÊ — não invente linhas que não aparecem. Se a imagem não mostrar uma palma legível, diga isso gentilmente e oriente uma nova foto.
+Faça uma análise TÉCNICA e ESPECÍFICA do que está VISÍVEL na imagem, ponto a ponto. Use a terminologia própria da quiromancia e descreva o que realmente observa (traçado, profundidade, comprimento, curvatura, ramificações, ilhas, correntes, cruzes, quebras) — nunca invente o que não aparece. Se algum ponto não estiver visível ou nítido, diga claramente que não é possível avaliá-lo.
 
-Formato: texto puro (sem markdown/JSON), 3 a 4 parágrafos.
-Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de saúde, previsões de morte ou promessas absolutas.
+Analise cada elemento abaixo em seu próprio parágrafo, começando com o marcador ◈ e o nome do ponto:
+◈ Formato da mão: classifique o tipo elemental (Terra: palma quadrada e dedos curtos; Ar: palma quadrada e dedos longos; Fogo: palma retangular e dedos curtos; Água: palma longa e dedos longos) e o que revela sobre o temperamento.
+◈ Linha da Vida: origem, curvatura ao redor do monte de Vênus, profundidade, extensão, ramos, ilhas ou quebras — e o significado técnico de cada traço.
+◈ Linha da Cabeça: comprimento, inclinação (reta, curva para a Lua), se nasce unida ou separada da Linha da Vida.
+◈ Linha do Coração: onde começa (sob Júpiter, Saturno ou entre eles), curvatura, ramificações e correntes.
+◈ Linha do Destino/Saturno (se visível): origem, trajeto até o monte de Saturno, interrupções.
+◈ Montes (Vênus, Júpiter, Saturno, Apolo, Mercúrio, Lua, Marte): quais estão mais desenvolvidos e o que indicam.
+◈ Dedos e polegar: proporção, formato das pontas, ângulo/flexibilidade aparente do polegar.
+
+No fim, escreva um parágrafo de síntese começando com o marcador ✦ ("A leitura como um todo"), conectando os achados de forma acolhedora.
+
+Formato: texto puro (sem markdown/JSON), parágrafos separados por linha em branco.
+Seja concreto e técnico — evite generalidades vagas e elogios genéricos. Baseie cada afirmação em algo observável na imagem.
+Limites: leitura reflexiva — NUNCA faça diagnósticos de saúde, previsões de morte ou promessas absolutas.
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}''',
           },
@@ -696,8 +770,8 @@ Limites: a leitura é simbólica e reflexiva — NUNCA faça diagnósticos de sa
             ],
           },
         ],
-        'temperature': 0.7,
-        'max_tokens': 1200,
+        'temperature': 0.6,
+        'max_tokens': 1600,
         // qwen3 é modelo de raciocínio: desliga o "pensamento" para vir só
         // a leitura final (uma leitura simbólica não precisa de reasoning).
         'reasoning_effort': 'none',

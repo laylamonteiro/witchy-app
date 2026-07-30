@@ -15,6 +15,7 @@ import 'trails/trail_magia_negra_pt.dart';
 import 'trails/trail_magia_verde_en.dart';
 import 'trails/trail_magia_verde_es.dart';
 import 'trails/trail_magia_verde_pt.dart';
+import 'trails/trail_quiromancia_pt.dart';
 import 'trails/trail_tarot_en.dart';
 import 'trails/trail_tarot_es.dart';
 import 'trails/trail_tarot_pt.dart';
@@ -37,6 +38,7 @@ List<LearningTrail> get learningTrails => ContentLocale.instance.select(
         magiaNegraTrailPt,
         magiaDoCaosTrailPt,
         tarotTrailPt,
+        quiromanciaTrailPt,
       ],
       en: const [
         magiaBrancaTrailEn,
@@ -46,6 +48,9 @@ List<LearningTrail> get learningTrails => ContentLocale.instance.select(
         magiaNegraTrailEn,
         magiaDoCaosTrailEn,
         tarotTrailEn,
+        // TODO(i18n): substituir por quiromanciaTrailEn quando a tradução
+        // da trilha nova (chegada da main) estiver pronta.
+        quiromanciaTrailPt,
       ],
       es: const [
         magiaBrancaTrailEs,
@@ -55,5 +60,8 @@ List<LearningTrail> get learningTrails => ContentLocale.instance.select(
         magiaNegraTrailEs,
         magiaDoCaosTrailEs,
         tarotTrailEs,
+        // TODO(i18n): substituir por quiromanciaTrailEs quando a tradução
+        // da trilha nova (chegada da main) estiver pronta.
+        quiromanciaTrailPt,
       ],
     );

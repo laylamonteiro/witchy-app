@@ -15,7 +15,13 @@ enum Planet {
   neptune,
   pluto,
   northNode,
-  southNode;
+  southNode,
+  midheaven,
+  imumCoeli,
+  descendant,
+  vertex,
+  lilith,
+  partOfFortune;
 
   String get displayName => ContentLocale.instance
       .select(pt: _planetNamesPt, en: _planetNamesEn, es: _planetNamesEs)[this]!;
@@ -46,6 +52,18 @@ enum Planet {
         return '☊';
       case Planet.southNode:
         return '☋';
+      case Planet.midheaven:
+        return 'MC';
+      case Planet.imumCoeli:
+        return 'IC';
+      case Planet.descendant:
+        return 'Dsc';
+      case Planet.vertex:
+        return 'Vx';
+      case Planet.lilith:
+        return '⚸';
+      case Planet.partOfFortune:
+        return '⊗';
     }
   }
 
@@ -75,6 +93,15 @@ enum Planet {
         return 10; // SE_MEAN_NODE
       case Planet.southNode:
         return 10; // Same as north node, calculate opposite
+      case Planet.lilith:
+        return 12; // SE_MEAN_APOG (Lua Negra / apogeu médio)
+      case Planet.midheaven:
+      case Planet.imumCoeli:
+      case Planet.descendant:
+      case Planet.vertex:
+      case Planet.partOfFortune:
+        // Pontos calculados a partir das casas/ângulos — não vêm do sweph.
+        throw StateError('${displayName} é um ponto calculado, não tem swephId');
     }
   }
 }
@@ -350,6 +377,12 @@ const Map<Planet, String> _planetNamesPt = {
   Planet.pluto: 'Plutão',
   Planet.northNode: 'Nodo Norte',
   Planet.southNode: 'Nodo Sul',
+  Planet.midheaven: 'Meio do Céu',
+  Planet.imumCoeli: 'Fundo do Céu',
+  Planet.descendant: 'Descendente',
+  Planet.vertex: 'Vértex',
+  Planet.lilith: 'Lilith',
+  Planet.partOfFortune: 'Parte da Fortuna',
 };
 
 const Map<Planet, String> _planetNamesEn = {
@@ -365,6 +398,12 @@ const Map<Planet, String> _planetNamesEn = {
   Planet.pluto: 'Pluto',
   Planet.northNode: 'North Node',
   Planet.southNode: 'South Node',
+  Planet.midheaven: 'Midheaven',
+  Planet.imumCoeli: 'Imum Coeli',
+  Planet.descendant: 'Descendant',
+  Planet.vertex: 'Vertex',
+  Planet.lilith: 'Lilith',
+  Planet.partOfFortune: 'Part of Fortune',
 };
 
 const Map<Planet, String> _planetNamesEs = {
@@ -380,6 +419,12 @@ const Map<Planet, String> _planetNamesEs = {
   Planet.pluto: 'Plutón',
   Planet.northNode: 'Nodo Norte',
   Planet.southNode: 'Nodo Sur',
+  Planet.midheaven: 'Medio Cielo',
+  Planet.imumCoeli: 'Fondo del Cielo',
+  Planet.descendant: 'Descendente',
+  Planet.vertex: 'Vértex',
+  Planet.lilith: 'Lilith',
+  Planet.partOfFortune: 'Parte de la Fortuna',
 };
 
 const Map<ZodiacSign, String> _zodiacNamesPt = {

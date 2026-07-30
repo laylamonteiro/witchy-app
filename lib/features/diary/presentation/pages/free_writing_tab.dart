@@ -53,10 +53,13 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
     setState(() {});
   }
 
-  /// Salva a reflexão atual somente quando a pessoa aciona o botão explícito.
+  /// Salva a reflexão atual. Chamado automaticamente ao sair da tela ou iniciar
+  /// uma nova reflexão — assim a pessoa nunca perde o que escreveu.
   Future<void> _save() async {
     final text = _controller.text;
     if (text.trim().isEmpty) return;
+    // Nada mudou em uma reflexão já carregada: evita gravações repetidas.
+    if (_current != null && text == _originalContent) return;
 
     final model = _current == null
         ? FreeWritingModel(content: text)
@@ -70,25 +73,16 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
     });
   }
 
-  bool _shouldWarnAboutDiscard() {
-    // A saída padrão descarta alterações sem interromper o fluxo. Caso a regra
-    // mude no futuro (ex.: textos muito longos), concentre a decisão aqui.
-    return false;
-  }
-
-  void _discardCurrentDraft() {
-    _controller.text = _originalContent;
-  }
-
   Future<bool> _handleBack() async {
-    if (_shouldWarnAboutDiscard()) {
-      return false;
-    }
-    _discardCurrentDraft();
+    // Salva automaticamente antes de sair.
+    await _save();
     return true;
   }
 
   Future<void> _openHistory() async {
+    // Salva a reflexão atual antes de abrir o histórico.
+    await _save();
+    if (!mounted) return;
     final selected = await Navigator.of(context).push<FreeWritingModel>(
       MaterialPageRoute(builder: (_) => const FreeWritingsListPage()),
     );
@@ -103,8 +97,11 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
     });
   }
 
-  void _newReflection() {
+  Future<void> _newReflection() async {
     FocusScope.of(context).unfocus();
+    // Salva a reflexão atual antes de abrir um canvas em branco.
+    await _save();
+    if (!mounted) return;
     setState(() {
       _current = null;
       _originalContent = '';
@@ -124,9 +121,9 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
     final hasText = _controller.text.trim().isNotEmpty;
 
     return PopScope(
-      canPop: !_shouldWarnAboutDiscard(),
+      canPop: true,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) _discardCurrentDraft();
+        if (didPop) _save();
       },
       child: Scaffold(
         body: SafeArea(
@@ -162,15 +159,6 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                       tooltip: AppLocalizations.of(context).diaryPreviousReflections,
                       onPressed: _openHistory,
                     ),
-                    if (hasText)
-                      IconButton(
-                        icon: Icon(
-                          Icons.save_outlined,
-                          color: context.gc.lilac,
-                        ),
-                        tooltip: AppLocalizations.of(context).diarySaveReflection,
-                        onPressed: _save,
-                      ),
                   ],
                 ),
                 const SizedBox(height: 4),

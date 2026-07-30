@@ -32,7 +32,7 @@ class House {
       )[number] ??
       '';
 
-  String get cuspString => '${sign.symbol} ${degree}°${minute}\'';
+  String get cuspString => '${degree}°${minute}\' ${sign.symbol}';
 
   Map<String, dynamic> toJson() {
     return {

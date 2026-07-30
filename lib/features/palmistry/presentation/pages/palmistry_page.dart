@@ -7,6 +7,7 @@ import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../diary/presentation/widgets/dream_interpretation_text.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -254,13 +255,8 @@ class _PalmistryPageState extends State<PalmistryPage> {
                         ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    _reading!,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.6),
-                  ),
+                  // Destaca os cabeçalhos ◈ (cada ponto da mão) e ✦ (síntese).
+                  DreamInterpretationText(_reading!),
                   const SizedBox(height: 12),
                   Text(
                     AppLocalizations.of(context).palmDisclaimer,

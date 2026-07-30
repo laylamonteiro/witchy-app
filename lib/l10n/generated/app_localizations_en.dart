@@ -2476,6 +2476,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chartInvalidTime => 'Invalid time';
 
+
+
   @override
   String get chartPlaceNotFound => 'Place not found';
 
