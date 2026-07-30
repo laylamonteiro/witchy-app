@@ -14,6 +14,8 @@ import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/tra
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_magia_verde_en.dart';
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_magia_verde_es.dart';
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_magia_verde_pt.dart';
+import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_quiromancia_en.dart';
+import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_quiromancia_es.dart';
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_quiromancia_pt.dart';
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_tarot_en.dart';
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_tarot_es.dart';
@@ -29,9 +31,6 @@ import 'package:grimorio_de_bolso/features/learning/data/models/trail_model.dart
 /// tradução nunca pode alterar a identidade nem a estrutura do conteúdo.
 void main() {
   // As 8 trilhas nos três idiomas, na mesma ordem exposta por learningTrails.
-  // TODO(i18n): quiromancia (nova, vinda da main) usa o PT nas listas EN/ES
-  // até a tradução ficar pronta — os testes de identidade/estrutura seguem
-  // válidos porque comparam ids e contagens, não texto.
   const trailsPt = <LearningTrail>[
     magiaBrancaTrailPt,
     magiaVerdeTrailPt,
@@ -50,7 +49,7 @@ void main() {
     magiaNegraTrailEn,
     magiaDoCaosTrailEn,
     tarotTrailEn,
-    quiromanciaTrailPt,
+    quiromanciaTrailEn,
   ];
   const trailsEs = <LearningTrail>[
     magiaBrancaTrailEs,
@@ -60,7 +59,7 @@ void main() {
     magiaNegraTrailEs,
     magiaDoCaosTrailEs,
     tarotTrailEs,
-    quiromanciaTrailPt,
+    quiromanciaTrailEs,
   ];
 
   test('as três línguas têm as mesmas 8 trilhas na mesma ordem', () {
