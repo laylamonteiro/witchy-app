@@ -4,95 +4,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../data/data_sources/archetype_quiz_data.dart';
 import '../../data/data_sources/archetypes_data.dart';
 import '../../data/models/arcane_entry_model.dart';
 import 'arcane_detail_page.dart';
 
-/// Pergunta do teste: cada opção pontua para um arquétipo da Enciclopédia.
-class _QuizOption {
-  final String text;
-  final String archetype; // deve casar com ArcaneEntry.name
-
-  const _QuizOption(this.text, this.archetype);
-}
-
-class _Question {
-  final String text;
-  final List<_QuizOption> options;
-
-  const _Question(this.text, this.options);
-}
-
-const List<_Question> _questions = [
-  _Question('Num dia difícil, o que mais te restaura?', [
-    _QuizOption('Ficar em silêncio comigo mesma, longe de todos', 'A Sábia'),
-    _QuizOption('Preparar um chá, um banho, cuidar do corpo', 'A Curandeira'),
-    _QuizOption('Sair para a natureza, caminhar sem rumo', 'A Caçadora'),
-    _QuizOption('Organizar minha casa e meus planos', 'A Guardiã'),
-    _QuizOption('Criar algo novo: cozinhar, desenhar, inventar', 'A Alquimista'),
-    _QuizOption('Colocar uma música e dançar como ninguém está vendo', 'A Donzela'),
-  ]),
-  _Question('Qual destes presentes te encantaria mais?', [
-    _QuizOption('Um baralho de tarot antigo', 'A Vidente'),
-    _QuizOption('Um caderno em branco encadernado à mão', 'A Tecelã'),
-    _QuizOption('Um kit de ervas e óleos essenciais', 'A Curandeira'),
-    _QuizOption('Um livro raro de mistérios', 'A Alquimista'),
-    _QuizOption('Uma capa preta que arrasta no chão', 'A Bruxa'),
-    _QuizOption('Um álbum de fotografias antigas da família', 'A Mãe'),
-  ]),
-  _Question('Como você reage quando alguém que ama é ameaçado?', [
-    _QuizOption('Viro uma muralha: ninguém passa por mim', 'A Guardiã'),
-    _QuizOption('Acolho e cuido das feridas primeiro', 'A Mãe'),
-    _QuizOption('Enfrento de frente, sem hesitar', 'A Caçadora'),
-    _QuizOption('Percebo a ameaça antes de todo mundo', 'A Vidente'),
-    _QuizOption('Encaro o agressor com uma verdade que ninguém disse', 'A Rainha Sombria'),
-    _QuizOption('Amarro as pontas: descubro quem, como e por quê', 'A Tecelã'),
-  ]),
-  _Question('O que mais te atrai no caminho da bruxaria?', [
-    _QuizOption('A liberdade de ser quem eu sou', 'A Bruxa'),
-    _QuizOption('Transformar dor em sabedoria', 'A Alquimista'),
-    _QuizOption('Os sonhos, sinais e presságios', 'A Vidente'),
-    _QuizOption('Os ciclos, padrões e conexões de tudo', 'A Tecelã'),
-    _QuizOption('O poder de curar a mim e aos meus', 'A Curandeira'),
-    _QuizOption('Proteger quem amo com algo maior que eu', 'A Guardiã'),
-  ]),
-  _Question('Qual frase soa mais como você?', [
-    _QuizOption('"Eu começo de novo quantas vezes precisar"', 'A Donzela'),
-    _QuizOption('"Eu faço crescer tudo o que toco"', 'A Mãe'),
-    _QuizOption('"Eu não devo satisfações a ninguém"', 'A Bruxa'),
-    _QuizOption('"Eu já vi essa história antes"', 'A Sábia'),
-    _QuizOption('"Eu vou aonde ninguém teve coragem de ir"', 'A Caçadora'),
-    _QuizOption('"Eu enxergo o que ainda não aconteceu"', 'A Vidente'),
-  ]),
-  _Question('Diante da própria sombra, você…', [
-    _QuizOption('Desço até ela: quero conhecê-la inteira', 'A Rainha Sombria'),
-    _QuizOption('Transformo: nada em mim é lixo, tudo é matéria-prima',
-        'A Alquimista'),
-    _QuizOption('Escuto o que ela tem a dizer, sem pressa', 'A Sábia'),
-    _QuizOption('Ilumino com práticas de cura e autocompaixão',
-        'A Curandeira'),
-    _QuizOption('Enfrento como caça: olho nos olhos até ela recuar', 'A Caçadora'),
-    _QuizOption('Rio dela: sombra também é parte da minha liberdade', 'A Bruxa'),
-  ]),
-  _Question('Seu lugar favorito num festival místico seria…', [
-    _QuizOption('A roda de dança, no meio da alegria', 'A Donzela'),
-    _QuizOption('A tenda de leituras e oráculos', 'A Vidente'),
-    _QuizOption('A fogueira, contando histórias antigas', 'A Sábia'),
-    _QuizOption('A barraca de artesanato: nós, fios e amuletos', 'A Tecelã'),
-    _QuizOption('A cozinha comunitária, alimentando todo mundo', 'A Mãe'),
-    _QuizOption('O ritual de meia-noite, longe das luzes', 'A Rainha Sombria'),
-  ]),
-  _Question('O que as pessoas mais buscam em você?', [
-    _QuizOption('Proteção: comigo elas se sentem seguras', 'A Guardiã'),
-    _QuizOption('Colo: acolhimento e incentivo', 'A Mãe'),
-    _QuizOption('Coragem: eu vou na frente', 'A Caçadora'),
-    _QuizOption('Verdade: falo o que ninguém ousa', 'A Rainha Sombria'),
-    _QuizOption('Leveza: eu lembro a elas que recomeçar é possível', 'A Donzela'),
-    _QuizOption('Transformação: saio melhor de tudo que me atravessa', 'A Alquimista'),
-  ]),
-];
-
 /// Teste de Arquétipo: 8 perguntas, resultado abre o verbete da Enciclopédia.
+///
+/// As perguntas vêm de `archetype_quiz_data.dart` (ContentLocale, pt/en/es).
+/// A pontuação e a persistência usam o EMOJI do arquétipo como chave — o
+/// emoji é invariante entre idiomas, então o resultado sobrevive a trocas de
+/// idioma (os nomes são traduzidos e não servem de chave).
 class ArchetypeQuizPage extends StatefulWidget {
   const ArchetypeQuizPage({super.key});
 
@@ -117,15 +39,21 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     _loadSaved();
   }
 
+  /// Resolve a chave persistida (emoji ou, em registros antigos, o nome em
+  /// português) para o verbete no idioma atual.
+  ArcaneEntry _entryForKey(String key) {
+    return archetypesData.firstWhere(
+      (e) => e.emoji == key || e.name == key,
+      orElse: () => archetypesData.first,
+    );
+  }
+
   Future<void> _loadSaved() async {
     final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString(_resultKey);
-    if (name == null || !mounted) return;
+    final saved = prefs.getString(_resultKey);
+    if (saved == null || !mounted) return;
     setState(() {
-      _result = archetypesData.firstWhere(
-        (e) => e.name == name,
-        orElse: () => archetypesData.first,
-      );
+      _result = _entryForKey(saved);
       _topThree = (prefs.getStringList(_topThreeKey) ?? [])
           .map((raw) {
             final parts = raw.split('|');
@@ -136,12 +64,12 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     });
   }
 
-  Future<void> _persist(String winner) async {
+  Future<void> _persist(String winnerEmoji) async {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     _savedDate = '${now.day.toString().padLeft(2, '0')}/'
         '${now.month.toString().padLeft(2, '0')}/${now.year}';
-    await prefs.setString(_resultKey, winner);
+    await prefs.setString(_resultKey, winnerEmoji);
     await prefs.setStringList(
       _topThreeKey,
       [for (final e in _topThree) '${e.key}|${e.value}'],
@@ -149,10 +77,11 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
     await prefs.setString(_dateKey, _savedDate!);
   }
 
-  void _answer(_QuizOption option) {
-    _scores[option.archetype] = (_scores[option.archetype] ?? 0) + 1;
+  void _answer(ArchetypeQuizOption option) {
+    _scores[option.archetypeEmoji] =
+        (_scores[option.archetypeEmoji] ?? 0) + 1;
 
-    if (_index < _questions.length - 1) {
+    if (_index < archetypeQuizQuestions.length - 1) {
       setState(() => _index++);
       return;
     }
@@ -168,10 +97,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
         .toList();
     _persist(winner);
     setState(() {
-      _result = archetypesData.firstWhere(
-        (e) => e.name == winner,
-        orElse: () => archetypesData.first,
-      );
+      _result = _entryForKey(winner);
     });
   }
 
@@ -196,7 +122,8 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
   }
 
   Widget _buildQuestion() {
-    final question = _questions[_index];
+    final questions = archetypeQuizQuestions;
+    final question = questions[_index];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -204,14 +131,15 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           LinearProgressIndicator(
-            value: (_index + 1) / _questions.length,
+            value: (_index + 1) / questions.length,
             backgroundColor: context.gc.surfaceBorder,
             valueColor: AlwaysStoppedAnimation(context.gc.lilac),
             borderRadius: BorderRadius.circular(4),
           ),
           const SizedBox(height: 6),
           Text(
-            AppLocalizations.of(context).quizProgress('${_index + 1}', '${_questions.length}'),
+            AppLocalizations.of(context)
+                .quizProgress('${_index + 1}', '${questions.length}'),
             textAlign: TextAlign.center,
             style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
           ),
@@ -337,7 +265,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                           Expanded(
                             flex: 3,
                             child: Text(
-                              entry.key,
+                              _entryForKey(entry.key).name,
                               style: TextStyle(
                                 color: context.gc.textPrimary,
                                 fontSize: 13,
@@ -347,7 +275,8 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                           Expanded(
                             flex: 4,
                             child: LinearProgressIndicator(
-                              value: entry.value / _questions.length,
+                              value: entry.value /
+                                  archetypeQuizQuestions.length,
                               backgroundColor: context.gc.surfaceBorder,
                               valueColor: AlwaysStoppedAnimation(
                                   context.gc.lilac),

@@ -4,17 +4,23 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
+import '../../data/data_sources/altar_content.dart';
 
-/// Página informativa sobre altares
+/// Página informativa sobre altares.
+///
+/// Todo o conteúdo textual vem de `altar_content.dart` (ContentLocale),
+/// localizado em pt/en/es.
 class AltarPage extends StatelessWidget {
   const AltarPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final content = altarContent;
+
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('O Altar Mágico'),
+        title: ResponsiveAppBarTitle(content.pageTitle),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -34,7 +40,7 @@ class AltarPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Sobre o Altar',
+                          content.introTitle,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                       ),
@@ -42,16 +48,14 @@ class AltarPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Um altar é seu espaço sagrado pessoal - um ponto focal para sua prática mágica. '
-                    'Não precisa ser elaborado ou caro; o que importa é a intenção e o respeito com que você o trata. '
-                    'Seu altar é uma extensão da sua energia e um portal entre o mundo físico e o espiritual.',
+                    content.introBody,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Explore as seções abaixo para aprender a montar, purificar, manter e utilizar seu altar.',
+                    content.introHint,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -62,86 +66,36 @@ class AltarPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // NOVO: Passo-a-Passo para Iniciantes
-            _buildPassoAPasso(context),
+            // Passo-a-Passo para Iniciantes
+            _buildPassoAPasso(context, content),
 
             const SizedBox(height: 16),
 
             // Como montar
             ExpansionMagicalCard(
-              title: 'Como Montar seu Altar',
+              title: content.mountTitle,
               emoji: '🏡',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildStep(
-                    context,
-                    '1. Escolha o local',
-                    'Selecione um espaço tranquilo onde você possa ter privacidade. '
-                        'Pode ser uma mesa, prateleira, cômoda ou até um canto do seu quarto. '
-                        'Evite banheiros e lavanderias (pontos de saída de energia).',
-                  ),
-                  _buildStep(
-                    context,
-                    '2. Limpe o espaço',
-                    'Limpe fisicamente a superfície e energeticamente com fumaça de ervas '
-                        '(alecrim, arruda, sálvia) ou borrife água com sal.',
-                  ),
-                  _buildStep(
-                    context,
-                    '3. Use uma toalha ou tecido',
-                    'Opcional, mas recomendado. Use cores que ressoem com você: '
-                        'preto (proteção), branco (pureza), roxo (espiritualidade), verde (cura).',
-                  ),
-                  _buildStep(
-                    context,
-                    '4. Represente os 4 elementos',
-                    'Cada elemento traz uma energia essencial para o altar:\n\n'
-                        '🌍 Terra (Norte): Cristais, sal, pedras, plantas, pentáculo\n'
-                        '💧 Água (Oeste): Taça com água, conchas, água lunar\n'
-                        '🔥 Fogo (Sul): Vela, caldeirão, athame\n'
-                        '💨 Ar (Leste): Incenso, penas, sinos, varinha\n\n'
-                        '💡 Dica: Posicione cada elemento na direção cardeal correspondente quando possível.',
-                  ),
-                  _buildStep(
-                    context,
-                    '5. Adicione itens pessoais',
-                    'Imagens de divindades, fotos de ancestrais, símbolos que fazem sentido para você, '
-                        'ferramentas mágicas (athame, caldeirão, varinha), livro de sombras.',
-                  ),
+                  for (final step in content.mountSteps)
+                    _buildStep(context, step.title, step.description),
                 ],
               ),
             ),
 
             // O que usar
             ExpansionMagicalCard(
-              title: 'O que Usar no Altar',
+              title: content.itemsTitle,
               emoji: '✨',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildItem(context, '🕯️ Velas',
-                      'Representam o elemento Fogo e a luz divina. Use cores correspondentes às suas intenções.'),
-                  _buildItem(context, '💎 Cristais',
-                      'Amplificam energia e trazem propriedades específicas (quartzo rosa para amor, ametista para espiritualidade).'),
-                  _buildItem(context, '🌿 Ervas',
-                      'Secas ou frescas, cada erva tem correspondências mágicas únicas.'),
-                  _buildItem(context, '🔮 Objetos simbólicos',
-                      'Pentáculo, símbolos lunares, runas, tarot, estatuetas de divindades.'),
-                  _buildItem(context, '💧 Taça com água',
-                      'Elemento Água, pode ser trocada regularmente ou usada em rituais.'),
-                  _buildItem(context, '🧂 Sal',
-                      'Purificação e proteção, representa a Terra.'),
-                  _buildItem(context, '📿 Incenso',
-                      'Elemento Ar, limpa energia e eleva vibrações.'),
-                  _buildItem(context, '📖 Grimório',
-                      'Seu livro de sombras ou diário de práticas.'),
-                  _buildItem(context, '🌙 Itens lunares',
-                      'Representações da lua, água lunar, calendário lunar.'),
-                  _buildItem(context, '🪶 Penas',
-                      'Elemento Ar, conexão com o divino.'),
+                  for (final item in content.items)
+                    _buildItem(context, item.emoji, item.title,
+                        item.description),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -152,7 +106,7 @@ class AltarPage extends StatelessWidget {
                           Border.all(color: context.gc.lilac.withOpacity(0.3)),
                     ),
                     child: Text(
-                      '💡 Lembre-se: Não existe lista obrigatória. Use o que ressoa com você e sua prática.',
+                      content.itemsNote,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.textSecondary,
                             fontStyle: FontStyle.italic,
@@ -165,24 +119,14 @@ class AltarPage extends StatelessWidget {
 
             // O que não usar
             ExpansionMagicalCard(
-              title: 'O que Evitar no Altar',
+              title: content.avoidTitle,
               emoji: '⚠️',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildWarning(context, 'Itens de energia negativa',
-                      'Objetos que tragam memórias ruins ou sensações desconfortáveis.'),
-                  _buildWarning(context, 'Excesso de objetos',
-                      'Um altar lotado dispersa a energia. Mantenha organizado e intencional.'),
-                  _buildWarning(context, 'Itens emprestados sem permissão',
-                      'Cada objeto carrega a energia de seu dono.'),
-                  _buildWarning(context, 'Lixo ou sujeira',
-                      'Mantenha seu altar limpo fisicamente e energeticamente.'),
-                  _buildWarning(context, 'Objetos alheios à sua prática',
-                      'Não coloque símbolos de tradições que você não pratica por modismo.'),
-                  _buildWarning(context, 'Plantas mortas',
-                      'Retire folhas secas e plantas mortas regularmente.'),
+                  for (final item in content.avoidItems)
+                    _buildWarning(context, item.title, item.description),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -199,7 +143,7 @@ class AltarPage extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'SEGURANÇA: Nunca deixe velas acesas sem supervisão. Mantenha materiais inflamáveis longe das chamas.',
+                            content.safetyNote,
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium
@@ -217,29 +161,22 @@ class AltarPage extends StatelessWidget {
 
             // Como purificar
             ExpansionMagicalCard(
-              title: 'Como Purificar seu Altar',
+              title: content.purifyTitle,
               emoji: '🌊',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
                   Text(
-                    'A purificação remove energias estagnadas ou negativas, renovando o espaço sagrado.',
+                    content.purifyIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 16),
-                  _buildMethod(context, '🔥 Defumação',
-                      'Use alecrim, arruda, sálvia, ou pau santo. Passe a fumaça por todo o altar e objetos com intenção de limpeza.'),
-                  _buildMethod(context, '💧 Água e sal',
-                      'Borrife água com sal grosso (ou água lunar) pelo espaço. Cuidado com objetos que não podem molhar.'),
-                  _buildMethod(context, '🔔 Som',
-                      'Use sinos, tigelas tibetanas ou palmas para quebrar energia estagnada.'),
-                  _buildMethod(context, '🌙 Luz da lua',
-                      'Deixe objetos sob a luz da lua cheia para limpeza energética profunda.'),
-                  _buildMethod(context, '🧘 Visualização',
-                      'Visualize luz branca ou dourada preenchendo o altar e dissolvendo energias densas.'),
+                  for (final method in content.purifyMethods)
+                    _buildMethod(context, '${method.emoji} ${method.title}',
+                        method.description),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -250,7 +187,7 @@ class AltarPage extends StatelessWidget {
                           Border.all(color: context.gc.info.withOpacity(0.3)),
                     ),
                     child: Text(
-                      '🌙 Frequência recomendada: A cada lua nova ou cheia, ou quando sentir a energia pesada.',
+                      content.purifyFrequency,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.textSecondary,
                             fontStyle: FontStyle.italic,
@@ -263,52 +200,28 @@ class AltarPage extends StatelessWidget {
 
             // Como manter
             ExpansionMagicalCard(
-              title: 'Como Manter seu Altar',
+              title: content.maintainTitle,
               emoji: '🧹',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildMaintenance(context, 'Limpeza física regular',
-                      'Tire poeira, limpe superfícies, organize objetos. Idealmente na lua minguante.'),
-                  _buildMaintenance(context, 'Troque oferendas',
-                      'Se você deixa oferendas (flores, alimentos, água), troque antes que estraguem.'),
-                  _buildMaintenance(context, 'Recarregue cristais',
-                      'Limpe e recarregue cristais regularmente (lua, sol, terra, fumaça).'),
-                  _buildMaintenance(context, 'Atualize conforme as estações',
-                      'Adapte decorações e elementos sazonais (Sabbats, solstícios, equinócios).'),
-                  _buildMaintenance(context, 'Visite diariamente',
-                      'Mesmo que brevemente. Acenda uma vela, agradeça, medite. Mantenha a energia viva.'),
-                  _buildMaintenance(context, 'Reorganize quando necessário',
-                      'Seu altar pode evoluir com você. Remova o que não ressoa mais, adicione o novo.'),
-                  _buildMaintenance(context, 'Proteja energeticamente',
-                      'Renove proteções regularmente com sal ao redor, visualizações ou sigilos.'),
+                  for (final item in content.maintainItems)
+                    _buildMaintenance(context, item.title, item.description),
                 ],
               ),
             ),
 
             // Como utilizar
             ExpansionMagicalCard(
-              title: 'Como Utilizar seu Altar',
+              title: content.usageTitle,
               emoji: '✨',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildUsage(context, 'Meditação e conexão',
-                      'Sente-se em frente ao altar para meditar, centrar-se e conectar-se com o divino.'),
-                  _buildUsage(context, 'Feitiços e rituais',
-                      'Use como espaço de trabalho mágico. Acenda velas, prepare poções, consagre ferramentas.'),
-                  _buildUsage(context, 'Oferendas e agradecimentos',
-                      'Deixe oferendas para divindades, ancestrais ou espíritos que você honra.'),
-                  _buildUsage(context, 'Celebrações sazonais',
-                      'Decore e celebre Sabbats, luas cheias, equinócios no altar.'),
-                  _buildUsage(context, 'Carregamento de objetos',
-                      'Deixe itens (talismãs, joias, cristais) no altar para carregar com energia.'),
-                  _buildUsage(context, 'Divinação',
-                      'Pratique tarot, runas, pêndulo ou outras formas de divinação no altar.'),
-                  _buildUsage(context, 'Ponto focal diário',
-                      'Comece ou termine o dia no altar, definindo intenções ou refletindo.'),
+                  for (final item in content.usageItems)
+                    _buildUsage(context, item.title, item.description),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -322,7 +235,7 @@ class AltarPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '💚 Sugestão de rotina diária:',
+                          content.routineTitle,
                           style: Theme.of(context)
                               .textTheme
                               .titleSmall
@@ -330,9 +243,7 @@ class AltarPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '• Manhã: Acenda uma vela, defina intenção do dia\n'
-                          '• Tarde: Momento de gratidão ou reflexão breve\n'
-                          '• Noite: Agradeça pelo dia, apague a vela com reverência',
+                          content.routineBody,
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: context.gc.textSecondary,
@@ -347,19 +258,14 @@ class AltarPage extends StatelessWidget {
 
             // Considerações finais
             ExpansionMagicalCard(
-              title: 'Considerações Finais',
+              title: content.finalTitle,
               emoji: '🌟',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
                   Text(
-                    'Seu altar é uma expressão pessoal da sua espiritualidade. Não existe forma "certa" ou "errada" - '
-                    'o que importa é que ele seja significativo para VOCÊ. '
-                    '\n\nUm altar simples com três velas e um cristal carregado de intenção é mais poderoso '
-                    'que um altar elaborado sem conexão emocional. '
-                    '\n\nPermita que seu altar cresça organicamente, reflita suas mudanças e seja sempre um espaço de paz, '
-                    'poder e conexão com o sagrado.',
+                    content.finalBody,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
@@ -380,7 +286,7 @@ class AltarPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPassoAPasso(BuildContext context) {
+  Widget _buildPassoAPasso(BuildContext context, AltarContent content) {
     return MagicalCard(
       margin: EdgeInsets.zero,
       child: Column(
@@ -395,7 +301,7 @@ class AltarPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Passo-a-Passo para Iniciantes',
+                      content.beginnerTitle,
                       style: GoogleFonts.cinzelDecorative(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -404,7 +310,7 @@ class AltarPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Seu primeiro encontro com seu altar',
+                      content.beginnerSubtitle,
                       style: TextStyle(
                         color: context.gc.textSecondary,
                         fontSize: 12,
@@ -429,9 +335,7 @@ class AltarPage extends StatelessWidget {
               border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
             ),
             child: Text(
-              'Não se preocupe se você não tem todos os itens "tradicionais". '
-              'Um altar pode começar com uma vela e uma intenção. O importante é que '
-              'seja significativo para VOCÊ. Não existe altar errado quando é feito com coração.',
+              content.beginnerIntro,
               style: TextStyle(
                 color: context.gc.textSecondary,
                 height: 1.5,
@@ -442,40 +346,14 @@ class AltarPage extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Passos numerados
-          _buildPassoNumerado(
+          for (var i = 0; i < content.beginnerSteps.length; i++)
+            _buildPassoNumerado(
               context,
-              '1',
-              'Escolha o Local',
-              'Um cantinho onde você não será perturbado(a). Pode ser uma mesinha, prateleira, ou até uma caixa que você abre quando for praticar.',
-              'Não precisa ser grande! Um espaço de 30x30cm já é suficiente.'),
-
-          _buildPassoNumerado(
-              context,
-              '2',
-              'Limpe o Espaço',
-              'Limpe fisicamente com um pano, depois passe fumaça de incenso ou visualize uma luz branca purificando.',
-              'Diga: "Que este espaço seja purificado e abençoado."'),
-
-          _buildPassoNumerado(
-              context,
-              '3',
-              'Adicione uma Vela',
-              'A vela é o coração do altar - representa o fogo e a luz divina. Uma única vela branca já é suficiente.',
-              'Velas brancas são universais e podem substituir qualquer cor.'),
-
-          _buildPassoNumerado(
-              context,
-              '4',
-              'Adicione Itens Significativos',
-              'Coloque o que tem significado para você: foto de ancestrais, cristal que ganhou, flores, uma concha da praia.',
-              'Comece com 3-5 itens e vá adicionando com o tempo.'),
-
-          _buildPassoNumerado(
-              context,
-              '5',
-              'Consagre seu Altar',
-              'Acenda a vela, respire fundo e diga: "Consagro este altar como meu espaço sagrado. Que ele seja um portal de conexão."',
-              'Use suas próprias palavras! O importante é a intenção.'),
+              '${i + 1}',
+              content.beginnerSteps[i].title,
+              content.beginnerSteps[i].description,
+              content.beginnerSteps[i].tip,
+            ),
 
           const SizedBox(height: 20),
 
@@ -491,7 +369,7 @@ class AltarPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '🌟 Nas primeiras vezes no altar',
+                  content.firstTimesTitle,
                   style: TextStyle(
                     fontSize: 16,
                     color: context.gc.mint,
@@ -499,24 +377,8 @@ class AltarPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildListaSimples(
-                    context,
-                    '1. Acenda a vela com intenção, observe a chama'),
-                _buildListaSimples(
-                    context,
-                    '2. Faça 3 respirações profundas para se centrar'),
-                _buildListaSimples(
-                    context,
-                    '3. Agradeça pelo dia, pela vida, por algo bom'),
-                _buildListaSimples(
-                    context,
-                    '4. Defina uma intenção: "Hoje eu peço/agradeço..."'),
-                _buildListaSimples(
-                    context,
-                    '5. Fique alguns minutos em silêncio ou converse'),
-                _buildListaSimples(
-                    context,
-                    '6. Feche: "Agradeço pela conexão. Que assim seja."'),
+                for (final item in content.firstTimesItems)
+                  _buildListaSimples(context, item),
               ],
             ),
           ),
@@ -535,7 +397,7 @@ class AltarPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '💬 O que falar no altar?',
+                  content.speakTitle,
                   style: TextStyle(
                     fontSize: 16,
                     color: context.gc.starYellow,
@@ -543,17 +405,11 @@ class AltarPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildExemploFala(context, 'Para abrir:',
-                    '"Acendo esta vela como símbolo da minha conexão com o sagrado."'),
-                _buildExemploFala(context, 'Para pedir:',
-                    '"Peço orientação para [situação]. Que a sabedoria ilumine meu caminho."'),
-                _buildExemploFala(context, 'Para agradecer:',
-                    '"Agradeço por [bênção específica]. Meu coração está cheio de gratidão."'),
-                _buildExemploFala(context, 'Para fechar:',
-                    '"Agradeço a conexão. Que a magia continue comigo. Assim seja."'),
+                for (final example in content.speakExamples)
+                  _buildExemploFala(context, example.label, example.phrase),
                 const SizedBox(height: 8),
                 Text(
-                  'Lembre-se: Não existe fórmula errada. O universo entende sua intenção!',
+                  content.speakNote,
                   style: TextStyle(
                     color: context.gc.textSecondary,
                     fontStyle: FontStyle.italic,
@@ -578,7 +434,7 @@ class AltarPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '❓ Dúvidas Comuns de Iniciantes',
+                  content.faqTitle,
                   style: TextStyle(
                     fontSize: 16,
                     color: context.gc.pink,
@@ -586,14 +442,8 @@ class AltarPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildDuvida(context, 'Posso ter um altar secreto?',
-                    'Sim! Use uma caixa que você abre quando for praticar.'),
-                _buildDuvida(context, 'Preciso ir ao altar todo dia?',
-                    'Não há regra. Vá quando sentir vontade. Uma rotina fortalece, mas não é obrigatória.'),
-                _buildDuvida(context, 'Posso mexer nas coisas?',
-                    'Sim! O altar é vivo e deve mudar com você.'),
-                _buildDuvida(context, 'E se eu esquecer as palavras?',
-                    'Improvise! O divino não se importa com palavras perfeitas.'),
+                for (final faq in content.faqs)
+                  _buildDuvida(context, faq.question, faq.answer),
               ],
             ),
           ),
@@ -775,11 +625,8 @@ class AltarPage extends StatelessWidget {
     );
   }
 
-  Widget _buildItem(
-      BuildContext context, String iconTitle, String description) {
-    final emoji = iconTitle.substring(0, iconTitle.indexOf(' ') + 1);
-    final title = iconTitle.substring(iconTitle.indexOf(' ') + 1);
-
+  Widget _buildItem(BuildContext context, String emoji, String title,
+      String description) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
