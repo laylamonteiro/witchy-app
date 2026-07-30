@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'crystals_list_page.dart';
 import 'colors_list_page.dart';
 import 'herbs_list_page.dart';
@@ -17,6 +16,7 @@ import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
 import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -34,8 +34,9 @@ class EncyclopediaPage extends StatefulWidget {
 
 class _EncyclopediaPageState extends State<EncyclopediaPage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  // A Enciclopédia abre SEMPRE na aba da Lua (índice 0) — é a tela inicial
+  // do app; a última aba visitada deixou de ser restaurada de propósito.
   late TabController _tabController;
-  static const String _lastTabKey = 'encyclopedia_last_tab';
 
   @override
   bool get wantKeepAlive => true;
@@ -44,15 +45,16 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 14, vsync: this);
-    _tabController.addListener(_onTabChanged);
     widget.resetNotifier?.addListener(_onResetRequested);
-    _loadLastTab();
+    DeepLinkService.instance.pending.addListener(_onDeepLink);
+    // Notificação pode ter ABERTO o app: trata o link pendente ao montar.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLink());
   }
 
   @override
   void dispose() {
+    DeepLinkService.instance.pending.removeListener(_onDeepLink);
     widget.resetNotifier?.removeListener(_onResetRequested);
-    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -63,23 +65,17 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
     }
   }
 
-  void _onTabChanged() {
-    if (!_tabController.indexIsChanging) {
-      _saveLastTab(_tabController.index);
+  /// Deep link para uma sub-aba da Enciclopédia (lua cheia → Lua, sabbat →
+  /// Sabbats...): navega e consome o link. Destinos de outras seções são
+  /// ignorados aqui (a seção dona consome).
+  void _onDeepLink() {
+    final link = DeepLinkService.instance.pending.value;
+    final target = link?.encyclopediaTab;
+    if (target == null || !mounted) return;
+    if (_tabController.index != target) {
+      _tabController.animateTo(target);
     }
-  }
-
-  Future<void> _loadLastTab() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lastTab = prefs.getInt(_lastTabKey) ?? 0;
-    if (mounted && lastTab != _tabController.index) {
-      _tabController.animateTo(lastTab);
-    }
-  }
-
-  Future<void> _saveLastTab(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_lastTabKey, index);
+    DeepLinkService.instance.consume();
   }
 
   @override

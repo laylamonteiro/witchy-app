@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../../features/wheel_of_year/data/models/sabbat_model.dart';
+import '../navigation/app_deep_link.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../content/content_locale.dart';
 
@@ -91,6 +92,7 @@ class NotificationService {
         debugNotificationId,
         _l10n.notifDebugTitle,
         _l10n.notifDebugBody,
+        payload: AppDeepLink.moonEncyclopedia.payload,
         NotificationDetails(
           android: AndroidNotificationDetails(
             'debug_notifications',
@@ -151,6 +153,7 @@ class NotificationService {
     required String body,
     required DateTime localDate,
     required NotificationDetails details,
+    String? payload,
   }) async {
     if (!localDate.isAfter(DateTime.now())) return;
     await _notifications.zonedSchedule(
@@ -160,6 +163,7 @@ class NotificationService {
       tz.TZDateTime.from(localDate.toUtc(), tz.UTC),
       details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
     );
   }
 
@@ -169,6 +173,7 @@ class NotificationService {
         body: _l10n.notifFullMoonBody,
         localDate: reminderDate(eventDate, daysBefore: 1, hour: 20),
         details: _moonDetails(),
+        payload: AppDeepLink.moonEncyclopedia.payload,
       );
 
   Future<void> scheduleNewMoonNotification(DateTime eventDate) => _schedule(
@@ -177,6 +182,7 @@ class NotificationService {
         body: _l10n.notifNewMoonBody,
         localDate: reminderDate(eventDate, daysBefore: 1, hour: 20),
         details: _moonDetails(),
+        payload: AppDeepLink.moonEncyclopedia.payload,
       );
 
   NotificationDetails _moonDetails() => NotificationDetails(
@@ -196,6 +202,7 @@ class NotificationService {
         title: _l10n.notifSabbatTitle(sabbat.emoji, sabbat.name),
         body: _l10n.notifSabbatBody(sabbat.name),
         localDate: reminderDate(sabbat.date, daysBefore: 3, hour: 9),
+        payload: AppDeepLink.sabbatsEncyclopedia.payload,
         details: NotificationDetails(
           android: AndroidNotificationDetails(
             'sabbat_notifications',

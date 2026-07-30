@@ -92,6 +92,7 @@ jobs:
             test/astrology_interpretations_parity_test.dart \
             test/daily_weather_content_parity_test.dart \
             test/spell_localization_test.dart \
+            test/app_deep_link_test.dart \
             test/l10n_test.dart \
             test/numerology_calculator_test.dart
 

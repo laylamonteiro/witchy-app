@@ -22,6 +22,7 @@ import 'core/services/payment_service.dart';
 import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
+import 'core/navigation/app_deep_link.dart';
 import 'core/utils/app_session_policy.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
@@ -100,7 +101,20 @@ void main() async {
 
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
+      // Toque em notificação com o app aberto/em background: navega para a
+      // página do evento (lua → Enciclopédia da Lua, sabbat → Sabbats etc.).
+      onDidReceiveNotificationResponse: (response) =>
+          DeepLinkService.instance.dispatchPayload(response.payload),
     );
+
+    // App ABERTO por uma notificação (estava encerrado): o payload chega
+    // aqui antes do runApp; HomePage/seções leem o link pendente ao montar.
+    final launchDetails =
+        await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      DeepLinkService.instance
+          .dispatchPayload(launchDetails!.notificationResponse?.payload);
+    }
   }
 
   runApp(GrimorioDeBolsoApp(prefs: prefs));
@@ -127,6 +141,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    DeepLinkService.instance.pending.addListener(_onDeepLink);
     _checkSplashDisplay();
     // Restaura os dados automaticamente quando o app inicia com uma sessão
     // Premium já ativa. O próprio método valida preferência e disponibilidade.
@@ -137,8 +152,17 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
 
   @override
   void dispose() {
+    DeepLinkService.instance.pending.removeListener(_onDeepLink);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  /// Um deep link chegou (toque em notificação): fecha fluxos de tela cheia
+  /// (Configurações, Assinatura...) para revelar a HomePage, que fará a troca
+  /// de aba. A seção de destino consome o link ao concluir a navegação.
+  void _onDeepLink() {
+    if (DeepLinkService.instance.pending.value == null) return;
+    _rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
   }
 
   Future<void> _checkSplashDisplay() async {
