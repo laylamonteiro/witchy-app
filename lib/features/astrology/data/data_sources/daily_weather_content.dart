@@ -27,6 +27,21 @@ class DailyWeatherContent {
     )(weather);
   }
 
+  /// Um texto de previsão persistido é considerado completo quando traz as
+  /// seções que só existem na versão nova (IA ou fallback de 7 seções).
+  ///
+  /// A checagem aceita os cabeçalhos de QUALQUER um dos três idiomas: textos
+  /// salvos em EN/ES não podem ser tratados como incompletos (e regerados a
+  /// cada abertura) por uma verificação apenas em português.
+  static bool looksComplete(String text) {
+    const requiredPairsByLocale = [
+      ['## Ritual Sugerido', '## Cuidados do Dia'], // pt
+      ['## Suggested Ritual', '## Cautions for the Day'], // en
+      ['## Ritual Sugerido', '## Cuidados del Día'], // es
+    ];
+    return requiredPairsByLocale.any((pair) => pair.every(text.contains));
+  }
+
   /// Títulos de seção da prévia Free quando o markdown da previsão não tem
   /// cabeçalhos próprios.
   static List<String> get fallbackHeadings => ContentLocale.instance.select(

@@ -48,20 +48,43 @@ const Map<Element, String> _elementNamesEn = {
   Element.water: 'Water',
 };
 
-/// Fallback (markdown) text used when AI generation fails.
+/// Fallback (markdown) text used when AI generation fails. It keeps the SAME
+/// 7 sections as the AI text (Energy, Moon, Opportunities, Cautions, Ritual,
+/// Crystals, Message) so the daily weather stays complete even without AI.
 String dailyWeatherFallbackTextEn(DailyMagicalWeather weather) {
+  final element = _elementNamesEn[weather.moonSign.element]!;
+  final sign = _signNamesEn[weather.moonSign]!;
+
+  final challenges = weather.aspects
+      .where((a) => a.energyLevel == EnergyLevel.challenging)
+      .take(2)
+      .map((a) =>
+          '- ${a.description}: act calmly and avoid reacting on impulse.')
+      .toList();
+  final cautions = challenges.isNotEmpty
+      ? challenges.join('\n')
+      : '- No major tensions today. Even so, avoid rushed decisions and set aside a quiet moment to center yourself.';
+
   return '''## Energy of the Day
 
 ${weather.generalInterpretation}
 
 ## The Moon Today
 
-The Moon is in ${_signNamesEn[weather.moonSign]}, bringing energies of the ${_elementNamesEn[weather.moonSign.element]} element.
+The Moon is in $sign, bringing energies of the $element element.
 Current phase: ${weather.moonPhase}.
 
 ## Magical Opportunities
 
 ${weather.recommendedPractices.map((p) => '- $p').join('\n')}
+
+## Cautions for the Day
+
+$cautions
+
+## Suggested Ritual
+
+Light a candle and take three deep breaths, attuning yourself to the $element element of the Moon in $sign. Set a simple, clear intention for the day and visualize it coming true.
 
 ## Crystals and Allies
 

@@ -1,3 +1,4 @@
+import '../models/enums.dart';
 import '../models/transit_model.dart';
 
 /// Conteúdo do Clima Mágico Diário — português (idioma-base).
@@ -28,20 +29,42 @@ const List<String> dailyWeatherFallbackHeadingsPt = [
 const String dailyWeatherPremiumPlaceholderPt =
     'As influências do dia revelam orientações e práticas mágicas personalizadas para este momento.';
 
-/// Texto de fallback (markdown) usado quando a geração por IA falha.
+/// Texto de fallback (markdown) usado quando a geração por IA falha. Mantém
+/// as MESMAS 7 seções do texto da IA (Energia, Lua, Oportunidades, Cuidados,
+/// Ritual, Cristais, Mensagem) para que o clima diário fique completo mesmo
+/// sem a IA.
 String dailyWeatherFallbackTextPt(DailyMagicalWeather weather) {
+  final elemento = weather.moonSign.element.displayName;
+
+  final desafios = weather.aspects
+      .where((a) => a.energyLevel == EnergyLevel.challenging)
+      .take(2)
+      .map((a) => '- ${a.description}: aja com calma e evite reagir no impulso.')
+      .toList();
+  final cuidados = desafios.isNotEmpty
+      ? desafios.join('\n')
+      : '- Sem tensões marcantes hoje. Ainda assim, evite decisões apressadas e reserve um momento de pausa para se centrar.';
+
   return '''## Energia do Dia
 
 ${weather.generalInterpretation}
 
 ## A Lua Hoje
 
-A Lua está em ${weather.moonSign.displayName}, trazendo energias do elemento ${weather.moonSign.element.displayName}.
+A Lua está em ${weather.moonSign.displayName}, trazendo energias do elemento $elemento.
 Fase atual: ${weather.moonPhase}.
 
 ## Oportunidades Mágicas
 
 ${weather.recommendedPractices.map((p) => '- $p').join('\n')}
+
+## Cuidados do Dia
+
+$cuidados
+
+## Ritual Sugerido
+
+Acenda uma vela e faça três respirações profundas, sintonizando-se com o elemento $elemento da Lua em ${weather.moonSign.displayName}. Formule uma intenção simples e clara para o dia e visualize-a se realizando.
 
 ## Cristais e Aliados
 

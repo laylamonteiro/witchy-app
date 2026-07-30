@@ -50,19 +50,43 @@ const Map<Element, String> _elementNamesEs = {
 };
 
 /// Texto de respaldo (markdown) usado cuando falla la generación por IA.
+/// Mantiene las MISMAS 7 secciones del texto de la IA (Energía, Luna,
+/// Oportunidades, Cuidados, Ritual, Cristales, Mensaje) para que el clima
+/// diario quede completo incluso sin la IA.
 String dailyWeatherFallbackTextEs(DailyMagicalWeather weather) {
+  final elemento = _elementNamesEs[weather.moonSign.element]!;
+  final signo = _signNamesEs[weather.moonSign]!;
+
+  final desafios = weather.aspects
+      .where((a) => a.energyLevel == EnergyLevel.challenging)
+      .take(2)
+      .map((a) =>
+          '- ${a.description}: actúa con calma y evita reaccionar por impulso.')
+      .toList();
+  final cuidados = desafios.isNotEmpty
+      ? desafios.join('\n')
+      : '- Sin tensiones marcadas hoy. Aun así, evita decisiones apresuradas y reserva un momento de pausa para centrarte.';
+
   return '''## Energía del Día
 
 ${weather.generalInterpretation}
 
 ## La Luna Hoy
 
-La Luna está en ${_signNamesEs[weather.moonSign]}, trayendo energías del elemento ${_elementNamesEs[weather.moonSign.element]}.
+La Luna está en $signo, trayendo energías del elemento $elemento.
 Fase actual: ${weather.moonPhase}.
 
 ## Oportunidades Mágicas
 
 ${weather.recommendedPractices.map((p) => '- $p').join('\n')}
+
+## Cuidados del Día
+
+$cuidados
+
+## Ritual Sugerido
+
+Enciende una vela y haz tres respiraciones profundas, sintonizándote con el elemento $elemento de la Luna en $signo. Formula una intención simple y clara para el día y visualízala haciéndose realidad.
 
 ## Cristales y Aliados
 
