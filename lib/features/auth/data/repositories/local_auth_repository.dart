@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-
-import '../../../../core/content/content_locale.dart';
-
-/// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
-AppLocalizations get _l10n =>
-    lookupAppLocalizations(ContentLocale.instance.locale);
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/user_model.dart';
 import 'auth_repository.dart';
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
 
 /// Implementação local do AuthRepository usando SharedPreferences
 /// Usado para modo offline e testes

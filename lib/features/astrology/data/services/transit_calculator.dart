@@ -1,15 +1,15 @@
-import '../models/enums.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/content/content_locale.dart';
+import '../models/birth_chart_model.dart';
+import '../models/enums.dart';
+import '../models/planet_position_model.dart';
+import '../models/transit_model.dart';
+import 'sweph_service.dart';
 
 /// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
-import '../models/transit_model.dart';
-import '../models/planet_position_model.dart';
-import '../models/birth_chart_model.dart';
-import 'sweph_service.dart';
 
 /// Calcula trânsitos planetários em tempo real
 class TransitCalculator {

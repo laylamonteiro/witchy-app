@@ -1,15 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/data_sources/trails_data.dart';
+import '../../data/models/trail_model.dart';
+import '../../data/repositories/learning_progress_repository.dart';
 import '../../../../core/content/content_locale.dart';
 
 /// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../data/data_sources/trails_data.dart';
-import '../../data/models/trail_model.dart';
-import '../../data/repositories/learning_progress_repository.dart';
+
 
 /// Nível do Grimório Vivo — gamificação no espírito das Jornadas Mágicas
 /// (XP e títulos), aplicada ao aprendizado.
