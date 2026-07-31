@@ -106,8 +106,11 @@ WidgetBuilder? resolveRelatedLink(String label) {
   }
 
   // 5. Seções por palavra-chave (pt/en/es, sem acentos).
-  bool has(List<String> words) =>
-      words.any((w) => normBase.contains(w) || normHint.contains(w));
+  // Match de PALAVRA INTEIRA (com plural s/es opcional) — nunca substring:
+  // "Angélica" não pode casar com "angel", nem "girassol" com "sol".
+  final searchText = '$normBase $normHint';
+  bool has(List<String> words) => words.any((w) =>
+      RegExp('\\b${RegExp.escape(w)}(es|s)?\\b').hasMatch(searchText));
 
   if (has(['lua', 'moon', 'luna'])) return (_) => const LunarCalendarPage();
   if (has(['sabbat', 'roda do ano', 'wheel of the year', 'rueda del ano'])) {
@@ -124,9 +127,9 @@ WidgetBuilder? resolveRelatedLink(String label) {
   if (has(['elemento', 'element'])) return (_) => const ElementsPage();
 
   ArcaneCategory? arcaneList;
-  if (has(['arquetip', 'archetyp'])) arcaneList = ArcaneCategory.archetypes;
-  if (has(['anjo', 'angel', 'ange'])) arcaneList = ArcaneCategory.angels;
-  if (has(['demoni', 'demon'])) arcaneList = ArcaneCategory.demons;
+  if (has(['arquetipo', 'archetype'])) arcaneList = ArcaneCategory.archetypes;
+  if (has(['anjo', 'angel'])) arcaneList = ArcaneCategory.angels;
+  if (has(['demonio', 'demon'])) arcaneList = ArcaneCategory.demons;
   if (has(['simbolo', 'symbol'])) arcaneList = ArcaneCategory.sacredSymbols;
   if (arcaneList != null) {
     final category = arcaneList;
@@ -165,10 +168,10 @@ WidgetBuilder? resolveRelatedLink(String label) {
   if (has(['erva', 'herb', 'hierba'])) {
     return (_) => const _WrappedSection(child: HerbsListPage());
   }
-  if (has(['cristal', 'crystal', 'pedra', 'stone', 'piedra'])) {
+  if (has(['cristal', 'cristais', 'crystal', 'pedra', 'stone', 'piedra'])) {
     return (_) => const _WrappedSection(child: CrystalsListPage());
   }
-  if (has(['metal', 'metais', 'metals', 'metales'])) {
+  if (has(['metal', 'metais', 'metales'])) {
     return (_) => const _WrappedSection(child: MetalsListPage());
   }
   if (has(['cores', 'colors', 'colores'])) {

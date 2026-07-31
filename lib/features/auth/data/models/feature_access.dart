@@ -66,6 +66,9 @@ enum AppFeature {
   // é Premium com preview)
   guidedRitualPlayer,
 
+  // Conhecimento de bruxaria solar (página Sol) — Premium com preview
+  sunKnowledge,
+
   // Enciclopédia pessoal (entradas criadas pela usuária com foto + IA)
   encyclopediaPersonalEntries,
 
@@ -427,6 +430,8 @@ class FeatureAccessService {
         return _l10n.featurePreviewPalmistry;
       case AppFeature.guidedRitualPlayer:
         return _l10n.featurePreviewGuidedRituals;
+      case AppFeature.sunKnowledge:
+        return _l10n.featurePreviewEncyclopedia;
       case AppFeature.encyclopediaPersonalEntries:
         return _l10n.featurePreviewPersonalEncyclopedia;
       default:

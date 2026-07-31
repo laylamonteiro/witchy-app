@@ -5,7 +5,9 @@ import 'package:grimorio_de_bolso/features/guided_rituals/data/models/guided_rit
 void main() {
   group('AppDeepLink', () {
     test('payloads são estáveis e fazem round-trip', () {
+      expect(AppDeepLink.yourDay.payload, 'today');
       expect(AppDeepLink.moonEncyclopedia.payload, 'encyclopedia/moon');
+      expect(AppDeepLink.sunEncyclopedia.payload, 'encyclopedia/sun');
       expect(AppDeepLink.sabbatsEncyclopedia.payload, 'encyclopedia/sabbats');
       expect(AppDeepLink.guidedRitualSabbat.payload, 'ritual/sabbat');
       expect(AppDeepLink.guidedRitualFullMoon.payload, 'ritual/full_moon');
@@ -22,15 +24,20 @@ void main() {
       expect(AppDeepLink.fromPayload('rota/inexistente'), isNull);
     });
 
-    test('destinos apontam para a aba certa da Enciclopédia', () {
-      expect(AppDeepLink.moonEncyclopedia.homeTab, 0);
+    test('destinos apontam para a aba certa (bottom bar e Enciclopédia)', () {
+      // Bottom bar: 0 = Seu Dia, 1 = Enciclopédia, 2 = Grimório, 3 = Diários.
+      expect(AppDeepLink.yourDay.homeTab, 0);
+      expect(AppDeepLink.yourDay.encyclopediaTab, isNull);
+      expect(AppDeepLink.moonEncyclopedia.homeTab, 1);
       expect(AppDeepLink.moonEncyclopedia.encyclopediaTab, 0);
-      expect(AppDeepLink.sabbatsEncyclopedia.homeTab, 0);
-      expect(AppDeepLink.sabbatsEncyclopedia.encyclopediaTab, 1);
-      expect(AppDeepLink.guidedRitualSabbat.encyclopediaTab, 1);
+      expect(AppDeepLink.sunEncyclopedia.homeTab, 1);
+      expect(AppDeepLink.sunEncyclopedia.encyclopediaTab, 1);
+      expect(AppDeepLink.sabbatsEncyclopedia.homeTab, 1);
+      expect(AppDeepLink.sabbatsEncyclopedia.encyclopediaTab, 2);
+      expect(AppDeepLink.guidedRitualSabbat.encyclopediaTab, 2);
       expect(AppDeepLink.guidedRitualFullMoon.encyclopediaTab, 0);
       expect(AppDeepLink.guidedRitualNewMoon.encyclopediaTab, 0);
-      expect(AppDeepLink.guidedRitualSunWater.encyclopediaTab, 0);
+      expect(AppDeepLink.guidedRitualSunWater.encyclopediaTab, 1);
     });
 
     test('destinos de ritual carregam o ritualId certo', () {

@@ -12,32 +12,44 @@ import 'package:flutter/foundation.dart';
 ///    `ritual/sabbat/imbolc`) e o argumento chega em [PendingDeepLink.arg].
 /// A HomePage e as seções escutam o [DeepLinkService] e navegam sozinhas.
 enum AppDeepLink {
+  /// Aba "Seu Dia" da bottom bar (hub diário).
+  yourDay('today'),
+
   /// Enciclopédia Mágica → aba Lua (notificações de lua cheia/nova).
-  moonEncyclopedia('encyclopedia/moon', encyclopediaTab: 0),
+  moonEncyclopedia('encyclopedia/moon', homeTab: 1, encyclopediaTab: 0),
+
+  /// Enciclopédia Mágica → aba Sol.
+  sunEncyclopedia('encyclopedia/sun', homeTab: 1, encyclopediaTab: 1),
 
   /// Enciclopédia Mágica → aba Sabbats/Roda do Ano (notificações de sabbat).
-  sabbatsEncyclopedia('encyclopedia/sabbats', encyclopediaTab: 1),
+  sabbatsEncyclopedia('encyclopedia/sabbats', homeTab: 1, encyclopediaTab: 2),
 
   /// Página guiada do ritual de um sabbat (payload emitido:
   /// `ritual/sabbat/<SabbatType.name>`, ex. `ritual/sabbat/imbolc`).
-  guidedRitualSabbat('ritual/sabbat', encyclopediaTab: 1),
+  guidedRitualSabbat('ritual/sabbat', homeTab: 1, encyclopediaTab: 2),
 
   /// Página guiada do ritual de lua cheia.
   guidedRitualFullMoon('ritual/full_moon',
-      encyclopediaTab: 0, ritualId: 'full_moon'),
+      homeTab: 1, encyclopediaTab: 0, ritualId: 'full_moon'),
 
   /// Página guiada do ritual de lua nova.
   guidedRitualNewMoon('ritual/new_moon',
-      encyclopediaTab: 0, ritualId: 'new_moon'),
+      homeTab: 1, encyclopediaTab: 0, ritualId: 'new_moon'),
 
-  /// Página guiada da água solar (notificação semanal opt-in).
+  /// Página guiada da água solar (notificação semanal opt-in) — abre sobre
+  /// a aba Sol.
   guidedRitualSunWater('ritual/sun_water',
-      encyclopediaTab: 0, ritualId: 'sun_water');
+      homeTab: 1, encyclopediaTab: 1, ritualId: 'sun_water');
 
-  const AppDeepLink(this.payload, {this.encyclopediaTab, this.ritualId});
+  const AppDeepLink(this.payload,
+      {this.homeTab = 0, this.encyclopediaTab, this.ritualId});
 
   /// Identificador estável usado como payload da notificação.
   final String payload;
+
+  /// Aba da bottom bar da HomePage (0 = Seu Dia, 1 = Enciclopédia,
+  /// 2 = Grimório, 3 = Diários).
+  final int homeTab;
 
   /// Sub-aba da Enciclopédia a abrir (null = não é um destino da Enciclopédia).
   final int? encyclopediaTab;
@@ -49,10 +61,6 @@ enum AppDeepLink {
   /// É um destino de página guiada de ritual?
   bool get isGuidedRitual =>
       ritualId != null || this == AppDeepLink.guidedRitualSabbat;
-
-  /// Aba da bottom bar da HomePage (0 = Enciclopédia, 1 = Grimório,
-  /// 2 = Diários). Hoje todos os destinos vivem na Enciclopédia.
-  int get homeTab => 0;
 
   static AppDeepLink? fromPayload(String? payload) =>
       PendingDeepLink.parse(payload)?.link;
