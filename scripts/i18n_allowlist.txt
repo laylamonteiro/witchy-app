@@ -24,6 +24,11 @@ lib/core/i18n/gender\.dart:
 lib/core/ai/ai_service\.dart:
 # Console de diagnóstico dev-only (não é interface de usuário final).
 lib/core/diagnostic/diagnostic_page\.dart:
+
+# Tabelas de acentos usadas para slugs/normalização — não são texto de UI.
+const accents = '
+lib/core/utils/accents\.dart:
+'(Á|À|Ã|Â|Ä|É|È|Ê|Ë|Í|Ì|Î|Ï|Ó|Ò|Õ|Ô|Ö|Ú|Ù|Û|Ü|Ç|Ñ)': '[A-Z]'
 # Seeds/campos PT canônicos com overlay ou mapa EN/ES ao lado (paridade testada).
 lib/features/diary/data/models/affirmation_model\.dart:
 lib/features/journeys/data/models/journey_model\.dart:

@@ -1,3 +1,13 @@
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext (modelos são usados fora da
+/// árvore de widgets); o locale vem do ContentLocale, setado pelo
+/// LanguageProvider.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
 enum Element {
   earth,
   water,
@@ -55,15 +65,15 @@ extension ElementExtension on Element {
   String get displayName {
     switch (this) {
       case Element.earth:
-        return 'Terra';
+        return _l10n.elementEarth;
       case Element.water:
-        return 'Água';
+        return _l10n.elementWater;
       case Element.air:
-        return 'Ar';
+        return _l10n.elementAir;
       case Element.fire:
-        return 'Fogo';
+        return _l10n.elementFire;
       case Element.spirit:
-        return 'Espírito';
+        return _l10n.elementSpirit;
     }
   }
 

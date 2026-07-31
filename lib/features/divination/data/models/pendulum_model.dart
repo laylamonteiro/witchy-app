@@ -1,3 +1,13 @@
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext (modelos são usados fora da
+/// árvore de widgets); o locale vem do ContentLocale, setado pelo
+/// LanguageProvider.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
 enum PendulumAnswer {
   yes,
   no,
@@ -6,22 +16,22 @@ enum PendulumAnswer {
   String get displayName {
     switch (this) {
       case PendulumAnswer.yes:
-        return 'SIM';
+        return _l10n.pendulumYes;
       case PendulumAnswer.no:
-        return 'NÃO';
+        return _l10n.pendulumNo;
       case PendulumAnswer.maybe:
-        return 'TALVEZ';
+        return _l10n.pendulumMaybe;
     }
   }
 
   String get message {
     switch (this) {
       case PendulumAnswer.yes:
-        return 'A energia indica uma resposta positiva';
+        return _l10n.pendulumYesMsg;
       case PendulumAnswer.no:
-        return 'A energia indica uma resposta negativa';
+        return _l10n.pendulumNoMsg;
       case PendulumAnswer.maybe:
-        return 'As energias estão em equilíbrio. A situação ainda está se definindo.';
+        return _l10n.pendulumMaybeMsg;
     }
   }
 

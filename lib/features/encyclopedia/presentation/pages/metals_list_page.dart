@@ -223,24 +223,41 @@ class _MetalsListPageState extends State<MetalsListPage> {
   }
 
   IconData _getMetalIcon(String metalName) {
-    switch (metalName.toLowerCase()) {
+    // Nomes nos 3 idiomas, sem acentos (removeAccents), para que o ícone
+    // acompanhe o metal independentemente do idioma do conteúdo.
+    switch (removeAccents(metalName.toLowerCase())) {
       case 'ouro':
+      case 'gold':
+      case 'oro':
         return Icons.auto_awesome;
       case 'prata':
+      case 'silver':
+      case 'plata':
         return Icons.nightlight;
       case 'cobre':
+      case 'copper':
         return Icons.favorite;
       case 'ferro':
+      case 'iron':
+      case 'hierro':
         return Icons.shield;
       case 'estanho':
+      case 'tin':
+      case 'estano':
         return Icons.calendar_view_week;
       case 'chumbo':
+      case 'lead':
+      case 'plomo':
         return Icons.lock;
       case 'bronze':
+      case 'bronce':
         return Icons.history_edu;
-      case 'latão':
+      case 'latao':
+      case 'brass':
+      case 'laton':
         return Icons.light_mode;
-      case 'alumínio':
+      case 'aluminio':
+      case 'aluminum':
         return Icons.speed;
       default:
         return Icons.blur_circular;
