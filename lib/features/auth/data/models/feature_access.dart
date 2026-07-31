@@ -1,3 +1,5 @@
+import '../../../../core/content/content_locale.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/services/premium_access.dart';
 import 'user_model.dart';
 
@@ -202,12 +204,18 @@ class AccessResult {
       );
 }
 
+/// Localizações resolvidas no idioma atual sem BuildContext (mesmo padrão
+/// do NotificationService) — mensagens são lidas a cada acesso, então a
+/// troca de idioma em runtime reflete imediatamente.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
 /// Mensagens padronizadas para gates, previews e bloqueios.
 class FeatureAccessMessages {
-  static const preview = 'Conteúdo exclusivo Premium. Desbloqueie para atravessar o véu.';
-  static const blocked = 'Funcionalidade indisponível para seu acesso atual.';
-  static const limitReached = 'Limite gratuito atingido. Assine Premium para uso ilimitado.';
-  static const adminOnly = 'Painel de diagnóstico exclusivo para administradores.';
+  static String get preview => _l10n.featureAccessPreview;
+  static String get blocked => _l10n.featureAccessBlocked;
+  static String get limitReached => _l10n.featureAccessLimitReached;
+  static String get adminOnly => _l10n.featureAccessAdminOnly;
 }
 
 /// Serviço central para consulta de acesso e limites.
@@ -223,29 +231,30 @@ class FeatureAccessService {
     _analyticsHook = hook;
   }
 
-  static final FeatureUsageLimit _diaryLimit = FeatureUsageLimit(
-    limit: UserModel.freeDiaryEntriesLimit,
-    window: LimitWindow.monthly,
-    used: (user) => user.diaryEntriesThisMonth,
-    blockedMessage:
-        'Você atingiu o limite de ${UserModel.freeDiaryEntriesLimit} entradas este mês. Assine Premium para registros ilimitados.',
-  );
+  static FeatureUsageLimit get _diaryLimit => FeatureUsageLimit(
+        limit: UserModel.freeDiaryEntriesLimit,
+        window: LimitWindow.monthly,
+        used: (user) => user.diaryEntriesThisMonth,
+        blockedMessage:
+            _l10n.featureLimitDiaryBlocked(UserModel.freeDiaryEntriesLimit),
+      );
 
-  static final FeatureUsageLimit _aiLimit = FeatureUsageLimit(
-    limit: UserModel.freeAiConsultationsLimit,
-    window: LimitWindow.daily,
-    used: (user) => user.aiConsultationsToday,
-    availableMessage: 'consulta(s) mística(s) hoje',
-    blockedMessage:
-        'Você usou suas ${UserModel.freeAiConsultationsLimit} consultas místicas hoje. Assine Premium para acesso ilimitado.',
-  );
+  static FeatureUsageLimit get _aiLimit => FeatureUsageLimit(
+        limit: UserModel.freeAiConsultationsLimit,
+        window: LimitWindow.daily,
+        used: (user) => user.aiConsultationsToday,
+        availableMessage: _l10n.featureLimitAiAvailable,
+        blockedMessage:
+            _l10n.featureLimitAiBlocked(UserModel.freeAiConsultationsLimit),
+      );
 
-  static final Map<AppFeature, FeatureUsageLimit> limits = {
+  static Map<AppFeature, FeatureUsageLimit> get limits => {
     AppFeature.grimoireCreate: FeatureUsageLimit(
       limit: UserModel.freeSpellsLimit,
       window: LimitWindow.total,
       used: (user) => user.spellsCount,
-      blockedMessage: 'Você atingiu o limite de ${UserModel.freeSpellsLimit} feitiços. Assine Premium para criar ilimitados.',
+      blockedMessage:
+          _l10n.featureLimitSpellsBlocked(UserModel.freeSpellsLimit),
     ),
     AppFeature.diaryDreamsCreate: _diaryLimit,
     AppFeature.diaryDesiresCreate: _diaryLimit,
@@ -255,28 +264,28 @@ class FeatureAccessService {
       limit: UserModel.freeRuneReadingsLimit,
       window: LimitWindow.daily,
       used: (user) => user.runeReadingsToday,
-      availableMessage: 'leitura(s) gratuita(s) hoje',
+      availableMessage: _l10n.featureLimitReadingsAvailable,
       blockedMessage: FeatureAccessMessages.limitReached,
     ),
     AppFeature.divinationPendulum: FeatureUsageLimit(
       limit: UserModel.dailyPendulumLimit,
       window: LimitWindow.daily,
       used: (user) => user.pendulumUsesToday,
-      availableMessage: 'consulta(s) gratuita(s) hoje',
+      availableMessage: _l10n.featureLimitConsultAvailable,
       blockedMessage: FeatureAccessMessages.limitReached,
     ),
     AppFeature.divinationOracle: FeatureUsageLimit(
       limit: UserModel.freeOracleReadingsLimit,
       window: LimitWindow.daily,
       used: (user) => user.oracleReadingsToday,
-      availableMessage: 'leitura(s) gratuita(s) hoje',
+      availableMessage: _l10n.featureLimitReadingsAvailable,
       blockedMessage: FeatureAccessMessages.limitReached,
     ),
     AppFeature.tarotReadings: FeatureUsageLimit(
       limit: UserModel.freeOracleReadingsLimit,
       window: LimitWindow.daily,
       used: (user) => user.oracleReadingsToday,
-      availableMessage: 'leitura(s) gratuita(s) de tarot hoje',
+      availableMessage: _l10n.featureLimitTarotAvailable,
       blockedMessage: FeatureAccessMessages.limitReached,
     ),
     // numerologyReadings (explicação do Conselheiro Místico) é exclusiva
@@ -285,8 +294,8 @@ class FeatureAccessService {
       limit: UserModel.freeAdvisorConsultationsLimit,
       window: LimitWindow.daily,
       used: (user) => user.advisorConsultationsToday,
-      availableMessage: 'consulta(s) ao Conselheiro hoje',
-      blockedMessage: 'Você usou sua consulta ao Conselheiro Místico hoje. Assine Premium para consultas ilimitadas.',
+      availableMessage: _l10n.featureLimitCounselorAvailable,
+      blockedMessage: _l10n.featureLimitCounselorBlocked,
     ),
     AppFeature.aiDreamAnalysis: _aiLimit,
     // aiPalmistry e aiPersonalizedDreamInterpretation são exclusivas Premium:
@@ -388,27 +397,27 @@ class FeatureAccessService {
       case AppFeature.encyclopediaElementsDetails:
       case AppFeature.encyclopediaAltarDetails:
       case AppFeature.encyclopediaArcaneDetails:
-        return 'Desbloqueie detalhes completos da enciclopédia com o plano Premium.';
+        return _l10n.featurePreviewEncyclopedia;
       case AppFeature.lunarCalendarDetails:
-        return 'Informações detalhadas das fases lunares são exclusivas Premium.';
+        return _l10n.featurePreviewLunar;
       case AppFeature.wheelOfYearDetails:
-        return 'Rituais e celebrações detalhadas são conteúdo Premium.';
+        return _l10n.featurePreviewWheel;
       case AppFeature.astrologyBirthChart:
       case AppFeature.astrologyMagicalProfile:
       case AppFeature.astrologyDailyWeather:
       case AppFeature.astrologyPersonalizedSuggestions:
-        return 'Mapa astral completo e perfil mágico são exclusivos Premium.';
+        return _l10n.featurePreviewAstrology;
       case AppFeature.sigilsCreate:
       case AppFeature.sigilsView:
-        return 'Criação de sigilos é uma funcionalidade Premium.';
+        return _l10n.featurePreviewSigils;
       case AppFeature.aiPersonalizedDreamInterpretation:
-        return 'A interpretação personalizada de sonhos é exclusiva do plano Premium.';
+        return _l10n.featurePreviewDreams;
       case AppFeature.numerologyReadings:
-        return 'A explicação do Conselheiro Místico é exclusiva do plano Premium.';
+        return _l10n.featurePreviewNumerology;
       case AppFeature.interactiveMagicalLearning:
-        return 'As trilhas completas do Grimório Vivo são exclusivas do plano Premium.';
+        return _l10n.featurePreviewLearning;
       case AppFeature.aiPalmistry:
-        return 'A leitura de mãos é exclusiva do plano Premium.';
+        return _l10n.featurePreviewPalmistry;
       default:
         return FeatureAccessMessages.preview;
     }

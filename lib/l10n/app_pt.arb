@@ -1107,12 +1107,82 @@
   "notifNewMoonTitle": "🌑 Lua Nova se aproxima!",
   "notifNewMoonBody": "Amanhã é Lua Nova! Momento perfeito para definir intenções e novos começos.",
   "notifSabbatTitle": "{emoji} {name} se aproxima!",
-  "@notifSabbatTitle": {"placeholders": {"emoji": {"type": "String"}, "name": {"type": "String"}}},
+  "@notifSabbatTitle": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "notifSabbatBody": "Em 3 dias celebramos {name}. Prepare seus rituais!",
-  "@notifSabbatBody": {"placeholders": {"name": {"type": "String"}}},
+  "@notifSabbatBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "notifErrPermissionDenied": "Permissão de notificações não concedida",
   "notifErrTestFailed": "Falha ao enviar notificação de teste: {error}",
-  "@notifErrTestFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@notifErrTestFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "notifErrScheduleFailed": "Falha ao agendar notificações: {error}",
-  "@notifErrScheduleFailed": {"placeholders": {"error": {"type": "String"}}}
+  "@notifErrScheduleFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "featureAccessPreview": "Conteúdo exclusivo Premium. Desbloqueie para atravessar o véu.",
+  "featureAccessBlocked": "Funcionalidade indisponível para seu acesso atual.",
+  "featureAccessLimitReached": "Limite gratuito atingido. Assine Premium para uso ilimitado.",
+  "featureAccessAdminOnly": "Painel de diagnóstico exclusivo para administradores.",
+  "featureLimitDiaryBlocked": "Você atingiu o limite de {count} entradas este mês. Assine Premium para registros ilimitados.",
+  "@featureLimitDiaryBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "featureLimitAiAvailable": "consulta(s) mística(s) hoje",
+  "featureLimitAiBlocked": "Você usou suas {count} consultas místicas hoje. Assine Premium para acesso ilimitado.",
+  "@featureLimitAiBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "featureLimitSpellsBlocked": "Você atingiu o limite de {count} feitiços. Assine Premium para criar ilimitados.",
+  "@featureLimitSpellsBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "featureLimitReadingsAvailable": "leitura(s) gratuita(s) hoje",
+  "featureLimitConsultAvailable": "consulta(s) gratuita(s) hoje",
+  "featureLimitTarotAvailable": "leitura(s) gratuita(s) de tarot hoje",
+  "featureLimitCounselorAvailable": "consulta(s) ao Conselheiro hoje",
+  "featureLimitCounselorBlocked": "Você usou sua consulta ao Conselheiro Místico hoje. Assine Premium para consultas ilimitadas.",
+  "featurePreviewEncyclopedia": "Desbloqueie detalhes completos da enciclopédia com o plano Premium.",
+  "featurePreviewLunar": "Informações detalhadas das fases lunares são exclusivas Premium.",
+  "featurePreviewWheel": "Rituais e celebrações detalhadas são conteúdo Premium.",
+  "featurePreviewAstrology": "Mapa astral completo e perfil mágico são exclusivos Premium.",
+  "featurePreviewSigils": "Criação de sigilos é uma funcionalidade Premium.",
+  "featurePreviewDreams": "A interpretação personalizada de sonhos é exclusiva do plano Premium.",
+  "featurePreviewNumerology": "A explicação do Conselheiro Místico é exclusiva do plano Premium.",
+  "featurePreviewLearning": "As trilhas completas do Grimório Vivo são exclusivas do plano Premium.",
+  "featurePreviewPalmistry": "A leitura de mãos é exclusiva do plano Premium."
 }
