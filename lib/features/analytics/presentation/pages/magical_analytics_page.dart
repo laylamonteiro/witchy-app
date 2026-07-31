@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/utils/accents.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -288,7 +291,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: ResponsiveAppBarTitle(
-          'Estatísticas Mágicas',
+          AppLocalizations.of(context).profileMagicalStats,
           style: TextStyle(
             color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
@@ -379,7 +382,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             ),
           ),
           Text(
-            'Praticas Mágicas',
+            AppLocalizations.of(context).analyticsPractices,
             style: TextStyle(
               color: context.gc.textSecondary,
               fontSize: 16,
@@ -458,7 +461,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             children: [
               Expanded(
                 child: _buildStreakItem(
-                  'Gratidão',
+                  AppLocalizations.of(context).diaryTabGratitude,
                   gratitudeStreak,
                   Colors.orange,
                   Icons.favorite,
@@ -482,10 +485,11 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                   Expanded(
                     child: Text(
                       gratitudeStreak >= 30
-                          ? 'Incrivel! 30 dias de gratidão!'
+                          ? AppLocalizations.of(context).analyticsStreak30
                           : gratitudeStreak >= 7
-                              ? 'Otimo! 1 semana de gratidão!'
-                              : 'Continue assim! $gratitudeStreak dias de gratidão!',
+                              ? AppLocalizations.of(context).analyticsStreak7
+                              : AppLocalizations.of(context)
+                                  .analyticsStreakKeepGoing(gratitudeStreak),
                       style: const TextStyle(
                         color: Colors.orange,
                         fontSize: 13,
@@ -566,58 +570,58 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           childAspectRatio: 1,
           children: [
             _buildCategoryCard(
-              'Feitiços',
+              AppLocalizations.of(context).profileSpells,
               _stats['spells'] ?? 0,
               Icons.auto_fix_high,
               Colors.purple,
               onTap: () => _openAndReload(
-                const UserSpellsListPage(title: 'Meu Grimório'),
+                UserSpellsListPage(title: AppLocalizations.of(context).grimoireTabMyGrimoire),
               ),
             ),
             _buildCategoryCard(
-              'Sonhos',
+              AppLocalizations.of(context).diaryTabDreams,
               _stats['dreams'] ?? 0,
               Icons.nights_stay,
               Colors.indigo,
               onTap: () => _openAndReload(const DreamsListPage()),
             ),
             _buildCategoryCard(
-              'Gratidão',
+              AppLocalizations.of(context).diaryTabGratitude,
               _stats['gratitudes'] ?? 0,
               Icons.favorite,
               Colors.pink,
               onTap: () => _openAndReload(const GratitudesListPage()),
             ),
             _buildCategoryCard(
-              'Afirmacoes',
+              AppLocalizations.of(context).diaryTabAffirmations,
               _stats['affirmations'] ?? 0,
               Icons.format_quote,
               Colors.teal,
               onTap: () => _openAndReload(const AffirmationsListPage()),
             ),
             _buildCategoryCard(
-              'Sigilos',
+              AppLocalizations.of(context).toolSigilsTitle,
               _stats['sigils'] ?? 0,
               Icons.gesture,
               Colors.amber,
               onTap: () => _openAndReload(const SigilStep1IntentionPage()),
             ),
             _buildCategoryCard(
-              'Runas',
+              AppLocalizations.of(context).encyTabRunes,
               _stats['runeReadings'] ?? 0,
               Icons.casino,
               Colors.red,
               onTap: () => _openAndReload(const RuneReadingPage()),
             ),
             _buildCategoryCard(
-              'Oráculo',
+              AppLocalizations.of(context).analyticsOracle,
               _stats['oracleReadings'] ?? 0,
               Icons.style,
               Colors.cyan,
               onTap: () => _openAndReload(const OracleCardsPage()),
             ),
             _buildCategoryCard(
-              'Pêndulo',
+              AppLocalizations.of(context).pendulumTitle,
               _stats['pendulum'] ?? 0,
               Icons.radio_button_checked,
               Colors.green,
@@ -793,7 +797,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               Icon(Icons.auto_fix_high, color: Colors.purple, size: 24),
               SizedBox(width: 8),
               Text(
-                'Feitiços por Tipo',
+                AppLocalizations.of(context).analyticsSpellsByType,
                 style: TextStyle(
                   color: context.gc.textPrimary,
                   fontSize: 18,
@@ -849,8 +853,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
   }
 
   Color _getTypeColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'proteção':
+    // Valores persistidos historicamente em PT; compara sem acentos.
+    switch (removeAccents(type.toLowerCase())) {
       case 'protecao':
         return Colors.blue;
       case 'amor':

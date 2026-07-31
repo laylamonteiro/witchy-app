@@ -1588,5 +1588,73 @@
   "encyGoddessSymbolsAssoc": "Símbolos & Associações",
   "encyGoddessSymbols": "Símbolos",
   "encyGoddessUsesSub": "Práticas devocionais e rituais associados a esta divindade.",
-  "encyGoddessConnectionSub": "Orientações para conexão, invocação e trabalho devocional."
+  "encyGoddessConnectionSub": "Orientações para conexão, invocação e trabalho devocional.",
+  "analyticsPractices": "Práticas Mágicas",
+  "analyticsStreak30": "Incrível! 30 dias de gratidão!",
+  "analyticsStreak7": "Ótimo! 1 semana de gratidão!",
+  "analyticsStreakKeepGoing": "Continue assim! {count, plural, one{1 dia} other{{count} dias}} de gratidão!",
+  "@analyticsStreakKeepGoing": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsOracle": "Oráculo",
+  "analyticsSpellsByType": "Feitiços por Tipo",
+  "wheelNextSabbat": "Próximo Sabbat",
+  "wheelCalendar": "Calendário dos Sabbats",
+  "wheelAbout": "Sobre a Roda do Ano",
+  "wheelAboutBody": "A Roda do Ano representa o ciclo anual de celebrações da natureza. São 8 sabbats que marcam mudanças sazonais: 4 festivais solares (solstícios e equinócios) e 4 festivais de fogo (datas fixas).",
+  "wheelAboutSouth": "Estas datas foram adaptadas para o hemisfério sul, seguindo o ciclo natural das estações.",
+  "wheelToday": "Hoje!",
+  "wheelTomorrow": "Amanhã",
+  "wheelInDays": "Em {count, plural, one{1 dia} other{{count} dias}}",
+  "@wheelInDays": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "wheelSouthHemisphere": "Hemisfério Sul",
+  "wheelNorthHemisphere": "Hemisfério Norte",
+  "lunarCalendarTitle": "Calendário Lunar",
+  "lunarYesterday": "Ontem",
+  "lunarToday": "Hoje",
+  "lunarNextPhases": "Próximas Fases Lunares",
+  "lunarNextPhasesSub": "Acompanhe as próximas mudanças da lua",
+  "lunarRecommendations": "Recomendações",
+  "lunarLoadError": "Erro ao carregar calendário lunar",
+  "lunarNow": "Agora!",
+  "lunarInHours": "Em {count, plural, one{1 hora} other{{count} horas}}",
+  "@lunarInHours": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "lunarTomorrowAt": "Amanhã às {time}",
+  "@lunarTomorrowAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "lunarInDaysAt": "Em {count, plural, one{1 dia} other{{count} dias}} às {time}",
+  "@lunarInDaysAt": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      },
+      "time": {}
+    }
+  },
+  "divinationTitle": "Divinação",
+  "divArtsTitle": "Artes Divinatórias",
+  "divArtsSub": "Consulte os oráculos e receba orientação",
+  "divRunesDesc": "Leitura das antigas runas nórdicas",
+  "divPendulumDesc": "Perguntas de sim ou não",
+  "divOracleTitle": "Oracle Cards",
+  "divOracleDesc": "Mensagens e orientação do universo"
 }

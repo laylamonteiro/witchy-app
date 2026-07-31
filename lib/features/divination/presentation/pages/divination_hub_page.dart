@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -15,7 +16,7 @@ class DivinationHubPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Divinação'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).divinationTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -30,14 +31,14 @@ class DivinationHubPage extends StatelessWidget {
                   const Text('🔮', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 16),
                   Text(
-                    'Artes Divinatórias',
+                    AppLocalizations.of(context).divArtsTitle,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Consulte os oráculos e receba orientação',
+                    AppLocalizations.of(context).divArtsSub,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -50,8 +51,8 @@ class DivinationHubPage extends StatelessWidget {
             _buildDivinationOption(
               context,
               icon: 'ᚱᚢᚾᚨ',
-              title: 'Runas',
-              description: 'Leitura das antigas runas nórdicas',
+              title: AppLocalizations.of(context).runesListTitle,
+              description: AppLocalizations.of(context).divRunesDesc,
               feature: AppFeature.runesReadings,
               onTap: () {
                 Navigator.of(context).push(
@@ -65,8 +66,8 @@ class DivinationHubPage extends StatelessWidget {
             _buildDivinationOption(
               context,
               icon: '⟟',
-              title: 'Pêndulo',
-              description: 'Perguntas de sim ou não',
+              title: AppLocalizations.of(context).pendulumTitle,
+              description: AppLocalizations.of(context).divPendulumDesc,
               feature: AppFeature.divinationPendulum,
               onTap: () {
                 Navigator.of(context).push(
@@ -80,8 +81,8 @@ class DivinationHubPage extends StatelessWidget {
             _buildDivinationOption(
               context,
               icon: '🔮',
-              title: 'Oracle Cards',
-              description: 'Mensagens e orientação do universo',
+              title: AppLocalizations.of(context).divOracleTitle,
+              description: AppLocalizations.of(context).divOracleDesc,
               feature: AppFeature.divinationOracle,
               onTap: () {
                 Navigator.of(context).push(
