@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../divination/presentation/pages/pendulum_page.dart';
-import '../../diary/presentation/pages/dreams_list_page.dart';
+import '../../diary/presentation/pages/dream_interpretation_page.dart';
 import '../../grimoire/presentation/pages/ai_spell_creation_page.dart';
 import '../../grimoire/presentation/pages/mystic_advisor_page.dart';
 import '../../runes/presentation/pages/rune_reading_page.dart';
@@ -65,7 +65,7 @@ class YourDayShortcuts {
       id: 'dreams',
       emoji: '🌙',
       label: (l10n) => l10n.toolDreamsTitle,
-      builder: (_) => const DreamsListPage(),
+      builder: (_) => const DreamInterpretationPage(),
     ),
     ShortcutTool(
       id: 'sigils',

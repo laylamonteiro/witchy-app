@@ -7,8 +7,12 @@ import 'moon_content_pt.dart';
 /// Conhecimento de bruxaria de uma fase lunar.
 typedef MoonPhaseKnowledge = ({String favors, List<String> goodFor});
 
-/// Conteúdo dos esbats (celebrações da lua cheia).
-typedef EsbatsContent = ({String what, String how});
+/// Um elemento da celebração dos esbats (linha com emoji, no mesmo formato
+/// dos sabbats solares da página do Sol).
+typedef EsbatItem = ({String emoji, String title, String text});
+
+/// Uma divindade lunar com descrição curta.
+typedef LunarDeity = ({String name, String description});
 
 /// Conhecimento de bruxaria da Lua — conteúdo da página "Lua" da
 /// Enciclopédia. Trilíngue via ContentLocale (paridade em
@@ -27,9 +31,17 @@ class MoonContent {
           en: moonPhaseKnowledgeEn,
           es: moonPhaseKnowledgeEs);
 
-  /// Esbats: o que são e como celebrar.
-  static EsbatsContent get esbats => ContentLocale.instance
-      .select(pt: moonEsbatsPt, en: moonEsbatsEn, es: moonEsbatsEs);
+  /// Esbats: o que são (introdução).
+  static String get esbatsIntro => ContentLocale.instance.select(
+      pt: moonEsbatsIntroPt, en: moonEsbatsIntroEn, es: moonEsbatsIntroEs);
+
+  /// Esbats: os elementos da celebração (linhas com emoji).
+  static List<EsbatItem> get esbatItems => ContentLocale.instance.select(
+      pt: moonEsbatItemsPt, en: moonEsbatItemsEn, es: moonEsbatItemsEs);
+
+  /// Divindades lunares pelas tradições.
+  static List<LunarDeity> get lunarDeities => ContentLocale.instance
+      .select(pt: moonDeitiesPt, en: moonDeitiesEn, es: moonDeitiesEs);
 
   /// Correspondências lunares (rótulos que o resolveRelatedLink entende
   /// viram chips clicáveis; os demais ficam inertes).

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/breathing_moon.dart';
@@ -34,7 +33,6 @@ class _MoonDayCarouselState extends State<MoonDayCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy');
     return SizedBox(
       height: 300,
       child: Stack(
@@ -51,19 +49,16 @@ class _MoonDayCarouselState extends State<MoonDayCarousel> {
                 context,
                 AppLocalizations.of(context).lunarYesterday,
                 -1,
-                dateFormat,
               ),
               _buildDayCard(
                 context,
                 AppLocalizations.of(context).lunarToday,
                 0,
-                dateFormat,
               ),
               _buildDayCard(
                 context,
                 AppLocalizations.of(context).wheelTomorrow,
                 1,
-                dateFormat,
               ),
             ],
           ),
@@ -134,7 +129,6 @@ class _MoonDayCarouselState extends State<MoonDayCarousel> {
     BuildContext context,
     String dayLabel,
     int dayOffset,
-    DateFormat dateFormat,
   ) {
     // Calcular a data baseada no offset (-1 = ontem, 0 = hoje, 1 = amanhã)
     final date = DateTime.now().add(Duration(days: dayOffset));
@@ -154,13 +148,6 @@ class _MoonDayCarouselState extends State<MoonDayCarousel> {
             Text(
               dayLabel,
               style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              dateFormat.format(date),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
             ),
             const SizedBox(height: 12),
             // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases

@@ -56,12 +56,74 @@ const Map<MoonPhase, MoonPhaseKnowledge> moonPhaseKnowledgeEn = {
   ),
 };
 
-const EsbatsContent moonEsbatsEn = (
-  what:
-      'Esbats are the celebrations of the full moon — the "working" gatherings of witchcraft, in contrast with the sabbats, which celebrate the Sun and the wheel of the year. At each esbat the Moon is honored at the height of her power and the most important spells of the month are performed. There are 12 or 13 esbats a year, and many traditions name each full moon (Wolf Moon, Flower Moon, Harvest Moon...).',
-  how:
-      'To celebrate: set the altar with white or silver candles, offer water or milk to the Moon, charge your crystals and tools under the moonlight, make moon water and save a moment for divination. Even a simple ritual — lighting a candle and giving thanks — is already an esbat.',
-);
+const String moonEsbatsIntroEn =
+    'Esbats are the celebrations of the full moon — the "working" gatherings '
+    'of witchcraft, in contrast with the sabbats, which celebrate the Sun and '
+    'the wheel of the year. At each esbat the Moon is honored at the height '
+    'of her power and the most important spells of the month are performed.';
+
+const List<EsbatItem> moonEsbatItemsEn = [
+  (
+    emoji: '🌕',
+    title: 'When',
+    text:
+        'On the night of the full moon — there are 12 or 13 a year, and many traditions name each one (Wolf Moon, Flower Moon, Harvest Moon...).',
+  ),
+  (
+    emoji: '🕯️',
+    title: 'The altar',
+    text: 'Set white or silver candles and offer water or milk to the Moon.',
+  ),
+  (
+    emoji: '💎',
+    title: 'Charging energy',
+    text:
+        'Leave crystals and tools under the moonlight to renew their power.',
+  ),
+  (
+    emoji: '🫙',
+    title: 'Moon water',
+    text: 'Make moon water at the height of lunar power.',
+  ),
+  (
+    emoji: '🔮',
+    title: 'Divination',
+    text: 'Save a moment for tarot, runes or your favorite oracle.',
+  ),
+  (
+    emoji: '✨',
+    title: 'Simplicity',
+    text: 'Even lighting a candle and giving thanks is already an esbat.',
+  ),
+];
+
+const List<LunarDeity> moonDeitiesEn = [
+  (
+    name: 'Selene',
+    description:
+        'The Moon herself in ancient Greece: the titaness who crosses the night sky in her silver chariot.',
+  ),
+  (
+    name: 'Artemis',
+    description:
+        'Greek goddess of the hunt and the waxing moon, protector of wild nature and independence.',
+  ),
+  (
+    name: 'Hecate',
+    description:
+        'Lady of the crossroads, of magic and the dark moon — the great witch among the goddesses.',
+  ),
+  (
+    name: 'Isis',
+    description:
+        'Great sorceress of Egypt, tied to the moon, the mysteries and healing.',
+  ),
+  (
+    name: 'Yemanja',
+    description:
+        'Queen of the sea in Afro-Brazilian traditions, tied to the moon, the tides and motherhood.',
+  ),
+];
 
 const List<String> moonCorrespondencesEn = [
   'Moonstone',

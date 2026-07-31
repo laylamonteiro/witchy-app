@@ -49,10 +49,33 @@ void main() {
       }
     });
 
-    test('esbats com o quê/como nos 3 idiomas', () {
-      for (final esbats in [moonEsbatsPt, moonEsbatsEn, moonEsbatsEs]) {
-        expect(esbats.what.trim(), isNotEmpty);
-        expect(esbats.how.trim(), isNotEmpty);
+    test('esbats: intro e itens com a mesma contagem nos 3 idiomas', () {
+      for (final intro in [
+        moonEsbatsIntroPt,
+        moonEsbatsIntroEn,
+        moonEsbatsIntroEs
+      ]) {
+        expect(intro.trim(), isNotEmpty);
+      }
+      expect(moonEsbatItemsEn.length, moonEsbatItemsPt.length);
+      expect(moonEsbatItemsEs.length, moonEsbatItemsPt.length);
+      for (final list in [moonEsbatItemsPt, moonEsbatItemsEn, moonEsbatItemsEs]) {
+        for (final item in list) {
+          expect(item.emoji.trim(), isNotEmpty);
+          expect(item.title.trim(), isNotEmpty);
+          expect(item.text.trim(), isNotEmpty, reason: item.title);
+        }
+      }
+    });
+
+    test('divindades lunares: mesma contagem e textos não vazios', () {
+      expect(moonDeitiesEn.length, moonDeitiesPt.length);
+      expect(moonDeitiesEs.length, moonDeitiesPt.length);
+      for (final list in [moonDeitiesPt, moonDeitiesEn, moonDeitiesEs]) {
+        for (final deity in list) {
+          expect(deity.name.trim(), isNotEmpty);
+          expect(deity.description.trim(), isNotEmpty, reason: deity.name);
+        }
       }
     });
 
@@ -66,7 +89,9 @@ void main() {
       expect(MoonContent.intro, moonIntroEn);
       expect(MoonContent.phaseKnowledge, moonPhaseKnowledgeEn);
       ContentLocale.instance.setLocale(const Locale('es'));
-      expect(MoonContent.esbats, moonEsbatsEs);
+      expect(MoonContent.esbatsIntro, moonEsbatsIntroEs);
+      expect(MoonContent.esbatItems, moonEsbatItemsEs);
+      expect(MoonContent.lunarDeities, moonDeitiesEs);
       expect(MoonContent.correspondences, moonCorrespondencesEs);
     });
   });

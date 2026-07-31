@@ -57,12 +57,75 @@ const Map<MoonPhase, MoonPhaseKnowledge> moonPhaseKnowledgeEs = {
   ),
 };
 
-const EsbatsContent moonEsbatsEs = (
-  what:
-      'Los esbats son las celebraciones de la luna llena — las reuniones "de trabajo" de la brujería, en contraste con los sabbats, que celebran el Sol y la rueda del año. En cada esbat se honra a la Luna en el auge de su poder y se realizan los hechizos más importantes del mes. Hay 12 o 13 esbats al año, y muchas tradiciones dan nombre a cada luna llena (Luna del Lobo, Luna de las Flores, Luna de la Cosecha...).',
-  how:
-      'Para celebrar: prepara el altar con velas blancas o plateadas, ofrece agua o leche a la Luna, carga tus cristales e instrumentos bajo la luz lunar, haz agua de luna y reserva un momento de adivinación. Incluso un ritual simple — encender una vela y agradecer — ya es un esbat.',
-);
+const String moonEsbatsIntroEs =
+    'Los esbats son las celebraciones de la luna llena — las reuniones "de '
+    'trabajo" de la brujería, en contraste con los sabbats, que celebran el '
+    'Sol y la rueda del año. En cada esbat se honra a la Luna en el auge de '
+    'su poder y se realizan los hechizos más importantes del mes.';
+
+const List<EsbatItem> moonEsbatItemsEs = [
+  (
+    emoji: '🌕',
+    title: 'Cuándo',
+    text:
+        'En la noche de luna llena — hay 12 o 13 al año, y muchas tradiciones dan nombre a cada una (Luna del Lobo, Luna de las Flores, Luna de la Cosecha...).',
+  ),
+  (
+    emoji: '🕯️',
+    title: 'El altar',
+    text:
+        'Prepara velas blancas o plateadas y ofrece agua o leche a la Luna.',
+  ),
+  (
+    emoji: '💎',
+    title: 'Cargar energía',
+    text:
+        'Deja cristales e instrumentos bajo la luz lunar para renovar su poder.',
+  ),
+  (
+    emoji: '🫙',
+    title: 'Agua de luna',
+    text: 'Prepara el agua de luna en el auge del poder lunar.',
+  ),
+  (
+    emoji: '🔮',
+    title: 'Adivinación',
+    text: 'Reserva un momento para tarot, runas o tu oráculo favorito.',
+  ),
+  (
+    emoji: '✨',
+    title: 'Simplicidad',
+    text: 'Incluso encender una vela y agradecer ya es un esbat.',
+  ),
+];
+
+const List<LunarDeity> moonDeitiesEs = [
+  (
+    name: 'Selene',
+    description:
+        'La propia Luna en la Grecia antigua: la titánide que cruza el cielo nocturno en su carro de plata.',
+  ),
+  (
+    name: 'Ártemis',
+    description:
+        'Diosa griega de la caza y la luna creciente, protectora de la naturaleza salvaje y la independencia.',
+  ),
+  (
+    name: 'Hécate',
+    description:
+        'Señora de las encrucijadas, de la magia y de la luna oscura — la gran bruja entre las diosas.',
+  ),
+  (
+    name: 'Isis',
+    description:
+        'Gran maga de Egipto, ligada a la luna, a los misterios y a la sanación.',
+  ),
+  (
+    name: 'Yemayá',
+    description:
+        'Reina del mar en las tradiciones afrobrasileñas, ligada a la luna, las mareas y la maternidad.',
+  ),
+];
 
 const List<String> moonCorrespondencesEs = [
   'Piedra luna',

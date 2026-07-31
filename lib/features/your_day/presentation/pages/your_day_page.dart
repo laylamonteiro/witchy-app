@@ -10,8 +10,10 @@ import '../../../settings/presentation/pages/settings_page.dart';
 import '../widgets/daily_affirmation_card.dart';
 import '../widgets/greeting_header.dart';
 import '../widgets/magical_weather_card.dart';
+import '../widgets/next_moon_phases_card.dart';
 import '../widgets/ritual_of_moment_card.dart';
 import '../widgets/shortcuts_grid.dart';
+import '../widgets/spell_recommendations_card.dart';
 
 /// Aba "Seu Dia" — o hub diário da Bruxa (primeira aba da bottom bar):
 /// saudação, lua de hoje, momento mágico, clima do dia (cache), afirmação,
@@ -87,6 +89,8 @@ class _YourDayPageState extends State<YourDayPage>
             const MagicalMomentCard(),
             const MagicalWeatherCard(),
             const DailyAffirmationCard(),
+            const NextMoonPhasesCard(),
+            const SpellRecommendationsCard(),
             const ShortcutsGrid(),
           ],
         ),

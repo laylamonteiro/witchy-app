@@ -56,12 +56,75 @@ const Map<MoonPhase, MoonPhaseKnowledge> moonPhaseKnowledgePt = {
   ),
 };
 
-const EsbatsContent moonEsbatsPt = (
-  what:
-      'Esbats são as celebrações da lua cheia — os encontros "de trabalho" da bruxaria, em contraste com os sabbats, que celebram o Sol e a roda do ano. Em cada esbat honra-se a Lua no auge do poder e realizam-se os feitiços mais importantes do mês. Há 12 ou 13 esbats por ano, e muitas tradições dão nome a cada lua cheia (Lua do Lobo, Lua das Flores, Lua da Colheita...).',
-  how:
-      'Para celebrar: prepare o altar com velas brancas ou prateadas, ofereça água ou leite à Lua, carregue seus cristais e instrumentos sob o luar, faça água de lua e reserve um momento de adivinhação. Mesmo um ritual simples — acender uma vela e agradecer — já é um esbat.',
-);
+const String moonEsbatsIntroPt =
+    'Esbats são as celebrações da lua cheia — os encontros "de trabalho" da '
+    'bruxaria, em contraste com os sabbats, que celebram o Sol e a roda do '
+    'ano. Em cada esbat honra-se a Lua no auge do poder e realizam-se os '
+    'feitiços mais importantes do mês.';
+
+const List<EsbatItem> moonEsbatItemsPt = [
+  (
+    emoji: '🌕',
+    title: 'Quando',
+    text:
+        'Na noite da lua cheia — há 12 ou 13 por ano, e muitas tradições dão nome a cada uma (Lua do Lobo, Lua das Flores, Lua da Colheita...).',
+  ),
+  (
+    emoji: '🕯️',
+    title: 'O altar',
+    text:
+        'Prepare velas brancas ou prateadas e ofereça água ou leite à Lua.',
+  ),
+  (
+    emoji: '💎',
+    title: 'Carregar energia',
+    text:
+        'Deixe cristais e instrumentos sob o luar para renovar o poder deles.',
+  ),
+  (
+    emoji: '🫙',
+    title: 'Água de lua',
+    text: 'Prepare a água de lua no auge do poder lunar.',
+  ),
+  (
+    emoji: '🔮',
+    title: 'Adivinhação',
+    text: 'Reserve um momento para tarot, runas ou o oráculo que preferir.',
+  ),
+  (
+    emoji: '✨',
+    title: 'Simplicidade',
+    text: 'Mesmo acender uma vela e agradecer já é um esbat.',
+  ),
+];
+
+const List<LunarDeity> moonDeitiesPt = [
+  (
+    name: 'Selene',
+    description:
+        'A própria Lua na Grécia antiga: a titânide que cruza o céu noturno em sua carruagem de prata.',
+  ),
+  (
+    name: 'Ártemis',
+    description:
+        'Deusa grega da caça e da lua crescente, protetora da natureza selvagem e da independência.',
+  ),
+  (
+    name: 'Hécate',
+    description:
+        'Senhora das encruzilhadas, da magia e da lua escura — a grande bruxa entre as deusas.',
+  ),
+  (
+    name: 'Ísis',
+    description:
+        'Grande maga do Egito, ligada à lua, aos mistérios e à cura.',
+  ),
+  (
+    name: 'Iemanjá',
+    description:
+        'Rainha do mar nas tradições afro-brasileiras, ligada à lua, às marés e à maternidade.',
+  ),
+];
 
 const List<String> moonCorrespondencesPt = [
   'Pedra da lua',

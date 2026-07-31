@@ -106,7 +106,12 @@ class RitualOfMomentCard extends StatelessWidget {
 
     candidates.sort((a, b) => a.date.compareTo(b.date));
     final next = candidates.first;
-    final days = next.date.difference(now).inDays.clamp(1, 9999);
+    // Dias de CALENDÁRIO (véspera = 1), nunca horas ÷ 24 — o evento de hoje
+    // já foi tratado acima, então aqui é sempre pelo menos 1.
+    final today = DateTime(now.year, now.month, now.day);
+    final targetDay =
+        DateTime(next.date.year, next.date.month, next.date.day);
+    final days = targetDay.difference(today).inDays.clamp(1, 9999);
 
     return MagicalCard(
       onTap: () => DeepLinkService.instance.dispatch(next.link),

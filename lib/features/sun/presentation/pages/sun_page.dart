@@ -28,37 +28,6 @@ class SunPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // O Sol agora (free) — período solar do momento
-          MagicalCard(
-            child: Column(
-              children: [
-                Text(
-                  l10n.sunNowTitle,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 12),
-                Text(nowPeriod.emoji, style: const TextStyle(fontSize: 48)),
-                const SizedBox(height: 8),
-                Text(
-                  nowPeriod.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: context.gc.starYellow,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  nowPeriod.goodFor,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(height: 1.4),
-                ),
-              ],
-            ),
-          ),
-
           // O Sol na bruxaria (premium)
           MagicalCard(
             child: PremiumContentSection(
@@ -112,6 +81,37 @@ class SunPage extends StatelessWidget {
                   ),
                 ),
                 Icon(Icons.chevron_right, color: context.gc.textSecondary),
+              ],
+            ),
+          ),
+
+          // O Sol agora (free) — período solar do momento
+          MagicalCard(
+            child: Column(
+              children: [
+                Text(
+                  l10n.sunNowTitle,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 12),
+                Text(nowPeriod.emoji, style: const TextStyle(fontSize: 48)),
+                const SizedBox(height: 8),
+                Text(
+                  nowPeriod.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.starYellow,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  nowPeriod.goodFor,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(height: 1.4),
+                ),
               ],
             ),
           ),

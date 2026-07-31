@@ -7,8 +7,8 @@ import '../../../../core/i18n/gender.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-/// Saudação do Seu Dia: Salem + "Boa noite, {nome}" (fallback por gênero)
-/// + data longa localizada.
+/// Saudação do Seu Dia: "Boa noite, {nome}" (fallback por gênero) + data
+/// longa localizada. Sem imagem do Salem — o mascote real já flutua na tela.
 class GreetingHeader extends StatelessWidget {
   const GreetingHeader({super.key});
 
@@ -40,33 +40,19 @@ class GreetingHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset(
-            'assets/icons/new_cat/cat_sit_tail_left.png',
-            width: 56,
-            height: 56,
-            errorBuilder: (_, __, ___) =>
-                const Text('🐈‍⬛', style: TextStyle(fontSize: 40)),
+          Text(
+            _greeting(l10n, name),
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _greeting(l10n, name),
-                  style: Theme.of(context).textTheme.headlineSmall,
+          const SizedBox(height: 2),
+          Text(
+            dateText,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.gc.textSecondary,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  dateText,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.gc.textSecondary,
-                      ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

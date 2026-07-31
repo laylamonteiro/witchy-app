@@ -134,8 +134,13 @@ class Sabbat {
   String get description => type.description;
   List<String> get rituals => type.rituals;
 
+  /// Diferença em DIAS DE CALENDÁRIO (não horas ÷ 24): na véspera é sempre
+  /// 1, no próprio dia é 0 — independente da hora atual. Evita "É hoje!"
+  /// aparecer na véspera à noite.
   int daysUntil(DateTime now) {
-    return date.difference(now).inDays;
+    final target = DateTime(date.year, date.month, date.day);
+    final today = DateTime(now.year, now.month, now.day);
+    return target.difference(today).inDays;
   }
 
   bool isPast(DateTime now) {
