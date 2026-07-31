@@ -227,16 +227,40 @@ de interface:
 5. **Widgets sem `BuildContext`** (ex.: `CustomPainter`, helpers estáticos)
    recebem os textos prontos pelo construtor — nunca chame
    `AppLocalizations.of(context)` onde não há `context` válido.
-6. **Conteúdo editorial** (verbetes da Enciclopédia, significados de cartas/
-   runas/números, lições das trilhas) permanece em PT por enquanto —
-   a regra acima vale para o *chrome* da interface (títulos, botões,
-   rótulos, diálogos, mensagens, dicas).
-7. A IA (Conselheiro Místico) já responde no idioma ativo: novos prompts
-   devem usar `_localizedInstruction()` e `GenderText`, como os existentes.
+6. **Conteúdo editorial** (verbetes da Enciclopédia, cartas, runas,
+   números, trilhas, feitiços, prompts de IA) vive em arquivos por locale —
+   `*_pt.dart` / `*_en.dart` / `*_es.dart` — selecionados em runtime pelo
+   `ContentLocale` (`lib/core/content/content_locale.dart`). Ao alterar
+   conteúdo, edite as TRÊS variantes; a paridade (mesmas chaves/contagens)
+   é verificada por testes bloqueantes no CI (`test/*_parity_test.dart`).
+7. A IA (Conselheiro Místico) responde no idioma ativo: os prompts por
+   idioma vivem em `lib/core/ai/prompts/ai_prompts_{pt,en,es}.dart` e usam
+   `GenderText`/helpers de gênero por idioma. Conteúdo escrito pela pessoa
+   usuária NUNCA é traduzido.
+8. **Identidades persistidas são invariantes**: seeds de feitiços/
+   afirmações ficam congeladas em PT (tradução só na exibição, via
+   `SpellLocalizer`/`AffirmationLocalizer`); ids, enums e slugs de assets
+   não mudam com o idioma.
+9. **Prova de completude**: `bash scripts/check_hardcoded_pt.sh` precisa
+   passar limpo (é bloqueante no CI de branch) e
+   `bash scripts/check_arb_sync.sh` garante a paridade dos ARBs.
 
-> O seletor de idioma está temporariamente oculto nas Configurações
-> (`_showLanguageOption` em `settings_page.dart`) até a tradução total do
-> app ser concluída.
+#### Como adicionar um novo idioma
+
+1. Crie `lib/l10n/app_<código>.arb` com TODAS as chaves do template
+   `app_pt.arb` traduzidas.
+2. Adicione o locale em `LanguageProvider.supportedLocales` e no seletor
+   (`settings_page.dart`).
+3. Acrescente o parâmetro do novo idioma em `ContentLocale.select` e crie
+   as variantes `*_<código>.dart` de cada arquivo de conteúdo (o compilador
+   aponta todos os pontos pendentes).
+4. Crie `ai_prompts_<código>.dart` e os títulos do clima diário no novo
+   idioma (`daily_weather_content_<código>.dart` + `looksComplete`).
+5. Estenda os testes de paridade e o smoke (`test/i18n_smoke_test.dart`).
+
+> O seletor de idioma (pt-BR/EN/ES) está ativo nas Configurações. O idioma
+> inicial segue o do dispositivo (fallback pt-BR) e a escolha manual fica
+> persistida; trocar o idioma reagenda as notificações no novo idioma.
 
 ### Outras regras do projeto
 
