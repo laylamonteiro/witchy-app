@@ -1,5 +1,10 @@
+import '../../../../core/content/content_locale.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import '../../../grimoire/data/models/spell_model.dart';
+
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 class LunarProvider with ChangeNotifier {
   DateTime _selectedDate = DateTime.now();
@@ -192,43 +197,43 @@ class LunarProvider with ChangeNotifier {
       if (isGoodTime) {
         switch (currentPhase) {
           case MoonPhase.waxingCrescent:
-            return 'Momento ideal para plantar intenções e iniciar manifestações. A energia está crescendo!';
+            return _l10n.lunarAdviceWaxingCrescent;
           case MoonPhase.firstQuarter:
-            return 'Fase de ação! Tome decisões importantes e supere obstáculos em seus feitiços de atração.';
+            return _l10n.lunarAdviceFirstQuarter;
           case MoonPhase.waxingGibbous:
-            return 'Refine e ajuste seus rituais. A Lua Cheia se aproxima - prepare-se para o ápice!';
+            return _l10n.lunarAdviceWaxingGibbous;
           case MoonPhase.fullMoon:
-            return 'Poder máximo! Momento perfeito para rituais importantes de atração, amor e prosperidade.';
+            return _l10n.lunarAdviceFullMoon;
           default:
-            return 'Momento favorável para feitiços de atração e crescimento.';
+            return _l10n.lunarAdviceWaxingGeneric;
         }
       } else {
         final daysUntilWaxing = _getDaysUntilPhase(MoonPhase.waxingCrescent);
         if (daysUntilWaxing != null && daysUntilWaxing <= 3) {
-          return 'A lua crescente está chegando em $daysUntilWaxing ${daysUntilWaxing == 1 ? 'dia' : 'dias'}. Prepare seus rituais!';
+          return _l10n.lunarWaxingComing(daysUntilWaxing);
         }
-        return 'Para melhores resultados em feitiços de atração, aguarde a próxima lua crescente.';
+        return _l10n.lunarWaitWaxing;
       }
     } else {
       if (isGoodTime) {
         switch (currentPhase) {
           case MoonPhase.waningGibbous:
-            return 'Momento de gratidão e liberação. Deixe ir o que não te serve mais.';
+            return _l10n.lunarAdviceWaningGibbous;
           case MoonPhase.lastQuarter:
-            return 'Fase poderosa para banimento e corte de laços. Libere, perdoe, siga em frente.';
+            return _l10n.lunarAdviceLastQuarter;
           case MoonPhase.waningCrescent:
-            return 'Tempo de descanso e limpeza profunda. Banimentos e proteções são muito efetivos.';
+            return _l10n.lunarAdviceWaningCrescent;
           case MoonPhase.newMoon:
-            return 'Fim de ciclo e novos começos. Banimentos, limpezas e proteções têm poder total.';
+            return _l10n.lunarAdviceNewMoon;
           default:
-            return 'Momento favorável para feitiços de banimento e corte.';
+            return _l10n.lunarAdviceWaningGeneric;
         }
       } else {
         final daysUntilWaning = _getDaysUntilPhase(MoonPhase.waningGibbous);
         if (daysUntilWaning != null && daysUntilWaning <= 3) {
-          return 'A lua minguante está chegando em $daysUntilWaning ${daysUntilWaning == 1 ? 'dia' : 'dias'}. Prepare-se!';
+          return _l10n.lunarWaningComing(daysUntilWaning);
         }
-        return 'Para melhores resultados em feitiços de banimento, aguarde a próxima lua minguante.';
+        return _l10n.lunarWaitWaning;
       }
     }
   }

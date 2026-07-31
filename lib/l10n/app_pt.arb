@@ -1267,5 +1267,56 @@
         "type": "String"
       }
     }
-  }
+  },
+  "authErrConnection": "Erro de conexão: {error}",
+  "@authErrConnection": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrGoogleCredentials": "Não foi possível obter credenciais do Google",
+  "authErrFacebookUnavailable": "Login com Facebook não está mais disponível",
+  "authErrAppleUnavailable": "Login com Apple não disponível",
+  "authErrNoUser": "Nenhum usuário logado",
+  "authErrUserNotFound": "Usuário não encontrado",
+  "authErrEmailInUse": "Este email já está em uso",
+  "authErrNetworkCheck": "Erro de conexão. Verifique sua internet.",
+  "authErrCodeProcess": "Erro ao processar código: {error}",
+  "@authErrCodeProcess": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "lunarAdviceWaxingCrescent": "Momento ideal para plantar intenções e iniciar manifestações. A energia está crescendo!",
+  "lunarAdviceFirstQuarter": "Fase de ação! Tome decisões importantes e supere obstáculos em seus feitiços de atração.",
+  "lunarAdviceWaxingGibbous": "Refine e ajuste seus rituais. A Lua Cheia se aproxima - prepare-se para o ápice!",
+  "lunarAdviceFullMoon": "Poder máximo! Momento perfeito para rituais importantes de atração, amor e prosperidade.",
+  "lunarAdviceWaxingGeneric": "Momento favorável para feitiços de atração e crescimento.",
+  "lunarWaxingComing": "{count, plural, one{A lua crescente está chegando em 1 dia. Prepare seus rituais!} other{A lua crescente está chegando em {count} dias. Prepare seus rituais!}}",
+  "@lunarWaxingComing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lunarWaitWaxing": "Para melhores resultados em feitiços de atração, aguarde a próxima lua crescente.",
+  "lunarAdviceWaningGibbous": "Momento de gratidão e liberação. Deixe ir o que não te serve mais.",
+  "lunarAdviceLastQuarter": "Fase poderosa para banimento e corte de laços. Libere, perdoe, siga em frente.",
+  "lunarAdviceWaningCrescent": "Tempo de descanso e limpeza profunda. Banimentos e proteções são muito efetivos.",
+  "lunarAdviceNewMoon": "Fim de ciclo e novos começos. Banimentos, limpezas e proteções têm poder total.",
+  "lunarAdviceWaningGeneric": "Momento favorável para feitiços de banimento e corte.",
+  "lunarWaningComing": "{count, plural, one{A lua minguante está chegando em 1 dia. Prepare-se!} other{A lua minguante está chegando em {count} dias. Prepare-se!}}",
+  "@lunarWaningComing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lunarWaitWaning": "Para melhores resultados em feitiços de banimento, aguarde a próxima lua minguante."
 }

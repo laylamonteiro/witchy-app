@@ -28,11 +28,25 @@ matches=$(rg -n "$PATTERN" "$ROOT/lib" \
   --glob '!**/*_en.dart' \
   --glob '!**/*_es.dart' \
   | python3 -c "
-import re, sys
+import linecache, re, sys
 accent = re.compile(r'$PATTERN')
+logcall = re.compile(r'(await\s+)?(print|debugPrint|debugLog|_log|_addLog)\s*\(')
+
+def in_log_continuation(path, lineno):
+    # Continuação multilinha de chamada de log: procura, até 5 linhas acima,
+    # uma abertura de log ainda não fechada até a linha anterior à atual.
+    for start in range(lineno - 1, max(lineno - 6, 0), -1):
+        opening = linecache.getline(path, start)
+        if not logcall.match(opening.lstrip()):
+            continue
+        span = ''.join(
+            linecache.getline(path, n) for n in range(start, lineno))
+        return span.count('(') > span.count(')')
+    return False
+
 for line in sys.stdin:
     line = line.rstrip('\n')
-    _, _, code = line.split(':', 2)
+    path, lineno, code = line.split(':', 2)
     stripped = code.lstrip()
     # Linha inteira de comentário.
     if stripped.startswith('//'):
@@ -41,7 +55,9 @@ for line in sys.stdin:
     if re.match(r'throw\s+(ArgumentError|StateError|UnsupportedError)\(', stripped):
         continue
     # Chamadas de log/debug não são texto visível ao usuário.
-    if re.match(r'(await\s+)?(print|debugPrint|debugLog|_log|_addLog)\s*\(', stripped):
+    if logcall.match(stripped):
+        continue
+    if in_log_continuation(path, int(lineno)):
         continue
     # Argumentos nomeados por locale de ContentLocale.select(pt:/es:) —
     # conteúdo já localizado inline; o EN fica ao lado sem acentos.
