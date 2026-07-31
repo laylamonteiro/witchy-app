@@ -1,3 +1,5 @@
+import '../content/content_locale.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -6,6 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import '../config/revenuecat_config.dart';
+
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 /// Status de compra
 enum PurchaseStatus {
@@ -399,7 +404,7 @@ class PaymentService extends ChangeNotifier {
 
     if (!RevenueCatConfig.isConfigured) {
       debugPrint('❌ Compra falhou: RevenueCat não configurado');
-      return PurchaseResult.error('Pagamentos não configurados');
+      return PurchaseResult.error(_l10n.paymentNotConfigured);
     }
 
     _setStatus(PurchaseStatus.loading);
@@ -412,7 +417,7 @@ class PaymentService extends ChangeNotifier {
         debugPrint('❌ Nenhuma oferta disponível');
         debugPrint('💡 Verifique se a offering "default" existe no RevenueCat Dashboard');
         _setStatus(PurchaseStatus.error);
-        return PurchaseResult.error('Nenhuma oferta disponível. Verifique a configuração no RevenueCat Dashboard.');
+        return PurchaseResult.error(_l10n.paymentNoOffers);
       }
 
       debugPrint('✅ Offering encontrada: ${offerings.current!.identifier}');
@@ -441,7 +446,7 @@ class PaymentService extends ChangeNotifier {
         debugPrint('💡 Verifique se o produto está associado à offering no RevenueCat Dashboard');
         debugPrint('   Pacotes disponíveis: ${offerings.current!.availablePackages.map((p) => p.identifier).join(", ")}');
         _setStatus(PurchaseStatus.error);
-        return PurchaseResult.error('Produto "$packageName" não encontrado. Verifique a configuração.');
+        return PurchaseResult.error(_l10n.paymentProductNotFound(packageName));
       }
 
       debugPrint('✅ Pacote encontrado: ${package.identifier}');
@@ -489,7 +494,7 @@ class PaymentService extends ChangeNotifier {
   /// Compra um pacote específico
   Future<PurchaseResult> purchasePackage(Package package) async {
     if (!RevenueCatConfig.isConfigured) {
-      return PurchaseResult.error('Pagamentos não configurados');
+      return PurchaseResult.error(_l10n.paymentNotConfigured);
     }
 
     _setStatus(PurchaseStatus.loading);
@@ -520,7 +525,7 @@ class PaymentService extends ChangeNotifier {
   /// Restaura compras anteriores
   Future<PurchaseResult> restorePurchases() async {
     if (!RevenueCatConfig.isConfigured) {
-      return PurchaseResult.error('Pagamentos não configurados');
+      return PurchaseResult.error(_l10n.paymentNotConfigured);
     }
 
     _setStatus(PurchaseStatus.loading);
@@ -695,47 +700,33 @@ class PaymentService extends ChangeNotifier {
   String _getErrorMessage(PurchasesErrorCode errorCode) {
     switch (errorCode) {
       case PurchasesErrorCode.purchaseCancelledError:
-        return 'Compra cancelada';
+        return _l10n.paymentErrCancelled;
       case PurchasesErrorCode.storeProblemError:
-        return 'Problema com a loja. Tente novamente mais tarde.\n\n'
-            'Verifique se você está usando uma conta de teste configurada (sandbox).';
+        return _l10n.paymentErrStore;
       case PurchasesErrorCode.purchaseNotAllowedError:
-        return 'Compras não permitidas neste dispositivo.\n\n'
-            'Verifique as configurações de Restrições e Compras In-App.';
+        return _l10n.paymentErrNotAllowed;
       case PurchasesErrorCode.purchaseInvalidError:
-        return 'Compra inválida.\n\n'
-            'Os produtos podem não estar configurados corretamente nas lojas.';
+        return _l10n.paymentErrInvalid;
       case PurchasesErrorCode.productNotAvailableForPurchaseError:
-        return 'Produto não disponível para compra.\n\n'
-            'Verifique se:\n'
-            '• Os produtos foram criados no App Store Connect / Google Play Console\n'
-            '• Os produtos estão com status "Ready to Submit" ou aprovados\n'
-            '• Os IDs dos produtos correspondem exatamente aos configurados';
+        return _l10n.paymentErrUnavailable;
       case PurchasesErrorCode.productAlreadyPurchasedError:
-        return 'Você já possui este produto.\n\n'
-            'Tente restaurar suas compras.';
+        return _l10n.paymentErrAlreadyOwned;
       case PurchasesErrorCode.networkError:
-        return 'Erro de conexão. Verifique sua internet e tente novamente.';
+        return _l10n.paymentErrNetwork;
       case PurchasesErrorCode.receiptAlreadyInUseError:
-        return 'Este recibo já está em uso por outra conta.\n\n'
-            'Você pode ter criado uma compra com outra conta anteriormente.';
+        return _l10n.paymentErrReceiptInUse;
       case PurchasesErrorCode.invalidReceiptError:
-        return 'Recibo inválido.\n\n'
-            'Tente desinstalar e reinstalar o app.';
+        return _l10n.paymentErrInvalidReceipt;
       case PurchasesErrorCode.missingReceiptFileError:
-        return 'Arquivo de recibo não encontrado.\n\n'
-            'Tente fazer logout e login novamente no App Store / Google Play.';
+        return _l10n.paymentErrMissingReceipt;
       case PurchasesErrorCode.paymentPendingError:
-        return 'Pagamento pendente. Aguarde a confirmação da loja.';
+        return _l10n.paymentErrPending;
       case PurchasesErrorCode.configurationError:
-        return 'Erro de configuração do RevenueCat.\n\n'
-            'Verifique as API keys e a configuração no dashboard.';
+        return _l10n.paymentErrConfiguration;
       case PurchasesErrorCode.invalidCredentialsError:
-        return 'Credenciais inválidas.\n\n'
-            'Verifique se as API keys do RevenueCat estão corretas.';
+        return _l10n.paymentErrCredentials;
       default:
-        return 'Erro ao processar compra (código: $errorCode).\n\n'
-            'Verifique os logs do console para mais detalhes.';
+        return _l10n.paymentErrGeneric('$errorCode');
     }
   }
 }

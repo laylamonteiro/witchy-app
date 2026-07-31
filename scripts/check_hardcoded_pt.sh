@@ -37,6 +37,9 @@ for line in sys.stdin:
     # Linha inteira de comentário.
     if stripped.startswith('//'):
         continue
+    # Exceções internas de programação (guards) não são UI.
+    if re.match(r'throw\s+(ArgumentError|StateError|UnsupportedError)\(', stripped):
+        continue
     # Chamadas de log/debug não são texto visível ao usuário.
     if re.match(r'(await\s+)?(print|debugPrint|debugLog|_log|_addLog)\s*\(', stripped):
         continue
