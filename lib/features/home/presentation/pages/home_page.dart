@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// seção à raiz; a própria seção (ex.: Enciclopédia) escolhe a sub-aba e
   /// consome o link.
   void _onDeepLink() {
-    final link = DeepLinkService.instance.pending.value;
+    final link = DeepLinkService.instance.pending.value?.link;
     if (link == null || !mounted) return;
     _navigatorKeys[link.homeTab]
         .currentState

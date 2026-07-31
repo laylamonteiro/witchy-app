@@ -1821,5 +1821,26 @@
   "magicalMomentWeekdaysTitle": "Dias da semana",
   "magicalMomentPeriodsTitle": "Horas do dia",
   "featurePreviewGuidedRituals": "O ritual passo a passo completo, com progresso e XP, é exclusivo do plano Premium.",
-  "featurePreviewPersonalEncyclopedia": "Adicionar suas próprias ervas, pedras e cores à enciclopédia é exclusivo do plano Premium."
+  "featurePreviewPersonalEncyclopedia": "Adicionar suas próprias ervas, pedras e cores à enciclopédia é exclusivo do plano Premium.",
+  "notifFullMoonDayTitle": "🌕 A Lua Cheia é hoje!",
+  "notifFullMoonDayBody": "Esta noite: colete sua Água de Lua, carregue seus cristais e faça o ritual guiado. Toque para começar.",
+  "notifNewMoonDayTitle": "🌑 A Lua Nova é hoje!",
+  "notifNewMoonDayBody": "Noite perfeita para plantar intenções. Toque para fazer o ritual guiado.",
+  "notifSabbatDayTitle": "{emoji} Hoje é {name}!",
+  "@notifSabbatDayTitle": {
+    "placeholders": {
+      "emoji": {},
+      "name": {}
+    }
+  },
+  "notifSabbatDayBody": "A roda girou! Toque para fazer o ritual guiado de {name} e celebrar a data.",
+  "@notifSabbatDayBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "notifSunWaterTitle": "🌞 Domingo, dia do Sol",
+  "notifSunWaterBody": "Manhã perfeita para preparar sua Água Solar. Toque para ver o passo a passo.",
+  "settingsSunWater": "Água Solar (domingos)",
+  "settingsSunWaterDesc": "Lembrete semanal no dia do Sol para preparar sua água solar"
 }

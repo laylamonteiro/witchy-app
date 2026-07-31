@@ -768,6 +768,21 @@ class SettingsPage extends StatelessWidget {
                           }
                         },
                       ),
+                      Divider(color: context.gc.textPrimary10),
+                      _NotificationTile(
+                        icon: '🌞',
+                        title: AppLocalizations.of(context).settingsSunWater,
+                        subtitle:
+                            AppLocalizations.of(context).settingsSunWaterDesc,
+                        value: notificationProvider.sunWaterNotifications,
+                        onChanged: (value) async {
+                          await notificationProvider
+                              .setSunWaterNotifications(value);
+                          if (context.mounted) {
+                            _scheduleNotifications(context);
+                          }
+                        },
+                      ),
                     ],
                   );
                 },

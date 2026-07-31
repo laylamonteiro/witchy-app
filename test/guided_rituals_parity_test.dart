@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:grimorio_de_bolso/features/guided_rituals/data/models/guided_ritual_model.dart';
 import 'package:grimorio_de_bolso/features/guided_rituals/data/models/guided_rituals_data.dart';
 import 'package:grimorio_de_bolso/features/guided_rituals/data/models/guided_rituals_en.dart';
 import 'package:grimorio_de_bolso/features/guided_rituals/data/models/guided_rituals_es.dart';

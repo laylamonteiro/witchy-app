@@ -78,7 +78,10 @@ class NotificationService {
     ));
   }
 
-  Future<NotificationScheduleResult> showDebugNotification() async {
+  /// [payload] permite testar o fluxo notificação → deep link de qualquer
+  /// destino (ex.: `ritual/sabbat/imbolc`); default = aba Lua.
+  Future<NotificationScheduleResult> showDebugNotification(
+      {String? payload}) async {
     try {
       final granted = await requestPermissions();
       if (!granted) {
@@ -92,7 +95,7 @@ class NotificationService {
         debugNotificationId,
         _l10n.notifDebugTitle,
         _l10n.notifDebugBody,
-        payload: AppDeepLink.moonEncyclopedia.payload,
+        payload: payload ?? AppDeepLink.moonEncyclopedia.payload,
         NotificationDetails(
           android: AndroidNotificationDetails(
             'debug_notifications',
@@ -121,6 +124,10 @@ class NotificationService {
     }
   }
 
+  /// Id fixo da notificação semanal de água solar (agendamento recorrente,
+  /// um único slot).
+  static const int sunWaterNotificationId = 700001;
+
   @visibleForTesting
   static int notificationId(String type, DateTime eventDate) {
     final datePart =
@@ -128,6 +135,9 @@ class NotificationService {
     final prefix = switch (type) {
       'full_moon' => 10,
       'new_moon' => 20,
+      'full_moon_day' => 40,
+      'new_moon_day' => 50,
+      'sabbat_day' => 60,
       _ => 30,
     };
     return (prefix * 10000000) + datePart;
@@ -185,6 +195,59 @@ class NotificationService {
         payload: AppDeepLink.moonEncyclopedia.payload,
       );
 
+  /// No dia da lua cheia, às 19h: convite para o ritual guiado + água de lua.
+  Future<void> scheduleFullMoonDayNotification(DateTime eventDate) =>
+      _schedule(
+        id: notificationId('full_moon_day', eventDate),
+        title: _l10n.notifFullMoonDayTitle,
+        body: _l10n.notifFullMoonDayBody,
+        localDate: reminderDate(eventDate, daysBefore: 0, hour: 19),
+        details: _moonDetails(),
+        payload: AppDeepLink.guidedRitualFullMoon.payload,
+      );
+
+  /// No dia da lua nova, às 19h: convite para plantar intenções.
+  Future<void> scheduleNewMoonDayNotification(DateTime eventDate) => _schedule(
+        id: notificationId('new_moon_day', eventDate),
+        title: _l10n.notifNewMoonDayTitle,
+        body: _l10n.notifNewMoonDayBody,
+        localDate: reminderDate(eventDate, daysBefore: 0, hour: 19),
+        details: _moonDetails(),
+        payload: AppDeepLink.guidedRitualNewMoon.payload,
+      );
+
+  /// No dia do sabbat, às 9h: abre a página do ritual guiado do sabbat.
+  Future<void> scheduleSabbatDayNotification(Sabbat sabbat) => _schedule(
+        id: notificationId('sabbat_day', sabbat.date),
+        title: _l10n.notifSabbatDayTitle(sabbat.emoji, sabbat.name),
+        body: _l10n.notifSabbatDayBody(sabbat.name),
+        localDate: reminderDate(sabbat.date, daysBefore: 0, hour: 9),
+        payload:
+            '${AppDeepLink.guidedRitualSabbat.payload}/${sabbat.type.name.toLowerCase()}',
+        details: _sabbatDetails(),
+      );
+
+  /// Água solar: notificação semanal aos domingos (dia do Sol), 8h.
+  /// Opt-in — só é agendada quando o toggle dedicado está ligado.
+  Future<void> scheduleSunWaterNotification() async {
+    final now = DateTime.now();
+    // Próximo domingo às 8h (hoje mesmo, se ainda não passou).
+    var next = DateTime(now.year, now.month, now.day, 8);
+    while (next.weekday != DateTime.sunday || !next.isAfter(now)) {
+      next = next.add(const Duration(days: 1));
+    }
+    await _notifications.zonedSchedule(
+      sunWaterNotificationId,
+      _l10n.notifSunWaterTitle,
+      _l10n.notifSunWaterBody,
+      tz.TZDateTime.from(next.toUtc(), tz.UTC),
+      _moonDetails(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      payload: AppDeepLink.guidedRitualSunWater.payload,
+    );
+  }
+
   NotificationDetails _moonDetails() => NotificationDetails(
         android: AndroidNotificationDetails(
           'moon_notifications',
@@ -203,17 +266,19 @@ class NotificationService {
         body: _l10n.notifSabbatBody(sabbat.name),
         localDate: reminderDate(sabbat.date, daysBefore: 3, hour: 9),
         payload: AppDeepLink.sabbatsEncyclopedia.payload,
-        details: NotificationDetails(
-          android: AndroidNotificationDetails(
-            'sabbat_notifications',
-            _l10n.notifChannelSabbatName,
-            channelDescription: _l10n.notifChannelSabbatDesc,
-            importance: Importance.high,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
-          ),
-          iOS: const DarwinNotificationDetails(),
+        details: _sabbatDetails(),
+      );
+
+  NotificationDetails _sabbatDetails() => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'sabbat_notifications',
+          _l10n.notifChannelSabbatName,
+          channelDescription: _l10n.notifChannelSabbatDesc,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
         ),
+        iOS: const DarwinNotificationDetails(),
       );
 
   Future<void> cancelAllNotifications() => _notifications.cancelAll();
@@ -233,6 +298,7 @@ class NotificationService {
     required List<DateTime> fullMoonDates,
     required List<DateTime> newMoonDates,
     required List<Sabbat> sabbats,
+    bool sunWater = false,
   }) async {
     try {
       final granted = await requestPermissions();
@@ -246,12 +312,18 @@ class NotificationService {
       await cancelAllNotifications();
       for (final date in fullMoonDates) {
         await scheduleFullMoonNotification(date);
+        await scheduleFullMoonDayNotification(date);
       }
       for (final date in newMoonDates) {
         await scheduleNewMoonNotification(date);
+        await scheduleNewMoonDayNotification(date);
       }
       for (final sabbat in sabbats) {
         await scheduleSabbatNotification(sabbat);
+        await scheduleSabbatDayNotification(sabbat);
+      }
+      if (sunWater) {
+        await scheduleSunWaterNotification();
       }
       final pending = await _notifications.pendingNotificationRequests();
       return NotificationScheduleResult(

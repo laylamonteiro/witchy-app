@@ -1259,5 +1259,15 @@
   "magicalMomentWeekdaysTitle": "Days of the week",
   "magicalMomentPeriodsTitle": "Hours of the day",
   "featurePreviewGuidedRituals": "The full step-by-step ritual, with progress and XP, is exclusive to the Premium plan.",
-  "featurePreviewPersonalEncyclopedia": "Adding your own herbs, stones and colors to the encyclopedia is exclusive to the Premium plan."
+  "featurePreviewPersonalEncyclopedia": "Adding your own herbs, stones and colors to the encyclopedia is exclusive to the Premium plan.",
+  "notifFullMoonDayTitle": "🌕 The Full Moon is today!",
+  "notifFullMoonDayBody": "Tonight: collect your Moon Water, charge your crystals and do the guided ritual. Tap to begin.",
+  "notifNewMoonDayTitle": "🌑 The New Moon is today!",
+  "notifNewMoonDayBody": "A perfect night to plant intentions. Tap to do the guided ritual.",
+  "notifSabbatDayTitle": "{emoji} Today is {name}!",
+  "notifSabbatDayBody": "The wheel has turned! Tap to do the {name} guided ritual and celebrate the day.",
+  "notifSunWaterTitle": "🌞 Sunday, the day of the Sun",
+  "notifSunWaterBody": "A perfect morning to prepare your Sun Water. Tap to see the step-by-step.",
+  "settingsSunWater": "Sun Water (Sundays)",
+  "settingsSunWaterDesc": "Weekly reminder on the day of the Sun to prepare your sun water"
 }

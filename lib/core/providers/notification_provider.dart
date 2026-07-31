@@ -13,6 +13,8 @@ class NotificationProvider with ChangeNotifier {
   bool _fullMoonNotifications = true;
   bool _newMoonNotifications = true;
   bool _sabbatNotifications = true;
+  // Água solar é opt-in (semanal, aos domingos) para não virar spam.
+  bool _sunWaterNotifications = false;
   bool _initialized = false;
   bool? _permissionGranted;
   int _scheduledCount = 0;
@@ -28,6 +30,7 @@ class NotificationProvider with ChangeNotifier {
   bool get fullMoonNotifications => _fullMoonNotifications;
   bool get newMoonNotifications => _newMoonNotifications;
   bool get sabbatNotifications => _sabbatNotifications;
+  bool get sunWaterNotifications => _sunWaterNotifications;
   bool? get permissionGranted => _permissionGranted;
   int get scheduledCount => _scheduledCount;
   String? get lastError => _lastError;
@@ -39,8 +42,10 @@ class NotificationProvider with ChangeNotifier {
   Future<bool?> areNotificationsEnabled() =>
       _notificationService.areNotificationsEnabled();
 
-  Future<NotificationScheduleResult> sendDebugNotification() async {
-    final result = await _notificationService.showDebugNotification();
+  Future<NotificationScheduleResult> sendDebugNotification(
+      {String? payload}) async {
+    final result =
+        await _notificationService.showDebugNotification(payload: payload);
     _permissionGranted = result.permissionGranted;
     _lastError = result.error;
     notifyListeners();
@@ -71,6 +76,7 @@ class NotificationProvider with ChangeNotifier {
     _fullMoonNotifications = _prefs.getBool('fullMoonNotifications') ?? true;
     _newMoonNotifications = _prefs.getBool('newMoonNotifications') ?? true;
     _sabbatNotifications = _prefs.getBool('sabbatNotifications') ?? true;
+    _sunWaterNotifications = _prefs.getBool('sunWaterNotifications') ?? false;
   }
 
   Future<void> setFullMoonNotifications(bool value) async {
@@ -88,6 +94,12 @@ class NotificationProvider with ChangeNotifier {
   Future<void> setSabbatNotifications(bool value) async {
     _sabbatNotifications = value;
     await _prefs.setBool('sabbatNotifications', value);
+    notifyListeners();
+  }
+
+  Future<void> setSunWaterNotifications(bool value) async {
+    _sunWaterNotifications = value;
+    await _prefs.setBool('sunWaterNotifications', value);
     notifyListeners();
   }
 
@@ -129,7 +141,8 @@ class NotificationProvider with ChangeNotifier {
 
     if (!_fullMoonNotifications &&
         !_newMoonNotifications &&
-        !_sabbatNotifications) {
+        !_sabbatNotifications &&
+        !_sunWaterNotifications) {
       await _notificationService.cancelAllNotifications();
       _permissionGranted = true;
       _scheduledCount = 0;
@@ -142,6 +155,7 @@ class NotificationProvider with ChangeNotifier {
       fullMoonDates: fullMoons,
       newMoonDates: newMoons,
       sabbats: sabbats,
+      sunWater: _sunWaterNotifications,
     );
     _permissionGranted = result.permissionGranted;
     _scheduledCount = result.scheduledCount;

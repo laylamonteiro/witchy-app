@@ -13,6 +13,8 @@ import '../../data/data_sources/archetypes_data.dart';
 import '../../data/data_sources/angels_data.dart';
 import '../../data/data_sources/demons_data.dart';
 import '../../data/data_sources/sacred_symbols_data.dart';
+import '../../../guided_rituals/data/models/guided_rituals_data.dart';
+import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
 import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
 import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
@@ -68,14 +70,30 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
 
   /// Deep link para uma sub-aba da Enciclopédia (lua cheia → Lua, sabbat →
   /// Sabbats...): navega e consome o link. Destinos de outras seções são
-  /// ignorados aqui (a seção dona consome).
+  /// ignorados aqui (a seção dona consome). Destinos de ritual guiado abrem
+  /// a sub-aba e empilham a página guiada por cima (bottom bar visível).
   void _onDeepLink() {
-    final link = DeepLinkService.instance.pending.value;
-    final target = link?.encyclopediaTab;
-    if (target == null || !mounted) return;
+    final pending = DeepLinkService.instance.pending.value;
+    final target = pending?.link.encyclopediaTab;
+    if (pending == null || target == null || !mounted) return;
     if (_tabController.index != target) {
       _tabController.animateTo(target);
     }
+
+    if (pending.link.isGuidedRitual) {
+      // Sabbat resolve o id pelo argumento (ritual/sabbat/<nome>); os demais
+      // têm ritualId fixo. Argumento inválido = só abre a sub-aba.
+      final ritualId = pending.link.ritualId ??
+          (pending.arg != null ? 'sabbat_${pending.arg}' : null);
+      if (ritualId != null && AllGuidedRituals.byId(ritualId) != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => GuidedRitualPage(ritualId: ritualId),
+          ),
+        );
+      }
+    }
+
     DeepLinkService.instance.consume();
   }
 
