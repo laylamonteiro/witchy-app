@@ -314,9 +314,9 @@ class _SpreadTabState extends State<_SpreadTab> {
                 textCapitalization: TextCapitalization.sentences,
                 style: TextStyle(color: context.gc.textPrimary),
                 decoration: InputDecoration(
-                  labelText: $L.tarotQuestionOptional,
+                  labelText: AppLocalizations.of(context).tarotQuestionOptional,
                   labelStyle: TextStyle(color: context.gc.textSecondary),
-                  hintText: $L.tarotQuestionHint,
+                  hintText: AppLocalizations.of(context).tarotQuestionHint,
                   hintStyle: TextStyle(
                     color: context.gc.textSecondary.withValues(alpha: 0.6),
                     fontSize: 13,
@@ -452,7 +452,7 @@ class _SpreadTabState extends State<_SpreadTab> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
                 child: Text(
-                  $L.tarotQuestionPrefix(_question),
+                  AppLocalizations.of(context).tarotQuestionPrefix(_question),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
                         fontStyle: FontStyle.italic,
