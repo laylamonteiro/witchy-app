@@ -681,7 +681,9 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  /// Configurações do Salem: mostrar/esconder o mascote e rever o tour.
+  /// Configurações do Salem: rever o tour guiado. (Esconder o Salem é um
+  /// segredo do próprio gatinho: 5 toques nele — e ele sempre volta na
+  /// próxima sessão ou com 5 toques na tela.)
   void _showSalemBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -719,19 +721,6 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(AppLocalizations.of(context).settingsShowSalem),
-                subtitle: Text(
-                  AppLocalizations.of(context).settingsShowSalemDesc,
-                  style: TextStyle(
-                    color: context.gc.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                value: !mascot.isHidden,
-                onChanged: (value) => mascot.setHidden(!value),
-              ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.replay, color: context.gc.lilac),

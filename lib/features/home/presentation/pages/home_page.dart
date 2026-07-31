@@ -227,6 +227,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     size: 100,
                     positionNotifier: _mascotPosition,
                     onDismissed: mascot.hide,
+                    // Voltou do esconderijo → materializa em fumaça.
+                    appearInSmoke: mascot.appearPending,
+                    onAppeared: mascot.consumeAppearPending,
                   ),
                 ] else
                   // Salem escondido: contador invisível de toques para ele

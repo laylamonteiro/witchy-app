@@ -35,6 +35,13 @@ class DraggableCatMascot extends StatefulWidget {
   /// esconde o mascote (5 toques seguidos na tela o trazem de volta).
   final VoidCallback? onDismissed;
 
+  /// Ao montar, o Salem MATERIALIZA em fumaça (espelho do sumiço) — usado
+  /// quando ele volta do esconderijo.
+  final bool appearInSmoke;
+
+  /// Fim da animação de materializar (o pai consome a flag transitória).
+  final VoidCallback? onAppeared;
+
   const DraggableCatMascot({
     super.key,
     this.initialX = 50,
@@ -44,6 +51,8 @@ class DraggableCatMascot extends StatefulWidget {
     this.positionNotifier,
     this.assetFolder = 'assets/icons/new_cat',
     this.onDismissed,
+    this.appearInSmoke = false,
+    this.onAppeared,
   });
 
   @override
@@ -59,6 +68,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   bool _isHappy = false; // Expressão feliz quando toca
   bool _isSleepWarning = false;
   bool _isDismissing = false; // Sumindo em fumaça (5 toques rápidos)
+  bool _isMaterializing = false; // Voltando do esconderijo em fumaça
 
   // Pose atual do mascote
   MascotPose _currentPose = MascotPose.sitting;
@@ -236,6 +246,24 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
     // Iniciar animação de partículas em loop contínuo
     _particleController.repeat();
+
+    // Voltando do esconderijo: nasce invisível, solta a fumaça e cresce
+    // (mesma nuvem do sumiço, ao contrário).
+    if (widget.appearInSmoke) {
+      _isMaterializing = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _createSmokeBurst(_x + widget.size / 2, _y + widget.size / 2);
+        });
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) setState(() => _isMaterializing = false);
+        });
+        Future.delayed(const Duration(milliseconds: 550), () {
+          if (mounted) widget.onAppeared?.call();
+        });
+      });
+    }
 
     _startBlinking();
     _resetIdleTimer();
@@ -576,12 +604,12 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
             child: child!,
           ),
           child: AnimatedOpacity(
-            opacity: _isDismissing ? 0.0 : 1.0,
+            opacity: (_isDismissing || _isMaterializing) ? 0.0 : 1.0,
             duration: const Duration(milliseconds: 450),
             child: AnimatedScale(
-            scale: _isDismissing ? 0.2 : 1.0,
+            scale: (_isDismissing || _isMaterializing) ? 0.2 : 1.0,
             duration: const Duration(milliseconds: 450),
-            curve: Curves.easeInBack,
+            curve: _isDismissing ? Curves.easeInBack : Curves.easeOutBack,
             child: GestureDetector(
             onTap: _onTap,
             onLongPress: _onLongPress,

@@ -1855,9 +1855,7 @@
   "salemTourBack": "Voltar",
   "salemTourDone": "Vamos começar!",
   "settingsSalem": "Salem, o gatinho",
-  "settingsSalemDesc": "Seu familiar de estimação: mostre, esconda ou reveja o tour guiado.",
-  "settingsShowSalem": "Mostrar o Salem",
-  "settingsShowSalemDesc": "Ele também some com 5 toques rápidos e volta com 5 toques na tela",
+  "settingsSalemDesc": "Seu familiar de estimação: reveja o tour guiado. Segredinho: 5 toques nele o dissolvem em fumaça — e 5 toques na tela o trazem de volta.",
   "settingsReplayTour": "Rever tour com o Salem",
   "encyAddTitle": "Adicionar em {category}",
   "@encyAddTitle": {

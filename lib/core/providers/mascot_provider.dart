@@ -2,34 +2,52 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Estado do Salem, o gatinho mascote: visível/escondido (5 toques nele o
-/// dissolvem em fumaça; 5 toques seguidos na tela o trazem de volta) e o
-/// walk-through guiado (1º acesso + "rever tour" nas Configurações).
+/// dissolvem em fumaça; 5 toques seguidos na tela, fechar o app ou o
+/// "refresh" de sessão o trazem de volta) e o walk-through guiado
+/// (1º acesso + "rever tour" nas Configurações).
+///
+/// O escondido NÃO persiste de propósito: cada sessão nova começa com o
+/// Salem presente — sumir é sempre temporário.
 class MascotProvider with ChangeNotifier {
-  static const String _hiddenKey = 'mascot_hidden';
   static const String _tourSeenPrefix = 'salem_tour_seen_';
 
   final SharedPreferences _prefs;
 
-  bool _hidden;
+  bool _hidden = false;
+  bool _appearPending = false;
   bool _tourRequested = false;
 
-  MascotProvider(this._prefs) : _hidden = _prefs.getBool(_hiddenKey) ?? false;
+  MascotProvider(this._prefs);
 
-  /// Salem está escondido (sumiu em fumaça ou desligado nas Configurações)?
+  /// Salem está escondido (sumiu em fumaça)?
   bool get isHidden => _hidden;
+
+  /// Salem acabou de voltar e deve MATERIALIZAR em fumaça (em vez de só
+  /// aparecer)? O mascote consome via [consumeAppearPending].
+  bool get appearPending => _appearPending;
 
   /// Um tour foi pedido (1º acesso ou "rever tour")? A HomePage consome.
   bool get tourRequested => _tourRequested;
 
-  Future<void> setHidden(bool value) async {
-    if (_hidden == value) return;
-    _hidden = value;
-    await _prefs.setBool(_hiddenKey, value);
+  void hide() {
+    if (_hidden) return;
+    _hidden = true;
     notifyListeners();
   }
 
-  Future<void> hide() => setHidden(true);
-  Future<void> show() => setHidden(false);
+  void show() {
+    if (!_hidden) return;
+    _hidden = false;
+    // Voltar do esconderijo = entrada em fumaça (espelho do sumiço).
+    _appearPending = true;
+    notifyListeners();
+  }
+
+  /// O mascote iniciou a animação de materializar (sem notify: chamado
+  /// durante o build/pós-frame).
+  void consumeAppearPending() {
+    _appearPending = false;
+  }
 
   bool hasSeenTour(String userId) =>
       _prefs.getBool('$_tourSeenPrefix$userId') ?? false;
