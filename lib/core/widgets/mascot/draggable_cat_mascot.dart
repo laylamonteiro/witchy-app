@@ -31,6 +31,10 @@ class DraggableCatMascot extends StatefulWidget {
   /// Pasta base onde estão os assets do mascote (ex: 'assets/icons/new_cat')
   final String assetFolder;
 
+  /// Chamado quando o 5º toque rápido dissolve o Salem em fumaça — o pai
+  /// esconde o mascote (5 toques seguidos na tela o trazem de volta).
+  final VoidCallback? onDismissed;
+
   const DraggableCatMascot({
     super.key,
     this.initialX = 50,
@@ -39,6 +43,7 @@ class DraggableCatMascot extends StatefulWidget {
     this.size = 85,
     this.positionNotifier,
     this.assetFolder = 'assets/icons/new_cat',
+    this.onDismissed,
   });
 
   @override
@@ -53,6 +58,7 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
   bool _isBlinking = false;
   bool _isHappy = false; // Expressão feliz quando toca
   bool _isSleepWarning = false;
+  bool _isDismissing = false; // Sumindo em fumaça (5 toques rápidos)
 
   // Pose atual do mascote
   MascotPose _currentPose = MascotPose.sitting;
@@ -391,6 +397,14 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
       _rapidTapCount = 0;
     }
 
+    if (_isDismissing) return;
+
+    // 5º toque rápido: o Salem some em fumaça (se o pai quiser saber).
+    if (_rapidTapCount >= _maxRapidTaps - 1 && widget.onDismissed != null) {
+      _dismissInSmoke();
+      return;
+    }
+
     // Limitar a 5 taps rápidos
     if (_rapidTapCount >= _maxRapidTaps) return;
 
@@ -447,6 +461,42 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
 
       // Criar algumas partículas de conforto
       _createParticleBurst(_x + widget.size / 2, _y + widget.size / 2);
+    }
+  }
+
+  /// 5º toque rápido: nuvem de fumaça, o sprite encolhe/some e o pai é
+  /// avisado para esconder o Salem.
+  void _dismissInSmoke() {
+    if (_isDismissing) return;
+    setState(() => _isDismissing = true);
+    _createSmokeBurst(_x + widget.size / 2, _y + widget.size / 2);
+    Future.delayed(const Duration(milliseconds: 550), () {
+      if (mounted) widget.onDismissed?.call();
+    });
+  }
+
+  void _createSmokeBurst(double x, double y) {
+    if (_particles.length >= _maxParticles) {
+      _particles.removeRange(0, 20);
+    }
+    final random = math.Random();
+    for (int i = 0; i < 22; i++) {
+      final gray = 150 + random.nextInt(80);
+      final smokeColors = [
+        Color.fromARGB(255, gray, gray, gray),
+        context.gc.lilac.withValues(alpha: 0.8),
+      ];
+      _particles.add(MagicParticle(
+        x: x + (random.nextDouble() - 0.5) * widget.size * 0.6,
+        y: y + (random.nextDouble() - 0.5) * widget.size * 0.6,
+        vx: (random.nextDouble() - 0.5) * 3,
+        vy: -random.nextDouble() * 3 - 1, // fumaça sobe
+        size: random.nextDouble() * 10 + 6,
+        color: smokeColors[random.nextInt(smokeColors.length)],
+        opacity: 0.9,
+        isHeart: false,
+        isStar: false,
+      ));
     }
   }
 
@@ -525,7 +575,14 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                 _jumpAnimation.value,
             child: child!,
           ),
-          child: GestureDetector(
+          child: AnimatedOpacity(
+            opacity: _isDismissing ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 450),
+            child: AnimatedScale(
+            scale: _isDismissing ? 0.2 : 1.0,
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeInBack,
+            child: GestureDetector(
             onTap: _onTap,
             onLongPress: _onLongPress,
             onPanStart: (details) {
@@ -640,6 +697,8 @@ class _DraggableCatMascotState extends State<DraggableCatMascot>
                 );
               },
             ),
+          ),
+          ),
           ),
         ),
 

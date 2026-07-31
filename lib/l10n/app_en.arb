@@ -1269,5 +1269,21 @@
   "notifSunWaterTitle": "🌞 Sunday, the day of the Sun",
   "notifSunWaterBody": "A perfect morning to prepare your Sun Water. Tap to see the step-by-step.",
   "settingsSunWater": "Sun Water (Sundays)",
-  "settingsSunWaterDesc": "Weekly reminder on the day of the Sun to prepare your sun water"
+  "settingsSunWaterDesc": "Weekly reminder on the day of the Sun to prepare your sun water",
+  "salemTourStep1": "Meow! I'm Salem, your familiar in this grimoire. 🐈‍⬛ Let me show you everything this magical place holds, Witch. Come along!",
+  "salemTourStep2": "This is the Magical Encyclopedia: today's moon, the magical moment of the day, crystals, herbs, colors, goddesses and much more. Your book of reference!",
+  "salemTourStep3": "The Wheel of the Year with the sabbats also lives here. On magical dates I'll notify you — and a guided page walks you through the ritual, step by step. ✨",
+  "salemTourStep4": "This is the Grimoire: create your spells (even with AI!), draw tarot, cast runes, consult the pendulum and the Mystic Counselor.",
+  "salemTourStep5": "And these are the Journals: gratitude, affirmations, dreams and desires. Writing is magic too, Witch. 📖",
+  "salemTourStep6": "The gear ⚙️ (corner of the Encyclopedia) holds the Settings: notifications, themes, language... and the Premium plan, which unlocks everything.",
+  "salemTourStep7": "All set! Oh, a secret: tap me 5 times and I vanish in smoke; tap the screen 5 times and I return. Safe travels, Witch! 🌙",
+  "salemTourSkip": "Skip tour",
+  "salemTourNext": "Next",
+  "salemTourBack": "Back",
+  "salemTourDone": "Let's begin!",
+  "settingsSalem": "Salem, the cat",
+  "settingsSalemDesc": "Your familiar: show him, hide him or replay the guided tour.",
+  "settingsShowSalem": "Show Salem",
+  "settingsShowSalemDesc": "He also vanishes with 5 quick taps and returns with 5 taps on the screen",
+  "settingsReplayTour": "Replay tour with Salem"
 }

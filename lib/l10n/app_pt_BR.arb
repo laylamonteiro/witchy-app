@@ -1269,5 +1269,21 @@
   "notifSunWaterTitle": "🌞 Domingo, dia do Sol",
   "notifSunWaterBody": "Manhã perfeita para preparar sua Água Solar. Toque para ver o passo a passo.",
   "settingsSunWater": "Água Solar (domingos)",
-  "settingsSunWaterDesc": "Lembrete semanal no dia do Sol para preparar sua água solar"
+  "settingsSunWaterDesc": "Lembrete semanal no dia do Sol para preparar sua água solar",
+  "salemTourStep1": "Miau! Eu sou o Salem, seu familiar neste grimório. 🐈‍⬛ Vou te mostrar tudo o que este lugar mágico guarda, Bruxa. Vem comigo!",
+  "salemTourStep2": "Esta é a Enciclopédia Mágica: a lua de hoje, o momento mágico do dia, cristais, ervas, cores, deusas e muito mais. É o seu livro de consultas!",
+  "salemTourStep3": "Aqui também vive a Roda do Ano com os sabbats. Nas datas mágicas eu te aviso — e uma página guiada te leva pelo ritual, passo a passo. ✨",
+  "salemTourStep4": "Este é o Grimório: crie seus feitiços (até com IA!), tire tarot, jogue runas, consulte o pêndulo e o Conselheiro Místico.",
+  "salemTourStep5": "E estes são os Diários: gratidão, afirmações, sonhos e desejos. Escrever também é magia, Bruxa. 📖",
+  "salemTourStep6": "Na engrenagem ⚙️ (canto da Enciclopédia) ficam as Configurações: notificações, temas, idioma... e o plano Premium, que abre tudo.",
+  "salemTourStep7": "Prontinha! Ah, um segredo: 5 toques em mim e eu sumo em fumaça; 5 toques na tela e eu volto. Boa jornada, Bruxa! 🌙",
+  "salemTourSkip": "Pular tour",
+  "salemTourNext": "Próximo",
+  "salemTourBack": "Voltar",
+  "salemTourDone": "Vamos começar!",
+  "settingsSalem": "Salem, o gatinho",
+  "settingsSalemDesc": "Seu familiar de estimação: mostre, esconda ou reveja o tour guiado.",
+  "settingsShowSalem": "Mostrar o Salem",
+  "settingsShowSalemDesc": "Ele também some com 5 toques rápidos e volta com 5 toques na tela",
+  "settingsReplayTour": "Rever tour com o Salem"
 }

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/presentation/pages/grimoire_page.dart';
 import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
+import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
+import '../../../../core/widgets/mascot/salem_tour.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -51,13 +55,56 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     DiaryPage(resetNotifier: _resetNotifiers[2]),
   ];
 
+  /// Tour do Salem em exibição?
+  bool _showTour = false;
+
+  /// Contagem de toques seguidos na tela para o Salem escondido voltar.
+  int _returnTapCount = 0;
+  DateTime? _lastReturnTap;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
     // Link pendente de um toque em notificação que ABRIU o app.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLink());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onDeepLink();
+      _maybeStartTour();
+    });
+  }
+
+  /// 1º acesso desta conta: o Salem apresenta o app (com opção de pular).
+  void _maybeStartTour() {
+    if (!mounted || _showTour) return;
+    final mascot = context.read<MascotProvider>();
+    final userId = context.read<AuthProvider>().currentUser.id;
+    if (!mascot.hasSeenTour(userId)) {
+      setState(() => _showTour = true);
+    }
+  }
+
+  void _finishTour() {
+    final mascot = context.read<MascotProvider>();
+    final userId = context.read<AuthProvider>().currentUser.id;
+    mascot.markTourSeen(userId);
+    setState(() => _showTour = false);
+  }
+
+  /// Salem escondido: 5 toques seguidos em qualquer lugar da tela (janela de
+  /// 1,5s entre toques) o trazem de volta em fumaça.
+  void _onHiddenScreenTap(PointerDownEvent _) {
+    final now = DateTime.now();
+    if (_lastReturnTap != null &&
+        now.difference(_lastReturnTap!).inMilliseconds > 1500) {
+      _returnTapCount = 0;
+    }
+    _lastReturnTap = now;
+    _returnTapCount++;
+    if (_returnTapCount >= 5) {
+      _returnTapCount = 0;
+      context.read<MascotProvider>().show();
+    }
   }
 
   @override
@@ -154,25 +201,48 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _handleSystemBack();
       },
       child: Scaffold(
-        body: Stack(
-          children: [
-            // Páginas principais — cada aba com seu próprio Navigator
-            IndexedStack(
-              index: _selectedIndex,
-              children: List.generate(3, _buildTabNavigator),
-            ),
-            CatChatBubble(mascotPosition: _mascotPosition),
-            // Mascote arrastável flutuando sobre o conteúdo — deve sobrepor o balão
-            DraggableCatMascot(
-              initialX: 20,
-              initialY: 120,
-              size: 100,
-              positionNotifier: _mascotPosition,
-              onTap: () {
-                // Opcional: adicionar interação ao clicar no mascote
-              },
-            ),
-          ],
+        body: Consumer<MascotProvider>(
+          builder: (context, mascot, _) {
+            if (mascot.tourRequested) {
+              // "Rever tour com o Salem" nas Configurações.
+              mascot.consumeTourRequest();
+              _showTour = true;
+            }
+            return Stack(
+              children: [
+                // Páginas principais — cada aba com seu próprio Navigator
+                IndexedStack(
+                  index: _selectedIndex,
+                  children: List.generate(3, _buildTabNavigator),
+                ),
+                if (!mascot.isHidden) ...[
+                  CatChatBubble(mascotPosition: _mascotPosition),
+                  // Mascote flutuando sobre o conteúdo — sobrepõe o balão
+                  DraggableCatMascot(
+                    initialX: 20,
+                    initialY: 120,
+                    size: 100,
+                    positionNotifier: _mascotPosition,
+                    onDismissed: mascot.hide,
+                  ),
+                ] else
+                  // Salem escondido: contador invisível de toques para ele
+                  // voltar. Translucent = não bloqueia a UI de baixo.
+                  Positioned.fill(
+                    child: Listener(
+                      behavior: HitTestBehavior.translucent,
+                      onPointerDown: _onHiddenScreenTap,
+                    ),
+                  ),
+                if (_showTour)
+                  SalemTourOverlay(
+                    onTabChange: (index) =>
+                        setState(() => _selectedIndex = index),
+                    onFinished: _finishTour,
+                  ),
+              ],
+            );
+          },
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(

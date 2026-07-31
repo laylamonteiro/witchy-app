@@ -1,10 +1,11 @@
-/// Daily mascot bubble messages (EN).
+/// Daily Salem bubble messages (EN). Same count across the 3 languages.
 const List<String> catBubbleMessagesEn = [
-  'How about checking your magical weather today? 🪄',
-  'Your magical weather has already been revealed today 🔮',
-  'The stars have prepared something interesting for you 👀',
-  "Discover today's magical energy ✨",
-  "The day's magical weather is waiting for you 🌙",
-  'Today is a good day to explore the magic around you 🌟',
-  "The day's magic is in your hands — discover it now! 🧙‍"
+  "Meow, Witch! I'm Salem — how about today's magical weather? 🪄",
+  "Salem has already sniffed out today's magical weather. Come see! 🔮",
+  'The stars have prepared something interesting for you, Witch 👀',
+  "Salem here: today's magical energy feels delightful ✨",
+  "The day's magical weather is waiting for you, Witch 🌙",
+  'This black cat knows: today is a day to explore the magic around you 🌟',
+  "The day's magic is in your hands, Witch — Salem guarantees it! 🧙‍",
+  'Purring with curiosity about your magical weather today 🐾',
 ];
