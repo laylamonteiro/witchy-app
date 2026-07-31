@@ -99,13 +99,20 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
 
       setState(() {
         _isLoading = false;
-        _error = 'Erro ao carregar clima mágico. Tente novamente.';
+        _error = ContentLocale.instance.select(
+          pt: 'Erro ao carregar clima mágico. Tente novamente.',
+          en: 'Could not load the magical weather. Please try again.',
+          es: 'Error al cargar el clima mágico. Inténtalo de nuevo.',
+        );
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              'Erro ao calcular clima mágico. Por favor, tente novamente.'),
+          content: Text(ContentLocale.instance.select(
+            pt: 'Erro ao calcular clima mágico. Por favor, tente novamente.',
+            en: 'Error calculating the magical weather. Please try again.',
+            es: 'Error al calcular el clima mágico. Inténtalo de nuevo.',
+          )),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -126,7 +133,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             IconButton(
               icon: const Icon(Icons.info_outline),
               onPressed: () => _showInfoDialog(),
-              tooltip: 'Sobre o clima mágico',
+              tooltip: ContentLocale.instance.select(
+                pt: 'Sobre o clima mágico',
+                en: 'About the magical weather',
+                es: 'Sobre el clima mágico',
+              ),
             ),
         ],
       ),
@@ -201,7 +212,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     if (_weatherCache == null) {
       return Center(
         child: Text(
-          'Carregando clima mágico...',
+          ContentLocale.instance.select(
+            pt: 'Carregando clima mágico...',
+            en: 'Loading magical weather...',
+            es: 'Cargando clima mágico...',
+          ),
           style: TextStyle(color: context.gc.softWhite),
         ),
       );
@@ -315,7 +330,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Semantics(
         button: true,
-        label: 'Abrir Sugestões Personalizadas',
+        label: ContentLocale.instance.select(
+          pt: 'Abrir Sugestões Personalizadas',
+          en: 'Open Personalized Suggestions',
+          es: 'Abrir Sugerencias Personalizadas',
+        ),
         child: ElevatedButton(
           key: const Key('daily-personalized-suggestions-button'),
           onPressed: () {

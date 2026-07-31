@@ -43,7 +43,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                   onPressed: provider.isGeneratingAI
                       ? null
                       : () => provider.regenerateAIMagicalProfile(),
-                  tooltip: 'Regenerar análise',
+                  tooltip: ContentLocale.instance.select(
+                    pt: 'Regenerar análise',
+                    en: 'Regenerate analysis',
+                    es: 'Regenerar análisis',
+                  ),
                 );
               }
               return const SizedBox.shrink();
@@ -59,7 +63,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           if (profile == null) {
             return Center(
               child: Text(
-                'Perfil mágico não encontrado',
+                ContentLocale.instance.select(
+                  pt: 'Perfil mágico não encontrado',
+                  en: 'Magical profile not found',
+                  es: 'Perfil mágico no encontrado',
+                ),
                 style: TextStyle(color: context.gc.softWhite),
               ),
             );
@@ -606,7 +614,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             Icon(Icons.error_outline, color: context.gc.alert, size: 48),
             const SizedBox(height: 16),
             Text(
-              'Não foi possível gerar sua análise',
+              ContentLocale.instance.select(
+                pt: 'Não foi possível gerar sua análise',
+                en: 'We could not generate your analysis',
+                es: 'No fue posible generar tu análisis',
+              ),
               style: GoogleFonts.cinzelDecorative(
                 fontSize: 18,
                 color: context.gc.alert,
@@ -614,7 +626,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Verifique sua conexão e tente novamente.',
+              ContentLocale.instance.select(
+                pt: 'Verifique sua conexão e tente novamente.',
+                en: 'Check your connection and try again.',
+                es: 'Verifica tu conexión e inténtalo de nuevo.',
+              ),
               style: TextStyle(
                 color: context.gc.softWhite.withOpacity(0.7),
               ),
@@ -670,7 +686,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           ElevatedButton.icon(
             onPressed: () => provider.generateAIMagicalProfile(),
             icon: const Icon(Icons.auto_awesome),
-            label: const Text('Gerar Análise'),
+            label: Text(ContentLocale.instance.select(
+              pt: 'Gerar Análise',
+              en: 'Generate Analysis',
+              es: 'Generar Análisis',
+            )),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
               foregroundColor: context.gc.darkBackground,

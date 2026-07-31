@@ -40,6 +40,10 @@ for line in sys.stdin:
     # Chamadas de log/debug não são texto visível ao usuário.
     if re.match(r'(print|debugPrint|debugLog|_log|_addLog)\s*\(', stripped):
         continue
+    # Argumentos nomeados por locale de ContentLocale.select(pt:/es:) —
+    # conteúdo já localizado inline; o EN fica ao lado sem acentos.
+    if re.match(r\"(pt|pt_BR|es)\s*:\s*['\\\"]\", stripped):
+        continue
     # Comentário no fim da linha: só conta se houver acento ANTES do '//'
     # (fora de string, aproximado ignorando '//' precedido por ':', ex. URLs).
     m = re.search(r'(?<!:)//', code)

@@ -65,8 +65,7 @@ class _PersonalizedSuggestionsPageState
   }
 
   Future<void> _loadNatalChart() async {
-    print(
-        '🔮 PersonalizedSuggestionsPage: Iniciando carregamento mapa natal...');
+    print('🔮 PersonalizedSuggestionsPage: Iniciando carregamento mapa natal...');
     setState(() => _isLoading = true);
 
     try {
@@ -89,8 +88,7 @@ class _PersonalizedSuggestionsPageState
           _natalChart = chart;
           _hasNatalChart = true;
         });
-        print(
-            '📊 PersonalizedSuggestionsPage: Estado atualizado, carregando sugestões...');
+        print('📊 PersonalizedSuggestionsPage: Estado atualizado, carregando sugestões...');
 
         await _loadSuggestions();
       } else {
@@ -118,8 +116,7 @@ class _PersonalizedSuggestionsPageState
 
   Future<void> _loadSuggestions() async {
     if (_natalChart == null) {
-      print(
-          '⚠️ PersonalizedSuggestionsPage: Não pode gerar sugestões: mapa natal não encontrado');
+      print('⚠️ PersonalizedSuggestionsPage: Não pode gerar sugestões: mapa natal não encontrado');
       return;
     }
 
@@ -127,8 +124,7 @@ class _PersonalizedSuggestionsPageState
     setState(() => _isLoading = true);
 
     try {
-      print(
-          '📊 PersonalizedSuggestionsPage: Chamando generatePersonalizedSuggestions...');
+      print('📊 PersonalizedSuggestionsPage: Chamando generatePersonalizedSuggestions...');
 
       // Carregar sugestões e planetas retrógrados em paralelo
       final calculator = TransitCalculator();
@@ -142,14 +138,11 @@ class _PersonalizedSuggestionsPageState
         _natalChart!,
       );
 
-      print(
-          '✅ PersonalizedSuggestionsPage: ${suggestions.length} sugestões geradas');
-      print(
-          '🔄 PersonalizedSuggestionsPage: ${retrograde.length} planetas retrógrados');
+      print('✅ PersonalizedSuggestionsPage: ${suggestions.length} sugestões geradas');
+      print('🔄 PersonalizedSuggestionsPage: ${retrograde.length} planetas retrógrados');
 
       if (!mounted) {
-        print(
-            '⚠️ PersonalizedSuggestionsPage: Widget não está montado, abortando');
+        print('⚠️ PersonalizedSuggestionsPage: Widget não está montado, abortando');
         return;
       }
 
@@ -158,8 +151,7 @@ class _PersonalizedSuggestionsPageState
         _retrogradePlanets = retrograde;
         _isLoading = false;
       });
-      print(
-          '✅ PersonalizedSuggestionsPage: Estado atualizado! _suggestions.length=${_suggestions?.length}');
+      print('✅ PersonalizedSuggestionsPage: Estado atualizado! _suggestions.length=${_suggestions?.length}');
     } catch (e, stackTrace) {
       print('❌ PersonalizedSuggestionsPage: ERRO ao gerar sugestões: $e');
       print('📋 Stack trace: $stackTrace');
@@ -183,8 +175,7 @@ class _PersonalizedSuggestionsPageState
 
   @override
   Widget build(BuildContext context) {
-    print(
-        '🎨 PersonalizedSuggestionsPage.build: _isLoading=$_isLoading, _hasNatalChart=$_hasNatalChart, _suggestions?.length=${_suggestions?.length}');
+    print('🎨 PersonalizedSuggestionsPage.build: _isLoading=$_isLoading, _hasNatalChart=$_hasNatalChart, _suggestions?.length=${_suggestions?.length}');
 
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
