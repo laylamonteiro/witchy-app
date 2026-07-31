@@ -3,17 +3,23 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/lunar_provider.dart';
+import '../../data/models/moon_content_data.dart';
+import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/moon_phase_widget.dart';
-import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../auth/data/models/feature_access.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../encyclopedia/presentation/widgets/related_link.dart';
 import '../../../grimoire/data/models/spell_model.dart';
-import '../../../guided_rituals/data/models/guided_rituals_data.dart';
 import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
-import '../../../guided_rituals/presentation/widgets/magical_moment_card.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 
+/// Página "Lua" da Enciclopédia: todo o conhecimento de bruxaria da Lua.
+/// O carrossel Ontem/Hoje/Amanhã vive no "Seu Dia"; aqui ficam a fase de
+/// hoje, o saber lunar (premium), a Água de Lua, correspondências, próximas
+/// fases e recomendações de feitiço.
 class LunarCalendarPage extends StatefulWidget {
   final bool embedded;
 
@@ -24,137 +30,204 @@ class LunarCalendarPage extends StatefulWidget {
 }
 
 class _LunarCalendarPageState extends State<LunarCalendarPage> {
-  final PageController _pageController = PageController(initialPage: 1);
-  int _currentPage = 1; // 0 = Ontem, 1 = Hoje, 2 = Amanhã
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final content = Consumer<LunarProvider>(
       builder: (context, lunarProvider, _) {
         try {
-          final dateFormat = DateFormat('dd/MM/yyyy');
+          final l10n = AppLocalizations.of(context);
+          final phase = lunarProvider.getCurrentMoonPhase();
 
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Carrossel: Ontem - Hoje - Amanhã com setas laterais
-                SizedBox(
-                  height: 300,
-                  child: Stack(
+                // Fase de hoje (compacta, free)
+                MagicalCard(
+                  child: Column(
                     children: [
-                      // PageView do carrossel
-                      PageView(
-                        controller: _pageController,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _currentPage = index;
-                          });
-                        },
-                        children: [
-                          // Ontem
-                          _buildDayCard(
-                            context,
-                            lunarProvider,
-                            AppLocalizations.of(context).lunarYesterday,
-                            -1,
-                            dateFormat,
-                          ),
-                          // Hoje
-                          _buildDayCard(
-                            context,
-                            lunarProvider,
-                            AppLocalizations.of(context).lunarToday,
-                            0,
-                            dateFormat,
-                          ),
-                          // Amanhã
-                          _buildDayCard(
-                            context,
-                            lunarProvider,
-                            AppLocalizations.of(context).wheelTomorrow,
-                            1,
-                            dateFormat,
-                          ),
-                        ],
+                      Text(
+                        l10n.lunarToday,
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
-                      // Seta esquerda
-                      if (_currentPage > 0)
-                        Positioned(
-                          left: 4,
-                          top: 0,
-                          bottom: 0,
-                          child: Center(
-                            child: GestureDetector(
-                              onTap: () {
-                                _pageController.previousPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color:
-                                      context.gc.surface.withValues(alpha: 0.8),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.chevron_left,
-                                  color: context.gc.lilac,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      // Seta direita
-                      if (_currentPage < 2)
-                        Positioned(
-                          right: 4,
-                          top: 0,
-                          bottom: 0,
-                          child: Center(
-                            child: GestureDetector(
-                              onTap: () {
-                                _pageController.nextPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color:
-                                      context.gc.surface.withValues(alpha: 0.8),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.chevron_right,
-                                  color: context.gc.lilac,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      const SizedBox(height: 12),
+                      MoonPhaseWidget(
+                        phase: phase,
+                        showName: true,
+                        showDescription: true,
+                        size: 80,
+                      ),
                     ],
                   ),
                 ),
 
-                // Momento mágico do dia (dia da semana + período)
-                const MagicalMomentCard(),
+                // A Lua na bruxaria (premium)
+                MagicalCard(
+                  child: PremiumContentSection(
+                    feature: AppFeature.lunarCalendarDetails,
+                    title: Text(
+                      l10n.moonInWitchcraftTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    subtitle: l10n.moonInWitchcraftSubtitle,
+                    contentBuilder: (context) => Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        MoonContent.intro,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(height: 1.5),
+                      ),
+                    ),
+                  ),
+                ),
 
-                // Rituais guiados do momento (lua de hoje + águas mágicas)
-                _buildGuidedRitualsCard(context, lunarProvider),
+                // O que cada fase favorece (premium)
+                MagicalCard(
+                  child: PremiumContentSection(
+                    feature: AppFeature.lunarCalendarDetails,
+                    title: Text(
+                      l10n.moonPhasesWitchcraftTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    subtitle: l10n.moonPhasesWitchcraftSubtitle,
+                    contentBuilder: (context) => Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Column(
+                        children: MoonPhase.values.map((moonPhase) {
+                          final knowledge =
+                              MoonContent.phaseKnowledge[moonPhase]!;
+                          return ExpansionMagicalCard(
+                            emoji: moonPhase.emoji,
+                            title: moonPhase.displayName,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  knowledge.favors,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(height: 1.4),
+                                ),
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: knowledge.goodFor
+                                      .map((item) => LinkableChip(
+                                          label: item,
+                                          color: context.gc.lilac))
+                                      .toList(),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
 
-                // Próximas fases importantes
+                // Água de Lua (free) → ritual guiado
+                MagicalCard(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const GuidedRitualPage(ritualId: 'moon_water'),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('🫙', style: TextStyle(fontSize: 32)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.guidedRitualsSectionTitle,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            Text(
+                              l10n.moonWaterCardSubtitle,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    color: context.gc.lilac,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right,
+                          color: context.gc.textSecondary),
+                    ],
+                  ),
+                ),
+
+                // Esbats (premium)
+                MagicalCard(
+                  child: PremiumContentSection(
+                    feature: AppFeature.lunarCalendarDetails,
+                    title: Text(
+                      l10n.moonEsbatsTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    subtitle: l10n.moonEsbatsSubtitle,
+                    contentBuilder: (context) => Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            MoonContent.esbats.what,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(height: 1.5),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            MoonContent.esbats.how,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(height: 1.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Correspondências lunares (premium)
+                MagicalCard(
+                  child: PremiumContentSection(
+                    feature: AppFeature.lunarCalendarDetails,
+                    title: Text(
+                      l10n.moonCorrespondencesTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    subtitle: l10n.moonCorrespondencesSubtitle,
+                    contentBuilder: (context) => Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: MoonContent.correspondences
+                            .map((item) => LinkableChip(
+                                label: item, color: context.gc.lilac))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Próximas fases importantes (free)
                 MagicalCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,7 +249,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                   ),
                 ),
 
-                // Recomendações para feitiços
+                // Recomendações para feitiços (free)
                 MagicalCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,13 +283,13 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                   ),
                 ),
 
-                // Significado das fases
+                // Significado básico das fases (free)
                 MagicalCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Fases da Lua',
+                        l10n.lunarPhasesTitle,
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       const SizedBox(height: 16),
@@ -313,63 +386,6 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
         ],
       ),
       body: content,
-    );
-  }
-
-  Widget _buildDayCard(
-    BuildContext context,
-    LunarProvider provider,
-    String dayLabel,
-    int dayOffset,
-    DateFormat dateFormat,
-  ) {
-    // Calcular a data baseada no offset (-1 = ontem, 0 = hoje, 1 = amanhã)
-    final date = DateTime.now().add(Duration(days: dayOffset));
-
-    // Criar um provider temporário para a data específica
-    final tempProvider = LunarProvider()..setSelectedDate(date);
-    final phase = tempProvider.getCurrentMoonPhase();
-
-    return MagicalCard(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              dayLabel,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              dateFormat.format(date),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            // Usar BreathingMoon para Lua Cheia, MoonPhaseWidget para outras fases
-            Flexible(
-              child: phase == MoonPhase.fullMoon
-                  ? BreathingMoon(
-                      moonEmoji: phase.emoji,
-                      size: 70,
-                      showStars: true,
-                      showName: true,
-                      showDescription: true,
-                      phase: phase,
-                    )
-                  : MoonPhaseWidget(
-                      phase: phase,
-                      showName: true,
-                      showDescription: true,
-                      size: 70,
-                    ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -473,94 +489,6 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  /// Atalhos para os rituais guiados do momento: ritual da lua de hoje (se
-  /// for lua cheia/nova) e as águas mágicas, sempre disponíveis.
-  Widget _buildGuidedRitualsCard(
-    BuildContext context,
-    LunarProvider lunarProvider,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    final phase = lunarProvider.getCurrentMoonPhase();
-
-    final tiles = <Widget>[];
-
-    void addTile(String ritualId, {bool highlight = false}) {
-      final ritual = AllGuidedRituals.byId(ritualId);
-      if (ritual == null) return;
-      tiles.add(Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: highlight
-              ? context.gc.lilac.withValues(alpha: 0.15)
-              : context.gc.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: highlight ? context.gc.lilac : context.gc.surfaceBorder,
-          ),
-        ),
-        child: ListTile(
-          leading: Text(ritual.emoji, style: const TextStyle(fontSize: 28)),
-          title: Text(
-            ritual.title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: highlight ? context.gc.lilac : null,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          subtitle: highlight
-              ? Text(
-                  l10n.guidedRitualTodayChip,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.gc.mint,
-                        fontWeight: FontWeight.w600,
-                      ),
-                )
-              : null,
-          trailing:
-              Icon(Icons.chevron_right, color: context.gc.textSecondary),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => GuidedRitualPage(ritualId: ritual.id),
-              ),
-            );
-          },
-        ),
-      ));
-    }
-
-    if (phase == MoonPhase.fullMoon) {
-      addTile('full_moon', highlight: true);
-      addTile('moon_water', highlight: true);
-    } else if (phase == MoonPhase.newMoon) {
-      addTile('new_moon', highlight: true);
-      addTile('moon_water');
-    } else {
-      addTile('moon_water');
-    }
-    addTile('sun_water');
-
-    return MagicalCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.auto_awesome, color: context.gc.lilac),
-              const SizedBox(width: 8),
-              Text(
-                l10n.guidedRitualsSectionTitle,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...tiles,
         ],
       ),
     );

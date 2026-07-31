@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/presentation/pages/grimoire_page.dart';
+import '../../../your_day/presentation/pages/your_day_page.dart';
 import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/navigation/app_deep_link.dart';
@@ -22,9 +23,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  /// A tela inicial é SEMPRE a Enciclopédia Mágica (aba 0), que abre na
-  /// sub-aba da Lua — tanto em aberturas novas quanto no "refresh" de sessão
-  /// (AppSessionPolicy recria a navegação inteira, voltando para cá).
+  /// A tela inicial é SEMPRE o "Seu Dia" (aba 0) — tanto em aberturas novas
+  /// quanto no "refresh" de sessão (AppSessionPolicy recria a navegação
+  /// inteira, voltando para cá).
   int _selectedIndex = 0;
 
   /// Momento do último toque em "voltar" na raiz de uma aba — usado para o
@@ -37,22 +38,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// cristais, feitiços, sigilos etc.) são empilhadas DENTRO da aba, mantendo
   /// a bottom bar sempre visível. Fluxos de tela cheia (Configurações,
   /// Assinatura) devem usar `Navigator.of(context, rootNavigator: true)`.
+  /// Abas: 0 = Seu Dia, 1 = Enciclopédia, 2 = Grimório, 3 = Diários.
   final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
-    3,
+    4,
     (_) => GlobalKey<NavigatorState>(),
   );
 
   /// Notificadores de reset por seção (re-toque na aba ativa → seção volta
   /// à primeira aba interna).
   final List<SectionResetNotifier> _resetNotifiers = List.generate(
-    3,
+    4,
     (_) => SectionResetNotifier(),
   );
 
   late final List<Widget> _pages = [
-    EncyclopediaPage(resetNotifier: _resetNotifiers[0]),
-    GrimoirePage(resetNotifier: _resetNotifiers[1]),
-    DiaryPage(resetNotifier: _resetNotifiers[2]),
+    YourDayPage(resetNotifier: _resetNotifiers[0]),
+    EncyclopediaPage(resetNotifier: _resetNotifiers[1]),
+    GrimoirePage(resetNotifier: _resetNotifiers[2]),
+    DiaryPage(resetNotifier: _resetNotifiers[3]),
   ];
 
   /// Tour do Salem em exibição?
@@ -213,7 +216,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 // Páginas principais — cada aba com seu próprio Navigator
                 IndexedStack(
                   index: _selectedIndex,
-                  children: List.generate(3, _buildTabNavigator),
+                  children: List.generate(4, _buildTabNavigator),
                 ),
                 if (!mascot.isHidden) ...[
                   CatChatBubble(mascotPosition: _mascotPosition),
@@ -256,7 +259,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           child: BottomNavigationBar(
             currentIndex: _selectedIndex,
             onTap: _onTabTapped,
+            type: BottomNavigationBarType.fixed,
             items: [
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.auto_awesome),
+                label: AppLocalizations.of(context).navYourDay,
+              ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.auto_stories),
                 label: AppLocalizations.of(context).navEncyclopedia,

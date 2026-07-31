@@ -16,6 +16,7 @@ import '../../data/data_sources/sacred_symbols_data.dart';
 import '../../../guided_rituals/data/models/guided_rituals_data.dart';
 import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
 import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
+import '../../../sun/presentation/pages/sun_page.dart';
 import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
@@ -47,7 +48,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 14, vsync: this);
+    _tabController = TabController(length: 15, vsync: this);
     widget.resetNotifier?.addListener(_onResetRequested);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
     // Notificação pode ter ABERTO o app: trata o link pendente ao montar.
@@ -128,6 +129,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
               unselectedLabelStyle: const TextStyle(fontSize: 14),
               tabs: [
                 Tab(text: AppLocalizations.of(context).encyTabMoon),
+                Tab(text: AppLocalizations.of(context).encyTabSun),
                 Tab(text: AppLocalizations.of(context).encyTabSabbats),
                 Tab(text: AppLocalizations.of(context).encyTabCrystals),
                 Tab(text: AppLocalizations.of(context).encyTabHerbs),
@@ -150,6 +152,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
         controller: _tabController,
         children: [
           const LunarCalendarPage(embedded: true),
+          const SunPage(),
           const WheelOfYearPage(embedded: true),
           const CrystalsListPage(),
           const HerbsListPage(),

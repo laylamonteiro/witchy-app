@@ -28,14 +28,17 @@ class SalemTourOverlay extends StatefulWidget {
 }
 
 class _SalemTourOverlayState extends State<SalemTourOverlay> {
+  // Abas da bottom bar: 0 = Seu Dia, 1 = Enciclopédia, 2 = Grimório,
+  // 3 = Diários.
   static const List<_TourStep> _steps = [
-    (tab: 0, text: _step1),
-    (tab: 0, text: _step2),
-    (tab: 0, text: _step3),
-    (tab: 1, text: _step4),
-    (tab: 2, text: _step5),
-    (tab: 0, text: _step6),
-    (tab: 0, text: _step7),
+    (tab: 0, text: _step1), // boas-vindas
+    (tab: 0, text: _step2), // Seu Dia
+    (tab: 1, text: _step3), // Enciclopédia
+    (tab: 1, text: _step4), // Sabbats/rituais guiados
+    (tab: 2, text: _step5), // Grimório
+    (tab: 3, text: _step6), // Diários
+    (tab: 0, text: _step7), // Configurações
+    (tab: 0, text: _step8), // segredo/despedida
   ];
 
   static String _step1(AppLocalizations l10n) => l10n.salemTourStep1;
@@ -45,6 +48,7 @@ class _SalemTourOverlayState extends State<SalemTourOverlay> {
   static String _step5(AppLocalizations l10n) => l10n.salemTourStep5;
   static String _step6(AppLocalizations l10n) => l10n.salemTourStep6;
   static String _step7(AppLocalizations l10n) => l10n.salemTourStep7;
+  static String _step8(AppLocalizations l10n) => l10n.salemTourStep8;
 
   int _current = 0;
 
