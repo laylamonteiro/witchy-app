@@ -9,6 +9,8 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../encyclopedia/presentation/widgets/related_link.dart';
 import '../../../guided_rituals/data/models/magical_moment_data.dart';
 import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
+import '../../../learning/data/data_sources/trails_data.dart';
+import '../../../learning/presentation/pages/trail_page.dart';
 // A extensão de SabbatType (name/emoji) precisa estar em escopo aqui.
 import '../../../wheel_of_year/data/models/sabbat_model.dart';
 import '../../data/models/sun_content_data.dart';
@@ -71,6 +73,44 @@ class SunPage extends StatelessWidget {
                       ),
                       Text(
                         l10n.sunWaterCardSubtitle,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: context.gc.starYellow,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: context.gc.textSecondary),
+              ],
+            ),
+          ),
+
+          // Águas mágicas no Grimório Vivo (trilha completa das águas)
+          MagicalCard(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => TrailPage(
+                  trail: learningTrails
+                      .firstWhere((t) => t.id == 'aguas_magicas'),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Text('💧', style: TextStyle(fontSize: 32)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.toolLivingGrimoireTitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Text(
+                        l10n.watersTrailCardSubtitle,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: context.gc.starYellow,

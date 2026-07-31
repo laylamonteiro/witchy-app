@@ -10,6 +10,8 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../encyclopedia/presentation/widgets/related_link.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
+import '../../../learning/data/data_sources/trails_data.dart';
+import '../../../learning/presentation/pages/trail_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 
 /// Página "Lua" da Enciclopédia: todo o conhecimento de bruxaria da Lua.
@@ -73,6 +75,46 @@ class LunarCalendarPage extends StatelessWidget {
                       ),
                       Text(
                         l10n.moonWaterCardSubtitle,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              color: context.gc.lilac,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: context.gc.textSecondary),
+              ],
+            ),
+          ),
+
+          // Águas mágicas no Grimório Vivo (trilha completa das águas)
+          MagicalCard(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => TrailPage(
+                  trail: learningTrails
+                      .firstWhere((t) => t.id == 'aguas_magicas'),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Text('💧', style: TextStyle(fontSize: 32)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.toolLivingGrimoireTitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Text(
+                        l10n.watersTrailCardSubtitle,
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium

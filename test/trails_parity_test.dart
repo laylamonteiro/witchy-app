@@ -1,4 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_aguas_magicas_en.dart';
+import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_aguas_magicas_es.dart';
+import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_aguas_magicas_pt.dart';
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_bruxaria_tradicional_en.dart';
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_bruxaria_tradicional_es.dart';
 import 'package:grimorio_de_bolso/features/learning/data/data_sources/trails/trail_bruxaria_tradicional_pt.dart';
@@ -30,7 +33,7 @@ import 'package:grimorio_de_bolso/features/learning/data/models/trail_model.dart
 /// mesmos ids de lição na mesma ordem e o mesmo número de pagePrompts. A
 /// tradução nunca pode alterar a identidade nem a estrutura do conteúdo.
 void main() {
-  // As 8 trilhas nos três idiomas, na mesma ordem exposta por learningTrails.
+  // As 9 trilhas nos três idiomas, na mesma ordem exposta por learningTrails.
   const trailsPt = <LearningTrail>[
     magiaBrancaTrailPt,
     magiaVerdeTrailPt,
@@ -40,6 +43,7 @@ void main() {
     magiaDoCaosTrailPt,
     tarotTrailPt,
     quiromanciaTrailPt,
+    aguasMagicasTrailPt,
   ];
   const trailsEn = <LearningTrail>[
     magiaBrancaTrailEn,
@@ -50,6 +54,7 @@ void main() {
     magiaDoCaosTrailEn,
     tarotTrailEn,
     quiromanciaTrailEn,
+    aguasMagicasTrailEn,
   ];
   const trailsEs = <LearningTrail>[
     magiaBrancaTrailEs,
@@ -60,10 +65,11 @@ void main() {
     magiaDoCaosTrailEs,
     tarotTrailEs,
     quiromanciaTrailEs,
+    aguasMagicasTrailEs,
   ];
 
-  test('as três línguas têm as mesmas 8 trilhas na mesma ordem', () {
-    expect(trailsPt.length, 8);
+  test('as três línguas têm as mesmas 9 trilhas na mesma ordem', () {
+    expect(trailsPt.length, 9);
     expect(trailsEn.length, trailsPt.length);
     expect(trailsEs.length, trailsPt.length);
 

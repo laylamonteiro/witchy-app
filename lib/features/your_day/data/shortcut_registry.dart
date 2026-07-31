@@ -7,6 +7,7 @@ import '../../divination/presentation/pages/pendulum_page.dart';
 import '../../diary/presentation/pages/dream_interpretation_page.dart';
 import '../../grimoire/presentation/pages/ai_spell_creation_page.dart';
 import '../../grimoire/presentation/pages/mystic_advisor_page.dart';
+import '../../learning/presentation/pages/learning_home_page.dart';
 import '../../runes/presentation/pages/rune_reading_page.dart';
 import '../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 import '../../tarot/presentation/pages/tarot_page.dart';
@@ -37,6 +38,12 @@ class YourDayShortcuts {
   const YourDayShortcuts._();
 
   static final List<ShortcutTool> all = [
+    ShortcutTool(
+      id: 'living_grimoire',
+      emoji: '📖',
+      label: (l10n) => l10n.toolLivingGrimoireTitle,
+      builder: (_) => const LearningHomePage(),
+    ),
     ShortcutTool(
       id: 'tarot',
       emoji: '🎴',
@@ -88,6 +95,7 @@ class YourDayShortcuts {
   ];
 
   static const List<String> defaults = [
+    'living_grimoire',
     'tarot',
     'runes',
     'ai_spell',

@@ -1,5 +1,8 @@
 import '../../../../core/content/content_locale.dart';
 import '../models/trail_model.dart';
+import 'trails/trail_aguas_magicas_en.dart';
+import 'trails/trail_aguas_magicas_es.dart';
+import 'trails/trail_aguas_magicas_pt.dart';
 import 'trails/trail_bruxaria_tradicional_en.dart';
 import 'trails/trail_bruxaria_tradicional_es.dart';
 import 'trails/trail_bruxaria_tradicional_pt.dart';
@@ -29,7 +32,7 @@ import 'trails/trail_wicca_pt.dart';
 /// estático (fallback: português). A primeira lição de cada trilha é gratuita;
 /// as demais são Premium (regra centralizada no FeatureAccess).
 ///
-/// A ordem das 7 trilhas é idêntica entre os idiomas e é preservada aqui.
+/// A ordem das trilhas é idêntica entre os idiomas e é preservada aqui.
 /// Paridade pt/en/es verificada em test/trails_parity_test.dart.
 List<LearningTrail> get learningTrails => ContentLocale.instance.select(
       pt: const [
@@ -41,6 +44,7 @@ List<LearningTrail> get learningTrails => ContentLocale.instance.select(
         magiaDoCaosTrailPt,
         tarotTrailPt,
         quiromanciaTrailPt,
+        aguasMagicasTrailPt,
       ],
       en: const [
         magiaBrancaTrailEn,
@@ -51,6 +55,7 @@ List<LearningTrail> get learningTrails => ContentLocale.instance.select(
         magiaDoCaosTrailEn,
         tarotTrailEn,
         quiromanciaTrailEn,
+        aguasMagicasTrailEn,
       ],
       es: const [
         magiaBrancaTrailEs,
@@ -61,5 +66,6 @@ List<LearningTrail> get learningTrails => ContentLocale.instance.select(
         magiaDoCaosTrailEs,
         tarotTrailEs,
         quiromanciaTrailEs,
+        aguasMagicasTrailEs,
       ],
     );
