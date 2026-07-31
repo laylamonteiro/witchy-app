@@ -3,6 +3,9 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/accents.dart';
+import '../../../../core/theme/grimoire_colors.dart';
+import '../../../diary/presentation/pages/dream_themes_page.dart';
+import '../../../diary/presentation/pages/dreams_list_page.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../grimoire/data/models/spell_model.dart';
@@ -174,8 +177,53 @@ WidgetBuilder? resolveRelatedLink(String label) {
   if (has(['grimorio', 'grimoire', 'feitico', 'spell', 'hechizo'])) {
     return (_) => const _WrappedSection(child: SpellCategoriesHubPage());
   }
+  if (has(['tema onirico', 'temas oniricos', 'dream theme'])) {
+    return (_) => const DreamThemesPage();
+  }
+  if (has(['sonho', 'dream', 'sueno'])) return (_) => const DreamsListPage();
 
   return null;
+}
+
+/// Chip de correspondência/tag que navega quando o rótulo resolve para uma
+/// página do app (verbete, deusa, seção...). Sem destino, fica inerte —
+/// mesmo visual em ambos os casos, com seta ↗ quando é clicável.
+class LinkableChip extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const LinkableChip({super.key, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final destination = resolveRelatedLink(label);
+    final chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          if (destination != null) ...[
+            const SizedBox(width: 4),
+            Icon(Icons.arrow_outward, size: 13, color: context.gc.lilac),
+          ],
+        ],
+      ),
+    );
+    if (destination == null) return chip;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: destination),
+      ),
+      child: chip,
+    );
+  }
 }
 
 /// Scaffold para seções que normalmente vivem como aba (sem AppBar própria).

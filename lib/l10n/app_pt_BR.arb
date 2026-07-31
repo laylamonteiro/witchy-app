@@ -1309,5 +1309,7 @@
   "encyAddFabTooltip": "Adicionar com foto",
   "encyUserEntryBadge": "Minha",
   "encyDeleteEntryTitle": "Excluir verbete?",
-  "encyDeleteEntryBody": "\"{name}\" e a foto associada serão removidos da sua enciclopédia."
+  "encyDeleteEntryBody": "\"{name}\" e a foto associada serão removidos da sua enciclopédia.",
+  "guidedRitualCreatingSpell": "O Conselheiro Místico está escrevendo seu feitiço...",
+  "guidedRitualSpellContext": "Estou fazendo o {title} agora. Contexto do ritual: {intro} Crie um feitiço personalizado para este exato momento, aproveitando correspondências como os cristais ({crystals}) e as ervas ({herbs}) deste ritual."
 }

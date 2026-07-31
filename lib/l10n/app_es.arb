@@ -1309,5 +1309,7 @@
   "encyAddFabTooltip": "Agregar con foto",
   "encyUserEntryBadge": "Mía",
   "encyDeleteEntryTitle": "¿Eliminar entrada?",
-  "encyDeleteEntryBody": "\"{name}\" y su foto se eliminarán de tu enciclopedia."
+  "encyDeleteEntryBody": "\"{name}\" y su foto se eliminarán de tu enciclopedia.",
+  "guidedRitualCreatingSpell": "El Consejero Místico está escribiendo tu hechizo...",
+  "guidedRitualSpellContext": "Estoy haciendo el {title} ahora mismo. Contexto del ritual: {intro} Crea un hechizo personalizado para este momento exacto, aprovechando correspondencias como los cristales ({crystals}) y las hierbas ({herbs}) de este ritual."
 }

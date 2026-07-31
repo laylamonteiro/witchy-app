@@ -8,6 +8,7 @@ import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../encyclopedia/presentation/widgets/related_link.dart';
 import '../../../guided_rituals/data/models/guided_rituals_data.dart';
 import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
 
@@ -300,7 +301,9 @@ class WheelOfYearPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              MagicalButton(
+              SizedBox(
+                width: double.infinity,
+                child: MagicalButton(
                 text: AppLocalizations.of(context).guidedRitualOpenCta,
                 icon: Icons.auto_awesome,
                 onPressed: () {
@@ -314,6 +317,7 @@ class WheelOfYearPage extends StatelessWidget {
                     ),
                   );
                 },
+                ),
               ),
               const SizedBox(height: 24),
               Text(
@@ -427,12 +431,8 @@ class WheelOfYearPage extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: sabbat.type.crystals
-                    .map((crystal) => Chip(
-                          label: Text(crystal),
-                          backgroundColor:
-                              context.gc.lilac.withValues(alpha: 0.2),
-                          side: BorderSide(color: context.gc.lilac),
-                        ))
+                    .map((crystal) => LinkableChip(
+                        label: crystal, color: context.gc.lilac))
                     .toList(),
               ),
               const SizedBox(height: 16),
@@ -445,12 +445,8 @@ class WheelOfYearPage extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: sabbat.type.herbs
-                    .map((herb) => Chip(
-                          label: Text(herb),
-                          backgroundColor:
-                              context.gc.mint.withValues(alpha: 0.2),
-                          side: BorderSide(color: context.gc.mint),
-                        ))
+                    .map((herb) => LinkableChip(
+                        label: herb, color: context.gc.mint))
                     .toList(),
               ),
               const SizedBox(height: 16),
@@ -463,12 +459,8 @@ class WheelOfYearPage extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: sabbat.type.colors
-                    .map((color) => Chip(
-                          label: Text(color),
-                          backgroundColor:
-                              context.gc.starYellow.withValues(alpha: 0.2),
-                          side: BorderSide(color: context.gc.starYellow),
-                        ))
+                    .map((color) => LinkableChip(
+                        label: color, color: context.gc.starYellow))
                     .toList(),
               ),
               const SizedBox(height: 16),

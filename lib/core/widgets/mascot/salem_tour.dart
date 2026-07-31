@@ -6,8 +6,9 @@ import '../../theme/grimoire_colors.dart';
 /// Um passo do tour: aba da bottom bar a exibir + texto do Salem.
 typedef _TourStep = ({int tab, String Function(AppLocalizations) text});
 
-/// Walk-through do app guiado pelo Salem: overlay com scrim, o gatinho e um
-/// balão de fala, passo a passo pelas 3 seções. Sempre com opção de pular.
+/// Walk-through do app guiado pelo Salem: um card compacto ancorado no rodapé
+/// (sem escurecer a tela — a feature explicada fica totalmente visível; o
+/// tour troca de aba para mostrá-la ao vivo). Sempre com opção de pular.
 /// Exibido no 1º acesso e via "Rever tour com o Salem" nas Configurações.
 class SalemTourOverlay extends StatefulWidget {
   /// Troca a aba da bottom bar para acompanhar o passo atual.
@@ -58,118 +59,122 @@ class _SalemTourOverlayState extends State<SalemTourOverlay> {
     widget.onTabChange(_steps[_current].tab);
   }
 
+  void _back() {
+    if (_current == 0) return;
+    setState(() => _current--);
+    widget.onTabChange(_steps[_current].tab);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final step = _steps[_current];
 
-    return Positioned.fill(
-      child: Material(
-        color: Colors.black.withValues(alpha: 0.72),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Progresso + pular no topo
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    Text(
-                      '${_current + 1}/${_steps.length}',
-                      style: TextStyle(
-                        color: context.gc.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: widget.onFinished,
-                      child: Text(
-                        l10n.salemTourSkip,
-                        style: TextStyle(color: context.gc.textSecondary),
-                      ),
-                    ),
-                  ],
+    // Card compacto no rodapé: a tela continua visível e interativa acima —
+    // o Salem aponta a feature trocando de aba, sem sombrear nada.
+    return Positioned(
+      left: 12,
+      right: 12,
+      bottom: 12,
+      child: SafeArea(
+        top: false,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            decoration: BoxDecoration(
+              color: context.gc.surface.withValues(alpha: 0.97),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: context.gc.lilac),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
                 ),
-              ),
-              const Spacer(),
-              // Salem + balão
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: context.gc.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: context.gc.lilac),
-                        boxShadow: [
-                          BoxShadow(
-                            color: context.gc.lilac.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                          ),
-                        ],
-                      ),
+                    Image.asset(
+                      'assets/icons/new_cat/cat_sit_happy.png',
+                      width: 52,
+                      height: 52,
+                      errorBuilder: (_, __, ___) =>
+                          const Text('🐈‍⬛', style: TextStyle(fontSize: 36)),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
                       child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
+                        duration: const Duration(milliseconds: 220),
                         child: Text(
                           step.text(l10n),
                           key: ValueKey(_current),
                           style: Theme.of(context)
                               .textTheme
-                              .bodyLarge
-                              ?.copyWith(height: 1.4),
-                          textAlign: TextAlign.center,
+                              .bodyMedium
+                              ?.copyWith(height: 1.35),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Image.asset(
-                      'assets/icons/new_cat/cat_sit_happy.png',
-                      width: 110,
-                      height: 110,
-                      errorBuilder: (_, __, ___) =>
-                          const Text('🐈‍⬛', style: TextStyle(fontSize: 72)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      '${_current + 1}/${_steps.length}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        if (_current > 0)
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                setState(() => _current--);
-                                widget.onTabChange(_steps[_current].tab);
-                              },
-                              child: Text(l10n.salemTourBack),
-                            ),
-                          ),
-                        if (_current > 0) const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: _next,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: context.gc.lilac,
-                              foregroundColor: context.gc.onPrimary,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: Text(
-                              _isLast ? l10n.salemTourDone : l10n.salemTourNext,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w700),
-                            ),
-                          ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: widget.onFinished,
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      child: Text(
+                        l10n.salemTourSkip,
+                        style: TextStyle(
+                          color: context.gc.textSecondary,
+                          fontSize: 12,
                         ),
-                      ],
+                      ),
+                    ),
+                    const Spacer(),
+                    if (_current > 0)
+                      IconButton(
+                        onPressed: _back,
+                        visualDensity: VisualDensity.compact,
+                        icon: Icon(Icons.arrow_back,
+                            size: 20, color: context.gc.lilac),
+                        tooltip: l10n.salemTourBack,
+                      ),
+                    ElevatedButton(
+                      onPressed: _next,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.gc.lilac,
+                        foregroundColor: context.gc.onPrimary,
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 8),
+                      ),
+                      child: Text(
+                        _isLast ? l10n.salemTourDone : l10n.salemTourNext,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const Spacer(),
-            ],
+              ],
+            ),
           ),
         ),
       ),

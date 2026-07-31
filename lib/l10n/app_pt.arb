@@ -1904,5 +1904,15 @@
     "placeholders": {
       "name": {}
     }
+  },
+  "guidedRitualCreatingSpell": "O Conselheiro Místico está escrevendo seu feitiço...",
+  "guidedRitualSpellContext": "Estou fazendo o {title} agora. Contexto do ritual: {intro} Crie um feitiço personalizado para este exato momento, aproveitando correspondências como os cristais ({crystals}) e as ervas ({herbs}) deste ritual.",
+  "@guidedRitualSpellContext": {
+    "placeholders": {
+      "title": {},
+      "intro": {},
+      "crystals": {},
+      "herbs": {}
+    }
   }
 }
