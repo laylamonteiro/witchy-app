@@ -203,9 +203,9 @@ class MagicalMomentCard extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 8),
-              ...DayPeriod.values.map((period) {
+              ...MagicDayPeriod.values.map((period) {
                 final isNow =
-                    DayPeriod.fromHour(DateTime.now().hour) == period;
+                    MagicDayPeriod.fromHour(DateTime.now().hour) == period;
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),

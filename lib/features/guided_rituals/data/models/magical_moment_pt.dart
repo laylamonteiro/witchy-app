@@ -90,28 +90,28 @@ const Map<int, WeekdayText> weekdayTextsPt = {
   ),
 };
 
-const Map<DayPeriod, DayPeriodText> dayPeriodTextsPt = {
-  DayPeriod.sunrise: (
+const Map<MagicDayPeriod, DayPeriodText> dayPeriodTextsPt = {
+  MagicDayPeriod.sunrise: (
     title: 'Nascer do sol',
     goodFor: 'Novos começos, novas energias, purificar, curar, estudar, iniciativa.',
   ),
-  DayPeriod.day: (
+  MagicDayPeriod.day: (
     title: 'Durante o dia',
     goodFor: 'Expansão, inteligência, liderança, mente consciente.',
   ),
-  DayPeriod.noon: (
+  MagicDayPeriod.noon: (
     title: 'Meio-dia',
     goodFor: 'Poder, saúde, dinheiro, sucesso, força, proteção, oportunidade, vitalidade.',
   ),
-  DayPeriod.sunset: (
+  MagicDayPeriod.sunset: (
     title: 'Pôr do sol',
     goodFor: 'Encontrar a verdade, deixar ir, banir, romper maus hábitos, encerramentos.',
   ),
-  DayPeriod.night: (
+  MagicDayPeriod.night: (
     title: 'Noite',
     goodFor: 'Inventar, autodesenvolvimento, consciência, liberar estresse e preocupações, curar feridas.',
   ),
-  DayPeriod.midnight: (
+  MagicDayPeriod.midnight: (
     title: 'Meia-noite',
     goodFor: 'Banimento, adivinhação, cura, aprimoramento pessoal.',
   ),

@@ -11,7 +11,7 @@ typedef WeekdayText = ({String theme, List<String> goodFor, String suggestion});
 typedef DayPeriodText = ({String title, String goodFor});
 
 /// Período mágico do dia (correspondências da hora de lançar um feitiço).
-enum DayPeriod {
+enum MagicDayPeriod {
   sunrise,
   day,
   noon,
@@ -22,30 +22,30 @@ enum DayPeriod {
   /// Mapeia qualquer hora (0–23) para um período. Faixas:
   /// 0–1 e 23 = meia-noite; 2–4 e 20–22 = noite; 5–7 = nascer do sol;
   /// 8–10 e 14–16 = durante o dia; 11–13 = meio-dia; 17–19 = pôr do sol.
-  static DayPeriod fromHour(int hour) {
+  static MagicDayPeriod fromHour(int hour) {
     assert(hour >= 0 && hour < 24);
-    if (hour == 23 || hour <= 1) return DayPeriod.midnight;
-    if (hour <= 4 || hour >= 20) return DayPeriod.night;
-    if (hour <= 7) return DayPeriod.sunrise;
-    if (hour <= 10) return DayPeriod.day;
-    if (hour <= 13) return DayPeriod.noon;
-    if (hour <= 16) return DayPeriod.day;
-    return DayPeriod.sunset;
+    if (hour == 23 || hour <= 1) return MagicDayPeriod.midnight;
+    if (hour <= 4 || hour >= 20) return MagicDayPeriod.night;
+    if (hour <= 7) return MagicDayPeriod.sunrise;
+    if (hour <= 10) return MagicDayPeriod.day;
+    if (hour <= 13) return MagicDayPeriod.noon;
+    if (hour <= 16) return MagicDayPeriod.day;
+    return MagicDayPeriod.sunset;
   }
 
   String get emoji {
     switch (this) {
-      case DayPeriod.sunrise:
+      case MagicDayPeriod.sunrise:
         return '🌅';
-      case DayPeriod.day:
+      case MagicDayPeriod.day:
         return '☀️';
-      case DayPeriod.noon:
+      case MagicDayPeriod.noon:
         return '🌞';
-      case DayPeriod.sunset:
+      case MagicDayPeriod.sunset:
         return '🌇';
-      case DayPeriod.night:
+      case MagicDayPeriod.night:
         return '🌌';
-      case DayPeriod.midnight:
+      case MagicDayPeriod.midnight:
         return '🕛';
     }
   }
@@ -95,12 +95,12 @@ class WeekdayCorrespondence {
 /// O momento mágico de um instante: dia da semana + período do dia.
 class MagicalMoment {
   final WeekdayCorrespondence day;
-  final DayPeriod period;
+  final MagicDayPeriod period;
 
   const MagicalMoment._(this.day, this.period);
 
   factory MagicalMoment.of(DateTime when) => MagicalMoment._(
         WeekdayCorrespondence(when.weekday),
-        DayPeriod.fromHour(when.hour),
+        MagicDayPeriod.fromHour(when.hour),
       );
 }

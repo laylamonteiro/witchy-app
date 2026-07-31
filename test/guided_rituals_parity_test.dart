@@ -127,7 +127,7 @@ void main() {
 
     test('períodos do dia cobertos nos 3 idiomas', () {
       for (final map in [dayPeriodTextsPt, dayPeriodTextsEn, dayPeriodTextsEs]) {
-        expect(map.keys.toSet(), DayPeriod.values.toSet());
+        expect(map.keys.toSet(), MagicDayPeriod.values.toSet());
         for (final entry in map.entries) {
           expect(entry.value.title, isNotEmpty, reason: '${entry.key}');
           expect(entry.value.goodFor, isNotEmpty, reason: '${entry.key}');
@@ -137,7 +137,7 @@ void main() {
 
     test('toda hora 0–23 mapeia para um período', () {
       for (var hour = 0; hour < 24; hour++) {
-        expect(() => DayPeriod.fromHour(hour), returnsNormally);
+        expect(() => MagicDayPeriod.fromHour(hour), returnsNormally);
       }
     });
 
