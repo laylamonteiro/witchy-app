@@ -56,7 +56,6 @@ dependencies:
   dio: ^5.4.0
 
   # Secure storage for API keys
-  flutter_secure_storage: ^9.0.0
 
   # Crypto utilities
   crypto: ^3.0.3

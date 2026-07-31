@@ -1,4 +1,5 @@
 import '../../../../core/content/content_locale.dart';
+import '../../../../core/utils/mask.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -139,7 +140,8 @@ class SupabaseAuthRepository implements AuthRepository {
         return AuthResult.error('Login cancelado');
       }
 
-      await debugLog('AUTH', 'Google Sign-In: usuário obtido - ${googleUser.email}');
+      await debugLog(
+          'AUTH', 'Google Sign-In: usuário obtido - ${maskEmail(googleUser.email)}');
 
       final googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
