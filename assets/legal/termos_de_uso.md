@@ -63,7 +63,7 @@ Na máxima extensão permitida pela lei, o Grimório de Bolso não se responsabi
 
 ## 11. Contato
 
-Dúvidas sobre estes Termos: suporte@grimoriodebolso.com
+Dúvidas sobre estes Termos: suporte.grimoriodebolso@gmail.com
 
 ## 12. Lei aplicável
 

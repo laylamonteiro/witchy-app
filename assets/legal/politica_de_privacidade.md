@@ -78,4 +78,4 @@ Publicaremos atualizações no próprio aplicativo, com data de revisão. Mudan�
 
 ## 11. Contato e encarregado (DPO)
 
-Dúvidas ou solicitações sobre dados pessoais: suporte@grimoriodebolso.com
+Dúvidas ou solicitações sobre dados pessoais: suporte.grimoriodebolso@gmail.com

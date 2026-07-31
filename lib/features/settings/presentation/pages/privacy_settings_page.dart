@@ -1067,7 +1067,7 @@ Você pode a qualquer momento:
 6. CONTATO
 
 Para dúvidas sobre privacidade, entre em contato:
-privacidade@grimoriodebolso.com.br
+suporte.grimoriodebolso@gmail.com
 ''',
                   style: TextStyle(
                     color: context.gc.textSecondary,

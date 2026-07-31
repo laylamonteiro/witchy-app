@@ -78,23 +78,23 @@ https://laylamonteiro.github.io/witchy-app/data-deletion.html
 
 **OU email de contato:**
 ```
-privacidade@grimoriodebolso.com.br
+suporte.grimoriodebolso@gmail.com
 ```
 
 ## ⚠️ Importante
 
 ### Email de Privacidade
 
-As páginas HTML referenciam o email: `privacidade@grimoriodebolso.com.br`
+As páginas HTML referenciam o email: `suporte.grimoriodebolso@gmail.com`
 
 **Se este email não existir ainda:**
 
-1. **Opção 1 (Recomendada):** Crie o email `privacidade@grimoriodebolso.com.br` e configure redirecionamento para seu email pessoal
+1. **Opção 1 (Recomendada):** Crie o email `suporte.grimoriodebolso@gmail.com` e configure redirecionamento para seu email pessoal
 
 2. **Opção 2:** Substitua todas as ocorrências nas páginas HTML por um email que você já use:
    ```bash
    # Edite os arquivos e substitua:
-   privacidade@grimoriodebolso.com.br
+   suporte.grimoriodebolso@gmail.com
    # Por:
    seu-email@gmail.com
    ```

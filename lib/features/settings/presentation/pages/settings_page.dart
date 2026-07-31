@@ -1145,7 +1145,7 @@ class SettingsPage extends StatelessWidget {
               context,
               icon: Icons.email_outlined,
               title: AppLocalizations.of(context).profileSupportEmail,
-              subtitle: 'suporte@grimoriodebolso.com',
+              subtitle: 'suporte.grimoriodebolso@gmail.com',
               onTap: () => _launchEmail(),
             ),
             const SizedBox(height: 16),
@@ -1234,7 +1234,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _launchEmail() async {
-    final uri = Uri.parse('mailto:suporte@grimoriodebolso.com');
+    final uri = Uri.parse('mailto:suporte.grimoriodebolso@gmail.com');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
