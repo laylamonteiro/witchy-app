@@ -8,6 +8,7 @@ import '../../data/data_sources/arcane_categories.dart';
 import '../../data/models/arcane_entry_model.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../widgets/related_link.dart';
 
 /// Detalhe genérico de uma entrada arcana da Enciclopédia.
 class ArcaneDetailPage extends StatelessWidget {
@@ -327,6 +328,8 @@ class ArcaneDetailPage extends StatelessWidget {
     );
   }
 
+  /// Chips do "Veja também": quando o rótulo resolve para uma página do app
+  /// (outro verbete, deusa, fases da lua, runas...), o chip navega até ela.
   Widget _chipSection(BuildContext context, String title, List<String> items) {
     return _section(
       context,
@@ -334,25 +337,41 @@ class ArcaneDetailPage extends StatelessWidget {
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: items
-            .map(
-              (item) => Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: context.gc.lilac.withOpacity(0.12),
-                  border: Border.all(
-                    color: context.gc.lilac.withOpacity(0.35),
-                  ),
-                ),
-                child: Text(
+        children: items.map((item) {
+          final destination = resolveRelatedLink(item);
+          final chip = Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: context.gc.lilac.withOpacity(0.12),
+              border: Border.all(
+                color: context.gc.lilac.withOpacity(0.35),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
                   item,
                   style: TextStyle(color: context.gc.lilac, fontSize: 13),
                 ),
-              ),
-            )
-            .toList(),
+                if (destination != null) ...[
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_outward,
+                      size: 13, color: context.gc.lilac),
+                ],
+              ],
+            ),
+          );
+          if (destination == null) return chip;
+          return InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: destination),
+            ),
+            child: chip,
+          );
+        }).toList(),
       ),
     );
   }
