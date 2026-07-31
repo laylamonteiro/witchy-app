@@ -1011,47 +1011,45 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                AppLocalizations.of(context).editGenderSection,
-                style: TextStyle(
-                  color: context.gc.lilac,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+              // Mesma largura e estilo do campo Nome.
+              DropdownButtonFormField<Gender>(
+                value: selectedGender,
+                isExpanded: true,
+                dropdownColor: context.gc.surface,
+                style: TextStyle(color: context.gc.textPrimary),
+                iconEnabledColor: context.gc.lilac,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).editGenderSection,
+                  labelStyle: TextStyle(color: context.gc.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: context.gc.textPrimary.withValues(alpha: 0.3)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: context.gc.lilac),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
+                items: Gender.values
+                    .map((pref) => DropdownMenuItem<Gender>(
+                          value: pref,
+                          child: Text(_genderLabel(context, pref)),
+                        ))
+                    .toList(),
+                onChanged: (pref) {
+                  if (pref != null) {
+                    setDialogState(() => selectedGender = pref);
+                  }
+                },
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 AppLocalizations.of(context).editGenderHelp,
                 style: TextStyle(
                   color: context.gc.textSecondary,
                   fontSize: 12,
                 ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                children: Gender.values.map((pref) {
-                  final selected = selectedGender == pref;
-                  return ChoiceChip(
-                    label: Text(_genderLabel(context, pref)),
-                    selected: selected,
-                    selectedColor: context.gc.lilac.withValues(alpha: 0.25),
-                    labelStyle: TextStyle(
-                      color: selected
-                          ? context.gc.lilac
-                          : context.gc.textSecondary,
-                      fontWeight:
-                          selected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    side: BorderSide(
-                      color:
-                          selected ? context.gc.lilac : context.gc.surfaceBorder,
-                    ),
-                    backgroundColor: context.gc.surface,
-                    onSelected: (_) =>
-                        setDialogState(() => selectedGender = pref),
-                  );
-                }).toList(),
               ),
             ],
           ),
