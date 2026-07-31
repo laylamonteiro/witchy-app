@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/content/content_locale.dart';
+import 'journey_texts_en.dart';
+import 'journey_texts_es.dart';
+import 'journey_texts_pt.dart';
+
+/// Título+descrição localizados de jornadas/etapas, indexados por id.
+typedef JourneyText = ({String title, String description});
+
 /// Representa uma jornada mágica gamificada
 class JourneyModel {
   final String id;
@@ -25,6 +33,18 @@ class JourneyModel {
   });
 
   int get totalSteps => steps.length;
+
+  /// Título no idioma atual (fallback: campo PT gravado no modelo).
+  String get localizedTitle => ContentLocale.instance
+          .select(pt: journeyTextsPt, en: journeyTextsEn, es: journeyTextsEs)[id]
+          ?.title ??
+      title;
+
+  /// Descrição no idioma atual (fallback: campo PT do modelo).
+  String get localizedDescription => ContentLocale.instance
+          .select(pt: journeyTextsPt, en: journeyTextsEn, es: journeyTextsEs)[id]
+          ?.description ??
+      description;
 }
 
 /// Etapa de uma jornada
@@ -46,6 +66,24 @@ class JourneyStep {
     this.targetEntity,
     this.xpReward = 20,
   });
+
+  /// Título no idioma atual (fallback: campo PT gravado no modelo).
+  String get localizedTitle => ContentLocale.instance
+          .select(
+              pt: journeyStepTextsPt,
+              en: journeyStepTextsEn,
+              es: journeyStepTextsEs)[id]
+          ?.title ??
+      title;
+
+  /// Descrição no idioma atual (fallback: campo PT do modelo).
+  String get localizedDescription => ContentLocale.instance
+          .select(
+              pt: journeyStepTextsPt,
+              en: journeyStepTextsEn,
+              es: journeyStepTextsEs)[id]
+          ?.description ??
+      description;
 }
 
 /// Tipo de etapa

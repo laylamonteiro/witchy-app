@@ -431,7 +431,7 @@ class _JourneysPageState extends State<JourneysPage>
                           Row(
                             children: [
                               Text(
-                                journey.title,
+                                journey.localizedTitle,
                                 style: TextStyle(
                                   color: context.gc.textPrimary,
                                   fontSize: 16,
@@ -450,7 +450,7 @@ class _JourneysPageState extends State<JourneysPage>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            journey.description,
+                            journey.localizedDescription,
                             style: TextStyle(
                               color: context.gc.textSecondary,
                               fontSize: 12,
@@ -572,7 +572,7 @@ class _JourneysPageState extends State<JourneysPage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                journey.title,
+                                journey.localizedTitle,
                                 style: TextStyle(
                                   color: context.gc.textPrimary,
                                   fontSize: 22,
@@ -581,7 +581,7 @@ class _JourneysPageState extends State<JourneysPage>
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                journey.description,
+                                journey.localizedDescription,
                                 style: TextStyle(
                                   color: context.gc.textSecondary,
                                   fontSize: 14,
@@ -656,7 +656,7 @@ class _JourneysPageState extends State<JourneysPage>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    step.title,
+                                    step.localizedTitle,
                                     style: TextStyle(
                                       color: isCompleted
                                           ? Colors.green
@@ -666,7 +666,7 @@ class _JourneysPageState extends State<JourneysPage>
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    step.description,
+                                    step.localizedDescription,
                                     style: TextStyle(
                                       color: context.gc.textSecondary,
                                       fontSize: 12,
