@@ -1331,5 +1331,97 @@
   "privacySyncNow": "Sincronizar agora",
   "privacyReadFullPolicy": "Ler Política de Privacidade completa",
   "privacyBackupSubject": "Backup Grimório de Bolso",
-  "privacyPolicyBody": "POLÍTICA DE PRIVACIDADE - GRIMÓRIO DE BOLSO\n\nÚltima atualização: Novembro 2025\n\n1. COLETA DE DADOS\n\nColetamos apenas os dados necessários para o funcionamento do app:\n- Email e senha (para autenticação)\n- Dados de perfil (nome, foto - opcionais)\n- Dados de nascimento (para cálculo do mapa astral)\n- Conteúdo criado por você (feitiços, diários, etc.)\n\n2. USO DOS DADOS\n\nSeus dados são utilizados exclusivamente para:\n- Prover os serviços do app\n- Sincronizar entre dispositivos\n- Melhorar a experiência do usuário\n\n3. COMPARTILHAMENTO\n\nNÃO vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto:\n- Quando exigido por lei\n- Para proteger nossos direitos legais\n\n4. SEGURANÇA\n\nUtilizamos criptografia e melhores práticas de segurança para proteger seus dados.\n\n5. SEUS DIREITOS\n\nVocê pode a qualquer momento:\n- Acessar seus dados\n- Corrigir informações\n- Exportar seus dados\n- Excluir sua conta\n\n6. CONTATO\n\nPara dúvidas sobre privacidade, entre em contato:\nsuporte.grimoriodebolso@gmail.com"
+  "privacyPolicyBody": "POLÍTICA DE PRIVACIDADE - GRIMÓRIO DE BOLSO\n\nÚltima atualização: Novembro 2025\n\n1. COLETA DE DADOS\n\nColetamos apenas os dados necessários para o funcionamento do app:\n- Email e senha (para autenticação)\n- Dados de perfil (nome, foto - opcionais)\n- Dados de nascimento (para cálculo do mapa astral)\n- Conteúdo criado por você (feitiços, diários, etc.)\n\n2. USO DOS DADOS\n\nSeus dados são utilizados exclusivamente para:\n- Prover os serviços do app\n- Sincronizar entre dispositivos\n- Melhorar a experiência do usuário\n\n3. COMPARTILHAMENTO\n\nNÃO vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto:\n- Quando exigido por lei\n- Para proteger nossos direitos legais\n\n4. SEGURANÇA\n\nUtilizamos criptografia e melhores práticas de segurança para proteger seus dados.\n\n5. SEUS DIREITOS\n\nVocê pode a qualquer momento:\n- Acessar seus dados\n- Corrigir informações\n- Exportar seus dados\n- Excluir sua conta\n\n6. CONTATO\n\nPara dúvidas sobre privacidade, entre em contato:\nsuporte.grimoriodebolso@gmail.com",
+  "adminCodesTitle": "Gerenciar Códigos Premium",
+  "adminCodesLoadError": "Erro ao carregar códigos",
+  "adminCodesEnterValid": "Digite um código válido",
+  "adminCodesLettersNumbersOnly": "Use apenas letras e números",
+  "adminCodesUsesAtLeastOne": "Número de usos deve ser pelo menos 1",
+  "adminCodesCreated": "Código \"{code}\" criado com sucesso! ({count, plural, one{1 uso} other{{count} usos}})",
+  "@adminCodesCreated": {
+    "placeholders": {
+      "code": {},
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "adminCodesCreateFailed": "Erro ao criar código no servidor. O código NÃO foi criado. Verifique se ele já existe e se o Supabase está acessível (veja Debug Logs).",
+  "adminCodesInvalidateTitle": "Invalidar Código",
+  "adminCodesInvalidateConfirm": "Tem certeza que deseja invalidar o código \"{code}\"?",
+  "@adminCodesInvalidateConfirm": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "adminCodesInvalidateAction": "Invalidar",
+  "adminCodesInvalidated": "Código \"{code}\" invalidado",
+  "@adminCodesInvalidated": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "adminCodesInvalidateError": "Erro ao invalidar código",
+  "adminCodesDeleteTitle": "Excluir Código",
+  "adminCodesDeleteConfirm": "Tem certeza que deseja excluir permanentemente o código \"{code}\"?",
+  "@adminCodesDeleteConfirm": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "adminCodesDeleted": "Código \"{code}\" excluído",
+  "@adminCodesDeleted": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "adminCodesDeleteError": "Erro ao excluir código",
+  "adminCodesCreateNew": "Criar Novo Código",
+  "adminCodesCodeLabel": "Código",
+  "adminCodesCodeHint": "Digite o código (ex: PREMIUM2025)",
+  "adminCodesUsesLabel": "Número de usos",
+  "adminCodesUsesSuffix": "uso(s)",
+  "adminCodesCreateAction": "Criar",
+  "adminCodesStatTotal": "Total",
+  "adminCodesStatAvailable": "Disponíveis",
+  "adminCodesStatUsed": "Usados",
+  "adminCodesListTitle": "Códigos Criados",
+  "adminCodesEmpty": "Nenhum código criado ainda",
+  "adminCodesBadgeUsed": "USADO",
+  "adminCodesBadgeAvailable": "DISPONÍVEL",
+  "adminCodesCopied": "Código copiado!",
+  "adminCodesCopyTooltip": "Copiar código",
+  "adminCodesCreatedAt": "Criado em: {date}",
+  "@adminCodesCreatedAt": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "adminCodesUses": "Usos: {current}/{max}",
+  "@adminCodesUses": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
+  "adminCodesRemaining": "({count, plural, one{1 restante} other{{count} restantes}})",
+  "@adminCodesRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "adminCodesLastUsedAt": "Último uso em: {date}",
+  "@adminCodesLastUsedAt": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "adminCodesLastUser": "Último usuário: {user}",
+  "@adminCodesLastUser": {
+    "placeholders": {
+      "user": {}
+    }
+  }
 }

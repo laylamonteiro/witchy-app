@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -37,6 +39,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     super.dispose();
   }
 
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   Future<void> _loadCodes() async {
     setState(() => _isLoading = true);
     try {
@@ -50,7 +54,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao carregar códigos: $e'),
+            content: Text('${_l10n.adminCodesLoadError}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -64,8 +68,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
 
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Digite um código válido'),
+        SnackBar(
+          content: Text(_l10n.adminCodesEnterValid),
           backgroundColor: Colors.orange,
         ),
       );
@@ -75,8 +79,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     // Validar formato do código (letras e números apenas)
     if (!RegExp(r'^[A-Z0-9]+$').hasMatch(code)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Use apenas letras e números'),
+        SnackBar(
+          content: Text(_l10n.adminCodesLettersNumbersOnly),
           backgroundColor: Colors.orange,
         ),
       );
@@ -87,8 +91,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     final maxUses = int.tryParse(_maxUsesController.text) ?? 1;
     if (maxUses < 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Número de usos deve ser pelo menos 1'),
+        SnackBar(
+          content: Text(_l10n.adminCodesUsesAtLeastOne),
           backgroundColor: Colors.orange,
         ),
       );
@@ -101,8 +105,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                'Código "$result" criado com sucesso! (${maxUses} uso${maxUses > 1 ? 's' : ''})'),
+            content: Text(_l10n.adminCodesCreated(result, maxUses)),
             backgroundColor: Colors.green,
           ),
         );
@@ -111,14 +114,10 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
         _loadCodes();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Erro ao criar código no servidor. O código NÃO foi criado. '
-              'Verifique se ele já existe e se o Supabase está acessível '
-              '(veja Debug Logs).',
-            ),
+          SnackBar(
+            content: Text(_l10n.adminCodesCreateFailed),
             backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -129,17 +128,17 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Invalidar Código'),
-        content: Text('Tem certeza que deseja invalidar o código "$code"?'),
+        title: Text(_l10n.adminCodesInvalidateTitle),
+        content: Text(_l10n.adminCodesInvalidateConfirm(code)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(_l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Invalidar'),
+            child: Text(_l10n.adminCodesInvalidateAction),
           ),
         ],
       ),
@@ -154,15 +153,15 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Código "$code" invalidado'),
+              content: Text(_l10n.adminCodesInvalidated(code)),
               backgroundColor: Colors.green,
             ),
           );
           _loadCodes();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Erro ao invalidar código'),
+            SnackBar(
+              content: Text(_l10n.adminCodesInvalidateError),
               backgroundColor: Colors.red,
             ),
           );
@@ -172,7 +171,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao invalidar código: $e'),
+            content: Text('${_l10n.adminCodesInvalidateError}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -184,18 +183,17 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir Código'),
-        content: Text(
-            'Tem certeza que deseja excluir permanentemente o código "$code"?'),
+        title: Text(_l10n.adminCodesDeleteTitle),
+        content: Text(_l10n.adminCodesDeleteConfirm(code)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(_l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Excluir'),
+            child: Text(_l10n.commonDelete),
           ),
         ],
       ),
@@ -210,15 +208,15 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Código "$code" excluído'),
+              content: Text(_l10n.adminCodesDeleted(code)),
               backgroundColor: Colors.green,
             ),
           );
           _loadCodes();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Erro ao excluir código'),
+            SnackBar(
+              content: Text(_l10n.adminCodesDeleteError),
               backgroundColor: Colors.red,
             ),
           );
@@ -228,7 +226,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao excluir código: $e'),
+            content: Text('${_l10n.adminCodesDeleteError}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -241,7 +239,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D1A),
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Gerenciar Códigos Premium'),
+        title: ResponsiveAppBarTitle(_l10n.adminCodesTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -273,10 +271,10 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       children: [
                         Row(
                           children: [
-                            Text('➕', style: TextStyle(fontSize: 24)),
-                            SizedBox(width: 12),
+                            const Text('➕', style: TextStyle(fontSize: 24)),
+                            const SizedBox(width: 12),
                             Text(
-                              'Criar Novo Código',
+                              _l10n.adminCodesCreateNew,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -290,8 +288,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                         TextField(
                           controller: _codeController,
                           decoration: InputDecoration(
-                            labelText: 'Código',
-                            hintText: 'Digite o código (ex: PREMIUM2025)',
+                            labelText: _l10n.adminCodesCodeLabel,
+                            hintText: _l10n.adminCodesCodeHint,
                             hintStyle: TextStyle(
                               color: context.gc.softWhite.withOpacity(0.5),
                             ),
@@ -326,9 +324,9 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                               child: TextField(
                                 controller: _maxUsesController,
                                 decoration: InputDecoration(
-                                  labelText: 'Número de usos',
+                                  labelText: _l10n.adminCodesUsesLabel,
                                   hintText: '1',
-                                  suffixText: 'uso(s)',
+                                  suffixText: _l10n.adminCodesUsesSuffix,
                                   hintStyle: TextStyle(
                                     color: context.gc.softWhite.withOpacity(0.5),
                                   ),
@@ -369,7 +367,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text('Criar'),
+                              child: Text(_l10n.adminCodesCreateAction),
                             ),
                           ],
                         ),
@@ -383,7 +381,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                     children: [
                       Expanded(
                         child: _buildStatCard(
-                          'Total',
+                          _l10n.adminCodesStatTotal,
                           _codes.length.toString(),
                           Colors.blue,
                         ),
@@ -391,7 +389,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildStatCard(
-                          'Disponíveis',
+                          _l10n.adminCodesStatAvailable,
                           _codes
                               .where((c) =>
                                   c['is_used'] == false || c['is_used'] == 0)
@@ -403,7 +401,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildStatCard(
-                          'Usados',
+                          _l10n.adminCodesStatUsed,
                           _codes
                               .where((c) =>
                                   c['is_used'] == true || c['is_used'] == 1)
@@ -418,7 +416,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
 
                   // Lista de códigos
                   Text(
-                    'Códigos Criados',
+                    _l10n.adminCodesListTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -432,7 +430,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                       child: Padding(
                         padding: const EdgeInsets.all(32),
                         child: Text(
-                          'Nenhum código criado ainda',
+                          _l10n.adminCodesEmpty,
                           style: TextStyle(
                             color: context.gc.softWhite.withOpacity(0.5),
                           ),
@@ -516,7 +514,9 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                   ),
                 ),
                 child: Text(
-                  isUsed ? 'USADO' : 'DISPONÍVEL',
+                  isUsed
+                      ? _l10n.adminCodesBadgeUsed
+                      : _l10n.adminCodesBadgeAvailable,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -543,20 +543,20 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: codeText));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Código copiado!'),
-                      duration: Duration(seconds: 1),
+                    SnackBar(
+                      content: Text(_l10n.adminCodesCopied),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                 },
-                tooltip: 'Copiar código',
+                tooltip: _l10n.adminCodesCopyTooltip,
               ),
             ],
           ),
           const SizedBox(height: 8),
           // Informações
           Text(
-            'Criado em: ${_formatDate(createdAt)}',
+            _l10n.adminCodesCreatedAt(_formatDate(createdAt)),
             style: TextStyle(
               fontSize: 12,
               color: context.gc.softWhite.withOpacity(0.6),
@@ -573,7 +573,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               ),
               const SizedBox(width: 4),
               Text(
-                'Usos: $currentUses/$maxUses',
+                _l10n.adminCodesUses('$currentUses', '$maxUses'),
                 style: TextStyle(
                   fontSize: 12,
                   color: usesRemaining > 0
@@ -585,7 +585,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               if (usesRemaining > 0) ...[
                 const SizedBox(width: 8),
                 Text(
-                  '($usesRemaining restante${usesRemaining > 1 ? 's' : ''})',
+                  _l10n.adminCodesRemaining(usesRemaining),
                   style: TextStyle(
                     fontSize: 12,
                     color: context.gc.softWhite.withOpacity(0.5),
@@ -597,7 +597,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
           if (usedAt != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Último uso em: ${_formatDate(usedAt)}',
+              _l10n.adminCodesLastUsedAt(_formatDate(usedAt)),
               style: TextStyle(
                 fontSize: 12,
                 color: context.gc.softWhite.withOpacity(0.6),
@@ -607,7 +607,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
           if (usedBy != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Último usuário: $usedBy',
+              _l10n.adminCodesLastUser(usedBy),
               style: TextStyle(
                 fontSize: 12,
                 color: context.gc.softWhite.withOpacity(0.6),
@@ -623,7 +623,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                 TextButton.icon(
                   onPressed: () => _invalidateCode(code['id'], codeText),
                   icon: const Icon(Icons.block, size: 16),
-                  label: const Text('Invalidar'),
+                  label: Text(_l10n.adminCodesInvalidateAction),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.orange,
                   ),
@@ -631,7 +631,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               TextButton.icon(
                 onPressed: () => _deleteCode(code['id'], codeText),
                 icon: const Icon(Icons.delete, size: 16),
-                label: const Text('Excluir'),
+                label: Text(_l10n.commonDelete),
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.red,
                 ),
@@ -644,7 +644,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.yMd(locale).add_Hm().format(date);
   }
 
   /// Parse DateTime de diferentes formatos (Supabase String ISO8601 ou SQLite int milliseconds)
