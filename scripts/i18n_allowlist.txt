@@ -15,3 +15,6 @@ lib/features/astrology/data/models/house_model\.dart:
 lib/features/astrology/data/models/aspect_model\.dart:
 # Console de diagnóstico dev-only (não é interface de usuário final).
 lib/core/diagnostic/diagnostic_page\.dart:
+# Seeds/campos PT canônicos com overlay ou mapa EN/ES ao lado (paridade testada).
+lib/features/diary/data/models/affirmation_model\.dart:
+lib/features/journeys/data/models/journey_model\.dart:
