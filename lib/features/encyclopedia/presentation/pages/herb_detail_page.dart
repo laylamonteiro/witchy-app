@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
 import '../../data/models/herb_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -139,7 +141,7 @@ class HerbDetailPage extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Avisos de Segurança',
+                            AppLocalizations.of(context).encySectionSafety,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge
@@ -167,7 +169,7 @@ class HerbDetailPage extends StatelessWidget {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'PLANTA TÓXICA - Não ingerir!',
+                                    AppLocalizations.of(context).encyHerbToxicWarning,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -217,7 +219,7 @@ class HerbDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Propriedades Mágicas',
+                    AppLocalizations.of(context).encySectionMagicProps,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -249,7 +251,9 @@ class HerbDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        herb.edible ? 'Comestível' : 'Não Comestível',
+                        herb.edible
+                            ? AppLocalizations.of(context).encyHerbEdible
+                            : AppLocalizations.of(context).encyHerbNotEdible,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -263,7 +267,9 @@ class HerbDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        herb.toxic ? 'Tóxica' : 'Não Tóxica',
+                        herb.toxic
+                            ? AppLocalizations.of(context).encyHerbToxicLabel
+                            : AppLocalizations.of(context).encyHerbNotToxic,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -276,11 +282,11 @@ class HerbDetailPage extends StatelessWidget {
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaHerbsDetails,
                 title: Text(
-                  'Usos Mágicos',
+                  AppLocalizations.of(context).encySectionMagicUses,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 subtitle:
-                    'Práticas, intenções e formas de trabalhar magicamente com esta erva.',
+                    AppLocalizations.of(context).encyHerbUsesSub,
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

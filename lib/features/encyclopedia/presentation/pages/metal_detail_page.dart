@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
 import '../../data/models/metal_model.dart';
 import '../../data/models/crystal_model.dart'; // Para ElementExtension
 import '../../data/models/herb_model.dart'; // Para PlanetExtension
@@ -84,7 +86,7 @@ class MetalDetailPage extends StatelessWidget {
                     ),
                     child: Text(
                       metal.conductsPower
-                          ? '⚡ Conduz energia mágica'
+                          ? AppLocalizations.of(context).encyMetalConducts
                           : '🛡️ Protetor',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: metal.conductsPower
@@ -125,7 +127,7 @@ class MetalDetailPage extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Avisos de Segurança',
+                            AppLocalizations.of(context).encySectionSafety,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge
@@ -172,7 +174,7 @@ class MetalDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Propriedades Mágicas',
+                    AppLocalizations.of(context).encySectionMagicProps,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -194,11 +196,11 @@ class MetalDetailPage extends StatelessWidget {
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaMetalsDetails,
                 title: Text(
-                  'Usos Mágicos',
+                  AppLocalizations.of(context).encySectionMagicUses,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 subtitle:
-                    'Aplicações deste metal em rituais, proteção e condução de energia.',
+                    AppLocalizations.of(context).encyMetalUsesSub,
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -234,7 +236,7 @@ class MetalDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Correspondências',
+                    AppLocalizations.of(context).encySectionCorrespondences,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -277,7 +279,7 @@ class MetalDetailPage extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Contexto Histórico',
+                          AppLocalizations.of(context).encySectionHistory,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ],

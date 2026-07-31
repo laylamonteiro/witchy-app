@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -110,7 +112,7 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle(context, 'Aspectos & Domínios'),
+                  _buildSectionTitle(context, AppLocalizations.of(context).encyGoddessAspects),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
@@ -157,7 +159,7 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle(context, 'Correspondências'),
+                  _buildSectionTitle(context, AppLocalizations.of(context).encySectionCorrespondences),
                   const SizedBox(height: 12),
                   Text(
                     goddess.correspondences,
@@ -178,9 +180,9 @@ class GoddessDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle(context, 'Símbolos & Associações'),
+                  _buildSectionTitle(context, AppLocalizations.of(context).encyGoddessSymbolsAssoc),
                   const SizedBox(height: 12),
-                  _buildChipSection(context, 'Símbolos', goddess.symbols, '✨'),
+                  _buildChipSection(context, AppLocalizations.of(context).encyGoddessSymbols, goddess.symbols, '✨'),
                   const SizedBox(height: 12),
                   _buildChipSection(context, 'Animais Sagrados', goddess.animals, '🐾'),
                   const SizedBox(height: 12),
@@ -218,9 +220,9 @@ class GoddessDetailPage extends StatelessWidget {
             MagicalCard(
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaGoddessesDetails,
-                title: _buildSectionTitle(context, 'Usos Mágicos'),
+                title: _buildSectionTitle(context, AppLocalizations.of(context).encySectionMagicUses),
                 subtitle:
-                    'Práticas devocionais e rituais associados a esta divindade.',
+                    AppLocalizations.of(context).encyGoddessUsesSub,
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -257,7 +259,7 @@ class GoddessDetailPage extends StatelessWidget {
                 feature: AppFeature.encyclopediaGoddessesDetails,
                 title: _buildSectionTitle(context, 'Como Invocar'),
                 subtitle:
-                    'Orientações para conexão, invocação e trabalho devocional.',
+                    AppLocalizations.of(context).encyGoddessConnectionSub,
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

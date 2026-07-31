@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
@@ -77,7 +79,7 @@ class _MetalsListPageState extends State<MetalsListPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Text(
-            'Os metais e sua magia — planetas regentes, condução de energia e usos mágicos.',
+            AppLocalizations.of(context).encyMetalsIntro,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.gc.textSecondary,
                 ),
