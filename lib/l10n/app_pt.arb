@@ -1760,14 +1760,6 @@
   "faqA7": "Em Configurações → Privacidade você pode exportar todos os seus dados, limpar os dados locais ou excluir sua conta permanentemente.",
   "faqQ8": "Como falo com o suporte?",
   "faqA8": "Pelo e-mail suporte.grimoriodebolso@gmail.com — o botão \"Email de Suporte\" em Ajuda & Suporte abre seu aplicativo de e-mail.",
-  "tarotQuestionOptional": "Pergunta (opcional)",
-  "tarotQuestionHint": "Concentre-se e escreva sua pergunta para as cartas",
-  "tarotQuestionPrefix": "Pergunta: {question}",
-  "@tarotQuestionPrefix": {
-    "placeholders": {
-      "question": {}
-    }
-  },
   "guidedRitualTitle": "Ritual guiado",
   "guidedRitualNotFound": "Este ritual não está mais disponível. Explore os rituais guiados no calendário lunar e na Roda do Ano.",
   "guidedRitualWhenTitle": "Quando fazer",

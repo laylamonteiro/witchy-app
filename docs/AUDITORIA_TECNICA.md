@@ -5,6 +5,10 @@ internacionalização pt-BR/EN/ES e da revisão de conteúdo do Tarot).
 **Este documento lista achados e propostas; remoções e correções são
 aplicadas em commits separados, apenas nos itens marcados como seguros.**
 
+> **Status (31/Jul/2026):** todas as ações propostas foram aplicadas,
+> **exceto a seção 1 (Segurança)**, adiada por decisão da mantenedora —
+> permanece como pendência para uma próxima rodada.
+
 ## 1. Segurança
 
 ### 1.1 ALTA — Chave de API do Firebase commitada
@@ -50,7 +54,7 @@ mas podem ser copiados/exportados pela tela de debug.
 
 | Pacote | Situação | Proposta |
 | --- | --- | --- |
-| `flutter_secure_storage` | **0 usos** em `lib/`/`test/` | Remover do pubspec (seguro) |
+| `flutter_secure_storage` | **0 usos** em `lib/`/`test/` | ✅ Removido do pubspec |
 | `crypto` | 2 usos reais | Manter |
 | `image_cropper` | 1 uso | Manter |
 | `gal` | 1 uso | Manter |
@@ -58,7 +62,7 @@ mas podem ser copiados/exportados pela tela de debug.
 
 ## 3. Arquivos e assets
 
-### 3.1 Binários soltos na raiz (dados pessoais + bloat)
+### 3.1 Binários soltos na raiz (dados pessoais + bloat) — ✅ APLICADO
 - `astro_1.pdf`, `astro_2.pdf`, `astro_3.pdf` — mapas astrais **pessoais**
   (de terceiros), irrelevantes ao código.
 - `mapa_astral_layla.png` — dado pessoal da mantenedora.
@@ -67,8 +71,10 @@ mas podem ser copiados/exportados pela tela de debug.
 - `recurso grafico gplay.png` — arte da loja; se ainda for a arte vigente,
   mover para `docs/` ou armazenar fora do repositório.
 
-Proposta: **remover da árvore atual** (não reescreve histórico). Aguarda
-confirmação da mantenedora — não aplicado automaticamente.
+Aplicado com autorização da mantenedora (31/Jul/2026): `astro_1/2/3.pdf`,
+`mapa_astral_layla.png`, `diagnostico_api.jpg` e `Logs Diagnóstico.docx`
+removidos da árvore atual (histórico preservado);
+`recurso grafico gplay.png` movido para `docs/assets/` (arte da loja).
 
 ### 3.2 Assets empacotados no APK sem necessidade
 `pubspec.yaml` inclui `assets/icons/` inteiro, que contém documentação e
@@ -99,12 +105,16 @@ isso vai para dentro do APK.
 
 ## 5. Dívida de testes (pré-existente, fora do gate bloqueante)
 
-| Teste | Causa | Ação proposta |
-| --- | --- | --- |
-| `core/i18n/gender_test.dart` (fallback neutro) | Código usa `Gender.feminine` como padrão; teste espera `neutral` | **Decisão de produto** — precisa de definição da mantenedora |
-| `widget_test.dart` FeatureAccess (2 casos de limites Free) | Divergência teste × lógica igual à main | Alinhar teste ou lógica após decisão dos limites |
-| `regression_fixes_test.dart` (paywall sem rolagem + 2 navegações) | Sensível a comprimento de texto localizado | Reavaliar layout do paywall nos 3 idiomas |
-| `free_writing_tab_test.dart` (2 fluxos de edição) | Asserções de interação falham no harness | Depurar com Flutter local |
+Estado atual (run verde de 31/Jul/2026): **205 passam, 11 falham** —
+todas falhas legadas, nenhuma introduzida pela revisão.
+
+| Teste | Casos | Causa | Ação proposta |
+| --- | --- | --- | --- |
+| `core/i18n/gender_test.dart` (fallback neutro) | 1 | Código usa `Gender.feminine` como padrão; teste espera `neutral` | **Decisão de produto** — precisa de definição da mantenedora |
+| `widget_test.dart` FeatureAccess (limites Free) | 2 | Divergência teste × lógica igual à main | Alinhar teste ou lógica após decisão dos limites |
+| `regression_fixes_test.dart` (paywall sem rolagem + 2 navegações) | 3 | Sensível a comprimento de texto localizado | Reavaliar layout do paywall nos 3 idiomas |
+| `free_writing_tab_test.dart` (fluxos de edição) | 4 | Asserções de interação falham no harness | Depurar com Flutter local |
+| `zodiac_signs_layout_test.dart` (margem esquerda) | 1 | Asserção de layout sensível a texto localizado | Reavaliar com Flutter local |
 
 A suíte completa roda como **informativa** no CI de branch; o núcleo de
 i18n/conteúdo (16+ arquivos de teste) é bloqueante.

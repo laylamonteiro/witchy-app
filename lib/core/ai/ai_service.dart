@@ -872,15 +872,9 @@ class AIService {
   /// Interpretar uma tiragem de tarot já sorteada no app (Premium).
   Future<String> interpretTarotSpread({
     required String summary,
-    String? question,
     Gender? gender,
   }) async {
     gender ??= _gender;
-    // A pergunta é conteúdo da pessoa usuária: entra verbatim, nunca traduzida.
-    final trimmedQuestion = question?.trim();
-    final userContent = trimmedQuestion == null || trimmedQuestion.isEmpty
-        ? summary
-        : '$summary\n${_prompts.tarotQuestionIntro}\n"$trimmedQuestion"';
     try {
       final requestData = {
         'model': _textModel,
@@ -892,7 +886,7 @@ class AIService {
           },
           {
             'role': 'user',
-            'content': userContent,
+            'content': summary,
           },
         ],
         'temperature': 0.7,

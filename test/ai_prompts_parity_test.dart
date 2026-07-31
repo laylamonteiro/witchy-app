@@ -46,7 +46,6 @@ void main() {
       'mysticAdvisorSystemPrompt': (p, g) => p.mysticAdvisorSystemPrompt(g),
       'palmistrySystemPrompt': (p, g) => p.palmistrySystemPrompt(g),
       'tarotSpreadSystemPrompt': (p, g) => p.tarotSpreadSystemPrompt(g),
-      'tarotQuestionIntro': (p, g) => p.tarotQuestionIntro,
       'numerologySystemPrompt': (p, g) => p.numerologySystemPrompt(g),
       'dreamInterpreterSystemPrompt': (p, g) =>
           p.dreamInterpreterSystemPrompt(g),
