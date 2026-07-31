@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -29,6 +31,8 @@ Future<void> openSubscriptionPage(BuildContext context) {
 
 class _SubscriptionPageState extends State<SubscriptionPage> {
   final PaymentService _paymentService = PaymentService();
+
+  AppLocalizations get _l10n => AppLocalizations.of(context);
   bool _isLoading = false;
 
   @override
@@ -53,7 +57,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: ResponsiveAppBarTitle(
-          'Assinatura',
+          _l10n.subsTitle,
           style: TextStyle(
             color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
@@ -143,36 +147,37 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     Color labelColor;
 
     if (!isPro) {
-      subscriptionLabel = 'Desbloqueie todos os recursos';
+      subscriptionLabel = _l10n.subsUnlockAll;
       labelColor = context.gc.textSecondary;
     } else if (hasRevenueCat) {
       // Premium via RevenueCat
       if (isLifetimeSubscription) {
-        subscriptionLabel = 'Acesso Vitalício';
+        subscriptionLabel = _l10n.subsLifetime;
         labelColor = context.gc.starYellow;
       } else if (expirationDate != null) {
-        subscriptionLabel = 'Válido até ${_formatDate(expirationDate)}';
+        subscriptionLabel = _l10n.subsValidUntil(_formatDate(expirationDate));
         labelColor = context.gc.textSecondary;
       } else {
-        subscriptionLabel = 'Assinatura Ativa';
+        subscriptionLabel = _l10n.subsActive;
         labelColor = context.gc.starYellow;
       }
     } else if (isBetaCodePremium) {
-      subscriptionLabel = 'Acesso Vitalício (Código Premium)';
+      subscriptionLabel = _l10n.subsLifetimeBetaCode;
       labelColor = context.gc.starYellow;
     } else if (isPremiumWithLifetime) {
-      subscriptionLabel = 'Acesso Vitalício';
+      subscriptionLabel = _l10n.subsLifetime;
       labelColor = context.gc.starYellow;
     } else if (isPremiumWithMonthlyPlan) {
       // Assinatura mensal/anual (sem RevenueCat ativo no momento)
-      final planName =
-          currentUser.plan == SubscriptionPlan.monthly ? 'Mensal' : 'Anual';
+      final planName = currentUser.plan == SubscriptionPlan.monthly
+          ? _l10n.premiumPlanMonthly
+          : _l10n.premiumPlanYearly;
       subscriptionLabel = currentUser.isAdmin
-          ? 'Plano $planName (Simulação)'
-          : 'Plano $planName';
+          ? _l10n.subsPlanNameSim(planName)
+          : _l10n.subsPlanName(planName);
       labelColor = context.gc.textSecondary;
     } else {
-      subscriptionLabel = 'Premium Ativo';
+      subscriptionLabel = _l10n.subsPremiumActive;
       labelColor = context.gc.starYellow;
     }
 
@@ -208,7 +213,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
           // Título
           Text(
-            isPro ? 'Grimório de Bolso Premium' : 'Plano Gratuito',
+            isPro ? _l10n.subsAppPremium : _l10n.profileFreePlan,
             style: TextStyle(
               color: context.gc.textPrimary,
               fontSize: 20,
@@ -241,7 +246,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Seus Benefícios Premium',
+            _l10n.subsYourBenefits,
             style: TextStyle(
               color: context.gc.textPrimary,
               fontSize: 16,
@@ -249,17 +254,17 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildFeatureItem(Icons.auto_awesome, 'Previsões Mágicas ilimitadas'),
-          _buildFeatureItem(Icons.book, 'Grimório completo'),
-          _buildFeatureItem(Icons.psychology, 'Conselheiro Místico'),
           _buildFeatureItem(
-              Icons.account_circle, 'Perfil mágico personalizado'),
+              Icons.auto_awesome, _l10n.subsBenefitUnlimitedForecasts),
+          _buildFeatureItem(Icons.book, _l10n.subsBenefitFullGrimoire),
+          _buildFeatureItem(Icons.psychology, _l10n.subsBenefitAdvisor),
+          _buildFeatureItem(Icons.account_circle, _l10n.subsBenefitProfile),
+          _buildFeatureItem(Icons.stars, _l10n.subsBenefitTransits),
+          _buildFeatureItem(Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
           _buildFeatureItem(
-              Icons.stars, 'Sugestões personalizadas pelos trânsitos'),
-          _buildFeatureItem(Icons.wb_sunny, 'Clima mágico diário completo'),
-          _buildFeatureItem(Icons.calendar_today, 'Calendário lunar avançado'),
-          _buildFeatureItem(Icons.sync, 'Sincronização entre dispositivos'),
-          _buildFeatureItem(Icons.support_agent, 'Suporte prioritário'),
+              Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
+          _buildFeatureItem(Icons.sync, _l10n.premiumBenefitCloudSync),
+          _buildFeatureItem(Icons.support_agent, _l10n.subsBenefitSupport),
         ],
       ),
     );
@@ -304,14 +309,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.star),
-                SizedBox(width: 8),
+                const Icon(Icons.star),
+                const SizedBox(width: 8),
                 Text(
-                  'Desbloquear Premium',
-                  style: TextStyle(
+                  _l10n.premiumUnlock,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -333,7 +338,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'O que você ganha com o Premium:',
+                _l10n.subsWhatYouGet,
                 style: TextStyle(
                   color: context.gc.textPrimary,
                   fontSize: 14,
@@ -342,17 +347,18 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               ),
               const SizedBox(height: 12),
               _buildFeatureItem(
-                  Icons.auto_awesome, 'Previsões Mágicas ilimitadas'),
-              _buildFeatureItem(Icons.book, 'Acesso ao Grimório completo'),
-              _buildFeatureItem(Icons.psychology, 'Conselheiro Místico'),
+                  Icons.auto_awesome, _l10n.subsBenefitUnlimitedForecasts),
               _buildFeatureItem(
-                  Icons.account_circle, 'Perfil mágico personalizado'),
-              _buildFeatureItem(Icons.stars,
-                  'Sugestões personalizadas com base nos trânsitos'),
-              _buildFeatureItem(Icons.wb_sunny, 'Clima mágico diário completo'),
+                  Icons.book, _l10n.subsBenefitFullGrimoireAccess),
+              _buildFeatureItem(Icons.psychology, _l10n.subsBenefitAdvisor),
               _buildFeatureItem(
-                  Icons.calendar_today, 'Calendário lunar avançado'),
-              _buildFeatureItem(Icons.sync, 'Sincronização na nuvem'),
+                  Icons.account_circle, _l10n.subsBenefitProfile),
+              _buildFeatureItem(Icons.stars, _l10n.subsBenefitTransits),
+              _buildFeatureItem(
+                  Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
+              _buildFeatureItem(
+                  Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
+              _buildFeatureItem(Icons.sync, _l10n.premiumBenefitCloudSync),
             ],
           ),
         ),
@@ -387,8 +393,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             Expanded(
               child: Text(
                 isBetaCodePremium
-                    ? 'Seu acesso Premium foi resgatado via Código Premium e não expira.'
-                    : 'Seu acesso Premium vitalício está ativo.',
+                    ? _l10n.subsBetaLifetimeInfo
+                    : _l10n.subsLifetimeActiveInfo,
                 style: TextStyle(
                   color: context.gc.textSecondary,
                   fontSize: 14,
@@ -421,7 +427,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Plano ${currentUser.plan == SubscriptionPlan.monthly ? "Mensal" : "Anual"}',
+                        _l10n.subsPlanName(
+                            currentUser.plan == SubscriptionPlan.monthly
+                                ? _l10n.premiumPlanMonthly
+                                : _l10n.premiumPlanYearly),
                         style: TextStyle(
                           color: context.gc.textPrimary,
                           fontSize: 16,
@@ -434,7 +443,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 if (currentUser.isAdmin) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Modo de simulação: Em produção, este seria um plano ativo via Play Store com renovação automática.',
+                    _l10n.subsSimNote,
                     style: TextStyle(
                       color: context.gc.textSecondary,
                       fontSize: 13,
@@ -455,21 +464,20 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   builder: (context) => AlertDialog(
                     backgroundColor: context.gc.surface,
                     title: Text(
-                      'Gerenciar Assinatura',
+                      _l10n.profileManageSubscription,
                       style: TextStyle(color: context.gc.textPrimary),
                     ),
                     content: Text(
                       currentUser.isAdmin
-                          ? 'Em produção, este botão direcionaria para o Google Play para gerenciar a assinatura.\n\n'
-                              'Você está em modo de simulação como admin.'
-                          : 'Para gerenciar sua assinatura, acesse as configurações da Google Play Store ou App Store.',
+                          ? _l10n.subsManageDialogAdmin
+                          : _l10n.subsManageDialogUser,
                       style: TextStyle(color: context.gc.textSecondary),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: Text(
-                          'Entendi',
+                          _l10n.commonUnderstood,
                           style: TextStyle(color: context.gc.lilac),
                         ),
                       ),
@@ -485,12 +493,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.settings),
-                  SizedBox(width: 8),
-                  Text('Gerenciar Assinatura'),
+                  const Icon(Icons.settings),
+                  const SizedBox(width: 8),
+                  Text(_l10n.profileManageSubscription),
                 ],
               ),
             ),
@@ -512,12 +520,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.settings),
-            SizedBox(width: 8),
-            Text('Gerenciar Assinatura'),
+            const Icon(Icons.settings),
+            const SizedBox(width: 8),
+            Text(_l10n.profileManageSubscription),
           ],
         ),
       ),
@@ -543,7 +551,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Tem um Código Premium?',
+                    _l10n.subsHaveCode,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -555,7 +563,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Resgate seu código para obter acesso Premium vitalício!',
+              _l10n.subsRedeemPitch,
               style: TextStyle(
                 color: context.gc.softWhite.withOpacity(0.7),
                 fontSize: 14,
@@ -568,7 +576,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   child: TextField(
                     controller: codeController,
                     decoration: InputDecoration(
-                      hintText: 'Digite seu código',
+                      hintText: _l10n.subsCodeHint,
                       hintStyle: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.5),
                       ),
@@ -596,8 +604,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     final code = codeController.text.trim();
                     if (code.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Por favor, digite um código'),
+                        SnackBar(
+                          content: Text(_l10n.subsEnterCode),
                           backgroundColor: Colors.orange,
                         ),
                       );
@@ -645,7 +653,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Resgatar'),
+                  child: Text(_l10n.subsRedeemAction),
                 ),
               ],
             ),
@@ -671,7 +679,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 ),
               )
             : Text(
-                'Restaurar Compras',
+                _l10n.subsRestorePurchases,
                 style: TextStyle(
                   color: context.gc.textSecondary,
                   decoration: TextDecoration.underline,
@@ -698,8 +706,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       SnackBar(
         content: Text(
           result.success
-              ? 'Compras restauradas com sucesso!'
-              : result.errorMessage ?? 'Nenhuma compra encontrada',
+              ? _l10n.subsRestored
+              : result.errorMessage ?? _l10n.subsNoPurchases,
         ),
         backgroundColor: result.success ? Colors.green : Colors.orange,
       ),
@@ -707,6 +715,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    return DateFormat.yMd(Localizations.localeOf(context).toString())
+        .format(date);
   }
 }

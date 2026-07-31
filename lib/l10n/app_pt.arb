@@ -1423,5 +1423,54 @@
     "placeholders": {
       "user": {}
     }
-  }
+  },
+  "subsTitle": "Assinatura",
+  "subsUnlockAll": "Desbloqueie todos os recursos",
+  "subsLifetime": "Acesso Vitalício",
+  "subsValidUntil": "Válido até {date}",
+  "@subsValidUntil": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "subsActive": "Assinatura Ativa",
+  "subsLifetimeBetaCode": "Acesso Vitalício (Código Premium)",
+  "subsPlanName": "Plano {plan}",
+  "@subsPlanName": {
+    "placeholders": {
+      "plan": {}
+    }
+  },
+  "subsPlanNameSim": "Plano {plan} (Simulação)",
+  "@subsPlanNameSim": {
+    "placeholders": {
+      "plan": {}
+    }
+  },
+  "subsPremiumActive": "Premium Ativo",
+  "subsAppPremium": "Grimório de Bolso Premium",
+  "subsYourBenefits": "Seus Benefícios Premium",
+  "subsWhatYouGet": "O que você ganha com o Premium:",
+  "subsBenefitUnlimitedForecasts": "Previsões Mágicas ilimitadas",
+  "subsBenefitFullGrimoire": "Grimório completo",
+  "subsBenefitFullGrimoireAccess": "Acesso ao Grimório completo",
+  "subsBenefitAdvisor": "Conselheiro Místico",
+  "subsBenefitProfile": "Perfil mágico personalizado",
+  "subsBenefitTransits": "Sugestões personalizadas pelos trânsitos",
+  "subsBenefitDailyWeather": "Clima mágico diário completo",
+  "subsBenefitLunarCalendar": "Calendário lunar avançado",
+  "subsBenefitSupport": "Suporte prioritário",
+  "subsBetaLifetimeInfo": "Seu acesso Premium foi resgatado via Código Premium e não expira.",
+  "subsLifetimeActiveInfo": "Seu acesso Premium vitalício está ativo.",
+  "subsSimNote": "Modo de simulação: Em produção, este seria um plano ativo via Play Store com renovação automática.",
+  "subsManageDialogAdmin": "Em produção, este botão direcionaria para o Google Play para gerenciar a assinatura.\n\nVocê está em modo de simulação como admin.",
+  "subsManageDialogUser": "Para gerenciar sua assinatura, acesse as configurações da Google Play Store ou App Store.",
+  "subsHaveCode": "Tem um Código Premium?",
+  "subsRedeemPitch": "Resgate seu código para obter acesso Premium vitalício!",
+  "subsCodeHint": "Digite seu código",
+  "subsEnterCode": "Por favor, digite um código",
+  "subsRedeemAction": "Resgatar",
+  "subsRestorePurchases": "Restaurar Compras",
+  "subsRestored": "Compras restauradas com sucesso!",
+  "subsNoPurchases": "Nenhuma compra encontrada"
 }
