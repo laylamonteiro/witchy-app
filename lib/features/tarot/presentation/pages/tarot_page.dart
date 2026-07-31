@@ -15,6 +15,7 @@ import '../../data/models/tarot_card_model.dart';
 import '../widgets/tarot_card_view.dart';
 import 'tarot_learn_tab.dart';
 import 'tarot_library_page.dart';
+import '../../../../core/services/ad_service.dart';
 
 /// Tarot: tiragens com significados + tutor de aprendizado.
 class TarotPage extends StatefulWidget {
@@ -240,6 +241,11 @@ class _SpreadTabState extends State<_SpreadTab> {
       _revealed = true;
       if (saved != null) _aiReading = saved;
     });
+
+    // Anúncio intersticial para usuários free (não na carta do dia).
+    if (spread != TarotSpread.daily) {
+      AdService.instance.maybeShowInterstitial();
+    }
   }
 
   Future<void> _askCounselor() async {

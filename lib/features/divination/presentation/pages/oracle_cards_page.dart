@@ -12,6 +12,7 @@ import '../../data/data_sources/oracle_cards_data.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../../core/services/ad_service.dart';
 
 class OracleCardsPage extends StatefulWidget {
   const OracleCardsPage({super.key});
@@ -93,6 +94,9 @@ class _OracleCardsPageState extends State<OracleCardsPage>
     });
 
     _animController.forward(from: 0);
+
+    // Anúncio intersticial para usuários free (cooldown interno).
+    AdService.instance.maybeShowInterstitial();
 
     // Salvar leitura
     await _saveReading(drawn);

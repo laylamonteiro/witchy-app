@@ -19,6 +19,7 @@ import 'core/providers/notification_provider.dart';
 import 'core/providers/sync_provider.dart';
 import 'core/providers/language_provider.dart';
 import 'core/config/supabase_config.dart';
+import 'core/services/ad_service.dart';
 import 'core/services/payment_service.dart';
 import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
@@ -116,6 +117,9 @@ void main() async {
       DeepLinkService.instance
           .dispatchPayload(launchDetails!.notificationResponse?.payload);
     }
+
+    // Anúncios (free): inicialização em segundo plano, sem atrasar o boot.
+    unawaited(AdService.instance.initialize());
   }
 
   runApp(GrimorioDeBolsoApp(prefs: prefs));

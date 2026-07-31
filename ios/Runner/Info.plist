@@ -9,9 +9,19 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Permite salvar a imagem do seu sigilo na galeria.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Permite fotografar a palma da mão para a leitura de quiromancia.</string>
+	<string>Permite fotografar a palma da mão para a quiromancia e suas ervas, pedras e cores para a enciclopédia pessoal.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Permite escolher uma foto da palma da mão para a leitura de quiromancia.</string>
+	<string>Permite escolher fotos para a leitura de quiromancia e para a enciclopédia pessoal.</string>
+	<key>GADApplicationIdentifier</key>
+	<!-- ID DE TESTE do Google. Troque pelo ID real do app AdMob (iOS). -->
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
