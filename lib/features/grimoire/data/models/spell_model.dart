@@ -1,5 +1,7 @@
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/content/content_locale.dart';
+
 enum SpellType {
   attraction, // Atração/crescimento
   banishment, // Banimento/corte
@@ -170,62 +172,37 @@ class SpellModel {
 }
 
 // Extensões para tradução
+// Nomes de exibição por idioma (a chave persistida é o enum.name, invariante;
+// paridade das 3 línguas testada em content_models_parity_test).
 extension SpellTypeExtension on SpellType {
-  String get displayName {
-    switch (this) {
-      case SpellType.attraction:
-        return 'Atração/Crescimento';
-      case SpellType.banishment:
-        return 'Banimento/Corte';
-    }
-  }
+  String get displayName => ContentLocale.instance.select(
+        pt: _spellTypeNamesPt,
+        en: _spellTypeNamesEn,
+        es: _spellTypeNamesEs,
+      )[this]!;
 }
 
+const Map<SpellType, String> _spellTypeNamesPt = {
+  SpellType.attraction: 'Atração/Crescimento',
+  SpellType.banishment: 'Banimento/Corte',
+};
+
+const Map<SpellType, String> _spellTypeNamesEn = {
+  SpellType.attraction: 'Attraction/Growth',
+  SpellType.banishment: 'Banishing/Cutting',
+};
+
+const Map<SpellType, String> _spellTypeNamesEs = {
+  SpellType.attraction: 'Atracción/Crecimiento',
+  SpellType.banishment: 'Destierro/Corte',
+};
+
 extension SpellCategoryExtension on SpellCategory {
-  String get displayName {
-    switch (this) {
-      case SpellCategory.love:
-        return 'Amor e Romance';
-      case SpellCategory.selfLove:
-        return 'Amor Próprio';
-      case SpellCategory.protection:
-        return 'Proteção';
-      case SpellCategory.prosperity:
-        return 'Prosperidade';
-      case SpellCategory.healing:
-        return 'Cura';
-      case SpellCategory.cleansing:
-        return 'Limpeza';
-      case SpellCategory.banishing:
-        return 'Banimento';
-      case SpellCategory.luck:
-        return 'Sorte';
-      case SpellCategory.creativity:
-        return 'Criatividade';
-      case SpellCategory.communication:
-        return 'Comunicação';
-      case SpellCategory.dreams:
-        return 'Sonhos';
-      case SpellCategory.divination:
-        return 'Adivinhação';
-      case SpellCategory.energy:
-        return 'Energia';
-      case SpellCategory.wisdom:
-        return 'Sabedoria';
-      case SpellCategory.courage:
-        return 'Coragem';
-      case SpellCategory.friendship:
-        return 'Amizade';
-      case SpellCategory.home:
-        return 'Casa e Lar';
-      case SpellCategory.work:
-        return 'Trabalho';
-      case SpellCategory.study:
-        return 'Estudos';
-      case SpellCategory.other:
-        return 'Outros';
-    }
-  }
+  String get displayName => ContentLocale.instance.select(
+        pt: _spellCategoryNamesPt,
+        en: _spellCategoryNamesEn,
+        es: _spellCategoryNamesEs,
+      )[this]!;
 
   String get icon {
     switch (this) {
@@ -274,26 +251,11 @@ extension SpellCategoryExtension on SpellCategory {
 }
 
 extension MoonPhaseExtension on MoonPhase {
-  String get displayName {
-    switch (this) {
-      case MoonPhase.newMoon:
-        return 'Lua Nova';
-      case MoonPhase.waxingCrescent:
-        return 'Crescente';
-      case MoonPhase.firstQuarter:
-        return 'Quarto Crescente';
-      case MoonPhase.waxingGibbous:
-        return 'Gibosa Crescente';
-      case MoonPhase.fullMoon:
-        return 'Lua Cheia';
-      case MoonPhase.waningGibbous:
-        return 'Gibosa Minguante';
-      case MoonPhase.lastQuarter:
-        return 'Quarto Minguante';
-      case MoonPhase.waningCrescent:
-        return 'Minguante';
-    }
-  }
+  String get displayName => ContentLocale.instance.select(
+        pt: _moonPhaseNamesPt,
+        en: _moonPhaseNamesEn,
+        es: _moonPhaseNamesEs,
+      )[this]!;
 
   String get emoji {
     switch (this) {
@@ -316,24 +278,144 @@ extension MoonPhaseExtension on MoonPhase {
     }
   }
 
-  String get description {
-    switch (this) {
-      case MoonPhase.newMoon:
-        return 'Novos começos, intenções, planejamento';
-      case MoonPhase.waxingCrescent:
-        return 'Crescimento, atração, manifestação';
-      case MoonPhase.firstQuarter:
-        return 'Ação, decisão, superação de obstáculos';
-      case MoonPhase.waxingGibbous:
-        return 'Refinamento, ajustes, preparação';
-      case MoonPhase.fullMoon:
-        return 'Poder máximo, rituais importantes, gratidão';
-      case MoonPhase.waningGibbous:
-        return 'Gratidão, compartilhamento, ensino';
-      case MoonPhase.lastQuarter:
-        return 'Liberação, perdão, deixar ir';
-      case MoonPhase.waningCrescent:
-        return 'Descanso, reflexão, limpeza';
-    }
-  }
+  String get description => ContentLocale.instance.select(
+        pt: _moonPhaseDescriptionsPt,
+        en: _moonPhaseDescriptionsEn,
+        es: _moonPhaseDescriptionsEs,
+      )[this]!;
 }
+
+const Map<MoonPhase, String> _moonPhaseNamesPt = {
+  MoonPhase.newMoon: 'Lua Nova',
+  MoonPhase.waxingCrescent: 'Crescente',
+  MoonPhase.firstQuarter: 'Quarto Crescente',
+  MoonPhase.waxingGibbous: 'Gibosa Crescente',
+  MoonPhase.fullMoon: 'Lua Cheia',
+  MoonPhase.waningGibbous: 'Gibosa Minguante',
+  MoonPhase.lastQuarter: 'Quarto Minguante',
+  MoonPhase.waningCrescent: 'Minguante',
+};
+
+const Map<MoonPhase, String> _moonPhaseNamesEn = {
+  MoonPhase.newMoon: 'New Moon',
+  MoonPhase.waxingCrescent: 'Waxing Crescent',
+  MoonPhase.firstQuarter: 'First Quarter',
+  MoonPhase.waxingGibbous: 'Waxing Gibbous',
+  MoonPhase.fullMoon: 'Full Moon',
+  MoonPhase.waningGibbous: 'Waning Gibbous',
+  MoonPhase.lastQuarter: 'Last Quarter',
+  MoonPhase.waningCrescent: 'Waning Crescent',
+};
+
+const Map<MoonPhase, String> _moonPhaseNamesEs = {
+  MoonPhase.newMoon: 'Luna Nueva',
+  MoonPhase.waxingCrescent: 'Luna Creciente',
+  MoonPhase.firstQuarter: 'Cuarto Creciente',
+  MoonPhase.waxingGibbous: 'Gibosa Creciente',
+  MoonPhase.fullMoon: 'Luna Llena',
+  MoonPhase.waningGibbous: 'Gibosa Menguante',
+  MoonPhase.lastQuarter: 'Cuarto Menguante',
+  MoonPhase.waningCrescent: 'Luna Menguante',
+};
+
+const Map<MoonPhase, String> _moonPhaseDescriptionsPt = {
+  MoonPhase.newMoon: 'Novos começos, intenções, planejamento',
+  MoonPhase.waxingCrescent: 'Crescimento, atração, manifestação',
+  MoonPhase.firstQuarter: 'Ação, decisão, superação de obstáculos',
+  MoonPhase.waxingGibbous: 'Refinamento, ajustes, preparação',
+  MoonPhase.fullMoon: 'Poder máximo, rituais importantes, gratidão',
+  MoonPhase.waningGibbous: 'Gratidão, compartilhamento, ensino',
+  MoonPhase.lastQuarter: 'Liberação, perdão, deixar ir',
+  MoonPhase.waningCrescent: 'Descanso, reflexão, limpeza',
+};
+
+const Map<MoonPhase, String> _moonPhaseDescriptionsEn = {
+  MoonPhase.newMoon: 'New beginnings, intentions, planning',
+  MoonPhase.waxingCrescent: 'Growth, attraction, manifestation',
+  MoonPhase.firstQuarter: 'Action, decision, overcoming obstacles',
+  MoonPhase.waxingGibbous: 'Refinement, adjustments, preparation',
+  MoonPhase.fullMoon: 'Peak power, important rituals, gratitude',
+  MoonPhase.waningGibbous: 'Gratitude, sharing, teaching',
+  MoonPhase.lastQuarter: 'Release, forgiveness, letting go',
+  MoonPhase.waningCrescent: 'Rest, reflection, cleansing',
+};
+
+const Map<MoonPhase, String> _moonPhaseDescriptionsEs = {
+  MoonPhase.newMoon: 'Nuevos comienzos, intenciones, planificación',
+  MoonPhase.waxingCrescent: 'Crecimiento, atracción, manifestación',
+  MoonPhase.firstQuarter: 'Acción, decisión, superación de obstáculos',
+  MoonPhase.waxingGibbous: 'Refinamiento, ajustes, preparación',
+  MoonPhase.fullMoon: 'Poder máximo, rituales importantes, gratitud',
+  MoonPhase.waningGibbous: 'Gratitud, compartir, enseñanza',
+  MoonPhase.lastQuarter: 'Liberación, perdón, dejar ir',
+  MoonPhase.waningCrescent: 'Descanso, reflexión, limpieza',
+};
+
+const Map<SpellCategory, String> _spellCategoryNamesPt = {
+  SpellCategory.love: 'Amor e Romance',
+  SpellCategory.selfLove: 'Amor Próprio',
+  SpellCategory.protection: 'Proteção',
+  SpellCategory.prosperity: 'Prosperidade',
+  SpellCategory.healing: 'Cura',
+  SpellCategory.cleansing: 'Limpeza',
+  SpellCategory.banishing: 'Banimento',
+  SpellCategory.luck: 'Sorte',
+  SpellCategory.creativity: 'Criatividade',
+  SpellCategory.communication: 'Comunicação',
+  SpellCategory.dreams: 'Sonhos',
+  SpellCategory.divination: 'Adivinhação',
+  SpellCategory.energy: 'Energia',
+  SpellCategory.wisdom: 'Sabedoria',
+  SpellCategory.courage: 'Coragem',
+  SpellCategory.friendship: 'Amizade',
+  SpellCategory.home: 'Casa e Lar',
+  SpellCategory.work: 'Trabalho',
+  SpellCategory.study: 'Estudos',
+  SpellCategory.other: 'Outros',
+};
+
+const Map<SpellCategory, String> _spellCategoryNamesEn = {
+  SpellCategory.love: 'Love and Romance',
+  SpellCategory.selfLove: 'Self-Love',
+  SpellCategory.protection: 'Protection',
+  SpellCategory.prosperity: 'Prosperity',
+  SpellCategory.healing: 'Healing',
+  SpellCategory.cleansing: 'Cleansing',
+  SpellCategory.banishing: 'Banishing',
+  SpellCategory.luck: 'Luck',
+  SpellCategory.creativity: 'Creativity',
+  SpellCategory.communication: 'Communication',
+  SpellCategory.dreams: 'Dreams',
+  SpellCategory.divination: 'Divination',
+  SpellCategory.energy: 'Energy',
+  SpellCategory.wisdom: 'Wisdom',
+  SpellCategory.courage: 'Courage',
+  SpellCategory.friendship: 'Friendship',
+  SpellCategory.home: 'Home and Hearth',
+  SpellCategory.work: 'Work',
+  SpellCategory.study: 'Studies',
+  SpellCategory.other: 'Other',
+};
+
+const Map<SpellCategory, String> _spellCategoryNamesEs = {
+  SpellCategory.love: 'Amor y Romance',
+  SpellCategory.selfLove: 'Amor Propio',
+  SpellCategory.protection: 'Protección',
+  SpellCategory.prosperity: 'Prosperidad',
+  SpellCategory.healing: 'Sanación',
+  SpellCategory.cleansing: 'Limpieza',
+  SpellCategory.banishing: 'Destierro',
+  SpellCategory.luck: 'Suerte',
+  SpellCategory.creativity: 'Creatividad',
+  SpellCategory.communication: 'Comunicación',
+  SpellCategory.dreams: 'Sueños',
+  SpellCategory.divination: 'Adivinación',
+  SpellCategory.energy: 'Energía',
+  SpellCategory.wisdom: 'Sabiduría',
+  SpellCategory.courage: 'Coraje',
+  SpellCategory.friendship: 'Amistad',
+  SpellCategory.home: 'Casa y Hogar',
+  SpellCategory.work: 'Trabajo',
+  SpellCategory.study: 'Estudios',
+  SpellCategory.other: 'Otros',
+};

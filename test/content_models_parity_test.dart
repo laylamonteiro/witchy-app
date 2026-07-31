@@ -6,6 +6,7 @@ import 'package:grimorio_de_bolso/features/diary/data/data_sources/affirmation_c
 import 'package:grimorio_de_bolso/features/diary/data/data_sources/affirmation_content_es.dart';
 import 'package:grimorio_de_bolso/features/diary/data/data_sources/affirmation_localizer.dart';
 import 'package:grimorio_de_bolso/features/diary/data/models/affirmation_model.dart';
+import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
 import 'package:grimorio_de_bolso/features/journeys/data/models/journey_model.dart';
 import 'package:grimorio_de_bolso/features/journeys/data/models/journey_texts_en.dart';
 import 'package:grimorio_de_bolso/features/journeys/data/models/journey_texts_es.dart';
@@ -94,6 +95,28 @@ void main() {
       expect(j.localizedTitle, 'First Steps');
       ContentLocale.instance.setLocale(const Locale('pt', 'BR'));
       expect(j.localizedTitle, j.title);
+    });
+  });
+
+  group('Enums do grimório (spell_model)', () {
+    test('displayName/description cobrem todos os valores nas 3 línguas', () {
+      final samples = <String>{};
+      for (final locale in const [Locale('pt', 'BR'), Locale('en'), Locale('es')]) {
+        ContentLocale.instance.setLocale(locale);
+        for (final t in SpellType.values) {
+          expect(t.displayName.trim(), isNotEmpty, reason: '$locale $t');
+        }
+        for (final c in SpellCategory.values) {
+          expect(c.displayName.trim(), isNotEmpty, reason: '$locale $c');
+        }
+        for (final p in MoonPhase.values) {
+          expect(p.displayName.trim(), isNotEmpty, reason: '$locale $p');
+          expect(p.description.trim(), isNotEmpty, reason: '$locale $p');
+        }
+        samples.add(MoonPhase.fullMoon.displayName);
+      }
+      // Os três idiomas produzem textos distintos.
+      expect(samples.length, 3);
     });
   });
 

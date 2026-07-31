@@ -13,6 +13,15 @@ lib/features/grimoire/data/data_sources/spells_data\.dart:
 lib/features/astrology/data/models/enums\.dart:
 lib/features/astrology/data/models/house_model\.dart:
 lib/features/astrology/data/models/aspect_model\.dart:
+lib/features/grimoire/data/models/spell_model\.dart:
+# Fragmentos de persona/instrução em PT usados pelos prompts de IA em
+# português; os equivalentes EN/ES vivem em lib/core/ai/prompts/
+# ai_prompts_{en,es}.dart (paridade em test/ai_prompts_parity_test.dart).
+lib/core/i18n/gender\.dart:
+# Rótulos internos do payload de dados enviado à IA (resumo do mapa astral/
+# trânsitos); não são texto de interface — o idioma da resposta é imposto
+# pelos prompts localizados + instrução de idioma.
+lib/core/ai/ai_service\.dart:
 # Console de diagnóstico dev-only (não é interface de usuário final).
 lib/core/diagnostic/diagnostic_page\.dart:
 # Seeds/campos PT canônicos com overlay ou mapa EN/ES ao lado (paridade testada).
