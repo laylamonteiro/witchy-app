@@ -1,0 +1,96 @@
+import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/navigation/app_deep_link.dart';
+import '../../../../core/navigation/section_reset_notifier.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../guided_rituals/presentation/widgets/magical_moment_card.dart';
+import '../../../lunar/presentation/widgets/moon_day_carousel.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
+import '../widgets/daily_affirmation_card.dart';
+import '../widgets/greeting_header.dart';
+import '../widgets/magical_weather_card.dart';
+import '../widgets/ritual_of_moment_card.dart';
+import '../widgets/shortcuts_grid.dart';
+
+/// Aba "Seu Dia" — o hub diário da Bruxa (primeira aba da bottom bar):
+/// saudação, lua de hoje, momento mágico, clima do dia (cache), afirmação,
+/// ritual do momento e atalhos personalizáveis. Tudo gratuito.
+class YourDayPage extends StatefulWidget {
+  final SectionResetNotifier? resetNotifier;
+
+  const YourDayPage({super.key, this.resetNotifier});
+
+  @override
+  State<YourDayPage> createState() => _YourDayPageState();
+}
+
+class _YourDayPageState extends State<YourDayPage>
+    with AutomaticKeepAliveClientMixin {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.resetNotifier?.addListener(_onResetRequested);
+  }
+
+  @override
+  void dispose() {
+    widget.resetNotifier?.removeListener(_onResetRequested);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onResetRequested() {
+    if (mounted && _scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).yourDayTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        controller: _scrollController,
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const GreetingHeader(),
+            MoonDayCarousel(
+              onDayTap: () => DeepLinkService.instance
+                  .dispatch(AppDeepLink.moonEncyclopedia),
+            ),
+            const RitualOfMomentCard(),
+            const MagicalMomentCard(),
+            const MagicalWeatherCard(),
+            const DailyAffirmationCard(),
+            const ShortcutsGrid(),
+          ],
+        ),
+      ),
+    );
+  }
+}
