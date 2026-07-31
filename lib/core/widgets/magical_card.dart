@@ -4,6 +4,7 @@ import '../theme/grimoire_colors.dart';
 class MagicalCard extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
 
@@ -11,6 +12,7 @@ class MagicalCard extends StatelessWidget {
     super.key,
     required this.child,
     this.onTap,
+    this.onLongPress,
     this.padding,
     this.margin,
   });
@@ -24,6 +26,7 @@ class MagicalCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
+          onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: padding ?? const EdgeInsets.all(16),

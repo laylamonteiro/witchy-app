@@ -304,7 +304,13 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             return provider;
           },
         ),
-        ChangeNotifierProvider(create: (_) => EncyclopediaProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, EncyclopediaProvider>(
+          create: (_) => EncyclopediaProvider(),
+          update: (_, auth, provider) {
+            provider!.loadUserEntries(auth.currentUser.id);
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => LunarProvider()),
         ChangeNotifierProvider(create: (_) => WheelOfYearProvider()),
         ChangeNotifierProxyProvider<AuthProvider, AstrologyProvider>(

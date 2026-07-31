@@ -640,6 +640,137 @@ class AIService {
     }
   }
 
+  /// Identifica um item da enciclopédia pessoal por foto (visão, Premium).
+  /// [categoryKey]: `crystal` | `herb` | `color` (invariante).
+  /// Retorna `{"identified": bool, "name": String, "confidence": String}`.
+  /// A imagem é enviada em memória e não é armazenada pelo serviço.
+  Future<Map<String, dynamic>> identifyEncyclopediaItem({
+    required List<int> jpegBytes,
+    required String categoryKey,
+  }) async {
+    try {
+      final base64Image = base64Encode(jpegBytes);
+      final requestData = {
+        'model': _visionModel,
+        'messages': [
+          {
+            'role': 'system',
+            'content': '${_localizedInstruction()}\n\n'
+                '${_prompts.encyIdentifySystemPrompt(categoryKey)}',
+          },
+          {
+            'role': 'user',
+            'content': [
+              {
+                'type': 'text',
+                'text': _prompts.encyIdentifyUserMessage,
+              },
+              {
+                'type': 'image_url',
+                'image_url': {
+                  'url': 'data:image/jpeg;base64,$base64Image',
+                },
+              },
+            ],
+          },
+        ],
+        'temperature': 0.2,
+        'max_tokens': 300,
+        'reasoning_effort': 'none',
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 60),
+        ),
+        data: requestData,
+      );
+
+      final content =
+          _stripReasoning('${response.data['choices'][0]['message']['content']}');
+      return _extractJsonObject(content);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      } else if (e.response?.statusCode == 413) {
+        throw Exception(_prompts.errorImageTooLarge);
+      } else if (e.response?.statusCode == 404) {
+        throw Exception(_prompts.errorPalmUnavailable);
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
+  /// Gera o verbete completo de um item da enciclopédia pessoal a partir do
+  /// nome confirmado pela usuária. Chaves/enums do JSON sempre em inglês.
+  Future<Map<String, dynamic>> generateEncyclopediaEntry({
+    required String name,
+    required String categoryKey,
+  }) async {
+    try {
+      final requestData = {
+        'model': _textModel,
+        'messages': [
+          {
+            'role': 'system',
+            'content': '${_localizedInstruction()}\n\n'
+                '${_prompts.encyGenerateSystemPrompt(categoryKey, name)}',
+          },
+          {
+            'role': 'user',
+            'content': _prompts.encyGenerateUserMessage(name),
+          },
+        ],
+        'temperature': 0.5,
+        'max_tokens': 1200,
+        'response_format': {'type': 'json_object'},
+      };
+
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 60),
+        ),
+        data: requestData,
+      );
+
+      final content = response.data['choices'][0]['message']['content'];
+      return _extractJsonObject(content.toString());
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
+  /// Extrai o primeiro objeto JSON de um texto (modelos de visão nem sempre
+  /// respeitam "só JSON": pode vir cercado de prosa ou cercas de código).
+  static Map<String, dynamic> _extractJsonObject(String text) {
+    final start = text.indexOf('{');
+    final end = text.lastIndexOf('}');
+    if (start == -1 || end <= start) {
+      throw const FormatException('Resposta sem JSON');
+    }
+    final decoded = jsonDecode(text.substring(start, end + 1));
+    return Map<String, dynamic>.from(decoded as Map);
+  }
+
   /// Remove o raciocínio de modelos "reasoning" (Qwen3, DeepSeek-R1 etc.),
   /// que emitem o processo de pensamento dentro de <think>...</think> antes
   /// da resposta final. Devolve apenas o texto final.

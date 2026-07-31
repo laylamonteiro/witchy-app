@@ -1858,5 +1858,51 @@
   "settingsSalemDesc": "Seu familiar de estimação: mostre, esconda ou reveja o tour guiado.",
   "settingsShowSalem": "Mostrar o Salem",
   "settingsShowSalemDesc": "Ele também some com 5 toques rápidos e volta com 5 toques na tela",
-  "settingsReplayTour": "Rever tour com o Salem"
+  "settingsReplayTour": "Rever tour com o Salem",
+  "encyAddTitle": "Adicionar em {category}",
+  "@encyAddTitle": {
+    "placeholders": {
+      "category": {}
+    }
+  },
+  "encyAddIntro": "Fotografe sua erva, pedra ou cor: a IA identifica, você confirma o nome e uma página completa é criada na sua enciclopédia, com a sua foto.",
+  "encyAddTakePhoto": "Tirar foto",
+  "encyAddFromGallery": "Da galeria",
+  "encyAddIdentifying": "Identificando com magia (e IA)...",
+  "encyAddIdentifiedAs": "Encontrei! Confirme ou corrija o nome:",
+  "encyAddNotIdentified": "Não consegui identificar com certeza. Digite o nome:",
+  "encyAddConfidence": "Confiança da identificação: {level}",
+  "@encyAddConfidence": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "encyAddNameLabel": "Nome",
+  "encyAddNameHint": "Ex.: Alecrim, Ametista, Verde-esmeralda...",
+  "encyAddGenerateCta": "Gerar página mágica",
+  "encyAddGenerating": "Escrevendo o verbete...",
+  "encyAddGenerateError": "Não deu certo agora. Tente novamente em instantes.",
+  "encyAddPreviewTitle": "Prévia do verbete",
+  "encyAddSaveCta": "Salvar na minha enciclopédia",
+  "encyAddSaving": "Salvando...",
+  "encyAddSaved": "Verbete salvo na sua enciclopédia! ✨",
+  "encyAddDailyLimit": "Você já criou {count} verbetes hoje — volte amanhã para continuar alimentando sua enciclopédia.",
+  "@encyAddDailyLimit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "encyAddImageTooLarge": "Imagem muito grande. Tente outra foto.",
+  "encyAddNameRequired": "Digite um nome para gerar o verbete.",
+  "encyAddFabTooltip": "Adicionar com foto",
+  "encyUserEntryBadge": "Minha",
+  "encyDeleteEntryTitle": "Excluir verbete?",
+  "encyDeleteEntryBody": "\"{name}\" e a foto associada serão removidos da sua enciclopédia.",
+  "@encyDeleteEntryBody": {
+    "placeholders": {
+      "name": {}
+    }
+  }
 }

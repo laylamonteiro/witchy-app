@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/encyclopedia_image.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../data/models/crystal_model.dart';
@@ -28,11 +29,10 @@ class CrystalDetailPage extends StatelessWidget {
                   if (crystal.imageUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Image.asset(
-                        crystal.imageUrl!,
+                      child: EncyclopediaImage(
+                        path: crystal.imageUrl!,
                         width: 200,
                         height: 200,
-                        fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return _buildPlaceholderImage(context);
                         },

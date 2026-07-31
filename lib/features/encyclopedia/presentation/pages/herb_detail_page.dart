@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/encyclopedia_image.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../data/models/herb_model.dart';
@@ -28,11 +29,10 @@ class HerbDetailPage extends StatelessWidget {
                   if (herb.imageUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Image.asset(
-                        herb.imageUrl!,
+                      child: EncyclopediaImage(
+                        path: herb.imageUrl!,
                         width: 200,
                         height: 200,
-                        fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             width: 200,

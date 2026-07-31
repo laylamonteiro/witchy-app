@@ -4,10 +4,13 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/herb_model.dart';
+import '../../data/models/user_entry_model.dart';
 import '../../../../core/utils/accents.dart';
 import '../providers/encyclopedia_provider.dart';
 import 'herb_detail_page.dart';
+import '../widgets/encyclopedia_image.dart';
 import '../widgets/entry_pager.dart';
+import '../widgets/user_entry_helpers.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 
@@ -48,7 +51,22 @@ class _HerbsListPageState extends State<HerbsListPage> {
     // Ordena alfabeticamente
     final herbs = _sortHerbs(unsortedHerbs);
 
-    return Column(
+    // Entradas pessoais (foto + IA) aparecem antes das oficiais.
+    final lowerQuery = _searchQuery.toLowerCase();
+    final userEntries = provider
+        .userEntries(UserEntryCategory.herb)
+        .where((e) =>
+            _searchQuery.isEmpty ||
+            e.name.toLowerCase().contains(lowerQuery))
+        .toList();
+    final combined = [
+      ...userEntries.map((e) => e.toHerbModel()),
+      ...herbs,
+    ];
+
+    return Stack(
+      children: [
+        Column(
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -93,32 +111,36 @@ class _HerbsListPageState extends State<HerbsListPage> {
         ),
         Expanded(
           child: ListView.builder(
-            itemCount: herbs.length,
+            padding: const EdgeInsets.only(bottom: 88),
+            itemCount: combined.length,
             itemBuilder: (context, index) {
-              final herb = herbs[index];
+              final herb = combined[index];
+              final isUserEntry = index < userEntries.length;
               return MagicalCard(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => EntryPager(
-                        itemCount: herbs.length,
+                        itemCount: combined.length,
                         initialIndex: index,
-                        itemBuilder: (_, i) => HerbDetailPage(herb: herbs[i]),
+                        itemBuilder: (_, i) => HerbDetailPage(herb: combined[i]),
                       ),
                     ),
                   );
                 },
+                onLongPress: isUserEntry
+                    ? () => confirmDeleteUserEntry(context, userEntries[index])
+                    : null,
                 child: Row(
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: herb.imageUrl != null
-                          ? Image.asset(
-                              herb.imageUrl!,
+                          ? EncyclopediaImage(
+                              path: herb.imageUrl!,
                               width: 60,
                               height: 60,
-                              fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   width: 60,
@@ -168,6 +190,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
                                   ),
                                 ),
                               ),
+                              if (isUserEntry) const UserEntryBadge(),
                               if (herb.toxic)
                                 Icon(
                                   Icons.warning_amber_rounded,
@@ -207,6 +230,9 @@ class _HerbsListPageState extends State<HerbsListPage> {
             },
           ),
         ),
+      ],
+        ),
+        AddUserEntryFab(category: UserEntryCategory.herb),
       ],
     );
   }

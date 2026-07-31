@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
 import '../../data/models/crystal_model.dart';
+import '../../data/models/user_entry_model.dart';
 import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../widgets/encyclopedia_image.dart';
 import '../widgets/entry_pager.dart';
+import '../widgets/user_entry_helpers.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'crystal_detail_page.dart';
 
@@ -37,9 +40,19 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
     return sorted;
   }
 
+  bool _matchesQuery(CrystalModel crystal) {
+    if (_searchQuery.isEmpty) return true;
+    final lowerQuery = _searchQuery.toLowerCase();
+    return crystal.name.toLowerCase().contains(lowerQuery) ||
+        crystal.description.toLowerCase().contains(lowerQuery) ||
+        crystal.intentions.any((i) => i.toLowerCase().contains(lowerQuery));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
+      children: [
+        Column(
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -92,34 +105,48 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
               // Ordena alfabeticamente
               final crystals = _sortCrystals(unsortedCrystals);
 
+              // Entradas pessoais (foto + IA) aparecem antes das oficiais.
+              final userEntries = provider
+                  .userEntries(UserEntryCategory.crystal)
+                  .where((e) => _matchesQuery(e.toCrystalModel()))
+                  .toList();
+              final userModels =
+                  userEntries.map((e) => e.toCrystalModel()).toList();
+              final combined = [...userModels, ...crystals];
+
               return ListView.builder(
-                itemCount: crystals.length,
+                padding: const EdgeInsets.only(bottom: 88),
+                itemCount: combined.length,
                 itemBuilder: (context, index) {
-                  final crystal = crystals[index];
+                  final crystal = combined[index];
+                  final isUserEntry = index < userEntries.length;
                   return MagicalCard(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => EntryPager(
-                            itemCount: crystals.length,
+                            itemCount: combined.length,
                             initialIndex: index,
                             itemBuilder: (_, i) =>
-                                CrystalDetailPage(crystal: crystals[i]),
+                                CrystalDetailPage(crystal: combined[i]),
                           ),
                         ),
                       );
                     },
+                    onLongPress: isUserEntry
+                        ? () => confirmDeleteUserEntry(
+                            context, userEntries[index])
+                        : null,
                     child: Row(
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: crystal.imageUrl != null
-                              ? Image.asset(
-                                  crystal.imageUrl!,
+                              ? EncyclopediaImage(
+                                  path: crystal.imageUrl!,
                                   width: 60,
                                   height: 60,
-                                  fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
                                       width: 60,
@@ -167,6 +194,8 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                       ),
                                     ),
                                   ),
+                                  if (isUserEntry)
+                                    const UserEntryBadge(),
                                 ],
                               ),
                               const SizedBox(height: 4),
@@ -202,6 +231,9 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
             },
           ),
         ),
+      ],
+        ),
+        AddUserEntryFab(category: UserEntryCategory.crystal),
       ],
     );
   }

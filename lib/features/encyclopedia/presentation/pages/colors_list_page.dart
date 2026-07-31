@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
 import '../../data/models/color_model.dart';
+import '../../data/models/user_entry_model.dart';
+import '../widgets/user_entry_helpers.dart';
 import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -37,7 +39,9 @@ class _ColorsListPageState extends State<ColorsListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
+      children: [
+        Column(
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -88,24 +92,43 @@ class _ColorsListPageState extends State<ColorsListPage> {
               // Ordena alfabeticamente
               final colors = _sortColors(unsortedColors);
 
+              // Entradas pessoais (foto + IA) aparecem antes das oficiais.
+              final lowerQuery = _searchQuery.toLowerCase();
+              final userEntries = provider
+                  .userEntries(UserEntryCategory.color)
+                  .where((e) =>
+                      _searchQuery.isEmpty ||
+                      e.name.toLowerCase().contains(lowerQuery))
+                  .toList();
+              final combined = [
+                ...userEntries.map((e) => e.toColorModel()),
+                ...colors,
+              ];
+
               return ListView.builder(
-                itemCount: colors.length,
+                padding: const EdgeInsets.only(bottom: 88),
+                itemCount: combined.length,
                 itemBuilder: (context, index) {
-                  final colorModel = colors[index];
+                  final colorModel = combined[index];
+                  final isUserEntry = index < userEntries.length;
                   return MagicalCard(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => EntryPager(
-                            itemCount: colors.length,
+                            itemCount: combined.length,
                             initialIndex: index,
                             itemBuilder: (_, i) =>
-                                ColorDetailPage(colorModel: colors[i]),
+                                ColorDetailPage(colorModel: combined[i]),
                           ),
                         ),
                       );
                     },
+                    onLongPress: isUserEntry
+                        ? () =>
+                            confirmDeleteUserEntry(context, userEntries[index])
+                        : null,
                     child: Row(
                       children: [
                         Container(
@@ -125,13 +148,20 @@ class _ColorsListPageState extends State<ColorsListPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                colorModel.name,
-                                style: GoogleFonts.cinzelDecorative(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: context.gc.lilac,
-                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      colorModel.name,
+                                      style: GoogleFonts.cinzelDecorative(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: context.gc.lilac,
+                                      ),
+                                    ),
+                                  ),
+                                  if (isUserEntry) const UserEntryBadge(),
+                                ],
                               ),
                               const SizedBox(height: 4),
                               Row(
@@ -173,6 +203,9 @@ class _ColorsListPageState extends State<ColorsListPage> {
             },
           ),
         ),
+      ],
+        ),
+        AddUserEntryFab(category: UserEntryCategory.color),
       ],
     );
   }

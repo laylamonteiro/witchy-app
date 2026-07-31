@@ -61,6 +61,21 @@ void main() {
       'dreamUserPrompt (sem emoções)': (p, g) =>
           p.dreamUserPrompt('sonhei com o mar', null),
       'defaultSpellName': (p, g) => p.defaultSpellName,
+      'encyIdentifySystemPrompt (crystal)': (p, g) =>
+          p.encyIdentifySystemPrompt('crystal'),
+      'encyIdentifySystemPrompt (herb)': (p, g) =>
+          p.encyIdentifySystemPrompt('herb'),
+      'encyIdentifySystemPrompt (color)': (p, g) =>
+          p.encyIdentifySystemPrompt('color'),
+      'encyIdentifyUserMessage': (p, g) => p.encyIdentifyUserMessage,
+      'encyGenerateSystemPrompt (crystal)': (p, g) =>
+          p.encyGenerateSystemPrompt('crystal', 'Ametista'),
+      'encyGenerateSystemPrompt (herb)': (p, g) =>
+          p.encyGenerateSystemPrompt('herb', 'Alecrim'),
+      'encyGenerateSystemPrompt (color)': (p, g) =>
+          p.encyGenerateSystemPrompt('color', 'Verde'),
+      'encyGenerateUserMessage': (p, g) =>
+          p.encyGenerateUserMessage('Alecrim'),
       'errorInvalidRequest': (p, g) => p.errorInvalidRequest,
       'errorBadRequest': (p, g) => p.errorBadRequest('detalhe'),
       'errorAuthentication': (p, g) => p.errorAuthentication,
