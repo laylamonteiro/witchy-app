@@ -926,5 +926,18 @@
   "lunarAdviceNewMoon": "End of a cycle and new beginnings. Banishings, cleansings, and protections are at full power.",
   "lunarAdviceWaningGeneric": "Favorable moment for banishing and cutting spells.",
   "lunarWaningComing": "{count, plural, one{The waning moon arrives in 1 day. Get ready!} other{The waning moon arrives in {count} days. Get ready!}}",
-  "lunarWaitWaning": "For best results with banishing spells, wait for the next waning moon."
+  "lunarWaitWaning": "For best results with banishing spells, wait for the next waning moon.",
+  "privacySyncStatusSection": "Sync Status",
+  "privacyCloudSyncUpsellTitle": "Cloud Sync",
+  "privacyCloudSyncUpsellBody": "Keep your data synced across all your devices and never lose your spells and journals.",
+  "privacySyncOff": "Sync disabled",
+  "privacySyncNotConnected": "Not connected",
+  "privacySyncEnablePrompt": "Enable cloud sync",
+  "privacySyncLoginPrompt": "Sign in to sync",
+  "privacyPremiumBadge": "PREMIUM",
+  "privacySyncSuccess": "Synced successfully.",
+  "privacySyncNow": "Sync now",
+  "privacyReadFullPolicy": "Read the full Privacy Policy",
+  "privacyBackupSubject": "Pocket Grimoire Backup",
+  "privacyPolicyBody": "PRIVACY POLICY - POCKET GRIMOIRE\n\nLast updated: November 2025\n\n1. DATA COLLECTION\n\nWe collect only the data needed for the app to work:\n- Email and password (for authentication)\n- Profile data (name, photo - optional)\n- Birth data (for birth chart calculation)\n- Content you create (spells, journals, etc.)\n\n2. USE OF DATA\n\nYour data is used exclusively to:\n- Provide the app's services\n- Sync across devices\n- Improve the user experience\n\n3. SHARING\n\nWe DO NOT sell, rent, or share your personal data with third parties, except:\n- When required by law\n- To protect our legal rights\n\n4. SECURITY\n\nWe use encryption and security best practices to protect your data.\n\n5. YOUR RIGHTS\n\nAt any time you can:\n- Access your data\n- Correct information\n- Export your data\n- Delete your account\n\n6. CONTACT\n\nFor privacy questions, reach out to:\nsuporte.grimoriodebolso@gmail.com"
 }

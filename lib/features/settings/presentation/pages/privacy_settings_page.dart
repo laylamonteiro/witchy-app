@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_theme.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../../core/providers/sync_provider.dart';
@@ -70,13 +71,14 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: ResponsiveAppBarTitle(
-          'Privacidade',
+          l10n.settingsPrivacy,
           style: TextStyle(
             color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
@@ -96,13 +98,12 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Seção: Coleta de Dados
-                  _buildSectionHeader('Coleta de Dados'),
+                  _buildSectionHeader(l10n.editDataCollection),
                   _buildSettingsCard([
                     _buildSwitchTile(
                       icon: Icons.analytics_outlined,
-                      title: 'Analytics',
-                      subtitle:
-                          'Ajude a melhorar o app compartilhando dados de uso anônimos',
+                      title: l10n.editAnalytics,
+                      subtitle: l10n.editAnalyticsSubtitle,
                       value: _analyticsEnabled,
                       onChanged: (value) {
                         setState(() => _analyticsEnabled = value);
@@ -112,9 +113,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildDivider(),
                     _buildSwitchTile(
                       icon: Icons.bug_report_outlined,
-                      title: 'Relatórios de Erro',
-                      subtitle:
-                          'Enviar relatórios automáticos quando o app tiver problemas',
+                      title: l10n.editCrashReports,
+                      subtitle: l10n.editCrashReportsSubtitle,
                       value: _crashReportingEnabled,
                       onChanged: (value) {
                         setState(() => _crashReportingEnabled = value);
@@ -124,8 +124,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                     _buildDivider(),
                     _buildSwitchTile(
                       icon: Icons.auto_awesome,
-                      title: 'Conteúdo Personalizado',
-                      subtitle: 'Receber sugestões baseadas no seu uso do app',
+                      title: l10n.editPersonalizedContent,
+                      subtitle: l10n.editPersonalizedContentSubtitle,
                       value: _personalizedContent,
                       onChanged: (value) {
                         setState(() => _personalizedContent = value);
@@ -137,17 +137,17 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   const SizedBox(height: 24),
 
                   // Seção: Sincronização e Backup
-                  _buildSectionHeader('Sincronização e Backup'),
+                  _buildSectionHeader(l10n.editSyncBackup),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
                       final isPremium = authProvider.isPremiumEffective;
                       return _buildSettingsCard([
                         _buildSwitchTile(
                           icon: Icons.sync,
-                          title: 'Sincronização e Backup na Nuvem',
+                          title: l10n.editSyncBackupCloud,
                           subtitle: isPremium
-                              ? 'Manter seus dados protegidos e sincronizados entre dispositivos'
-                              : 'Recurso exclusivo Premium',
+                              ? l10n.editSyncBackupOn
+                              : l10n.editSyncPremiumOnly,
                           value: isPremium && _cloudSyncEnabled,
                           onChanged: (value) {
                             // Free não altera o toggle: qualquer toque abre
@@ -170,33 +170,33 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   const SizedBox(height: 24),
 
                   // Seção: Status de Sincronização
-                  _buildSectionHeader('Status de Sincronização'),
+                  _buildSectionHeader(l10n.privacySyncStatusSection),
                   _buildSyncStatusCard(),
 
                   const SizedBox(height: 24),
 
                   // Seção: Gerenciar Dados
-                  _buildSectionHeader('Gerenciar Seus Dados'),
+                  _buildSectionHeader(l10n.editManageData),
                   _buildSettingsCard([
                     _buildActionTile(
                       icon: Icons.download_outlined,
-                      title: 'Exportar Meus Dados',
-                      subtitle: 'Baixar uma cópia de todos os seus dados',
+                      title: l10n.editExportData,
+                      subtitle: l10n.editExportDataSubtitle,
                       onTap: _exportData,
                     ),
                     _buildDivider(),
                     _buildActionTile(
                       icon: Icons.delete_sweep_outlined,
-                      title: 'Limpar Dados Locais',
-                      subtitle: 'Remover dados salvos neste dispositivo',
+                      title: l10n.editClearLocal,
+                      subtitle: l10n.editClearLocalSubtitle,
                       onTap: _clearLocalData,
                       isDestructive: false,
                     ),
                     _buildDivider(),
                     _buildActionTile(
                       icon: Icons.delete_forever_outlined,
-                      title: 'Excluir Minha Conta',
-                      subtitle: 'Remover permanentemente todos os seus dados',
+                      title: l10n.editDeleteAccount,
+                      subtitle: l10n.editDeleteAccountSubtitle,
                       onTap: _deleteAccount,
                       isDestructive: true,
                     ),
@@ -332,6 +332,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Widget _buildSyncStatusCard() {
     return Consumer<SyncProvider>(
       builder: (context, syncProvider, _) {
+        final l10n = AppLocalizations.of(context);
         final isPremium = syncProvider.isPremium;
         final isReady = syncProvider.isReady && _cloudSyncEnabled;
         final status = syncProvider.status;
@@ -372,16 +373,16 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Sincronização na Nuvem',
+                            l10n.privacyCloudSyncUpsellTitle,
                             style: TextStyle(
                               color: context.gc.textPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            'Recurso exclusivo Premium',
+                            l10n.editSyncPremiumOnly,
                             style: TextStyle(
                               color: context.gc.gold,
                               fontSize: 12,
@@ -394,7 +395,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Mantenha seus dados sincronizados entre todos os seus dispositivos e nunca perca seus feitiços e diários.',
+                  l10n.privacyCloudSyncUpsellBody,
                   style: TextStyle(color: context.gc.textSecondary, fontSize: 13),
                 ),
                 const SizedBox(height: 16),
@@ -403,7 +404,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                   child: ElevatedButton.icon(
                     onPressed: () => openSubscriptionPage(context),
                     icon: const Icon(Icons.star, size: 18),
-                    label: const Text('Seja Premium'),
+                    label: Text(l10n.premiumBePremium),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.gc.lilac,
                       foregroundColor: context.gc.onPrimary,
@@ -449,10 +450,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                             Expanded(
                               child: Text(
                                 !_cloudSyncEnabled
-                                    ? 'Sincronização desativada'
+                                    ? l10n.privacySyncOff
                                     : isReady
                                         ? syncProvider.statusText
-                                        : 'Não conectado',
+                                        : l10n.privacySyncNotConnected,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -471,7 +472,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                'PREMIUM',
+                                l10n.privacyPremiumBadge,
                                 style: TextStyle(
                                   color: context.gc.gold,
                                   fontSize: 9,
@@ -484,10 +485,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         const SizedBox(height: 2),
                         Text(
                           !_cloudSyncEnabled
-                              ? 'Ative a sincronização na nuvem'
+                              ? l10n.privacySyncEnablePrompt
                               : isReady
                                   ? syncProvider.lastSyncText
-                                  : 'Faça login para sincronizar',
+                                  : l10n.privacySyncLoginPrompt,
                           style: TextStyle(
                             color: context.gc.textSecondary,
                             fontSize: 12,
@@ -506,8 +507,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                             SnackBar(
                               content: Text(
                                 result.success
-                                    ? 'Sincronizado com sucesso.'
-                                    : result.error ?? 'Erro na sincronização',
+                                    ? l10n.privacySyncSuccess
+                                    : result.error ?? l10n.syncError,
                               ),
                               backgroundColor: result.success
                                   ? context.gc.success
@@ -517,7 +518,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                         }
                       },
                       icon: Icon(Icons.refresh, color: context.gc.lilac),
-                      tooltip: 'Sincronizar agora',
+                      tooltip: l10n.privacySyncNow,
                     ),
                   if (isSyncing)
                     SizedBox(
@@ -572,6 +573,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Widget _buildInfoCard() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -587,7 +589,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               Icon(Icons.shield_outlined, color: context.gc.lilac, size: 20),
               SizedBox(width: 8),
               Text(
-                'Sua Privacidade Importa',
+                l10n.editPrivacyMatters,
                 style: TextStyle(
                   color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
@@ -597,8 +599,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Seus dados mágicos são sagrados. Nunca vendemos suas informações pessoais '
-            'e você tem controle total sobre o que é coletado e armazenado.',
+            l10n.editPrivacyNote,
             style: TextStyle(
               color: context.gc.textSecondary,
               fontSize: 13,
@@ -614,7 +615,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(
-              'Ler Política de Privacidade completa',
+              l10n.privacyReadFullPolicy,
               style: TextStyle(
                 color: context.gc.lilac,
                 decoration: TextDecoration.underline,
@@ -627,23 +628,23 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Future<void> _exportData() async {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
         title: Text(
-          'Exportar Dados',
+          l10n.editExportTitle,
           style: TextStyle(color: context.gc.textPrimary),
         ),
         content: Text(
-          'Seus dados serão exportados em formato JSON. '
-          'Isso pode levar alguns segundos.',
+          l10n.editExportConfirm,
           style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -654,7 +655,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               backgroundColor: context.gc.lilac,
             ),
             child:
-                Text('Exportar', style: TextStyle(color: context.gc.textPrimary)),
+                Text(l10n.editExportAction,
+                    style: TextStyle(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -662,10 +664,11 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Future<void> _performExport() async {
+    final l10n = AppLocalizations.of(context);
     try {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Exportando dados...'),
+          content: Text(l10n.editExporting),
           backgroundColor: context.gc.lilac,
         ),
       );
@@ -714,12 +717,12 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       if (mounted) {
         await Share.shareXFiles(
           [XFile(file.path)],
-          subject: 'Backup Grimório de Bolso',
+          subject: l10n.privacyBackupSubject,
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Dados exportados com sucesso!'),
+            content: Text(l10n.editExportSuccess),
             backgroundColor: context.gc.success,
           ),
         );
@@ -728,7 +731,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao exportar: $e'),
+            content: Text('${l10n.editExportError}: $e'),
             backgroundColor: context.gc.alert,
           ),
         );
@@ -737,30 +740,31 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Future<void> _clearLocalData() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
         title: Text(
-          'Limpar Dados Locais?',
+          l10n.editClearLocalTitle,
           style: TextStyle(color: context.gc.textPrimary),
         ),
         content: Text(
-          'Isso removera todos os dados salvos neste dispositivo. '
-          'Se você tem sincronização ativada, seus dados na nuvem serão mantidos.',
+          l10n.editClearLocalConfirm,
           style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
             ),
-            child: Text('Limpar', style: TextStyle(color: context.gc.textPrimary)),
+            child: Text(l10n.editClearAction,
+                style: TextStyle(color: context.gc.textPrimary)),
           ),
         ],
       ),
@@ -803,7 +807,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Dados locais removidos com sucesso'),
+              content: Text(l10n.editClearSuccess),
               backgroundColor: context.gc.success,
             ),
           );
@@ -812,7 +816,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Erro ao limpar dados: $e'),
+              content: Text('${l10n.editClearError}: $e'),
               backgroundColor: context.gc.alert,
             ),
           );
@@ -822,34 +826,29 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Future<void> _deleteAccount() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red),
-            SizedBox(width: 8),
+            const Icon(Icons.warning_amber_rounded, color: Colors.red),
+            const SizedBox(width: 8),
             Text(
-              'Excluir Conta',
-              style: TextStyle(color: Colors.red),
+              l10n.editDeleteTitle,
+              style: const TextStyle(color: Colors.red),
             ),
           ],
         ),
         content: Text(
-          'ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\n'
-          'Todos os seus dados serão permanentemente excluídos, incluindo:\n'
-          '- Feitiços e rituais\n'
-          '- Entradas de diário\n'
-          '- Mapa astral\n'
-          '- Configurações\n\n'
-          'Tem certeza absoluta?',
+          l10n.editDeleteWarning,
           style: TextStyle(color: context.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -857,7 +856,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               backgroundColor: Colors.red,
             ),
             child: Text(
-              'Excluir Permanentemente',
+              l10n.editDeletePermanently,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ),
@@ -876,9 +875,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(color: context.gc.lilac),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
-                'Excluindo conta...',
+                l10n.editDeleting,
                 style: TextStyle(color: context.gc.textSecondary),
               ),
             ],
@@ -892,7 +891,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           final authRepository = SupabaseAuthRepository();
           final result = await authRepository.deleteAccount();
           if (!result.success) {
-            throw Exception(result.errorMessage ?? 'Erro ao deletar conta');
+            throw Exception(result.errorMessage ?? l10n.editDeleteError);
           }
         }
 
@@ -916,7 +915,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         // Mostrar mensagem de sucesso
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Conta excluída com sucesso'),
+            content: Text(l10n.editDeleteSuccess),
             backgroundColor: context.gc.success,
           ),
         );
@@ -933,7 +932,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         // Mostrar erro
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao excluir conta: $e'),
+            content: Text('${l10n.editDeleteErrorPrefix}: $e'),
             backgroundColor: context.gc.alert,
           ),
         );
@@ -942,30 +941,30 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   void _showUpgradeDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
         title: Row(
           children: [
-            Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
-            SizedBox(width: 8),
+            const Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
+            const SizedBox(width: 8),
             Text(
-              'Recurso Premium',
+              l10n.editPremiumFeature,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
         ),
         content: Text(
-          'A sincronização de dados na nuvem é um recurso exclusivo para usuários Premium.\n\n'
-          'Com o Premium, seus dados ficam sempre seguros e sincronizados entre todos os seus dispositivos.',
+          l10n.editSyncPremiumPitch,
           style: TextStyle(color: context.gc.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Agora Não',
+              l10n.editNotNow,
               style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
@@ -978,7 +977,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               backgroundColor: const Color(0xFF9C27B0),
             ),
             child: Text(
-              'Fazer Upgrade',
+              l10n.profileUpgrade,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ),
@@ -988,6 +987,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   void _showPrivacyPolicy() {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1014,7 +1014,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
             Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                'Política de Privacidade',
+                l10n.authPrivacyPolicy,
                 style: TextStyle(
                   color: context.gc.textPrimary,
                   fontSize: 20,
@@ -1027,48 +1027,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                 controller: scrollController,
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  '''POLÍTICA DE PRIVACIDADE - GRIMÓRIO DE BOLSO
-
-Última atualização: Novembro 2025
-
-1. COLETA DE DADOS
-
-Coletamos apenas os dados necessários para o funcionamento do app:
-- Email e senha (para autenticação)
-- Dados de perfil (nome, foto - opcionais)
-- Dados de nascimento (para cálculo do mapa astral)
-- Conteúdo criado por você (feitiços, diários, etc.)
-
-2. USO DOS DADOS
-
-Seus dados são utilizados exclusivamente para:
-- Prover os serviços do app
-- Sincronizar entre dispositivos
-- Melhorar a experiência do usuário
-
-3. COMPARTILHAMENTO
-
-NÃO vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto:
-- Quando exigido por lei
-- Para proteger nossos direitos legais
-
-4. SEGURANCA
-
-Utilizamos criptografia e melhores práticas de segurança para proteger seus dados.
-
-5. SEUS DIREITOS
-
-Você pode a qualquer momento:
-- Acessar seus dados
-- Corrigir informações
-- Exportar seus dados
-- Excluir sua conta
-
-6. CONTATO
-
-Para dúvidas sobre privacidade, entre em contato:
-suporte.grimoriodebolso@gmail.com
-''',
+                  l10n.privacyPolicyBody,
                   style: TextStyle(
                     color: context.gc.textSecondary,
                     fontSize: 14,

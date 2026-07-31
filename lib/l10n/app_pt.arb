@@ -1318,5 +1318,18 @@
       }
     }
   },
-  "lunarWaitWaning": "Para melhores resultados em feitiços de banimento, aguarde a próxima lua minguante."
+  "lunarWaitWaning": "Para melhores resultados em feitiços de banimento, aguarde a próxima lua minguante.",
+  "privacySyncStatusSection": "Status de Sincronização",
+  "privacyCloudSyncUpsellTitle": "Sincronização na Nuvem",
+  "privacyCloudSyncUpsellBody": "Mantenha seus dados sincronizados entre todos os seus dispositivos e nunca perca seus feitiços e diários.",
+  "privacySyncOff": "Sincronização desativada",
+  "privacySyncNotConnected": "Não conectado",
+  "privacySyncEnablePrompt": "Ative a sincronização na nuvem",
+  "privacySyncLoginPrompt": "Faça login para sincronizar",
+  "privacyPremiumBadge": "PREMIUM",
+  "privacySyncSuccess": "Sincronizado com sucesso.",
+  "privacySyncNow": "Sincronizar agora",
+  "privacyReadFullPolicy": "Ler Política de Privacidade completa",
+  "privacyBackupSubject": "Backup Grimório de Bolso",
+  "privacyPolicyBody": "POLÍTICA DE PRIVACIDADE - GRIMÓRIO DE BOLSO\n\nÚltima atualização: Novembro 2025\n\n1. COLETA DE DADOS\n\nColetamos apenas os dados necessários para o funcionamento do app:\n- Email e senha (para autenticação)\n- Dados de perfil (nome, foto - opcionais)\n- Dados de nascimento (para cálculo do mapa astral)\n- Conteúdo criado por você (feitiços, diários, etc.)\n\n2. USO DOS DADOS\n\nSeus dados são utilizados exclusivamente para:\n- Prover os serviços do app\n- Sincronizar entre dispositivos\n- Melhorar a experiência do usuário\n\n3. COMPARTILHAMENTO\n\nNÃO vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto:\n- Quando exigido por lei\n- Para proteger nossos direitos legais\n\n4. SEGURANÇA\n\nUtilizamos criptografia e melhores práticas de segurança para proteger seus dados.\n\n5. SEUS DIREITOS\n\nVocê pode a qualquer momento:\n- Acessar seus dados\n- Corrigir informações\n- Exportar seus dados\n- Excluir sua conta\n\n6. CONTATO\n\nPara dúvidas sobre privacidade, entre em contato:\nsuporte.grimoriodebolso@gmail.com"
 }

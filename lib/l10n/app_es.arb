@@ -926,5 +926,18 @@
   "lunarAdviceNewMoon": "Fin de ciclo y nuevos comienzos. Destierros, limpiezas y protecciones tienen poder total.",
   "lunarAdviceWaningGeneric": "Momento favorable para hechizos de destierro y corte.",
   "lunarWaningComing": "{count, plural, one{La luna menguante llega en 1 día. ¡Prepárate!} other{La luna menguante llega en {count} días. ¡Prepárate!}}",
-  "lunarWaitWaning": "Para mejores resultados en hechizos de destierro, espera la próxima luna menguante."
+  "lunarWaitWaning": "Para mejores resultados en hechizos de destierro, espera la próxima luna menguante.",
+  "privacySyncStatusSection": "Estado de Sincronización",
+  "privacyCloudSyncUpsellTitle": "Sincronización en la Nube",
+  "privacyCloudSyncUpsellBody": "Mantén tus datos sincronizados entre todos tus dispositivos y nunca pierdas tus hechizos y diarios.",
+  "privacySyncOff": "Sincronización desactivada",
+  "privacySyncNotConnected": "No conectado",
+  "privacySyncEnablePrompt": "Activa la sincronización en la nube",
+  "privacySyncLoginPrompt": "Inicia sesión para sincronizar",
+  "privacyPremiumBadge": "PREMIUM",
+  "privacySyncSuccess": "Sincronizado con éxito.",
+  "privacySyncNow": "Sincronizar ahora",
+  "privacyReadFullPolicy": "Leer la Política de Privacidad completa",
+  "privacyBackupSubject": "Copia de seguridad de Grimorio de Bolsillo",
+  "privacyPolicyBody": "POLÍTICA DE PRIVACIDAD - GRIMORIO DE BOLSILLO\n\nÚltima actualización: Noviembre 2025\n\n1. RECOPILACIÓN DE DATOS\n\nRecopilamos solo los datos necesarios para el funcionamiento de la app:\n- Email y contraseña (para autenticación)\n- Datos de perfil (nombre, foto - opcionales)\n- Datos de nacimiento (para calcular la carta astral)\n- Contenido creado por ti (hechizos, diarios, etc.)\n\n2. USO DE LOS DATOS\n\nTus datos se utilizan exclusivamente para:\n- Ofrecer los servicios de la app\n- Sincronizar entre dispositivos\n- Mejorar la experiencia de uso\n\n3. COMPARTICIÓN\n\nNO vendemos, alquilamos ni compartimos tus datos personales con terceros, excepto:\n- Cuando lo exija la ley\n- Para proteger nuestros derechos legales\n\n4. SEGURIDAD\n\nUtilizamos cifrado y buenas prácticas de seguridad para proteger tus datos.\n\n5. TUS DERECHOS\n\nPuedes en cualquier momento:\n- Acceder a tus datos\n- Corregir información\n- Exportar tus datos\n- Eliminar tu cuenta\n\n6. CONTACTO\n\nPara dudas sobre privacidad, contáctanos:\nsuporte.grimoriodebolso@gmail.com"
 }
