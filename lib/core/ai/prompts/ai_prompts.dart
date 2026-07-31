@@ -30,7 +30,6 @@ class AiPrompts {
     required this.mysticAdvisorSystemPrompt,
     required this.palmistrySystemPrompt,
     required this.tarotSpreadSystemPrompt,
-    required this.tarotQuestionIntro,
     required this.numerologySystemPrompt,
     required this.dreamInterpreterSystemPrompt,
     required this.palmUserMessage,
@@ -74,10 +73,6 @@ class AiPrompts {
 
   /// Taróloga da tradição Rider-Waite (tiragem já sorteada pelo app).
   final String Function(Gender gender) tarotSpreadSystemPrompt;
-
-  /// Introdução da pergunta de quem consulta na mensagem de usuário do
-  /// Tarot — o texto da pergunta em si é passado verbatim, nunca traduzido.
-  final String tarotQuestionIntro;
 
   /// Especialista em numerologia pitagórica (números já calculados pelo app).
   final String Function(Gender gender) numerologySystemPrompt;
