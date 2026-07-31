@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/wheel_of_year_provider.dart';
 import '../../data/models/sabbat_model.dart';
+import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../guided_rituals/data/models/guided_rituals_data.dart';
+import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
 
 class WheelOfYearPage extends StatelessWidget {
   final bool embedded;
@@ -264,7 +267,7 @@ class WheelOfYearPage extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
+      builder: (sheetContext) => Padding(
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
           child: Column(
@@ -295,6 +298,22 @@ class WheelOfYearPage extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
+              ),
+              const SizedBox(height: 16),
+              MagicalButton(
+                text: AppLocalizations.of(context).guidedRitualOpenCta,
+                icon: Icons.auto_awesome,
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GuidedRitualPage(
+                        ritualId:
+                            AllGuidedRituals.forSabbat(sabbat.type).id,
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 24),
               Text(

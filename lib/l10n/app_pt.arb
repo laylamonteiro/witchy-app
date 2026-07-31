@@ -1767,5 +1767,59 @@
     "placeholders": {
       "question": {}
     }
-  }
+  },
+  "guidedRitualTitle": "Ritual guiado",
+  "guidedRitualNotFound": "Este ritual não está mais disponível. Explore os rituais guiados no calendário lunar e na Roda do Ano.",
+  "guidedRitualWhenTitle": "Quando fazer",
+  "guidedRitualMaterialsTitle": "Materiais",
+  "guidedRitualCorrespondencesTitle": "Correspondências",
+  "guidedRitualFoodsTitle": "Comidas",
+  "guidedRitualUsesTitle": "Como usar depois",
+  "guidedRitualStartCta": "Iniciar ritual guiado",
+  "guidedRitualCreateSpellCta": "Criar feitiço deste momento",
+  "guidedRitualOpenCta": "Fazer o ritual guiado",
+  "guidedRitualProgress": "{done} de {total} passos concluídos",
+  "@guidedRitualProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "guidedRitualLockedStepsTitle": "Mais {count} passos guiados",
+  "@guidedRitualLockedStepsTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "guidedRitualLockedStepsSubtitle": "O passo a passo completo, com progresso e XP, é do plano Premium. O primeiro passo é grátis!",
+  "guidedRitualCompletedTitle": "Ritual concluído!",
+  "guidedRitualCompletedBody": "+{xp} XP conquistados ✨",
+  "@guidedRitualCompletedBody": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "guidedRitualTodayChip": "É hoje! A energia está perfeita",
+  "guidedRitualsSectionTitle": "Rituais guiados",
+  "magicalMomentTitle": "Momento mágico",
+  "magicalMomentTodayIs": "Hoje é {weekday}, {theme}",
+  "@magicalMomentTodayIs": {
+    "placeholders": {
+      "weekday": {},
+      "theme": {}
+    }
+  },
+  "magicalMomentGuideTitle": "Guia dos dias e horários mágicos",
+  "magicalMomentWeekdaysTitle": "Dias da semana",
+  "magicalMomentPeriodsTitle": "Horas do dia",
+  "featurePreviewGuidedRituals": "O ritual passo a passo completo, com progresso e XP, é exclusivo do plano Premium.",
+  "featurePreviewPersonalEncyclopedia": "Adicionar suas próprias ervas, pedras e cores à enciclopédia é exclusivo do plano Premium."
 }

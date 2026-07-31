@@ -9,6 +9,7 @@ const Map<String, JourneyText> journeyTextsEn = {
   'sonhos_01': (title: 'Dream Traveler', description: 'Explore the world of dreams'),
   'divinacao_01': (title: 'Seer', description: 'Master the divinatory arts'),
   'desejos_01': (title: 'Manifestor', description: 'Learn to manifest your desires'),
+  'rituais_01': (title: 'Ritualist', description: 'Live the magic of the dates: sabbats, moons and magical waters'),
 };
 
 const Map<String, JourneyText> journeyStepTextsEn = {
@@ -37,4 +38,8 @@ const Map<String, JourneyText> journeyStepTextsEn = {
   'des_01_02': (title: 'Wish List', description: 'Record 10 desires'),
   'des_01_03': (title: 'First Manifestation', description: 'Manifest your first desire'),
   'des_01_04': (title: 'Master Manifestor', description: 'Manifest 5 desires'),
+  'rit_01_01': (title: 'First Ritual', description: 'Complete your first guided ritual'),
+  'rit_01_02': (title: 'Wheel Practitioner', description: 'Complete 3 guided rituals'),
+  'rit_01_03': (title: 'Keeper of the Cycles', description: 'Complete 8 guided rituals'),
+  'rit_01_04': (title: 'Master of Rituals', description: 'Complete 13 guided rituals'),
 };

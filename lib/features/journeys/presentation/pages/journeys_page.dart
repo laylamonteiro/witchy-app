@@ -60,6 +60,8 @@ class _JourneysPageState extends State<JourneysPage>
         'desires_manifested':
             await _countDesiresByStatus(db, odUserId, 'manifested'),
         'gratitude_streak': await _calculateStreak(db, 'gratitudes', odUserId),
+        'guided_rituals':
+            await _countRecords(db, 'guided_ritual_logs', odUserId),
       };
 
       // Calcular all_readings

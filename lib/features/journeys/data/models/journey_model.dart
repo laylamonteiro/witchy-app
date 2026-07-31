@@ -346,6 +346,54 @@ class AvailableJourneys {
       ],
     ),
 
+    // Jornada dos Rituais Guiados
+    JourneyModel(
+      id: 'rituais_01',
+      title: 'Ritualista',
+      description: 'Viva a magia das datas: sabbats, luas e águas mágicas',
+      icon: Icons.local_fire_department,
+      color: Color(0xFF8E24AA),
+      category: JourneyCategory.iniciante,
+      xpReward: 250,
+      steps: [
+        JourneyStep(
+          id: 'rit_01_01',
+          title: 'Primeiro Ritual',
+          description: 'Complete seu primeiro ritual guiado',
+          type: StepType.complete,
+          targetEntity: 'guided_rituals',
+          xpReward: 40,
+        ),
+        JourneyStep(
+          id: 'rit_01_02',
+          title: 'Praticante da Roda',
+          description: 'Complete 3 rituais guiados',
+          type: StepType.complete,
+          targetEntity: 'guided_rituals',
+          requiredCount: 3,
+          xpReward: 50,
+        ),
+        JourneyStep(
+          id: 'rit_01_03',
+          title: 'Guardiã dos Ciclos',
+          description: 'Complete 8 rituais guiados',
+          type: StepType.complete,
+          targetEntity: 'guided_rituals',
+          requiredCount: 8,
+          xpReward: 70,
+        ),
+        JourneyStep(
+          id: 'rit_01_04',
+          title: 'Mestra dos Rituais',
+          description: 'Complete 13 rituais guiados',
+          type: StepType.complete,
+          targetEntity: 'guided_rituals',
+          requiredCount: 13,
+          xpReward: 90,
+        ),
+      ],
+    ),
+
     // Jornada da Divinação
     JourneyModel(
       id: 'divinacao_01',

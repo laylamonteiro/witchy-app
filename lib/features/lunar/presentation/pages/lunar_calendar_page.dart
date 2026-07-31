@@ -9,6 +9,9 @@ import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../grimoire/data/models/spell_model.dart';
+import '../../../guided_rituals/data/models/guided_rituals_data.dart';
+import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
+import '../../../guided_rituals/presentation/widgets/magical_moment_card.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 
 class LunarCalendarPage extends StatefulWidget {
@@ -144,6 +147,12 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                     ],
                   ),
                 ),
+
+                // Momento mágico do dia (dia da semana + período)
+                const MagicalMomentCard(),
+
+                // Rituais guiados do momento (lua de hoje + águas mágicas)
+                _buildGuidedRitualsCard(context, lunarProvider),
 
                 // Próximas fases importantes
                 MagicalCard(
@@ -464,6 +473,94 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Atalhos para os rituais guiados do momento: ritual da lua de hoje (se
+  /// for lua cheia/nova) e as águas mágicas, sempre disponíveis.
+  Widget _buildGuidedRitualsCard(
+    BuildContext context,
+    LunarProvider lunarProvider,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final phase = lunarProvider.getCurrentMoonPhase();
+
+    final tiles = <Widget>[];
+
+    void addTile(String ritualId, {bool highlight = false}) {
+      final ritual = AllGuidedRituals.byId(ritualId);
+      if (ritual == null) return;
+      tiles.add(Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: highlight
+              ? context.gc.lilac.withValues(alpha: 0.15)
+              : context.gc.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: highlight ? context.gc.lilac : context.gc.surfaceBorder,
+          ),
+        ),
+        child: ListTile(
+          leading: Text(ritual.emoji, style: const TextStyle(fontSize: 28)),
+          title: Text(
+            ritual.title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: highlight ? context.gc.lilac : null,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          subtitle: highlight
+              ? Text(
+                  l10n.guidedRitualTodayChip,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.mint,
+                        fontWeight: FontWeight.w600,
+                      ),
+                )
+              : null,
+          trailing:
+              Icon(Icons.chevron_right, color: context.gc.textSecondary),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => GuidedRitualPage(ritualId: ritual.id),
+              ),
+            );
+          },
+        ),
+      ));
+    }
+
+    if (phase == MoonPhase.fullMoon) {
+      addTile('full_moon', highlight: true);
+      addTile('moon_water', highlight: true);
+    } else if (phase == MoonPhase.newMoon) {
+      addTile('new_moon', highlight: true);
+      addTile('moon_water');
+    } else {
+      addTile('moon_water');
+    }
+    addTile('sun_water');
+
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: context.gc.lilac),
+              const SizedBox(width: 8),
+              Text(
+                l10n.guidedRitualsSectionTitle,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...tiles,
         ],
       ),
     );
