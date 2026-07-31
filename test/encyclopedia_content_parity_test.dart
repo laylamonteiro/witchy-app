@@ -1,7 +1,11 @@
+import 'dart:ui' show Locale;
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grimorio_de_bolso/core/content/content_locale.dart';
 import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/altar_content_en.dart';
 import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/altar_content_es.dart';
 import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/altar_content_pt.dart';
+import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/arcane_categories.dart';
 import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/archetype_quiz_data_en.dart';
 import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/archetype_quiz_data_es.dart';
 import 'package:grimorio_de_bolso/features/encyclopedia/data/data_sources/archetype_quiz_data_pt.dart';
@@ -44,6 +48,29 @@ void main() {
     'en': archetypesEn,
     'es': archetypesEs,
   };
+
+  group('Categorias arcanas — assets invariantes', () {
+    test('imageAssetFor devolve o mesmo caminho nos 3 idiomas', () {
+      addTearDown(
+          () => ContentLocale.instance.setLocale(const Locale('pt', 'BR')));
+      for (final category in ArcaneCategory.values) {
+        final paths = <String>{};
+        for (final locale in const [
+          Locale('pt', 'BR'),
+          Locale('en'),
+          Locale('es')
+        ]) {
+          ContentLocale.instance.setLocale(locale);
+          final entries = category.entries;
+          expect(entries, isNotEmpty, reason: category.name);
+          paths.add(category.imageAssetFor(entries.first));
+        }
+        expect(paths.length, 1,
+            reason: '${category.name}: caminho deve ser invariante');
+        expect(paths.first, contains('assets/images/${category.assetFolder}/'));
+      }
+    });
+  });
 
   group('Altar', () {
     test('contagens iguais nas três línguas', () {

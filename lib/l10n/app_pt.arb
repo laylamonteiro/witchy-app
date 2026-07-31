@@ -1472,5 +1472,30 @@
   "subsRedeemAction": "Resgatar",
   "subsRestorePurchases": "Restaurar Compras",
   "subsRestored": "Compras restauradas com sucesso!",
-  "subsNoPurchases": "Nenhuma compra encontrada"
+  "subsNoPurchases": "Nenhuma compra encontrada",
+  "encyNothingFound": "Nada encontrado 🔍",
+  "encyArcaneSearchHint": "Buscar em {category}...",
+  "@encyArcaneSearchHint": {
+    "placeholders": {
+      "category": {}
+    }
+  },
+  "encyCatSacredSymbols": "Símbolos Sagrados",
+  "encyArcaneIntroArchetypes": "Figuras universais dos mitos e da psique — espelhos para o autoconhecimento no caminho mágico.",
+  "encyArcaneIntroAngels": "Abordagem histórica e informativa: como diferentes tradições — religiosas, ocultistas, folclóricas e literárias — enxergam essas figuras.",
+  "encyArcaneIntroDemons": "Estudo histórico e simbólico, sem sensacionalismo: goécia, folclore e literatura, diferenciando as tradições sem verdade única.",
+  "encyArcaneIntroSymbols": "A origem e o poder dos símbolos usados na bruxaria — do pentagrama ao ouroboros.",
+  "encySectionHistory": "Contexto Histórico",
+  "encyArcaneTraditions": "Olhares das Tradições",
+  "encyArcaneTraditionsNote": "Cada tradição enxerga essa figura de um jeito — nenhuma leitura é a única verdade.",
+  "encyArcaneCharacteristics": "Características",
+  "encyArcaneSymbolism": "Simbolismos",
+  "encySectionCorrespondences": "Correspondências",
+  "encyArcaneCorrespondencesSub": "Cores, ervas, astros e dias associados a esta figura.",
+  "encyArcaneStudy": "Estudo & Contemplação",
+  "encyArcaneStudySub": "Práticas de aprofundamento e meditação.",
+  "encySectionMagicUses": "Usos Mágicos",
+  "encyArcaneUsesSub": "Aplicações rituais e energéticas.",
+  "encyArcaneCautions": "Cuidados & Observações",
+  "encyArcaneSeeAlso": "Veja também"
 }

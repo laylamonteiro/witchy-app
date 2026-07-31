@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../data/data_sources/arcane_categories.dart';
 import '../../data/data_sources/archetype_quiz_data.dart';
 import '../../data/data_sources/archetypes_data.dart';
 import '../../data/models/arcane_entry_model.dart';
@@ -228,7 +229,7 @@ class _ArchetypeQuizPageState extends State<ArchetypeQuizPage> {
                     MaterialPageRoute(
                       builder: (_) => ArcaneDetailPage(
                         entry: result,
-                        categoryTitle: 'Arquétipos',
+                        category: ArcaneCategory.archetypes,
                       ),
                     ),
                   ),
