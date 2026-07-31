@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../../features/wheel_of_year/data/models/sabbat_model.dart';
+import '../navigation/app_deep_link.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../content/content_locale.dart';
 
 class NotificationScheduleResult {
   final bool permissionGranted;
@@ -19,13 +22,16 @@ class NotificationScheduleResult {
 
 class NotificationService {
   static const int debugNotificationId = 990001;
-  static const String debugNotificationTitle = '🔮 Mensagem do Grimório';
-  static const String debugNotificationBody =
-      'Seu Grimório está pronto para acompanhar sua jornada mágica.';
 
   final FlutterLocalNotificationsPlugin _notifications;
 
   NotificationService(this._notifications);
+
+  /// Textos resolvidos no idioma atual do app (via ContentLocale), sem
+  /// depender de BuildContext — os textos são "assados" no agendamento,
+  /// então reagendar após trocar o idioma re-emite tudo traduzido.
+  AppLocalizations get _l10n =>
+      lookupAppLocalizations(ContentLocale.instance.locale);
 
   Future<bool> requestPermissions() async {
     if (kIsWeb) return false;
@@ -51,22 +57,23 @@ class NotificationService {
     final android = _notifications.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     if (android == null) return;
-    await android.createNotificationChannel(const AndroidNotificationChannel(
+    final l10n = _l10n;
+    await android.createNotificationChannel(AndroidNotificationChannel(
       'moon_notifications',
-      'Fases da Lua',
-      description: 'Notificações sobre fases lunares importantes',
+      l10n.notifChannelMoonName,
+      description: l10n.notifChannelMoonDesc,
       importance: Importance.high,
     ));
-    await android.createNotificationChannel(const AndroidNotificationChannel(
+    await android.createNotificationChannel(AndroidNotificationChannel(
       'sabbat_notifications',
-      'Sabbats',
-      description: 'Lembretes de celebrações da Roda do Ano',
+      l10n.notifChannelSabbatName,
+      description: l10n.notifChannelSabbatDesc,
       importance: Importance.high,
     ));
-    await android.createNotificationChannel(const AndroidNotificationChannel(
+    await android.createNotificationChannel(AndroidNotificationChannel(
       'debug_notifications',
-      'Testes de notificação',
-      description: 'Notificações enviadas pelo diagnóstico do aplicativo',
+      l10n.notifChannelDebugName,
+      description: l10n.notifChannelDebugDesc,
       importance: Importance.high,
     ));
   }
@@ -75,27 +82,27 @@ class NotificationService {
     try {
       final granted = await requestPermissions();
       if (!granted) {
-        return const NotificationScheduleResult(
+        return NotificationScheduleResult(
           permissionGranted: false,
-          error: 'Permissão de notificações não concedida',
+          error: _l10n.notifErrPermissionDenied,
         );
       }
       await createChannels();
       await _notifications.show(
         debugNotificationId,
-        debugNotificationTitle,
-        debugNotificationBody,
-        const NotificationDetails(
+        _l10n.notifDebugTitle,
+        _l10n.notifDebugBody,
+        payload: AppDeepLink.moonEncyclopedia.payload,
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'debug_notifications',
-            'Testes de notificação',
-            channelDescription:
-                'Notificações enviadas pelo diagnóstico do aplicativo',
+            _l10n.notifChannelDebugName,
+            channelDescription: _l10n.notifChannelDebugDesc,
             importance: Importance.high,
             priority: Priority.high,
             icon: '@mipmap/ic_launcher',
           ),
-          iOS: DarwinNotificationDetails(
+          iOS: const DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
@@ -109,7 +116,7 @@ class NotificationService {
     } catch (e) {
       return NotificationScheduleResult(
         permissionGranted: true,
-        error: 'Falha ao enviar notificação de teste: $e',
+        error: _l10n.notifErrTestFailed('$e'),
       );
     }
   }
@@ -146,6 +153,7 @@ class NotificationService {
     required String body,
     required DateTime localDate,
     required NotificationDetails details,
+    String? payload,
   }) async {
     if (!localDate.isAfter(DateTime.now())) return;
     await _notifications.zonedSchedule(
@@ -155,62 +163,56 @@ class NotificationService {
       tz.TZDateTime.from(localDate.toUtc(), tz.UTC),
       details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
     );
   }
 
   Future<void> scheduleFullMoonNotification(DateTime eventDate) => _schedule(
         id: notificationId('full_moon', eventDate),
-        title: '🌕 Lua Cheia se aproxima!',
-        body:
-            'Amanhã é Lua Cheia! Prepare-se para rituais de manifestação e gratidão.',
+        title: _l10n.notifFullMoonTitle,
+        body: _l10n.notifFullMoonBody,
         localDate: reminderDate(eventDate, daysBefore: 1, hour: 20),
-        details: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'moon_notifications',
-            'Fases da Lua',
-            channelDescription: 'Notificações sobre fases lunares importantes',
-            importance: Importance.high,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
-          ),
-          iOS: DarwinNotificationDetails(),
-        ),
+        details: _moonDetails(),
+        payload: AppDeepLink.moonEncyclopedia.payload,
       );
 
   Future<void> scheduleNewMoonNotification(DateTime eventDate) => _schedule(
         id: notificationId('new_moon', eventDate),
-        title: '🌑 Lua Nova se aproxima!',
-        body:
-            'Amanhã é Lua Nova! Momento perfeito para definir intenções e novos começos.',
+        title: _l10n.notifNewMoonTitle,
+        body: _l10n.notifNewMoonBody,
         localDate: reminderDate(eventDate, daysBefore: 1, hour: 20),
-        details: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'moon_notifications',
-            'Fases da Lua',
-            channelDescription: 'Notificações sobre fases lunares importantes',
-            importance: Importance.high,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
-          ),
-          iOS: DarwinNotificationDetails(),
+        details: _moonDetails(),
+        payload: AppDeepLink.moonEncyclopedia.payload,
+      );
+
+  NotificationDetails _moonDetails() => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'moon_notifications',
+          _l10n.notifChannelMoonName,
+          channelDescription: _l10n.notifChannelMoonDesc,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
         ),
+        iOS: const DarwinNotificationDetails(),
       );
 
   Future<void> scheduleSabbatNotification(Sabbat sabbat) => _schedule(
         id: notificationId('sabbat', sabbat.date),
-        title: '${sabbat.emoji} ${sabbat.name} se aproxima!',
-        body: 'Em 3 dias celebramos ${sabbat.name}. Prepare seus rituais!',
+        title: _l10n.notifSabbatTitle(sabbat.emoji, sabbat.name),
+        body: _l10n.notifSabbatBody(sabbat.name),
         localDate: reminderDate(sabbat.date, daysBefore: 3, hour: 9),
-        details: const NotificationDetails(
+        payload: AppDeepLink.sabbatsEncyclopedia.payload,
+        details: NotificationDetails(
           android: AndroidNotificationDetails(
             'sabbat_notifications',
-            'Sabbats',
-            channelDescription: 'Lembretes de celebrações da Roda do Ano',
+            _l10n.notifChannelSabbatName,
+            channelDescription: _l10n.notifChannelSabbatDesc,
             importance: Importance.high,
             priority: Priority.high,
             icon: '@mipmap/ic_launcher',
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
       );
 
@@ -235,9 +237,9 @@ class NotificationService {
     try {
       final granted = await requestPermissions();
       if (!granted) {
-        return const NotificationScheduleResult(
+        return NotificationScheduleResult(
           permissionGranted: false,
-          error: 'Permissão de notificações não concedida',
+          error: _l10n.notifErrPermissionDenied,
         );
       }
       await createChannels();
@@ -259,7 +261,7 @@ class NotificationService {
     } catch (e) {
       return NotificationScheduleResult(
         permissionGranted: true,
-        error: 'Falha ao agendar notificações: $e',
+        error: _l10n.notifErrScheduleFailed('$e'),
       );
     }
   }

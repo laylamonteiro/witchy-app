@@ -1,3 +1,8 @@
+import '../../../../core/content/content_locale.dart';
+import 'sabbat_content_en.dart';
+import 'sabbat_content_es.dart';
+import 'sabbat_content_pt.dart';
+
 enum SabbatType {
   samhain,
   yule,
@@ -10,6 +15,7 @@ enum SabbatType {
 }
 
 extension SabbatTypeExtension on SabbatType {
+  // Nome próprio do Sabbat — INVARIANTE entre idiomas (Samhain, Yule...).
   String get name {
     switch (this) {
       case SabbatType.samhain:
@@ -52,215 +58,37 @@ extension SabbatTypeExtension on SabbatType {
     }
   }
 
-  String get description {
-    switch (this) {
-      case SabbatType.samhain:
-        return 'Ano Novo Bruxo. Véu entre mundos está fino. Honre ancestrais e entes queridos. Início do outono/inverno, período de recolhimento.';
-      case SabbatType.yule:
-        return 'Solstício de Inverno. A noite mais longa do ano. Renascimento da luz. Coincide com festas juninas que mantêm a tradição do fogo sagrado.';
-      case SabbatType.imbolc:
-        return 'Festival da luz crescente. Despertar da Terra, primeiros sinais da primavera. Tempo de limpeza, purificação e preparação para o novo crescimento.';
-      case SabbatType.ostara:
-        return 'Equinócio de Primavera. Equilíbrio perfeito entre luz e escuridão. A natureza desperta plenamente. Tempo de novos começos.';
-      case SabbatType.beltane:
-        return 'Festival do fogo e fertilidade. Celebração da vida em plenitude. Coincide com Finados, mas energeticamente é sobre celebrar a vida e o amor.';
-      case SabbatType.litha:
-        return 'Solstício de Verão. O dia mais longo, pico do poder solar. Coincide com festas de fim de ano. Momento de celebração e gratidão.';
-      case SabbatType.lammas:
-        return 'Primeira colheita. Após o verão abundante, é tempo de agradecer e compartilhar. Reconhecemos o sacrifício necessário para a abundância.';
-      case SabbatType.mabon:
-        return 'Equinócio de Outono. Segunda colheita e segundo equilíbrio do ano. Preparação para o outono. Tempo de gratidão e equilíbrio.';
-    }
-  }
+  String get description => ContentLocale.instance.select(
+      pt: sabbatDescriptionsPt,
+      en: sabbatDescriptionsEn,
+      es: sabbatDescriptionsEs)[this]!;
 
   // Data formatada para hemisfério sul (Brasil)
-  String get southernHemisphereDate {
-    switch (this) {
-      case SabbatType.samhain:
-        return '1 de maio';
-      case SabbatType.yule:
-        return '21 de junho';
-      case SabbatType.imbolc:
-        return '1 de agosto';
-      case SabbatType.ostara:
-        return '21 de setembro';
-      case SabbatType.beltane:
-        return '31 de outubro';
-      case SabbatType.litha:
-        return '21 de dezembro';
-      case SabbatType.lammas:
-        return '2 de fevereiro';
-      case SabbatType.mabon:
-        return '20 de março';
-    }
-  }
+  String get southernHemisphereDate => ContentLocale.instance.select(
+      pt: sabbatSouthDatesPt,
+      en: sabbatSouthDatesEn,
+      es: sabbatSouthDatesEs)[this]!;
 
   // Data formatada para hemisfério norte (referência tradicional)
-  String get northernHemisphereDate {
-    switch (this) {
-      case SabbatType.samhain:
-        return '31 de outubro';
-      case SabbatType.yule:
-        return '21 de dezembro';
-      case SabbatType.imbolc:
-        return '1 de fevereiro';
-      case SabbatType.ostara:
-        return '21 de março';
-      case SabbatType.beltane:
-        return '1 de maio';
-      case SabbatType.litha:
-        return '21 de junho';
-      case SabbatType.lammas:
-        return '1 de agosto';
-      case SabbatType.mabon:
-        return '21 de setembro';
-    }
-  }
+  String get northernHemisphereDate => ContentLocale.instance.select(
+      pt: sabbatNorthDatesPt,
+      en: sabbatNorthDatesEn,
+      es: sabbatNorthDatesEs)[this]!;
 
-  List<String> get crystals {
-    switch (this) {
-      case SabbatType.samhain:
-        return ['Obsidiana', 'Ônix', 'Turmalina negra', 'Ametista'];
-      case SabbatType.yule:
-        return ['Quartzo transparente', 'Citrino', 'Granada', 'Rubi'];
-      case SabbatType.imbolc:
-        return ['Ametista', 'Quartzo rosa', 'Selenita', 'Pedra da lua'];
-      case SabbatType.ostara:
-        return ['Quartzo rosa', 'Aventurina', 'Água-marinha', 'Jaspe'];
-      case SabbatType.beltane:
-        return ['Quartzo rosa', 'Esmeralda', 'Malaquita', 'Carnélia'];
-      case SabbatType.litha:
-        return ['Citrino', 'Olho de tigre', 'Quartzo transparente', 'Âmbar'];
-      case SabbatType.lammas:
-        return ['Citrino', 'Cornalina', 'Ágata', 'Peridoto'];
-      case SabbatType.mabon:
-        return ['Âmbar', 'Topázio', 'Citrino', 'Ágata'];
-    }
-  }
+  List<String> get crystals => ContentLocale.instance.select(
+      pt: sabbatCrystalsPt, en: sabbatCrystalsEn, es: sabbatCrystalsEs)[this]!;
 
-  List<String> get herbs {
-    switch (this) {
-      case SabbatType.samhain:
-        return ['Artemísia', 'Alecrim', 'Sálvia', 'Rosa (pétalas)', 'Hortelã'];
-      case SabbatType.yule:
-        return ['Alecrim', 'Canela', 'Gengibre', 'Pinheiro', 'Louro'];
-      case SabbatType.imbolc:
-        return ['Lavanda', 'Camomila', 'Angélica', 'Manjericão'];
-      case SabbatType.ostara:
-        return ['Rosa', 'Lavanda', 'Hortelã', 'Manjericão'];
-      case SabbatType.beltane:
-        return ['Rosa', 'Lavanda', 'Hortelã', 'Manjericão'];
-      case SabbatType.litha:
-        return ['Camomila', 'Hortelã', 'Rosa', 'Lavanda'];
-      case SabbatType.lammas:
-        return ['Manjericão', 'Camomila', 'Alecrim'];
-      case SabbatType.mabon:
-        return ['Sálvia', 'Alecrim', 'Camomila'];
-    }
-  }
+  List<String> get herbs => ContentLocale.instance.select(
+      pt: sabbatHerbsPt, en: sabbatHerbsEn, es: sabbatHerbsEs)[this]!;
 
-  List<String> get colors {
-    switch (this) {
-      case SabbatType.samhain:
-        return ['Preto', 'Laranja', 'Roxo escuro', 'Dourado escuro'];
-      case SabbatType.yule:
-        return ['Vermelho', 'Verde', 'Dourado', 'Branco'];
-      case SabbatType.imbolc:
-        return ['Branco', 'Rosa claro', 'Amarelo claro', 'Verde claro'];
-      case SabbatType.ostara:
-        return ['Verde', 'Amarelo', 'Rosa', 'Lilás'];
-      case SabbatType.beltane:
-        return ['Vermelho', 'Verde vibrante', 'Dourado', 'Rosa'];
-      case SabbatType.litha:
-        return ['Amarelo', 'Laranja', 'Dourado', 'Vermelho'];
-      case SabbatType.lammas:
-        return ['Dourado', 'Marrom', 'Laranja', 'Verde escuro'];
-      case SabbatType.mabon:
-        return ['Laranja', 'Vermelho', 'Marrom', 'Dourado escuro'];
-    }
-  }
+  List<String> get colors => ContentLocale.instance.select(
+      pt: sabbatColorsPt, en: sabbatColorsEn, es: sabbatColorsEs)[this]!;
 
-  List<String> get foods {
-    switch (this) {
-      case SabbatType.samhain:
-        return ['Abóbora', 'Maçãs', 'Pães caseiros', 'Sopas', 'Castanhas', 'Romã'];
-      case SabbatType.yule:
-        return ['Quentão', 'Pães de gengibre', 'Frutas secas', 'Milho', 'Laranja'];
-      case SabbatType.imbolc:
-        return ['Leite e derivados', 'Pães com sementes', 'Mel', 'Chás'];
-      case SabbatType.ostara:
-        return ['Ovos', 'Saladas verdes', 'Pães com ervas', 'Mel', 'Sementes'];
-      case SabbatType.beltane:
-        return ['Morangos', 'Frutas vermelhas', 'Vinho', 'Bolos de mel'];
-      case SabbatType.litha:
-        return ['Frutas frescas', 'Saladas', 'Sucos', 'Girassol (sementes)'];
-      case SabbatType.lammas:
-        return ['Pães', 'Milho', 'Cerveja', 'Frutas da estação', 'Grãos'];
-      case SabbatType.mabon:
-        return ['Maçãs', 'Uvas', 'Vinho', 'Abóboras', 'Nozes', 'Cogumelos'];
-    }
-  }
+  List<String> get foods => ContentLocale.instance.select(
+      pt: sabbatFoodsPt, en: sabbatFoodsEn, es: sabbatFoodsEs)[this]!;
 
-  List<String> get rituals {
-    switch (this) {
-      case SabbatType.samhain:
-        return [
-          'Crie um altar para ancestrais com fotos e oferendas',
-          'Faça uma ceia silenciosa em honra aos que partiram',
-          'Pratique divinação (tarô, runas, pêndulo)',
-          'Acenda velas pretas e laranja',
-        ];
-      case SabbatType.yule:
-        return [
-          'Decore sua casa com elementos naturais',
-          'Acenda velas para trazer a luz de volta',
-          'Faça um banho de ervas purificador',
-          'Medite sobre o ciclo de morte e renascimento',
-        ];
-      case SabbatType.imbolc:
-        return [
-          'Limpe e purifique sua casa',
-          'Acenda velas brancas ou amarelas',
-          'Plante sementes (literais ou simbólicas)',
-          'Faça um ritual de banho com leite e mel',
-        ];
-      case SabbatType.ostara:
-        return [
-          'Pinte ovos com símbolos mágicos',
-          'Plante flores e ervas',
-          'Faça um ritual de equilíbrio e harmonia',
-          'Crie sachês de prosperidade',
-        ];
-      case SabbatType.beltane:
-        return [
-          'Acenda uma fogueira ou velas vermelhas',
-          'Dance e celebre a vida',
-          'Faça oferendas às fadas e elementais',
-          'Crie um altar de flores',
-        ];
-      case SabbatType.litha:
-        return [
-          'Assista ao nascer ou pôr do sol',
-          'Colha ervas mágicas (estão no auge)',
-          'Faça um círculo de proteção ao redor de sua casa',
-          'Celebre com frutas e flores amarelas/douradas',
-        ];
-      case SabbatType.lammas:
-        return [
-          'Asse pão como oferenda',
-          'Agradeça pelas conquistas do ano',
-          'Faça bonecas de milho (corn dolly)',
-          'Doe alimentos para quem precisa',
-        ];
-      case SabbatType.mabon:
-        return [
-          'Crie uma cornucópia de gratidão',
-          'Faça um ritual de equilíbrio',
-          'Preserve alimentos (geleias, chás)',
-          'Medite sobre o que precisa ser liberado',
-        ];
-    }
-  }
+  List<String> get rituals => ContentLocale.instance.select(
+      pt: sabbatRitualsPt, en: sabbatRitualsEn, es: sabbatRitualsEs)[this]!;
 
   // Datas para hemisfério sul (Brasil)
   DateTime getDateForYear(int year) {

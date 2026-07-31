@@ -1,7 +1,10 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ai/ai_service.dart';
+import '../content/content_locale.dart';
 
 class LanguageProvider extends ChangeNotifier {
   static const String preferencesKey = 'selected_locale';
@@ -16,8 +19,14 @@ class LanguageProvider extends ChangeNotifier {
   Locale _locale = fallbackLocale;
 
   LanguageProvider(this._prefs) {
-    _locale = _localeFromTag(_prefs.getString(preferencesKey));
+    final savedTag = _prefs.getString(preferencesKey);
+    // Sem preferência salva, o idioma inicial segue o do dispositivo
+    // (com fallback pt-BR); a escolha manual é persistida em setLocale.
+    _locale = savedTag != null
+        ? _localeFromTag(savedTag)
+        : _normalize(ui.PlatformDispatcher.instance.locale);
     AIService.instance.setLocale(_locale);
+    ContentLocale.instance.setLocale(_locale);
   }
 
   Locale get locale => _locale;
@@ -25,10 +34,15 @@ class LanguageProvider extends ChangeNotifier {
 
   Future<void> setLocale(Locale locale) async {
     final normalized = _normalize(locale);
-    if (_locale == normalized) return;
+    // Persiste mesmo quando o idioma escolhido coincide com o do dispositivo
+    // (primeiro uso sem preferência salva): a escolha manual "fixa" o idioma.
+    final alreadySaved =
+        _prefs.getString(preferencesKey) == _languageTag(normalized);
+    if (_locale == normalized && alreadySaved) return;
 
     _locale = normalized;
     AIService.instance.setLocale(_locale);
+    ContentLocale.instance.setLocale(_locale);
     await _prefs.setString(preferencesKey, _languageTag(_locale));
     notifyListeners();
   }

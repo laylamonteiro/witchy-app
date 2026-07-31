@@ -7,7 +7,6 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'gratitude_form_page.dart';
 
@@ -35,15 +34,15 @@ class _GratitudesListPageState extends State<GratitudesListPage> {
       body: Consumer<GratitudeProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingGratitudes);
+            return LoadingWidget(message: AppLocalizations.of(context).diaryLoadingGratitudes);
           }
 
           if (provider.gratitudes.isEmpty) {
             return EmptyStateWidget(
               message:
-                  AppLocalizations.of(context)!.diaryEmptyGratitudes,
+                  AppLocalizations.of(context).diaryEmptyGratitudes,
               icon: Icons.favorite,
-              actionText: AppLocalizations.of(context)!.diaryAddGratitude,
+              actionText: AppLocalizations.of(context).diaryAddGratitude,
               onAction: () => _navigateToForm(context),
             );
           }

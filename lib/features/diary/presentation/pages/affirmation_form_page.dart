@@ -52,7 +52,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-            widget.affirmation == null ? AppLocalizations.of(context)!.diaryNewAffirmation : AppLocalizations.of(context)!.diaryEditAffirmation),
+            widget.affirmation == null ? AppLocalizations.of(context).diaryNewAffirmation : AppLocalizations.of(context).diaryEditAffirmation),
         actions: widget.affirmation != null && !isPreloaded
             ? [
                 IconButton(
@@ -82,7 +82,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        AppLocalizations.of(context)!.diaryPreloadedAffirmationNote,
+                        AppLocalizations.of(context).diaryPreloadedAffirmationNote,
                         style: TextStyle(fontSize: 12),
                       ),
                     ),
@@ -111,7 +111,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                         Text('🧙🏻‍♂️', style: TextStyle(fontSize: 24)),
                         SizedBox(width: 8),
                         Text(
-                          AppLocalizations.of(context)!.profileMysticAdvisor,
+                          AppLocalizations.of(context).profileMysticAdvisor,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -122,7 +122,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.diaryAdvisorAffirmationPitch,
+                      AppLocalizations.of(context).diaryAdvisorAffirmationPitch,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.gc.softWhite.withOpacity(0.7),
@@ -132,10 +132,10 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                     TextFormField(
                       controller: _contextController,
                       decoration: InputDecoration(
-                        labelText: AppLocalizations.of(context)!.diaryContextOptional,
-                        hintText: AppLocalizations.of(context)!.diaryContextHint,
+                        labelText: AppLocalizations.of(context).diaryContextOptional,
+                        hintText: AppLocalizations.of(context).diaryContextHint,
                         helperText:
-                            AppLocalizations.of(context)!.diaryContextHelper,
+                            AppLocalizations.of(context).diaryContextHelper,
                       ),
                       maxLines: 2,
                     ),
@@ -155,8 +155,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                               )
                             : const Icon(Icons.auto_awesome),
                         label: Text(_isGenerating
-                            ? AppLocalizations.of(context)!.diaryConsulting
-                            : AppLocalizations.of(context)!.diaryGenerateAffirmation),
+                            ? AppLocalizations.of(context).diaryConsulting
+                            : AppLocalizations.of(context).diaryGenerateAffirmation),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: context.gc.lilac,
                           foregroundColor: context.gc.darkBackground,
@@ -170,7 +170,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
               const Divider(),
               const SizedBox(height: 8),
               Text(
-                AppLocalizations.of(context)!.diaryWriteOwnAffirmation,
+                AppLocalizations.of(context).diaryWriteOwnAffirmation,
                 style: TextStyle(
                   fontSize: 12,
                   color: context.gc.softWhite.withOpacity(0.6),
@@ -182,9 +182,9 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
               controller: _textController,
               enabled: !isPreloaded,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryAffirmationLabel,
-                hintText: AppLocalizations.of(context)!.diaryAffirmationHint,
-                helperText: AppLocalizations.of(context)!.diaryAffirmationHelper,
+                labelText: AppLocalizations.of(context).diaryAffirmationLabel,
+                hintText: AppLocalizations.of(context).diaryAffirmationHint,
+                helperText: AppLocalizations.of(context).diaryAffirmationHelper,
               ),
               maxLines: 3,
             ),
@@ -192,7 +192,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
             DropdownButtonFormField<AffirmationCategory>(
               value: _selectedCategory,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryCategoryLabel,
+                labelText: AppLocalizations.of(context).diaryCategoryLabel,
               ),
               items: AffirmationCategory.values
                   .map((category) => DropdownMenuItem(
@@ -221,8 +221,8 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
             if (!isPreloaded)
               MagicalButton(
                 text: widget.affirmation == null
-                    ? AppLocalizations.of(context)!.diarySaveAffirmation
-                    : AppLocalizations.of(context)!.commonUpdate,
+                    ? AppLocalizations.of(context).diarySaveAffirmation
+                    : AppLocalizations.of(context).commonUpdate,
                 icon: Icons.auto_awesome,
                 onPressed: _saveAffirmation,
               ),
@@ -236,7 +236,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      AppLocalizations.of(context)!.diaryAffirmationsRemaining('$remaining/${UserModel.freeAffirmationsLimit}'),
+                      AppLocalizations.of(context).diaryAffirmationsRemaining('$remaining/${UserModel.freeAffirmationsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
                             ? context.gc.softWhite.withOpacity(0.6)
@@ -273,7 +273,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.diaryAffirmationCreated),
+            content: Text(AppLocalizations.of(context).diaryAffirmationCreated),
             backgroundColor: context.gc.lilac,
           ),
         );
@@ -282,7 +282,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${AppLocalizations.of(context)!.diaryAffirmationError}: $e'),
+            content: Text('${AppLocalizations.of(context).diaryAffirmationError}: $e'),
             backgroundColor: context.gc.alert,
           ),
         );
@@ -300,7 +300,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     if (_textController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.diaryTypeOrGenerate),
+          content: Text(AppLocalizations.of(context).diaryTypeOrGenerate),
           backgroundColor: Colors.orange,
         ),
       );
@@ -314,7 +314,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              AppLocalizations.of(context)!.diaryAffirmationLimit),
+              AppLocalizations.of(context).diaryAffirmationLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -350,17 +350,17 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.diaryDeleteAffirmationTitle),
-        content: Text(AppLocalizations.of(context)!.diaryDeleteAffirmationConfirm),
+        title: Text(AppLocalizations.of(context).diaryDeleteAffirmationTitle),
+        content: Text(AppLocalizations.of(context).diaryDeleteAffirmationConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(AppLocalizations.of(context)!.commonCancel),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: context.gc.alert),
-            child: Text(AppLocalizations.of(context)!.commonDelete),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),

@@ -30,7 +30,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Grimório Vivo'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolLivingGrimoireTitle),
       ),
       body: Consumer<LearningProvider>(
         builder: (context, learning, _) {
@@ -45,7 +45,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
                       const Text('📖', style: TextStyle(fontSize: 44)),
                       const SizedBox(height: 10),
                       Text(
-                        AppLocalizations.of(context)!.learnHomeTitle,
+                        AppLocalizations.of(context).learnHomeTitle,
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
@@ -54,7 +54,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        AppLocalizations.of(context)!.learnHomeSubtitle,
+                        AppLocalizations.of(context).learnHomeSubtitle,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: context.gc.textSecondary,
@@ -106,8 +106,8 @@ class _LearningHomePageState extends State<LearningHomePage> {
                       const SizedBox(height: 6),
                       Text(
                         learning.nextLevel == null
-                            ? AppLocalizations.of(context)!.learnMaxTitle
-                            : AppLocalizations.of(context)!.learnNextTitle('${learning.totalPagesWritten}', learning.nextLevel!.title, '${learning.nextLevel!.minXp}'),
+                            ? AppLocalizations.of(context).learnMaxTitle
+                            : AppLocalizations.of(context).learnNextTitle('${learning.totalPagesWritten}', learning.nextLevel!.title, '${learning.nextLevel!.minXp}'),
                         style: TextStyle(
                           color: context.gc.textSecondary,
                           fontSize: 11,
@@ -200,7 +200,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  complete ? AppLocalizations.of(context)!.learnBoundShort : AppLocalizations.of(context)!.learnPagesProgress('$done', '$total'),
+                  complete ? AppLocalizations.of(context).learnBoundShort : AppLocalizations.of(context).learnPagesProgress('$done', '$total'),
                   style: TextStyle(
                     color: complete
                         ? context.gc.success
@@ -267,7 +267,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  AppLocalizations.of(context)!.learnBoundVolume('${trail.lessons.length}'),
+                  AppLocalizations.of(context).learnBoundVolume('${trail.lessons.length}'),
                   style: TextStyle(
                     color: context.gc.starYellow,
                     fontSize: 12,

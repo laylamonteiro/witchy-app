@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/services/payment_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 
 class SubscriptionHero extends StatelessWidget {
@@ -147,7 +146,7 @@ class _CatHeroArt extends StatelessWidget {
               fit: BoxFit.contain,
               alignment: Alignment.bottomCenter,
               filterQuality: FilterQuality.high,
-              semanticLabel: AppLocalizations.of(context)!.premiumCatSemantic,
+              semanticLabel: AppLocalizations.of(context).premiumCatSemantic,
             ),
           ),
         ],
@@ -173,7 +172,7 @@ class _HeroCopy extends StatelessWidget {
       crossAxisAlignment: alignment,
       children: [
         Text(
-          AppLocalizations.of(context)!.premiumHeroAccess,
+          AppLocalizations.of(context).premiumHeroAccess,
           textAlign: textAlign,
           style: GoogleFonts.lora(
             color: context.gc.textPrimary,
@@ -192,7 +191,7 @@ class _HeroCopy extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              AppLocalizations.of(context)!.premiumHeroPower,
+              AppLocalizations.of(context).premiumHeroPower,
               textAlign: textAlign,
               style: GoogleFonts.cinzelDecorative(
                 color: context.gc.textPrimary,
@@ -206,7 +205,7 @@ class _HeroCopy extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
-            AppLocalizations.of(context)!.premiumHeroMagic,
+            AppLocalizations.of(context).premiumHeroMagic,
             textAlign: textAlign,
             style: GoogleFonts.cinzelDecorative(
               color: context.gc.textPrimary,
@@ -226,12 +225,12 @@ class _HeroCopy extends StatelessWidget {
               height: 1.34,
             ),
             children: [
-              TextSpan(text: AppLocalizations.of(context)!.premiumHeroTagline1),
+              TextSpan(text: AppLocalizations.of(context).premiumHeroTagline1),
               TextSpan(
-                text: AppLocalizations.of(context)!.premiumHeroTaglineHighlight,
+                text: AppLocalizations.of(context).premiumHeroTaglineHighlight,
                 style: TextStyle(color: context.gc.lilac),
               ),
-              TextSpan(text: AppLocalizations.of(context)!.premiumHeroTagline2),
+              TextSpan(text: AppLocalizations.of(context).premiumHeroTagline2),
             ],
           ),
         ),
@@ -275,7 +274,7 @@ class PremiumBenefitsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final benefits = [
       ('assets/premium/icon_orb.png', l10n.premiumBenefitAdvisor),
       ('assets/premium/icon_book.png', l10n.premiumBenefitEncyclopedia),
@@ -462,19 +461,19 @@ class SubscriptionPlanSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final monthly = _SubscriptionPlanCard(
       type: SubscriptionType.monthly,
-      title: AppLocalizations.of(context)!.premiumPlanMonthly,
+      title: AppLocalizations.of(context).premiumPlanMonthly,
       price: monthlyPrice,
-      period: AppLocalizations.of(context)!.premiumPerMonth,
+      period: AppLocalizations.of(context).premiumPerMonth,
       selected: selectedPlan == SubscriptionType.monthly,
       enabled: monthlyEnabled,
       onTap: () => onSelected(SubscriptionType.monthly),
     );
     final yearly = _SubscriptionPlanCard(
       type: SubscriptionType.yearly,
-      title: AppLocalizations.of(context)!.premiumPlanYearly,
+      title: AppLocalizations.of(context).premiumPlanYearly,
       price: yearlyPrice,
-      period: AppLocalizations.of(context)!.premiumPerYear,
-      savings: AppLocalizations.of(context)!.premiumSave33,
+      period: AppLocalizations.of(context).premiumPerYear,
+      savings: AppLocalizations.of(context).premiumSave33,
       popular: true,
       emphasized: true,
       selected: selectedPlan == SubscriptionType.yearly,
@@ -521,7 +520,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = selected ? context.gc.lilac : context.gc.surfaceBorder;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final tag =
         selected ? l10n.premiumTagSelected : (popular ? l10n.premiumTagPopular : null);
 
@@ -702,7 +701,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    AppLocalizations.of(context)!.premiumStartNow,
+                    AppLocalizations.of(context).premiumStartNow,
                     style: GoogleFonts.lora(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -720,7 +719,7 @@ class SubscriptionGuarantees extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final guarantees = [
       ('assets/premium/icon_shield.png', l10n.premiumSecurePayment),
       ('assets/premium/icon_lock.png', l10n.premiumDataProtected),

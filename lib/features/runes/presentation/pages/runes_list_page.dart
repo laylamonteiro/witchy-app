@@ -17,7 +17,7 @@ class RunesListPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.runesListTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).runesListTitle),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -37,7 +37,7 @@ class RunesListPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          AppLocalizations.of(context)!.runesAbout,
+                          AppLocalizations.of(context).runesAbout,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                       ),
@@ -45,14 +45,14 @@ class RunesListPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.runesAboutText,
+                    AppLocalizations.of(context).runesAboutText,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.runesExplore,
+                    AppLocalizations.of(context).runesExplore,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -65,7 +65,7 @@ class RunesListPage extends StatelessWidget {
 
             // Título da lista
             Text(
-              AppLocalizations.of(context)!.runesElderFuthark,
+              AppLocalizations.of(context).runesElderFuthark,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),

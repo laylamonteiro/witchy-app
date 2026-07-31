@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_button.dart';
+import '../../data/data_sources/sigil_content.dart';
 import '../../data/models/sigil_model.dart';
 import 'sigil_step3_drawing_page.dart';
 
@@ -21,7 +22,7 @@ class SigilStep2LettersPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.sigilMagicLetters),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).sigilMagicLetters),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -31,13 +32,13 @@ class SigilStep2LettersPage extends StatelessWidget {
           children: [
             // Título da etapa
             Text(
-              AppLocalizations.of(context)!.sigilYourLetters,
+              AppLocalizations.of(context).sigilYourLetters,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              AppLocalizations.of(context)!.sigilEssence,
+              AppLocalizations.of(context).sigilEssence,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.gc.textSecondary,
                   ),
@@ -50,7 +51,7 @@ class SigilStep2LettersPage extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.sigilYourIntention,
+                    AppLocalizations.of(context).sigilYourIntention,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),
@@ -85,7 +86,7 @@ class SigilStep2LettersPage extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.sigilTransformedInto,
+                    AppLocalizations.of(context).sigilTransformedInto,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),
@@ -138,27 +139,24 @@ class SigilStep2LettersPage extends StatelessWidget {
                       const Text('✨', style: TextStyle(fontSize: 24)),
                       const SizedBox(width: 12),
                       Text(
-                        AppLocalizations.of(context)!.sigilWhatHappened,
+                        AppLocalizations.of(context).sigilWhatHappened,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.sigilSimplified,
+                    SigilContent.simplifiedIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
-                  _buildStep(context, AppLocalizations.of(context)!.sigilStepAccents),
-                  _buildStep(context, AppLocalizations.of(context)!.sigilStepSpaces),
-                  _buildStep(
-                      context,
-                      AppLocalizations.of(context)!.sigilStepDupes),
+                  for (final step in SigilContent.simplificationSteps)
+                    _buildStep(context, step),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.sigilWheelNote,
+                    SigilContent.wheelNote,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -171,7 +169,7 @@ class SigilStep2LettersPage extends StatelessWidget {
 
             // Botão continuar
             MagicalButton(
-              text: AppLocalizations.of(context)!.sigilSeeDrawing,
+              text: AppLocalizations.of(context).sigilSeeDrawing,
               onPressed: () async {
                 final completed = await Navigator.push<bool>(
                   context,

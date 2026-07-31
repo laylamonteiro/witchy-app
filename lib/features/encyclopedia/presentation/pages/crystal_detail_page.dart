@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
 import '../../data/models/crystal_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -87,7 +89,7 @@ class CrystalDetailPage extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Avisos de Segurança',
+                            AppLocalizations.of(context).encySectionSafety,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge
@@ -135,7 +137,7 @@ class CrystalDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Propriedades Mágicas',
+                    AppLocalizations.of(context).encySectionMagicProps,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -292,11 +294,11 @@ class CrystalDetailPage extends StatelessWidget {
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaCrystalsDetails,
                 title: Text(
-                  'Usos Mágicos',
+                  AppLocalizations.of(context).encySectionMagicUses,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 subtitle:
-                    'Sugestões de uso energético e ritual para este cristal.',
+                    AppLocalizations.of(context).encyCrystalUsesSub,
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

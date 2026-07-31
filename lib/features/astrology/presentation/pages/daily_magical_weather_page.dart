@@ -1,12 +1,15 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/content/content_locale.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../data/data_sources/daily_weather_content.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/enums.dart';
 import '../../data/repositories/daily_weather_repository.dart';
@@ -15,18 +18,16 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../providers/astrology_provider.dart';
 import 'personalized_suggestions_page.dart';
 
+/// Atalho para conteúdo estático localizado (padrão `ContentLocale`,
+/// paridade pt/en/es garantida pelos parâmetros obrigatórios).
+String _sel({required String pt, required String en, required String es}) =>
+    ContentLocale.instance.select(pt: pt, en: en, es: es);
+
 /// Extrai somente a estrutura editorial da previsão. O texto Premium não é
 /// exposto ao usuário Free, mas os assuntos continuam legíveis.
 class DailyForecastPreview {
-  static const fallbackHeadings = <String>[
-    'Energia do Dia',
-    'A Lua Hoje',
-    'Oportunidades Mágicas',
-    'Cuidados do Dia',
-    'Ritual Sugerido',
-    'Cristais e Aliados',
-    'Mensagem das Estrelas',
-  ];
+  static List<String> get fallbackHeadings =>
+      DailyWeatherContent.fallbackHeadings;
 
   static List<String> headingsFromMarkdown(String markdown) {
     final heading = RegExp(r'^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$');
@@ -98,13 +99,20 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
 
       setState(() {
         _isLoading = false;
-        _error = 'Erro ao carregar clima mágico. Tente novamente.';
+        _error = ContentLocale.instance.select(
+          pt: 'Erro ao carregar clima mágico. Tente novamente.',
+          en: 'Could not load the magical weather. Please try again.',
+          es: 'Error al cargar el clima mágico. Inténtalo de nuevo.',
+        );
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              'Erro ao calcular clima mágico. Por favor, tente novamente.'),
+          content: Text(ContentLocale.instance.select(
+            pt: 'Erro ao calcular clima mágico. Por favor, tente novamente.',
+            en: 'Error calculating the magical weather. Please try again.',
+            es: 'Error al calcular el clima mágico. Inténtalo de nuevo.',
+          )),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -115,9 +123,9 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle(
-          'Clima Mágico Diário',
-          style: TextStyle(fontSize: 18),
+        title: ResponsiveAppBarTitle(
+          AppLocalizations.of(context).astroDailyWeather,
+          style: const TextStyle(fontSize: 18),
         ),
         backgroundColor: context.gc.darkBackground,
         actions: [
@@ -125,7 +133,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             IconButton(
               icon: const Icon(Icons.info_outline),
               onPressed: () => _showInfoDialog(),
-              tooltip: 'Sobre o clima mágico',
+              tooltip: ContentLocale.instance.select(
+                pt: 'Sobre o clima mágico',
+                en: 'About the magical weather',
+                es: 'Sobre el clima mágico',
+              ),
             ),
         ],
       ),
@@ -143,7 +155,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             CircularProgressIndicator(color: context.gc.lilac),
             const SizedBox(height: 24),
             Text(
-              'Consultando as estrelas...',
+              _sel(
+                pt: 'Consultando as estrelas...',
+                en: 'Consulting the stars...',
+                es: 'Consultando las estrellas...',
+              ),
               style: GoogleFonts.cinzelDecorative(
                 fontSize: 18,
                 color: context.gc.lilac,
@@ -151,7 +167,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'O Conselheiro Místico está analisando os trânsitos de hoje',
+              _sel(
+                pt: 'O Conselheiro Místico está analisando os trânsitos de hoje',
+                en: "The Mystic Advisor is analyzing today's transits",
+                es: 'El Consejero Místico está analizando los tránsitos de hoy',
+              ),
               style: TextStyle(
                 color: context.gc.softWhite.withOpacity(0.7),
                 fontSize: 14,
@@ -192,7 +212,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     if (_weatherCache == null) {
       return Center(
         child: Text(
-          'Carregando clima mágico...',
+          ContentLocale.instance.select(
+            pt: 'Carregando clima mágico...',
+            en: 'Loading magical weather...',
+            es: 'Cargando clima mágico...',
+          ),
           style: TextStyle(color: context.gc.softWhite),
         ),
       );
@@ -232,7 +256,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           const Text('🌟', style: TextStyle(fontSize: 32)),
           const SizedBox(height: 8),
           Text(
-            'Hoje',
+            _sel(pt: 'Hoje', en: 'Today', es: 'Hoy'),
             style: GoogleFonts.cinzelDecorative(
               fontSize: 24,
               color: context.gc.lilac,
@@ -241,7 +265,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            DateFormat('dd/MM/yyyy - EEEE', 'pt_BR').format(DateTime.now()),
+            DateFormat(
+              'dd/MM/yyyy - EEEE',
+              ContentLocale.instance.locale.toString(),
+            ).format(DateTime.now()),
             style: TextStyle(
               color: context.gc.softWhite.withOpacity(0.7),
               fontSize: 14,
@@ -260,6 +287,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           const SizedBox(height: 12),
           Text(
             weather.moonPhase,
+            textAlign: TextAlign.center,
             style: GoogleFonts.cinzelDecorative(
               fontSize: 24,
               color: context.gc.lilac,
@@ -268,7 +296,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Lua em ${weather.moonSign.displayName} ${weather.moonSign.symbol}',
+            '${_sel(pt: 'Lua em', en: 'Moon in', es: 'Luna en')} ${weather.moonSign.displayName} ${weather.moonSign.symbol}',
             style: TextStyle(
               color: context.gc.softWhite.withOpacity(0.9),
               fontSize: 16,
@@ -303,7 +331,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Semantics(
         button: true,
-        label: 'Abrir Sugestões Personalizadas',
+        label: ContentLocale.instance.select(
+          pt: 'Abrir Sugestões Personalizadas',
+          en: 'Open Personalized Suggestions',
+          es: 'Abrir Sugerencias Personalizadas',
+        ),
         child: ElevatedButton(
           key: const Key('daily-personalized-suggestions-button'),
           onPressed: () {
@@ -343,7 +375,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sugestões Personalizadas',
+                      AppLocalizations.of(context).astroSuggestions,
                       style: TextStyle(
                         color: context.gc.lilac,
                         fontSize: 16,
@@ -352,7 +384,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Orientações diárias baseadas no seu mapa astral',
+                      _sel(
+                        pt: 'Orientações diárias baseadas no seu mapa astral',
+                        en: 'Daily guidance based on your birth chart',
+                        es: 'Orientación diaria basada en tu carta natal',
+                      ),
                       style: TextStyle(
                         color: context.gc.softWhite,
                         fontSize: 12,
@@ -377,7 +413,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Palavras-chave',
+            _sel(
+              pt: 'Palavras-chave',
+              en: 'Keywords',
+              es: 'Palabras clave',
+            ),
             style: TextStyle(
               color: context.gc.lilac,
               fontSize: 16,
@@ -432,7 +472,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Previsão Mágica do Dia',
+                      _sel(
+                        pt: 'Previsão Mágica do Dia',
+                        en: "Today's Magical Forecast",
+                        es: 'Previsión Mágica del Día',
+                      ),
                       style: GoogleFonts.cinzelDecorative(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -444,7 +488,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Criada pelo Conselheiro Místico baseada nos trânsitos astrológicos',
+                _sel(
+                  pt: 'Criada pelo Conselheiro Místico baseada nos trânsitos astrológicos',
+                  en: 'Created by the Mystic Advisor based on the astrological transits',
+                  es: 'Creada por el Consejero Místico basada en los tránsitos astrológicos',
+                ),
                 style: TextStyle(
                   color: context.gc.softWhite.withOpacity(0.6),
                   fontSize: 12,
@@ -470,7 +518,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                       );
                     },
                     icon: const Icon(Icons.star, size: 18),
-                    label: const Text('Seja Premium'),
+                    label: Text(AppLocalizations.of(context).premiumBePremium),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.gc.lilac,
                       foregroundColor: context.gc.onPrimary,
@@ -528,7 +576,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         child: ImageFiltered(
           imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
           child: Text(
-            'As influências do dia revelam orientações e práticas mágicas personalizadas para este momento.',
+            DailyWeatherContent.premiumPlaceholder,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -597,7 +645,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               Text('🪐', style: TextStyle(fontSize: 24)),
               SizedBox(width: 8),
               Text(
-                'Trânsitos Planetários',
+                _sel(
+                  pt: 'Trânsitos Planetários',
+                  en: 'Planetary Transits',
+                  es: 'Tránsitos Planetarios',
+                ),
                 style: TextStyle(
                   color: context.gc.lilac,
                   fontSize: 16,
@@ -656,7 +708,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               Text('⭐', style: TextStyle(fontSize: 24)),
               SizedBox(width: 8),
               Text(
-                'Aspectos Significativos',
+                _sel(
+                  pt: 'Aspectos Significativos',
+                  en: 'Significant Aspects',
+                  es: 'Aspectos Significativos',
+                ),
                 style: TextStyle(
                   color: context.gc.lilac,
                   fontSize: 16,
@@ -704,7 +760,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
         title: Text(
-          'Sobre o Clima Mágico',
+          _sel(
+            pt: 'Sobre o Clima Mágico',
+            en: 'About the Magical Weather',
+            es: 'Sobre el Clima Mágico',
+          ),
           style: GoogleFonts.cinzelDecorative(
             color: context.gc.lilac,
             fontWeight: FontWeight.bold,
@@ -715,7 +775,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'O Clima Mágico é calculado diariamente com base nos trânsitos planetários reais e interpretado pelo Conselheiro Místico para práticas mágicas.',
+              _sel(
+                pt: 'O Clima Mágico é calculado diariamente com base nos trânsitos planetários reais e interpretado pelo Conselheiro Místico para práticas mágicas.',
+                en: 'The Magical Weather is calculated daily based on the real planetary transits and interpreted by the Mystic Advisor for magical practices.',
+                es: 'El Clima Mágico se calcula a diario a partir de los tránsitos planetarios reales y lo interpreta el Consejero Místico para las prácticas mágicas.',
+              ),
               style: TextStyle(
                 color: context.gc.softWhite.withOpacity(0.9),
                 height: 1.5,
@@ -723,7 +787,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'A previsão é gerada uma vez por dia às 00h e permanece a mesma até a meia-noite seguinte.',
+              _sel(
+                pt: 'A previsão é gerada uma vez por dia às 00h e permanece a mesma até a meia-noite seguinte.',
+                en: 'The forecast is generated once a day at midnight and stays the same until the following midnight.',
+                es: 'La previsión se genera una vez al día a las 00h y permanece igual hasta la medianoche siguiente.',
+              ),
               style: TextStyle(
                 color: context.gc.softWhite.withOpacity(0.7),
                 fontSize: 12,
@@ -736,7 +804,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Entendi',
+              AppLocalizations.of(context).commonUnderstood,
               style: TextStyle(color: context.gc.lilac),
             ),
           ),

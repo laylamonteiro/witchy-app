@@ -1,3 +1,13 @@
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext (modelos são usados fora da
+/// árvore de widgets); o locale vem do ContentLocale, setado pelo
+/// LanguageProvider.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
 /// Origem da deusa
 enum GoddessOrigin {
   greek,
@@ -16,25 +26,25 @@ extension GoddessOriginExtension on GoddessOrigin {
   String get displayName {
     switch (this) {
       case GoddessOrigin.greek:
-        return 'Grega';
+        return _l10n.goddessOriginGreek;
       case GoddessOrigin.roman:
-        return 'Romana';
+        return _l10n.goddessOriginRoman;
       case GoddessOrigin.celtic:
-        return 'Celta';
+        return _l10n.goddessOriginCeltic;
       case GoddessOrigin.norse:
-        return 'Nórdica';
+        return _l10n.goddessOriginNorse;
       case GoddessOrigin.egyptian:
-        return 'Egípcia';
+        return _l10n.goddessOriginEgyptian;
       case GoddessOrigin.hindu:
-        return 'Hindu';
+        return _l10n.goddessOriginHindu;
       case GoddessOrigin.brazilian:
-        return 'Brasileira';
+        return _l10n.goddessOriginBrazilian;
       case GoddessOrigin.african:
-        return 'Africana';
+        return _l10n.goddessOriginAfrican;
       case GoddessOrigin.mesopotamian:
-        return 'Mesopotâmica';
+        return _l10n.goddessOriginMesopotamian;
       case GoddessOrigin.japanese:
-        return 'Japonesa';
+        return _l10n.goddessOriginJapanese;
     }
   }
 
@@ -88,37 +98,37 @@ extension GoddessAspectExtension on GoddessAspect {
   String get displayName {
     switch (this) {
       case GoddessAspect.love:
-        return 'Amor';
+        return _l10n.goddessAspectLove;
       case GoddessAspect.war:
-        return 'Guerra';
+        return _l10n.goddessAspectWar;
       case GoddessAspect.wisdom:
-        return 'Sabedoria';
+        return _l10n.goddessAspectWisdom;
       case GoddessAspect.fertility:
-        return 'Fertilidade';
+        return _l10n.goddessAspectFertility;
       case GoddessAspect.moon:
-        return 'Lua';
+        return _l10n.goddessAspectMoon;
       case GoddessAspect.sun:
-        return 'Sol';
+        return _l10n.goddessAspectSun;
       case GoddessAspect.nature:
-        return 'Natureza';
+        return _l10n.goddessAspectNature;
       case GoddessAspect.magic:
-        return 'Magia';
+        return _l10n.goddessAspectMagic;
       case GoddessAspect.protection:
-        return 'Proteção';
+        return _l10n.goddessAspectProtection;
       case GoddessAspect.healing:
-        return 'Cura';
+        return _l10n.goddessAspectHealing;
       case GoddessAspect.death:
-        return 'Morte';
+        return _l10n.goddessAspectDeath;
       case GoddessAspect.transformation:
-        return 'Transformação';
+        return _l10n.goddessAspectTransformation;
       case GoddessAspect.sea:
-        return 'Mar';
+        return _l10n.goddessAspectSea;
       case GoddessAspect.harvest:
-        return 'Colheita';
+        return _l10n.goddessAspectHarvest;
       case GoddessAspect.home:
-        return 'Lar';
+        return _l10n.goddessAspectHome;
       case GoddessAspect.beauty:
-        return 'Beleza';
+        return _l10n.goddessAspectBeauty;
     }
   }
 

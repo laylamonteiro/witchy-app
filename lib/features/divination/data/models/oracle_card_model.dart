@@ -1,5 +1,16 @@
 import 'dart:convert';
 
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext (modelos são usados fora da
+/// árvore de widgets); o locale vem do ContentLocale, setado pelo
+/// LanguageProvider.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
+
 class OracleCard {
   final int id;
   final String name;
@@ -48,22 +59,22 @@ enum OracleSpreadType {
   String get displayName {
     switch (this) {
       case OracleSpreadType.daily:
-        return 'Carta Diária';
+        return _l10n.oracleSpreadDaily;
       case OracleSpreadType.threeCard:
-        return 'Três Cartas';
+        return _l10n.oracleSpreadThreeCard;
       case OracleSpreadType.weeklyGuidance:
-        return 'Guia Semanal';
+        return _l10n.oracleSpreadWeekly;
     }
   }
 
   String get description {
     switch (this) {
       case OracleSpreadType.daily:
-        return 'Uma mensagem para o seu dia';
+        return _l10n.oracleSpreadDailyDesc;
       case OracleSpreadType.threeCard:
-        return 'Passado, Presente e Futuro';
+        return _l10n.oracleSpreadThreeCardDesc;
       case OracleSpreadType.weeklyGuidance:
-        return 'Orientação para a semana';
+        return _l10n.oracleSpreadWeeklyDesc;
     }
   }
 
@@ -81,16 +92,16 @@ enum OracleSpreadType {
   String getPositionMeaning(int position) {
     switch (this) {
       case OracleSpreadType.daily:
-        return 'Mensagem do Dia';
+        return _l10n.oraclePosDayMessage;
       case OracleSpreadType.threeCard:
-        return ['Passado', 'Presente', 'Futuro'][position];
+        return [_l10n.tarotPosPast, _l10n.tarotPosPresent, _l10n.tarotPosFuture][position];
       case OracleSpreadType.weeklyGuidance:
         return [
-          'Segunda/Terça',
-          'Quarta',
-          'Quinta/Sexta',
-          'Fim de Semana',
-          'Foco Geral'
+          _l10n.oraclePosMonTue,
+          _l10n.oraclePosWed,
+          _l10n.oraclePosThuFri,
+          _l10n.oraclePosWeekend,
+          _l10n.oraclePosFocus
         ][position];
     }
   }

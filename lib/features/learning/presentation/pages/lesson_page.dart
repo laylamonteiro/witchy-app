@@ -74,7 +74,7 @@ class _LessonPageState extends State<LessonPage> {
       final answer = _promptControllers[i].text.trim();
       buffer.writeln('✦ ${widget.lesson.pagePrompts[i]}');
       buffer.writeln(
-          answer.isEmpty ? AppLocalizations.of(context)!.learnToFill : answer);
+          answer.isEmpty ? AppLocalizations.of(context).learnToFill : answer);
       if (i != widget.lesson.pagePrompts.length - 1) buffer.writeln();
     }
     return buffer.toString();
@@ -199,7 +199,7 @@ class _LessonPageState extends State<LessonPage> {
           category: lesson.pageCategory,
           ingredients: lesson.pageIngredients,
           steps: content,
-          observations: AppLocalizations.of(context)!
+          observations: AppLocalizations.of(context)
               .learnPageNote(widget.trail.title, lesson.title),
         );
         await context.read<SpellProvider>().addSpell(spell);
@@ -212,7 +212,7 @@ class _LessonPageState extends State<LessonPage> {
     if (!_hasAnyAnswer) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.learnFillAtLeastOne),
+          content: Text(AppLocalizations.of(context).learnFillAtLeastOne),
           backgroundColor: context.gc.warning,
         ),
       );
@@ -292,8 +292,8 @@ class _LessonPageState extends State<LessonPage> {
               const SizedBox(height: 12),
               Text(
                 reward.trailBound
-                    ? AppLocalizations.of(context)!.learnTrailBound
-                    : AppLocalizations.of(context)!.learnPageDone,
+                    ? AppLocalizations.of(context).learnTrailBound
+                    : AppLocalizations.of(context).learnPageDone,
                 style: Theme.of(dialogContext)
                     .textTheme
                     .headlineSmall
@@ -312,7 +312,7 @@ class _LessonPageState extends State<LessonPage> {
               if (reward.trailBound) ...[
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context)!
+                  AppLocalizations.of(context)
                       .learnChapterBound(widget.trail.title),
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -331,7 +331,7 @@ class _LessonPageState extends State<LessonPage> {
                     color: dialogContext.gc.lilac.withValues(alpha: 0.15),
                   ),
                   child: Text(
-                    '${reward.leveledUpTo!.emoji} ${AppLocalizations.of(context)!.learnNewTitle}: '
+                    '${reward.leveledUpTo!.emoji} ${AppLocalizations.of(context).learnNewTitle}: '
                     '${reward.leveledUpTo!.title}',
                     style: TextStyle(
                       color: dialogContext.gc.lilac,
@@ -343,7 +343,7 @@ class _LessonPageState extends State<LessonPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text(AppLocalizations.of(context)!.learnSoBeIt),
+                child: Text(AppLocalizations.of(context).learnSoBeIt),
               ),
             ],
           ),
@@ -385,9 +385,9 @@ class _LessonPageState extends State<LessonPage> {
 
   Widget _buildStepper(BuildContext context) {
     final labels = [
-      AppLocalizations.of(context)!.learnStepTeaching,
-      AppLocalizations.of(context)!.learnStepPractice,
-      AppLocalizations.of(context)!.learnStepPage,
+      AppLocalizations.of(context).learnStepTeaching,
+      AppLocalizations.of(context).learnStepPractice,
+      AppLocalizations.of(context).learnStepPage,
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -433,7 +433,7 @@ class _LessonPageState extends State<LessonPage> {
   }
 
   Widget _buildTeaching(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final paragraphs = widget.lesson.teaching
         .split('\n\n')
         .where((p) => p.trim().isNotEmpty)
@@ -559,7 +559,7 @@ class _LessonPageState extends State<LessonPage> {
             child: ElevatedButton.icon(
               onPressed: () => setState(() => _step = 1),
               icon: const Icon(Icons.arrow_forward, size: 18),
-              label: Text(AppLocalizations.of(context)!.learnGoToPractice),
+              label: Text(AppLocalizations.of(context).learnGoToPractice),
             ),
           ),
           const SizedBox(height: 24),
@@ -612,7 +612,7 @@ class _LessonPageState extends State<LessonPage> {
   }
 
   Widget _buildPractice(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final tool = _toolFor(l10n);
 
     return SingleChildScrollView(
@@ -755,7 +755,7 @@ class _LessonPageState extends State<LessonPage> {
   }
 
   Widget _buildPage(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       key: const ValueKey('page'),

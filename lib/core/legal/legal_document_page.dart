@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../content/content_locale.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../theme/app_theme.dart';
 import '../theme/grimoire_colors.dart';
@@ -15,15 +18,19 @@ class LegalDocumentPage extends StatelessWidget {
     required this.assetPath,
   });
 
-  static const terms = LegalDocumentPage(
-    title: 'Termos de Uso',
-    assetPath: 'assets/legal/termos_de_uso.md',
-  );
+  // Título localizado; o documento .md em si é o texto legal canônico do
+  // app (mantido em PT — ver auditoria).
+  static LegalDocumentPage get terms => LegalDocumentPage(
+        title: lookupAppLocalizations(ContentLocale.instance.locale)
+            .authTermsOfUse,
+        assetPath: 'assets/legal/termos_de_uso.md',
+      );
 
-  static const privacy = LegalDocumentPage(
-    title: 'Política de Privacidade',
-    assetPath: 'assets/legal/politica_de_privacidade.md',
-  );
+  static LegalDocumentPage get privacy => LegalDocumentPage(
+        title: lookupAppLocalizations(ContentLocale.instance.locale)
+            .authPrivacyPolicy,
+        assetPath: 'assets/legal/politica_de_privacidade.md',
+      );
 
   @override
   Widget build(BuildContext context) {

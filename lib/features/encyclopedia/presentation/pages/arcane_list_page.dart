@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/magical_card.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import '../../data/data_sources/arcane_categories.dart';
 import '../../data/models/arcane_entry_model.dart';
 import 'arcane_detail_page.dart';
 import '../widgets/entry_pager.dart';
@@ -10,13 +12,15 @@ import '../widgets/entry_pager.dart';
 /// Lista genérica para as categorias arcanas (Arquétipos, Anjos,
 /// Demônios, Símbolos Sagrados) — busca + cards no padrão da Enciclopédia.
 class ArcaneListPage extends StatefulWidget {
-  final String categoryTitle;
+  final ArcaneCategory category;
+  final String title;
   final String intro;
   final List<ArcaneEntry> entries;
 
   const ArcaneListPage({
     super.key,
-    required this.categoryTitle,
+    required this.category,
+    required this.title,
     required this.intro,
     required this.entries,
   });
@@ -56,14 +60,15 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
   }
 
   String _displayCardTitle(ArcaneEntry entry) {
-    if (widget.categoryTitle == 'Arquétipos') {
-      return entry.name.replaceFirst(RegExp(r'^A\s+', caseSensitive: false), '');
+    if (widget.category == ArcaneCategory.archetypes) {
+      return entry.name.replaceFirst(
+          RegExp(r'^(A|O|The|El|La)\s+', caseSensitive: false), '');
     }
     return entry.name;
   }
 
   String _imageAssetForEntry(ArcaneEntry entry) =>
-      arcaneImageAsset(widget.categoryTitle, entry.name);
+      widget.category.imageAssetFor(entry);
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +79,8 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Buscar em ${widget.categoryTitle}...',
+              hintText: AppLocalizations.of(context)
+                  .encyArcaneSearchHint(widget.title),
               prefixIcon: Icon(Icons.search, color: context.gc.lilac),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
@@ -108,7 +114,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
           child: _filtered.isEmpty
               ? Center(
                   child: Text(
-                    'Nada encontrado 🔍',
+                    AppLocalizations.of(context).encyNothingFound,
                     style: TextStyle(color: context.gc.textSecondary),
                   ),
                 )
@@ -127,7 +133,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                             initialIndex: index,
                             itemBuilder: (_, i) => ArcaneDetailPage(
                               entry: entries[i],
-                              categoryTitle: widget.categoryTitle,
+                              category: widget.category,
                             ),
                           ),
                         ),

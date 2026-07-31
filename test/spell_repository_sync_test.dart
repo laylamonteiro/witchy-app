@@ -86,6 +86,9 @@ class _FakeSpellLocalStore implements SpellLocalStore {
   void seed(SpellModel spell) => _spells[spell.id] = spell;
 
   @override
+  Future<void> ensurePreloadedSpells() async {}
+
+  @override
   Future<int> insert(SpellModel spell) async {
     _spells[spell.id] = spell;
     return 1;

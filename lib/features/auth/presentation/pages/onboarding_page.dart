@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/auth_provider.dart';
 
@@ -23,9 +22,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     OnboardingSlide(
       icon: Icons.auto_stories,
       iconColor: context.gc.lilac,
-      title: AppLocalizations.of(context)!.onbSlide1Title,
+      title: AppLocalizations.of(context).onbSlide1Title,
       description:
-          AppLocalizations.of(context)!.onbSlide1Desc,
+          AppLocalizations.of(context).onbSlide1Desc,
       gradient: [
         const Color(0xFF1A1033),
         const Color(0xFF2D1B4E),
@@ -34,9 +33,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     OnboardingSlide(
       icon: Icons.nightlight_round,
       iconColor: context.gc.starYellow,
-      title: AppLocalizations.of(context)!.onbSlide2Title,
+      title: AppLocalizations.of(context).onbSlide2Title,
       description:
-          AppLocalizations.of(context)!.onbSlide2Desc,
+          AppLocalizations.of(context).onbSlide2Desc,
       gradient: [
         const Color(0xFF1A2033),
         const Color(0xFF1B3D4E),
@@ -45,9 +44,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     OnboardingSlide(
       icon: Icons.book,
       iconColor: context.gc.pink,
-      title: AppLocalizations.of(context)!.onbSlide3Title,
+      title: AppLocalizations.of(context).onbSlide3Title,
       description:
-          AppLocalizations.of(context)!.onbSlide3Desc,
+          AppLocalizations.of(context).onbSlide3Desc,
       gradient: [
         const Color(0xFF331A2A),
         const Color(0xFF4E1B3D),
@@ -56,9 +55,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     OnboardingSlide(
       icon: Icons.stars,
       iconColor: context.gc.mint,
-      title: AppLocalizations.of(context)!.onbSlide4Title,
+      title: AppLocalizations.of(context).onbSlide4Title,
       description:
-          AppLocalizations.of(context)!.onbSlide4Desc,
+          AppLocalizations.of(context).onbSlide4Desc,
       gradient: [
         const Color(0xFF1A3320),
         const Color(0xFF1B4E2D),
@@ -67,9 +66,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     OnboardingSlide(
       icon: Icons.auto_awesome,
       iconColor: context.gc.lilac,
-      title: AppLocalizations.of(context)!.onbSlide5Title,
+      title: AppLocalizations.of(context).onbSlide5Title,
       description:
-          AppLocalizations.of(context)!.onbSlide5Desc,
+          AppLocalizations.of(context).onbSlide5Desc,
       gradient: [
         const Color(0xFF1A1033),
         const Color(0xFF2D1B4E),
@@ -108,7 +107,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: TextButton(
                 onPressed: _skipOnboarding,
                 child: Text(
-                  AppLocalizations.of(context)!.onbSkip,
+                  AppLocalizations.of(context).onbSkip,
                   style: GoogleFonts.nunito(
                     fontSize: 16,
                     color: context.gc.textSecondary,
@@ -255,7 +254,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ),
                 ),
                 child: Text(
-                  AppLocalizations.of(context)!.authCreateAccount,
+                  AppLocalizations.of(context).authCreateAccount,
                   style: GoogleFonts.nunito(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -270,7 +269,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: TextButton(
                 onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
                 child: Text(
-                  AppLocalizations.of(context)!.onbHaveAccount,
+                  AppLocalizations.of(context).onbHaveAccount,
                   style: GoogleFonts.nunito(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -297,7 +296,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.onbNext,
+                      AppLocalizations.of(context).onbNext,
                       style: GoogleFonts.nunito(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

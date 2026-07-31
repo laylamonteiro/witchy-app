@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/herb_model.dart';
@@ -83,7 +85,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Text(
-            'O poder verde das ervas — propriedades mágicas, elementos e avisos de cada planta.',
+            AppLocalizations.of(context).encyHerbsIntro,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.gc.textSecondary,
                 ),

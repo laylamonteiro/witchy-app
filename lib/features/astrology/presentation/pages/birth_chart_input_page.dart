@@ -80,7 +80,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
           _dateError = null;
         } else {
           _birthDate = null;
-          _dateError = AppLocalizations.of(context)!.chartInvalidDate;
+          _dateError = AppLocalizations.of(context).chartInvalidDate;
         }
       } else {
         _birthDate = null;
@@ -98,7 +98,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
           _timeError = null;
         } else {
           _birthTime = null;
-          _timeError = AppLocalizations.of(context)!.chartInvalidTime;
+          _timeError = AppLocalizations.of(context).chartInvalidTime;
         }
       } else {
         _birthTime = null;
@@ -199,7 +199,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
         final place =
             await GeocodingService.instance.resolveFirst(_birthPlace!);
         if (place == null) {
-          throw Exception(AppLocalizations.of(context)!.chartPlaceNotFound);
+          throw Exception(AppLocalizations.of(context).chartPlaceNotFound);
         }
         latitude = place.latitude;
         longitude = place.longitude;
@@ -228,7 +228,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(provider.error ?? AppLocalizations.of(context)!.chartCalcError),
+            content: Text(provider.error ?? AppLocalizations.of(context).chartCalcError),
             backgroundColor: context.gc.alert,
           ),
         );
@@ -238,7 +238,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${AppLocalizations.of(context)!.editErrorPrefix}: $e'),
+          content: Text('${AppLocalizations.of(context).editErrorPrefix}: $e'),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -255,7 +255,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.chartCreateTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).chartCreateTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -273,7 +273,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     const Text('🌟', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      AppLocalizations.of(context)!.chartYourChart,
+                      AppLocalizations.of(context).chartYourChart,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: context.gc.softWhite,
@@ -281,7 +281,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.chartIntro,
+                      AppLocalizations.of(context).chartIntro,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: context.gc.softWhite,
                           ),
@@ -299,14 +299,14 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.chartBirthDate,
+                      AppLocalizations.of(context).chartBirthDate,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.chartDateFormat,
+                      AppLocalizations.of(context).chartDateFormat,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.softWhite.withOpacity(0.7),
                           ),
@@ -322,7 +322,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       ],
                       onChanged: _onDateChanged,
                       decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.chartDateHint,
+                        hintText: AppLocalizations.of(context).chartDateHint,
                         hintStyle: TextStyle(
                           color: context.gc.softWhite.withOpacity(0.4),
                         ),
@@ -364,14 +364,14 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.chartBirthTime,
+                      AppLocalizations.of(context).chartBirthTime,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.chartTimeImportant,
+                      AppLocalizations.of(context).chartTimeImportant,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.softWhite.withOpacity(0.7),
                           ),
@@ -442,7 +442,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                         });
                       },
                       title: Text(
-                        AppLocalizations.of(context)!.chartDontKnowTime,
+                        AppLocalizations.of(context).chartDontKnowTime,
                         style: TextStyle(color: context.gc.softWhite),
                       ),
                       activeColor: context.gc.lilac,
@@ -460,14 +460,14 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.chartBirthPlace,
+                      AppLocalizations.of(context).chartBirthPlace,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: context.gc.lilac,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.chartTypeToSearch,
+                      AppLocalizations.of(context).chartTypeToSearch,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.softWhite.withOpacity(0.7),
                           ),
@@ -478,7 +478,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       focusNode: _birthPlaceFocusNode,
                       style: TextStyle(color: context.gc.softWhite),
                       decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.chartPlaceHint,
+                        hintText: AppLocalizations.of(context).chartPlaceHint,
                         hintStyle: TextStyle(
                           color: context.gc.softWhite.withOpacity(0.5),
                         ),
@@ -594,8 +594,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Não foi possível buscar agora. Verifique sua '
-                                'conexão e tente novamente em instantes.',
+                                AppLocalizations.of(context).birthChartSearchFailed,
                                 style: TextStyle(
                                   color: context.gc.softWhite,
                                   fontSize: 13,
@@ -623,8 +622,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           ),
                         ),
                         child: Text(
-                          'Nenhuma cidade encontrada. Tente outra grafia ou '
-                          'inclua o estado/país (ex.: "Campinas, São Paulo").',
+                          AppLocalizations.of(context).birthChartNoCityFound,
                           style: TextStyle(
                             color: context.gc.softWhite.withOpacity(0.8),
                             fontSize: 13,
@@ -695,7 +693,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                         ),
                       )
                     : Text(
-                        AppLocalizations.of(context)!.chartCalculate,
+                        AppLocalizations.of(context).chartCalculate,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -715,7 +713,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          AppLocalizations.of(context)!.chartNoonNote,
+                          AppLocalizations.of(context).chartNoonNote,
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: context.gc.softWhite.withOpacity(0.8),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/features/sigils/presentation/pages/sigil_step1_intention_page.dart';
 import 'package:grimorio_de_bolso/features/sigils/presentation/widgets/sigil_icon.dart';
@@ -7,7 +8,7 @@ void main() {
   testWidgets('bloco explicativo de sigilo usa o ícone reutilizável do card',
       (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
         home: SigilStep1IntentionPage(),
       ),
     );

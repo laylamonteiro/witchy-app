@@ -1,3 +1,5 @@
+import '../content/content_locale.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -6,6 +8,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
 import 'premium_access.dart';
+
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 /// Tipos de entidades sincronizáveis
 enum SyncEntity {
@@ -146,7 +151,7 @@ class SyncResult {
     return SyncResult(
       success: false,
       unresolvedConflicts: conflicts,
-      error: '${conflicts.length} conflito(s) requer(em) resolução manual',
+      error: _l10n.syncConflicts(conflicts.length),
     );
   }
 }
@@ -273,13 +278,13 @@ class DataSyncService {
     ConflictResolution? resolution,
   }) async {
     if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error('Sincronização é uma funcionalidade Premium');
+      return SyncResult.error(_l10n.syncPremiumOnly);
     }
     if (!isReady) {
-      return SyncResult.error('Usuário não autenticado');
+      return SyncResult.error(_l10n.syncNotAuthenticated);
     }
     if (!await cloudSyncEnabled) {
-      return SyncResult.error('Sincronização na nuvem desativada');
+      return SyncResult.error(_l10n.syncDisabled);
     }
 
     final useResolution = resolution ?? _defaultResolution;
@@ -329,7 +334,7 @@ class DataSyncService {
       );
     } catch (e) {
       _setStatus(SyncStatus.error);
-      return SyncResult.error('Erro na sincronização: $e');
+      return SyncResult.error(_l10n.syncFailed('$e'));
     }
   }
 
@@ -866,13 +871,13 @@ class DataSyncService {
   /// Limpa dados locais e baixa tudo do servidor
   Future<SyncResult> fullDownload() async {
     if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error('Sincronização é uma funcionalidade Premium');
+      return SyncResult.error(_l10n.syncPremiumOnly);
     }
     if (!isReady) {
-      return SyncResult.error('Usuário não autenticado');
+      return SyncResult.error(_l10n.syncNotAuthenticated);
     }
     if (!await cloudSyncEnabled) {
-      return SyncResult.error('Sincronização na nuvem desativada');
+      return SyncResult.error(_l10n.syncDisabled);
     }
 
     _setStatus(SyncStatus.syncing);
@@ -926,13 +931,13 @@ class DataSyncService {
   /// Envia todos os dados locais para o servidor
   Future<SyncResult> fullUpload() async {
     if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error('Sincronização é uma funcionalidade Premium');
+      return SyncResult.error(_l10n.syncPremiumOnly);
     }
     if (!isReady) {
-      return SyncResult.error('Usuário não autenticado');
+      return SyncResult.error(_l10n.syncNotAuthenticated);
     }
     if (!await cloudSyncEnabled) {
-      return SyncResult.error('Sincronização na nuvem desativada');
+      return SyncResult.error(_l10n.syncDisabled);
     }
 
     _setStatus(SyncStatus.syncing);

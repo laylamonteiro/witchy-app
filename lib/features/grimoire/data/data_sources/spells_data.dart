@@ -3,6 +3,12 @@ import '../models/spell_model.dart';
 /// Feitiços pré-carregados do app
 /// Baseados em "O Grimório Moderno das Bruxas" (Jason Mankey),
 /// "Bruxaria Verde" (Lindsay Squire) e práticas tradicionais de bruxaria
+///
+/// ATENÇÃO: esta seed é congelada em português. Os ids `preloaded_*` derivam
+/// do slug do nome PT (SqfliteSpellLocalStore.preloadedSpellId) e o dedup do
+/// seed é feito por nome (spell_repository.dart) — traduzir aqui duplicaria
+/// os 65 feitiços no banco. Traduções ficam nos overlays de apresentação
+/// aplicados pelo SpellLocalizer (spells_content_en.dart / spells_content_es.dart).
 final List<SpellModel> preloadedSpells = [
   // ============================================
   // AMOR E ROMANCE (5 feitiços)

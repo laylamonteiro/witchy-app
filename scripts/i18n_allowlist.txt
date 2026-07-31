@@ -1,0 +1,53 @@
+# Allowlist do scanner de strings hardcoded (scripts/check_hardcoded_pt.sh).
+# Um padrão (regex estendida, aplicada à linha inteira "arquivo:linha:conteúdo")
+# por linha. Linhas em branco e iniciadas por # são ignoradas.
+#
+# Use apenas para nomes próprios e termos intencionalmente invariantes
+# entre idiomas — nunca para adiar tradução de texto de interface.
+
+# Seed de feitiços intencionalmente congelada em PT (ids preloaded_* derivam
+# do slug do nome PT; tradução via overlay no SpellLocalizer).
+lib/features/grimoire/data/data_sources/spells_data\.dart:
+# Mapas PT por-locale dentro de arquivos compartilhados (os pares EN/ES vivem
+# ao lado e a paridade é testada).
+lib/features/astrology/data/models/enums\.dart:
+lib/features/astrology/data/models/house_model\.dart:
+lib/features/astrology/data/models/aspect_model\.dart:
+lib/features/grimoire/data/models/spell_model\.dart:
+# Fragmentos de persona/instrução em PT usados pelos prompts de IA em
+# português; os equivalentes EN/ES vivem em lib/core/ai/prompts/
+# ai_prompts_{en,es}.dart (paridade em test/ai_prompts_parity_test.dart).
+lib/core/i18n/gender\.dart:
+# Rótulos internos do payload de dados enviado à IA (resumo do mapa astral/
+# trânsitos); não são texto de interface — o idioma da resposta é imposto
+# pelos prompts localizados + instrução de idioma.
+lib/core/ai/ai_service\.dart:
+# Console de diagnóstico dev-only (não é interface de usuário final).
+lib/core/diagnostic/diagnostic_page\.dart:
+lib/core/diagnostic/debug_logs_page\.dart:
+lib/core/services/debug_log_service\.dart:
+lib/features/settings/presentation/pages/beta_codes_debug_page\.dart:
+
+# Nome-marca do app — invariante entre idiomas (inclui a forma abreviada
+# na prévia de temas).
+Grimório de Bolso
+'Grimório',
+
+# Pares de títulos trilingues do looksComplete no arquivo acessor
+# compartilhado do clima diário (conteúdo por locale vive nos _pt/_en/_es).
+lib/features/astrology/data/data_sources/daily_weather_content\.dart:
+
+# Tag interna persistida nos registros de página do Grimório Vivo
+# (identidade estável, não é texto exibido isoladamente).
+tags: const \['grimório-vivo'\]
+
+# Matchers sobre mensagens de erro persistidas/emitidas em PT (não são UI).
+\.contains\('
+
+# Tabelas de acentos usadas para slugs/normalização — não são texto de UI.
+const accents = '
+lib/core/utils/accents\.dart:
+'(Á|À|Ã|Â|Ä|É|È|Ê|Ë|Í|Ì|Î|Ï|Ó|Ò|Õ|Ô|Ö|Ú|Ù|Û|Ü|Ç|Ñ)': '[A-Z]'
+# Seeds/campos PT canônicos com overlay ou mapa EN/ES ao lado (paridade testada).
+lib/features/diary/data/models/affirmation_model\.dart:
+lib/features/journeys/data/models/journey_model\.dart:

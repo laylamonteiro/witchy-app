@@ -3,17 +3,23 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
+import '../../data/data_sources/elements_content.dart';
 
-/// Página informativa sobre os 4 elementos
+/// Página informativa sobre os 4 elementos.
+///
+/// Todo o conteúdo textual vem de `elements_content.dart` (ContentLocale),
+/// localizado em pt/en/es.
 class ElementsPage extends StatelessWidget {
   const ElementsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final content = elementsContent;
+
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Os Quatro Elementos'),
+        title: ResponsiveAppBarTitle(content.pageTitle),
         backgroundColor: context.gc.surface,
       ),
       body: SingleChildScrollView(
@@ -33,7 +39,7 @@ class ElementsPage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Sobre os 4 Elementos',
+                          content.introTitle,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                       ),
@@ -41,16 +47,14 @@ class ElementsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Na Wicca e na bruxaria tradicional, os quatro elementos - Terra, Água, Fogo e Ar - '
-                    'são forças fundamentais da natureza e da existência. Eles não são apenas substâncias físicas, '
-                    'mas energias primordiais que compõem toda a criação.',
+                    content.introBody,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Explore cada elemento abaixo para compreender suas qualidades, correspondências e como trabalhar com eles.',
+                    content.introHint,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -61,318 +65,56 @@ class ElementsPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // TERRA
-            ExpansionMagicalCard(
-              title: 'Terra',
-              emoji: '🌍',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSubsection(
-                    context,
-                    'Essência',
-                    'A Terra representa estabilidade, solidez, crescimento e manifestação física. '
-                        'É o elemento da matéria, do corpo, da abundância material e da conexão com o mundo natural. '
-                        'Terra é onde as ideias se tornam realidade.',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Qualidades',
-                    'Estável, fértil, nutritiva, confiável, prática, paciente, enraizada',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Direção Cardeal',
-                    'Norte',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Estação',
-                    'Inverno (momento de recolhimento e gestação)',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Fase da Vida',
-                    'Velhice e sabedoria',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Hora do Dia',
-                    'Meia-noite',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Cores',
-                    'Verde, marrom, preto, amarelo (tons terrosos)',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Ferramentas Mágicas',
-                    'Pentáculo, cristais, sal, pedras, moedas',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Correspondências',
-                    '• Cristais: Quartzo fumê, turmalina negra, jaspe, ágata, hematita\n'
-                        '• Ervas: Alecrim, cedro, patchouli, vetiver, raízes\n'
-                        '• Animais: Urso, veado, touro, coelho, cobra\n'
-                        '• Zodíaco: Touro, Virgem, Capricórnio',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Quando Trabalhar com Terra',
-                    '• Manifestação de objetivos materiais\n'
-                        '• Prosperidade e abundância\n'
-                        '• Enraizamento e centralização\n'
-                        '• Cura física\n'
-                        '• Conexão com a natureza\n'
-                        '• Estabilidade e segurança\n'
-                        '• Crescimento e fertilidade',
-                  ),
-                ],
+            // Terra, Água, Fogo, Ar
+            for (final element in content.elements)
+              ExpansionMagicalCard(
+                title: element.name,
+                emoji: element.emoji,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSubsection(
+                        context, content.essenceLabel, element.essence),
+                    _buildSubsection(
+                        context, content.qualitiesLabel, element.qualities),
+                    _buildSubsection(
+                        context, content.directionLabel, element.direction),
+                    _buildSubsection(
+                        context, content.seasonLabel, element.season),
+                    _buildSubsection(
+                        context, content.lifePhaseLabel, element.lifePhase),
+                    _buildSubsection(
+                        context, content.timeOfDayLabel, element.timeOfDay),
+                    _buildSubsection(
+                        context, content.colorsLabel, element.colors),
+                    _buildSubsection(
+                        context, content.toolsLabel, element.tools),
+                    _buildSubsection(context, content.correspondencesLabel,
+                        element.correspondences),
+                    _buildSubsection(
+                        context, element.whenToWorkTitle, element.whenToWork),
+                  ],
+                ),
               ),
-            ),
-
-            // ÁGUA
-            ExpansionMagicalCard(
-              title: 'Água',
-              emoji: '🌊',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSubsection(
-                    context,
-                    'Essência',
-                    'A Água representa emoções, intuição, cura e purificação. '
-                        'É o elemento dos sentimentos profundos, do subconsciente, dos sonhos e da psique. '
-                        'Água flui, adapta-se e reflete a verdade interior.',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Qualidades',
-                    'Fluida, adaptável, emocional, intuitiva, curativa, purificadora, reflexiva',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Direção Cardeal',
-                    'Oeste',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Estação',
-                    'Outono (momento de colheita e reflexão)',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Fase da Vida',
-                    'Maturidade',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Hora do Dia',
-                    'Crepúsculo',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Cores',
-                    'Azul, turquesa, prateado, índigo, roxo',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Ferramentas Mágicas',
-                    'Cálice, caldeirão, espelho, taça, conchas',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Correspondências',
-                    '• Cristais: Ametista, pedra da lua, água-marinha, pérola, sodalita\n'
-                        '• Ervas: Camomila, gardênia, jasmim, lótus, sálvia\n'
-                        '• Animais: Peixe, golfinho, cisne, sapo, lontra\n'
-                        '• Zodíaco: Câncer, Escorpião, Peixes',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Quando Trabalhar com Água',
-                    '• Cura emocional e espiritual\n'
-                        '• Desenvolvimento da intuição\n'
-                        '• Trabalho com sonhos\n'
-                        '• Purificação energética\n'
-                        '• Amor e relacionamentos\n'
-                        '• Meditação e contemplação\n'
-                        '• Conexão com o subconsciente',
-                  ),
-                ],
-              ),
-            ),
-
-            // FOGO
-            ExpansionMagicalCard(
-              title: 'Fogo',
-              emoji: '🔥',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSubsection(
-                    context,
-                    'Essência',
-                    'O Fogo representa transformação, paixão, vontade e poder pessoal. '
-                        'É o elemento da energia vital, da coragem, da criatividade e da ação. '
-                        'Fogo consome, transforma e ilumina.',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Qualidades',
-                    'Dinâmico, transformador, purificador, apaixonado, corajoso, energético, criativo',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Direção Cardeal',
-                    'Sul',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Estação',
-                    'Verão (momento de pico de energia)',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Fase da Vida',
-                    'Juventude e vigor',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Hora do Dia',
-                    'Meio-dia',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Cores',
-                    'Vermelho, laranja, dourado, amarelo brilhante',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Ferramentas Mágicas',
-                    'Athame (adaga ritual), varinha, vela, caldeirão em chamas',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Correspondências',
-                    '• Cristais: Cornalina, citrino, rubi, granada, obsidiana\n'
-                        '• Ervas: Canela, gengibre, pimenta, manjericão, cravo\n'
-                        '• Animais: Dragão, leão, fênix, serpente de fogo, salamandra\n'
-                        '• Zodíaco: Áries, Leão, Sagitário',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Quando Trabalhar com Fogo',
-                    '• Transformação pessoal\n'
-                        '• Coragem e força de vontade\n'
-                        '• Paixão e criatividade\n'
-                        '• Proteção ativa\n'
-                        '• Purificação energética\n'
-                        '• Banimento de energias negativas\n'
-                        '• Manifestação rápida de desejos',
-                  ),
-                ],
-              ),
-            ),
-
-            // AR
-            ExpansionMagicalCard(
-              title: 'Ar',
-              emoji: '💨',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSubsection(
-                    context,
-                    'Essência',
-                    'O Ar representa intelecto, comunicação, pensamento e inspiração. '
-                        'É o elemento da mente, das ideias, da sabedoria e do conhecimento. '
-                        'Ar carrega mensagens, dispersa e renova.',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Qualidades',
-                    'Leve, móvel, comunicativo, intelectual, inspirador, livre, renovador',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Direção Cardeal',
-                    'Leste',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Estação',
-                    'Primavera (momento de novos começos)',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Fase da Vida',
-                    'Infância e aprendizado',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Hora do Dia',
-                    'Amanhecer',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Cores',
-                    'Amarelo claro, branco, azul claro, lavanda',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Ferramentas Mágicas',
-                    'Varinha (em algumas tradições), athame (em outras), incenso, penas, sinos',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Correspondências',
-                    '• Cristais: Citrino, topázio, fluorita, ágata de renda azul\n'
-                        '• Ervas: Lavanda, hortelã, eucalipto, sálvia branca, dente-de-leão\n'
-                        '• Animais: Águia, borboleta, pássaros, libélula, fada\n'
-                        '• Zodíaco: Gêmeos, Libra, Aquário',
-                  ),
-                  _buildSubsection(
-                    context,
-                    'Quando Trabalhar com Ar',
-                    '• Estudo e aprendizado\n'
-                        '• Comunicação e eloquência\n'
-                        '• Viagem e movimento\n'
-                        '• Inspiração criativa\n'
-                        '• Clareza mental\n'
-                        '• Novos começos\n'
-                        '• Trabalho com divindades celestes',
-                  ),
-                ],
-              ),
-            ),
 
             // Equilíbrio dos Elementos
             ExpansionMagicalCard(
-              title: 'O Equilíbrio Elemental',
+              title: content.balanceTitle,
               emoji: '⚖️',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
                   Text(
-                    'Na prática da bruxaria, buscar o equilíbrio dos quatro elementos é essencial. '
-                    'Cada elemento representa aspectos diferentes de nossa vida e personalidade:',
+                    content.balanceIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 16),
-                  _buildBalanceItem(
-                      context,
-                      '🌍 Terra', 'Nosso corpo físico e recursos materiais'),
-                  _buildBalanceItem(
-                      context,
-                      '🌊 Água', 'Nossas emoções e relacionamentos'),
-                  _buildBalanceItem(context, '🔥 Fogo', 'Nossa energia e poder pessoal'),
-                  _buildBalanceItem(context, '💨 Ar', 'Nossa mente e comunicação'),
+                  for (final item in content.balanceItems)
+                    _buildBalanceItem(context, '${item.emoji} ${item.name}',
+                        item.description),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -386,7 +128,7 @@ class ElementsPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sinais de Desequilíbrio:',
+                          content.imbalanceTitle,
                           style:
                               Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -394,10 +136,7 @@ class ElementsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '• Terra em excesso: Teimosia, materialismo, resistência a mudanças\n'
-                          '• Água em excesso: Emotividade excessiva, instabilidade emocional\n'
-                          '• Fogo em excesso: Impulsividade, raiva, esgotamento\n'
-                          '• Ar em excesso: Distração, falta de praticidade, desconexão',
+                          content.imbalanceBody,
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: context.gc.textSecondary,
@@ -412,65 +151,35 @@ class ElementsPage extends StatelessWidget {
 
             // Como Trabalhar com os Elementos
             ExpansionMagicalCard(
-              title: 'Como Trabalhar com os Elementos',
+              title: content.practicesTitle,
               emoji: '✨',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildPracticeItem(
-                    context,
-                    'Meditação Elemental',
-                    'Sente-se com um objeto representando cada elemento e medite sobre suas qualidades. '
-                        'Sinta a energia do elemento fluindo através de você.',
-                  ),
-                  _buildPracticeItem(
-                    context,
-                    'Círculo Mágico',
-                    'Ao lançar um círculo, invoque cada elemento em sua direção cardeal. '
-                        'Isso cria um espaço sagrado equilibrado e protegido.',
-                  ),
-                  _buildPracticeItem(
-                    context,
-                    'Altar Elemental',
-                    'Mantenha representações dos quatro elementos em seu altar para manter o equilíbrio energético.',
-                  ),
-                  _buildPracticeItem(
-                    context,
-                    'Feitiços Específicos',
-                    'Trabalhe com o elemento correspondente à sua intenção: '
-                        'Terra para prosperidade, Água para amor, Fogo para coragem, Ar para sabedoria.',
-                  ),
-                  _buildPracticeItem(
-                    context,
-                    'Conexão Diária',
-                    'Passe tempo na natureza conectando-se com os elementos: '
-                        'caminhe descalço (Terra), tome banho ritual (Água), acenda velas (Fogo), pratique respiração (Ar).',
-                  ),
+                  for (final practice in content.practices)
+                    _buildPracticeItem(
+                        context, practice.title, practice.description),
                 ],
               ),
             ),
 
             // Considerações Finais
             ExpansionMagicalCard(
-              title: 'Honrando os Elementos',
+              title: content.honoringTitle,
               emoji: '🌟',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
                   Text(
-                    'Os quatro elementos não são apenas ferramentas mágicas - eles são forças vivas que sustentam toda a existência. '
-                    'Ao trabalhar com os elementos, estamos nos conectando com as próprias fundações do universo. '
-                    '\n\nRespeite cada elemento, aprenda suas lições e permita que suas energias guiem e fortaleçam sua prática. '
-                    'Com o tempo, você desenvolverá uma relação profunda com cada elemento, reconhecendo sua presença '
-                    'tanto no mundo exterior quanto dentro de si mesmo.',
+                    content.honoringBody,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 16),
-                  Center(
+                  const Center(
                     child: Text(
                       '🌍🌊🔥💨',
                       style: TextStyle(fontSize: 32),
@@ -510,7 +219,8 @@ class ElementsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceItem(BuildContext context, String element, String description) {
+  Widget _buildBalanceItem(
+      BuildContext context, String element, String description) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -6,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/i18n/gender.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/providers/language_provider.dart';
-import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/diagnostic/diagnostic_page.dart';
@@ -16,19 +18,19 @@ import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dar
 import '../../../auth/auth.dart';
 import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
-import '../../../auth/presentation/widgets/profile_avatar_picker.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
+import 'faq_page.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
 import 'theme_picker_page.dart';
 import '../../../../core/legal/legal_document_page.dart';
 
 class SettingsPage extends StatelessWidget {
-  /// Seletor de idioma oculto enquanto a tradução total (F4) não termina.
-  /// Quando todo o app estiver traduzido, basta voltar para true.
-  static const bool _showLanguageOption = false;
+  /// Seletor de idioma (pt-BR / EN / ES). Reativado após a conclusão da
+  /// internacionalização: scanner de PT hardcoded limpo e paridade das
+  /// 1195 chaves ARB + conteúdo por locale garantida por testes no CI.
+  static const bool _showLanguageOption = true;
 
   const SettingsPage({super.key});
 
@@ -38,7 +40,7 @@ class SettingsPage extends StatelessWidget {
       backgroundColor: context.gc.background,
       appBar: AppBar(
         title:
-            ResponsiveAppBarTitle(AppLocalizations.of(context)!.settingsTitle),
+            ResponsiveAppBarTitle(AppLocalizations.of(context).settingsTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -80,7 +82,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildLanguageOptionTile(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final languageProvider = context.watch<LanguageProvider>();
 
     String labelFor(Locale locale) {
@@ -120,6 +122,10 @@ class SettingsPage extends StatelessWidget {
           await context.read<LanguageProvider>().setLocale(locale);
 
           if (!context.mounted) return;
+
+          // Reagenda as notificações pendentes para re-assar os textos no
+          // idioma recém-selecionado (agendamento é idempotente).
+          unawaited(_scheduleNotifications(context));
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -171,7 +177,7 @@ class SettingsPage extends StatelessWidget {
             Flexible(
               fit: FlexFit.loose,
               child: Text(
-                user.displayName ?? AppLocalizations.of(context)!.profileAnonymous,
+                user.displayName ?? AppLocalizations.of(context).profileAnonymous,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -231,7 +237,7 @@ class SettingsPage extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: context.gc.surface,
         title: Text(
-          AppLocalizations.of(context)!.profileEditName,
+          AppLocalizations.of(context).profileEditName,
           style: TextStyle(color: context.gc.textPrimary),
         ),
         content: TextField(
@@ -239,7 +245,7 @@ class SettingsPage extends StatelessWidget {
           autofocus: true,
           style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)!.authNameHint,
+            hintText: AppLocalizations.of(context).authNameHint,
             hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -256,7 +262,7 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              AppLocalizations.of(context)!.commonCancel,
+              AppLocalizations.of(context).commonCancel,
               style: TextStyle(color: context.gc.textSecondary),
             ),
           ),
@@ -273,7 +279,7 @@ class SettingsPage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: context.gc.lilac,
             ),
-            child: Text(AppLocalizations.of(context)!.commonSave),
+            child: Text(AppLocalizations.of(context).commonSave),
           ),
         ],
       ),
@@ -319,7 +325,7 @@ class SettingsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isFree ? AppLocalizations.of(context)!.profileFreePlan : AppLocalizations.of(context)!.profilePremiumPlan,
+                      isFree ? AppLocalizations.of(context).profileFreePlan : AppLocalizations.of(context).profilePremiumPlan,
                       style: TextStyle(
                         color: context.gc.textPrimary,
                         fontSize: 18,
@@ -328,8 +334,8 @@ class SettingsPage extends StatelessWidget {
                     ),
                     Text(
                       isFree
-                          ? AppLocalizations.of(context)!.profileFreePlanDesc
-                          : AppLocalizations.of(context)!.profilePremiumPlanDesc,
+                          ? AppLocalizations.of(context).profileFreePlanDesc
+                          : AppLocalizations.of(context).profilePremiumPlanDesc,
                       style: TextStyle(
                         color: context.gc.textPrimary.withValues(alpha: 0.7),
                         fontSize: 12,
@@ -345,7 +351,7 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 12),
             if (paymentService.isLifetime)
               Text(
-                AppLocalizations.of(context)!.settingsLifetime,
+                AppLocalizations.of(context).settingsLifetime,
                 style: TextStyle(
                   color: context.gc.textPrimary.withValues(alpha: 0.9),
                   fontSize: 13,
@@ -353,7 +359,7 @@ class SettingsPage extends StatelessWidget {
               )
             else if (paymentService.subscriptionExpirationDate != null)
               Text(
-                AppLocalizations.of(context)!.settingsRenewsOn(_formatDate(context, paymentService.subscriptionExpirationDate!)),
+                AppLocalizations.of(context).settingsRenewsOn(_formatDate(context, paymentService.subscriptionExpirationDate!)),
                 style: TextStyle(
                   color: context.gc.textPrimary.withValues(alpha: 0.9),
                   fontSize: 13,
@@ -374,7 +380,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.settings, size: 18),
                 label: Text(
-                  AppLocalizations.of(context)!.profileManageSubscription,
+                  AppLocalizations.of(context).profileManageSubscription,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -402,7 +408,7 @@ class SettingsPage extends StatelessWidget {
                     Icon(Icons.auto_awesome, size: 18),
                     SizedBox(width: 8),
                     Text(
-                      AppLocalizations.of(context)!.profileUpgrade,
+                      AppLocalizations.of(context).profileUpgrade,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -416,7 +422,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   String _formatDate(BuildContext context, DateTime date) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final months = [
       l10n.monthJanShort,
       l10n.monthFebShort,
@@ -452,7 +458,7 @@ class SettingsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)!.profileFreeUsage,
+            AppLocalizations.of(context).profileFreeUsage,
             style: TextStyle(
               color: context.gc.textPrimary,
               fontSize: 16,
@@ -462,7 +468,7 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 16),
           _buildUsageRow(
             context,
-            AppLocalizations.of(context)!.profileSpells,
+            AppLocalizations.of(context).profileSpells,
             user.spellsCount,
             UserModel.freeSpellsLimit,
             Icons.auto_fix_high,
@@ -470,20 +476,20 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            AppLocalizations.of(context)!.profileDiaryEntries,
+            AppLocalizations.of(context).profileDiaryEntries,
             user.diaryEntriesThisMonth,
             UserModel.freeDiaryEntriesLimit,
             Icons.book,
-            subtitle: AppLocalizations.of(context)!.profileThisMonth,
+            subtitle: AppLocalizations.of(context).profileThisMonth,
           ),
           const SizedBox(height: 12),
           _buildUsageRow(
             context,
-            AppLocalizations.of(context)!.profileMysticAdvisor,
+            AppLocalizations.of(context).profileMysticAdvisor,
             user.aiConsultationsToday,
             UserModel.freeAiConsultationsLimit,
             Icons.psychology,
-            subtitle: AppLocalizations.of(context)!.profileToday,
+            subtitle: AppLocalizations.of(context).profileToday,
           ),
         ],
       ),
@@ -576,7 +582,7 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.person_outline,
-            title: AppLocalizations.of(context)!.profileEditProfile,
+            title: AppLocalizations.of(context).profileEditProfile,
             onTap: () => _showEditProfileDialog(context, authProvider),
           ),
           // Só mostra "Alterar Senha" para usuários que usam email/senha
@@ -586,7 +592,7 @@ class SettingsPage extends StatelessWidget {
             _buildOptionTile(
               context,
               icon: Icons.lock_outline,
-              title: AppLocalizations.of(context)!.changePasswordTitle,
+              title: AppLocalizations.of(context).changePasswordTitle,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
@@ -597,7 +603,7 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.analytics_outlined,
-            title: AppLocalizations.of(context)!.profileMagicalStats,
+            title: AppLocalizations.of(context).profileMagicalStats,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
@@ -607,7 +613,7 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.explore_outlined,
-            title: AppLocalizations.of(context)!.profileMagicalJourneys,
+            title: AppLocalizations.of(context).profileMagicalJourneys,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JourneysPage()),
@@ -617,7 +623,7 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.palette_outlined,
-            title: AppLocalizations.of(context)!.settingsAppearance,
+            title: AppLocalizations.of(context).settingsAppearance,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ThemePickerPage()),
@@ -627,14 +633,14 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.notifications_outlined,
-            title: AppLocalizations.of(context)!.profileNotifications,
+            title: AppLocalizations.of(context).profileNotifications,
             onTap: () => _showNotificationsBottomSheet(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.privacy_tip_outlined,
-            title: AppLocalizations.of(context)!.settingsPrivacy,
+            title: AppLocalizations.of(context).settingsPrivacy,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PrivacySettingsPage()),
@@ -644,21 +650,21 @@ class SettingsPage extends StatelessWidget {
           _buildOptionTile(
             context,
             icon: Icons.help_outline,
-            title: AppLocalizations.of(context)!.profileHelpSupport,
+            title: AppLocalizations.of(context).profileHelpSupport,
             onTap: () => _showHelpDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.info_outline,
-            title: AppLocalizations.of(context)!.profileAboutApp,
+            title: AppLocalizations.of(context).profileAboutApp,
             onTap: () => _showAboutDialog(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.logout,
-            title: AppLocalizations.of(context)!.profileLogout,
+            title: AppLocalizations.of(context).profileLogout,
             textColor: context.gc.alert,
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
@@ -694,7 +700,7 @@ class SettingsPage extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    AppLocalizations.of(context)!.profileNotifications,
+                    AppLocalizations.of(context).profileNotifications,
                     style: TextStyle(
                       color: context.gc.textPrimary,
                       fontSize: 20,
@@ -710,7 +716,7 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                AppLocalizations.of(context)!.settingsNotifDesc,
+                AppLocalizations.of(context).settingsNotifDesc,
                 style: TextStyle(
                   color: context.gc.textSecondary,
                   fontSize: 14,
@@ -723,8 +729,8 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       _NotificationTile(
                         icon: '🌕',
-                        title: AppLocalizations.of(context)!.settingsFullMoon,
-                        subtitle: AppLocalizations.of(context)!.settingsFullMoonDesc,
+                        title: AppLocalizations.of(context).settingsFullMoon,
+                        subtitle: AppLocalizations.of(context).settingsFullMoonDesc,
                         value: notificationProvider.fullMoonNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -737,8 +743,8 @@ class SettingsPage extends StatelessWidget {
                       Divider(color: context.gc.textPrimary10),
                       _NotificationTile(
                         icon: '🌑',
-                        title: AppLocalizations.of(context)!.settingsNewMoon,
-                        subtitle: AppLocalizations.of(context)!.settingsNewMoonDesc,
+                        title: AppLocalizations.of(context).settingsNewMoon,
+                        subtitle: AppLocalizations.of(context).settingsNewMoonDesc,
                         value: notificationProvider.newMoonNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -751,8 +757,8 @@ class SettingsPage extends StatelessWidget {
                       Divider(color: context.gc.textPrimary10),
                       _NotificationTile(
                         icon: '🎃',
-                        title: AppLocalizations.of(context)!.settingsSabbats,
-                        subtitle: AppLocalizations.of(context)!.settingsSabbatsDesc,
+                        title: AppLocalizations.of(context).settingsSabbats,
+                        subtitle: AppLocalizations.of(context).settingsSabbatsDesc,
                         value: notificationProvider.sabbatNotifications,
                         onChanged: (value) async {
                           await notificationProvider
@@ -785,7 +791,7 @@ class SettingsPage extends StatelessWidget {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        AppLocalizations.of(context)!.settingsNotifMobileOnly,
+                        AppLocalizations.of(context).settingsNotifMobileOnly,
                         style: TextStyle(
                           color: Color(0xFF2196F3),
                           fontSize: 12,
@@ -819,7 +825,7 @@ class SettingsPage extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            result.error ?? AppLocalizations.of(context)!.settingsNotifUpdateError,
+            result.error ?? AppLocalizations.of(context).settingsNotifUpdateError,
           ),
           duration: const Duration(seconds: 2),
           backgroundColor: context.gc.alert,
@@ -863,11 +869,11 @@ class SettingsPage extends StatelessWidget {
               color: context.gc.lilac,
             ),
             title: Text(
-              'Diagnóstico & Debug',
+              AppLocalizations.of(context).settingsDiagnostics,
               style: TextStyle(color: context.gc.textPrimary),
             ),
             subtitle: Text(
-              'Testes, alternância de roles e mais',
+              AppLocalizations.of(context).settingsDiagnosticsSub,
               style: TextStyle(
                 color: context.gc.textSecondary,
                 fontSize: 12,
@@ -891,11 +897,11 @@ class SettingsPage extends StatelessWidget {
               color: context.gc.lilac,
             ),
             title: Text(
-              'Gerenciar Códigos Premium',
+              AppLocalizations.of(context).adminCodesTitle,
               style: TextStyle(color: context.gc.textPrimary),
             ),
             subtitle: Text(
-              'Criar e invalidar códigos promocionais',
+              AppLocalizations.of(context).settingsManageCodesSub,
               style: TextStyle(
                 color: context.gc.textSecondary,
                 fontSize: 12,
@@ -957,40 +963,8 @@ class SettingsPage extends StatelessWidget {
     return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
   }
 
-  void _showRevenueCatNotConfiguredDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.gc.surface,
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber, color: context.gc.gold),
-            SizedBox(width: 8),
-            Text(
-              AppLocalizations.of(context)!.settingsPaymentsNotConfigured,
-              style: TextStyle(color: context.gc.textPrimary, fontSize: 18),
-            ),
-          ],
-        ),
-        content: Text(
-          AppLocalizations.of(context)!.settingsPaymentsNotConfiguredDesc,
-          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context)!.commonUnderstood,
-              style: TextStyle(color: context.gc.lilac),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _genderLabel(BuildContext context, Gender pref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     switch (pref) {
       case Gender.feminine:
         return l10n.genderFeminine;
@@ -1012,7 +986,7 @@ class SettingsPage extends StatelessWidget {
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: context.gc.surface,
           title: Text(
-            AppLocalizations.of(context)!.profileEditProfile,
+            AppLocalizations.of(context).profileEditProfile,
             style: TextStyle(color: context.gc.textPrimary),
           ),
           content: Column(
@@ -1023,7 +997,7 @@ class SettingsPage extends StatelessWidget {
                 controller: nameController,
                 style: TextStyle(color: context.gc.textPrimary),
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.authNameLabel,
+                  labelText: AppLocalizations.of(context).authNameLabel,
                   labelStyle: TextStyle(color: context.gc.textSecondary),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
@@ -1037,54 +1011,52 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                AppLocalizations.of(context)!.editGenderSection,
-                style: TextStyle(
-                  color: context.gc.lilac,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+              // Mesma largura e estilo do campo Nome.
+              DropdownButtonFormField<Gender>(
+                value: selectedGender,
+                isExpanded: true,
+                dropdownColor: context.gc.surface,
+                style: TextStyle(color: context.gc.textPrimary),
+                iconEnabledColor: context.gc.lilac,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).editGenderSection,
+                  labelStyle: TextStyle(color: context.gc.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: context.gc.textPrimary.withValues(alpha: 0.3)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: context.gc.lilac),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
+                items: Gender.values
+                    .map((pref) => DropdownMenuItem<Gender>(
+                          value: pref,
+                          child: Text(_genderLabel(context, pref)),
+                        ))
+                    .toList(),
+                onChanged: (pref) {
+                  if (pref != null) {
+                    setDialogState(() => selectedGender = pref);
+                  }
+                },
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
-                AppLocalizations.of(context)!.editGenderHelp,
+                AppLocalizations.of(context).editGenderHelp,
                 style: TextStyle(
                   color: context.gc.textSecondary,
                   fontSize: 12,
                 ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                children: Gender.values.map((pref) {
-                  final selected = selectedGender == pref;
-                  return ChoiceChip(
-                    label: Text(_genderLabel(context, pref)),
-                    selected: selected,
-                    selectedColor: context.gc.lilac.withValues(alpha: 0.25),
-                    labelStyle: TextStyle(
-                      color: selected
-                          ? context.gc.lilac
-                          : context.gc.textSecondary,
-                      fontWeight:
-                          selected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    side: BorderSide(
-                      color:
-                          selected ? context.gc.lilac : context.gc.surfaceBorder,
-                    ),
-                    backgroundColor: context.gc.surface,
-                    onSelected: (_) =>
-                        setDialogState(() => selectedGender = pref),
-                  );
-                }).toList(),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.commonCancel,
+              child: Text(AppLocalizations.of(context).commonCancel,
                   style: TextStyle(color: context.gc.textSecondary)),
             ),
             ElevatedButton(
@@ -1097,7 +1069,7 @@ class SettingsPage extends StatelessWidget {
                 backgroundColor: context.gc.lilac,
               ),
               child: Text(
-                AppLocalizations.of(context)!.commonSave,
+                AppLocalizations.of(context).commonSave,
                 style: TextStyle(color: context.gc.textPrimary),
               ),
             ),
@@ -1114,18 +1086,18 @@ class SettingsPage extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: dialogContext.gc.surface,
         title: Text(
-          AppLocalizations.of(dialogContext)!.profileLogout,
+          AppLocalizations.of(dialogContext).profileLogout,
           style: TextStyle(color: dialogContext.gc.textPrimary),
         ),
         content: Text(
-          AppLocalizations.of(dialogContext)!.profileLogoutConfirm,
+          AppLocalizations.of(dialogContext).profileLogoutConfirm,
           style: TextStyle(color: dialogContext.gc.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              AppLocalizations.of(dialogContext)!.commonCancel,
+              AppLocalizations.of(dialogContext).commonCancel,
               style: TextStyle(color: dialogContext.gc.textSecondary),
             ),
           ),
@@ -1142,7 +1114,7 @@ class SettingsPage extends StatelessWidget {
               backgroundColor: dialogContext.gc.alert,
             ),
             child: Text(
-              AppLocalizations.of(dialogContext)!.profileLogoutAction,
+              AppLocalizations.of(dialogContext).profileLogoutAction,
               style: TextStyle(color: dialogContext.gc.textPrimary),
             ),
           ),
@@ -1161,7 +1133,7 @@ class SettingsPage extends StatelessWidget {
             Icon(Icons.help_outline, color: context.gc.lilac),
             SizedBox(width: 8),
             Text(
-              AppLocalizations.of(context)!.profileHelpSupport,
+              AppLocalizations.of(context).profileHelpSupport,
               style: TextStyle(color: context.gc.textPrimary),
             ),
           ],
@@ -1173,32 +1145,34 @@ class SettingsPage extends StatelessWidget {
             _buildHelpItem(
               context,
               icon: Icons.email_outlined,
-              title: AppLocalizations.of(context)!.profileSupportEmail,
-              subtitle: 'suporte@grimoriodebolso.com',
-              onTap: () => _launchEmail(),
+              title: AppLocalizations.of(context).profileSupportEmail,
+              subtitle: 'suporte.grimoriodebolso@gmail.com',
+              onTap: () => _launchEmail(context),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
               context,
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
-              subtitle: AppLocalizations.of(context)!.profileFaq,
-              onTap: () => _launchFaq(),
+              subtitle: AppLocalizations.of(context).profileFaq,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FaqPage()),
+              ),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
               context,
               icon: Icons.policy_outlined,
-              title: AppLocalizations.of(context)!.authPrivacyPolicy,
-              subtitle: AppLocalizations.of(context)!.profilePrivacySafe,
+              title: AppLocalizations.of(context).authPrivacyPolicy,
+              subtitle: AppLocalizations.of(context).profilePrivacySafe,
               onTap: () => _openPrivacyPolicy(context),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
               context,
               icon: Icons.gavel_outlined,
-              title: AppLocalizations.of(context)!.authTermsOfUse,
-              subtitle: AppLocalizations.of(context)!.settingsTermsSubtitle,
+              title: AppLocalizations.of(context).authTermsOfUse,
+              subtitle: AppLocalizations.of(context).settingsTermsSubtitle,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => LegalDocumentPage.terms),
               ),
@@ -1209,7 +1183,7 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              AppLocalizations.of(context)!.commonClose,
+              AppLocalizations.of(context).commonClose,
               style: TextStyle(color: context.gc.lilac),
             ),
           ),
@@ -1262,17 +1236,26 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Future<void> _launchEmail() async {
-    final uri = Uri.parse('mailto:suporte@grimoriodebolso.com');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+  /// Abre o app de e-mail; sem app compatível, copia o endereço e avisa.
+  Future<void> _launchEmail(BuildContext context) async {
+    const supportEmail = 'suporte.grimoriodebolso@gmail.com';
+    final uri = Uri(scheme: 'mailto', path: supportEmail);
+    var opened = false;
+    try {
+      opened = await launchUrl(uri);
+    } catch (_) {
+      opened = false;
     }
-  }
-
-  Future<void> _launchFaq() async {
-    final uri = Uri.parse('https://grimoriodebolso.com/faq');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      await Clipboard.setData(const ClipboardData(text: supportEmail));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).supportEmailCopied(supportEmail),
+          ),
+        ),
+      );
     }
   }
 
@@ -1306,17 +1289,17 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppLocalizations.of(context)!.aboutVersion(packageInfo.version, packageInfo.buildNumber),
+              AppLocalizations.of(context).aboutVersion(packageInfo.version, packageInfo.buildNumber),
               style: TextStyle(color: context.gc.textSecondary),
             ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)!.aboutDescription,
+              AppLocalizations.of(context).aboutDescription,
               style: TextStyle(color: context.gc.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)!.aboutMadeWith,
+              AppLocalizations.of(context).aboutMadeWith,
               style: TextStyle(color: context.gc.lilac),
             ),
             const SizedBox(height: 8),
@@ -1330,7 +1313,7 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              AppLocalizations.of(context)!.commonClose,
+              AppLocalizations.of(context).commonClose,
               style: TextStyle(color: context.gc.lilac),
             ),
           ),

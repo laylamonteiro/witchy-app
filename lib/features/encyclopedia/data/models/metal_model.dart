@@ -1,5 +1,5 @@
-import 'crystal_model.dart' show Element, ElementExtension;
-import 'herb_model.dart' show Planet, PlanetExtension;
+import 'crystal_model.dart' show Element;
+import 'herb_model.dart' show Planet;
 
 class MetalModel {
   final String name;

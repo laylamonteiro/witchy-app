@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:grimorio_de_bolso/core/services/data_sync_service.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:grimorio_de_bolso/core/services/payment_service.dart';
 import 'package:grimorio_de_bolso/core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/core/services/notification_service.dart';
@@ -15,6 +16,7 @@ import 'package:grimorio_de_bolso/features/astrology/data/models/enums.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/transit_model.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/services/transit_interpreter.dart';
 import 'package:grimorio_de_bolso/features/astrology/presentation/pages/daily_magical_weather_page.dart';
+import 'package:grimorio_de_bolso/features/auth/data/models/feature_access.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_provider.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/widgets/premium_blur_widget.dart';
@@ -312,21 +314,18 @@ void main() {
   group('Benefícios Premium', () {
     test('lista reflete diferenciais implementados sem promessas obsoletas',
         () {
-      final benefits = premiumBenefitItems.map((item) => item.text).toList();
+      final l10n = lookupAppLocalizations(const Locale('pt', 'BR'));
+      final benefits = [
+        l10n.premiumBenefitAdvisor,
+        l10n.premiumBenefitEncyclopedia,
+        l10n.premiumBenefitDailyClimate,
+        l10n.premiumBenefitUnlimitedReadings,
+        l10n.premiumBenefitCloudSync,
+      ];
 
       expect(benefits, hasLength(5));
-      expect(
-        benefits,
-        contains(
-          'Converse à vontade com o Conselheiro Místico, sem limite de perguntas',
-        ),
-      );
-      expect(
-        benefits,
-        contains(
-          'Mantenha seu Grimório protegido na nuvem e sincronizado entre seus dispositivos',
-        ),
-      );
+      expect(benefits, contains('Conselheiro Místico ilimitado'));
+      expect(benefits, contains('Sincronização entre dispositivos'));
       expect(benefits.any((text) => text.contains('em breve')), isFalse);
       expect(
         benefits.any((text) => text.contains('Suporte prioritário')),
@@ -340,7 +339,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
-        const MaterialApp(
+        const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           home: Scaffold(body: PremiumUpgradeSheet()),
         ),
       );
@@ -371,7 +370,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: authProvider,
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const SettingsPage(),
@@ -404,7 +403,7 @@ void main() {
             ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
             ChangeNotifierProvider<SyncProvider>.value(value: syncProvider),
           ],
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const PrivacySettingsPage(),
@@ -436,7 +435,7 @@ void main() {
               value: PaymentService(),
             ),
           ],
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const Scaffold(
@@ -472,7 +471,7 @@ void main() {
         final (size, textScale) = testCase;
         await tester.binding.setSurfaceSize(size);
         await tester.pumpWidget(
-          MaterialApp(
+          MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             theme: AppTheme.darkTheme,
             home: MediaQuery(
               data: MediaQueryData(
@@ -512,7 +511,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           theme: AppTheme.darkTheme,
           home: const Scaffold(
             body: SingleChildScrollView(
@@ -540,7 +539,7 @@ void main() {
       var selected = SubscriptionType.yearly;
 
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           theme: AppTheme.darkTheme,
           home: Scaffold(
             body: StatefulBuilder(
@@ -592,7 +591,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           theme: AppTheme.darkTheme,
           home: MediaQuery(
             data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
@@ -625,7 +624,7 @@ void main() {
         (tester) async {
       var taps = 0;
       await tester.pumpWidget(
-        MaterialApp(
+        MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
           theme: AppTheme.darkTheme,
           home: Scaffold(
             body: SubscriptionPurchaseButton(
@@ -683,7 +682,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: AuthProvider(),
-          child: const MaterialApp(home: SubscriptionPage()),
+          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
         ),
       );
       await tester.pump();
@@ -738,7 +737,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: AuthProvider(),
-          child: const MaterialApp(home: SubscriptionPage()),
+          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
         ),
       );
       await tester.pump();
@@ -764,7 +763,11 @@ void main() {
       expect(find.text('Seus dados protegidos'), findsOneWidget);
 
       for (final path in [
-        ...premiumBenefitItems.map((item) => item.assetPath),
+        'assets/premium/icon_orb.png',
+        'assets/premium/icon_book.png',
+        'assets/premium/icon_moon.png',
+        'assets/premium/icon_runes.png',
+        'assets/premium/icon_cloud.png',
         'assets/premium/icon_shield.png',
         'assets/premium/icon_sync.png',
         'assets/premium/icon_lock.png',
@@ -785,7 +788,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: authProvider,
-          child: const MaterialApp(home: SubscriptionPage()),
+          child: const MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SubscriptionPage()),
         ),
       );
       await tester.pumpAndSettle();
@@ -911,7 +914,7 @@ Outro conteúdo secreto.''';
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: auth,
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Scaffold(
               body: PremiumContentSection(
                 feature: AppFeature.encyclopediaHerbsDetails,
@@ -948,7 +951,7 @@ Outro conteúdo secreto.''';
       await tester.pumpWidget(
         ChangeNotifierProvider<AuthProvider>.value(
           value: auth,
-          child: MaterialApp(
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: MediaQuery(
               data: MediaQueryData(
                 size: Size(width, 500),

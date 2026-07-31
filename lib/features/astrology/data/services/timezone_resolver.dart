@@ -1,4 +1,11 @@
 import 'package:timezone/timezone.dart' as tz;
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 /// Fuso resolvido para uma data/local de nascimento.
 class ResolvedTimezone {
@@ -92,7 +99,7 @@ class TimezoneResolver {
     final base = minutes == 0
         ? 'UTC$sign$whole'
         : 'UTC$sign$whole:${minutes.toString().padLeft(2, '0')}';
-    return isDst ? '$base (horário de verão)' : base;
+    return isDst ? _l10n.astroDstSuffix(base) : base;
   }
 
   /// Zona IANA aproximada por lat/lon. Retorna null fora do Brasil (usa o

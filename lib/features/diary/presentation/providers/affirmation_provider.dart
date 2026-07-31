@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../data/data_sources/affirmation_localizer.dart';
 import '../../data/models/affirmation_model.dart';
 import '../../data/repositories/affirmation_repository.dart';
 
@@ -40,7 +41,9 @@ class AffirmationProvider with ChangeNotifier {
             .insertAll(AffirmationModel.getPreloadedAffirmations());
       }
 
-      _affirmations = await _repository.getAll(_currentUserId);
+      _affirmations = (await _repository.getAll(_currentUserId))
+          .map(AffirmationLocalizer.localize)
+          .toList();
       _isLoading = false;
       notifyListeners();
     } catch (e) {

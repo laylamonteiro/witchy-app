@@ -43,7 +43,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: ResponsiveAppBarTitle(
-          AppLocalizations.of(context)!.changePasswordTitle,
+          AppLocalizations.of(context).changePasswordTitle,
           style: GoogleFonts.cinzelDecorative(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -101,7 +101,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ),
         const SizedBox(height: 24),
         Text(
-          AppLocalizations.of(context)!.changePasswordHeader,
+          AppLocalizations.of(context).changePasswordHeader,
           style: GoogleFonts.cinzelDecorative(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -110,7 +110,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          AppLocalizations.of(context)!.changePasswordSubtitle,
+          AppLocalizations.of(context).changePasswordSubtitle,
           style: GoogleFonts.nunito(
             fontSize: 15,
             color: context.gc.textSecondary,
@@ -128,7 +128,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       obscureText: _obscureCurrentPassword,
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: AppLocalizations.of(context)!.changePasswordCurrentLabel,
+        labelText: AppLocalizations.of(context).changePasswordCurrentLabel,
         hintText: '••••••••',
         prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
@@ -145,10 +145,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return AppLocalizations.of(context)!.changePasswordCurrentRequired;
+          return AppLocalizations.of(context).changePasswordCurrentRequired;
         }
         if (value.length < 6) {
-          return AppLocalizations.of(context)!.authPasswordMinLength;
+          return AppLocalizations.of(context).authPasswordMinLength;
         }
         return null;
       },
@@ -161,8 +161,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       obscureText: _obscureNewPassword,
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: AppLocalizations.of(context)!.changePasswordNewLabel,
-        hintText: AppLocalizations.of(context)!.authPasswordHintMin,
+        labelText: AppLocalizations.of(context).changePasswordNewLabel,
+        hintText: AppLocalizations.of(context).authPasswordHintMin,
         prefixIcon: Icon(Icons.lock_open_outlined, color: context.gc.mint),
         suffixIcon: IconButton(
           icon: Icon(
@@ -178,13 +178,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return AppLocalizations.of(context)!.changePasswordNewRequired;
+          return AppLocalizations.of(context).changePasswordNewRequired;
         }
         if (value.length < 6) {
-          return AppLocalizations.of(context)!.authPasswordMinLength;
+          return AppLocalizations.of(context).authPasswordMinLength;
         }
         if (value == _currentPasswordController.text) {
-          return AppLocalizations.of(context)!.changePasswordMustDiffer;
+          return AppLocalizations.of(context).changePasswordMustDiffer;
         }
         return null;
       },
@@ -197,8 +197,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       obscureText: _obscureConfirmPassword,
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
-        labelText: AppLocalizations.of(context)!.changePasswordConfirmLabel,
-        hintText: AppLocalizations.of(context)!.changePasswordConfirmHint,
+        labelText: AppLocalizations.of(context).changePasswordConfirmLabel,
+        hintText: AppLocalizations.of(context).changePasswordConfirmHint,
         prefixIcon: Icon(Icons.lock_open_outlined, color: context.gc.mint),
         suffixIcon: IconButton(
           icon: Icon(
@@ -214,10 +214,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return AppLocalizations.of(context)!.changePasswordConfirmRequired;
+          return AppLocalizations.of(context).changePasswordConfirmRequired;
         }
         if (value != _newPasswordController.text) {
-          return AppLocalizations.of(context)!.authPasswordsDontMatch;
+          return AppLocalizations.of(context).authPasswordsDontMatch;
         }
         return null;
       },
@@ -246,7 +246,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               ),
             )
           : Text(
-              AppLocalizations.of(context)!.changePasswordTitle,
+              AppLocalizations.of(context).changePasswordTitle,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -273,7 +273,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         );
 
         if (!result.success) {
-          throw Exception(result.errorMessage ?? AppLocalizations.of(context)!.changePasswordError);
+          throw Exception(result.errorMessage ?? AppLocalizations.of(context).changePasswordError);
         }
       } else {
         // Simular alteração se Supabase não configurado
@@ -284,7 +284,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         // Mostrar sucesso
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.changePasswordSuccess),
+            content: Text(AppLocalizations.of(context).changePasswordSuccess),
             backgroundColor: context.gc.success,
           ),
         );
@@ -296,11 +296,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (mounted) {
         setState(() => _isLoading = false);
 
-        String errorMessage = AppLocalizations.of(context)!.changePasswordError;
+        String errorMessage = AppLocalizations.of(context).changePasswordError;
         if (e.toString().contains('Invalid login') ||
             e.toString().contains('credentials') ||
             e.toString().contains('password')) {
-          errorMessage = AppLocalizations.of(context)!.changePasswordWrongCurrent;
+          errorMessage = AppLocalizations.of(context).changePasswordWrongCurrent;
         } else {
           errorMessage = e.toString().replaceAll('Exception: ', '');
         }

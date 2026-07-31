@@ -54,7 +54,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              AppLocalizations.of(context)!.oracleDailyLimit),
+              AppLocalizations.of(context).oracleDailyLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -113,7 +113,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       id: const Uuid().v4(),
       question: _questionController.text.isNotEmpty
           ? _questionController.text
-          : AppLocalizations.of(context)!.runesNoQuestion,
+          : AppLocalizations.of(context).runesNoQuestion,
       spreadType: _selectedSpread,
       positions: positions,
       date: DateTime.now(),
@@ -129,7 +129,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.runesReadingTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).runesReadingTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -145,7 +145,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     const Text('ᚱᚢᚾᚨ', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      AppLocalizations.of(context)!.runesReadingTitle,
+                      AppLocalizations.of(context).runesReadingTitle,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: context.gc.lilac,
@@ -153,7 +153,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      AppLocalizations.of(context)!.runesReadingIntro,
+                      AppLocalizations.of(context).runesReadingIntro,
                       style: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.8),
                         fontSize: 14,
@@ -163,7 +163,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.runesReversedNote,
+                      AppLocalizations.of(context).runesReversedNote,
                       style: TextStyle(
                         color: context.gc.lilac.withOpacity(0.7),
                         fontSize: 12,
@@ -179,7 +179,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               const SizedBox(height: 16),
 
               Text(
-                AppLocalizations.of(context)!.runesChooseLayout,
+                AppLocalizations.of(context).runesChooseLayout,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: context.gc.lilac,
                     ),
@@ -217,9 +217,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   controller: _questionController,
                   style: TextStyle(color: context.gc.softWhite),
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.runesQuestionOptional,
+                    labelText: AppLocalizations.of(context).runesQuestionOptional,
                     labelStyle: TextStyle(color: context.gc.lilac),
-                    hintText: AppLocalizations.of(context)!.runesQuestionHint,
+                    hintText: AppLocalizations.of(context).runesQuestionHint,
                     hintStyle: TextStyle(
                       color: context.gc.softWhite.withOpacity(0.5),
                     ),
@@ -258,7 +258,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                         ),
                       )
                     : const Icon(Icons.auto_awesome),
-                label: Text(_isDrawing ? AppLocalizations.of(context)!.runesDrawing : AppLocalizations.of(context)!.runesDraw),
+                label: Text(_isDrawing ? AppLocalizations.of(context).runesDrawing : AppLocalizations.of(context).runesDraw),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
@@ -279,7 +279,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                      AppLocalizations.of(context)!.oracleRemainingToday('$remaining/${UserModel.freeRuneReadingsLimit}'),
+                      AppLocalizations.of(context).oracleRemainingToday('$remaining/${UserModel.freeRuneReadingsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
                             ? context.gc.softWhite.withOpacity(0.6)
@@ -306,7 +306,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: Text(AppLocalizations.of(context)!.oracleNewReading),
+                label: Text(AppLocalizations.of(context).oracleNewReading),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: context.gc.lilac,
                   side: BorderSide(color: context.gc.lilac),
@@ -394,7 +394,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
               const Text('✨', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 16),
               Text(
-                AppLocalizations.of(context)!.oracleYourReading,
+                AppLocalizations.of(context).oracleYourReading,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: context.gc.lilac,
                     ),
@@ -506,7 +506,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                AppLocalizations.of(context)!.runesReversed,
+                                AppLocalizations.of(context).runesReversed,
                                 style: TextStyle(
                                   color: context.gc.alert,
                                   fontSize: 10,

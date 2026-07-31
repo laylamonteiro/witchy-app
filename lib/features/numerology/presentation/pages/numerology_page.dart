@@ -16,7 +16,7 @@ class NumerologyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.toolNumerologyTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolNumerologyTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -29,7 +29,7 @@ class NumerologyPage extends StatelessWidget {
                   const Text('🔢', style: TextStyle(fontSize: 44)),
                   const SizedBox(height: 12),
                   Text(
-                    AppLocalizations.of(context)!.numMagicOfNumbers,
+                    AppLocalizations.of(context).numMagicOfNumbers,
                     style: Theme.of(context)
                         .textTheme
                         .headlineMedium
@@ -38,7 +38,7 @@ class NumerologyPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context)!.numIntro,
+                    AppLocalizations.of(context).numIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -50,9 +50,9 @@ class NumerologyPage extends StatelessWidget {
             _buildModeCard(
               context,
               emoji: '🌟',
-              title: AppLocalizations.of(context)!.numPersonalProfile,
+              title: AppLocalizations.of(context).numPersonalProfile,
               description:
-                  AppLocalizations.of(context)!.numPersonalProfileDesc,
+                  AppLocalizations.of(context).numPersonalProfileDesc,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const NumerologyProfilePage(),
@@ -62,8 +62,8 @@ class NumerologyPage extends StatelessWidget {
             _buildModeCard(
               context,
               emoji: '🔍',
-              title: AppLocalizations.of(context)!.numLookupTitle,
-              description: AppLocalizations.of(context)!.numLookupDesc,
+              title: AppLocalizations.of(context).numLookupTitle,
+              description: AppLocalizations.of(context).numLookupDesc,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const NumberLookupPage(),
@@ -73,8 +73,8 @@ class NumerologyPage extends StatelessWidget {
             _buildModeCard(
               context,
               emoji: '🕰️',
-              title: AppLocalizations.of(context)!.numMirrorHours,
-              description: AppLocalizations.of(context)!.numMirrorHoursDesc,
+              title: AppLocalizations.of(context).numMirrorHours,
+              description: AppLocalizations.of(context).numMirrorHoursDesc,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const MirrorHoursPage(),
@@ -84,8 +84,8 @@ class NumerologyPage extends StatelessWidget {
             _buildModeCard(
               context,
               emoji: '🌀',
-              title: AppLocalizations.of(context)!.numSequences,
-              description: AppLocalizations.of(context)!.numSequencesDesc,
+              title: AppLocalizations.of(context).numSequences,
+              description: AppLocalizations.of(context).numSequencesDesc,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const RepeatedSequencesPage(),
@@ -284,7 +284,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.numLookupTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).numLookupTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -296,7 +296,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.numWhichNumber,
+                    AppLocalizations.of(context).numWhichNumber,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -304,7 +304,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context)!.numLookupHelp,
+                    AppLocalizations.of(context).numLookupHelp,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                         ),
@@ -317,14 +317,14 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
                           controller: _controller,
                           keyboardType: TextInputType.number,
                           decoration:
-                              InputDecoration(hintText: AppLocalizations.of(context)!.numLookupHint),
+                              InputDecoration(hintText: AppLocalizations.of(context).numLookupHint),
                           onSubmitted: (_) => _lookup(),
                         ),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton(
                         onPressed: _lookup,
-                        child: Text(AppLocalizations.of(context)!.numSee),
+                        child: Text(AppLocalizations.of(context).numSee),
                       ),
                     ],
                   ),
@@ -336,7 +336,7 @@ class _NumberLookupPageState extends State<NumberLookupPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    AppLocalizations.of(context)!.numReducesTo('$_original', '$_result'),
+                    AppLocalizations.of(context).numReducesTo('$_original', '$_result'),
                     textAlign: TextAlign.center,
                     style: TextStyle(color: context.gc.textSecondary),
                   ),
@@ -360,7 +360,7 @@ class MirrorHoursPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.numMirrorHours),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).numMirrorHours),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -368,7 +368,7 @@ class MirrorHoursPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Text(
-              AppLocalizations.of(context)!.numMirrorIntro,
+              AppLocalizations.of(context).numMirrorIntro,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.gc.textSecondary,
                   ),
@@ -460,12 +460,12 @@ class _MirrorHourSheet extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            AppLocalizations.of(context)!.numVibrationOf('$number'),
+            AppLocalizations.of(context).numVibrationOf('$number'),
             style: TextStyle(color: context.gc.textSecondary),
           ),
           NumberMeaningCard(
             number: number,
-            contextLine: AppLocalizations.of(context)!.numMirrorMessage(label),
+            contextLine: AppLocalizations.of(context).numMirrorMessage(label),
           ),
         ],
       ),
@@ -483,7 +483,7 @@ class RepeatedSequencesPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.numSequences),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).numSequences),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -493,7 +493,7 @@ class RepeatedSequencesPage extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
               child: Text(
-                AppLocalizations.of(context)!.numSequencesIntro,
+                AppLocalizations.of(context).numSequencesIntro,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: context.gc.textSecondary,
                     ),
@@ -528,7 +528,7 @@ class RepeatedSequencesPage extends StatelessWidget {
                         color: context.gc.lilac.withOpacity(0.12),
                       ),
                       child: Text(
-                        AppLocalizations.of(context)!.numVibratesIn('$number'),
+                        AppLocalizations.of(context).numVibratesIn('$number'),
                         style:
                             TextStyle(color: context.gc.lilac, fontSize: 12),
                       ),

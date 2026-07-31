@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/mask.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../providers/auth_provider.dart';
@@ -38,7 +39,8 @@ class AuthWrapper extends StatelessWidget {
         final isAuthenticated = authProvider.currentUser.isAuthenticated;
 
         // Log para debug (fire-and-forget)
-        debugLog('NAV', 'AuthWrapper: isAuthenticated=$isAuthenticated, hasSeenOnboarding=$hasSeenOnboarding, email=${authProvider.currentUser.email}');
+        debugLog('NAV',
+            'AuthWrapper: isAuthenticated=$isAuthenticated, hasSeenOnboarding=$hasSeenOnboarding, email=${maskEmail(authProvider.currentUser.email)}');
 
         // Se tem conta logada, ir para home
         if (isAuthenticated) {

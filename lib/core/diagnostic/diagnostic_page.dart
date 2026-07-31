@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../theme/grimoire_colors.dart';
 import '../widgets/magical_card.dart';
@@ -17,7 +17,6 @@ import '../../core/database/database_helper.dart';
 import '../../features/auth/auth.dart';
 import 'debug_logs_page.dart';
 import '../services/payment_service.dart';
-import '../services/notification_service.dart';
 import '../config/revenuecat_config.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../providers/notification_provider.dart';
@@ -536,7 +535,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
 
       _addLog('✅ CLIMA CALCULADO!');
       _addLog('   Trânsitos: ${weather.transits.length}');
-      _addLog('   Lua: ${weather.moonPhase ?? "N/A"}');
+      _addLog('   Lua: ${weather.moonPhase}');
       _addLog('   Energia: ${weather.overallEnergy.name}');
       _addLog('   Palavras-chave: ${weather.energyKeywords.join(", ")}');
 
@@ -597,7 +596,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
       _addLog('✅ SUGESTÕES GERADAS!');
       _addLog('   Total: ${suggestions.length}');
       for (final suggestion in suggestions.take(3)) {
-        _addLog('   • ${suggestion.title ?? "Sugestão sem título"}');
+        _addLog('   • ${suggestion.title}');
       }
 
       setState(() {
@@ -1102,12 +1101,12 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                               ],
                             ),
                             SizedBox(height: 5),
-                            Text(NotificationService.debugNotificationTitle,
+                            Text(AppLocalizations.of(context).notifDebugTitle,
                                 style: TextStyle(
                                     color: context.gc.softWhite,
                                     fontWeight: FontWeight.bold)),
                             SizedBox(height: 2),
-                            Text(NotificationService.debugNotificationBody,
+                            Text(AppLocalizations.of(context).notifDebugBody,
                                 style: TextStyle(
                                     color: context.gc.softWhite,
                                     fontSize: 12,

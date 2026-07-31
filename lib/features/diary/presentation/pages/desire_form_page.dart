@@ -47,7 +47,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-          widget.desire == null ? AppLocalizations.of(context)!.diaryNewDesire : AppLocalizations.of(context)!.diaryEditDesire,
+          widget.desire == null ? AppLocalizations.of(context).diaryNewDesire : AppLocalizations.of(context).diaryEditDesire,
         ),
         actions: widget.desire != null
             ? [
@@ -69,17 +69,17 @@ class _DesireFormPageState extends State<DesireFormPage> {
               TextFormField(
                 enabled: false,
                 initialValue:
-                    AppLocalizations.of(context)!.diaryDesireSigilTitle,
+                    AppLocalizations.of(context).diaryDesireSigilTitle,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.diaryTitleLabel,
+                  labelText: AppLocalizations.of(context).diaryTitleLabel,
                 ),
               )
             else
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.diaryTitleLabel,
-                  hintText: AppLocalizations.of(context)!.diaryDesireTitleHint,
+                  labelText: AppLocalizations.of(context).diaryTitleLabel,
+                  hintText: AppLocalizations.of(context).diaryDesireTitleHint,
                 ),
               ),
             const SizedBox(height: 16),
@@ -91,8 +91,8 @@ class _DesireFormPageState extends State<DesireFormPage> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.diaryDescLabel,
-                  hintText: AppLocalizations.of(context)!.diaryDesireDescHint,
+                  labelText: AppLocalizations.of(context).diaryDescLabel,
+                  hintText: AppLocalizations.of(context).diaryDesireDescHint,
                 ),
                 maxLines: 5,
               ),
@@ -100,7 +100,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
             DropdownButtonFormField<DesireStatus>(
               value: _selectedStatus,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryStatusLabel,
+                labelText: AppLocalizations.of(context).diaryStatusLabel,
               ),
               items: DesireStatus.values.map((status) {
                 return DropdownMenuItem(
@@ -124,14 +124,14 @@ class _DesireFormPageState extends State<DesireFormPage> {
             TextFormField(
               controller: _evolutionController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryDesireProgressLabel,
-                hintText: AppLocalizations.of(context)!.diaryDesireProgressHint,
+                labelText: AppLocalizations.of(context).diaryDesireProgressLabel,
+                hintText: AppLocalizations.of(context).diaryDesireProgressHint,
               ),
               maxLines: 5,
             ),
             const SizedBox(height: 32),
             MagicalButton(
-              text: widget.desire == null ? AppLocalizations.of(context)!.diarySaveDesire : AppLocalizations.of(context)!.commonUpdate,
+              text: widget.desire == null ? AppLocalizations.of(context).diarySaveDesire : AppLocalizations.of(context).commonUpdate,
               icon: Icons.save,
               onPressed: _saveDesire,
             ),
@@ -147,7 +147,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppLocalizations.of(context)!.diaryDesireSigilImage,
+          AppLocalizations.of(context).diaryDesireSigilImage,
           style: TextStyle(
             color: context.gc.textSecondary,
             fontSize: 12,
@@ -178,7 +178,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
     if (_titleController.text.isEmpty && _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.diaryFillTitleOrDesc),
+          content: Text(AppLocalizations.of(context).diaryFillTitleOrDesc),
           backgroundColor: Colors.orange,
         ),
       );
@@ -188,9 +188,9 @@ class _DesireFormPageState extends State<DesireFormPage> {
     // Sigilo mantém sempre o título fixo, nunca a intenção secreta.
     final isSigil = widget.desire?.hasSigilImage == true;
     final resolvedTitle = isSigil
-        ? AppLocalizations.of(context)!.diaryDesireSigilTitle
+        ? AppLocalizations.of(context).diaryDesireSigilTitle
         : (_titleController.text.isEmpty
-            ? AppLocalizations.of(context)!.commonNoTitle
+            ? AppLocalizations.of(context).commonNoTitle
             : _titleController.text);
 
     final desire = widget.desire?.copyWith(
@@ -203,7 +203,7 @@ class _DesireFormPageState extends State<DesireFormPage> {
         ) ??
         DesireModel(
           title: _titleController.text.isEmpty
-              ? AppLocalizations.of(context)!.commonNoTitle
+              ? AppLocalizations.of(context).commonNoTitle
               : _titleController.text,
           description: _descriptionController.text,
           status: _selectedStatus,
@@ -225,19 +225,19 @@ class _DesireFormPageState extends State<DesireFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.commonConfirmDelete),
-        content: Text(AppLocalizations.of(context)!.diaryDeleteDesireConfirm),
+        title: Text(AppLocalizations.of(context).commonConfirmDelete),
+        content: Text(AppLocalizations.of(context).diaryDeleteDesireConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.commonCancel),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: context.gc.alert,
             ),
-            child: Text(AppLocalizations.of(context)!.commonDelete),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),

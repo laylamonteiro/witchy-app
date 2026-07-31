@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../data/data_sources/birth_chart_content.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/planet_position_model.dart';
 import '../providers/astrology_provider.dart';
@@ -18,9 +20,10 @@ class BirthChartViewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final content = birthChartContent;
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Seu Mapa Astral'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).chartYourChart),
         backgroundColor: context.gc.darkBackground,
         actions: [
           IconButton(
@@ -32,7 +35,7 @@ class BirthChartViewPage extends StatelessWidget {
                 ),
               );
             },
-            tooltip: 'Ver Perfil Mágico',
+            tooltip: content.ui['viewMagicalProfileTooltip'],
           ),
         ],
       ),
@@ -44,7 +47,7 @@ class BirthChartViewPage extends StatelessWidget {
           if (chart == null) {
             return Center(
               child: Text(
-                'Nenhum mapa astral encontrado',
+                content.ui['noChartFound']!,
                 style: TextStyle(color: context.gc.softWhite),
               ),
             );
@@ -111,28 +114,28 @@ class BirthChartViewPage extends StatelessWidget {
                 // Sol, Lua e Ascendente - CLICÁVEL
                 _buildClickableCard(
                   context: context,
-                  title: 'Trio Principal',
+                  title: content.ui['sectionMainTrio']!,
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildPlanetRow(
                         context,
-                        '☉ Sol',
+                        '${Planet.sun.symbol} ${Planet.sun.displayName}',
                         chart.sun.positionString,
-                        'Sua essência',
+                        content.planetRowMeanings[Planet.sun]!,
                       ),
                       _buildPlanetRow(
                         context,
-                        '☽ Lua',
+                        '${Planet.moon.symbol} ${Planet.moon.displayName}',
                         chart.moon.positionString,
-                        'Suas emoções',
+                        content.planetRowMeanings[Planet.moon]!,
                       ),
                       if (chart.ascendant != null)
                         _buildPlanetRow(
                           context,
-                          '⬆ Ascendente',
+                          '⬆ ${content.ui['ascendant']}',
                           chart.ascendant!.positionString,
-                          'Como você se apresenta',
+                          content.ui['ascendantMeaning']!,
                         ),
                     ],
                   ),
@@ -144,27 +147,27 @@ class BirthChartViewPage extends StatelessWidget {
                 // Planetas Pessoais - CLICÁVEL
                 _buildClickableCard(
                   context: context,
-                  title: 'Planetas Pessoais',
+                  title: content.ui['sectionPersonalPlanets']!,
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildPlanetRow(
                         context,
-                        '☿ Mercúrio',
+                        '${Planet.mercury.symbol} ${Planet.mercury.displayName}',
                         chart.mercury.positionString,
-                        'Comunicação',
+                        content.planetRowMeanings[Planet.mercury]!,
                       ),
                       _buildPlanetRow(
                         context,
-                        '♀ Vênus',
+                        '${Planet.venus.symbol} ${Planet.venus.displayName}',
                         chart.venus.positionString,
-                        'Amor e beleza',
+                        content.planetRowMeanings[Planet.venus]!,
                       ),
                       _buildPlanetRow(
                         context,
-                        '♂ Marte',
+                        '${Planet.mars.symbol} ${Planet.mars.displayName}',
                         chart.mars.positionString,
-                        'Ação e energia',
+                        content.planetRowMeanings[Planet.mars]!,
                       ),
                     ],
                   ),
@@ -176,7 +179,7 @@ class BirthChartViewPage extends StatelessWidget {
                 // Planetas Sociais (Júpiter, Saturno) - CLICÁVEL
                 _buildClickableCard(
                   context: context,
-                  title: 'Planetas Sociais',
+                  title: content.ui['sectionSocialPlanets']!,
                   content: _buildBodiesList(
                     context,
                     chart.planets,
@@ -190,7 +193,7 @@ class BirthChartViewPage extends StatelessWidget {
                 // Planetas Transpessoais (Urano, Netuno, Plutão) - CLICÁVEL
                 _buildClickableCard(
                   context: context,
-                  title: 'Planetas Transpessoais',
+                  title: content.ui['sectionTranspersonalPlanets']!,
                   content: _buildBodiesList(
                     context,
                     chart.planets,
@@ -204,7 +207,7 @@ class BirthChartViewPage extends StatelessWidget {
                 // Pontos Astrológicos / Nodos - CLICÁVEL
                 _buildClickableCard(
                   context: context,
-                  title: 'Pontos Astrológicos',
+                  title: content.ui['sectionAstroPoints']!,
                   content: _buildBodiesList(
                     context,
                     chart.planets,
@@ -228,7 +231,7 @@ class BirthChartViewPage extends StatelessWidget {
                 if (!chart.unknownBirthTime)
                   _buildClickableCard(
                     context: context,
-                    title: 'Casas Astrológicas',
+                    title: content.ui['sectionHouses']!,
                     content: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -245,7 +248,7 @@ class BirthChartViewPage extends StatelessWidget {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'Casa ${house.number}',
+                                      '${content.ui['houseWord']} ${house.number}',
                                       style: TextStyle(
                                         color: context.gc.softWhite,
                                         fontWeight: FontWeight.bold,
@@ -263,7 +266,7 @@ class BirthChartViewPage extends StatelessWidget {
                                   Padding(
                                     padding: const EdgeInsets.only(top: 4),
                                     child: Text(
-                                      'Planetas: ${planetsInHouse.map((p) => p.planet.symbol).join(' ')}',
+                                      '${content.ui['planetsInHousePrefix']} ${planetsInHouse.map((p) => p.planet.symbol).join(' ')}',
                                       style: TextStyle(
                                         color: context.gc.softWhite
                                             .withOpacity(0.6),
@@ -285,15 +288,15 @@ class BirthChartViewPage extends StatelessWidget {
                 // Aspectos - CLICÁVEL
                 _buildClickableCard(
                   context: context,
-                  title: 'Aspectos Principais',
+                  title: content.ui['sectionAspects']!,
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (chart.aspects.isEmpty)
                         Padding(
-                          padding: EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(16),
                           child: Text(
-                            'Nenhum aspecto significativo encontrado',
+                            content.ui['noAspects']!,
                             style: TextStyle(color: context.gc.softWhite),
                           ),
                         )
@@ -357,8 +360,7 @@ class BirthChartViewPage extends StatelessWidget {
                             );
                           },
                           icon: const Icon(Icons.star, size: 18),
-                          label: const Text(
-                              'Desbloquear interpretações completas'),
+                          label: Text(content.ui['unlockFullInterpretations']!),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF9C27B0),
                             foregroundColor: context.gc.textPrimary,
@@ -388,9 +390,9 @@ class BirthChartViewPage extends StatelessWidget {
                     foregroundColor: context.gc.darkBackground,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text(
-                    'Ver Perfil Mágico ✨',
-                    style: TextStyle(
+                  child: Text(
+                    content.ui['viewMagicalProfileButton']!,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -411,6 +413,7 @@ class BirthChartViewPage extends StatelessWidget {
     List<PlanetPosition> planets,
     List<Planet> bodies,
   ) {
+    final houseWord = birthChartContent.ui['houseWord']!;
     final rows = <Widget>[];
     for (final body in bodies) {
       final match = planets.where((p) => p.planet == body);
@@ -439,7 +442,7 @@ class BirthChartViewPage extends StatelessWidget {
                 Text(planet.positionString,
                     style: TextStyle(color: context.gc.lilac)),
                 Text(
-                  'Casa ${planet.houseNumber}',
+                  '$houseWord ${planet.houseNumber}',
                   style: TextStyle(
                     color: context.gc.softWhite.withOpacity(0.6),
                     fontSize: 12,
@@ -487,7 +490,7 @@ class BirthChartViewPage extends StatelessWidget {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Toque para saber mais',
+                birthChartContent.ui['tapToLearnMore']!,
                 style: TextStyle(
                   color: context.gc.lilac.withOpacity(0.5),
                   fontSize: 11,
@@ -542,7 +545,7 @@ class BirthChartViewPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Guia para Iniciantes',
+                birthChartContent.ui['beginnersGuide']!,
                 style: TextStyle(
                   color: context.gc.softWhite.withOpacity(0.6),
                   fontSize: 14,
@@ -602,41 +605,20 @@ class BirthChartViewPage extends StatelessWidget {
   }
 }
 
-// Widgets de explicação para iniciantes
+// Widgets de explicação para iniciantes (conteúdo localizado via
+// birthChartContent / ContentLocale).
 
 class _TrioPrincipalExplanation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final content = birthChartContent;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSection(
-          context,
-          '☉ O Sol - Sua Essência',
-          'O Sol representa quem você realmente é no seu núcleo mais profundo. É a sua identidade '
-              'fundamental, seus objetivos de vida e como você brilha no mundo.\n\n'
-              'Na bruxaria, o Sol representa sua força vital, sua energia criativa e seu propósito mágico. '
-              'O signo solar indica que tipo de magia você naturalmente expressa.',
-        ),
-        const SizedBox(height: 16),
-        _buildSection(
-          context,
-          '☽ A Lua - Suas Emoções',
-          'A Lua governa suas emoções, intuição e mundo interior. Ela revela como você processa '
-              'sentimentos, o que precisa para se sentir seguro(a) e suas reações instintivas.\n\n'
-              'Para praticantes de magia, a Lua é extremamente importante. Ela indica seus dons intuitivos, '
-              'sua conexão com o inconsciente e como você se relaciona com os ciclos lunares.',
-        ),
-        const SizedBox(height: 16),
-        _buildSection(
-          context,
-          '⬆ O Ascendente - Sua Máscara',
-          'O Ascendente (ou signo nascente) é como você se apresenta ao mundo e as primeiras '
-              'impressões que causa. É sua "máscara social" e aparência externa.\n\n'
-              'Na prática mágica, o Ascendente influencia como sua energia é percebida pelos outros '
-              'e pode indicar que tipo de trabalho mágico você atrai naturalmente.',
-        ),
-        const SizedBox(height: 16),
+        for (final section in content.trioSections) ...[
+          _buildSection(context, section.title, section.body),
+          const SizedBox(height: 16),
+        ],
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -648,7 +630,7 @@ class _TrioPrincipalExplanation extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '💡 Por que é importante?',
+                content.trioTip.title,
                 style: TextStyle(
                   color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
@@ -656,9 +638,7 @@ class _TrioPrincipalExplanation extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Esses três pontos formam a base da sua personalidade astrológica. '
-                'Se você está começando na astrologia, entender seu Sol, Lua e Ascendente '
-                'é o primeiro passo para se conhecer através das estrelas.',
+                content.trioTip.body,
                 style: TextStyle(
                   color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,
@@ -675,42 +655,22 @@ class _TrioPrincipalExplanation extends StatelessWidget {
 class _PlanetasPessoaisExplanation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final content = birthChartContent;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Os planetas pessoais são aqueles que se movem rapidamente pelo zodíaco e '
-          'influenciam aspectos do dia a dia da sua personalidade.',
+          content.personalIntro,
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
         const SizedBox(height: 16),
-        _buildSection(
-          context,
-          '☿ Mercúrio - Comunicação',
-          'Mercúrio governa como você pensa, se comunica e processa informações. '
-              'Influencia sua forma de aprender, falar e escrever.\n\n'
-              'Na magia: Indica como você lança encantamentos, escreve feitiços e se comunica com o divino.',
-        ),
-        const SizedBox(height: 16),
-        _buildSection(
-          context,
-          '♀ Vênus - Amor e Beleza',
-          'Vênus rege o amor, relacionamentos, beleza e prazer. Mostra o que você valoriza, '
-              'como se relaciona romanticamente e seu senso estético.\n\n'
-              'Na magia: Influencia trabalhos de amor (sempre éticos!), prosperidade e beleza do altar.',
-        ),
-        const SizedBox(height: 16),
-        _buildSection(
-          context,
-          '♂ Marte - Ação e Energia',
-          'Marte representa sua energia de ação, como você luta pelo que quer, sua coragem '
-              'e também raiva. É o planeta da iniciativa e determinação.\n\n'
-              'Na magia: Indica sua energia protetora, capacidade de banimento e força de vontade mágica.',
-        ),
-        const SizedBox(height: 16),
+        for (final section in content.personalSections) ...[
+          _buildSection(context, section.title, section.body),
+          const SizedBox(height: 16),
+        ],
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -722,7 +682,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '✨ Dica para iniciantes',
+                content.personalTip.title,
                 style: TextStyle(
                   color: context.gc.mint,
                   fontWeight: FontWeight.bold,
@@ -730,9 +690,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Esses planetas mudam de signo com frequência, por isso pessoas nascidas no mesmo dia '
-                'podem ter posições diferentes. Confira o seu Perfil Mágico para uma análise '
-                'personalizada de cada planeta.',
+                content.personalTip.body,
                 style: TextStyle(
                   color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,
@@ -749,32 +707,26 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
 class _PlanetasSociaisExplanation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final content = birthChartContent;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Júpiter e Saturno são os planetas sociais: fazem a ponte entre a sua '
-          'personalidade individual e o mundo coletivo — sua relação com a '
-          'sociedade, o crescimento, as regras, as responsabilidades e o amadurecimento.',
+          content.socialIntro,
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
         const SizedBox(height: 16),
-        _buildSection(
-          context,
-          '♃ Júpiter - Expansão',
-          'Expansão, fé, conhecimento, oportunidades e visão de mundo. Mostra onde '
-              'você cresce, confia e encontra facilidade e sorte na vida.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          '♄ Saturno - Estrutura',
-          'Limites, disciplina, dever, medo, estrutura e amadurecimento. Indica onde '
-              'você aprende com desafios, assume responsabilidades e constrói solidez.',
-        ),
+        for (var i = 0; i < content.socialSections.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          _buildSection(
+            context,
+            content.socialSections[i].title,
+            content.socialSections[i].body,
+          ),
+        ],
       ],
     );
   }
@@ -783,39 +735,26 @@ class _PlanetasSociaisExplanation extends StatelessWidget {
 class _PlanetasTranspessoaisExplanation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final content = birthChartContent;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Urano, Netuno e Plutão são os planetas transpessoais (ou geracionais). '
-          'Movem-se lentamente e ficam anos em cada signo, então gerações inteiras '
-          'os compartilham — falam de mudanças coletivas, espirituais e profundas.',
+          content.transpersonalIntro,
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
         const SizedBox(height: 16),
-        _buildSection(
-          context,
-          '♅ Urano - Ruptura',
-          'Ruptura, liberdade, inovação e revolução. Onde você quebra padrões, '
-              'busca autenticidade e abre caminhos novos.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          '♆ Netuno - Dissolução',
-          'Sonhos, espiritualidade, idealização, dissolução e ilusão. Sua conexão '
-              'com o transcendente, a imaginação e a compaixão.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          '♇ Plutão - Transformação',
-          'Poder, crise, morte simbólica, transformação e regeneração. Onde você '
-              'se reinventa profundamente e renasce.',
-        ),
+        for (var i = 0; i < content.transpersonalSections.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          _buildSection(
+            context,
+            content.transpersonalSections[i].title,
+            content.transpersonalSections[i].body,
+          ),
+        ],
       ],
     );
   }
@@ -824,76 +763,26 @@ class _PlanetasTranspessoaisExplanation extends StatelessWidget {
 class _NodosExplanation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final content = birthChartContent;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Além dos planetas, o mapa tem pontos e eixos calculados — cruzamentos, '
-          'ângulos e apogeus que não são corpos celestes, mas revelam camadas '
-          'profundas do destino, da sombra e da alma.',
+          content.pointsIntro,
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
         const SizedBox(height: 16),
-        _buildSection(
-          context,
-          'MC · Meio do Céu - Vocação',
-          'O ponto mais alto do mapa (cúspide da Casa 10). Mostra a sua vocação, a '
-              'imagem pública, a carreira e o legado que você constrói no mundo.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          'IC · Fundo do Céu - Raízes',
-          'O ponto mais baixo (cúspide da Casa 4), oposto ao MC. Fala das suas '
-              'raízes, do lar, da família e da base emocional mais íntima.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          'Dsc · Descendente - O Outro',
-          'A cúspide da Casa 7, oposta ao Ascendente. Descreve os relacionamentos, '
-              'as parcerias e as qualidades que você busca (ou projeta) no outro.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          'Vx · Vértex - Destino',
-          'Um ponto sensível ligado a encontros fatídicos e viradas do destino — '
-              'situações e pessoas que chegam como se fossem "escritas".',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          '⚸ Lilith - Lua Negra',
-          'O apogeu da órbita lunar. Representa o seu poder instintivo, a sombra, o '
-              'desejo indomado e aquilo que se recusa a ser domesticado. Na bruxaria, '
-              'é o portal da bruxa selvagem e da soberania feminina.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          '⊗ Parte da Fortuna - Sorte',
-          'Ponto árabe calculado a partir do Sol, da Lua e do Ascendente. Indica '
-              'onde moram a sua sorte natural, a prosperidade e o bem-estar — o lugar '
-              'de fluidez e alegria no mapa.',
-        ),
-        const SizedBox(height: 16),
-        _buildSection(
-          context,
-          '☊ Nodo Norte - Crescimento',
-          'Aponta as experiências que exigem crescimento e desenvolvimento — a '
-              'direção para onde a sua alma caminha nesta vida.',
-        ),
-        const SizedBox(height: 12),
-        _buildSection(
-          context,
-          '☋ Nodo Sul - Bagagem',
-          'Hábitos, talentos e padrões familiares ou automáticos — o repertório que '
-              'você já traz e no qual tende a se acomodar.',
-        ),
+        for (var i = 0; i < content.pointsSections.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          _buildSection(
+            context,
+            content.pointsSections[i].title,
+            content.pointsSections[i].body,
+          ),
+        ],
       ],
     );
   }
@@ -902,42 +791,25 @@ class _NodosExplanation extends StatelessWidget {
 class _CasasExplanation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final content = birthChartContent;
+    final houseWord = content.ui['houseWord']!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'As 12 casas astrológicas representam diferentes áreas da sua vida. Cada casa '
-          'é governada pelo signo que está na sua cúspide (início).',
+          content.housesIntro,
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
         const SizedBox(height: 16),
-        _buildHouseRow(
+        for (var n = 1; n <= 12; n++)
+          _buildHouseRow(
             context,
-            'Casa 1', 'Identidade, aparência física, como você inicia coisas'),
-        _buildHouseRow(
-            context,
-            'Casa 2', 'Recursos, dinheiro, valores pessoais, autoestima'),
-        _buildHouseRow(context, 'Casa 3', 'Comunicação, irmãos, vizinhos, pensamento'),
-        _buildHouseRow(context, 'Casa 4', 'Lar, família, raízes, vida privada'),
-        _buildHouseRow(context, 'Casa 5', 'Criatividade, romance, filhos, diversão'),
-        _buildHouseRow(context, 'Casa 6', 'Saúde, rotina, trabalho diário, serviço'),
-        _buildHouseRow(context, 'Casa 7', 'Parcerias, casamento, contratos, o outro'),
-        _buildHouseRow(
-            context,
-            'Casa 8', 'Transformação, sexualidade, morte/renascimento, magia'),
-        _buildHouseRow(
-            context,
-            'Casa 9', 'Filosofia, viagens, ensino superior, expansão'),
-        _buildHouseRow(
-            context,
-            'Casa 10', 'Carreira, reputação, status, missão de vida'),
-        _buildHouseRow(context, 'Casa 11', 'Amizades, grupos, sonhos, causas sociais'),
-        _buildHouseRow(
-            context,
-            'Casa 12', 'Inconsciente, espiritualidade, karma, retiros'),
+            '$houseWord $n',
+            content.houseMeanings[n]!,
+          ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(12),
@@ -950,7 +822,7 @@ class _CasasExplanation extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '🔮 Casas importantes para bruxaria',
+                content.housesTip.title,
                 style: TextStyle(
                   color: context.gc.lilac,
                   fontWeight: FontWeight.bold,
@@ -958,9 +830,7 @@ class _CasasExplanation extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'A Casa 8 (magia, transformação, mistérios) e Casa 12 (espiritualidade, intuição, '
-                'conexão com o divino) são especialmente importantes para praticantes de magia. '
-                'Veja seu Perfil Mágico para uma análise detalhada dessas casas.',
+                content.housesTip.body,
                 style: TextStyle(
                   color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,
@@ -1008,48 +878,32 @@ class _CasasExplanation extends StatelessWidget {
 class _AspectosExplanation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final content = birthChartContent;
+
+    Color colorFor(AspectType type) {
+      if (type.isHarmonious) return context.gc.success;
+      if (type.isChallenging) return context.gc.alert;
+      return context.gc.lilac;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Aspectos são as relações angulares entre os planetas. Eles mostram como as energias '
-          'planetárias interagem entre si no seu mapa.',
+          content.aspectsIntro,
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.8),
             height: 1.5,
           ),
         ),
         const SizedBox(height: 16),
-        _buildAspectType(
-          context,
-          '☌ Conjunção (0°)',
-          'Os planetas estão juntos. Energia intensa e fusionada.',
-          context.gc.lilac,
-        ),
-        _buildAspectType(
-          context,
-          '⚹ Sextil (60°)',
-          'Aspecto harmonioso. Oportunidades e talentos naturais.',
-          context.gc.success,
-        ),
-        _buildAspectType(
-          context,
-          '□ Quadratura (90°)',
-          'Aspecto desafiador. Tensão que gera crescimento.',
-          context.gc.alert,
-        ),
-        _buildAspectType(
-          context,
-          '△ Trígono (120°)',
-          'Aspecto muito harmonioso. Fluxo fácil de energia.',
-          context.gc.success,
-        ),
-        _buildAspectType(
-          context,
-          '☍ Oposição (180°)',
-          'Aspecto desafiador. Polaridade e necessidade de equilíbrio.',
-          context.gc.alert,
-        ),
+        for (final type in AspectType.values)
+          _buildAspectType(
+            context,
+            '${type.symbol} ${type.displayName} (${type.angle.toInt()}°)',
+            content.aspectTypeMeanings[type]!,
+            colorFor(type),
+          ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(12),
@@ -1062,7 +916,7 @@ class _AspectosExplanation extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '💫 Importante saber',
+                content.aspectsTip.title,
                 style: TextStyle(
                   color: context.gc.mint,
                   fontWeight: FontWeight.bold,
@@ -1070,10 +924,7 @@ class _AspectosExplanation extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Aspectos "desafiadores" não são ruins! Eles indicam áreas de crescimento e '
-                'potencial. Muitas vezes são onde desenvolvemos nossas maiores forças.\n\n'
-                'Na magia, entender seus aspectos ajuda a saber quais energias trabalham '
-                'bem juntas e quais precisam de mais atenção nos seus rituais.',
+                content.aspectsTip.body,
                 style: TextStyle(
                   color: context.gc.softWhite.withOpacity(0.8),
                   height: 1.5,

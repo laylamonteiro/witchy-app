@@ -1,8 +1,13 @@
+import '../content/content_locale.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../services/data_sync_service.dart';
 import '../services/debug_log_service.dart';
 import '../services/premium_access.dart';
+
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 /// Provider que gerencia o estado de sincronização e expõe para a UI
 /// NOTA: Sincronização é uma funcionalidade PREMIUM
@@ -74,13 +79,13 @@ class SyncProvider extends ChangeNotifier {
   String get statusText {
     switch (_status) {
       case SyncStatus.idle:
-        return 'Sincronização ativa';
+        return _l10n.syncActive;
       case SyncStatus.syncing:
         return 'Sincronizando...';
       case SyncStatus.success:
         return 'Sincronizado';
       case SyncStatus.error:
-        return 'Erro na sincronização';
+        return _l10n.syncError;
       case SyncStatus.conflict:
         return '${_conflicts.length} conflito(s)';
     }
@@ -92,21 +97,21 @@ class SyncProvider extends ChangeNotifier {
 
     final diff = DateTime.now().difference(_lastSyncTime!);
     if (diff.inMinutes < 1) return 'Agora mesmo';
-    if (diff.inMinutes < 60) return 'Há ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'Há ${diff.inHours} h';
-    return 'Há ${diff.inDays} dias';
+    if (diff.inMinutes < 60) return _l10n.syncAgoMinutes(diff.inMinutes);
+    if (diff.inHours < 24) return _l10n.syncAgoHours(diff.inHours);
+    return _l10n.syncAgoDays(diff.inDays);
   }
 
   /// Inicia sincronização manual
   Future<SyncResult> sync() async {
     if (!PremiumAccess.instance.isPremium) {
-      _lastError = 'Sincronização é uma funcionalidade Premium';
+      _lastError = _l10n.syncPremiumOnly;
       notifyListeners();
       return SyncResult.error(_lastError!);
     }
 
     if (!_syncService.isReady) {
-      _lastError = 'Usuário não autenticado';
+      _lastError = _l10n.syncNotAuthenticated;
       notifyListeners();
       return SyncResult.error(_lastError!);
     }
@@ -129,11 +134,11 @@ class SyncProvider extends ChangeNotifier {
   /// Upload completo (enviar tudo para nuvem)
   Future<SyncResult> fullUpload() async {
     if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error('Sincronização é uma funcionalidade Premium');
+      return SyncResult.error(_l10n.syncPremiumOnly);
     }
 
     if (!_syncService.isReady) {
-      return SyncResult.error('Usuário não autenticado');
+      return SyncResult.error(_l10n.syncNotAuthenticated);
     }
 
     await debugLog('SYNC', 'Iniciando upload completo');
@@ -150,11 +155,11 @@ class SyncProvider extends ChangeNotifier {
   /// Download completo (baixar tudo da nuvem)
   Future<SyncResult> fullDownload() async {
     if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error('Sincronização é uma funcionalidade Premium');
+      return SyncResult.error(_l10n.syncPremiumOnly);
     }
 
     if (!_syncService.isReady) {
-      return SyncResult.error('Usuário não autenticado');
+      return SyncResult.error(_l10n.syncNotAuthenticated);
     }
 
     await debugLog('SYNC', 'Iniciando download completo');

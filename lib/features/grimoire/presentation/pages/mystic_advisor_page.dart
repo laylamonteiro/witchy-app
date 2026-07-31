@@ -53,7 +53,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
     if (_questionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.advisorAskFirst),
+          content: Text(AppLocalizations.of(context).advisorAskFirst),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -66,7 +66,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              AppLocalizations.of(context)!.advisorDailyLimit),
+              AppLocalizations.of(context).advisorDailyLimit),
           backgroundColor: context.gc.alert,
           duration: Duration(seconds: 4),
         ),
@@ -104,27 +104,27 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
       if (!mounted) return;
 
       String errorMessage =
-          AppLocalizations.of(context)!.advisorGenericError;
+          AppLocalizations.of(context).advisorGenericError;
 
       if (e.toString().contains('limit') ||
           e.toString().contains('quota') ||
           e.toString().contains('usage') ||
           e.toString().contains('429')) {
         errorMessage =
-            AppLocalizations.of(context)!.advisorRateLimited;
+            AppLocalizations.of(context).advisorRateLimited;
       } else if (e.toString().contains('autenticação') ||
           e.toString().contains('authentication') ||
           e.toString().contains('401')) {
         errorMessage =
-            AppLocalizations.of(context)!.advisorTempError;
+            AppLocalizations.of(context).advisorTempError;
       } else if (e.toString().contains('network') ||
           e.toString().contains('connection') ||
           e.toString().contains('timeout')) {
         errorMessage =
-            AppLocalizations.of(context)!.advisorConnectionError;
+            AppLocalizations.of(context).advisorConnectionError;
       } else if (e.toString().contains('503')) {
         errorMessage =
-            AppLocalizations.of(context)!.advisorPortalClosed;
+            AppLocalizations.of(context).advisorPortalClosed;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -158,7 +158,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.profileMysticAdvisor),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).profileMysticAdvisor),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -179,7 +179,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    AppLocalizations.of(context)!.advisorWisdomTitle,
+                    AppLocalizations.of(context).advisorWisdomTitle,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
@@ -187,7 +187,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context)!.advisorIntro,
+                    AppLocalizations.of(context).advisorIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -204,7 +204,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                 controller: _questionController,
                 style: TextStyle(color: context.gc.softWhite),
                 decoration: InputDecoration(
-                  hintText: AppLocalizations.of(context)!.advisorQuestionHint,
+                  hintText: AppLocalizations.of(context).advisorQuestionHint,
                   hintStyle: TextStyle(
                     color: context.gc.softWhite.withOpacity(0.5),
                   ),
@@ -248,7 +248,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                     )
                   : const Icon(Icons.auto_stories),
               label: Text(
-                  _isAsking ? AppLocalizations.of(context)!.advisorConsultingStars : AppLocalizations.of(context)!.advisorConsult),
+                  _isAsking ? AppLocalizations.of(context).advisorConsultingStars : AppLocalizations.of(context).advisorConsult),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.darkBackground,
@@ -269,7 +269,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                 return Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    AppLocalizations.of(context)!.advisorRemainingToday('$remaining/${UserModel.freeAdvisorConsultationsLimit}'),
+                    AppLocalizations.of(context).advisorRemainingToday('$remaining/${UserModel.freeAdvisorConsultationsLimit}'),
                     style: TextStyle(
                       color: remaining > 0
                           ? context.gc.softWhite.withOpacity(0.6)
@@ -293,7 +293,7 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
                         const Text('🌙', style: TextStyle(fontSize: 28)),
                         const SizedBox(width: 12),
                         Text(
-                          AppLocalizations.of(context)!.advisorAnswers,
+                          AppLocalizations.of(context).advisorAnswers,
                           style: TextStyle(
                             color: context.gc.lilac,
                             fontSize: 20,

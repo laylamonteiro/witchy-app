@@ -3,7 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../content/content_locale.dart';
 import '../../theme/grimoire_colors.dart';
+import 'cat_bubble_messages_en.dart';
+import 'cat_bubble_messages_es.dart';
+import 'cat_bubble_messages_pt.dart';
 import '../../../features/astrology/presentation/pages/daily_magical_weather_page.dart';
 import '../../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -11,15 +15,13 @@ import '../../../features/auth/presentation/providers/auth_provider.dart';
 class CatBubbleMessages {
   CatBubbleMessages._();
 
-  static const List<String> messages = [
-    'Que tal olhar o clima mágico do seu dia? 🪄',
-    'Seu clima mágico já foi revelado hoje 🔮',
-    'Os astros prepararam algo interessante para você 👀',
-    'Descubra a energia mágica de hoje ✨',
-    'O clima mágico do dia está esperando por você 🌙',
-    'Hoje é um bom dia para explorar a magia ao seu redor 🌟',
-    'A magia do dia está em suas mãos, descubra agora! 🧙‍'
-  ];
+  /// Lista no idioma atual (mesma contagem nas 3 línguas — a rotação por
+  /// dia do ano continua estável entre idiomas).
+  static List<String> get messages => ContentLocale.instance.select(
+        pt: catBubbleMessagesPt,
+        en: catBubbleMessagesEn,
+        es: catBubbleMessagesEs,
+      );
 
   /// Mensagem determinística do dia: rotaciona pelo dia do ano.
   static String messageForDate(DateTime date) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
@@ -53,7 +54,7 @@ Future<void> pumpFreeWritingTab(
   await tester.pumpWidget(
     ChangeNotifierProvider<FreeWritingProvider>.value(
       value: provider,
-      child: MaterialApp(
+      child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
         home: const Scaffold(body: Text('Home')),
         routes: {
           '/write': (_) => const FreeWritingTab(),

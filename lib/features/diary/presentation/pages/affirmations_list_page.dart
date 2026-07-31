@@ -7,7 +7,6 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/magical_fab.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'affirmation_form_page.dart';
 
@@ -33,7 +32,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
       body: Consumer<AffirmationProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return LoadingWidget(message: AppLocalizations.of(context)!.diaryLoadingAffirmations);
+            return LoadingWidget(message: AppLocalizations.of(context).diaryLoadingAffirmations);
           }
 
           return Column(
@@ -47,7 +46,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                     children: [
                       _buildCategoryChip(
                         context,
-                        AppLocalizations.of(context)!.diaryAllCategories,
+                        AppLocalizations.of(context).diaryAllCategories,
                         null,
                         provider.selectedCategory == null,
                       ),
@@ -73,9 +72,9 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
                 child: provider.affirmations.isEmpty
                     ? EmptyStateWidget(
                         message:
-                            AppLocalizations.of(context)!.diaryEmptyAffirmationsCategory,
+                            AppLocalizations.of(context).diaryEmptyAffirmationsCategory,
                         icon: Icons.auto_awesome,
-                        actionText: AppLocalizations.of(context)!.diaryAddAffirmation,
+                        actionText: AppLocalizations.of(context).diaryAddAffirmation,
                         onAction: () => _navigateToForm(context),
                       )
                     : ListView.builder(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
 import '../../data/models/color_model.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -55,7 +57,7 @@ class ColorDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Propriedades Mágicas',
+                    AppLocalizations.of(context).encySectionMagicProps,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
@@ -79,11 +81,11 @@ class ColorDetailPage extends StatelessWidget {
               child: PremiumContentSection(
                 feature: AppFeature.encyclopediaColorsDetails,
                 title: Text(
-                  'Usos Mágicos',
+                  AppLocalizations.of(context).encySectionMagicUses,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 subtitle:
-                    'Formas de aplicar esta cor em intenções, rituais e práticas mágicas.',
+                    AppLocalizations.of(context).encyColorUsesSub,
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

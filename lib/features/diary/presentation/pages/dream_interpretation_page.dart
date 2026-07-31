@@ -66,7 +66,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
     if (text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.dreamDescribeFirst),
+          content: Text(AppLocalizations.of(context).dreamDescribeFirst),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -129,11 +129,11 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
     final notes = _notesController.text.trim();
     final dream = DreamModel(
       title: _titleController.text.trim().isEmpty
-          ? AppLocalizations.of(context)!.dreamInterpretedTitle
+          ? AppLocalizations.of(context).dreamInterpretedTitle
           : _titleController.text.trim(),
       content: notes.isEmpty
           ? _dreamController.text.trim()
-          : '${_dreamController.text.trim()}\n\n${AppLocalizations.of(context)!.dreamNotesPrefix}: $notes',
+          : '${_dreamController.text.trim()}\n\n${AppLocalizations.of(context).dreamNotesPrefix}: $notes',
       tags: const ['interpretado'],
       feeling: _feelingsController.text.trim().isEmpty
           ? null
@@ -148,7 +148,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
     setState(() => _saved = true);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context)!.dreamSavedToDiary),
+        content: Text(AppLocalizations.of(context).dreamSavedToDiary),
         backgroundColor: context.gc.success,
       ),
     );
@@ -163,7 +163,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.diaryInterpretDream),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).diaryInterpretDream),
       ),
       // Sem acesso: corpo vazio enquanto o paywall (subido no initState)
       // aparece por cima e a tela se fecha ao dispensar.
@@ -184,7 +184,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context)!.dreamTellYourDream,
+                  AppLocalizations.of(context).dreamTellYourDream,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: context.gc.lilac,
                         fontWeight: FontWeight.bold,
@@ -192,7 +192,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context)!.dreamTellHelp,
+                  AppLocalizations.of(context).dreamTellHelp,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.textSecondary,
                       ),
@@ -204,7 +204,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                   minLines: 4,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.dreamTextHint,
+                    hintText: AppLocalizations.of(context).dreamTextHint,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -214,7 +214,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                   minLines: 1,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.dreamFeelingOptional,
+                    labelText: AppLocalizations.of(context).dreamFeelingOptional,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -234,10 +234,10 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                         : const Icon(Icons.auto_awesome, size: 18),
                     label: Text(
                       _isInterpreting
-                          ? AppLocalizations.of(context)!.dreamInterpreting
+                          ? AppLocalizations.of(context).dreamInterpreting
                           : (_interpretation == null
-                              ? AppLocalizations.of(context)!.diaryInterpretDream
-                              : AppLocalizations.of(context)!.dreamInterpretAgain),
+                              ? AppLocalizations.of(context).diaryInterpretDream
+                              : AppLocalizations.of(context).dreamInterpretAgain),
                     ),
                   ),
                 ),
@@ -254,7 +254,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                       Text('🌙 ',
                           style: TextStyle(color: context.gc.starYellow)),
                       Text(
-                        AppLocalizations.of(context)!.dreamInterpretationLabel,
+                        AppLocalizations.of(context).dreamInterpretationLabel,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: context.gc.lilac,
@@ -273,7 +273,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.dreamSaveToDiary,
+                    AppLocalizations.of(context).dreamSaveToDiary,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
@@ -283,7 +283,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                   TextField(
                     controller: _titleController,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.diaryTitleLabel),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context).diaryTitleLabel),
                   ),
                   const SizedBox(height: 12),
                   InkWell(
@@ -297,7 +297,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                               size: 18, color: context.gc.lilac),
                           const SizedBox(width: 8),
                           Text(
-                            '${AppLocalizations.of(context)!.dreamDateLabel}: '
+                            '${AppLocalizations.of(context).dreamDateLabel}: '
                             '${_dreamDate.day.toString().padLeft(2, '0')}/'
                             '${_dreamDate.month.toString().padLeft(2, '0')}/'
                             '${_dreamDate.year}',
@@ -314,7 +314,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                     minLines: 1,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.dreamNotesOptional,
+                      labelText: AppLocalizations.of(context).dreamNotesOptional,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -326,7 +326,7 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
                         _saved ? Icons.check : Icons.bookmark_add_outlined,
                         size: 18,
                       ),
-                      label: Text(_saved ? AppLocalizations.of(context)!.dreamSavedShort : AppLocalizations.of(context)!.commonSave),
+                      label: Text(_saved ? AppLocalizations.of(context).dreamSavedShort : AppLocalizations.of(context).commonSave),
                     ),
                   ),
                 ],

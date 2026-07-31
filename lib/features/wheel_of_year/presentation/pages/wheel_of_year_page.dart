@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/wheel_of_year_provider.dart';
@@ -33,7 +34,7 @@ class WheelOfYearPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Próximo Sabbat',
+                          AppLocalizations.of(context).wheelNextSabbat,
                           style: Theme.of(context).textTheme.headlineSmall,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -74,7 +75,7 @@ class WheelOfYearPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Calendário dos Sabbats',
+                      AppLocalizations.of(context).wheelCalendar,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 16),
@@ -100,19 +101,19 @@ class WheelOfYearPage extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Sobre a Roda do Ano',
+                          AppLocalizations.of(context).wheelAbout,
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'A Roda do Ano representa o ciclo anual de celebrações da natureza. São 8 sabbats que marcam mudanças sazonais: 4 festivais solares (solstícios e equinócios) e 4 festivais de fogo (datas fixas).',
+                      AppLocalizations.of(context).wheelAboutBody,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Estas datas foram adaptadas para o hemisfério sul, seguindo o ciclo natural das estações.',
+                      AppLocalizations.of(context).wheelAboutSouth,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: context.gc.textSecondary,
                           ),
@@ -141,11 +142,11 @@ class WheelOfYearPage extends StatelessWidget {
   Widget _buildDaysUntilChip(BuildContext context, int days) {
     String text;
     if (days == 0) {
-      text = 'Hoje!';
+      text = AppLocalizations.of(context).wheelToday;
     } else if (days == 1) {
-      text = 'Amanhã';
+      text = AppLocalizations.of(context).wheelTomorrow;
     } else {
-      text = 'Em $days dias';
+      text = AppLocalizations.of(context).wheelInDays(days);
     }
 
     return Container(
@@ -225,10 +226,10 @@ class WheelOfYearPage extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         daysUntil == 0
-                            ? 'Hoje!'
+                            ? AppLocalizations.of(context).wheelToday
                             : daysUntil == 1
-                                ? 'Amanhã'
-                                : 'Em $daysUntil dias',
+                                ? AppLocalizations.of(context).wheelTomorrow
+                                : AppLocalizations.of(context).wheelInDays(daysUntil),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: context.gc.mint,
                               fontWeight: FontWeight.w600,
@@ -327,7 +328,7 @@ class WheelOfYearPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Hemisfério Sul',
+                                AppLocalizations.of(context).wheelSouthHemisphere,
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleMedium
@@ -360,7 +361,7 @@ class WheelOfYearPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Hemisfério Norte',
+                                AppLocalizations.of(context).wheelNorthHemisphere,
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleMedium

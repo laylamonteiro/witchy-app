@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../data/data_sources/spell_localizer.dart';
 import '../../data/models/spell_model.dart';
 import '../../data/repositories/spell_repository.dart';
 
@@ -40,6 +41,8 @@ class SpellProvider with ChangeNotifier {
 
       // Carregar apenas os feitiços do usuário atual + pré-carregados
       _spells = await _repository.getForUser(_currentUserId);
+      // Tradução apenas na apresentação: a seed/SQLite permanece em PT.
+      _spells = _spells.map(SpellLocalizer.localize).toList();
       _isLoading = false;
       notifyListeners();
     } catch (e) {

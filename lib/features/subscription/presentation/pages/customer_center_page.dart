@@ -88,22 +88,6 @@ class _CustomerCenterPageState extends State<CustomerCenterPage> {
     );
   }
 
-  /// Apresenta o Customer Center usando RevenueCat UI nativo
-  ///
-  /// Esta é a forma recomendada de apresentar o Customer Center
-  static Future<void> present(BuildContext context) async {
-    final paymentService = PaymentService();
-    await paymentService.presentCustomerCenter();
-  }
-
-  /// Abre o Customer Center como uma nova página
-  static Future<void> pushPage(BuildContext context) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const CustomerCenterPage(),
-      ),
-    );
-  }
 }
 
 /// Widget de Customer Center inline

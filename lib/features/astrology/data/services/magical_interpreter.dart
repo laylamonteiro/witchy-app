@@ -1,3 +1,4 @@
+import '../data_sources/magical_interpreter_texts.dart';
 import '../models/birth_chart_model.dart';
 import '../models/magical_profile_model.dart';
 import '../models/planet_position_model.dart';
@@ -6,7 +7,12 @@ import '../models/enums.dart';
 
 /// Interpretador Mágico
 ///
-/// Gera perfil mágico personalizado baseado no mapa natal
+/// Gera perfil mágico personalizado baseado no mapa natal.
+///
+/// As frases-template vivem em
+/// `data_sources/magical_interpreter_texts_pt/en/es.dart` e são selecionadas
+/// pelo idioma atual via `ContentLocale` (getter [magicalInterpreterTexts]) —
+/// o perfil é gerado (e persistido) no idioma ativo no momento da geração.
 class MagicalInterpreter {
   static final MagicalInterpreter instance = MagicalInterpreter._();
 
@@ -85,143 +91,54 @@ class MagicalInterpreter {
   }
 
   String _interpretSun(PlanetPosition sun) {
-    switch (sun.sign) {
-      case ZodiacSign.aries:
-        return 'Sua essência mágica é de pioneirismo e coragem. Você é uma bruxa guerreira, '
-            'que age com rapidez e decisão. Seus feitiços mais poderosos envolvem iniciar novos '
-            'ciclos e quebrar barreiras. Use o fogo como seu elemento principal.';
-
-      case ZodiacSign.taurus:
-        return 'Sua essência mágica está enraizada na terra e na manifestação. Você é uma bruxa '
-            'que traz o mundo espiritual para o físico. Seus feitiços mais poderosos envolvem '
-            'prosperidade, sensualidade e beleza. Trabalhe com cristais e ervas.';
-
-      case ZodiacSign.gemini:
-        return 'Sua essência mágica flui através da comunicação e do conhecimento. Você é uma '
-            'bruxa estudiosa, que domina a magia através de palavras e símbolos. Seus feitiços mais '
-            'poderosos envolvem comunicação, aprendizado e versatilidade.';
-
-      case ZodiacSign.cancer:
-        return 'Sua essência mágica flui com as marés lunares. Você é uma bruxa intuitiva, '
-            'profundamente conectada às emoções. Seus feitiços mais poderosos envolvem proteção '
-            'do lar, cura emocional e magia lunar.';
-
-      case ZodiacSign.leo:
-        return 'Sua essência mágica brilha como o Sol. Você é uma bruxa radiante, confiante e '
-            'criativa. Seus feitiços mais poderosos envolvem autoexpressão, criatividade e '
-            'liderança. Use rituais solares.';
-
-      case ZodiacSign.virgo:
-        return 'Sua essência mágica está na precisão e no serviço. Você é uma bruxa meticulosa, '
-            'que domina os detalhes de cada ritual. Seus feitiços mais poderosos envolvem cura, '
-            'purificação e magia herbal.';
-
-      case ZodiacSign.libra:
-        return 'Sua essência mágica busca o equilíbrio e a harmonia. Você é uma bruxa diplomata, '
-            'que trabalha com energias de beleza e justiça. Seus feitiços mais poderosos envolvem '
-            'relacionamentos, harmonia e estética.';
-
-      case ZodiacSign.scorpio:
-        return 'Sua essência mágica mergulha nas profundezas. Você é uma bruxa transformadora, '
-            'que não teme as sombras. Seus feitiços mais poderosos envolvem transformação profunda, '
-            'magia sexual e renascimento.';
-
-      case ZodiacSign.sagittarius:
-        return 'Sua essência mágica busca a sabedoria e a expansão. Você é uma bruxa filósofa, '
-            'que explora diferentes tradições. Seus feitiços mais poderosos envolvem crescimento '
-            'espiritual, proteção em viagens e abundância.';
-
-      case ZodiacSign.capricorn:
-        return 'Sua essência mágica é estruturada e ambiciosa. Você é uma bruxa disciplinada, '
-            'que constrói poder ao longo do tempo. Seus feitiços mais poderosos envolvem manifestação '
-            'material, carreira e magia saturnina.';
-
-      case ZodiacSign.aquarius:
-        return 'Sua essência mágica é inovadora e única. Você é uma bruxa revolucionária, que '
-            'quebra tradições e cria novos caminhos. Seus feitiços mais poderosos envolvem mudança '
-            'social, intuição e magia tecnológica.';
-
-      case ZodiacSign.pisces:
-        return 'Sua essência mágica dissolve fronteiras. Você é uma bruxa mística, profundamente '
-            'conectada ao inconsciente coletivo. Seus feitiços mais poderosos envolvem sonhos, '
-            'mediunidade e compaixão universal.';
-    }
+    return magicalInterpreterTexts.sunEssence[sun.sign]!;
   }
 
   String _interpretMoon(PlanetPosition moon) {
+    final texts = magicalInterpreterTexts;
     final sign = moon.sign;
-    final house = moon.houseNumber;
 
-    String base = 'Sua Lua em ${sign.displayName} na Casa $house ';
+    final complement = texts.moonBySign[sign] ??
+        texts.moonByElement(sign.element.displayName);
 
-    switch (sign) {
-      case ZodiacSign.aries:
-        base += 'traz intuições rápidas e instintivas. Confie em seus primeiros impulsos.';
-        break;
-      case ZodiacSign.taurus:
-        base += 'oferece intuição através dos sentidos. Trabalhe com aromas, texturas e sabores.';
-        break;
-      case ZodiacSign.cancer:
-        base += 'amplifica sua sensibilidade psíquica. Você é naturalmente empática e receptiva.';
-        break;
-      case ZodiacSign.scorpio:
-        base += 'mergulha nas profundezas emocionais. Você tem dons psíquicos poderosos.';
-        break;
-      case ZodiacSign.pisces:
-        base += 'dissolve as fronteiras entre mundos. Você pode ter sonhos proféticos.';
-        break;
-      default:
-        base += 'oferece intuição de acordo com ${sign.element.displayName}. '
-            'Trabalhe com esse elemento para fortalecer sua conexão.';
-    }
-
-    return base;
+    return texts.moonIntro(sign.displayName, moon.houseNumber) + complement;
   }
 
   String _interpretMercury(PlanetPosition mercury) {
-    final sign = mercury.sign;
-
-    switch (sign.element) {
-      case Element.fire:
-        return 'Sua comunicação mágica é direta e inspiradora. Use afirmações poderosas '
-            'e encantamentos falados em voz alta.';
-      case Element.earth:
-        return 'Sua comunicação mágica é prática e fundamentada. Escreva seus feitiços e '
-            'trabalhe com grimórios físicos.';
-      case Element.air:
-        return 'Sua comunicação mágica é versátil e clara. Você é excelente em leitura de runas, '
-            'tarô e outros sistemas divinatórios baseados em símbolos.';
-      case Element.water:
-        return 'Sua comunicação mágica é intuitiva e emocional. Trabalhe com poesia, música e '
-            'expressão criativa em seus rituais.';
-    }
+    return magicalInterpreterTexts.mercuryByElement[mercury.sign.element]!;
   }
 
   String _interpretVenus(PlanetPosition venus) {
-    return 'Sua Vênus em ${venus.sign.displayName} indica que você atrai beleza e prazer através '
-        'de ${venus.sign.element.displayName}. Incorpore esse elemento em feitiços de amor e autocuidado.';
+    return magicalInterpreterTexts.venus(
+      venus.sign.displayName,
+      venus.sign.element.displayName,
+    );
   }
 
   String _interpretMars(PlanetPosition mars) {
-    return 'Seu Marte em ${mars.sign.displayName} mostra que sua energia protetora se manifesta através '
-        'de ${mars.sign.element.displayName}. Use esse elemento em feitiços de proteção e banimento.';
+    return magicalInterpreterTexts.mars(
+      mars.sign.displayName,
+      mars.sign.element.displayName,
+    );
   }
 
   String _interpretHouse8(House house, List<PlanetPosition> planets) {
-    String interpretation = 'Sua Casa 8 (magia e ocultismo) está em ${house.sign.displayName}. ';
+    final texts = magicalInterpreterTexts;
+    String interpretation = texts.house8Intro(house.sign.displayName);
 
     if (planets.isEmpty) {
-      interpretation += 'Embora não haja planetas aqui, você ainda pode desenvolver suas habilidades '
-          'mágicas através da prática consciente.';
+      interpretation += texts.house8NoPlanets;
     } else {
-      interpretation += 'Com ${planets.length} planeta(s) aqui, você tem forte afinidade natural '
-          'com magia: ${planets.map((p) => p.planet.displayName).join(', ')}. ';
+      interpretation += texts.house8WithPlanets(
+        planets.length,
+        planets.map((p) => p.planet.displayName).join(', '),
+      );
 
       if (planets.any((p) => p.planet == Planet.moon)) {
-        interpretation += 'A Lua aqui intensifica sua intuição mágica. ';
+        interpretation += texts.house8Moon;
       }
       if (planets.any((p) => p.planet == Planet.pluto)) {
-        interpretation += 'Plutão aqui indica poderes transformadores profundos. ';
+        interpretation += texts.house8Pluto;
       }
     }
 
@@ -229,19 +146,22 @@ class MagicalInterpreter {
   }
 
   String _interpretHouse12(House house, List<PlanetPosition> planets) {
-    String interpretation = 'Sua Casa 12 (espiritualidade) está em ${house.sign.displayName}. ';
+    final texts = magicalInterpreterTexts;
+    String interpretation = texts.house12Intro(house.sign.displayName);
 
     if (planets.isEmpty) {
-      interpretation += 'Desenvolva sua conexão espiritual através de meditação e sonhos.';
+      interpretation += texts.house12NoPlanets;
     } else {
-      interpretation += 'Com ${planets.length} planeta(s) aqui, você tem forte conexão com o divino: '
-          '${planets.map((p) => p.planet.displayName).join(', ')}. ';
+      interpretation += texts.house12WithPlanets(
+        planets.length,
+        planets.map((p) => p.planet.displayName).join(', '),
+      );
 
       if (planets.any((p) => p.planet == Planet.neptune)) {
-        interpretation += 'Netuno aqui amplifica sua mediunidade e conexão mística. ';
+        interpretation += texts.house12Neptune;
       }
       if (planets.any((p) => p.planet == Planet.moon)) {
-        interpretation += 'A Lua aqui traz sonhos proféticos e forte intuição. ';
+        interpretation += texts.house12Moon;
       }
     }
 
@@ -249,139 +169,98 @@ class MagicalInterpreter {
   }
 
   List<String> _calculateStrengths(BirthChartModel chart) {
+    final texts = magicalInterpreterTexts;
     final strengths = <String>[];
 
     // Baseado em aspectos harmônicos
-    final harmonicAspects = chart.aspects.where((a) => a.type.isHarmonious).toList();
+    final harmonicAspects =
+        chart.aspects.where((a) => a.type.isHarmonious).toList();
 
     if (harmonicAspects.any((a) =>
         (a.planet1 == Planet.moon || a.planet2 == Planet.moon) &&
         (a.planet1 == Planet.neptune || a.planet2 == Planet.neptune))) {
-      strengths.add('Intuição psíquica natural');
+      strengths.add(texts.strengthPsychicIntuition);
     }
 
     if (harmonicAspects.any((a) =>
         (a.planet1 == Planet.sun || a.planet2 == Planet.sun) &&
         (a.planet1 == Planet.moon || a.planet2 == Planet.moon))) {
-      strengths.add('Equilíbrio entre ação e intuição');
+      strengths.add(texts.strengthSunMoonBalance);
     }
 
     // Baseado em planetas em casas mágicas
     if (chart.getPlanetsInHouse(8).isNotEmpty) {
-      strengths.add('Afinidade natural com magia');
+      strengths.add(texts.strengthMagicAffinity);
     }
 
     if (chart.getPlanetsInHouse(12).isNotEmpty) {
-      strengths.add('Conexão espiritual profunda');
+      strengths.add(texts.strengthSpiritualConnection);
     }
 
     // Baseado no elemento dominante
     final element = _getDominantElement(chart.getElementDistribution());
-    strengths.add('Domínio do elemento ${element.displayName}');
+    strengths.add(texts.strengthDominantElement(element.displayName));
 
     return strengths;
   }
 
-  List<String> _recommendPractices(BirthChartModel chart, Element dominantElement) {
+  List<String> _recommendPractices(
+      BirthChartModel chart, Element dominantElement) {
+    final texts = magicalInterpreterTexts;
     final practices = <String>[];
 
     // Baseado no elemento dominante
-    switch (dominantElement) {
-      case Element.fire:
-        practices.addAll([
-          'Magia de velas',
-          'Rituais sob o sol',
-          'Trabalho com fogo sagrado',
-          'Feitiços de ação rápida',
-        ]);
-        break;
-      case Element.earth:
-        practices.addAll([
-          'Bruxaria verde (ervas e plantas)',
-          'Magia de cristais',
-          'Rituais de manifestação',
-          'Trabalho com altar permanente',
-        ]);
-        break;
-      case Element.air:
-        practices.addAll([
-          'Magia de palavras e encantamentos',
-          'Leitura de runas e tarô',
-          'Trabalho com incensos',
-          'Comunicação com espíritos',
-        ]);
-        break;
-      case Element.water:
-        practices.addAll([
-          'Magia lunar',
-          'Banhos rituais',
-          'Trabalho com sonhos',
-          'Adivinhação por água',
-        ]);
-        break;
-    }
+    practices.addAll(texts.practicesByElement[dominantElement]!);
 
     // Baseado em planetas em casas específicas
     if (chart.getPlanetsInHouse(8).isNotEmpty) {
-      practices.add('Magia sexual e transformação profunda');
-      practices.add('Trabalho com sombras');
+      practices.addAll(texts.practicesHouse8);
     }
 
     if (chart.getPlanetsInHouse(12).isNotEmpty) {
-      practices.add('Meditação e viagens astrais');
-      practices.add('Trabalho com o inconsciente');
+      practices.addAll(texts.practicesHouse12);
     }
 
     return practices;
   }
 
   List<String> _recommendTools(BirthChartModel chart, Element dominantElement) {
+    final texts = magicalInterpreterTexts;
     final tools = <String>[];
 
     // Cristais baseados no elemento
-    switch (dominantElement) {
-      case Element.fire:
-        tools.addAll(['Citrino', 'Cornalina', 'Rubi', 'Velas vermelhas/laranja']);
-        break;
-      case Element.earth:
-        tools.addAll(['Quartzo Verde', 'Turmalina Negra', 'Sal grosso', 'Ervas']);
-        break;
-      case Element.air:
-        tools.addAll(['Quartzo Transparente', 'Ametista', 'Incensos', 'Penas']);
-        break;
-      case Element.water:
-        tools.addAll(['Pedra da Lua', 'Água lunar', 'Conchas', 'Espelho']);
-        break;
-    }
+    tools.addAll(texts.toolsByElement[dominantElement]!);
 
     // Baseado no Sol
-    tools.add('Cristal de ${chart.sun.sign.displayName}');
+    tools.add(texts.sunCrystal(chart.sun.sign.displayName));
 
     // Baseado na Lua
-    tools.add('Erva de ${chart.moon.sign.displayName}');
+    tools.add(texts.moonHerb(chart.moon.sign.displayName));
 
     return tools;
   }
 
   List<String> _identifyShadowWork(BirthChartModel chart) {
+    final texts = magicalInterpreterTexts;
     final shadowWork = <String>[];
 
     // Baseado em aspectos desafiadores
-    final challengingAspects = chart.aspects.where((a) => a.type.isChallenging).toList();
+    final challengingAspects =
+        chart.aspects.where((a) => a.type.isChallenging).toList();
 
     if (challengingAspects.any((a) =>
         (a.planet1 == Planet.sun || a.planet2 == Planet.sun) &&
         (a.planet1 == Planet.moon || a.planet2 == Planet.moon))) {
-      shadowWork.add('Integrar ego consciente com necessidades emocionais');
+      shadowWork.add(texts.shadowSunMoon);
     }
 
-    if (challengingAspects.any((a) =>
-        a.planet1 == Planet.saturn || a.planet2 == Planet.saturn)) {
-      shadowWork.add('Trabalhar com limitações e estruturas rígidas');
+    if (challengingAspects
+        .any((a) => a.planet1 == Planet.saturn || a.planet2 == Planet.saturn)) {
+      shadowWork.add(texts.shadowSaturn);
     }
 
     if (chart.getPlanetsInHouse(12).length > 2) {
-      shadowWork.add('Explorar aspectos ocultos da personalidade através de meditação');
+      shadowWork.add(texts.shadowHouse12);
     }
 
     return shadowWork;

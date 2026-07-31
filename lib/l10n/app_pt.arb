@@ -1093,5 +1093,679 @@
         "type": "String"
       }
     }
+  },
+  "notifChannelMoonName": "Fases da Lua",
+  "notifChannelMoonDesc": "Notificações sobre fases lunares importantes",
+  "notifChannelSabbatName": "Sabbats",
+  "notifChannelSabbatDesc": "Lembretes de celebrações da Roda do Ano",
+  "notifChannelDebugName": "Testes de notificação",
+  "notifChannelDebugDesc": "Notificações enviadas pelo diagnóstico do aplicativo",
+  "notifDebugTitle": "🔮 Mensagem do Grimório",
+  "notifDebugBody": "Seu Grimório está pronto para acompanhar sua jornada mágica.",
+  "notifFullMoonTitle": "🌕 Lua Cheia se aproxima!",
+  "notifFullMoonBody": "Amanhã é Lua Cheia! Prepare-se para rituais de manifestação e gratidão.",
+  "notifNewMoonTitle": "🌑 Lua Nova se aproxima!",
+  "notifNewMoonBody": "Amanhã é Lua Nova! Momento perfeito para definir intenções e novos começos.",
+  "notifSabbatTitle": "{emoji} {name} se aproxima!",
+  "@notifSabbatTitle": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSabbatBody": "Em 3 dias celebramos {name}. Prepare seus rituais!",
+  "@notifSabbatBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifErrPermissionDenied": "Permissão de notificações não concedida",
+  "notifErrTestFailed": "Falha ao enviar notificação de teste: {error}",
+  "@notifErrTestFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notifErrScheduleFailed": "Falha ao agendar notificações: {error}",
+  "@notifErrScheduleFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "featureAccessPreview": "Conteúdo exclusivo Premium. Desbloqueie para atravessar o véu.",
+  "featureAccessBlocked": "Funcionalidade indisponível para seu acesso atual.",
+  "featureAccessLimitReached": "Limite gratuito atingido. Assine Premium para uso ilimitado.",
+  "featureAccessAdminOnly": "Painel de diagnóstico exclusivo para administradores.",
+  "featureLimitDiaryBlocked": "Você atingiu o limite de {count} entradas este mês. Assine Premium para registros ilimitados.",
+  "@featureLimitDiaryBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "featureLimitAiAvailable": "consulta(s) mística(s) hoje",
+  "featureLimitAiBlocked": "Você usou suas {count} consultas místicas hoje. Assine Premium para acesso ilimitado.",
+  "@featureLimitAiBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "featureLimitSpellsBlocked": "Você atingiu o limite de {count} feitiços. Assine Premium para criar ilimitados.",
+  "@featureLimitSpellsBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "featureLimitReadingsAvailable": "leitura(s) gratuita(s) hoje",
+  "featureLimitConsultAvailable": "consulta(s) gratuita(s) hoje",
+  "featureLimitTarotAvailable": "leitura(s) gratuita(s) de tarot hoje",
+  "featureLimitCounselorAvailable": "consulta(s) ao Conselheiro hoje",
+  "featureLimitCounselorBlocked": "Você usou sua consulta ao Conselheiro Místico hoje. Assine Premium para consultas ilimitadas.",
+  "featurePreviewEncyclopedia": "Desbloqueie detalhes completos da enciclopédia com o plano Premium.",
+  "featurePreviewLunar": "Informações detalhadas das fases lunares são exclusivas Premium.",
+  "featurePreviewWheel": "Rituais e celebrações detalhadas são conteúdo Premium.",
+  "featurePreviewAstrology": "Mapa astral completo e perfil mágico são exclusivos Premium.",
+  "featurePreviewSigils": "Criação de sigilos é uma funcionalidade Premium.",
+  "featurePreviewDreams": "A interpretação personalizada de sonhos é exclusiva do plano Premium.",
+  "featurePreviewNumerology": "A explicação do Conselheiro Místico é exclusiva do plano Premium.",
+  "featurePreviewLearning": "As trilhas completas do Grimório Vivo são exclusivas do plano Premium.",
+  "featurePreviewPalmistry": "A leitura de mãos é exclusiva do plano Premium.",
+  "betaCodeProcessed": "Código processado",
+  "betaCodeValidationError": "Erro ao validar o código. Tente novamente.",
+  "betaCodeConnectionError": "Erro ao validar o código. Verifique sua conexão.",
+  "betaCodeAlreadyUsed": "Este código já foi utilizado",
+  "betaCodeInvalid": "Código inválido",
+  "betaCodeLimitReached": "Este código já atingiu o limite de usos",
+  "betaCodeRedeemed": "Código resgatado! Você agora tem acesso Premium vitalício 🎉",
+  "paymentNotConfigured": "Pagamentos não configurados",
+  "paymentNoOffers": "Nenhuma oferta disponível. Verifique a configuração no RevenueCat Dashboard.",
+  "paymentProductNotFound": "Produto \"{name}\" não encontrado. Verifique a configuração.",
+  "@paymentProductNotFound": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentErrCancelled": "Compra cancelada",
+  "paymentErrStore": "Problema com a loja. Tente novamente mais tarde.\n\nVerifique se você está usando uma conta de teste configurada (sandbox).",
+  "paymentErrNotAllowed": "Compras não permitidas neste dispositivo.\n\nVerifique as configurações de Restrições e Compras In-App.",
+  "paymentErrInvalid": "Compra inválida.\n\nOs produtos podem não estar configurados corretamente nas lojas.",
+  "paymentErrUnavailable": "Produto não disponível para compra.\n\nVerifique se:\n• Os produtos foram criados no App Store Connect / Google Play Console\n• Os produtos estão com status \"Ready to Submit\" ou aprovados\n• Os IDs dos produtos correspondem exatamente aos configurados",
+  "paymentErrAlreadyOwned": "Você já possui este produto.\n\nTente restaurar suas compras.",
+  "paymentErrNetwork": "Erro de conexão. Verifique sua internet e tente novamente.",
+  "paymentErrReceiptInUse": "Este recibo já está em uso por outra conta.\n\nVocê pode ter criado uma compra com outra conta anteriormente.",
+  "paymentErrInvalidReceipt": "Recibo inválido.\n\nTente desinstalar e reinstalar o app.",
+  "paymentErrMissingReceipt": "Arquivo de recibo não encontrado.\n\nTente fazer logout e login novamente no App Store / Google Play.",
+  "paymentErrPending": "Pagamento pendente. Aguarde a confirmação da loja.",
+  "paymentErrConfiguration": "Erro de configuração do RevenueCat.\n\nVerifique as API keys e a configuração no dashboard.",
+  "paymentErrCredentials": "Credenciais inválidas.\n\nVerifique se as API keys do RevenueCat estão corretas.",
+  "paymentErrGeneric": "Erro ao processar compra (código: {code}).\n\nVerifique os logs do console para mais detalhes.",
+  "@paymentErrGeneric": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "syncActive": "Sincronização ativa",
+  "syncError": "Erro na sincronização",
+  "syncAgoMinutes": "Há {count} min",
+  "@syncAgoMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncAgoHours": "Há {count} h",
+  "@syncAgoHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncAgoDays": "Há {count} dias",
+  "@syncAgoDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncPremiumOnly": "Sincronização é uma funcionalidade Premium",
+  "syncNotAuthenticated": "Usuário não autenticado",
+  "syncDisabled": "Sincronização na nuvem desativada",
+  "syncConflicts": "{count} conflito(s) requer(em) resolução manual",
+  "@syncConflicts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncFailed": "Erro na sincronização: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrConnection": "Erro de conexão: {error}",
+  "@authErrConnection": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrGoogleCredentials": "Não foi possível obter credenciais do Google",
+  "authErrFacebookUnavailable": "Login com Facebook não está mais disponível",
+  "authErrAppleUnavailable": "Login com Apple não disponível",
+  "authErrNoUser": "Nenhum usuário logado",
+  "authErrUserNotFound": "Usuário não encontrado",
+  "authErrEmailInUse": "Este email já está em uso",
+  "authErrNetworkCheck": "Erro de conexão. Verifique sua internet.",
+  "authErrCodeProcess": "Erro ao processar código: {error}",
+  "@authErrCodeProcess": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "lunarAdviceWaxingCrescent": "Momento ideal para plantar intenções e iniciar manifestações. A energia está crescendo!",
+  "lunarAdviceFirstQuarter": "Fase de ação! Tome decisões importantes e supere obstáculos em seus feitiços de atração.",
+  "lunarAdviceWaxingGibbous": "Refine e ajuste seus rituais. A Lua Cheia se aproxima - prepare-se para o ápice!",
+  "lunarAdviceFullMoon": "Poder máximo! Momento perfeito para rituais importantes de atração, amor e prosperidade.",
+  "lunarAdviceWaxingGeneric": "Momento favorável para feitiços de atração e crescimento.",
+  "lunarWaxingComing": "{count, plural, one{A lua crescente está chegando em 1 dia. Prepare seus rituais!} other{A lua crescente está chegando em {count} dias. Prepare seus rituais!}}",
+  "@lunarWaxingComing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lunarWaitWaxing": "Para melhores resultados em feitiços de atração, aguarde a próxima lua crescente.",
+  "lunarAdviceWaningGibbous": "Momento de gratidão e liberação. Deixe ir o que não te serve mais.",
+  "lunarAdviceLastQuarter": "Fase poderosa para banimento e corte de laços. Libere, perdoe, siga em frente.",
+  "lunarAdviceWaningCrescent": "Tempo de descanso e limpeza profunda. Banimentos e proteções são muito efetivos.",
+  "lunarAdviceNewMoon": "Fim de ciclo e novos começos. Banimentos, limpezas e proteções têm poder total.",
+  "lunarAdviceWaningGeneric": "Momento favorável para feitiços de banimento e corte.",
+  "lunarWaningComing": "{count, plural, one{A lua minguante está chegando em 1 dia. Prepare-se!} other{A lua minguante está chegando em {count} dias. Prepare-se!}}",
+  "@lunarWaningComing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lunarWaitWaning": "Para melhores resultados em feitiços de banimento, aguarde a próxima lua minguante.",
+  "privacySyncStatusSection": "Status de Sincronização",
+  "privacyCloudSyncUpsellTitle": "Sincronização na Nuvem",
+  "privacyCloudSyncUpsellBody": "Mantenha seus dados sincronizados entre todos os seus dispositivos e nunca perca seus feitiços e diários.",
+  "privacySyncOff": "Sincronização desativada",
+  "privacySyncNotConnected": "Não conectado",
+  "privacySyncEnablePrompt": "Ative a sincronização na nuvem",
+  "privacySyncLoginPrompt": "Faça login para sincronizar",
+  "privacyPremiumBadge": "PREMIUM",
+  "privacySyncSuccess": "Sincronizado com sucesso.",
+  "privacySyncNow": "Sincronizar agora",
+  "privacyReadFullPolicy": "Ler Política de Privacidade completa",
+  "privacyBackupSubject": "Backup Grimório de Bolso",
+  "adminCodesTitle": "Gerenciar Códigos Premium",
+  "adminCodesLoadError": "Erro ao carregar códigos",
+  "adminCodesEnterValid": "Digite um código válido",
+  "adminCodesLettersNumbersOnly": "Use apenas letras e números",
+  "adminCodesUsesAtLeastOne": "Número de usos deve ser pelo menos 1",
+  "adminCodesCreated": "Código \"{code}\" criado com sucesso! ({count, plural, one{1 uso} other{{count} usos}})",
+  "@adminCodesCreated": {
+    "placeholders": {
+      "code": {},
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "adminCodesCreateFailed": "Erro ao criar código no servidor. O código NÃO foi criado. Verifique se ele já existe e se o Supabase está acessível (veja Debug Logs).",
+  "adminCodesInvalidateTitle": "Invalidar Código",
+  "adminCodesInvalidateConfirm": "Tem certeza que deseja invalidar o código \"{code}\"?",
+  "@adminCodesInvalidateConfirm": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "adminCodesInvalidateAction": "Invalidar",
+  "adminCodesInvalidated": "Código \"{code}\" invalidado",
+  "@adminCodesInvalidated": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "adminCodesInvalidateError": "Erro ao invalidar código",
+  "adminCodesDeleteTitle": "Excluir Código",
+  "adminCodesDeleteConfirm": "Tem certeza que deseja excluir permanentemente o código \"{code}\"?",
+  "@adminCodesDeleteConfirm": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "adminCodesDeleted": "Código \"{code}\" excluído",
+  "@adminCodesDeleted": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "adminCodesDeleteError": "Erro ao excluir código",
+  "adminCodesCreateNew": "Criar Novo Código",
+  "adminCodesCodeLabel": "Código",
+  "adminCodesCodeHint": "Digite o código (ex: PREMIUM2025)",
+  "adminCodesUsesLabel": "Número de usos",
+  "adminCodesUsesSuffix": "uso(s)",
+  "adminCodesCreateAction": "Criar",
+  "adminCodesStatTotal": "Total",
+  "adminCodesStatAvailable": "Disponíveis",
+  "adminCodesStatUsed": "Usados",
+  "adminCodesListTitle": "Códigos Criados",
+  "adminCodesEmpty": "Nenhum código criado ainda",
+  "adminCodesBadgeUsed": "USADO",
+  "adminCodesBadgeAvailable": "DISPONÍVEL",
+  "adminCodesCopied": "Código copiado!",
+  "adminCodesCopyTooltip": "Copiar código",
+  "adminCodesCreatedAt": "Criado em: {date}",
+  "@adminCodesCreatedAt": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "adminCodesUses": "Usos: {current}/{max}",
+  "@adminCodesUses": {
+    "placeholders": {
+      "current": {},
+      "max": {}
+    }
+  },
+  "adminCodesRemaining": "({count, plural, one{1 restante} other{{count} restantes}})",
+  "@adminCodesRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "adminCodesLastUsedAt": "Último uso em: {date}",
+  "@adminCodesLastUsedAt": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "adminCodesLastUser": "Último usuário: {user}",
+  "@adminCodesLastUser": {
+    "placeholders": {
+      "user": {}
+    }
+  },
+  "subsTitle": "Assinatura",
+  "subsUnlockAll": "Desbloqueie todos os recursos",
+  "subsLifetime": "Acesso Vitalício",
+  "subsValidUntil": "Válido até {date}",
+  "@subsValidUntil": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "subsActive": "Assinatura Ativa",
+  "subsLifetimeBetaCode": "Acesso Vitalício (Código Premium)",
+  "subsPlanName": "Plano {plan}",
+  "@subsPlanName": {
+    "placeholders": {
+      "plan": {}
+    }
+  },
+  "subsPlanNameSim": "Plano {plan} (Simulação)",
+  "@subsPlanNameSim": {
+    "placeholders": {
+      "plan": {}
+    }
+  },
+  "subsPremiumActive": "Premium Ativo",
+  "subsAppPremium": "Grimório de Bolso Premium",
+  "subsYourBenefits": "Seus Benefícios Premium",
+  "subsWhatYouGet": "O que você ganha com o Premium:",
+  "subsBenefitUnlimitedForecasts": "Previsões Mágicas ilimitadas",
+  "subsBenefitFullGrimoire": "Grimório completo",
+  "subsBenefitFullGrimoireAccess": "Acesso ao Grimório completo",
+  "subsBenefitAdvisor": "Conselheiro Místico",
+  "subsBenefitProfile": "Perfil mágico personalizado",
+  "subsBenefitTransits": "Sugestões personalizadas pelos trânsitos",
+  "subsBenefitDailyWeather": "Clima mágico diário completo",
+  "subsBenefitLunarCalendar": "Calendário lunar avançado",
+  "subsBenefitSupport": "Suporte prioritário",
+  "subsBetaLifetimeInfo": "Seu acesso Premium foi resgatado via Código Premium e não expira.",
+  "subsLifetimeActiveInfo": "Seu acesso Premium vitalício está ativo.",
+  "subsSimNote": "Modo de simulação: Em produção, este seria um plano ativo via Play Store com renovação automática.",
+  "subsManageDialogAdmin": "Em produção, este botão direcionaria para o Google Play para gerenciar a assinatura.\n\nVocê está em modo de simulação como admin.",
+  "subsManageDialogUser": "Para gerenciar sua assinatura, acesse as configurações da Google Play Store ou App Store.",
+  "subsHaveCode": "Tem um Código Premium?",
+  "subsRedeemPitch": "Resgate seu código para obter acesso Premium vitalício!",
+  "subsCodeHint": "Digite seu código",
+  "subsEnterCode": "Por favor, digite um código",
+  "subsRedeemAction": "Resgatar",
+  "subsRestorePurchases": "Restaurar Compras",
+  "subsRestored": "Compras restauradas com sucesso!",
+  "subsNoPurchases": "Nenhuma compra encontrada",
+  "encyNothingFound": "Nada encontrado 🔍",
+  "encyArcaneSearchHint": "Buscar em {category}...",
+  "@encyArcaneSearchHint": {
+    "placeholders": {
+      "category": {}
+    }
+  },
+  "encyCatSacredSymbols": "Símbolos Sagrados",
+  "encyArcaneIntroArchetypes": "Figuras universais dos mitos e da psique — espelhos para o autoconhecimento no caminho mágico.",
+  "encyArcaneIntroAngels": "Abordagem histórica e informativa: como diferentes tradições — religiosas, ocultistas, folclóricas e literárias — enxergam essas figuras.",
+  "encyArcaneIntroDemons": "Estudo histórico e simbólico, sem sensacionalismo: goécia, folclore e literatura, diferenciando as tradições sem verdade única.",
+  "encyArcaneIntroSymbols": "A origem e o poder dos símbolos usados na bruxaria — do pentagrama ao ouroboros.",
+  "encySectionHistory": "Contexto Histórico",
+  "encyArcaneTraditions": "Olhares das Tradições",
+  "encyArcaneTraditionsNote": "Cada tradição enxerga essa figura de um jeito — nenhuma leitura é a única verdade.",
+  "encyArcaneCharacteristics": "Características",
+  "encyArcaneSymbolism": "Simbolismos",
+  "encySectionCorrespondences": "Correspondências",
+  "encyArcaneCorrespondencesSub": "Cores, ervas, astros e dias associados a esta figura.",
+  "encyArcaneStudy": "Estudo & Contemplação",
+  "encyArcaneStudySub": "Práticas de aprofundamento e meditação.",
+  "encySectionMagicUses": "Usos Mágicos",
+  "encyArcaneUsesSub": "Aplicações rituais e energéticas.",
+  "encyArcaneCautions": "Cuidados & Observações",
+  "encyArcaneSeeAlso": "Veja também",
+  "pendulumYesMsg": "A energia indica uma resposta positiva",
+  "pendulumNoMsg": "A energia indica uma resposta negativa",
+  "pendulumMaybeMsg": "As energias estão em equilíbrio. A situação ainda está se definindo.",
+  "runeSpreadSingle": "Runa Única",
+  "runeSpreadThreeCast": "Três Runas",
+  "runeSpreadNordicCross": "Cruz Nórdica",
+  "runeSpreadNineWorlds": "Nove Mundos",
+  "runeSpreadSingleDesc": "Mensagem direta e rápida para sua situação atual",
+  "runeSpreadThreeCastDesc": "Passado, Presente e Futuro da sua questão",
+  "runeSpreadNordicCrossDesc": "Análise completa: situação, desafio, passado, futuro e resultado",
+  "runeSpreadNineWorldsDesc": "Leitura profunda dos nove aspectos da sua vida",
+  "runePosMessage": "Mensagem",
+  "runePosSituation": "Situação Atual",
+  "runePosResult": "Resultado",
+  "runePosInnerSelf": "Eu Interior",
+  "runePosMind": "Mente",
+  "runePosSpirit": "Espírito",
+  "runePosResources": "Recursos",
+  "runePosObstacles": "Obstáculos",
+  "runePosOpportunities": "Oportunidades",
+  "oracleSpreadDaily": "Carta Diária",
+  "oracleSpreadThreeCard": "Três Cartas",
+  "oracleSpreadWeekly": "Guia Semanal",
+  "oracleSpreadDailyDesc": "Uma mensagem para o seu dia",
+  "oracleSpreadThreeCardDesc": "Passado, Presente e Futuro",
+  "oracleSpreadWeeklyDesc": "Orientação para a semana",
+  "oraclePosDayMessage": "Mensagem do Dia",
+  "oraclePosMonTue": "Segunda/Terça",
+  "oraclePosWed": "Quarta",
+  "oraclePosThuFri": "Quinta/Sexta",
+  "oraclePosWeekend": "Fim de Semana",
+  "oraclePosFocus": "Foco Geral",
+  "elementEarth": "Terra",
+  "elementWater": "Água",
+  "elementAir": "Ar",
+  "elementFire": "Fogo",
+  "elementSpirit": "Espírito",
+  "planetSun": "Sol",
+  "planetMoon": "Lua",
+  "planetMercury": "Mercúrio",
+  "planetVenus": "Vênus",
+  "planetMars": "Marte",
+  "planetJupiter": "Júpiter",
+  "planetSaturn": "Saturno",
+  "goddessOriginGreek": "Grega",
+  "goddessOriginRoman": "Romana",
+  "goddessOriginCeltic": "Celta",
+  "goddessOriginNorse": "Nórdica",
+  "goddessOriginEgyptian": "Egípcia",
+  "goddessOriginHindu": "Hindu",
+  "goddessOriginBrazilian": "Brasileira",
+  "goddessOriginAfrican": "Africana",
+  "goddessOriginMesopotamian": "Mesopotâmica",
+  "goddessOriginJapanese": "Japonesa",
+  "goddessAspectLove": "Amor",
+  "goddessAspectWar": "Guerra",
+  "goddessAspectWisdom": "Sabedoria",
+  "goddessAspectFertility": "Fertilidade",
+  "goddessAspectMoon": "Lua",
+  "goddessAspectSun": "Sol",
+  "goddessAspectNature": "Natureza",
+  "goddessAspectMagic": "Magia",
+  "goddessAspectProtection": "Proteção",
+  "goddessAspectHealing": "Cura",
+  "goddessAspectDeath": "Morte",
+  "goddessAspectTransformation": "Transformação",
+  "goddessAspectSea": "Mar",
+  "goddessAspectHarvest": "Colheita",
+  "goddessAspectHome": "Lar",
+  "goddessAspectBeauty": "Beleza",
+  "encySectionSafety": "Avisos de Segurança",
+  "encySectionMagicProps": "Propriedades Mágicas",
+  "encyMetalsIntro": "Os metais e sua magia — planetas regentes, condução de energia e usos mágicos.",
+  "encyMetalConducts": "⚡ Conduz energia mágica",
+  "encyMetalUsesSub": "Aplicações deste metal em rituais, proteção e condução de energia.",
+  "encyHerbsIntro": "O poder verde das ervas — propriedades mágicas, elementos e avisos de cada planta.",
+  "encyHerbToxicWarning": "PLANTA TÓXICA - Não ingerir!",
+  "encyHerbEdible": "Comestível",
+  "encyHerbNotEdible": "Não Comestível",
+  "encyHerbToxicLabel": "Tóxica",
+  "encyHerbNotToxic": "Não Tóxica",
+  "encyHerbUsesSub": "Práticas, intenções e formas de trabalhar magicamente com esta erva.",
+  "encyCrystalsIntro": "Aliados minerais da prática — com propriedades, limpeza e recarga de cada cristal.",
+  "encyCrystalUsesSub": "Sugestões de uso energético e ritual para este cristal.",
+  "encyColorUsesSub": "Formas de aplicar esta cor em intenções, rituais e práticas mágicas.",
+  "encyGoddessesIntro": "Deusas de muitos povos — mitologia, domínios e caminhos de devoção.",
+  "encyGoddessAspects": "Aspectos & Domínios",
+  "encyGoddessSymbolsAssoc": "Símbolos & Associações",
+  "encyGoddessSymbols": "Símbolos",
+  "encyGoddessUsesSub": "Práticas devocionais e rituais associados a esta divindade.",
+  "encyGoddessConnectionSub": "Orientações para conexão, invocação e trabalho devocional.",
+  "analyticsPractices": "Práticas Mágicas",
+  "analyticsStreak30": "Incrível! 30 dias de gratidão!",
+  "analyticsStreak7": "Ótimo! 1 semana de gratidão!",
+  "analyticsStreakKeepGoing": "Continue assim! {count, plural, one{1 dia} other{{count} dias}} de gratidão!",
+  "@analyticsStreakKeepGoing": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsOracle": "Oráculo",
+  "analyticsSpellsByType": "Feitiços por Tipo",
+  "wheelNextSabbat": "Próximo Sabbat",
+  "wheelCalendar": "Calendário dos Sabbats",
+  "wheelAbout": "Sobre a Roda do Ano",
+  "wheelAboutBody": "A Roda do Ano representa o ciclo anual de celebrações da natureza. São 8 sabbats que marcam mudanças sazonais: 4 festivais solares (solstícios e equinócios) e 4 festivais de fogo (datas fixas).",
+  "wheelAboutSouth": "Estas datas foram adaptadas para o hemisfério sul, seguindo o ciclo natural das estações.",
+  "wheelToday": "Hoje!",
+  "wheelTomorrow": "Amanhã",
+  "wheelInDays": "Em {count, plural, one{1 dia} other{{count} dias}}",
+  "@wheelInDays": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "wheelSouthHemisphere": "Hemisfério Sul",
+  "wheelNorthHemisphere": "Hemisfério Norte",
+  "lunarCalendarTitle": "Calendário Lunar",
+  "lunarYesterday": "Ontem",
+  "lunarToday": "Hoje",
+  "lunarNextPhases": "Próximas Fases Lunares",
+  "lunarNextPhasesSub": "Acompanhe as próximas mudanças da lua",
+  "lunarRecommendations": "Recomendações",
+  "lunarLoadError": "Erro ao carregar calendário lunar",
+  "lunarNow": "Agora!",
+  "lunarInHours": "Em {count, plural, one{1 hora} other{{count} horas}}",
+  "@lunarInHours": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "lunarTomorrowAt": "Amanhã às {time}",
+  "@lunarTomorrowAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "lunarInDaysAt": "Em {count, plural, one{1 dia} other{{count} dias}} às {time}",
+  "@lunarInDaysAt": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      },
+      "time": {}
+    }
+  },
+  "divinationTitle": "Divinação",
+  "divArtsTitle": "Artes Divinatórias",
+  "divArtsSub": "Consulte os oráculos e receba orientação",
+  "divRunesDesc": "Leitura das antigas runas nórdicas",
+  "divPendulumDesc": "Perguntas de sim ou não",
+  "divOracleTitle": "Oracle Cards",
+  "divOracleDesc": "Mensagens e orientação do universo",
+  "themeVinhoOrquidea": "Vinho & Orquídea",
+  "themeVinhoOrquideaSub": "Escuro • roxo-vinho quente",
+  "themeAzulCeleste": "Azul Meia-Noite",
+  "themeAzulCelesteSub": "Escuro • celestial",
+  "themeEsmeraldaJade": "Esmeralda & Jade",
+  "themeEsmeraldaJadeSub": "Escuro • bruxaria verde",
+  "themeArdosiaLavanda": "Ardósia Lavanda",
+  "themeArdosiaLavandaSub": "Crepúsculo • lilás acinzentado",
+  "themeClassico": "Clássico",
+  "themeClassicoSub": "Escuro • índigo & lilás (original)",
+  "themeLavandaNevoa": "Lavanda Névoa",
+  "themeLavandaNevoaSub": "Claro • lilás acinzentado",
+  "themePickerTitle": "Aparência",
+  "themePickerIntro": "Escolha a combinação de cores do app. A mudança é aplicada na hora.",
+  "themePreviewChipProsperity": "Prosperidade",
+  "themePreviewChipAttraction": "Atração",
+  "themePreviewButton": "✨ Manifestar Feitiço ✨",
+  "settingsDiagnostics": "Diagnóstico & Debug",
+  "settingsDiagnosticsSub": "Testes, alternância de roles e mais",
+  "settingsManageCodesSub": "Criar e invalidar códigos promocionais",
+  "premiumPlaceholderText": "As energias deste conteúdo estão veladas aos olhos comuns. Os astros sussurram segredos que apenas os iniciados podem ouvir. A lua guarda mistérios, os cristais vibram em silêncio e as ervas aguardam o momento de revelar seus poderes. Desperte seu potencial místico e descubra tudo o que o universo preparou para você. A magia completa espera por quem atravessa o véu.",
+  "loginTechStatus": "Status técnico",
+  "loginTechVersion": "Versão",
+  "loginTechEnvironment": "Ambiente",
+  "loginTechProd": "produção",
+  "loginTechDev": "desenvolvimento",
+  "loginTechService": "Serviço de login",
+  "loginTechAvailable": "Disponível",
+  "loginTechUnavailable": "Indisponível",
+  "authLocalNoGoogle": "Login com Google não disponível no modo local",
+  "authLocalNoFacebook": "Login com Facebook não disponível no modo local",
+  "authLocalNoApple": "Login com Apple não disponível no modo local",
+  "splashTagline": "Sua jornada mágica começa aqui ✨",
+  "astroDstSuffix": "{base} (horário de verão)",
+  "@astroDstSuffix": {
+    "placeholders": {
+      "base": {}
+    }
+  },
+  "tarotRankAce": "Ás",
+  "tarotRankPage": "Valete",
+  "tarotRankKnight": "Cavaleiro",
+  "tarotRankQueen": "Rainha",
+  "tarotRankKing": "Rei",
+  "transitSunMoonConj": "Momento poderoso para integrar vontade consciente com intuição",
+  "transitSunMoonOpp": "Tensão entre ego e emoções - momento para equilibrar",
+  "transitVenusMarsTrine": "Harmonia entre amor e ação - ótimo para magia de atração",
+  "transitJupiterSaturnSquare": "Desafio entre expansão e disciplina - momento de escolhas",
+  "transitMercuryRetro": "Revisão, reflexão e magia introspectiva são favorecidas",
+  "numerologySummaryForAi": "Perfil numerológico calculado pelo app:\n- Caminho de Vida: {lifePath}\n- Expressão: {expression}\n- Alma: {soulUrge}\n- Personalidade: {personality}\n- Ano Pessoal: {personalYear}",
+  "@numerologySummaryForAi": {
+    "placeholders": {
+      "lifePath": {},
+      "expression": {},
+      "soulUrge": {},
+      "personality": {},
+      "personalYear": {}
+    }
+  },
+  "learnLevelApprentice": "Aprendiz",
+  "learnLevelInitiate": "Iniciada",
+  "learnLevelPractitioner": "Praticante",
+  "learnLevelAdept": "Adepta",
+  "learnLevelMaster": "Mestra",
+  "learnLevelGuardian": "Guardiã do Grimório",
+  "zodiacIntro": "Descubra as características, dons mágicos e práticas recomendadas para cada signo do zodíaco.",
+  "zodiacGifts": "Dons Mágicos",
+  "zodiacPractices": "Práticas Recomendadas",
+  "birthChartSearchFailed": "Não foi possível buscar agora. Verifique sua conexão e tente novamente em instantes.",
+  "birthChartNoCityFound": "Nenhuma cidade encontrada. Tente outra grafia ou inclua o estado/país (ex.: \"Campinas, São Paulo\").",
+  "journeysTabBeginner": "Iniciante",
+  "avatarUseCamera": "Use a câmera do dispositivo",
+  "avatarResetDefault": "Voltar ao avatar padrão",
+  "profileAdminOptions": "Opções de Admin",
+  "pendulumRemainingToday": "{remaining} de {total} consultas disponíveis hoje",
+  "@pendulumRemainingToday": {
+    "placeholders": {
+      "remaining": {},
+      "total": {}
+    }
+  },
+  "faqPageTitle": "Perguntas Frequentes",
+  "supportEmailCopied": "Endereço de e-mail copiado: {email}",
+  "@supportEmailCopied": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "faqQ1": "Como funciona o Clima Mágico Diário?",
+  "faqA1": "Ele é gerado todos os dias com base na fase da Lua, no signo lunar e nos trânsitos planetários. Com o Premium, o texto completo é personalizado com o seu mapa astral.",
+  "faqQ2": "Onde meus dados ficam salvos?",
+  "faqA2": "Tudo fica salvo no seu dispositivo. Com o Premium e a sincronização ativada, seus dados também ficam protegidos na nuvem e disponíveis em outros aparelhos.",
+  "faqQ3": "O que ganho com o Premium?",
+  "faqA3": "Conteúdos completos da Enciclopédia e das trilhas, Conselheiro Místico ilimitado, clima mágico completo, sugestões personalizadas pelos trânsitos, calendário lunar avançado e sincronização entre dispositivos.",
+  "faqQ4": "Como resgato um Código Premium?",
+  "faqA4": "Abra Configurações → Assinatura e use o campo \"Tem um Código Premium?\" para digitar e resgatar o seu código.",
+  "faqQ5": "Como mudo o idioma do app?",
+  "faqA5": "Em Configurações → Idioma. O app está disponível em português, inglês e espanhol; a troca vale na hora.",
+  "faqQ6": "Como funcionam as notificações de Lua e Sabbats?",
+  "faqA6": "Ative-as em Configurações → Notificações. Ao tocar em uma notificação, o app abre direto na página correspondente da Enciclopédia.",
+  "faqQ7": "Como exporto ou excluo meus dados?",
+  "faqA7": "Em Configurações → Privacidade você pode exportar todos os seus dados, limpar os dados locais ou excluir sua conta permanentemente.",
+  "faqQ8": "Como falo com o suporte?",
+  "faqA8": "Pelo e-mail suporte.grimoriodebolso@gmail.com — o botão \"Email de Suporte\" em Ajuda & Suporte abre seu aplicativo de e-mail.",
+  "tarotQuestionOptional": "Pergunta (opcional)",
+  "tarotQuestionHint": "Concentre-se e escreva sua pergunta para as cartas",
+  "tarotQuestionPrefix": "Pergunta: {question}",
+  "@tarotQuestionPrefix": {
+    "placeholders": {
+      "question": {}
+    }
   }
 }

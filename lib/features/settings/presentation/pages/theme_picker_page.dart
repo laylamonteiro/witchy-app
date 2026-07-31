@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+
+import '../../../../core/content/content_locale.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/theme/theme_provider.dart';
@@ -15,13 +18,13 @@ class ThemePickerPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Aparência'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).themePickerTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Escolha a combinação de cores do app. A mudança é aplicada na hora.',
+            AppLocalizations.of(context).themePickerIntro,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: context.gc.textSecondary,
                 ),
@@ -128,6 +131,7 @@ class _ThemeCard extends StatelessWidget {
   /// Mini prévia com as cores do preset (usa as cores do próprio tema, não as
   /// do tema ativo, para mostrar como ele fica).
   Widget _preview(GrimoireColors c) {
+    final l10n = lookupAppLocalizations(ContentLocale.instance.locale);
     return Container(
       color: c.background,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
@@ -138,7 +142,7 @@ class _ThemeCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Grimório',
+                'Grimório',  // Nome-marca abreviado na prévia; invariante.
                 style: TextStyle(
                   color: c.lilac,
                   fontWeight: FontWeight.bold,
@@ -172,9 +176,9 @@ class _ThemeCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _chip('Prosperidade', c.lilac),
+                    _chip(l10n.themePreviewChipProsperity, c.lilac),
                     const SizedBox(width: 6),
-                    _chip('Atração', c.mint),
+                    _chip(l10n.themePreviewChipAttraction, c.mint),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -187,7 +191,7 @@ class _ThemeCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '✨ Manifestar Feitiço ✨',
+                    l10n.themePreviewButton,
                     style: TextStyle(
                       color: c.onPrimary,
                       fontWeight: FontWeight.bold,

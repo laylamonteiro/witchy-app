@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -292,7 +293,7 @@ class FeatureGate extends StatelessWidget {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  'Agora não',
+                  AppLocalizations.of(context).editNotNow,
                   style: TextStyle(color: context.gc.textSecondary),
                 ),
               ),

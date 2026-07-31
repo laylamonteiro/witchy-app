@@ -65,7 +65,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-            widget.spell == null ? AppLocalizations.of(context)!.spellNew : AppLocalizations.of(context)!.spellEdit),
+            widget.spell == null ? AppLocalizations.of(context).spellNew : AppLocalizations.of(context).spellEdit),
       ),
       body: Form(
         key: _formKey,
@@ -75,12 +75,12 @@ class _SpellFormPageState extends State<SpellFormPage> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellNameLabel,
-                hintText: AppLocalizations.of(context)!.spellNameHint,
+                labelText: AppLocalizations.of(context).spellNameLabel,
+                hintText: AppLocalizations.of(context).spellNameHint,
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return AppLocalizations.of(context)!.commonRequired;
+                  return AppLocalizations.of(context).commonRequired;
                 }
                 return null;
               },
@@ -89,12 +89,12 @@ class _SpellFormPageState extends State<SpellFormPage> {
             TextFormField(
               controller: _purposeController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellPurposeLabel,
-                hintText: AppLocalizations.of(context)!.spellPurposeHint,
+                labelText: AppLocalizations.of(context).spellPurposeLabel,
+                hintText: AppLocalizations.of(context).spellPurposeHint,
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return AppLocalizations.of(context)!.commonRequired;
+                  return AppLocalizations.of(context).commonRequired;
                 }
                 return null;
               },
@@ -103,7 +103,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
             DropdownButtonFormField<SpellType>(
               value: _selectedType,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellTypeLabel,
+                labelText: AppLocalizations.of(context).spellTypeLabel,
               ),
               items: SpellType.values.map((type) {
                 return DropdownMenuItem(
@@ -121,7 +121,7 @@ class _SpellFormPageState extends State<SpellFormPage> {
             DropdownButtonFormField<SpellCategory>(
               value: _selectedCategory,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellCategoryLabel,
+                labelText: AppLocalizations.of(context).spellCategoryLabel,
               ),
               items: SpellCategory.values.map((category) {
                 return DropdownMenuItem(
@@ -145,12 +145,12 @@ class _SpellFormPageState extends State<SpellFormPage> {
             DropdownButtonFormField<MoonPhase?>(
               value: _selectedMoonPhase,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellMoonPhaseLabel,
+                labelText: AppLocalizations.of(context).spellMoonPhaseLabel,
               ),
               items: [
                 DropdownMenuItem(
                   value: null,
-                  child: Text(AppLocalizations.of(context)!.commonNone),
+                  child: Text(AppLocalizations.of(context).commonNone),
                 ),
                 ...MoonPhase.values.map((phase) {
                   return DropdownMenuItem(
@@ -175,8 +175,8 @@ class _SpellFormPageState extends State<SpellFormPage> {
             TextFormField(
               controller: _ingredientsController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellIngredientsLabel,
-                hintText: AppLocalizations.of(context)!.spellIngredientsHint,
+                labelText: AppLocalizations.of(context).spellIngredientsLabel,
+                hintText: AppLocalizations.of(context).spellIngredientsHint,
               ),
               maxLines: 5,
             ),
@@ -184,13 +184,13 @@ class _SpellFormPageState extends State<SpellFormPage> {
             TextFormField(
               controller: _stepsController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellHowToLabel,
-                hintText: AppLocalizations.of(context)!.spellHowToHint,
+                labelText: AppLocalizations.of(context).spellHowToLabel,
+                hintText: AppLocalizations.of(context).spellHowToHint,
               ),
               maxLines: 8,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return AppLocalizations.of(context)!.commonRequired;
+                  return AppLocalizations.of(context).commonRequired;
                 }
                 return null;
               },
@@ -199,8 +199,8 @@ class _SpellFormPageState extends State<SpellFormPage> {
             TextFormField(
               controller: _durationController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellDurationLabel,
-                hintText: AppLocalizations.of(context)!.spellDurationHint,
+                labelText: AppLocalizations.of(context).spellDurationLabel,
+                hintText: AppLocalizations.of(context).spellDurationHint,
               ),
               keyboardType: TextInputType.number,
             ),
@@ -208,14 +208,14 @@ class _SpellFormPageState extends State<SpellFormPage> {
             TextFormField(
               controller: _observationsController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.spellNotesLabel,
-                hintText: AppLocalizations.of(context)!.spellNotesHint,
+                labelText: AppLocalizations.of(context).spellNotesLabel,
+                hintText: AppLocalizations.of(context).spellNotesHint,
               ),
               maxLines: 5,
             ),
             const SizedBox(height: 32),
             MagicalButton(
-              text: widget.spell == null ? AppLocalizations.of(context)!.spellAdd : AppLocalizations.of(context)!.commonSave,
+              text: widget.spell == null ? AppLocalizations.of(context).spellAdd : AppLocalizations.of(context).commonSave,
               icon: Icons.save,
               onPressed: _saveSpell,
             ),

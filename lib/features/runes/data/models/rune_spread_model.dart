@@ -1,6 +1,17 @@
 import 'dart:convert';
-import 'rune_model.dart';
+
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
 import '../data_sources/runes_data.dart';
+import 'rune_model.dart';
+
+/// Strings do idioma atual sem BuildContext (modelos são usados fora da
+/// árvore de widgets); o locale vem do ContentLocale, setado pelo
+/// LanguageProvider.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
 
 enum RuneSpreadType {
   single,
@@ -11,26 +22,26 @@ enum RuneSpreadType {
   String get displayName {
     switch (this) {
       case RuneSpreadType.single:
-        return 'Runa Única';
+        return _l10n.runeSpreadSingle;
       case RuneSpreadType.threeCast:
-        return 'Três Runas';
+        return _l10n.runeSpreadThreeCast;
       case RuneSpreadType.nordicCross:
-        return 'Cruz Nórdica';
+        return _l10n.runeSpreadNordicCross;
       case RuneSpreadType.nineWorlds:
-        return 'Nove Mundos';
+        return _l10n.runeSpreadNineWorlds;
     }
   }
 
   String get description {
     switch (this) {
       case RuneSpreadType.single:
-        return 'Mensagem direta e rápida para sua situação atual';
+        return _l10n.runeSpreadSingleDesc;
       case RuneSpreadType.threeCast:
-        return 'Passado, Presente e Futuro da sua questão';
+        return _l10n.runeSpreadThreeCastDesc;
       case RuneSpreadType.nordicCross:
-        return 'Análise completa: situação, desafio, passado, futuro e resultado';
+        return _l10n.runeSpreadNordicCrossDesc;
       case RuneSpreadType.nineWorlds:
-        return 'Leitura profunda dos nove aspectos da sua vida';
+        return _l10n.runeSpreadNineWorldsDesc;
     }
   }
 
@@ -50,22 +61,28 @@ enum RuneSpreadType {
   String getPositionMeaning(int position) {
     switch (this) {
       case RuneSpreadType.single:
-        return 'Mensagem';
+        return _l10n.runePosMessage;
       case RuneSpreadType.threeCast:
-        return ['Passado', 'Presente', 'Futuro'][position];
+        return [_l10n.tarotPosPast, _l10n.tarotPosPresent, _l10n.tarotPosFuture][position];
       case RuneSpreadType.nordicCross:
-        return ['Situação Atual', 'Desafio', 'Passado', 'Futuro', 'Resultado'][position];
+        return [
+          _l10n.runePosSituation,
+          _l10n.tarotPosChallenge,
+          _l10n.tarotPosPast,
+          _l10n.tarotPosFuture,
+          _l10n.runePosResult
+        ][position];
       case RuneSpreadType.nineWorlds:
         return [
-          'Eu Interior',
-          'Mente',
-          'Espírito',
-          'Recursos',
-          'Obstáculos',
-          'Oportunidades',
-          'Passado',
-          'Presente',
-          'Futuro'
+          _l10n.runePosInnerSelf,
+          _l10n.runePosMind,
+          _l10n.runePosSpirit,
+          _l10n.runePosResources,
+          _l10n.runePosObstacles,
+          _l10n.runePosOpportunities,
+          _l10n.tarotPosPast,
+          _l10n.tarotPosPresent,
+          _l10n.tarotPosFuture
         ][position];
     }
   }

@@ -3,115 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grimório de Bolso - Informações Legais</title>
+    <title>Grimório de Bolso — Informações Legais</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Quicksand', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.7;
+            color: #d8d2e0;
+            background:
+                radial-gradient(ellipse at 20% -10%, rgba(155, 109, 198, 0.22) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 15%, rgba(240, 199, 94, 0.07) 0%, transparent 45%),
+                linear-gradient(160deg, #17111f 0%, #0d0a14 60%, #0a0810 100%);
+            background-attachment: fixed;
             min-height: 100vh;
-            padding: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 28px 16px;
         }
 
         .container {
-            max-width: 600px;
-            background: white;
-            padding: 50px;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 460px;
+            width: 100%;
             text-align: center;
+            background: rgba(30, 22, 40, 0.92);
+            border: 1px solid rgba(201, 162, 232, 0.22);
+            padding: 44px 32px;
+            border-radius: 22px;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
         }
+
+        .emoji { font-size: 2.6em; margin-bottom: 10px; }
 
         h1 {
-            color: #764ba2;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-family: 'Cinzel Decorative', serif;
+            color: #c9a2e8;
+            font-size: 1.6em;
+            margin-bottom: 6px;
         }
 
-        .emoji {
-            font-size: 4em;
-            margin-bottom: 20px;
-        }
+        .tagline { color: #8d84a0; margin-bottom: 30px; }
 
-        p {
-            color: #666;
-            font-size: 1.1em;
-            margin-bottom: 30px;
-        }
-
-        .links {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
+        .links { display: flex; flex-direction: column; gap: 12px; }
 
         .link-button {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
+            gap: 12px;
+            background: rgba(155, 109, 198, 0.12);
+            border: 1px solid rgba(201, 162, 232, 0.35);
+            color: #efe9f6;
+            padding: 14px 20px;
+            border-radius: 14px;
             text-decoration: none;
-            font-weight: bold;
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 500;
+            transition: all .15s ease;
         }
 
         .link-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(118, 75, 162, 0.4);
+            background: rgba(155, 109, 198, 0.25);
+            border-color: #c9a2e8;
+            transform: translateY(-1px);
         }
 
-        .link-button .icon {
-            font-size: 1.5em;
-        }
+        .link-button .icon { font-size: 1.25em; }
 
-        .store-badges {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 30px;
-        }
-
-        .badge {
-            height: 50px;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-        }
-
-        .badge:hover {
-            opacity: 1;
-        }
+        .store-badges { margin-top: 28px; }
+        .badge { height: 56px; opacity: .85; transition: opacity .15s; }
+        .badge:hover { opacity: 1; }
 
         .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: #999;
-            font-size: 0.9em;
-        }
-
-        .footer a {
-            color: #764ba2;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
+            margin-top: 32px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(201, 162, 232, 0.18);
+            color: #8d84a0;
+            font-size: 0.86em;
         }
     </style>
 </head>
@@ -119,7 +89,7 @@
     <div class="container">
         <div class="emoji">🌙✨📖</div>
         <h1>Grimório de Bolso</h1>
-        <p>Seu companheiro de jornada mágica</p>
+        <p class="tagline">Sua jornada mágica começa aqui</p>
 
         <div class="links">
             <a href="privacy-policy.html" class="link-button">
@@ -132,28 +102,21 @@
                 <span>Exclusão de Dados</span>
             </a>
 
-            <a href="mailto:privacidade@grimoriodebolso.com.br" class="link-button">
+            <a href="mailto:suporte.grimoriodebolso@gmail.com" class="link-button">
                 <span class="icon">📧</span>
-                <span>Contato de Privacidade</span>
+                <span>Contato de Suporte</span>
             </a>
         </div>
 
         <div class="store-badges">
-            <!-- Substitua # pelos links reais quando o app estiver publicado -->
-            <a href="#" target="_blank">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" class="badge">
+            <!-- Substitua # pelo link real quando o app estiver publicado -->
+            <a href="#" target="_blank" rel="noopener">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Disponível no Google Play" class="badge">
             </a>
-            <!--
-            <a href="#" target="_blank">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="Download on App Store" class="badge">
-            </a>
-            -->
         </div>
 
         <div class="footer">
-            <p>Grimório de Bolso © 2025</p>
-            <p>Desenvolvido por <a href="https://github.com/laylamonteiro" target="_blank">@laylamonteiro</a></p>
-            <p>Feito com magia e código 🌙✨</p>
+            <p>Grimório de Bolso © 2026 &bull; Feito com magia e código 🌙✨</p>
         </div>
     </div>
 </body>

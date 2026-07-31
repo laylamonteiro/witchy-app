@@ -14,7 +14,7 @@ class DreamThemesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.dreamMeaningsTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).dreamMeaningsTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -22,7 +22,7 @@ class DreamThemesPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
             child: Text(
-              AppLocalizations.of(context)!.diaryDreamThemesIntro,
+              AppLocalizations.of(context).diaryDreamThemesIntro,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.gc.textSecondary,
                   ),

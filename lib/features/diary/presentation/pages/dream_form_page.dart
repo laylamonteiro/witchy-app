@@ -52,7 +52,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-          widget.dream == null ? AppLocalizations.of(context)!.diaryNewDream : AppLocalizations.of(context)!.diaryEditDream,
+          widget.dream == null ? AppLocalizations.of(context).diaryNewDream : AppLocalizations.of(context).diaryEditDream,
         ),
         actions: widget.dream != null
             ? [
@@ -71,14 +71,14 @@ class _DreamFormPageState extends State<DreamFormPage> {
             TextFormField(
               controller: _titleController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryTitleLabel,
-                hintText: AppLocalizations.of(context)!.diaryDreamTitleHint,
+                labelText: AppLocalizations.of(context).diaryTitleLabel,
+                hintText: AppLocalizations.of(context).diaryDreamTitleHint,
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(AppLocalizations.of(context)!.diaryDreamDate),
+              title: Text(AppLocalizations.of(context).diaryDreamDate),
               subtitle: Text(
                 '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
               ),
@@ -101,8 +101,8 @@ class _DreamFormPageState extends State<DreamFormPage> {
             TextFormField(
               controller: _contentController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryDreamDescLabel,
-                hintText: AppLocalizations.of(context)!.diaryDreamDescHint,
+                labelText: AppLocalizations.of(context).diaryDreamDescLabel,
+                hintText: AppLocalizations.of(context).diaryDreamDescHint,
               ),
               maxLines: 10,
             ),
@@ -110,17 +110,17 @@ class _DreamFormPageState extends State<DreamFormPage> {
             TextFormField(
               controller: _tagsController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryTagsLabel,
-                hintText: AppLocalizations.of(context)!.diaryDreamTagsHint,
-                helperText: AppLocalizations.of(context)!.diaryTagsHelper,
+                labelText: AppLocalizations.of(context).diaryTagsLabel,
+                hintText: AppLocalizations.of(context).diaryDreamTagsHint,
+                helperText: AppLocalizations.of(context).diaryTagsHelper,
               ),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _feelingController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryDreamFeelingLabel,
-                hintText: AppLocalizations.of(context)!.diaryDreamFeelingHint,
+                labelText: AppLocalizations.of(context).diaryDreamFeelingLabel,
+                hintText: AppLocalizations.of(context).diaryDreamFeelingHint,
               ),
             ),
             // Interpretação por IA já salva: somente leitura, nunca editada.
@@ -140,7 +140,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.diaryInterpretationHeader,
+                      AppLocalizations.of(context).diaryInterpretationHeader,
                       style: TextStyle(
                         color: context.gc.lilac,
                         fontWeight: FontWeight.bold,
@@ -154,7 +154,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
             ],
             const SizedBox(height: 32),
             MagicalButton(
-              text: widget.dream == null ? AppLocalizations.of(context)!.diarySaveDream : AppLocalizations.of(context)!.commonUpdate,
+              text: widget.dream == null ? AppLocalizations.of(context).diarySaveDream : AppLocalizations.of(context).commonUpdate,
               icon: Icons.save,
               onPressed: _saveDream,
             ),
@@ -169,7 +169,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
     if (_titleController.text.isEmpty && _contentController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.diaryFillTitleOrDesc),
+          content: Text(AppLocalizations.of(context).diaryFillTitleOrDesc),
           backgroundColor: Colors.orange,
         ),
       );
@@ -184,7 +184,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
 
     final dream = widget.dream?.copyWith(
           title: _titleController.text.isEmpty
-              ? AppLocalizations.of(context)!.commonNoTitle
+              ? AppLocalizations.of(context).commonNoTitle
               : _titleController.text,
           content: _contentController.text,
           tags: tags,
@@ -194,7 +194,7 @@ class _DreamFormPageState extends State<DreamFormPage> {
         ) ??
         DreamModel(
           title: _titleController.text.isEmpty
-              ? AppLocalizations.of(context)!.commonNoTitle
+              ? AppLocalizations.of(context).commonNoTitle
               : _titleController.text,
           content: _contentController.text,
           tags: tags,
@@ -216,19 +216,19 @@ class _DreamFormPageState extends State<DreamFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.commonConfirmDelete),
-        content: Text(AppLocalizations.of(context)!.diaryDeleteDreamConfirm),
+        title: Text(AppLocalizations.of(context).commonConfirmDelete),
+        content: Text(AppLocalizations.of(context).diaryDeleteDreamConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.commonCancel),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: context.gc.alert,
             ),
-            child: Text(AppLocalizations.of(context)!.commonDelete),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),

@@ -56,7 +56,7 @@ class _PendulumPageState extends State<PendulumPage>
     if (!authProvider.canUsePendulum) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.pendulumUsedAll),
+          content: Text(AppLocalizations.of(context).pendulumUsedAll),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -66,7 +66,7 @@ class _PendulumPageState extends State<PendulumPage>
     if (_question.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.pendulumAskFirst),
+          content: Text(AppLocalizations.of(context).pendulumAskFirst),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -140,7 +140,7 @@ class _PendulumPageState extends State<PendulumPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(AppLocalizations.of(context)!.pendulumTitle),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).pendulumTitle),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -155,14 +155,14 @@ class _PendulumPageState extends State<PendulumPage>
                   const Text('⟟', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 16),
                   Text(
-                    AppLocalizations.of(context)!.pendulumConsult,
+                    AppLocalizations.of(context).pendulumConsult,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context)!.pendulumIntro,
+                    AppLocalizations.of(context).pendulumIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -210,10 +210,12 @@ class _PendulumPageState extends State<PendulumPage>
                             const SizedBox(width: 6),
                             Text(
                               isUnlimited
-                                  ? AppLocalizations.of(context)!.pendulumUnlimitedAdmin
+                                  ? AppLocalizations.of(context).pendulumUnlimitedAdmin
                                   : (hasRemaining
-                                      ? '$remaining de $total consultas disponíveis hoje'
-                                      : AppLocalizations.of(context)!.pendulumUsedComeBack('$used', '$total')),
+                                      ? AppLocalizations.of(context)
+                                          .pendulumRemainingToday(
+                                              '$remaining', '$total')
+                                      : AppLocalizations.of(context).pendulumUsedComeBack('$used', '$total')),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: hasRemaining
@@ -241,9 +243,9 @@ class _PendulumPageState extends State<PendulumPage>
                   builder: (context, child) {
                     return CustomPaint(
                       painter: PendulumPainter(
-                        yesLabel: AppLocalizations.of(context)!.pendulumYes,
-                        noLabel: AppLocalizations.of(context)!.pendulumNo,
-                        maybeLabel: AppLocalizations.of(context)!.pendulumMaybe,
+                        yesLabel: AppLocalizations.of(context).pendulumYes,
+                        noLabel: AppLocalizations.of(context).pendulumNo,
+                        maybeLabel: AppLocalizations.of(context).pendulumMaybe,
                         accentColor: context.gc.lilac,
                         successColor: context.gc.success,
                         alertColor: context.gc.alert,
@@ -273,9 +275,9 @@ class _PendulumPageState extends State<PendulumPage>
                       : context.gc.softWhite.withOpacity(0.5),
                 ),
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.pendulumYourQuestion,
+                  labelText: AppLocalizations.of(context).pendulumYourQuestion,
                   labelStyle: TextStyle(color: context.gc.lilac),
-                  hintText: AppLocalizations.of(context)!.pendulumQuestionHint,
+                  hintText: AppLocalizations.of(context).pendulumQuestionHint,
                   hintStyle: TextStyle(
                     color: context.gc.softWhite.withOpacity(0.5),
                   ),
@@ -327,7 +329,7 @@ class _PendulumPageState extends State<PendulumPage>
                         ),
                       )
                     : const Icon(Icons.help),
-                label: Text(_isSwinging ? AppLocalizations.of(context)!.pendulumAsking : AppLocalizations.of(context)!.pendulumAsk),
+                label: Text(_isSwinging ? AppLocalizations.of(context).pendulumAsking : AppLocalizations.of(context).pendulumAsk),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
@@ -377,7 +379,7 @@ class _PendulumPageState extends State<PendulumPage>
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: Text(AppLocalizations.of(context)!.pendulumNewConsult),
+                label: Text(AppLocalizations.of(context).pendulumNewConsult),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: context.gc.lilac,
                   side: BorderSide(color: context.gc.lilac),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/lunar_provider.dart';
@@ -34,7 +35,6 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
     final content = Consumer<LunarProvider>(
       builder: (context, lunarProvider, _) {
         try {
-          final currentPhase = lunarProvider.getCurrentMoonPhase();
           final dateFormat = DateFormat('dd/MM/yyyy');
 
           return SingleChildScrollView(
@@ -59,7 +59,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                           _buildDayCard(
                             context,
                             lunarProvider,
-                            'Ontem',
+                            AppLocalizations.of(context).lunarYesterday,
                             -1,
                             dateFormat,
                           ),
@@ -67,7 +67,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                           _buildDayCard(
                             context,
                             lunarProvider,
-                            'Hoje',
+                            AppLocalizations.of(context).lunarToday,
                             0,
                             dateFormat,
                           ),
@@ -75,7 +75,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                           _buildDayCard(
                             context,
                             lunarProvider,
-                            'Amanhã',
+                            AppLocalizations.of(context).wheelTomorrow,
                             1,
                             dateFormat,
                           ),
@@ -151,12 +151,12 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Próximas Fases Lunares',
+                        AppLocalizations.of(context).lunarNextPhases,
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Acompanhe as próximas mudanças da lua',
+                        AppLocalizations.of(context).lunarNextPhasesSub,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: context.gc.textSecondary,
                             ),
@@ -180,7 +180,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Recomendações',
+                            AppLocalizations.of(context).lunarRecommendations,
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
                         ],
@@ -264,7 +264,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Erro ao carregar calendário lunar',
+                    AppLocalizations.of(context).lunarLoadError,
                     style: Theme.of(context).textTheme.titleLarge,
                     textAlign: TextAlign.center,
                   ),
@@ -288,7 +288,7 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Calendário Lunar'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).lunarCalendarTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -409,16 +409,15 @@ class _LunarCalendarPageState extends State<LunarCalendarPage> {
     String timeText = '';
     if (daysUntil == 0) {
       if (hoursUntil == 0) {
-        timeText = 'Agora!';
-      } else if (hoursUntil == 1) {
-        timeText = 'Em 1 hora';
+        timeText = AppLocalizations.of(context).lunarNow;
       } else {
-        timeText = 'Em $hoursUntil horas';
+        timeText = AppLocalizations.of(context).lunarInHours(hoursUntil);
       }
     } else if (daysUntil == 1) {
-      timeText = 'Amanhã às ${timeFormat.format(date)}';
+      timeText = AppLocalizations.of(context).lunarTomorrowAt(timeFormat.format(date));
     } else {
-      timeText = 'Em $daysUntil dias às ${timeFormat.format(date)}';
+      timeText =
+          AppLocalizations.of(context).lunarInDaysAt(daysUntil, timeFormat.format(date));
     }
 
     return Container(

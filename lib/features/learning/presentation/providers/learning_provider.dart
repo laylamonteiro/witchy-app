@@ -1,8 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/data_sources/trails_data.dart';
 import '../../data/models/trail_model.dart';
 import '../../data/repositories/learning_progress_repository.dart';
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
 
 /// Nível do Grimório Vivo — gamificação no espírito das Jornadas Mágicas
 /// (XP e títulos), aplicada ao aprendizado.
@@ -25,14 +32,15 @@ class LearningProvider with ChangeNotifier {
   static const int xpPerPage = 25;
   static const int xpPerTrailBound = 100;
 
-  static const levels = [
-    LearningLevel('Aprendiz', '🕯️', 0),
-    LearningLevel('Iniciada', '🌙', 100),
-    LearningLevel('Praticante', '⭐', 300),
-    LearningLevel('Adepta', '🔮', 600),
-    LearningLevel('Mestra', '👑', 1000),
-    LearningLevel('Guardiã do Grimório', '📜', 1500),
-  ];
+  /// Níveis com nomes no idioma atual (limiares de XP invariantes).
+  static List<LearningLevel> get levels => [
+        LearningLevel(_l10n.learnLevelApprentice, '🕯️', 0),
+        LearningLevel(_l10n.learnLevelInitiate, '🌙', 100),
+        LearningLevel(_l10n.learnLevelPractitioner, '⭐', 300),
+        LearningLevel(_l10n.learnLevelAdept, '🔮', 600),
+        LearningLevel(_l10n.learnLevelMaster, '👑', 1000),
+        LearningLevel(_l10n.learnLevelGuardian, '📜', 1500),
+      ];
 
   Set<String> _completed = {};
   bool _loaded = false;

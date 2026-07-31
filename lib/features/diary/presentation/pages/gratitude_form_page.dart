@@ -48,7 +48,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(
-            widget.gratitude == null ? AppLocalizations.of(context)!.diaryNewGratitude : AppLocalizations.of(context)!.diaryEditGratitude),
+            widget.gratitude == null ? AppLocalizations.of(context).diaryNewGratitude : AppLocalizations.of(context).diaryEditGratitude),
         actions: widget.gratitude != null
             ? [
                 IconButton(
@@ -66,14 +66,14 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _titleController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryTitleLabel,
-                hintText: AppLocalizations.of(context)!.diaryGratitudeTitleHint,
+                labelText: AppLocalizations.of(context).diaryTitleLabel,
+                hintText: AppLocalizations.of(context).diaryGratitudeTitleHint,
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(AppLocalizations.of(context)!.commonDate),
+              title: Text(AppLocalizations.of(context).commonDate),
               subtitle: Text(
                 '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
               ),
@@ -96,8 +96,8 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _contentController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryGratitudeLabel,
-                hintText: AppLocalizations.of(context)!.diaryGratitudeHint,
+                labelText: AppLocalizations.of(context).diaryGratitudeLabel,
+                hintText: AppLocalizations.of(context).diaryGratitudeHint,
               ),
               maxLines: 10,
             ),
@@ -105,14 +105,14 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
             TextFormField(
               controller: _tagsController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.diaryTagsLabel,
-                hintText: AppLocalizations.of(context)!.diaryGratitudeTagsHint,
-                helperText: AppLocalizations.of(context)!.diaryTagsHelper,
+                labelText: AppLocalizations.of(context).diaryTagsLabel,
+                hintText: AppLocalizations.of(context).diaryGratitudeTagsHint,
+                helperText: AppLocalizations.of(context).diaryTagsHelper,
               ),
             ),
             const SizedBox(height: 32),
             MagicalButton(
-              text: widget.gratitude == null ? AppLocalizations.of(context)!.diarySaveGratitude : AppLocalizations.of(context)!.commonUpdate,
+              text: widget.gratitude == null ? AppLocalizations.of(context).diarySaveGratitude : AppLocalizations.of(context).commonUpdate,
               icon: Icons.favorite,
               onPressed: _saveGratitude,
             ),
@@ -127,7 +127,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     if (_titleController.text.isEmpty && _contentController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.diaryFillTitleOrContent),
+          content: Text(AppLocalizations.of(context).diaryFillTitleOrContent),
           backgroundColor: Colors.orange,
         ),
       );
@@ -143,7 +143,7 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     final gratitude = GratitudeModel(
       id: widget.gratitude?.id,
       title:
-          _titleController.text.isEmpty ? AppLocalizations.of(context)!.commonNoTitle : _titleController.text,
+          _titleController.text.isEmpty ? AppLocalizations.of(context).commonNoTitle : _titleController.text,
       content: _contentController.text,
       tags: tags,
       date: _selectedDate,
@@ -163,17 +163,17 @@ class _GratitudeFormPageState extends State<GratitudeFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.diaryDeleteGratitudeTitle),
-        content: Text(AppLocalizations.of(context)!.diaryDeleteGratitudeConfirm),
+        title: Text(AppLocalizations.of(context).diaryDeleteGratitudeTitle),
+        content: Text(AppLocalizations.of(context).diaryDeleteGratitudeConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(AppLocalizations.of(context)!.commonCancel),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: context.gc.alert),
-            child: Text(AppLocalizations.of(context)!.commonDelete),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),

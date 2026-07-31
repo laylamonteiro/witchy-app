@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/data_sync_service.dart';
+import '../data_sources/daily_weather_content.dart';
 import '../models/enums.dart';
 import '../models/transit_model.dart';
 import '../models/birth_chart_model.dart';
@@ -196,7 +197,8 @@ class DailyWeatherRepository {
     // menos seções, salvo quando a IA estava indisponível) é tratado como
     // obsoleto e regerado.
     final cached = await getCachedWeather(date, userId, contextKey);
-    if (cached != null && _looksComplete(cached.aiGeneratedText)) {
+    if (cached != null &&
+        DailyWeatherContent.looksComplete(cached.aiGeneratedText)) {
       return cached;
     }
 
@@ -235,7 +237,7 @@ class DailyWeatherRepository {
       );
     } catch (e) {
       // Usar interpretação padrão se IA falhar
-      aiText = _generateFallbackText(weatherData);
+      aiText = DailyWeatherContent.fallbackText(weatherData);
       usedFallback = true;
     }
 
@@ -258,60 +260,6 @@ class DailyWeatherRepository {
     }
 
     return cache;
-  }
-
-  /// Um texto de clima é considerado completo quando traz as seções que só
-  /// existem na versão nova (IA ou fallback completo).
-  bool _looksComplete(String text) =>
-      text.contains('## Ritual Sugerido') &&
-      text.contains('## Cuidados do Dia');
-
-  /// Texto fallback se IA falhar. Mantém as MESMAS 7 seções do texto da IA
-  /// (Energia, Lua, Oportunidades, Cuidados, Ritual, Cristais, Mensagem) para
-  /// que o clima diário fique completo mesmo sem a IA.
-  String _generateFallbackText(DailyMagicalWeather weather) {
-    final elemento = weather.moonSign.element.displayName;
-
-    final desafios = weather.aspects
-        .where((a) => a.energyLevel == EnergyLevel.challenging)
-        .take(2)
-        .map((a) => '- ${a.description}: aja com calma e evite reagir no impulso.')
-        .toList();
-    final cuidados = desafios.isNotEmpty
-        ? desafios.join('\n')
-        : '- Sem tensões marcantes hoje. Ainda assim, evite decisões apressadas e reserve um momento de pausa para se centrar.';
-
-    return '''## Energia do Dia
-
-${weather.generalInterpretation}
-
-## A Lua Hoje
-
-A Lua está em ${weather.moonSign.displayName}, trazendo energias do elemento $elemento.
-Fase atual: ${weather.moonPhase}.
-
-## Oportunidades Mágicas
-
-${weather.recommendedPractices.map((p) => '- $p').join('\n')}
-
-## Cuidados do Dia
-
-$cuidados
-
-## Ritual Sugerido
-
-Acenda uma vela e faça três respirações profundas, sintonizando-se com o elemento $elemento da Lua em ${weather.moonSign.displayName}. Formule uma intenção simples e clara para o dia e visualize-a se realizando.
-
-## Cristais e Aliados
-
-- Quartzo transparente (equilíbrio geral)
-- Ametista (proteção espiritual)
-- Pedra da Lua (conexão lunar)
-
-## Mensagem das Estrelas
-
-Permita que as energias celestiais guiem seu caminho hoje. Confie em sua intuição e siga o fluxo do universo.
-''';
   }
 
   /// Limpa caches antigos (mais de 7 dias)

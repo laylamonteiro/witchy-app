@@ -1,7 +1,8 @@
+import '../../../../core/content/content_locale.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/i18n/gender.dart';
 import '../../../../core/services/debug_log_service.dart';
@@ -14,6 +15,9 @@ import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 import '../../data/repositories/beta_code_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
+
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 /// Provider para gerenciar autenticação e estado do usuário
 class AuthProvider extends ChangeNotifier {
@@ -824,7 +828,7 @@ class AuthProvider extends ChangeNotifier {
       await debugLog('BETA_CODE', 'Erro ao resgatar código: $e');
       return {
         'success': false,
-        'message': 'Erro ao processar código: $e',
+        'message': _l10n.authErrCodeProcess('$e'),
       };
     }
   }

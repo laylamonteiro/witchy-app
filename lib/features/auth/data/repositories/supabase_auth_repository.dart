@@ -1,3 +1,6 @@
+import '../../../../core/content/content_locale.dart';
+import '../../../../core/utils/mask.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,6 +9,9 @@ import '../models/user_model.dart';
 import 'auth_repository.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/debug_log_service.dart';
+
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 /// Implementação do AuthRepository usando Supabase
 class SupabaseAuthRepository implements AuthRepository {
@@ -62,7 +68,7 @@ class SupabaseAuthRepository implements AuthRepository {
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
-      return AuthResult.error('Erro de conexão: $e', AuthErrorCode.networkError);
+      return AuthResult.error(_l10n.authErrConnection('$e'), AuthErrorCode.networkError);
     }
   }
 
@@ -93,7 +99,7 @@ class SupabaseAuthRepository implements AuthRepository {
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
-      return AuthResult.error('Erro de conexão: $e', AuthErrorCode.networkError);
+      return AuthResult.error(_l10n.authErrConnection('$e'), AuthErrorCode.networkError);
     }
   }
 
@@ -134,7 +140,8 @@ class SupabaseAuthRepository implements AuthRepository {
         return AuthResult.error('Login cancelado');
       }
 
-      await debugLog('AUTH', 'Google Sign-In: usuário obtido - ${googleUser.email}');
+      await debugLog(
+          'AUTH', 'Google Sign-In: usuário obtido - ${maskEmail(googleUser.email)}');
 
       final googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
@@ -142,7 +149,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
       if (idToken == null) {
         await debugLog('AUTH', 'Google Sign-In: idToken é null');
-        return AuthResult.error('Não foi possível obter credenciais do Google');
+        return AuthResult.error(_l10n.authErrGoogleCredentials);
       }
 
       await debugLog('AUTH', 'Google Sign-In: obtendo tokens...');
@@ -176,13 +183,13 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<AuthResult> signInWithFacebook() async {
     // Facebook login foi removido - manter método para compatibilidade
-    return AuthResult.error('Login com Facebook não está mais disponível');
+    return AuthResult.error(_l10n.authErrFacebookUnavailable);
   }
 
   @override
   Future<AuthResult> signInWithApple() async {
     // Apple Sign-In não está habilitado neste app
-    return AuthResult.error('Login com Apple não disponível');
+    return AuthResult.error(_l10n.authErrAppleUnavailable);
   }
 
   @override
@@ -242,7 +249,7 @@ class SupabaseAuthRepository implements AuthRepository {
         );
         return AuthResult.success(await _userFromSupabaseUser(user));
       }
-      return AuthResult.error('Nenhum usuário logado');
+      return AuthResult.error(_l10n.authErrNoUser);
     } catch (e) {
       return AuthResult.error('Erro ao verificar email: $e');
     }
@@ -259,7 +266,7 @@ class SupabaseAuthRepository implements AuthRepository {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) {
-        return AuthResult.error('Nenhum usuário logado');
+        return AuthResult.error(_l10n.authErrNoUser);
       }
 
       // Atualizar metadata do usuário
@@ -324,7 +331,7 @@ class SupabaseAuthRepository implements AuthRepository {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) {
-        return AuthResult.error('Nenhum usuário logado');
+        return AuthResult.error(_l10n.authErrNoUser);
       }
 
       // Deletar dados do usuário das tabelas
@@ -388,7 +395,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
     // Detectar método de autenticação
     AuthMethod authMethod = AuthMethod.emailPassword; // Padrão
-    final appMetadata = supabaseUser.appMetadata ?? {};
+    final appMetadata = supabaseUser.appMetadata;
     final provider = appMetadata['provider'] as String?;
 
     if (provider == 'google') {
@@ -443,11 +450,11 @@ class SupabaseAuthRepository implements AuthRepository {
       message = 'Email ou senha incorretos';
     } else if (message.contains('User not found')) {
       code = AuthErrorCode.userNotFound;
-      message = 'Usuário não encontrado';
+      message = _l10n.authErrUserNotFound;
     } else if (message.contains('already registered') ||
         message.contains('already exists')) {
       code = AuthErrorCode.emailAlreadyInUse;
-      message = 'Este email já está em uso';
+      message = _l10n.authErrEmailInUse;
     } else if (message.contains('Password should be') ||
         message.contains('password')) {
       code = AuthErrorCode.weakPassword;
@@ -458,7 +465,7 @@ class SupabaseAuthRepository implements AuthRepository {
       message = 'Muitas tentativas. Aguarde alguns minutos.';
     } else if (message.contains('network') || message.contains('connection')) {
       code = AuthErrorCode.networkError;
-      message = 'Erro de conexão. Verifique sua internet.';
+      message = _l10n.authErrNetworkCheck;
     }
 
     return AuthResult.error(message, code);

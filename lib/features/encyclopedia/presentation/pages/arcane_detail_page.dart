@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import '../../data/data_sources/arcane_categories.dart';
 import '../../data/models/arcane_entry_model.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -10,26 +12,28 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 /// Detalhe genérico de uma entrada arcana da Enciclopédia.
 class ArcaneDetailPage extends StatelessWidget {
   final ArcaneEntry entry;
-  final String categoryTitle;
+  final ArcaneCategory category;
 
   const ArcaneDetailPage({
     super.key,
     required this.entry,
-    required this.categoryTitle,
+    required this.category,
   });
 
   /// Caminho da imagem do verbete (helper compartilhado com a lista).
-  String get imageAsset => arcaneImageAsset(categoryTitle, entry.name);
+  String get imageAsset => category.imageAssetFor(entry);
 
   String get displayTitle {
-    if (categoryTitle == 'Arquétipos') {
-      return entry.name.replaceFirst(RegExp(r'^A\s+', caseSensitive: false), '');
+    if (category == ArcaneCategory.archetypes) {
+      return entry.name.replaceFirst(
+          RegExp(r'^(A|O|The|El|La)\s+', caseSensitive: false), '');
     }
     return entry.name;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle('${entry.emoji} $displayTitle'),
@@ -107,7 +111,7 @@ class ArcaneDetailPage extends StatelessWidget {
           ),
           _section(
             context,
-            title: 'Contexto Histórico',
+            title: l10n.encySectionHistory,
             child: Text(
               entry.history,
               style:
@@ -117,13 +121,12 @@ class ArcaneDetailPage extends StatelessWidget {
           if (entry.perspectives.isNotEmpty)
             _section(
               context,
-              title: 'Olhares das Tradições',
+              title: l10n.encyArcaneTraditions,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Cada tradição enxerga essa figura de um jeito — nenhuma '
-                    'leitura é a única verdade.',
+                    l10n.encyArcaneTraditionsNote,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -154,35 +157,34 @@ class ArcaneDetailPage extends StatelessWidget {
             ),
           if (entry.characteristics.isNotEmpty)
             _bulletSection(
-                context, 'Características', entry.characteristics),
+                context, l10n.encyArcaneCharacteristics, entry.characteristics),
           if (entry.symbolism.isNotEmpty)
-            _bulletSection(context, 'Simbolismos', entry.symbolism),
+            _bulletSection(context, l10n.encyArcaneSymbolism, entry.symbolism),
           if (entry.correspondences.isNotEmpty)
             _premiumSection(
               context,
-              title: 'Correspondências',
-              subtitle:
-                  'Cores, ervas, astros e dias associados a esta figura.',
+              title: l10n.encySectionCorrespondences,
+              subtitle: l10n.encyArcaneCorrespondencesSub,
               content: _chipContent(context, entry.correspondences),
             ),
           if (entry.studyPractices.isNotEmpty)
             _premiumSection(
               context,
-              title: 'Estudo & Contemplação',
-              subtitle: 'Práticas de aprofundamento e meditação.',
+              title: l10n.encyArcaneStudy,
+              subtitle: l10n.encyArcaneStudySub,
               content: _bulletContent(context, entry.studyPractices),
             ),
           if (entry.magicalUses.isNotEmpty)
             _premiumSection(
               context,
-              title: 'Usos Mágicos',
-              subtitle: 'Aplicações rituais e energéticas.',
+              title: l10n.encySectionMagicUses,
+              subtitle: l10n.encyArcaneUsesSub,
               content: _bulletContent(context, entry.magicalUses),
             ),
           if (entry.cautions.isNotEmpty)
             _section(
               context,
-              title: 'Cuidados & Observações',
+              title: l10n.encyArcaneCautions,
               child: Text(
                 entry.cautions,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -192,7 +194,7 @@ class ArcaneDetailPage extends StatelessWidget {
               ),
             ),
           if (entry.related.isNotEmpty)
-            _chipSection(context, 'Veja também', entry.related),
+            _chipSection(context, l10n.encyArcaneSeeAlso, entry.related),
           const SizedBox(height: 24),
         ],
       ),

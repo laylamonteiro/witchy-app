@@ -1,11 +1,11 @@
 import 'dart:io';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 
 /// Widget para selecionar e exibir foto de perfil
@@ -219,7 +219,7 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                   child: Icon(Icons.camera_alt, color: context.gc.lilac),
                 ),
                 title: const Text('Tirar Foto'),
-                subtitle: const Text('Use a câmera do dispositivo'),
+                subtitle: Text(AppLocalizations.of(context).avatarUseCamera),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
@@ -252,7 +252,7 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
                     child: Icon(Icons.delete, color: context.gc.alert),
                   ),
                   title: const Text('Remover Foto'),
-                  subtitle: const Text('Voltar ao avatar padrão'),
+                  subtitle: Text(AppLocalizations.of(context).avatarResetDefault),
                   onTap: () {
                     Navigator.pop(context);
                     _removePhoto();

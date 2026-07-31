@@ -137,7 +137,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: AppLocalizations.of(context)!.grimoireSearchSpells,
+                  hintText: AppLocalizations.of(context).grimoireSearchSpells,
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _searchQuery.isEmpty
                       ? null
@@ -191,14 +191,14 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
         _buildHubCard(
           context,
           emoji: '✨',
-          title: AppLocalizations.of(context)!.grimoireMySpells,
-          subtitle: AppLocalizations.of(context)!.grimoireMySpellsSub,
+          title: AppLocalizations.of(context).grimoireMySpells,
+          subtitle: AppLocalizations.of(context).grimoireMySpellsSub,
           count: userCount,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => UserSpellsListPage(
-                title: AppLocalizations.of(context)!.grimoireMySpells,
+                title: AppLocalizations.of(context).grimoireMySpells,
                 initialSource: SpellSource.mine,
               ),
             ),
@@ -207,21 +207,21 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
         _buildHubCard(
           context,
           emoji: '📖',
-          title: AppLocalizations.of(context)!.grimoireMyRecords,
-          subtitle: AppLocalizations.of(context)!.grimoireMyRecordsSub,
+          title: AppLocalizations.of(context).grimoireMyRecords,
+          subtitle: AppLocalizations.of(context).grimoireMyRecordsSub,
           count: recordCount,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => UserSpellsListPage(
-                title: AppLocalizations.of(context)!.grimoireMyRecords,
+                title: AppLocalizations.of(context).grimoireMyRecords,
                 initialSource: SpellSource.mine,
                 recordsOnly: true,
               ),
             ),
           ),
         ),
-        for (final group in _spellGroups(AppLocalizations.of(context)!))
+        for (final group in _spellGroups(AppLocalizations.of(context)))
           _buildHubCard(
             context,
             emoji: group.emoji,
@@ -323,7 +323,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
     if (results.isEmpty) {
       return Center(
         child: Text(
-          AppLocalizations.of(context)!.grimoireNoSpellsFound,
+          AppLocalizations.of(context).grimoireNoSpellsFound,
           style: TextStyle(color: context.gc.textSecondary),
         ),
       );
@@ -359,7 +359,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
                     const SizedBox(height: 2),
                     Text(
                       spell.isPreloaded
-                          ? '${AppLocalizations.of(context)!.grimoireAncestral} · ${spell.category.displayName}'
+                          ? '${AppLocalizations.of(context).grimoireAncestral} · ${spell.category.displayName}'
                           : spell.category.displayName,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.textSecondary,

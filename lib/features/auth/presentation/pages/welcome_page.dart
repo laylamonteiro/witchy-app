@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
@@ -46,7 +45,7 @@ class WelcomePage extends StatelessWidget {
                 const SizedBox(height: 12),
                 // Subtítulo
                 Text(
-                  AppLocalizations.of(context)!.welcomeSubtitle,
+                  AppLocalizations.of(context).welcomeSubtitle,
                   style: GoogleFonts.nunito(
                     fontSize: 16,
                     color: context.gc.textSecondary,
@@ -103,7 +102,7 @@ class WelcomePage extends StatelessWidget {
   }
 
   Widget _buildFeaturesList(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final features = [
       (l10n.welcomeFeatureLunar, Icons.nightlight_round),
       (l10n.welcomeFeatureGrimoire, Icons.menu_book),
@@ -174,7 +173,7 @@ class WelcomePage extends StatelessWidget {
               ),
             ),
             child: Text(
-              AppLocalizations.of(context)!.authCreateAccount,
+              AppLocalizations.of(context).authCreateAccount,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -200,7 +199,7 @@ class WelcomePage extends StatelessWidget {
               ),
             ),
             child: Text(
-              AppLocalizations.of(context)!.welcomeHaveAccount,
+              AppLocalizations.of(context).welcomeHaveAccount,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
