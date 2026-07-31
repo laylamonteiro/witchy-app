@@ -1184,5 +1184,12 @@
   "featurePreviewDreams": "A interpretação personalizada de sonhos é exclusiva do plano Premium.",
   "featurePreviewNumerology": "A explicação do Conselheiro Místico é exclusiva do plano Premium.",
   "featurePreviewLearning": "As trilhas completas do Grimório Vivo são exclusivas do plano Premium.",
-  "featurePreviewPalmistry": "A leitura de mãos é exclusiva do plano Premium."
+  "featurePreviewPalmistry": "A leitura de mãos é exclusiva do plano Premium.",
+  "betaCodeProcessed": "Código processado",
+  "betaCodeValidationError": "Erro ao validar o código. Tente novamente.",
+  "betaCodeConnectionError": "Erro ao validar o código. Verifique sua conexão.",
+  "betaCodeAlreadyUsed": "Este código já foi utilizado",
+  "betaCodeInvalid": "Código inválido",
+  "betaCodeLimitReached": "Este código já atingiu o limite de usos",
+  "betaCodeRedeemed": "Código resgatado! Você agora tem acesso Premium vitalício 🎉"
 }

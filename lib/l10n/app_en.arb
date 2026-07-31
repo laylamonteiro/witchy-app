@@ -869,5 +869,12 @@
   "featurePreviewDreams": "Personalized dream interpretation is exclusive to the Premium plan.",
   "featurePreviewNumerology": "The Mystic Counselor's explanation is exclusive to the Premium plan.",
   "featurePreviewLearning": "The full Living Grimoire trails are exclusive to the Premium plan.",
-  "featurePreviewPalmistry": "Palm reading is exclusive to the Premium plan."
+  "featurePreviewPalmistry": "Palm reading is exclusive to the Premium plan.",
+  "betaCodeProcessed": "Code processed",
+  "betaCodeValidationError": "Error validating the code. Please try again.",
+  "betaCodeConnectionError": "Error validating the code. Check your connection.",
+  "betaCodeAlreadyUsed": "This code has already been used",
+  "betaCodeInvalid": "Invalid code",
+  "betaCodeLimitReached": "This code has reached its usage limit",
+  "betaCodeRedeemed": "Code redeemed! You now have lifetime Premium access 🎉"
 }

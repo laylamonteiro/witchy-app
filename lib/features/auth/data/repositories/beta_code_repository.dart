@@ -1,7 +1,12 @@
+import '../../../../core/content/content_locale.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/debug_log_service.dart';
+
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 /// Repositório para gerenciar Códigos Premium
 ///
@@ -129,7 +134,7 @@ class BetaCodeRepository {
         }
         return {
           'success': map['success'] == true,
-          'message': map['message'] ?? 'Código processado',
+          'message': map['message'] ?? _l10n.betaCodeProcessed,
         };
       } on PostgrestException catch (e) {
         // Função ainda não criada no projeto → cai no caminho legado abaixo
@@ -139,7 +144,7 @@ class BetaCodeRepository {
           await debugLog('BETA_CODE', 'Erro na RPC redeem_beta_code: $e');
           return {
             'success': false,
-            'message': 'Erro ao validar o código. Tente novamente.',
+            'message': _l10n.betaCodeValidationError,
           };
         }
         await debugLog('BETA_CODE',
@@ -148,7 +153,7 @@ class BetaCodeRepository {
         await debugLog('BETA_CODE', 'Erro inesperado na RPC: $e');
         return {
           'success': false,
-          'message': 'Erro ao validar o código. Verifique sua conexão.',
+          'message': _l10n.betaCodeConnectionError,
         };
       }
 
@@ -199,7 +204,7 @@ class BetaCodeRepository {
       if (updated.isEmpty) {
         return {
           'success': false,
-          'message': 'Este código já foi utilizado',
+          'message': _l10n.betaCodeAlreadyUsed,
         };
       }
 
@@ -216,7 +221,7 @@ class BetaCodeRepository {
       // cache local quando o servidor falhou.
       return {
         'success': false,
-        'message': 'Erro ao validar o código. Verifique sua conexão.',
+        'message': _l10n.betaCodeConnectionError,
       };
     }
   }
@@ -269,7 +274,7 @@ class BetaCodeRepository {
   /// Validações comuns de resgate. Retorna um mapa de erro ou null se válido.
   Map<String, dynamic>? _validateCodeData(Map<String, dynamic>? codeData) {
     if (codeData == null) {
-      return {'success': false, 'message': 'Código inválido'};
+      return {'success': false, 'message': _l10n.betaCodeInvalid};
     }
 
     // is_used cobre tanto o esgotamento quanto a invalidação manual pelo
@@ -277,7 +282,7 @@ class BetaCodeRepository {
     final rawIsUsed = codeData['is_used'];
     final isUsed = rawIsUsed == true || rawIsUsed == 1;
     if (isUsed) {
-      return {'success': false, 'message': 'Este código já foi utilizado'};
+      return {'success': false, 'message': _l10n.betaCodeAlreadyUsed};
     }
 
     final currentUses = (codeData['current_uses'] ?? 0) as int;
@@ -285,7 +290,7 @@ class BetaCodeRepository {
     if (currentUses >= maxUses) {
       return {
         'success': false,
-        'message': 'Este código já atingiu o limite de usos',
+        'message': _l10n.betaCodeLimitReached,
       };
     }
     return null;
@@ -296,7 +301,7 @@ class BetaCodeRepository {
   Map<String, dynamic> _successMessage() {
     return {
       'success': true,
-      'message': 'Código resgatado! Você agora tem acesso Premium vitalício 🎉',
+      'message': _l10n.betaCodeRedeemed,
     };
   }
 

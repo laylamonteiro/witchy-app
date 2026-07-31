@@ -38,7 +38,7 @@ for line in sys.stdin:
     if stripped.startswith('//'):
         continue
     # Chamadas de log/debug não são texto visível ao usuário.
-    if re.match(r'(print|debugPrint|debugLog|_log|_addLog)\s*\(', stripped):
+    if re.match(r'(await\s+)?(print|debugPrint|debugLog|_log|_addLog)\s*\(', stripped):
         continue
     # Argumentos nomeados por locale de ContentLocale.select(pt:/es:) —
     # conteúdo já localizado inline; o EN fica ao lado sem acentos.

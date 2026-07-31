@@ -18,3 +18,7 @@ lib/core/diagnostic/diagnostic_page\.dart:
 # Seeds/campos PT canônicos com overlay ou mapa EN/ES ao lado (paridade testada).
 lib/features/diary/data/models/affirmation_model\.dart:
 lib/features/journeys/data/models/journey_model\.dart:
+# Continuações multilinha de debugLog (não visíveis ao usuário).
+:\s*'BETA_CODE'
+Possível RLS desatualizado
+premium não persistido em profiles
