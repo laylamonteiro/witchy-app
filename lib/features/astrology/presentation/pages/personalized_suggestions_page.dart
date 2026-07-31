@@ -1,19 +1,34 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/content/content_locale.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../data/data_sources/personalized_suggestions_content.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/birth_chart_model.dart';
 import '../../data/models/enums.dart';
 import '../../data/services/transit_interpreter.dart';
 import '../../data/services/transit_calculator.dart';
 import 'birth_chart_input_page.dart';
+
+/// Ícones (invariantes entre idiomas) dos planetas retrógrados.
+const Map<Planet, String> _retrogradeIcons = {
+  Planet.mercury: '☿️',
+  Planet.venus: '♀️',
+  Planet.mars: '♂️',
+  Planet.jupiter: '♃',
+  Planet.saturn: '♄',
+  Planet.uranus: '♅',
+  Planet.neptune: '♆',
+  Planet.pluto: '♇',
+};
 
 class PersonalizedSuggestionsPage extends StatefulWidget {
   const PersonalizedSuggestionsPage({super.key});
@@ -92,8 +107,8 @@ class _PersonalizedSuggestionsPageState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                'Erro ao carregar mapa astral. Por favor, crie seu mapa astral primeiro.'),
+            content:
+                Text(personalizedSuggestionsContent.ui['errorLoadChart']!),
             backgroundColor: context.gc.alert,
           ),
         );
@@ -159,7 +174,7 @@ class _PersonalizedSuggestionsPageState
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao gerar sugestões. Tente novamente mais tarde.'),
+          content: Text(personalizedSuggestionsContent.ui['errorGenerate']!),
           backgroundColor: context.gc.alert,
         ),
       );
@@ -177,9 +192,9 @@ class _PersonalizedSuggestionsPageState
 
         return Scaffold(
           appBar: AppBar(
-            title: const ResponsiveAppBarTitle(
-              'Sugestões Personalizadas',
-              style: TextStyle(fontSize: 18),
+            title: ResponsiveAppBarTitle(
+              AppLocalizations.of(context).astroSuggestions,
+              style: const TextStyle(fontSize: 18),
             ),
             backgroundColor: context.gc.darkBackground,
           ),
@@ -239,7 +254,7 @@ class _PersonalizedSuggestionsPageState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Conteúdo Premium',
+                      AppLocalizations.of(context).premiumContentLabel,
                       style: TextStyle(
                         color: context.gc.lilac,
                         fontSize: 16,
@@ -247,7 +262,8 @@ class _PersonalizedSuggestionsPageState
                       ),
                     ),
                     Text(
-                      'Desbloqueie sugestões personalizadas completas',
+                      personalizedSuggestionsContent
+                          .ui['premiumUnlockSubtitle']!,
                       style: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.7),
                         fontSize: 12,
@@ -271,7 +287,7 @@ class _PersonalizedSuggestionsPageState
                 );
               },
               icon: const Icon(Icons.star, size: 18),
-              label: const Text('Seja Premium'),
+              label: Text(AppLocalizations.of(context).premiumBePremium),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.onPrimary,
@@ -285,6 +301,7 @@ class _PersonalizedSuggestionsPageState
   }
 
   Widget _buildNoChartView() {
+    final content = personalizedSuggestionsContent;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -295,7 +312,7 @@ class _PersonalizedSuggestionsPageState
               const Text('🌟', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               Text(
-                'Mapa Astral Necessário',
+                content.ui['chartNeededTitle']!,
                 style: TextStyle(
                   color: context.gc.lilac,
                   fontSize: 20,
@@ -305,7 +322,7 @@ class _PersonalizedSuggestionsPageState
               ),
               const SizedBox(height: 12),
               Text(
-                'Para receber sugestões personalizadas baseadas nos trânsitos astrológicos, você precisa criar seu mapa astral primeiro.',
+                content.ui['chartNeededBody']!,
                 style: TextStyle(
                   color: context.gc.softWhite.withOpacity(0.8),
                   fontSize: 14,
@@ -325,7 +342,7 @@ class _PersonalizedSuggestionsPageState
                   await _loadNatalChart();
                 },
                 icon: const Icon(Icons.assignment_ind_outlined),
-                label: const Text('Preencher Mapa Astral'),
+                label: Text(content.ui['fillChartButton']!),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
@@ -347,7 +364,7 @@ class _PersonalizedSuggestionsPageState
       child: Column(
         children: [
           Text(
-            'Hoje',
+            personalizedSuggestionsContent.ui['today']!,
             style: TextStyle(
               color: context.gc.lilac,
               fontSize: 20,
@@ -356,7 +373,10 @@ class _PersonalizedSuggestionsPageState
           ),
           const SizedBox(height: 4),
           Text(
-            DateFormat('dd/MM/yyyy - EEEE', 'pt_BR').format(DateTime.now()),
+            DateFormat(
+              'dd/MM/yyyy - EEEE',
+              ContentLocale.instance.locale.toString(),
+            ).format(DateTime.now()),
             style: TextStyle(
               color: context.gc.softWhite.withOpacity(0.7),
               fontSize: 14,
@@ -375,7 +395,7 @@ class _PersonalizedSuggestionsPageState
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Sugestões baseadas nos trânsitos planetários e seu mapa astral',
+              personalizedSuggestionsContent.ui['infoBanner']!,
               style: TextStyle(
                 color: context.gc.softWhite.withOpacity(0.8),
                 fontSize: 12,
@@ -388,62 +408,8 @@ class _PersonalizedSuggestionsPageState
   }
 
   Widget _buildRetrogradeCard({bool isFree = false}) {
-    final retrogradeInfo = {
-      Planet.mercury: {
-        'icon': '☿️',
-        'title': 'Mercúrio Retrógrado',
-        'effects':
-            'Comunicação confusa, atrasos em viagens, problemas tecnológicos',
-        'tips':
-            'Revise contratos, evite iniciar projetos novos, faça backup de dados',
-      },
-      Planet.venus: {
-        'icon': '♀️',
-        'title': 'Vênus Retrógrada',
-        'effects': 'Questões de relacionamento, gastos impulsivos, autoestima',
-        'tips':
-            'Reavalie relacionamentos, evite cirurgias estéticas, reflita sobre valores',
-      },
-      Planet.mars: {
-        'icon': '♂️',
-        'title': 'Marte Retrógrado',
-        'effects': 'Energia baixa, frustrações, agressividade reprimida',
-        'tips':
-            'Evite conflitos, não inicie batalhas legais, pratique paciência',
-      },
-      Planet.jupiter: {
-        'icon': '♃',
-        'title': 'Júpiter Retrógrado',
-        'effects': 'Expansão interior, reavaliação de crenças e filosofias',
-        'tips':
-            'Momento de introspecção espiritual, revise metas de longo prazo',
-      },
-      Planet.saturn: {
-        'icon': '♄',
-        'title': 'Saturno Retrógrado',
-        'effects':
-            'Responsabilidades passadas retornam, karma sendo trabalhado',
-        'tips': 'Resolva assuntos pendentes, trabalhe disciplina interior',
-      },
-      Planet.uranus: {
-        'icon': '♅',
-        'title': 'Urano Retrógrado',
-        'effects': 'Mudanças internas antes de externas, revelações pessoais',
-        'tips': 'Liberte-se de padrões antigos, aceite mudanças graduais',
-      },
-      Planet.neptune: {
-        'icon': '♆',
-        'title': 'Netuno Retrógrado',
-        'effects': 'Véus se levantam, ilusões reveladas, intuição aguçada',
-        'tips': 'Medite, trabalhe sonhos, cuidado com escapismo',
-      },
-      Planet.pluto: {
-        'icon': '♇',
-        'title': 'Plutão Retrógrado',
-        'effects': 'Transformação profunda, confronto com sombras',
-        'tips': 'Trabalho de sombra, deixe ir o que não serve mais',
-      },
-    };
+    final content = personalizedSuggestionsContent;
+    final retrogradeInfo = content.retrogradeInfo;
 
     // Verificar se Mercúrio está retrógrado (destaque especial)
     final mercuryRetrograde =
@@ -466,8 +432,8 @@ class _PersonalizedSuggestionsPageState
                   children: [
                     Text(
                       mercuryRetrograde
-                          ? 'Mercúrio Retrógrado Ativo!'
-                          : 'Planetas Retrógrados',
+                          ? content.ui['mercuryRetrogradeActive']!
+                          : content.ui['retrogradePlanets']!,
                       style: TextStyle(
                         color:
                             mercuryRetrograde ? Colors.orange : context.gc.lilac,
@@ -476,7 +442,11 @@ class _PersonalizedSuggestionsPageState
                       ),
                     ),
                     Text(
-                      '${_retrogradePlanets!.length} planeta${_retrogradePlanets!.length > 1 ? 's' : ''} em movimento retrógrado',
+                      (_retrogradePlanets!.length > 1
+                              ? content.ui['retrogradeCountMany']!
+                              : content.ui['retrogradeCountOne']!)
+                          .replaceAll(
+                              '{count}', '${_retrogradePlanets!.length}'),
                       style: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.7),
                         fontSize: 12,
@@ -502,11 +472,15 @@ class _PersonalizedSuggestionsPageState
                   // Título sempre visível
                   Row(
                     children: [
-                      Text(info['icon']!, style: const TextStyle(fontSize: 20)),
+                      Text(_retrogradeIcons[planet.planet] ?? '🔄',
+                          style: const TextStyle(fontSize: 20)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '${info['title']} em ${planet.sign.displayName}',
+                          content.ui['retrogradeInSign']!
+                              .replaceAll('{title}', info.title)
+                              .replaceAll(
+                                  '{sign}', planet.sign.displayName),
                           style: TextStyle(
                             color: context.gc.lilac,
                             fontWeight: FontWeight.bold,
@@ -519,7 +493,7 @@ class _PersonalizedSuggestionsPageState
                   const SizedBox(height: 6),
                   // Título "Efeitos" sempre visível
                   Text(
-                    'Efeitos:',
+                    content.ui['effectsLabel']!,
                     style: TextStyle(
                       color: context.gc.lilac,
                       fontSize: 12,
@@ -539,7 +513,7 @@ class _PersonalizedSuggestionsPageState
                     )
                   else
                     Text(
-                      info['effects']!,
+                      info.effects,
                       style: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.8),
                         fontSize: 12,
@@ -549,7 +523,7 @@ class _PersonalizedSuggestionsPageState
                   const SizedBox(height: 8),
                   // Título "Dicas" sempre visível
                   Text(
-                    'Dicas:',
+                    content.ui['tipsLabel']!,
                     style: TextStyle(
                       color: context.gc.lilac,
                       fontSize: 12,
@@ -568,7 +542,7 @@ class _PersonalizedSuggestionsPageState
                     )
                   else
                     Text(
-                      info['tips']!,
+                      info.tips,
                       style: TextStyle(
                         color: context.gc.softWhite.withOpacity(0.6),
                         fontSize: 12,
@@ -686,7 +660,7 @@ class _PersonalizedSuggestionsPageState
           const SizedBox(height: 12),
           // Título "Práticas Sugeridas" sempre visível
           Text(
-            'Práticas Sugeridas:',
+            personalizedSuggestionsContent.ui['suggestedPracticesLabel']!,
             style: TextStyle(
               color: context.gc.lilac,
               fontSize: 12,
@@ -730,7 +704,7 @@ class _PersonalizedSuggestionsPageState
             const SizedBox(height: 8),
             // Título "Aspectos Relevantes" sempre visível
             Text(
-              'Aspectos Relevantes:',
+              personalizedSuggestionsContent.ui['relevantAspectsLabel']!,
               style: TextStyle(
                 color: context.gc.lilac,
                 fontSize: 12,
@@ -785,7 +759,7 @@ class _PersonalizedSuggestionsPageState
           const Text('💫', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 12),
           Text(
-            'Sem Sugestões Especiais',
+            personalizedSuggestionsContent.ui['noSuggestionsTitle']!,
             style: TextStyle(
               color: context.gc.lilac,
               fontSize: 16,
@@ -794,7 +768,7 @@ class _PersonalizedSuggestionsPageState
           ),
           const SizedBox(height: 8),
           Text(
-            'Não há trânsitos significativos afetando seu mapa natal neste dia. Continue suas práticas regulares.',
+            personalizedSuggestionsContent.ui['noSuggestionsBody']!,
             style: TextStyle(
               color: context.gc.softWhite.withOpacity(0.8),
               fontSize: 14,

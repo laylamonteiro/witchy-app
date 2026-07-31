@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import '../../../../core/content/content_locale.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -11,6 +13,11 @@ import '../../data/models/enums.dart';
 import '../../data/data_sources/planet_sign_interpretations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+
+/// Atalho para conteúdo estático localizado (padrão `ContentLocale`,
+/// paridade pt/en/es garantida pelos parâmetros obrigatórios).
+String _sel({required String pt, required String en, required String es}) =>
+    ContentLocale.instance.select(pt: pt, en: en, es: es);
 
 class MagicalProfilePage extends StatefulWidget {
   const MagicalProfilePage({super.key});
@@ -24,7 +31,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Perfil Mágico'),
+        title: ResponsiveAppBarTitle(
+            AppLocalizations.of(context).astroMagicalProfile),
         backgroundColor: context.gc.darkBackground,
         actions: [
           Consumer<AstrologyProvider>(
@@ -69,7 +77,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       const Text('✨', style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 16),
                       Text(
-                        'Seu Perfil Mágico',
+                        _sel(
+                          pt: 'Seu Perfil Mágico',
+                          en: 'Your Magical Profile',
+                          es: 'Tu Perfil Mágico',
+                        ),
                         style: Theme.of(context)
                             .textTheme
                             .headlineMedium
@@ -79,7 +91,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Interpretação astrológica adaptada para bruxaria',
+                        _sel(
+                          pt: 'Interpretação astrológica adaptada para bruxaria',
+                          en: 'Astrological interpretation adapted for witchcraft',
+                          es: 'Interpretación astrológica adaptada a la brujería',
+                        ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: context.gc.softWhite.withOpacity(0.8),
                             ),
@@ -104,7 +120,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            'Elemento ${profile.dominantElement.displayName}',
+                            _sel(
+                              pt: 'Elemento ${profile.dominantElement.displayName}',
+                              en: '${profile.dominantElement.displayName} Element',
+                              es: 'Elemento ${profile.dominantElement.displayName}',
+                            ),
                             style: GoogleFonts.cinzelDecorative(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -126,7 +146,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Distribuição:',
+                        _sel(
+                          pt: 'Distribuição:',
+                          en: 'Distribution:',
+                          es: 'Distribución:',
+                        ),
                         style: TextStyle(
                           color: context.gc.softWhite.withOpacity(0.7),
                           fontWeight: FontWeight.bold,
@@ -145,7 +169,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                                     TextStyle(color: context.gc.softWhite),
                               ),
                               Text(
-                                '${entry.value} planeta(s)',
+                                '${entry.value} ${_sel(pt: 'planeta(s)', en: 'planet(s)', es: 'planeta(s)')}',
                                 style: TextStyle(
                                   color: context.gc.softWhite.withOpacity(0.6),
                                 ),
@@ -166,7 +190,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Modalidade ${profile.dominantModality.displayName}',
+                        _sel(
+                          pt: 'Modalidade ${profile.dominantModality.displayName}',
+                          en: '${profile.dominantModality.displayName} Modality',
+                          es: 'Modalidad ${profile.dominantModality.displayName}',
+                        ),
                         style: GoogleFonts.cinzelDecorative(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -207,7 +235,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '🔮 Ferramentas Favoráveis',
+                          _sel(
+                            pt: '🔮 Ferramentas Favoráveis',
+                            en: '🔮 Favorable Tools',
+                            es: '🔮 Herramientas Favorables',
+                          ),
                           style: GoogleFonts.cinzelDecorative(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -295,7 +327,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Seus Planetas nos Signos',
+                  _sel(
+                    pt: 'Seus Planetas nos Signos',
+                    en: 'Your Planets in the Signs',
+                    es: 'Tus Planetas en los Signos',
+                  ),
                   style: GoogleFonts.cinzelDecorative(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -307,7 +343,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Toque em cada planeta para entender seu significado no seu mapa',
+            _sel(
+              pt: 'Toque em cada planeta para entender seu significado no seu mapa',
+              en: 'Tap each planet to understand its meaning in your chart',
+              es: 'Toca cada planeta para entender su significado en tu carta',
+            ),
             style: TextStyle(
               color: context.gc.softWhite.withOpacity(0.6),
               fontSize: 12,
@@ -357,7 +397,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
         title: Row(
           children: [
             Text(
-              '${planet.displayName} em ',
+              '${planet.displayName} ${_sel(pt: 'em', en: 'in', es: 'en')} ',
               style: TextStyle(
                 color: context.gc.softWhite,
                 fontWeight: FontWeight.w500,
@@ -396,7 +436,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           ],
         ),
         subtitle: Text(
-          'Casa $houseNumber | ${sign.element.symbol} ${sign.element.displayName}',
+          '${_sel(pt: 'Casa', en: 'House', es: 'Casa')} $houseNumber | ${sign.element.symbol} ${sign.element.displayName}',
           style: TextStyle(
             color: context.gc.softWhite.withOpacity(0.6),
             fontSize: 12,
@@ -440,7 +480,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             CircularProgressIndicator(color: context.gc.lilac),
             const SizedBox(height: 16),
             Text(
-              'Gerando sua análise personalizada...',
+              _sel(
+                pt: 'Gerando sua análise personalizada...',
+                en: 'Generating your personalized analysis...',
+                es: 'Generando tu análisis personalizado...',
+              ),
               style: GoogleFonts.cinzelDecorative(
                 fontSize: 18,
                 color: context.gc.lilac,
@@ -449,7 +493,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'O Conselheiro Místico está analisando seu mapa astral\ne criando uma interpretação única para você.',
+              _sel(
+                pt: 'O Conselheiro Místico está analisando seu mapa astral\ne criando uma interpretação única para você.',
+                en: 'The Mystic Advisor is analyzing your birth chart\nand creating a unique interpretation for you.',
+                es: 'El Consejero Místico está analizando tu carta natal\ny creando una interpretación única para ti.',
+              ),
               style: TextStyle(
                 color: context.gc.softWhite.withOpacity(0.7),
                 fontSize: 14,
@@ -478,7 +526,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Sua Análise Personalizada',
+                        _sel(
+                          pt: 'Sua Análise Personalizada',
+                          en: 'Your Personalized Analysis',
+                          es: 'Tu Análisis Personalizado',
+                        ),
                         style: GoogleFonts.cinzelDecorative(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -490,7 +542,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Gerada especialmente para você com base no seu mapa astral',
+                  _sel(
+                    pt: 'Gerada especialmente para você com base no seu mapa astral',
+                    en: 'Created especially for you based on your birth chart',
+                    es: 'Creada especialmente para ti a partir de tu carta natal',
+                  ),
                   style: TextStyle(
                     color: context.gc.softWhite.withOpacity(0.6),
                     fontSize: 12,
@@ -516,7 +572,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                         );
                       },
                       icon: const Icon(Icons.star, size: 18),
-                      label: const Text('Seja Premium'),
+                      label:
+                          Text(AppLocalizations.of(context).premiumBePremium),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.gc.lilac,
                         foregroundColor: context.gc.onPrimary,
@@ -585,7 +642,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           const Text('🔮', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
           Text(
-            'Análise Personalizada',
+            _sel(
+              pt: 'Análise Personalizada',
+              en: 'Personalized Analysis',
+              es: 'Análisis Personalizado',
+            ),
             style: GoogleFonts.cinzelDecorative(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -594,7 +655,11 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Consulte o Conselheiro Místico para uma\nanálise única do seu perfil mágico.',
+            _sel(
+              pt: 'Consulte o Conselheiro Místico para uma\nanálise única do seu perfil mágico.',
+              en: 'Consult the Mystic Advisor for a\nunique analysis of your magical profile.',
+              es: 'Consulta al Consejero Místico para un\nanálisis único de tu perfil mágico.',
+            ),
             style: TextStyle(
               color: context.gc.softWhite.withOpacity(0.8),
               fontSize: 14,
