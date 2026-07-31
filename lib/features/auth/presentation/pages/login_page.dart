@@ -138,22 +138,29 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: dialogContext.gc.surface,
-        title: Text('Status técnico',
+        title: Text(AppLocalizations.of(context).loginTechStatus,
             style: TextStyle(color: dialogContext.gc.lilac, fontSize: 16)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              row('Versão', 'v${info.version}+${info.buildNumber}', true),
-              row('Ambiente', kReleaseMode ? 'produção' : 'desenvolvimento',
+              row(AppLocalizations.of(context).loginTechVersion,
+                  'v${info.version}+${info.buildNumber}', true),
+              row(
+                  AppLocalizations.of(context).loginTechEnvironment,
+                  kReleaseMode
+                      ? AppLocalizations.of(context).loginTechProd
+                      : AppLocalizations.of(context).loginTechDev,
                   true),
               const Divider(),
               // Indicador genérico: só diz se o serviço de login responde,
               // sem expor endpoint nem credenciais.
               row(
-                'Serviço de login',
-                SupabaseConfig.isConfigured ? 'Disponível' : 'Indisponível',
+                AppLocalizations.of(context).loginTechService,
+                SupabaseConfig.isConfigured
+                    ? AppLocalizations.of(context).loginTechAvailable
+                    : AppLocalizations.of(context).loginTechUnavailable,
                 SupabaseConfig.isConfigured,
               ),
             ],

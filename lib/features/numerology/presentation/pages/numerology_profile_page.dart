@@ -157,12 +157,13 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
 
     setState(() => _isExplaining = true);
     try {
-      final summary = 'Perfil numerológico calculado pelo app:\n'
-          '- Caminho de Vida: ${profile.lifePath}\n'
-          '- Expressão: ${profile.expression}\n'
-          '- Alma: ${profile.soulUrge}\n'
-          '- Personalidade: ${profile.personality}\n'
-          '- Ano Pessoal: ${profile.personalYear}';
+      final summary = AppLocalizations.of(context).numerologySummaryForAi(
+        '${profile.lifePath}',
+        '${profile.expression}',
+        '${profile.soulUrge}',
+        '${profile.personality}',
+        '${profile.personalYear}',
+      );
       final text = await AIService.instance.explainNumerology(summary: summary);
       await authProvider.incrementAiConsultations();
       if (!mounted) return;

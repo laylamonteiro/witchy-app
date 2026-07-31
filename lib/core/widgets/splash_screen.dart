@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import '../theme/grimoire_colors.dart';
 
@@ -179,7 +180,7 @@ class _SplashScreenState extends State<SplashScreen>
                   const SizedBox(height: 8),
                   // Subtítulo
                   Text(
-                    'Sua jornada mágica começa aqui ✨',
+                    AppLocalizations.of(context).splashTagline,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: context.gc.textSecondary,
                         ),

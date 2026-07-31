@@ -866,11 +866,11 @@ class SettingsPage extends StatelessWidget {
               color: context.gc.lilac,
             ),
             title: Text(
-              'Diagnóstico & Debug',
+              AppLocalizations.of(context).settingsDiagnostics,
               style: TextStyle(color: context.gc.textPrimary),
             ),
             subtitle: Text(
-              'Testes, alternância de roles e mais',
+              AppLocalizations.of(context).settingsDiagnosticsSub,
               style: TextStyle(
                 color: context.gc.textSecondary,
                 fontSize: 12,
@@ -894,11 +894,11 @@ class SettingsPage extends StatelessWidget {
               color: context.gc.lilac,
             ),
             title: Text(
-              'Gerenciar Códigos Premium',
+              AppLocalizations.of(context).adminCodesTitle,
               style: TextStyle(color: context.gc.textPrimary),
             ),
             subtitle: Text(
-              'Criar e invalidar códigos promocionais',
+              AppLocalizations.of(context).settingsManageCodesSub,
               style: TextStyle(
                 color: context.gc.textSecondary,
                 fontSize: 12,

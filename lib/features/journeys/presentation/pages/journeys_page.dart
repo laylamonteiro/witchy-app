@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -196,7 +197,7 @@ class _JourneysPageState extends State<JourneysPage>
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: ResponsiveAppBarTitle(
-          'Jornadas Mágicas',
+          AppLocalizations.of(context).profileMagicalJourneys,
           style: TextStyle(
             color: context.gc.textPrimary,
             fontWeight: FontWeight.bold,
@@ -212,11 +213,11 @@ class _JourneysPageState extends State<JourneysPage>
           indicatorColor: context.gc.lilac,
           labelColor: context.gc.lilac,
           unselectedLabelColor: context.gc.textSecondary,
-          tabs: const [
-            Tab(text: 'Todas'),
-            Tab(text: 'Iniciante'),
-            Tab(text: 'Diário'),
-            Tab(text: 'Divinação'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context).diaryAllCategories),
+            Tab(text: AppLocalizations.of(context).journeysTabBeginner),
+            Tab(text: AppLocalizations.of(context).diaryTitle),
+            Tab(text: AppLocalizations.of(context).divinationTitle),
           ],
         ),
       ),

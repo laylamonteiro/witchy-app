@@ -540,12 +540,12 @@ class ProfilePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.admin_panel_settings, color: Color(0xFF9C27B0)),
-              SizedBox(width: 8),
+              const Icon(Icons.admin_panel_settings, color: Color(0xFF9C27B0)),
+              const SizedBox(width: 8),
               Text(
-                'Opções de Admin',
+                AppLocalizations.of(context).profileAdminOptions,
                 style: TextStyle(
                   color: Color(0xFF9C27B0),
                   fontSize: 16,

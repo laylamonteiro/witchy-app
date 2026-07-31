@@ -212,7 +212,9 @@ class _PendulumPageState extends State<PendulumPage>
                               isUnlimited
                                   ? AppLocalizations.of(context).pendulumUnlimitedAdmin
                                   : (hasRemaining
-                                      ? '$remaining de $total consultas disponíveis hoje'
+                                      ? AppLocalizations.of(context)
+                                          .pendulumRemainingToday(
+                                              '$remaining', '$total')
                                       : AppLocalizations.of(context).pendulumUsedComeBack('$used', '$total')),
                               style: TextStyle(
                                 fontSize: 12,

@@ -594,8 +594,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Não foi possível buscar agora. Verifique sua '
-                                'conexão e tente novamente em instantes.',
+                                AppLocalizations.of(context).birthChartSearchFailed,
                                 style: TextStyle(
                                   color: context.gc.softWhite,
                                   fontSize: 13,
@@ -623,8 +622,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           ),
                         ),
                         child: Text(
-                          'Nenhuma cidade encontrada. Tente outra grafia ou '
-                          'inclua o estado/país (ex.: "Campinas, São Paulo").',
+                          AppLocalizations.of(context).birthChartNoCityFound,
                           style: TextStyle(
                             color: context.gc.softWhite.withOpacity(0.8),
                             fontSize: 13,

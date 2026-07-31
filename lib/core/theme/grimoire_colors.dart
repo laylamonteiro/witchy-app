@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../content/content_locale.dart';
 
 /// Conjunto de cores semânticas de um tema do app, exposto como
 /// [ThemeExtension] para permitir troca de tema em runtime.
@@ -245,19 +248,42 @@ class GrimoireColors extends ThemeExtension<GrimoireColors> {
   );
 }
 
-/// Metadados de um preset selecionável (id persistido + rótulo para a UI).
+/// Metadados de um preset selecionável (id persistido; rótulo/subtítulo
+/// localizados resolvidos por [label]/[subtitle] a partir do ARB).
 class AppThemePreset {
   final String id;
-  final String label;
-  final String subtitle;
   final GrimoireColors colors;
 
   const AppThemePreset({
     required this.id,
-    required this.label,
-    required this.subtitle,
     required this.colors,
   });
+
+  String get label {
+    final l10n = lookupAppLocalizations(ContentLocale.instance.locale);
+    return switch (id) {
+      'vinhoOrquidea' => l10n.themeVinhoOrquidea,
+      'azulCeleste' => l10n.themeAzulCeleste,
+      'esmeraldaJade' => l10n.themeEsmeraldaJade,
+      'ardosiaLavanda' => l10n.themeArdosiaLavanda,
+      'classico' => l10n.themeClassico,
+      'lavandaNevoa' => l10n.themeLavandaNevoa,
+      _ => id,
+    };
+  }
+
+  String get subtitle {
+    final l10n = lookupAppLocalizations(ContentLocale.instance.locale);
+    return switch (id) {
+      'vinhoOrquidea' => l10n.themeVinhoOrquideaSub,
+      'azulCeleste' => l10n.themeAzulCelesteSub,
+      'esmeraldaJade' => l10n.themeEsmeraldaJadeSub,
+      'ardosiaLavanda' => l10n.themeArdosiaLavandaSub,
+      'classico' => l10n.themeClassicoSub,
+      'lavandaNevoa' => l10n.themeLavandaNevoaSub,
+      _ => '',
+    };
+  }
 }
 
 class AppThemes {
@@ -268,38 +294,26 @@ class AppThemes {
   static const List<AppThemePreset> all = [
     AppThemePreset(
       id: 'vinhoOrquidea',
-      label: 'Vinho & Orquídea',
-      subtitle: 'Escuro • roxo-vinho quente',
       colors: GrimoireColors.vinhoOrquidea,
     ),
     AppThemePreset(
       id: 'azulCeleste',
-      label: 'Azul Meia-Noite',
-      subtitle: 'Escuro • celestial',
       colors: GrimoireColors.azulCeleste,
     ),
     AppThemePreset(
       id: 'esmeraldaJade',
-      label: 'Esmeralda & Jade',
-      subtitle: 'Escuro • bruxaria verde',
       colors: GrimoireColors.esmeraldaJade,
     ),
     AppThemePreset(
       id: 'ardosiaLavanda',
-      label: 'Ardósia Lavanda',
-      subtitle: 'Crepúsculo • lilás acinzentado',
       colors: GrimoireColors.ardosiaLavanda,
     ),
     AppThemePreset(
       id: 'classico',
-      label: 'Clássico',
-      subtitle: 'Escuro • índigo & lilás (original)',
       colors: GrimoireColors.classico,
     ),
     AppThemePreset(
       id: 'lavandaNevoa',
-      label: 'Lavanda Névoa',
-      subtitle: 'Claro • lilás acinzentado',
       colors: GrimoireColors.lavandaNevoa,
     ),
   ];

@@ -1,4 +1,11 @@
 import '../models/enums.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 import '../models/transit_model.dart';
 import '../models/planet_position_model.dart';
 import '../models/birth_chart_model.dart';
@@ -239,16 +246,11 @@ class TransitCalculator {
   String _getAspectInterpretation(
       Planet transitPlanet, Planet natalPlanet, AspectType aspect) {
     final combinations = {
-      'sun_moon_conjunction':
-          'Momento poderoso para integrar vontade consciente com intuição',
-      'sun_moon_opposition':
-          'Tensão entre ego e emoções - momento para equilibrar',
-      'venus_mars_trine':
-          'Harmonia entre amor e ação - ótimo para magia de atração',
-      'jupiter_saturn_square':
-          'Desafio entre expansão e disciplina - momento de escolhas',
-      'mercury_retrograde':
-          'Revisão, reflexão e magia introspectiva são favorecidas',
+      'sun_moon_conjunction': _l10n.transitSunMoonConj,
+      'sun_moon_opposition': _l10n.transitSunMoonOpp,
+      'venus_mars_trine': _l10n.transitVenusMarsTrine,
+      'jupiter_saturn_square': _l10n.transitJupiterSaturnSquare,
+      'mercury_retrograde': _l10n.transitMercuryRetro,
     };
 
     final key =

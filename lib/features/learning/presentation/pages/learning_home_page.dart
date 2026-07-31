@@ -30,7 +30,7 @@ class _LearningHomePageState extends State<LearningHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Grimório Vivo'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolLivingGrimoireTitle),
       ),
       body: Consumer<LearningProvider>(
         builder: (context, learning, _) {

@@ -24,6 +24,25 @@ lib/core/i18n/gender\.dart:
 lib/core/ai/ai_service\.dart:
 # Console de diagnóstico dev-only (não é interface de usuário final).
 lib/core/diagnostic/diagnostic_page\.dart:
+lib/core/diagnostic/debug_logs_page\.dart:
+lib/core/services/debug_log_service\.dart:
+lib/features/settings/presentation/pages/beta_codes_debug_page\.dart:
+
+# Nome-marca do app — invariante entre idiomas (inclui a forma abreviada
+# na prévia de temas).
+Grimório de Bolso
+'Grimório',
+
+# Pares de títulos trilingues do looksComplete no arquivo acessor
+# compartilhado do clima diário (conteúdo por locale vive nos _pt/_en/_es).
+lib/features/astrology/data/data_sources/daily_weather_content\.dart:
+
+# Tag interna persistida nos registros de página do Grimório Vivo
+# (identidade estável, não é texto exibido isoladamente).
+tags: const \['grimório-vivo'\]
+
+# Matchers sobre mensagens de erro persistidas/emitidas em PT (não são UI).
+\.contains\('
 
 # Tabelas de acentos usadas para slugs/normalização — não são texto de UI.
 const accents = '

@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/feature_access.dart';
@@ -27,13 +29,9 @@ Future<void> showPremiumUpgradePaywall(BuildContext context) {
 /// apenas cosmético: o texto continuaria na árvore de semântica (leitores de
 /// tela leem tudo) e parcialmente legível. Por isso os widgets abaixo
 /// renderizam este placeholder no lugar do conteúdo real.
-const String kPremiumPlaceholderText =
-    'As energias deste conteúdo estão veladas aos olhos comuns. '
-    'Os astros sussurram segredos que apenas os iniciados podem ouvir. '
-    'A lua guarda mistérios, os cristais vibram em silêncio e as ervas '
-    'aguardam o momento de revelar seus poderes. Desperte seu potencial '
-    'místico e descubra tudo o que o universo preparou para você. '
-    'A magia completa espera por quem atravessa o véu.';
+String get kPremiumPlaceholderText =>
+    lookupAppLocalizations(ContentLocale.instance.locale)
+        .premiumPlaceholderText;
 
 /// Bloco de texto placeholder desfocado, usado internamente pelos gates.
 class _BlurredPlaceholder extends StatelessWidget {

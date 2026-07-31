@@ -1,4 +1,11 @@
 import 'dart:async';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -93,7 +100,7 @@ class LocalAuthRepository implements AuthRepository {
         if (existingUser.email != null &&
             existingUser.email!.toLowerCase() == email.toLowerCase()) {
           return AuthResult.error(
-            'Este email já está em uso',
+            _l10n.authErrEmailInUse,
             AuthErrorCode.emailAlreadyInUse,
           );
         }
@@ -125,7 +132,7 @@ class LocalAuthRepository implements AuthRepository {
   Future<AuthResult> signInWithGoogle() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return AuthResult.error(
-      'Login com Google não disponível no modo local',
+      _l10n.authLocalNoGoogle,
       AuthErrorCode.unknown,
     );
   }
@@ -134,7 +141,7 @@ class LocalAuthRepository implements AuthRepository {
   Future<AuthResult> signInWithFacebook() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return AuthResult.error(
-      'Login com Facebook não disponível no modo local',
+      _l10n.authLocalNoFacebook,
       AuthErrorCode.unknown,
     );
   }
@@ -143,7 +150,7 @@ class LocalAuthRepository implements AuthRepository {
   Future<AuthResult> signInWithApple() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return AuthResult.error(
-      'Login com Apple não disponível no modo local',
+      _l10n.authLocalNoApple,
       AuthErrorCode.unknown,
     );
   }
@@ -171,7 +178,7 @@ class LocalAuthRepository implements AuthRepository {
     if (_currentUser != null) {
       return AuthResult.success(_currentUser!);
     }
-    return AuthResult.error('Nenhum usuário logado');
+    return AuthResult.error(_l10n.authErrNoUser);
   }
 
   @override
@@ -183,7 +190,7 @@ class LocalAuthRepository implements AuthRepository {
     String? birthPlace,
   }) async {
     if (_currentUser == null) {
-      return AuthResult.error('Nenhum usuário logado');
+      return AuthResult.error(_l10n.authErrNoUser);
     }
 
     _currentUser = _currentUser!.copyWith(
@@ -208,7 +215,7 @@ class LocalAuthRepository implements AuthRepository {
     if (_currentUser != null) {
       return AuthResult.success(_currentUser!);
     }
-    return AuthResult.error('Nenhum usuário logado');
+    return AuthResult.error(_l10n.authErrNoUser);
   }
 
   @override
@@ -225,7 +232,7 @@ class LocalAuthRepository implements AuthRepository {
   /// Atualiza o role do usuário (para testes/admin)
   Future<AuthResult> updateUserRole(UserRole role, SubscriptionPlan plan) async {
     if (_currentUser == null) {
-      return AuthResult.error('Nenhum usuário logado');
+      return AuthResult.error(_l10n.authErrNoUser);
     }
 
     _currentUser = _currentUser!.copyWith(

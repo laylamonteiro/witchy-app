@@ -31,16 +31,28 @@ matches=$(rg -n "$PATTERN" "$ROOT/lib" \
 import linecache, re, sys
 accent = re.compile(r'$PATTERN')
 logcall = re.compile(r'(await\s+)?(print|debugPrint|debugLog|_log|_addLog)\s*\(')
+assertopen = re.compile(r'.*\bassert\s*\(')
 
 def in_log_continuation(path, lineno):
-    # Continuação multilinha de chamada de log: procura, até 5 linhas acima,
-    # uma abertura de log ainda não fechada até a linha anterior à atual.
+    # Continuação multilinha de chamada de log/assert: procura, até 5 linhas
+    # acima, uma abertura ainda não fechada até a linha anterior à atual.
+    # O balanço de parênteses é contado a partir da PRÓPRIA chamada, para não
+    # ser confundido por fechamentos anteriores na mesma linha (ex. '}) :').
     for start in range(lineno - 1, max(lineno - 6, 0), -1):
         opening = linecache.getline(path, start)
-        if not logcall.match(opening.lstrip()):
+        stripped_open = opening.lstrip()
+        m = logcall.match(stripped_open)
+        offset = None
+        if m:
+            offset = len(opening) - len(stripped_open)
+        else:
+            am = re.search(r'\bassert\s*\(', opening)
+            if am:
+                offset = am.start()
+        if offset is None:
             continue
-        span = ''.join(
-            linecache.getline(path, n) for n in range(start, lineno))
+        span = opening[offset:] + ''.join(
+            linecache.getline(path, n) for n in range(start + 1, lineno))
         return span.count('(') > span.count(')')
     return False
 

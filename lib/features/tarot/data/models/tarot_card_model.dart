@@ -1,3 +1,11 @@
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+
+import '../../../../core/content/content_locale.dart';
+
+/// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
+
 /// Baralhos suportados. Rider-Waite primeiro; Marselha quando os assets
 /// forem adicionados em assets/tarot/marseille/.
 enum TarotDeck { riderWaite }
@@ -107,11 +115,11 @@ class TarotCard {
       return romans[number];
     }
     return switch (number) {
-      1 => 'Ás',
-      11 => 'Valete',
-      12 => 'Cavaleiro',
-      13 => 'Rainha',
-      14 => 'Rei',
+      1 => _l10n.tarotRankAce,
+      11 => _l10n.tarotRankPage,
+      12 => _l10n.tarotRankKnight,
+      13 => _l10n.tarotRankQueen,
+      14 => _l10n.tarotRankKing,
       _ => '$number',
     };
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -18,7 +19,7 @@ class ZodiacSignsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const ResponsiveAppBarTitle('Signos do Zodíaco'),
+        title: ResponsiveAppBarTitle(AppLocalizations.of(context).astroZodiacSigns),
         backgroundColor: context.gc.darkBackground,
       ),
       backgroundColor: context.gc.darkBackground,
@@ -41,8 +42,7 @@ class ZodiacSignsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Descubra as características, dons mágicos e práticas '
-                    'recomendadas para cada signo do zodíaco.',
+                    AppLocalizations.of(context).zodiacIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.gc.softWhite.withOpacity(0.8),
                         ),
@@ -141,10 +141,10 @@ class ZodiacSignsPage extends StatelessWidget {
             _buildSection(context, 'Personalidade', data.personality),
 
             // Dons Mágicos
-            _buildSection(context, 'Dons Mágicos', data.magicalGifts),
+            _buildSection(context, AppLocalizations.of(context).zodiacGifts, data.magicalGifts),
 
             // Práticas Recomendadas
-            _buildSection(context, 'Práticas Recomendadas', data.bestPractices),
+            _buildSection(context, AppLocalizations.of(context).zodiacPractices, data.bestPractices),
 
             // Cristais
             _buildSection(context, 'Cristais', data.crystals),
