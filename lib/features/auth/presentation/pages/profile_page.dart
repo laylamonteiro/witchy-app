@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../settings/presentation/pages/faq_page.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'package:provider/provider.dart';
@@ -732,7 +734,7 @@ class ProfilePage extends StatelessWidget {
               icon: Icons.email_outlined,
               title: AppLocalizations.of(context).profileSupportEmail,
               subtitle: 'suporte.grimoriodebolso@gmail.com',
-              onTap: () => _launchEmail(),
+              onTap: () => _launchEmail(context),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
@@ -740,7 +742,9 @@ class ProfilePage extends StatelessWidget {
               icon: Icons.question_answer_outlined,
               title: 'FAQ',
               subtitle: AppLocalizations.of(context).profileFaq,
-              onTap: () => _launchFaq(),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FaqPage()),
+              ),
             ),
             const SizedBox(height: 16),
             _buildHelpItem(
@@ -811,17 +815,26 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Future<void> _launchEmail() async {
-    final uri = Uri.parse('mailto:suporte.grimoriodebolso@gmail.com');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+  /// Abre o app de e-mail; sem app compatível, copia o endereço e avisa.
+  Future<void> _launchEmail(BuildContext context) async {
+    const supportEmail = 'suporte.grimoriodebolso@gmail.com';
+    final uri = Uri(scheme: 'mailto', path: supportEmail);
+    var opened = false;
+    try {
+      opened = await launchUrl(uri);
+    } catch (_) {
+      opened = false;
     }
-  }
-
-  Future<void> _launchFaq() async {
-    final uri = Uri.parse('https://grimoriodebolso.com/faq');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      await Clipboard.setData(const ClipboardData(text: supportEmail));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).supportEmailCopied(supportEmail),
+          ),
+        ),
+      );
     }
   }
 

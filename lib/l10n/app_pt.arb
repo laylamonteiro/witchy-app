@@ -1331,7 +1331,6 @@
   "privacySyncNow": "Sincronizar agora",
   "privacyReadFullPolicy": "Ler Política de Privacidade completa",
   "privacyBackupSubject": "Backup Grimório de Bolso",
-  "privacyPolicyBody": "POLÍTICA DE PRIVACIDADE - GRIMÓRIO DE BOLSO\n\nÚltima atualização: Novembro 2025\n\n1. COLETA DE DADOS\n\nColetamos apenas os dados necessários para o funcionamento do app:\n- Email e senha (para autenticação)\n- Dados de perfil (nome, foto - opcionais)\n- Dados de nascimento (para cálculo do mapa astral)\n- Conteúdo criado por você (feitiços, diários, etc.)\n\n2. USO DOS DADOS\n\nSeus dados são utilizados exclusivamente para:\n- Prover os serviços do app\n- Sincronizar entre dispositivos\n- Melhorar a experiência do usuário\n\n3. COMPARTILHAMENTO\n\nNÃO vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto:\n- Quando exigido por lei\n- Para proteger nossos direitos legais\n\n4. SEGURANÇA\n\nUtilizamos criptografia e melhores práticas de segurança para proteger seus dados.\n\n5. SEUS DIREITOS\n\nVocê pode a qualquer momento:\n- Acessar seus dados\n- Corrigir informações\n- Exportar seus dados\n- Excluir sua conta\n\n6. CONTATO\n\nPara dúvidas sobre privacidade, entre em contato:\nsuporte.grimoriodebolso@gmail.com",
   "adminCodesTitle": "Gerenciar Códigos Premium",
   "adminCodesLoadError": "Erro ao carregar códigos",
   "adminCodesEnterValid": "Digite um código válido",
@@ -1737,5 +1736,28 @@
       "remaining": {},
       "total": {}
     }
-  }
+  },
+  "faqPageTitle": "Perguntas Frequentes",
+  "supportEmailCopied": "Endereço de e-mail copiado: {email}",
+  "@supportEmailCopied": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "faqQ1": "Como funciona o Clima Mágico Diário?",
+  "faqA1": "Ele é gerado todos os dias com base na fase da Lua, no signo lunar e nos trânsitos planetários. Com o Premium, o texto completo é personalizado com o seu mapa astral.",
+  "faqQ2": "Onde meus dados ficam salvos?",
+  "faqA2": "Tudo fica salvo no seu dispositivo. Com o Premium e a sincronização ativada, seus dados também ficam protegidos na nuvem e disponíveis em outros aparelhos.",
+  "faqQ3": "O que ganho com o Premium?",
+  "faqA3": "Conteúdos completos da Enciclopédia e das trilhas, Conselheiro Místico ilimitado, clima mágico completo, sugestões personalizadas pelos trânsitos, calendário lunar avançado e sincronização entre dispositivos.",
+  "faqQ4": "Como resgato um Código Premium?",
+  "faqA4": "Abra Configurações → Assinatura e use o campo \"Tem um Código Premium?\" para digitar e resgatar o seu código.",
+  "faqQ5": "Como mudo o idioma do app?",
+  "faqA5": "Em Configurações → Idioma. O app está disponível em português, inglês e espanhol; a troca vale na hora.",
+  "faqQ6": "Como funcionam as notificações de Lua e Sabbats?",
+  "faqA6": "Ative-as em Configurações → Notificações. Ao tocar em uma notificação, o app abre direto na página correspondente da Enciclopédia.",
+  "faqQ7": "Como exporto ou excluo meus dados?",
+  "faqA7": "Em Configurações → Privacidade você pode exportar todos os seus dados, limpar os dados locais ou excluir sua conta permanentemente.",
+  "faqQ8": "Como falo com o suporte?",
+  "faqA8": "Pelo e-mail suporte.grimoriodebolso@gmail.com — o botão \"Email de Suporte\" em Ajuda & Suporte abre seu aplicativo de e-mail."
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../../core/legal/legal_document_page.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -987,58 +988,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   void _showPrivacyPolicy() {
-    final l10n = AppLocalizations.of(context);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.gc.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.gc.textSecondary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                l10n.authPrivacyPolicy,
-                style: TextStyle(
-                  color: context.gc.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  l10n.privacyPolicyBody,
-                  style: TextStyle(
-                    color: context.gc.textSecondary,
-                    fontSize: 14,
-                    height: 1.6,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    // Mesmo documento oficial usado em Ajuda & Suporte
+    // (assets/legal/politica_de_privacidade.md).
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
     );
   }
 }

@@ -67,4 +67,17 @@
             </intent-filter>
         </receiver>
     </application>
+
+    <!-- Android 11+ (package visibility): permite resolver apps de e-mail
+         (mailto:) e navegador (https:) para os botões de Ajuda & Suporte. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 </manifest>

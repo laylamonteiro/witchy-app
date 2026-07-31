@@ -287,6 +287,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           const SizedBox(height: 12),
           Text(
             weather.moonPhase,
+            textAlign: TextAlign.center,
             style: GoogleFonts.cinzelDecorative(
               fontSize: 24,
               color: context.gc.lilac,
