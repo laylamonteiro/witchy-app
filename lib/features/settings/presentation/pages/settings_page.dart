@@ -25,9 +25,10 @@ import 'theme_picker_page.dart';
 import '../../../../core/legal/legal_document_page.dart';
 
 class SettingsPage extends StatelessWidget {
-  /// Seletor de idioma oculto enquanto a tradução total (F4) não termina.
-  /// Quando todo o app estiver traduzido, basta voltar para true.
-  static const bool _showLanguageOption = false;
+  /// Seletor de idioma (pt-BR / EN / ES). Reativado após a conclusão da
+  /// internacionalização: scanner de PT hardcoded limpo e paridade das
+  /// 1195 chaves ARB + conteúdo por locale garantida por testes no CI.
+  static const bool _showLanguageOption = true;
 
   const SettingsPage({super.key});
 

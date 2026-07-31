@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,7 +19,12 @@ class LanguageProvider extends ChangeNotifier {
   Locale _locale = fallbackLocale;
 
   LanguageProvider(this._prefs) {
-    _locale = _localeFromTag(_prefs.getString(preferencesKey));
+    final savedTag = _prefs.getString(preferencesKey);
+    // Sem preferência salva, o idioma inicial segue o do dispositivo
+    // (com fallback pt-BR); a escolha manual é persistida em setLocale.
+    _locale = savedTag != null
+        ? _localeFromTag(savedTag)
+        : _normalize(ui.PlatformDispatcher.instance.locale);
     AIService.instance.setLocale(_locale);
     ContentLocale.instance.setLocale(_locale);
   }
