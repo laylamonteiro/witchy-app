@@ -390,54 +390,6 @@ class ChartCalculator {
     );
   }
 
-  /// Detecta automaticamente o timezone brasileiro baseado na data e localização
-  /// Considera horário de verão histórico (usado até 2019)
-  double _detectBrazilianTimezone(DateTime date, double latitude) {
-    // Timezone padrão do Brasil (maioria das regiões)
-    const standardOffset = -3.0;
-
-    // Horário de verão foi abolido em 2019
-    if (date.year >= 2019) {
-      return standardOffset;
-    }
-
-    // Regiões Norte e Nordeste (latitude > -15) não usavam horário de verão
-    if (latitude > -15) {
-      return standardOffset;
-    }
-
-    // Verificar se estava em período de horário de verão
-    // Horário de verão geralmente: outubro/novembro até fevereiro/março
-    final month = date.month;
-    final day = date.day;
-
-    // Período de verão brasileiro (simplificado):
-    // - Início: terceiro domingo de outubro (geralmente dia 15-21)
-    // - Fim: terceiro domingo de fevereiro (geralmente dia 15-21)
-
-    bool isInDST = false;
-
-    if (month >= 10) {
-      // Outubro a dezembro: verão começa em meados de outubro
-      if (month == 10 && day >= 15) {
-        isInDST = true;
-      } else if (month > 10) {
-        isInDST = true;
-      }
-    } else if (month <= 2) {
-      // Janeiro a fevereiro: verão termina em meados de fevereiro
-      if (month == 1) {
-        isInDST = true;
-      } else if (month == 2 && day <= 20) {
-        isInDST = true;
-      }
-    }
-
-    // Durante horário de verão: UTC-2
-    // Fora do horário de verão: UTC-3
-    return isInDST ? -2.0 : standardOffset;
-  }
-
   /// Converte DateTime para Julian Day
   double _dateTimeToJulianDay(
     DateTime date,

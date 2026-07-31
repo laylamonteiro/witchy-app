@@ -3,6 +3,8 @@ import 'numerology_meanings_data_en.dart';
 import 'numerology_meanings_data_es.dart';
 import 'numerology_meanings_data_pt.dart';
 
+import 'numerology_meanings_models.dart';
+
 export 'numerology_meanings_models.dart';
 
 /// Significados numerológicos no idioma atual do aplicativo.

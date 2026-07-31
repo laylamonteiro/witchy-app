@@ -305,7 +305,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            AppLocalizations.of(context)!.tarotLibraryTitle,
+                            AppLocalizations.of(context).tarotLibraryTitle,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -315,7 +315,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                                 ),
                           ),
                           Text(
-                            AppLocalizations.of(context)!.tarotLibraryDesc,
+                            AppLocalizations.of(context).tarotLibraryDesc,
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
