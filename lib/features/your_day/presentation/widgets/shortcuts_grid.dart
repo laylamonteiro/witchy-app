@@ -17,7 +17,7 @@ class ShortcutsGrid extends StatefulWidget {
 }
 
 class _ShortcutsGridState extends State<ShortcutsGrid> {
-  List<String> _ids = List.of(ShortcutRegistry.defaults);
+  List<String> _ids = List.of(YourDayShortcuts.defaults);
   SharedPreferences? _prefs;
 
   @override
@@ -30,7 +30,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     final userId = context.read<AuthProvider>().currentUser.id;
-    final ids = await ShortcutRegistry.loadIds(prefs, userId);
+    final ids = await YourDayShortcuts.loadIds(prefs, userId);
     if (!mounted) return;
     setState(() {
       _prefs = prefs;
@@ -79,7 +79,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: ShortcutRegistry.all.map((tool) {
+                children: YourDayShortcuts.all.map((tool) {
                   final isSelected = selected.contains(tool.id);
                   return FilterChip(
                     selected: isSelected,
@@ -108,7 +108,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
                   ),
                   onPressed: () {
                     // Preserva a ordem canônica do registry.
-                    final ordered = ShortcutRegistry.all
+                    final ordered = YourDayShortcuts.all
                         .where((t) => selected.contains(t.id))
                         .map((t) => t.id)
                         .toList();
@@ -124,9 +124,9 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
     );
 
     if (result == null || !mounted) return;
-    await ShortcutRegistry.saveIds(prefs, userId, result);
+    await YourDayShortcuts.saveIds(prefs, userId, result);
     setState(() => _ids = result.isEmpty
-        ? List.of(ShortcutRegistry.defaults)
+        ? List.of(YourDayShortcuts.defaults)
         : result);
   }
 
@@ -134,7 +134,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tools = _ids
-        .map(ShortcutRegistry.byId)
+        .map(YourDayShortcuts.byId)
         .whereType<ShortcutTool>()
         .toList();
 

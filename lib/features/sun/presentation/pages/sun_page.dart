@@ -9,6 +9,8 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../encyclopedia/presentation/widgets/related_link.dart';
 import '../../../guided_rituals/data/models/magical_moment_data.dart';
 import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
+// A extensão de SabbatType (name/emoji) precisa estar em escopo aqui.
+import '../../../wheel_of_year/data/models/sabbat_model.dart';
 import '../../data/models/sun_content_data.dart';
 
 /// Página "Sol" da Enciclopédia: o conhecimento de bruxaria do Sol —

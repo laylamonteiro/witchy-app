@@ -33,8 +33,8 @@ class ShortcutTool {
 }
 
 /// Catálogo dos atalhos personalizáveis do "Seu Dia".
-class ShortcutRegistry {
-  const ShortcutRegistry._();
+class YourDayShortcuts {
+  const YourDayShortcuts._();
 
   static final List<ShortcutTool> all = [
     ShortcutTool(
