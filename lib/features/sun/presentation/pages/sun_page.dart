@@ -66,13 +66,20 @@ class SunPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    nowPeriod.goodFor,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.textSecondary,
-                          height: 1.4,
-                        ),
+                  // Slot fixo de 2 linhas: a frase varia de tamanho, mas o
+                  // hero do Sol e o da Lua terminam SEMPRE na mesma altura.
+                  SizedBox(
+                    height: 40,
+                    child: Text(
+                      nowPeriod.goodFor,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
+                            height: 1.4,
+                          ),
+                    ),
                   ),
                 ],
               ),
