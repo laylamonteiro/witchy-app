@@ -303,10 +303,17 @@ Límites:
       _ => 'el color predominante',
     };
     return 'Eres especialista en identificación visual para una app de brujería. '
-        'Analiza la foto e identifica $objetivo mostrado. '
+        'Examina la foto con calma ANTES de nombrar: observa la forma, los colores, '
+        'las hojas, la disposición y cualquier rasgo distintivo de $objetivo. '
+        'Solo afirma un nombre si las características visibles corresponden de verdad a '
+        'algo que reconoces — NUNCA adivines un nombre plausible. '
+        'Sé honesto con la confianza: "high" solo con certeza real; si dudas entre '
+        'especies parecidas, usa "medium" o "low". '
+        'Si la imagen falta, es ilegible o no estás seguro, responde '
+        '"identified": false con "name" vacío — eso es MEJOR que equivocarse. '
         'Responde SOLO con JSON válido, sin texto extra, en el formato: '
-        '{"identified": true/false, "name": "nombre popular en español", "confidence": "high"/"medium"/"low"}. '
-        'Si no puedes identificarlo con seguridad, usa "identified": false y "name" vacío.';
+        '{"identified": true/false, "name": "nombre popular en español", '
+        '"scientific": "nombre científico o vacío", "confidence": "high"/"medium"/"low"}.';
   },
   encyIdentifyUserMessage:
       '¿Qué es esto? Identifícalo para mi enciclopedia mágica.',

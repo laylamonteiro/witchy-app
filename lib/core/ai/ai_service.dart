@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:uuid/uuid.dart';
 
 import '../i18n/gender.dart';
+import '../utils/accents.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../features/astrology/data/models/enums.dart';
 import '../../features/astrology/data/models/magical_profile_model.dart';
@@ -644,7 +645,76 @@ class AIService {
   /// [categoryKey]: `crystal` | `herb` | `color` (invariante).
   /// Retorna `{"identified": bool, "name": String, "confidence": String}`.
   /// A imagem é enviada em memória e não é armazenada pelo serviço.
+  ///
+  /// Auto-consistência: o modelo de visão disponível é fraco em espécies e
+  /// alucina confiança (a mesma foto rendia nomes diferentes, sempre "high").
+  /// Pedimos até 3 opiniões independentes e só aceitamos um nome com
+  /// CONSENSO entre duas delas; sem consenso, respondemos honestamente que
+  /// não identificamos — a página já convida a digitar o nome.
   Future<Map<String, dynamic>> identifyEncyclopediaItem({
+    required List<int> jpegBytes,
+    required String categoryKey,
+  }) async {
+    final votes = <Map<String, dynamic>>[];
+    for (var attempt = 0; attempt < 3; attempt++) {
+      votes.add(await _identifyOnce(
+        jpegBytes: jpegBytes,
+        categoryKey: categoryKey,
+      ));
+      final winner = _identifyConsensus(votes);
+      if (winner != null) return winner;
+    }
+    return {'identified': false, 'name': '', 'confidence': 'low'};
+  }
+
+  /// Consenso entre os votos até agora: dois nomes equivalentes elegem o
+  /// vencedor; dois "não sei" encerram como não identificado. Null = ainda
+  /// sem decisão (peça mais um voto).
+  Map<String, dynamic>? _identifyConsensus(List<Map<String, dynamic>> votes) {
+    if (votes.length < 2) return null;
+
+    String normalize(Object? name) {
+      final lower = removeAccents('$name').toLowerCase();
+      return lower
+          .replaceAll(RegExp(r'[-_]'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+    }
+
+    bool sameName(String a, String b) {
+      if (a.isEmpty || b.isEmpty) return false;
+      if (a == b) return true;
+      // "flor de seda" vs "flor de seda comum": um contém o outro.
+      return a.length >= 4 && b.length >= 4 && (a.contains(b) || b.contains(a));
+    }
+
+    final identified =
+        votes.where((v) => v['identified'] == true).toList(growable: false);
+    for (var i = 0; i < identified.length; i++) {
+      for (var j = i + 1; j < identified.length; j++) {
+        final a = identified[i];
+        final b = identified[j];
+        if (sameName(normalize(a['name']), normalize(b['name']))) {
+          return {
+            'identified': true,
+            'name': a['name'],
+            // Consenso de primeira mantém a confiança declarada; consenso
+            // que precisou de desempate fica em "medium" no máximo.
+            'confidence':
+                votes.length == 2 ? (a['confidence'] ?? 'medium') : 'medium',
+          };
+        }
+      }
+    }
+
+    final unsure = votes.length - identified.length;
+    if (unsure >= 2) {
+      return {'identified': false, 'name': '', 'confidence': 'low'};
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _identifyOnce({
     required List<int> jpegBytes,
     required String categoryKey,
   }) async {

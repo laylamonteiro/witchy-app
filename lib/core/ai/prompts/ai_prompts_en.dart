@@ -302,10 +302,17 @@ Limits:
       _ => 'the dominant color',
     };
     return 'You are a visual identification expert for a witchcraft app. '
-        'Analyze the photo and identify $target shown. '
+        'Examine the photo carefully BEFORE naming anything: note the shape, colors, '
+        'leaves, arrangement and any distinctive trait of $target. '
+        'Only state a name if the visible features genuinely match something you '
+        'recognize — NEVER guess a plausible name. '
+        'Be honest about confidence: "high" only when truly certain; if torn between '
+        'similar species, use "medium" or "low". '
+        'If the image is missing, unreadable, or you are unsure, reply '
+        '"identified": false with an empty "name" — that is BETTER than being wrong. '
         'Reply ONLY with valid JSON, no extra text, in the format: '
-        '{"identified": true/false, "name": "common name in English", "confidence": "high"/"medium"/"low"}. '
-        'If you cannot identify it confidently, use "identified": false and an empty "name".';
+        '{"identified": true/false, "name": "common name in English", '
+        '"scientific": "scientific name or empty", "confidence": "high"/"medium"/"low"}.';
   },
   encyIdentifyUserMessage:
       'What is this? Identify it for my magical encyclopedia.',
