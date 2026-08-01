@@ -94,4 +94,16 @@ class AffirmationProvider with ChangeNotifier {
   List<AffirmationModel> getFavorites() {
     return _affirmations.where((a) => a.isFavorite).toList();
   }
+
+  /// Afirmação do dia (Seu Dia): determinística por data sobre as
+  /// pré-carregadas, ignorando o filtro de categoria. Ordena por id para o
+  /// resultado ser o mesmo em qualquer dispositivo/ordem de leitura do banco.
+  AffirmationModel? affirmationForDate(DateTime date) {
+    final preloaded = _affirmations.where((a) => a.isPreloaded).toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+    if (preloaded.isEmpty) return null;
+    final dayOfYear =
+        date.difference(DateTime(date.year, 1, 1)).inDays + 1;
+    return preloaded[dayOfYear % preloaded.length];
+  }
 }

@@ -13,6 +13,7 @@ import 'rune_detail_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../../core/services/ad_service.dart';
 
 class RuneReadingPage extends StatefulWidget {
   const RuneReadingPage({super.key});
@@ -103,6 +104,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     });
 
     _animController.forward(from: 0);
+
+    // Anúncio intersticial para usuários free (cooldown interno).
+    AdService.instance.maybeShowInterstitial();
 
     // Salvar leitura
     await _saveReading(drawn);

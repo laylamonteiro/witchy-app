@@ -9,7 +9,11 @@ import '../../../../core/theme/app_theme.dart';
 class SpellFormPage extends StatefulWidget {
   final SpellModel? spell;
 
-  const SpellFormPage({super.key, this.spell});
+  /// Categoria pré-selecionada ao criar um feitiço novo (ex.: CTA de um
+  /// ritual guiado). Ignorada ao editar um feitiço existente.
+  final SpellCategory? initialCategory;
+
+  const SpellFormPage({super.key, this.spell, this.initialCategory});
 
   @override
   State<SpellFormPage> createState() => _SpellFormPageState();
@@ -46,6 +50,8 @@ class _SpellFormPageState extends State<SpellFormPage> {
       _selectedType = widget.spell!.type;
       _selectedCategory = widget.spell!.category;
       _selectedMoonPhase = widget.spell!.moonPhase;
+    } else if (widget.initialCategory != null) {
+      _selectedCategory = widget.initialCategory!;
     }
   }
 

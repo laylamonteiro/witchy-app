@@ -13,7 +13,10 @@ import '../../data/data_sources/archetypes_data.dart';
 import '../../data/data_sources/angels_data.dart';
 import '../../data/data_sources/demons_data.dart';
 import '../../data/data_sources/sacred_symbols_data.dart';
+import '../../../guided_rituals/data/models/guided_rituals_data.dart';
+import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
 import '../../../lunar/presentation/pages/lunar_calendar_page.dart';
+import '../../../sun/presentation/pages/sun_page.dart';
 import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
@@ -21,6 +24,7 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/mascot/tour_targets.dart';
 
 class EncyclopediaPage extends StatefulWidget {
   /// Notificador da HomePage: re-toque na aba "Enciclopédia" volta para a
@@ -45,7 +49,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 14, vsync: this);
+    _tabController = TabController(length: 15, vsync: this);
     widget.resetNotifier?.addListener(_onResetRequested);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
     // Notificação pode ter ABERTO o app: trata o link pendente ao montar.
@@ -68,14 +72,30 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
 
   /// Deep link para uma sub-aba da Enciclopédia (lua cheia → Lua, sabbat →
   /// Sabbats...): navega e consome o link. Destinos de outras seções são
-  /// ignorados aqui (a seção dona consome).
+  /// ignorados aqui (a seção dona consome). Destinos de ritual guiado abrem
+  /// a sub-aba e empilham a página guiada por cima (bottom bar visível).
   void _onDeepLink() {
-    final link = DeepLinkService.instance.pending.value;
-    final target = link?.encyclopediaTab;
-    if (target == null || !mounted) return;
+    final pending = DeepLinkService.instance.pending.value;
+    final target = pending?.link.encyclopediaTab;
+    if (pending == null || target == null || !mounted) return;
     if (_tabController.index != target) {
       _tabController.animateTo(target);
     }
+
+    if (pending.link.isGuidedRitual) {
+      // Sabbat resolve o id pelo argumento (ritual/sabbat/<nome>); os demais
+      // têm ritualId fixo. Argumento inválido = só abre a sub-aba.
+      final ritualId = pending.link.ritualId ??
+          (pending.arg != null ? 'sabbat_${pending.arg}' : null);
+      if (ritualId != null && AllGuidedRituals.byId(ritualId) != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => GuidedRitualPage(ritualId: ritualId),
+          ),
+        );
+      }
+    }
+
     DeepLinkService.instance.consume();
   }
 
@@ -100,30 +120,35 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
           preferredSize: const Size.fromHeight(48),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: context.gc.lilac,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              padding: EdgeInsets.zero,
-              labelStyle: const TextStyle(fontSize: 14),
-              unselectedLabelStyle: const TextStyle(fontSize: 14),
-              tabs: [
-                Tab(text: AppLocalizations.of(context).encyTabMoon),
-                Tab(text: AppLocalizations.of(context).encyTabSabbats),
-                Tab(text: AppLocalizations.of(context).encyTabCrystals),
-                Tab(text: AppLocalizations.of(context).encyTabHerbs),
-                Tab(text: AppLocalizations.of(context).encyTabMetals),
-                Tab(text: AppLocalizations.of(context).encyTabColors),
-                Tab(text: AppLocalizations.of(context).encyTabGoddesses),
-                Tab(text: AppLocalizations.of(context).encyTabElements),
-                Tab(text: AppLocalizations.of(context).encyTabAltar),
-                Tab(text: AppLocalizations.of(context).encyTabRunes),
-                Tab(text: AppLocalizations.of(context).encyTabArchetypes),
-                Tab(text: AppLocalizations.of(context).encyTabAngels),
-                Tab(text: AppLocalizations.of(context).encyTabDemons),
-                Tab(text: AppLocalizations.of(context).encyTabSymbols),
-              ],
+            // Alvo do tour do Salem (passo dos sabbats e rituais guiados).
+            child: TourTarget(
+              id: TourTargetIds.encyclopediaTabs,
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: context.gc.lilac,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: EdgeInsets.zero,
+                labelStyle: const TextStyle(fontSize: 14),
+                unselectedLabelStyle: const TextStyle(fontSize: 14),
+                tabs: [
+                  Tab(text: AppLocalizations.of(context).encyTabMoon),
+                  Tab(text: AppLocalizations.of(context).encyTabSun),
+                  Tab(text: AppLocalizations.of(context).encyTabSabbats),
+                  Tab(text: AppLocalizations.of(context).encyTabCrystals),
+                  Tab(text: AppLocalizations.of(context).encyTabHerbs),
+                  Tab(text: AppLocalizations.of(context).encyTabMetals),
+                  Tab(text: AppLocalizations.of(context).encyTabColors),
+                  Tab(text: AppLocalizations.of(context).encyTabGoddesses),
+                  Tab(text: AppLocalizations.of(context).encyTabElements),
+                  Tab(text: AppLocalizations.of(context).encyTabAltar),
+                  Tab(text: AppLocalizations.of(context).encyTabRunes),
+                  Tab(text: AppLocalizations.of(context).encyTabArchetypes),
+                  Tab(text: AppLocalizations.of(context).encyTabAngels),
+                  Tab(text: AppLocalizations.of(context).encyTabDemons),
+                  Tab(text: AppLocalizations.of(context).encyTabSymbols),
+                ],
+              ),
             ),
           ),
         ),
@@ -132,6 +157,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
         controller: _tabController,
         children: [
           const LunarCalendarPage(embedded: true),
+          const SunPage(),
           const WheelOfYearPage(embedded: true),
           const CrystalsListPage(),
           const HerbsListPage(),

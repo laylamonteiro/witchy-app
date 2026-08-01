@@ -53,6 +53,13 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- AdMob APPLICATION_ID: este é o ID DE TESTE oficial do Google.
+             Troque pelo ID real do app quando a conta AdMob for criada
+             (Configurações do app no AdMob > ID do aplicativo). -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
             android:exported="false" />

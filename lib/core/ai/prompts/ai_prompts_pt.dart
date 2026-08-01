@@ -256,6 +256,51 @@ Limites:
   palmUserMessage:
       'Esta é a palma da minha mão. Faça minha leitura de quiromancia.',
   palmDebugUserMessage: 'Descreva brevemente esta palma da mão.',
+  encyIdentifySystemPrompt: (categoryKey) {
+    final alvo = switch (categoryKey) {
+      'crystal' => 'o cristal ou pedra',
+      'herb' => 'a erva ou planta',
+      _ => 'a cor predominante',
+    };
+    return 'Você é especialista em identificação visual para um app de bruxaria. '
+        'Analise a foto e identifique $alvo mostrado(a). '
+        'Responda APENAS com JSON válido, sem nenhum texto extra, no formato: '
+        '{"identified": true/false, "name": "nome popular em português", "confidence": "high"/"medium"/"low"}. '
+        'Se não conseguir identificar com segurança, use "identified": false e "name" vazio.';
+  },
+  encyIdentifyUserMessage:
+      'O que é isto? Identifique para a minha enciclopédia mágica.',
+  encyGenerateSystemPrompt: (categoryKey, name) {
+    const commonPt =
+        'Você é uma bruxa erudita escrevendo verbetes para a enciclopédia mágica pessoal de uma praticante. '
+        'Escreva em português, com tom acolhedor e prático. '
+        'Responda APENAS com JSON válido, sem texto extra. As CHAVES do JSON e os valores de enum são SEMPRE em inglês; os TEXTOS, em português.';
+    switch (categoryKey) {
+      case 'crystal':
+        return '$commonPt Formato: {"name": string, "description": string (2-3 frases), '
+            '"element": "earth"|"water"|"air"|"fire"|"spirit", '
+            '"intentions": [3-5 strings], "usageTips": [3-5 strings], '
+            '"cleaningMethods": [{"method": string, "isSafe": bool, "warning": string|null} x3], '
+            '"chargingMethods": [{"method": string, "isSafe": bool, "warning": string|null} x3], '
+            '"safetyWarnings": [strings, pode ser vazio]}. '
+            'Cuidado com métodos de água/sal/sol em pedras que não os toleram (marque isSafe=false com warning).';
+      case 'herb':
+        return '$commonPt Formato: {"name": string, "scientificName": string, '
+            '"description": string (2-3 frases), '
+            '"element": "earth"|"water"|"air"|"fire", '
+            '"planet": "sun"|"moon"|"mercury"|"venus"|"mars"|"jupiter"|"saturn", '
+            '"magicalProperties": [3-5 strings], "ritualUses": [3-5 strings], '
+            '"safetyWarnings": [strings, seja rigorosa com toxicidade], '
+            '"edible": bool, "toxic": bool, "folkNames": string|null}. '
+            'Na dúvida sobre segurança, marque edible=false e explique em safetyWarnings.';
+      default:
+        return '$commonPt Formato: {"name": string, "hex": "#RRGGBB", '
+            '"meaning": string (2-3 frases sobre o significado mágico da cor), '
+            '"intentions": [3-5 strings], "usageTips": [3-5 strings]}.';
+    }
+  },
+  encyGenerateUserMessage: (name) =>
+      'Crie o verbete completo de: $name',
   affirmationUserPrompt: (category, userContext) =>
       userContext != null && userContext.isNotEmpty
           ? 'Categoria: $category\nContexto do usuário: $userContext'

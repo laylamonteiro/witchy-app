@@ -8,6 +8,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../../core/services/ad_service.dart';
 
 /// Conselheiro Místico: responde perguntas sobre bruxaria, magia e misticismo.
 ///
@@ -100,6 +101,9 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
         _answer = answer;
       });
       _startTypewriter(answer);
+
+      // Anúncio intersticial para usuários free (cooldown interno).
+      AdService.instance.maybeShowInterstitial();
     } catch (e) {
       if (!mounted) return;
 

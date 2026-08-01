@@ -34,6 +34,10 @@ class AiPrompts {
     required this.dreamInterpreterSystemPrompt,
     required this.palmUserMessage,
     required this.palmDebugUserMessage,
+    required this.encyIdentifySystemPrompt,
+    required this.encyIdentifyUserMessage,
+    required this.encyGenerateSystemPrompt,
+    required this.encyGenerateUserMessage,
     required this.affirmationUserPrompt,
     required this.dreamUserPrompt,
     required this.defaultSpellName,
@@ -85,6 +89,23 @@ class AiPrompts {
 
   /// Mensagem de usuário do diagnóstico admin da leitura de mãos.
   final String palmDebugUserMessage;
+
+  /// Identificação de item da enciclopédia por foto (visão). Recebe a chave
+  /// da categoria (`crystal`/`herb`/`color`, invariante) e retorna JSON
+  /// estrito `{"identified": bool, "name": string, "confidence": string}`.
+  final String Function(String categoryKey) encyIdentifySystemPrompt;
+
+  /// Mensagem de usuário enviada junto com a foto a identificar.
+  final String encyIdentifyUserMessage;
+
+  /// Geração da página da enciclopédia pessoal. Recebe a chave da categoria
+  /// e o nome confirmado pela usuária; o JSON de saída usa SEMPRE chaves e
+  /// valores de enum em inglês (invariante, igual ao feitiço).
+  final String Function(String categoryKey, String name)
+      encyGenerateSystemPrompt;
+
+  /// Mensagem de usuário da geração da página (nome do item).
+  final String Function(String name) encyGenerateUserMessage;
 
   /// Mensagem de usuário da afirmação (categoria + contexto opcional).
   final String Function(String category, String? userContext)

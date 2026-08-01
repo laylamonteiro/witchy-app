@@ -148,6 +148,15 @@ class DailyWeatherRepository {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
+  /// Chave de contexto do cache: 'general' sem mapa natal, senão o hash do
+  /// mapa. Público para que leitores externos (ex.: card do Seu Dia) consultem
+  /// o cache com a MESMA chave usada na geração.
+  static String contextKeyFor(BirthChartModel? natalChart) {
+    return natalChart == null
+        ? 'general'
+        : sha256.convert(utf8.encode(natalChart.toJsonString())).toString();
+  }
+
   /// Verifica se já existe clima para o dia
   Future<DailyWeatherCache?> getCachedWeather(
     DateTime date,
@@ -190,9 +199,7 @@ class DailyWeatherRepository {
     required String userId,
     BirthChartModel? natalChart,
   }) async {
-    final contextKey = natalChart == null
-        ? 'general'
-        : sha256.convert(utf8.encode(natalChart.toJsonString())).toString();
+    final contextKey = contextKeyFor(natalChart);
     // Verificar cache primeiro. Um cache incompleto (ex.: fallback antigo com
     // menos seções, salvo quando a IA estava indisponível) é tratado como
     // obsoleto e regerado.

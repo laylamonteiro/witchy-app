@@ -62,6 +62,16 @@ enum AppFeature {
   wheelOfYearBasic,
   wheelOfYearDetails,
 
+  // Rituais guiados (páginas de conteúdo são free; player passo a passo
+  // é Premium com preview)
+  guidedRitualPlayer,
+
+  // Conhecimento de bruxaria solar (página Sol) — Premium com preview
+  sunKnowledge,
+
+  // Enciclopédia pessoal (entradas criadas pela usuária com foto + IA)
+  encyclopediaPersonalEntries,
+
   // Funcionalidades de IA
   aiMysticCounselor,
   aiDreamAnalysis,
@@ -418,6 +428,12 @@ class FeatureAccessService {
         return _l10n.featurePreviewLearning;
       case AppFeature.aiPalmistry:
         return _l10n.featurePreviewPalmistry;
+      case AppFeature.guidedRitualPlayer:
+        return _l10n.featurePreviewGuidedRituals;
+      case AppFeature.sunKnowledge:
+        return _l10n.featurePreviewEncyclopedia;
+      case AppFeature.encyclopediaPersonalEntries:
+        return _l10n.featurePreviewPersonalEncyclopedia;
       default:
         return FeatureAccessMessages.preview;
     }

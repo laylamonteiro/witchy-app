@@ -4,9 +4,13 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/wheel_of_year_provider.dart';
 import '../../data/models/sabbat_model.dart';
+import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../encyclopedia/presentation/widgets/related_link.dart';
+import '../../../guided_rituals/data/models/guided_rituals_data.dart';
+import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
 
 class WheelOfYearPage extends StatelessWidget {
   final bool embedded;
@@ -264,7 +268,7 @@ class WheelOfYearPage extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
+      builder: (sheetContext) => Padding(
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
           child: Column(
@@ -294,6 +298,25 @@ class WheelOfYearPage extends StatelessWidget {
                   sabbat.name,
                   style: Theme.of(context).textTheme.headlineMedium,
                   textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: MagicalButton(
+                text: AppLocalizations.of(context).guidedRitualOpenCta,
+                icon: Icons.auto_awesome,
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GuidedRitualPage(
+                        ritualId:
+                            AllGuidedRituals.forSabbat(sabbat.type).id,
+                      ),
+                    ),
+                  );
+                },
                 ),
               ),
               const SizedBox(height: 24),
@@ -408,12 +431,8 @@ class WheelOfYearPage extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: sabbat.type.crystals
-                    .map((crystal) => Chip(
-                          label: Text(crystal),
-                          backgroundColor:
-                              context.gc.lilac.withValues(alpha: 0.2),
-                          side: BorderSide(color: context.gc.lilac),
-                        ))
+                    .map((crystal) => LinkableChip(
+                        label: crystal, color: context.gc.lilac))
                     .toList(),
               ),
               const SizedBox(height: 16),
@@ -426,12 +445,8 @@ class WheelOfYearPage extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: sabbat.type.herbs
-                    .map((herb) => Chip(
-                          label: Text(herb),
-                          backgroundColor:
-                              context.gc.mint.withValues(alpha: 0.2),
-                          side: BorderSide(color: context.gc.mint),
-                        ))
+                    .map((herb) => LinkableChip(
+                        label: herb, color: context.gc.mint))
                     .toList(),
               ),
               const SizedBox(height: 16),
@@ -444,12 +459,8 @@ class WheelOfYearPage extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: sabbat.type.colors
-                    .map((color) => Chip(
-                          label: Text(color),
-                          backgroundColor:
-                              context.gc.starYellow.withValues(alpha: 0.2),
-                          side: BorderSide(color: context.gc.starYellow),
-                        ))
+                    .map((color) => LinkableChip(
+                        label: color, color: context.gc.starYellow))
                     .toList(),
               ),
               const SizedBox(height: 16),

@@ -3,10 +3,12 @@ import '../../data/models/crystal_model.dart';
 import '../../data/models/color_model.dart';
 import '../../data/models/herb_model.dart';
 import '../../data/models/metal_model.dart';
+import '../../data/models/user_entry_model.dart';
 import '../../data/data_sources/crystals_data.dart';
 import '../../data/data_sources/colors_data.dart';
 import '../../data/data_sources/herbs_data.dart';
 import '../../data/data_sources/metals_data.dart';
+import '../../data/repositories/user_encyclopedia_repository.dart';
 
 class EncyclopediaProvider with ChangeNotifier {
   // Getters diretos (não campos) para que a troca de idioma em runtime
@@ -20,6 +22,61 @@ class EncyclopediaProvider with ChangeNotifier {
   List<ColorModel> get colors => _colors;
   List<HerbModel> get herbs => _herbs;
   List<MetalModel> get metals => _metals;
+
+  // ---- Entradas pessoais (foto + IA, Premium) ----
+
+  final UserEncyclopediaRepository _userRepository =
+      UserEncyclopediaRepository();
+
+  String _userId = 'local_user';
+  String? _loadedForUserId;
+  Map<UserEntryCategory, List<UserEncyclopediaEntry>> _userEntries = {};
+
+  List<UserEncyclopediaEntry> userEntries(UserEntryCategory category) =>
+      _userEntries[category] ?? const [];
+
+  /// Carrega as entradas pessoais da conta atual (no-op se já carregadas
+  /// para o mesmo usuário — o update do ProxyProvider dispara a cada notify
+  /// do AuthProvider).
+  Future<void> loadUserEntries(String userId) async {
+    if (_loadedForUserId == userId) return;
+    _loadedForUserId = userId;
+    _userId = userId;
+    final loaded = <UserEntryCategory, List<UserEncyclopediaEntry>>{};
+    for (final category in UserEntryCategory.values) {
+      loaded[category] = await _userRepository.entriesFor(userId, category);
+    }
+    _userEntries = loaded;
+    notifyListeners();
+  }
+
+  Future<UserEncyclopediaEntry> addUserEntry({
+    required UserEntryCategory category,
+    required String name,
+    String? imagePath,
+    required Map<String, dynamic> data,
+  }) async {
+    final entry = await _userRepository.create(
+      userId: _userId,
+      category: category,
+      name: name,
+      imagePath: imagePath,
+      data: data,
+    );
+    _userEntries[category] = [entry, ...userEntries(category)];
+    notifyListeners();
+    return entry;
+  }
+
+  Future<void> deleteUserEntry(UserEncyclopediaEntry entry) async {
+    await _userRepository.delete(entry);
+    _userEntries[entry.category] =
+        userEntries(entry.category).where((e) => e.id != entry.id).toList();
+    notifyListeners();
+  }
+
+  Future<int> userEntriesCreatedToday() =>
+      _userRepository.countCreatedToday(_userId);
 
   List<CrystalModel> searchCrystals(String query) {
     final lowerQuery = query.toLowerCase();

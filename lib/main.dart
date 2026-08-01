@@ -14,10 +14,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/theme_provider.dart';
 import 'core/database/database_helper.dart';
+import 'core/providers/mascot_provider.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/sync_provider.dart';
 import 'core/providers/language_provider.dart';
 import 'core/config/supabase_config.dart';
+import 'core/services/ad_service.dart';
 import 'core/services/payment_service.dart';
 import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
@@ -115,6 +117,9 @@ void main() async {
       DeepLinkService.instance
           .dispatchPayload(launchDetails!.notificationResponse?.payload);
     }
+
+    // Anúncios (free): inicialização em segundo plano, sem atrasar o boot.
+    unawaited(AdService.instance.initialize());
   }
 
   runApp(GrimorioDeBolsoApp(prefs: prefs));
@@ -137,6 +142,11 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>();
 
+  /// Instância única do Salem, viva pelo app inteiro: o "refresh" de sessão
+  /// (30 min em background) precisa chamar show() para o gatinho escondido
+  /// voltar — o esconderijo nunca sobrevive a uma sessão nova.
+  late final MascotProvider _mascotProvider = MascotProvider(widget.prefs);
+
   @override
   void initState() {
     super.initState();
@@ -154,6 +164,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
   void dispose() {
     DeepLinkService.instance.pending.removeListener(_onDeepLink);
     WidgetsBinding.instance.removeObserver(this);
+    _mascotProvider.dispose();
     super.dispose();
   }
 
@@ -211,6 +222,8 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     await widget.prefs.setInt(_lastOpenedKey, now.millisecondsSinceEpoch);
 
     if (shouldStartNewSession && mounted) {
+      // Sessão nova = Salem de volta (o esconderijo é sempre temporário).
+      _mascotProvider.show();
       // Recria toda a navegação, como em uma abertura real: páginas internas
       // são descartadas, o splash reaparece e a bubble verifica o novo dia.
       _rootNavigatorKey.currentState?.pushAndRemoveUntil(
@@ -248,6 +261,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(widget.prefs)),
+        ChangeNotifierProvider.value(value: _mascotProvider),
         ChangeNotifierProxyProvider<AuthProvider, LearningProvider>(
           create: (_) => LearningProvider(),
           update: (_, auth, provider) {
@@ -302,7 +316,13 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             return provider;
           },
         ),
-        ChangeNotifierProvider(create: (_) => EncyclopediaProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, EncyclopediaProvider>(
+          create: (_) => EncyclopediaProvider(),
+          update: (_, auth, provider) {
+            provider!.loadUserEntries(auth.currentUser.id);
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => LunarProvider()),
         ChangeNotifierProvider(create: (_) => WheelOfYearProvider()),
         ChangeNotifierProxyProvider<AuthProvider, AstrologyProvider>(

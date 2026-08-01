@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/i18n/gender.dart';
+import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -639,6 +640,13 @@ class SettingsPage extends StatelessWidget {
           _buildDivider(context),
           _buildOptionTile(
             context,
+            icon: Icons.pets_outlined,
+            title: AppLocalizations.of(context).settingsSalem,
+            onTap: () => _showSalemBottomSheet(context),
+          ),
+          _buildDivider(context),
+          _buildOptionTile(
+            context,
             icon: Icons.privacy_tip_outlined,
             title: AppLocalizations.of(context).settingsPrivacy,
             onTap: () => Navigator.push(
@@ -669,6 +677,64 @@ class SettingsPage extends StatelessWidget {
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Configurações do Salem: rever o tour guiado. (Esconder o Salem é um
+  /// segredo do próprio gatinho: 5 toques nele — e ele sempre volta na
+  /// próxima sessão ou com 5 toques na tela.)
+  void _showSalemBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.gc.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Consumer<MascotProvider>(
+          builder: (context, mascot, _) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('🐈‍⬛', style: TextStyle(fontSize: 26)),
+                  const SizedBox(width: 12),
+                  Text(
+                    AppLocalizations.of(context).settingsSalem,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                AppLocalizations.of(context).settingsSalemDesc,
+                style: TextStyle(
+                  color: context.gc.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.replay, color: context.gc.lilac),
+                title: Text(AppLocalizations.of(context).settingsReplayTour),
+                onTap: () {
+                  mascot.requestTour();
+                  // Fecha o sheet e as Configurações para revelar a HomePage.
+                  Navigator.of(sheetContext).pop();
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -763,6 +829,21 @@ class SettingsPage extends StatelessWidget {
                         onChanged: (value) async {
                           await notificationProvider
                               .setSabbatNotifications(value);
+                          if (context.mounted) {
+                            _scheduleNotifications(context);
+                          }
+                        },
+                      ),
+                      Divider(color: context.gc.textPrimary10),
+                      _NotificationTile(
+                        icon: '🌞',
+                        title: AppLocalizations.of(context).settingsSunWater,
+                        subtitle:
+                            AppLocalizations.of(context).settingsSunWaterDesc,
+                        value: notificationProvider.sunWaterNotifications,
+                        onChanged: (value) async {
+                          await notificationProvider
+                              .setSunWaterNotifications(value);
                           if (context.mounted) {
                             _scheduleNotifications(context);
                           }

@@ -10,6 +10,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
 import '../../../auth/auth.dart';
 import '../../data/models/pendulum_model.dart';
+import '../../../../core/services/ad_service.dart';
 
 class PendulumPage extends StatefulWidget {
   const PendulumPage({super.key});
@@ -99,6 +100,9 @@ class _PendulumPageState extends State<PendulumPage>
       _answer = answers[random.nextInt(answers.length)];
       _isSwinging = false;
     });
+
+    // Anúncio intersticial para usuários free (cooldown interno).
+    AdService.instance.maybeShowInterstitial();
 
     // Salvar histórico
     _saveConsultation();

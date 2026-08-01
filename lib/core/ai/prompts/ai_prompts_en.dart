@@ -292,6 +292,51 @@ Limits:
 - $_preservationEn''',
   palmUserMessage: 'This is the palm of my hand. Do my palmistry reading.',
   palmDebugUserMessage: 'Briefly describe this palm.',
+  encyIdentifySystemPrompt: (categoryKey) {
+    final target = switch (categoryKey) {
+      'crystal' => 'the crystal or stone',
+      'herb' => 'the herb or plant',
+      _ => 'the dominant color',
+    };
+    return 'You are a visual identification expert for a witchcraft app. '
+        'Analyze the photo and identify $target shown. '
+        'Reply ONLY with valid JSON, no extra text, in the format: '
+        '{"identified": true/false, "name": "common name in English", "confidence": "high"/"medium"/"low"}. '
+        'If you cannot identify it confidently, use "identified": false and an empty "name".';
+  },
+  encyIdentifyUserMessage:
+      'What is this? Identify it for my magical encyclopedia.',
+  encyGenerateSystemPrompt: (categoryKey, name) {
+    const commonEn =
+        'You are a learned witch writing entries for a practitioner\'s personal magical encyclopedia. '
+        'Write in English, with a welcoming, practical tone. '
+        'Reply ONLY with valid JSON, no extra text. JSON KEYS and enum values are ALWAYS in English.';
+    switch (categoryKey) {
+      case 'crystal':
+        return '$commonEn Format: {"name": string, "description": string (2-3 sentences), '
+            '"element": "earth"|"water"|"air"|"fire"|"spirit", '
+            '"intentions": [3-5 strings], "usageTips": [3-5 strings], '
+            '"cleaningMethods": [{"method": string, "isSafe": bool, "warning": string|null} x3], '
+            '"chargingMethods": [{"method": string, "isSafe": bool, "warning": string|null} x3], '
+            '"safetyWarnings": [strings, may be empty]}. '
+            'Mind water/salt/sun methods on stones that do not tolerate them (mark isSafe=false with a warning).';
+      case 'herb':
+        return '$commonEn Format: {"name": string, "scientificName": string, '
+            '"description": string (2-3 sentences), '
+            '"element": "earth"|"water"|"air"|"fire", '
+            '"planet": "sun"|"moon"|"mercury"|"venus"|"mars"|"jupiter"|"saturn", '
+            '"magicalProperties": [3-5 strings], "ritualUses": [3-5 strings], '
+            '"safetyWarnings": [strings, be strict about toxicity], '
+            '"edible": bool, "toxic": bool, "folkNames": string|null}. '
+            'When in doubt about safety, set edible=false and explain in safetyWarnings.';
+      default:
+        return '$commonEn Format: {"name": string, "hex": "#RRGGBB", '
+            '"meaning": string (2-3 sentences on the magical meaning of the color), '
+            '"intentions": [3-5 strings], "usageTips": [3-5 strings]}.';
+    }
+  },
+  encyGenerateUserMessage: (name) =>
+      'Create the full entry for: $name',
   affirmationUserPrompt: (category, userContext) =>
       userContext != null && userContext.isNotEmpty
           ? 'Category: $category\nUser context: $userContext'

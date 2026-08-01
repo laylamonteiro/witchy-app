@@ -692,7 +692,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         'rune_readings',
         'pendulum_consultations',
         'oracle_readings',
-        'daily_magical_weather'
+        'daily_magical_weather',
+        'learning_progress',
+        'guided_ritual_logs',
+        'user_encyclopedia_entries'
       ];
 
       for (final table in tables) {
@@ -789,7 +792,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           'rune_readings',
           'pendulum_consultations',
           'oracle_readings',
-          'daily_magical_weather'
+          'daily_magical_weather',
+          'learning_progress',
+          'guided_ritual_logs',
+          'user_encyclopedia_entries'
         ];
 
         for (final table in tables) {

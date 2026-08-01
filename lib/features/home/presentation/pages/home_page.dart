@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/presentation/pages/grimoire_page.dart';
+import '../../../your_day/presentation/pages/your_day_page.dart';
 import '../../../diary/presentation/pages/diary_page.dart';
 import '../../../encyclopedia/presentation/pages/encyclopedia_page.dart';
 import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
+import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
+import '../../../../core/widgets/mascot/salem_tour.dart';
+import '../../../../core/widgets/mascot/tour_targets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,9 +24,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  /// A tela inicial é SEMPRE a Enciclopédia Mágica (aba 0), que abre na
-  /// sub-aba da Lua — tanto em aberturas novas quanto no "refresh" de sessão
-  /// (AppSessionPolicy recria a navegação inteira, voltando para cá).
+  /// A tela inicial é SEMPRE o "Seu Dia" (aba 0) — tanto em aberturas novas
+  /// quanto no "refresh" de sessão (AppSessionPolicy recria a navegação
+  /// inteira, voltando para cá).
   int _selectedIndex = 0;
 
   /// Momento do último toque em "voltar" na raiz de uma aba — usado para o
@@ -33,23 +39,32 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// cristais, feitiços, sigilos etc.) são empilhadas DENTRO da aba, mantendo
   /// a bottom bar sempre visível. Fluxos de tela cheia (Configurações,
   /// Assinatura) devem usar `Navigator.of(context, rootNavigator: true)`.
+  /// Abas: 0 = Seu Dia, 1 = Enciclopédia, 2 = Grimório, 3 = Diários.
   final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
-    3,
+    4,
     (_) => GlobalKey<NavigatorState>(),
   );
 
   /// Notificadores de reset por seção (re-toque na aba ativa → seção volta
   /// à primeira aba interna).
   final List<SectionResetNotifier> _resetNotifiers = List.generate(
-    3,
+    4,
     (_) => SectionResetNotifier(),
   );
 
   late final List<Widget> _pages = [
-    EncyclopediaPage(resetNotifier: _resetNotifiers[0]),
-    GrimoirePage(resetNotifier: _resetNotifiers[1]),
-    DiaryPage(resetNotifier: _resetNotifiers[2]),
+    YourDayPage(resetNotifier: _resetNotifiers[0]),
+    EncyclopediaPage(resetNotifier: _resetNotifiers[1]),
+    GrimoirePage(resetNotifier: _resetNotifiers[2]),
+    DiaryPage(resetNotifier: _resetNotifiers[3]),
   ];
+
+  /// Tour do Salem em exibição?
+  bool _showTour = false;
+
+  /// Contagem de toques seguidos na tela para o Salem escondido voltar.
+  int _returnTapCount = 0;
+  DateTime? _lastReturnTap;
 
   @override
   void initState() {
@@ -57,7 +72,45 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
     // Link pendente de um toque em notificação que ABRIU o app.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLink());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onDeepLink();
+      _maybeStartTour();
+    });
+  }
+
+  /// 1º acesso desta conta: o Salem apresenta o app (com opção de pular).
+  void _maybeStartTour() {
+    if (!mounted || _showTour) return;
+    final mascot = context.read<MascotProvider>();
+    final userId = context.read<AuthProvider>().currentUser.id;
+    if (!mascot.hasSeenTour(userId)) {
+      setState(() => _showTour = true);
+    }
+  }
+
+  void _finishTour() {
+    final mascot = context.read<MascotProvider>();
+    final userId = context.read<AuthProvider>().currentUser.id;
+    mascot.markTourSeen(userId);
+    // O Salem-guia sai de cena e o mascote real entra em fumaça no lugar.
+    mascot.materializeNext();
+    setState(() => _showTour = false);
+  }
+
+  /// Salem escondido: 5 toques seguidos em qualquer lugar da tela (janela de
+  /// 1,5s entre toques) o trazem de volta em fumaça.
+  void _onHiddenScreenTap(PointerDownEvent _) {
+    final now = DateTime.now();
+    if (_lastReturnTap != null &&
+        now.difference(_lastReturnTap!).inMilliseconds > 1500) {
+      _returnTapCount = 0;
+    }
+    _lastReturnTap = now;
+    _returnTapCount++;
+    if (_returnTapCount >= 5) {
+      _returnTapCount = 0;
+      context.read<MascotProvider>().show();
+    }
   }
 
   @override
@@ -75,7 +128,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// seção à raiz; a própria seção (ex.: Enciclopédia) escolhe a sub-aba e
   /// consome o link.
   void _onDeepLink() {
-    final link = DeepLinkService.instance.pending.value;
+    final link = DeepLinkService.instance.pending.value?.link;
     if (link == null || !mounted) return;
     _navigatorKeys[link.homeTab]
         .currentState
@@ -153,28 +206,77 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         if (didPop) return;
         _handleSystemBack();
       },
-      child: Scaffold(
-        body: Stack(
-          children: [
-            // Páginas principais — cada aba com seu próprio Navigator
-            IndexedStack(
-              index: _selectedIndex,
-              children: List.generate(3, _buildTabNavigator),
-            ),
+      child: Consumer<MascotProvider>(
+        builder: (context, mascot, _) {
+          if (mascot.tourRequested) {
+            // "Rever tour com o Salem" nas Configurações.
+            mascot.consumeTourRequest();
+            _showTour = true;
+          }
+          // O tour vive FORA do Scaffold para escurecer a tela inteira —
+          // inclusive a bottom bar, que ele ilumina item a item.
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: _buildScaffold(context, mascot),
+              ),
+              if (_showTour)
+                Positioned.fill(
+                  child: SalemTourOverlay(
+                    onTabChange: (index) =>
+                        setState(() => _selectedIndex = index),
+                    onFinished: _finishTour,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, MascotProvider mascot) {
+    // Durante o tour quem aparece é o Salem-guia do overlay: o mascote real
+    // (e o contador de toques para trazê-lo de volta) fica fora de cena.
+    final showMascot = !mascot.isHidden && !_showTour;
+    final showReturnTapCounter = mascot.isHidden && !_showTour;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Páginas principais — cada aba com seu próprio Navigator
+          IndexedStack(
+            index: _selectedIndex,
+            children: List.generate(4, _buildTabNavigator),
+          ),
+          if (showMascot) ...[
             CatChatBubble(mascotPosition: _mascotPosition),
-            // Mascote arrastável flutuando sobre o conteúdo — deve sobrepor o balão
+            // Mascote flutuando sobre o conteúdo — sobrepõe o balão
             DraggableCatMascot(
               initialX: 20,
               initialY: 120,
               size: 100,
               positionNotifier: _mascotPosition,
-              onTap: () {
-                // Opcional: adicionar interação ao clicar no mascote
-              },
+              onDismissed: mascot.hide,
+              // Voltou do esconderijo (ou do tour) → materializa em fumaça.
+              appearInSmoke: mascot.appearPending,
+              onAppeared: mascot.consumeAppearPending,
             ),
           ],
-        ),
-        bottomNavigationBar: Container(
+          if (showReturnTapCounter)
+            // Salem escondido: contador invisível de toques para ele voltar.
+            // Translucent = não bloqueia a UI de baixo.
+            Positioned.fill(
+              child: Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: _onHiddenScreenTap,
+              ),
+            ),
+        ],
+      ),
+      bottomNavigationBar: TourTarget(
+        id: TourTargetIds.bottomBar,
+        child: Container(
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
@@ -186,7 +288,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           child: BottomNavigationBar(
             currentIndex: _selectedIndex,
             onTap: _onTabTapped,
+            type: BottomNavigationBarType.fixed,
             items: [
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.auto_awesome),
+                label: AppLocalizations.of(context).navYourDay,
+              ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.auto_stories),
                 label: AppLocalizations.of(context).navEncyclopedia,

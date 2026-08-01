@@ -777,7 +777,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'rune_readings',
         'pendulum_consultations',
         'oracle_readings',
-        'daily_magical_weather'
+        'daily_magical_weather',
+        'learning_progress',
+        'guided_ritual_logs',
+        'user_encyclopedia_entries'
       ];
 
       for (final table in tables) {
@@ -873,7 +876,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           'rune_readings',
           'pendulum_consultations',
           'oracle_readings',
-          'daily_magical_weather'
+          'daily_magical_weather',
+          'learning_progress',
+          'guided_ritual_logs',
+          'user_encyclopedia_entries'
         ];
 
         for (final table in tables) {

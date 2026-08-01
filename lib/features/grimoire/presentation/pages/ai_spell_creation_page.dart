@@ -10,6 +10,7 @@ import 'spell_detail_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../../core/services/ad_service.dart';
 
 class AISpellCreationPage extends StatefulWidget {
   const AISpellCreationPage({super.key});
@@ -91,6 +92,9 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       setState(() {
         _generatedSpell = spell;
       });
+
+      // Anúncio intersticial para usuários free (cooldown interno).
+      AdService.instance.maybeShowInterstitial();
     } catch (e) {
       if (!mounted) return;
 

@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 16,
+      version: 17,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -294,6 +294,38 @@ class DatabaseHelper {
       )
     ''');
 
+    // Registro de rituais guiados concluídos (sabbats, luas, águas mágicas).
+    // ritual_id referencia ids estáticos de AllGuidedRituals (não é FK).
+    await db.execute('''
+      CREATE TABLE guided_ritual_logs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        ritual_id TEXT NOT NULL,
+        event_date INTEGER,
+        xp INTEGER NOT NULL DEFAULT 0,
+        notes TEXT,
+        completed_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    // Entradas pessoais da enciclopédia (foto + página gerada por IA).
+    // `data` guarda o JSON com os campos do modelo da categoria.
+    await db.execute('''
+      CREATE TABLE user_encyclopedia_entries (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        category TEXT NOT NULL,
+        name TEXT NOT NULL,
+        image_path TEXT,
+        data TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
     // Criar índices para user_id em todas as tabelas
     await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
     await db.execute(
@@ -325,6 +357,10 @@ class DatabaseHelper {
         'CREATE INDEX idx_oracle_readings_user_id ON oracle_readings(user_id)');
     await db.execute(
         'CREATE INDEX idx_weather_user_id ON daily_magical_weather(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_guided_ritual_logs_user_id ON guided_ritual_logs(user_id)');
+    await db.execute(
+        'CREATE INDEX idx_user_ency_entries_user_id ON user_encyclopedia_entries(user_id)');
   }
 
   /// Migra o banco de dados de uma versão antiga para a nova
@@ -941,6 +977,41 @@ class DatabaseHelper {
             'CREATE INDEX IF NOT EXISTS idx_learning_progress_user_id ON learning_progress(user_id)');
       }
     }
+
+    // Migração para versão 17: rituais guiados + enciclopédia pessoal
+    if (oldVersion < 17) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS guided_ritual_logs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT 'local_user',
+          ritual_id TEXT NOT NULL,
+          event_date INTEGER,
+          xp INTEGER NOT NULL DEFAULT 0,
+          notes TEXT,
+          completed_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          synced INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_guided_ritual_logs_user_id ON guided_ritual_logs(user_id)');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS user_encyclopedia_entries (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT 'local_user',
+          category TEXT NOT NULL,
+          name TEXT NOT NULL,
+          image_path TEXT,
+          data TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          synced INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_user_ency_entries_user_id ON user_encyclopedia_entries(user_id)');
+    }
   }
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
@@ -965,6 +1036,8 @@ class DatabaseHelper {
       'oracle_readings',
       'daily_magical_weather',
       'learning_progress',
+      'guided_ritual_logs',
+      'user_encyclopedia_entries',
     ];
 
     await db.transaction((txn) async {
@@ -1059,6 +1132,8 @@ class DatabaseHelper {
       'oracle_readings',
       'daily_magical_weather',
       'learning_progress',
+      'guided_ritual_logs',
+      'user_encyclopedia_entries',
     ];
 
     for (final table in tables) {

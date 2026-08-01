@@ -103,6 +103,17 @@ class _DiagnosticPageState extends State<DiagnosticPage>
   bool _isTesting = false;
   String? _result;
 
+  // Payload da notificação de teste (null = destino padrão, aba Lua).
+  String? _debugNotifPayload;
+  static const Map<String, String?> _debugNotifPayloads = {
+    'Padrão (aba Lua)': null,
+    'Sabbats (aba)': 'encyclopedia/sabbats',
+    'Ritual guiado: Imbolc': 'ritual/sabbat/imbolc',
+    'Ritual guiado: Lua Cheia': 'ritual/full_moon',
+    'Ritual guiado: Lua Nova': 'ritual/new_moon',
+    'Ritual guiado: Água Solar': 'ritual/sun_water',
+  };
+
   // Diagnóstico de Quiromancia (visão)
   final _palmPicker = ImagePicker();
   bool _isTestingPalm = false;
@@ -1118,11 +1129,30 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   ),
                 ),
                 const SizedBox(height: 12),
+                DropdownButtonFormField<String?>(
+                  initialValue: _debugNotifPayload,
+                  decoration: const InputDecoration(
+                    labelText: 'Destino ao tocar (payload)',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: _debugNotifPayloads.entries
+                      .map((entry) => DropdownMenuItem<String?>(
+                            value: entry.value,
+                            child: Text(entry.key,
+                                style: const TextStyle(fontSize: 13)),
+                          ))
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => _debugNotifPayload = value),
+                ),
+                const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      final result = await provider.sendDebugNotification();
+                      final result = await provider.sendDebugNotification(
+                          payload: _debugNotifPayload);
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

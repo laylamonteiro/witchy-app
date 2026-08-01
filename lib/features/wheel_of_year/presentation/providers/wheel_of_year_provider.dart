@@ -9,14 +9,16 @@ class WheelOfYearProvider with ChangeNotifier {
   // Obter todos os sabbats do ano atual
   List<Sabbat> getAllSabbats() {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final currentYear = now.year;
     final sabbats = <Sabbat>[];
 
     for (final type in SabbatType.values) {
       final date = type.getDateForYear(currentYear);
-      
-      // Se a data já passou, pegar do próximo ano
-      if (date.isBefore(now) && now.difference(date).inDays > 0) {
+
+      // Comparação por DIA DE CALENDÁRIO: no próprio dia o sabbat ainda é
+      // deste ano; só vira o do próximo ano a partir do dia seguinte.
+      if (date.isBefore(today)) {
         sabbats.add(Sabbat(
           type: type,
           date: type.getDateForYear(currentYear + 1),
@@ -35,13 +37,15 @@ class WheelOfYearProvider with ChangeNotifier {
     return sabbats;
   }
 
-  // Obter próximo sabbat
+  // Obter próximo sabbat (INCLUI o de hoje — "próximo" nunca pula o dia
+  // do próprio sabbat; a véspera mostra 1 dia, o dia mostra "é hoje").
   Sabbat? getNextSabbat() {
     final sabbats = getAllSabbats();
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
     for (final sabbat in sabbats) {
-      if (sabbat.date.isAfter(now)) {
+      if (!sabbat.date.isBefore(today)) {
         return sabbat;
       }
     }
