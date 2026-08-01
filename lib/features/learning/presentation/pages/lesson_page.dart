@@ -19,6 +19,8 @@ import '../../../diary/presentation/providers/dream_provider.dart';
 import '../../../diary/presentation/providers/gratitude_provider.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
+import '../../../encyclopedia/data/models/user_entry_model.dart';
+import '../../../encyclopedia/presentation/pages/add_entry_page.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../grimoire/presentation/pages/spell_detail_page.dart';
 import '../../../grimoire/presentation/providers/spell_provider.dart';
@@ -141,6 +143,21 @@ class _LessonPageState extends State<LessonPage> {
         LessonTool.palmistry => (
             l10n.toolPalmistryTitle,
             (_) => const PalmistryPage()
+          ),
+        // Enciclopédia pessoal: a prática identifica uma planta/pedra/cor
+        // por foto e cria o verbete próprio (a página gera o paywall para
+        // quem é free — o atalho pode abrir direto).
+        LessonTool.addHerb => (
+            l10n.encyAddTitle(l10n.encyTabHerbs),
+            (_) => const AddEntryPage(category: UserEntryCategory.herb)
+          ),
+        LessonTool.addCrystal => (
+            l10n.encyAddTitle(l10n.encyTabCrystals),
+            (_) => const AddEntryPage(category: UserEntryCategory.crystal)
+          ),
+        LessonTool.addColor => (
+            l10n.encyAddTitle(l10n.encyTabColors),
+            (_) => const AddEntryPage(category: UserEntryCategory.color)
           ),
         null => null,
       };

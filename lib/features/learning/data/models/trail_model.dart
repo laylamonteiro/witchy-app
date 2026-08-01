@@ -80,6 +80,13 @@ enum LessonTool {
   tarotLibrary,
   tarotTutor,
   palmistry,
+
+  /// Fluxos "Adicionar em..." da enciclopédia pessoal: a prática pede para
+  /// identificar uma planta/pedra/cor por foto e criar o verbete próprio —
+  /// assim cada lição também faz a enciclopédia da pessoa crescer.
+  addHerb,
+  addCrystal,
+  addColor,
 }
 
 /// Trilha de aprendizado do Grimório Vivo.

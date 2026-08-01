@@ -13,12 +13,13 @@ const LearningTrail magiaVerdeTrailEs = LearningTrail(
     lessons: [
       TrailLesson(
         id: 'mv_01',
+        tool: LessonTool.addHerb,
         recordKind: LessonRecordKind.note,
         title: 'Conocer una planta de verdad',
         teaching:
             'La magia verde no comienza memorizando tablas de correspondencias — comienza con UNA planta conocida de verdad: nombre, olor, textura, cómo reacciona al agua y al sol. Conocer de cerca a una única aliada vale más que memorizar cien nombres, porque la magia verde nace de la relación, no del catálogo. Por eso este es el primer paso del camino\n\nLas brujas verdes tradicionales tenían una relación profunda con unas pocas docenas de plantas: sabían cosechar en el momento justo, agradecían, usaban cada parte, de la raíz a la flor. El romero de la ventana, la ruda del portón y la menta del patio eran vecinas conocidas, no ítems de una lista. Esa intimidad — observar la planta a lo largo de los días y de las estaciones — es lo que transforma la información en sabiduría\n\nEn lo cotidiano, esto significa elegir una planta accesible — una maceta de tu casa, un árbol del camino — y visitarla con atención verdadera. Observa las hojas, el perfume, la textura, cómo amanece. El error común de la principiante es querer trabajar con diez hierbas a la vez y no conocer ninguna de verdad. Ve despacio: una aliada bien conocida sostiene mucha magia\n\nTu primera página de magia verde es el retrato de una aliada, escrito con tus propios sentidos. Guarda esta idea como quien guarda una semilla: antes de usar una planta, conoce la planta. La relación viene antes del hechizo — y es ella la que da raíz, fuerza y verdad a todo lo que florece después en tu camino',
         practice:
-            'Pasa 5 minutos con una planta accesible usando los cinco sentidos con seguridad. Primero observa colores y formas, después toca con delicadeza, huele las hojas y escucha el ambiente alrededor — sin probar nada, pues nunca se lleva a la boca lo que no se conoce con certeza. Por último, anota 3 observaciones que ningún libro daría. El objetivo es iniciar una relación real con tu primera aliada verde',
+            'Pasa 5 minutos con una planta accesible usando los cinco sentidos con seguridad. Primero observa colores y formas, después toca con delicadeza, huele las hojas y escucha el ambiente alrededor — sin probar nada, pues nunca se lleva a la boca lo que no se conoce con certeza. Por último, anota 3 observaciones que ningún libro daría. El objetivo es iniciar una relación real con tu primera aliada verde. Para sellar el encuentro, fotografía a tu aliada con el atajo de abajo y crea su entrada en tu enciclopedia de Hierbas',
         pageTitle: 'Mi Primera Planta Aliada',
         pagePurpose: 'Registrar la relación con una planta',
         pageCategory: SpellCategory.healing,
@@ -157,12 +158,13 @@ const LearningTrail magiaVerdeTrailEs = LearningTrail(
       ),
       TrailLesson(
         id: 'mv_09',
+        tool: LessonTool.addHerb,
         recordKind: LessonRecordKind.gratitude,
         title: 'Cosecha y agradecimiento',
         teaching:
             'Cosechar es la mitad olvidada de la siembra. Mucha gente aprende a sembrar y a cuidar, pero pocas aprenden a recibir con reverencia lo que la tierra entrega. En la magia verde, la cosecha es un rito completo en sí misma — y la forma en que cosechas dice tanto sobre tu práctica como la forma en que plantas\n\nLa cosecha ritual tradicional pide cuatro gestos: la hora justa — según la tradición, la mañana, después de que el rocío se seca —, el pedido de permiso a la planta antes de tocar, el corte limpio que no lastima más de lo necesario y el agradecimiento sincero. Y una regla de oro: uso íntegro, nada cosechado en vano. Así cosechaban las curanderas sus hierbas de poder, con el respeto de quien visita a una maestra\n\nEn el día a día, esto vale hasta para una hoja de tu maceta o una fruta elegida en la feria con presencia: detente, pide permiso en pensamiento, cosecha con delicadeza, agradece. El error común es cosechar en automático, como quien toma un objeto cualquiera — la prisa quiebra el vínculo. Y recuerda: el mismo rito sirve para las cosechas simbólicas de la vida — reconocer lo que llegó, agradecer y usar bien\n\nLleva contigo la regla de oro de la bruja verde: nada cosechado en vano. Permiso, corte limpio, gratitud y uso íntegro — cuatro gestos simples que transforman el acto de recibir en ceremonia. Practícalos en la planta y después en la vida: quien aprende a cosechar con reverencia descubre que la gratitud es, ella misma, una forma de abono para las próximas cosechas',
         practice:
-            'Cosecha algo hoy con el rito completo — puede ser una hoja de tu maceta o una fruta de la feria elegida con presencia. Primero detente ante la planta y pide permiso en silencio; después haz el corte o la elección con delicadeza; en seguida agradece con palabras tuyas; por último, usa integralmente lo que cosechaste, sin desperdicio. El objetivo es aprender a recibir con la misma reverencia con que se planta',
+            'Cosecha algo hoy con el rito completo — puede ser una hoja de tu maceta o una fruta de la feria elegida con presencia. Primero detente ante la planta y pide permiso en silencio; después haz el corte o la elección con delicadeza; en seguida agradece con palabras tuyas; por último, usa integralmente lo que cosechaste, sin desperdicio. El objetivo es aprender a recibir con la misma reverencia con que se planta. Si cosechaste una planta que aún no tiene entrada tuya, fotografíala con el atajo de abajo y añádela a tu enciclopedia de Hierbas',
         pageTitle: 'Mi Rito de Cosecha',
         pagePurpose: 'Ritualizar el acto de cosechar',
         pageCategory: SpellCategory.prosperity,
@@ -175,12 +177,13 @@ const LearningTrail magiaVerdeTrailEs = LearningTrail(
       ),
       TrailLesson(
         id: 'mv_10',
+        tool: LessonTool.addHerb,
         recordKind: LessonRecordKind.note,
         title: 'Tu herbario mágico',
         teaching:
             'La última página de esta senda es, en verdad, una portada: la apertura de tu herbario mágico, la lista viva de tus plantas aliadas con los usos probados por TI. Más que un cuaderno de anotaciones, el herbario es el retrato de tu relación con el mundo verde — único, personal e intransferible, como toda magia que nace de la experiencia\n\nLas brujas verdes de antaño guardaban sus saberes en cuadernos de recetas, hojas prensadas y memoria pasada entre generaciones. El valor de esos registros nunca estuvo en la cantidad, sino en la verdad: cada hierba anotada había sido cosechada, preparada y observada de cerca. Tu herbario sigue esa misma tradición — nunca está terminado, crece con cada estación, como el jardín\n\nDe aquí en adelante, cada planta nueva merece una página propia en tu grimorio: nombre, observaciones directas, usos que tú misma probaste, recetas que funcionaron. Relee tus páginas verdes de vez en cuando y visita la Enciclopedia de Hierbas cuando quieras elegir la próxima aliada. El error común es copiar tablas hechas sin vivencia — registra solo lo que pasó por tus manos\n\nLleva esta certeza: comenzaste la senda conociendo una única planta y la terminas con un camino entero por delante. El herbario crece al ritmo del jardín — una aliada a la vez, una estación a la vez, una página a la vez. La tierra tiene tiempo, y ahora tú también: sigue escribiendo, y tu grimorio verde florecerá junto contigo',
         practice:
-            'Cierra la senda organizando tu índice vivo. Primero relee las páginas verdes que escribiste a lo largo de las lecciones, anotando cada planta y el uso que realmente probaste; después visita la Enciclopedia de Hierbas y elige la próxima aliada que deseas conocer; por último, registra por qué te llamó. El objetivo es consolidar lo que fue vivido y abrir espacio para que el herbario siga creciendo estación tras estación',
+            'Cierra la senda organizando tu índice vivo. Primero relee las páginas verdes que escribiste a lo largo de las lecciones, anotando cada planta y el uso que realmente probaste; después visita la Enciclopedia de Hierbas y elige la próxima aliada que deseas conocer; por último, registra por qué te llamó. El objetivo es consolidar lo que fue vivido y abrir espacio para que el herbario siga creciendo estación tras estación. Y abre la próxima página ahora: fotografía una planta tuya con el atajo de abajo y crea su entrada en tu enciclopedia de Hierbas',
         pageTitle: 'Mi Herbario: Índice Vivo',
         pagePurpose: 'Consolidar mis plantas aliadas',
         pageCategory: SpellCategory.wisdom,

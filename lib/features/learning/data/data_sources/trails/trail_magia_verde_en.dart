@@ -13,12 +13,13 @@ const LearningTrail magiaVerdeTrailEn = LearningTrail(
     lessons: [
       TrailLesson(
         id: 'mv_01',
+        tool: LessonTool.addHerb,
         recordKind: LessonRecordKind.note,
         title: 'Truly knowing a plant',
         teaching:
             'Green magic does not begin by memorizing correspondence tables — it begins with ONE plant truly known: its name, its scent, its texture, how it responds to water and sun. Knowing a single ally up close is worth more than memorizing a hundred names, because green magic is born of relationship, not of catalogues. That is why this is the first step of the path\n\nTraditional green witches held deep relationships with only a few dozen plants: they knew when to harvest, gave thanks, and used every part, from root to flower. The rosemary on the windowsill, the rue by the gate, and the mint in the yard were familiar neighbors, not items on a list. That intimacy — watching a plant across days and seasons — is what turns information into wisdom\n\nIn everyday terms, this means choosing an accessible plant — a pot in your home, a tree along your route — and visiting it with genuine attention. Observe its leaves, its fragrance, its texture, how it greets the morning. The beginner\'s common mistake is wanting to work with ten herbs at once and truly knowing none. Go slowly: one well-known ally can sustain a great deal of magic\n\nYour first page of green magic is the portrait of an ally, written with your own senses. Keep this idea the way you would keep a seed: before using a plant, know the plant. Relationship comes before spellwork — and it is what gives root, strength, and truth to everything that blooms later along your path',
         practice:
-            'Spend 5 minutes with an accessible plant, using your five senses safely. First observe its colors and shapes, then touch it gently, smell its leaves, and listen to the surroundings — tasting nothing, for you never bring to your lips what you do not know with certainty. Finally, jot down 3 observations no book could give you. The goal is to begin a real relationship with your first green ally',
+            'Spend 5 minutes with an accessible plant, using your five senses safely. First observe its colors and shapes, then touch it gently, smell its leaves, and listen to the surroundings — tasting nothing, for you never bring to your lips what you do not know with certainty. Finally, jot down 3 observations no book could give you. The goal is to begin a real relationship with your first green ally. To seal the meeting, photograph your ally through the shortcut below and create her entry in your Herb encyclopedia',
         pageTitle: 'My First Plant Ally',
         pagePurpose: 'Record a relationship with a plant',
         pageCategory: SpellCategory.healing,
@@ -157,12 +158,13 @@ const LearningTrail magiaVerdeTrailEn = LearningTrail(
       ),
       TrailLesson(
         id: 'mv_09',
+        tool: LessonTool.addHerb,
         recordKind: LessonRecordKind.gratitude,
         title: 'Harvest and thanksgiving',
         teaching:
             'Harvesting is the forgotten half of planting. Many people learn to sow and to tend, but few learn to receive with reverence what the earth delivers. In green magic, the harvest is a complete rite in itself — and the way you harvest says as much about your practice as the way you plant\n\nThe traditional ritual harvest asks for four gestures: the right hour — by tradition, morning, after the dew has dried —, asking the plant\'s permission before touching it, a clean cut that wounds no more than necessary, and sincere thanks. And one golden rule: whole use, nothing harvested idly. This is how healers gathered their herbs of power, with the respect of one visiting a teacher\n\nDay to day, this applies even to a leaf from your pot or a fruit chosen at the market with presence: pause, ask permission in thought, harvest gently, give thanks. The common mistake is harvesting on autopilot, as if grabbing any ordinary object — haste breaks the bond. And remember: the same rite serves life\'s symbolic harvests — acknowledging what has arrived, giving thanks, and using it well\n\nCarry with you the green witch\'s golden rule: nothing harvested idly. Permission, clean cut, gratitude, and whole use — four simple gestures that turn the act of receiving into ceremony. Practice them on the plant and then on life: whoever learns to harvest with reverence discovers that gratitude is, in itself, a kind of fertilizer for the harvests to come',
         practice:
-            'Harvest something today with the complete rite — it can be a leaf from your pot or a fruit from the market chosen with presence. First pause before the plant and ask permission in silence; then make the cut or the choice gently; next, give thanks in your own words; finally, use everything you harvested, with no waste. The goal is to learn to receive with the same reverence with which one plants',
+            'Harvest something today with the complete rite — it can be a leaf from your pot or a fruit from the market chosen with presence. First pause before the plant and ask permission in silence; then make the cut or the choice gently; next, give thanks in your own words; finally, use everything you harvested, with no waste. The goal is to learn to receive with the same reverence with which one plants. If you harvested a plant that has no entry of yours yet, photograph it through the shortcut below and add it to your Herb encyclopedia',
         pageTitle: 'My Harvest Rite',
         pagePurpose: 'Ritualize the act of harvesting',
         pageCategory: SpellCategory.prosperity,
@@ -175,12 +177,13 @@ const LearningTrail magiaVerdeTrailEn = LearningTrail(
       ),
       TrailLesson(
         id: 'mv_10',
+        tool: LessonTool.addHerb,
         recordKind: LessonRecordKind.note,
         title: 'Your magical herbal',
         teaching:
             'The last page of this trail is, in truth, a cover: the opening of your magical herbal, the living list of your plant allies with the uses tested by YOU. More than a notebook of jottings, the herbal is the portrait of your relationship with the green world — unique, personal, and untransferable, like all magic born of experience\n\nThe green witches of old kept their knowledge in recipe books, pressed leaves, and memory passed down through generations. The value of those records never lay in quantity, but in truth: every herb noted down had been harvested, prepared, and observed up close. Your herbal follows that same tradition — it is never finished, growing with each season, like the garden\n\nFrom here on, every new plant deserves its own page in your grimoire: name, direct observations, uses you yourself have tested, recipes that worked. Reread your green pages from time to time, and visit the Herb Encyclopedia whenever you wish to choose your next ally. The common mistake is copying ready-made tables without lived experience — record only what has passed through your hands\n\nCarry this certainty: you began the trail knowing a single plant, and you finish with a whole path ahead. The herbal grows at the garden\'s pace — one ally at a time, one season at a time, one page at a time. The earth has time, and now so do you: keep writing, and your green grimoire will bloom along with you',
         practice:
-            'Close the trail by organizing your living index. First reread the green pages you wrote throughout the lessons, noting each plant and the use you truly tested; then visit the Herb Encyclopedia and choose the next ally you wish to know; finally, record why it called to you. The goal is to consolidate what was lived and make room for the herbal to keep growing season after season',
+            'Close the trail by organizing your living index. First reread the green pages you wrote throughout the lessons, noting each plant and the use you truly tested; then visit the Herb Encyclopedia and choose the next ally you wish to know; finally, record why it called to you. The goal is to consolidate what was lived and make room for the herbal to keep growing season after season. And open the next page right now: photograph one of your plants through the shortcut below and create its entry in your Herb encyclopedia',
         pageTitle: 'My Herbal: Living Index',
         pagePurpose: 'Consolidate my plant allies',
         pageCategory: SpellCategory.wisdom,
