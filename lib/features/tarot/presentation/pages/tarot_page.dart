@@ -117,6 +117,10 @@ class _SpreadTabState extends State<_SpreadTab> {
   List<TarotDrawnCard> _drawn = [];
   bool _revealed = false;
 
+  /// Pergunta opcional de quem consulta — capturada ao iniciar a tiragem.
+  final _questionController = TextEditingController();
+  String _question = '';
+
   String? _aiReading;
   bool _isReadingAI = false;
 
@@ -128,14 +132,23 @@ class _SpreadTabState extends State<_SpreadTab> {
     _userId = context.read<AuthProvider>().currentUser.id;
   }
 
+  @override
+  void dispose() {
+    _questionController.dispose();
+    super.dispose();
+  }
+
   /// Assinatura única das cartas tiradas (tipo de tiragem + cartas + invertida).
   /// Serve para reconhecer a MESMA tiragem — inclusive a carta do dia, que é
   /// determinística — e não deixar regerar a interpretação.
   String _signature(TarotSpread spread, List<TarotDrawnCard> drawn) {
     // Usa (naipe, número) — chaves estáveis entre idiomas — para que a
     // interpretação salva sobreviva à troca de idioma do app.
+    // Inclui a pergunta: outra pergunta sobre as mesmas cartas gera outra
+    // interpretação (não reaproveita o cache).
     return '${spread.name}|'
-        '${drawn.map((d) => '${d.card.suit.name}${d.card.number}:${d.isReversed ? 'R' : 'U'}').join('|')}';
+        '${drawn.map((d) => '${d.card.suit.name}${d.card.number}:${d.isReversed ? 'R' : 'U'}').join('|')}'
+        '|q:${_question.toLowerCase()}';
   }
 
   /// Interpretação salva para exatamente esta assinatura (ou null).
@@ -217,6 +230,7 @@ class _SpreadTabState extends State<_SpreadTab> {
         ));
     setState(() {
       _activeSpread = spread;
+      _question = _questionController.text.trim();
       _drawn = drawn;
       _revealed = false;
       _aiReading = null;
@@ -265,8 +279,10 @@ class _SpreadTabState extends State<_SpreadTab> {
           '${drawn.isReversed ? ' (${AppLocalizations.of(context).tarotReversed})' : ''} — ${drawn.meaning}',
         );
       }
-      final reading = await AIService.instance
-          .interpretTarotSpread(summary: summary.toString());
+      final reading = await AIService.instance.interpretTarotSpread(
+        summary: summary.toString(),
+        question: _question.isEmpty ? null : _question,
+      );
       if (!mounted) return;
       setState(() => _aiReading = reading);
       // Guarda a interpretação atrelada a estas cartas para não regerar.
@@ -299,6 +315,41 @@ class _SpreadTabState extends State<_SpreadTab> {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: context.gc.textSecondary,
                     ),
+              ),
+            ),
+            // Pergunta opcional: o Conselheiro Místico ancora a leitura nela.
+            MagicalCard(
+              child: TextField(
+                controller: _questionController,
+                maxLines: 2,
+                minLines: 1,
+                textCapitalization: TextCapitalization.sentences,
+                style: TextStyle(color: context.gc.textPrimary),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).tarotQuestionOptional,
+                  labelStyle: TextStyle(color: context.gc.textSecondary),
+                  hintText: AppLocalizations.of(context).tarotQuestionHint,
+                  hintStyle: TextStyle(
+                    color: context.gc.textSecondary.withValues(alpha: 0.6),
+                    fontSize: 13,
+                  ),
+                  prefixIcon:
+                      Icon(Icons.help_outline, color: context.gc.lilac),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                        color: context.gc.lilac.withValues(alpha: 0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                        color: context.gc.lilac.withValues(alpha: 0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: context.gc.lilac),
+                  ),
+                ),
               ),
             ),
             // Biblioteca de Cartas: acesso rápido a partir da Tiragem.
@@ -401,6 +452,7 @@ class _SpreadTabState extends State<_SpreadTab> {
                       _activeSpread = null;
                       _drawn = [];
                       _aiReading = null;
+                      _question = '';
                     }),
                     icon: const Icon(Icons.refresh, size: 16),
                     label: Text(AppLocalizations.of(context).tarotNewSpread),
@@ -408,6 +460,17 @@ class _SpreadTabState extends State<_SpreadTab> {
                 ],
               ),
             ),
+            if (_question.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                child: Text(
+                  AppLocalizations.of(context).tarotQuestionPrefix(_question),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
