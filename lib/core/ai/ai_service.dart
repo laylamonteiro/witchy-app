@@ -629,8 +629,10 @@ class AIService {
             'temperature': temperature,
             'maxOutputTokens': maxTokens,
             // A família 3.x "pensa" por padrão e os pensamentos consomem os
-            // tokens de saída — visão aqui não precisa de raciocínio.
-            'thinkingConfig': {'thinkingBudget': 0},
+            // tokens de saída. Ela usa thinkingLevel (o thinkingBudget
+            // legado do 2.5 causa 400 INVALID_ARGUMENT aqui) — "low" é o
+            // mínimo aceito.
+            'thinkingConfig': {'thinkingLevel': 'low'},
           },
         },
       );
@@ -789,7 +791,8 @@ class AIService {
         userText: _prompts.encyIdentifyUserMessage,
         jpegBytes: jpegBytes,
         temperature: 0.2,
-        maxTokens: 300,
+        // Folga para o "pensamento" mínimo do Gemini 3.x + o JSON.
+        maxTokens: 640,
       );
       return _extractJsonObject(content);
     } on DioException catch (e) {
@@ -902,7 +905,7 @@ class AIService {
         systemPrompt: '',
         userText: _prompts.palmDebugUserMessage,
         jpegBytes: jpegBytes,
-        maxTokens: 300,
+        maxTokens: 640,
       );
       sw.stop();
       return {
