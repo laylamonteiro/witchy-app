@@ -71,7 +71,7 @@ final TransitInterpreterTexts transitInterpreterTextsEn =
       '$transitPlanet-$natalPlanet Conjunction',
   conjunctionDescription: (transitPlanet, natalPlanet) =>
       'This powerful aspect joins the energies of $transitPlanet and your '
-      'natal $natalPlanet. It is a moment of deep integration.',
+      'natal $natalPlanet. It is a moment of deep integration',
   conjunctionPractices: const [
     'Meditation focused on these energies',
     'Integration and alignment ritual',
@@ -80,7 +80,7 @@ final TransitInterpreterTexts transitInterpreterTextsEn =
   harmoniousTitle: 'Harmonious Energy Available',
   harmoniousDescription: (transitPlanet, aspectSymbol, natalPlanet) =>
       '$transitPlanet $aspectSymbol your natal $natalPlanet creates a '
-      'positive flow of energy.',
+      'positive flow of energy',
   harmoniousPractices: const [
     'Manifestation and attraction spells',
     'Creative, inspired work',
@@ -89,7 +89,7 @@ final TransitInterpreterTexts transitInterpreterTextsEn =
   challengingTitle: 'A Challenge for Growth',
   challengingDescription: (aspectName, transitPlanet, natalPlanet) =>
       'The $aspectName aspect between $transitPlanet and your natal '
-      '$natalPlanet brings important lessons.',
+      '$natalPlanet brings important lessons',
   challengingPractices: const [
     'Shadow work and self-knowledge',
     'Banishing old patterns',
@@ -98,7 +98,7 @@ final TransitInterpreterTexts transitInterpreterTextsEn =
   moonSuggestionTitle: (signName) => 'Moon in $signName',
   moonSuggestionDescription: (signName, elementName) =>
       'The Moon transits through $signName, bringing $elementName energies '
-      'to your emotions and intuition.',
+      'to your emotions and intuition',
   moonSuggestionPractices: const [
     'Working with water and emotions',
     'Divination and intuitive reading',

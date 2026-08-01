@@ -13,7 +13,7 @@ final List<MetalModel> metalsEs = [
     description:
         'Metal precioso del Sol, símbolo de poder divino, realeza y perfección. '
         'Representa la luz espiritual, la iluminación y la energía vital. '
-        'Tradicionalmente usado para atraer prosperidad, éxito y protección.',
+        'Tradicionalmente usado para atraer prosperidad, éxito y protección',
     element: Element.fire,
     planet: Planet.sun,
     conductsPower: true,
@@ -47,7 +47,7 @@ final List<MetalModel> metalsEs = [
     traditionalUses:
         'Usado en coronas, cetros y objetos rituales de poder. '
         'Las joyas de oro se usan tradicionalmente para protección '
-        'y para atraer la energía solar.',
+        'y para atraer la energía solar',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -55,7 +55,7 @@ final List<MetalModel> metalsEs = [
     description:
         'Metal sagrado de la Luna, símbolo de intuición, misterio y protección psíquica. '
         'Representa lo femenino divino, los ciclos y la magia lunar. '
-        'Es el metal más usado en brujería para protección y adivinación.',
+        'Es el metal más usado en brujería para protección y adivinación',
     element: Element.water,
     planet: Planet.moon,
     conductsPower: true,
@@ -90,7 +90,7 @@ final List<MetalModel> metalsEs = [
     traditionalUses:
         'Tradicionalmente usada en amuletos, espejos mágicos, '
         'cálices rituales y joyas de protección. Se dice que la plata '
-        'se oscurece en presencia de energía negativa.',
+        'se oscurece en presencia de energía negativa',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -98,7 +98,7 @@ final List<MetalModel> metalsEs = [
     description:
         'Metal de Venus, conductor supremo de energía mágica. '
         'Asociado al amor, la belleza, la armonía y la sanación. '
-        'Es el metal que mejor conduce la energía después de la plata.',
+        'Es el metal que mejor conduce la energía después de la plata',
     element: Element.water,
     planet: Planet.venus,
     conductsPower: true,
@@ -133,7 +133,7 @@ final List<MetalModel> metalsEs = [
     traditionalUses:
         'Usado en varitas, amuletos de amor y herramientas de sanación. '
         'Las pirámides de cobre se usan para amplificar la energía. '
-        'Las pulseras de cobre se usan tradicionalmente para aliviar dolores.',
+        'Las pulseras de cobre se usan tradicionalmente para aliviar dolores',
     safetyWarnings: [
       'Puede manchar la piel de verde (no es peligroso, solo oxidación)',
     ],
@@ -143,7 +143,7 @@ final List<MetalModel> metalsEs = [
     description:
         'Metal de Marte, símbolo de protección, fuerza y coraje. '
         'Tradicionalmente usado para alejar espíritus malignos y hadas. '
-        'Representa la fuerza guerrera y la protección física.',
+        'Representa la fuerza guerrera y la protección física',
     element: Element.fire,
     planet: Planet.mars,
     conductsPower: false,
@@ -179,7 +179,7 @@ final List<MetalModel> metalsEs = [
         'Herraduras sobre las puertas para protección. Clavos de hierro '
         'enterrados en las esquinas de la propiedad. Cuchillos rituales '
         '(athames) con hoja de hierro. Se dice que las hadas y los espíritus '
-        'malignos no pueden atravesar el hierro.',
+        'malignos no pueden atravesar el hierro',
     safetyWarnings: [
       'Se oxida fácilmente - manténlo seco',
     ],
@@ -188,7 +188,7 @@ final List<MetalModel> metalsEs = [
     name: 'Estaño',
     description:
         'Metal de Júpiter, asociado a la expansión, el crecimiento y la justicia. '
-        'Tradicionalmente usado para atraer prosperidad, suerte y protección legal.',
+        'Tradicionalmente usado para atraer prosperidad, suerte y protección legal',
     element: Element.air,
     planet: Planet.jupiter,
     conductsPower: true,
@@ -223,7 +223,7 @@ final List<MetalModel> metalsEs = [
     traditionalUses:
         'Usado en talismanes de suerte y prosperidad. '
         'Las monedas de estaño se llevan tradicionalmente para atraer dinero. '
-        'También se usa en campanas rituales.',
+        'También se usa en campanas rituales',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -231,7 +231,7 @@ final List<MetalModel> metalsEs = [
     description:
         'Metal de Saturno, asociado al tiempo, los límites y la transformación profunda. '
         'Usado en magia de destierro, protección pesada y ruptura de vicios. '
-        'Representa limitaciones, disciplina y karma.',
+        'Representa limitaciones, disciplina y karma',
     element: Element.earth,
     planet: Planet.saturn,
     conductsPower: false,
@@ -266,7 +266,7 @@ final List<MetalModel> metalsEs = [
     traditionalUses:
         'Tradicionalmente usado para sellar intenciones negativas en cajas '
         'que luego se entierran. Usado en pesos de protección y en rituales '
-        'de destierro definitivo.',
+        'de destierro definitivo',
     safetyWarnings: [
       '⚠️ TÓXICO - No ingerir, evitar el contacto prolongado con la piel',
       'Lávate las manos después de manipularlo',
@@ -278,7 +278,7 @@ final List<MetalModel> metalsEs = [
     name: 'Bronce',
     description:
         'Aleación antigua de cobre y estaño, representa tradición, antigüedad y conexión ancestral. '
-        'Usado desde tiempos inmemoriales en armas, escudos y objetos rituales.',
+        'Usado desde tiempos inmemoriales en armas, escudos y objetos rituales',
     element: Element.fire,
     planet: Planet.venus,
     conductsPower: true,
@@ -314,14 +314,14 @@ final List<MetalModel> metalsEs = [
         'Las campanas de bronce se usan para limpiar la energía y marcar '
         'el inicio de los rituales. Los calderos de bronce son tradicionales '
         'en la brujería celta. En la antigüedad se usaban espejos de bronce '
-        'pulido para la adivinación.',
+        'pulido para la adivinación',
     safetyWarnings: [],
   ),
   const MetalModel(
     name: 'Latón',
     description:
         'Aleación de cobre y zinc, asociada a la purificación, la limpieza energética '
-        'y la protección contra la negatividad. Brilla como el oro pero es más accesible.',
+        'y la protección contra la negatividad. Brilla como el oro pero es más accesible',
     element: Element.fire,
     planet: Planet.sun,
     conductsPower: true,
@@ -356,14 +356,14 @@ final List<MetalModel> metalsEs = [
     traditionalUses:
         'Tradicionalmente usado en incensarios y campanas de limpieza. '
         'Los objetos de latón pulido se usan en los altares para reflejar '
-        'la energía negativa de vuelta. Sustituto accesible del oro en la magia.',
+        'la energía negativa de vuelta. Sustituto accesible del oro en la magia',
     safetyWarnings: [],
   ),
   const MetalModel(
     name: 'Aluminio',
     description:
         'Metal moderno asociado a la protección mental, el bloqueo de influencias '
-        'externas y la preservación de la energía. Ligero y versátil.',
+        'externas y la preservación de la energía. Ligero y versátil',
     element: Element.air,
     planet: Planet.mercury,
     conductsPower: true,
@@ -397,7 +397,7 @@ final List<MetalModel> metalsEs = [
     traditionalUses:
         'El papel de aluminio se usa para envolver y proteger cartas de tarot, '
         'cristales y objetos mágicos. También se usa para reflejar la energía '
-        'negativa de vuelta a su origen.',
+        'negativa de vuelta a su origen',
     safetyWarnings: [],
   ),
 ];

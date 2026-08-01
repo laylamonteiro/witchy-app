@@ -14,12 +14,12 @@ const String sigilWhatIsDescEn =
     'Sigils are magical symbols created to manifest intentions. '
     'By turning words into abstract symbols, you create an energetic mark '
     'that carries the power of your will without revealing your intention '
-    'to others.';
+    'to others';
 
 /// How the method works (step 1 introduction).
 const String sigilHowIntroEn =
     'Set your intention, choose a word that represents it, and the app '
-    'will automatically create your unique sigil.';
+    'will automatically create your unique sigil';
 
 /// Suggested intention words.
 const List<String> sigilIntentionExamplesEn = [
@@ -32,7 +32,7 @@ const List<String> sigilIntentionExamplesEn = [
 
 /// Tip on choosing the intention word.
 const String sigilWordTipEn =
-    'Tip: Choose positive, specific words that resonate with you.';
+    'Tip: Choose positive, specific words that resonate with you';
 
 /// Introduction to the letter-simplification explanation (step 2).
 const String sigilSimplifiedIntroEn =
@@ -56,21 +56,21 @@ const List<({String title, String description})> sigilUsageStepsEn = [
   (
     title: '1. Copy this drawing',
     description:
-        'Reproduce the tracing in your notebook, altar, candle, or ritual paper.',
+        'Reproduce the tracing in your notebook, altar, candle, or ritual paper',
   ),
   (
     title: '2. Personalize',
     description:
-        'Simplify, rotate, or add details. Making it yours is part of the magic.',
+        'Simplify, rotate, or add details. Making it yours is part of the magic',
   ),
   (
     title: '3. Activate the sigil',
     description:
-        'Use it in meditation, burn it in ritual, or carry it with you to focus your intention.',
+        'Use it in meditation, burn it in ritual, or carry it with you to focus your intention',
   ),
 ];
 
 /// Closing interpretive reminder (step 3).
 const String sigilRememberNoteEn =
     'Remember: the magic is in your intention and in the act of creating, '
-    'not only in the final drawing.';
+    'not only in the final drawing';

@@ -11,7 +11,7 @@ final List<GoddessModel> goddessesPt = [
   const GoddessModel(
     name: 'Afrodite',
     emoji: '🌹',
-    description: 'Deusa grega do amor, beleza, prazer e procriação. Nascida da espuma do mar, Afrodite representa o poder transformador do amor e da atração.',
+    description: 'Deusa grega do amor, beleza, prazer e procriação. Nascida da espuma do mar, Afrodite representa o poder transformador do amor e da atração',
     origin: GoddessOrigin.greek,
     alternateNames: 'Vênus (Romana)',
     aspects: [GoddessAspect.love, GoddessAspect.beauty, GoddessAspect.fertility],
@@ -35,13 +35,13 @@ final List<GoddessModel> goddessesPt = [
       'Ofereça mel, maçãs ou vinho doce',
       'Banhos rituais com pétalas de rosa',
     ],
-    mythology: 'Afrodite nasceu da espuma do mar quando Cronos castrou Urano e jogou seus genitais no oceano. Ela emergiu das ondas em uma concha, trazendo beleza e desejo ao mundo. Casada com Hefesto, teve muitos amantes, sendo Ares o mais famoso. Sua energia nos ensina sobre o poder transformador do amor e a importância de honrar nossa própria beleza.',
+    mythology: 'Afrodite nasceu da espuma do mar quando Cronos castrou Urano e jogou seus genitais no oceano. Ela emergiu das ondas em uma concha, trazendo beleza e desejo ao mundo. Casada com Hefesto, teve muitos amantes, sendo Ares o mais famoso. Sua energia nos ensina sobre o poder transformador do amor e a importância de honrar nossa própria beleza',
   ),
 
   const GoddessModel(
     name: 'Ártemis',
     emoji: '🏹',
-    description: 'Deusa grega da caça, da lua, da natureza selvagem e protetora das mulheres e crianças. Representa a independência feminina e a conexão com a natureza.',
+    description: 'Deusa grega da caça, da lua, da natureza selvagem e protetora das mulheres e crianças. Representa a independência feminina e a conexão com a natureza',
     origin: GoddessOrigin.greek,
     alternateNames: 'Diana (Romana)',
     aspects: [GoddessAspect.moon, GoddessAspect.nature, GoddessAspect.protection],
@@ -65,13 +65,13 @@ final List<GoddessModel> goddessesPt = [
       'Use prata em seus rituais',
       'Queime artemísia ou cedro',
     ],
-    mythology: 'Filha de Zeus e Leto, irmã gêmea de Apolo. Ártemis pediu a seu pai que a deixasse permanecer virgem para sempre, dedicando-se à caça e à proteção da natureza. Ela representa a força feminina independente, a conexão com os ciclos naturais e a proteção dos vulneráveis.',
+    mythology: 'Filha de Zeus e Leto, irmã gêmea de Apolo. Ártemis pediu a seu pai que a deixasse permanecer virgem para sempre, dedicando-se à caça e à proteção da natureza. Ela representa a força feminina independente, a conexão com os ciclos naturais e a proteção dos vulneráveis',
   ),
 
   const GoddessModel(
     name: 'Hécate',
     emoji: '🔮',
-    description: 'Deusa grega da magia, encruzilhadas, lua nova e dos limiares. Guardiã dos mistérios ocultos e guia entre os mundos.',
+    description: 'Deusa grega da magia, encruzilhadas, lua nova e dos limiares. Guardiã dos mistérios ocultos e guia entre os mundos',
     origin: GoddessOrigin.greek,
     aspects: [GoddessAspect.magic, GoddessAspect.moon, GoddessAspect.transformation, GoddessAspect.death],
     imageUrl: 'assets/images/deusas/hecate.jpg',
@@ -95,13 +95,13 @@ final List<GoddessModel> goddessesPt = [
       'Use três velas (branca, vermelha, preta)',
       'Trabalhe à meia-noite',
     ],
-    mythology: 'Hécate é uma deusa titã que manteve seus poderes mesmo após a ascensão dos olímpicos. Ela guarda as encruzilhadas onde três caminhos se encontram, representando escolhas e transformações. Como deusa tríplice, ela incorpora os aspectos de donzela, mãe e anciã, detendo as chaves de todos os mistérios.',
+    mythology: 'Hécate é uma deusa titã que manteve seus poderes mesmo após a ascensão dos olímpicos. Ela guarda as encruzilhadas onde três caminhos se encontram, representando escolhas e transformações. Como deusa tríplice, ela incorpora os aspectos de donzela, mãe e anciã, detendo as chaves de todos os mistérios',
   ),
 
   const GoddessModel(
     name: 'Atena',
     emoji: '🦉',
-    description: 'Deusa grega da sabedoria, estratégia de guerra, artesanato e justiça. Nascida da cabeça de Zeus, representa a inteligência e a força feminina.',
+    description: 'Deusa grega da sabedoria, estratégia de guerra, artesanato e justiça. Nascida da cabeça de Zeus, representa a inteligência e a força feminina',
     origin: GoddessOrigin.greek,
     alternateNames: 'Minerva (Romana)',
     aspects: [GoddessAspect.wisdom, GoddessAspect.war, GoddessAspect.protection],
@@ -125,14 +125,14 @@ final List<GoddessModel> goddessesPt = [
       'Ofereça azeite, pão ou trabalhos artesanais',
       'Acenda velas douradas ou azuis',
     ],
-    mythology: 'Atena nasceu completamente armada da cabeça de Zeus após ele engolir sua mãe Métis. Ela é a protetora de Atenas, deusa das artes, do conhecimento e da guerra estratégica (diferente de Ares, deus da guerra violenta). Ela nos ensina que a verdadeira força vem da sabedoria e da estratégia.',
+    mythology: 'Atena nasceu completamente armada da cabeça de Zeus após ele engolir sua mãe Métis. Ela é a protetora de Atenas, deusa das artes, do conhecimento e da guerra estratégica (diferente de Ares, deus da guerra violenta). Ela nos ensina que a verdadeira força vem da sabedoria e da estratégia',
   ),
 
   // Deusas Egípcias
   const GoddessModel(
     name: 'Ísis',
     emoji: '🌟',
-    description: 'Grande deusa egípcia da magia, cura, maternidade e renascimento. Uma das divindades mais veneradas do mundo antigo.',
+    description: 'Grande deusa egípcia da magia, cura, maternidade e renascimento. Uma das divindades mais veneradas do mundo antigo',
     origin: GoddessOrigin.egyptian,
     aspects: [GoddessAspect.magic, GoddessAspect.healing, GoddessAspect.protection, GoddessAspect.transformation],
     imageUrl: 'assets/images/deusas/isis.jpg',
@@ -155,13 +155,13 @@ final List<GoddessModel> goddessesPt = [
       'Visualize suas asas protetoras ao seu redor',
       'Queime incenso de mirra ou olíbano',
     ],
-    mythology: 'Ísis é a esposa de Osíris e mãe de Hórus. Quando Set matou e desmembrou Osíris, Ísis viajou pelo mundo coletando seus pedaços e o trouxe de volta à vida com sua magia. Ela representa o poder feminino de cura, transformação e a força do amor que transcende a morte.',
+    mythology: 'Ísis é a esposa de Osíris e mãe de Hórus. Quando Set matou e desmembrou Osíris, Ísis viajou pelo mundo coletando seus pedaços e o trouxe de volta à vida com sua magia. Ela representa o poder feminino de cura, transformação e a força do amor que transcende a morte',
   ),
 
   const GoddessModel(
     name: 'Bastet',
     emoji: '🐱',
-    description: 'Deusa egípcia com cabeça de gata, protetora do lar, fertilidade e dos gatos. Originalmente uma deusa guerreira leoa.',
+    description: 'Deusa egípcia com cabeça de gata, protetora do lar, fertilidade e dos gatos. Originalmente uma deusa guerreira leoa',
     origin: GoddessOrigin.egyptian,
     aspects: [GoddessAspect.protection, GoddessAspect.home, GoddessAspect.fertility],
     imageUrl: 'assets/images/deusas/bastet.jpg',
@@ -184,14 +184,14 @@ final List<GoddessModel> goddessesPt = [
       'Ofereça perfumes, joias ou leite',
       'Queime incenso de mirra ou canela',
     ],
-    mythology: 'Bastet começou como uma feroz deusa leoa (Sekhmet) mas evoluiu para a protetora gentil dos lares. Ela representa o aspecto protetor e maternal do divino feminino, guardando as casas contra espíritos malignos e doenças. Seu culto envolvia grande reverência aos gatos.',
+    mythology: 'Bastet começou como uma feroz deusa leoa (Sekhmet) mas evoluiu para a protetora gentil dos lares. Ela representa o aspecto protetor e maternal do divino feminino, guardando as casas contra espíritos malignos e doenças. Seu culto envolvia grande reverência aos gatos',
   ),
 
   // Deusas Nórdicas
   const GoddessModel(
     name: 'Freya',
     emoji: '💎',
-    description: 'Deusa nórdica do amor, beleza, fertilidade, magia Seidr e líder das Valquírias. Uma das divindades mais poderosas do panteão nórdico.',
+    description: 'Deusa nórdica do amor, beleza, fertilidade, magia Seidr e líder das Valquírias. Uma das divindades mais poderosas do panteão nórdico',
     origin: GoddessOrigin.norse,
     aspects: [GoddessAspect.love, GoddessAspect.magic, GoddessAspect.war, GoddessAspect.beauty],
     imageUrl: 'assets/images/deusas/freya.jpg',
@@ -214,13 +214,13 @@ final List<GoddessModel> goddessesPt = [
       'Use um manto de plumas em rituais',
       'Pratique em sextas-feiras (dia de Freya)',
     ],
-    mythology: 'Freya é líder das Vanir (deuses da natureza) e recebe metade dos guerreiros mortos em batalha (a outra metade vai para Odin). Ela ensinou a magia Seidr aos deuses e é mestra em transformação. Seu colar Brisingamen representa a beleza e o poder feminino.',
+    mythology: 'Freya é líder das Vanir (deuses da natureza) e recebe metade dos guerreiros mortos em batalha (a outra metade vai para Odin). Ela ensinou a magia Seidr aos deuses e é mestra em transformação. Seu colar Brisingamen representa a beleza e o poder feminino',
   ),
 
   const GoddessModel(
     name: 'Hela',
     emoji: '💀',
-    description: 'Deusa nórdica do submundo, governante de Helheim, reino dos mortos. Filha de Loki, ela representa a morte como parte do ciclo natural.',
+    description: 'Deusa nórdica do submundo, governante de Helheim, reino dos mortos. Filha de Loki, ela representa a morte como parte do ciclo natural',
     origin: GoddessOrigin.norse,
     aspects: [GoddessAspect.death, GoddessAspect.transformation],
     imageUrl: 'assets/images/deusas/hela.jpg',
@@ -243,14 +243,14 @@ final List<GoddessModel> goddessesPt = [
       'Ofereça comida para os mortos',
       'Medite sobre aceitação da morte',
     ],
-    mythology: 'Hela foi enviada por Odin para governar Helheim, o reino dos que morrem de doença ou velhice. Metade de seu corpo é belo e jovem, a outra metade é cadavérico. Ela nos ensina que a morte não é algo a temer, mas parte natural do ciclo de existência.',
+    mythology: 'Hela foi enviada por Odin para governar Helheim, o reino dos que morrem de doença ou velhice. Metade de seu corpo é belo e jovem, a outra metade é cadavérico. Ela nos ensina que a morte não é algo a temer, mas parte natural do ciclo de existência',
   ),
 
   // Deusas Celtas
   const GoddessModel(
     name: 'Brigid',
     emoji: '🔥',
-    description: 'Deusa celta tríplice do fogo, poesia, cura e forja. Uma das divindades mais amadas, posteriormente sincretizada como Santa Brígida.',
+    description: 'Deusa celta tríplice do fogo, poesia, cura e forja. Uma das divindades mais amadas, posteriormente sincretizada como Santa Brígida',
     origin: GoddessOrigin.celtic,
     aspects: [GoddessAspect.healing, GoddessAspect.magic, GoddessAspect.transformation],
     imageUrl: 'assets/images/deusas/brigid.jpg',
@@ -273,13 +273,13 @@ final List<GoddessModel> goddessesPt = [
       'Visite poços ou fontes sagradas',
       'Ofereça leite, pão ou poesia',
     ],
-    mythology: 'Brigid é filha do Dagda, o deus-pai celta. Como deusa tríplice, ela governa a cura, a forja e a poesia. Seu fogo sagrado foi mantido aceso por 19 sacerdotisas em Kildare por séculos. Ela representa a chama da inspiração e transformação.',
+    mythology: 'Brigid é filha do Dagda, o deus-pai celta. Como deusa tríplice, ela governa a cura, a forja e a poesia. Seu fogo sagrado foi mantido aceso por 19 sacerdotisas em Kildare por séculos. Ela representa a chama da inspiração e transformação',
   ),
 
   const GoddessModel(
     name: 'Morrigan',
     emoji: '🐦‍⬛',
-    description: 'Deusa celta tríplice da guerra, destino e soberania. Aparece como corvo nos campos de batalha, decidindo quem vive e quem morre.',
+    description: 'Deusa celta tríplice da guerra, destino e soberania. Aparece como corvo nos campos de batalha, decidindo quem vive e quem morre',
     origin: GoddessOrigin.celtic,
     aspects: [GoddessAspect.war, GoddessAspect.death, GoddessAspect.transformation, GoddessAspect.magic],
     imageUrl: 'assets/images/deusas/morrigan.jpg',
@@ -302,14 +302,14 @@ final List<GoddessModel> goddessesPt = [
       'Use vermelho e preto juntos',
       'Trabalhe durante tempestades',
     ],
-    mythology: 'A Morrigan é frequentemente vista como três irmãs: Badb, Macha e Nemain. Ela apareceu para o herói Cú Chulainn antes de sua morte. Ela nos ensina sobre aceitar nossa própria mortalidade e lutar por aquilo que é importante.',
+    mythology: 'A Morrigan é frequentemente vista como três irmãs: Badb, Macha e Nemain. Ela apareceu para o herói Cú Chulainn antes de sua morte. Ela nos ensina sobre aceitar nossa própria mortalidade e lutar por aquilo que é importante',
   ),
 
   // Deusas Brasileiras/Africanas
   const GoddessModel(
     name: 'Iemanjá',
     emoji: '🌊',
-    description: 'Orixá das águas salgadas, mãe de todos os orixás e protetora dos pescadores. Rainha do mar na tradição afro-brasileira.',
+    description: 'Orixá das águas salgadas, mãe de todos os orixás e protetora dos pescadores. Rainha do mar na tradição afro-brasileira',
     origin: GoddessOrigin.brazilian,
     aspects: [GoddessAspect.sea, GoddessAspect.fertility, GoddessAspect.protection, GoddessAspect.healing],
     imageUrl: 'assets/images/deusas/iemanja.jpg',
@@ -332,13 +332,13 @@ final List<GoddessModel> goddessesPt = [
       'Cante suas cantigas',
       'Banhos com água do mar e rosas brancas',
     ],
-    mythology: 'Iemanjá é a grande mãe das águas, origem de todos os orixás. No Brasil, seu culto se fundiu com Nossa Senhora e é celebrada especialmente em 2 de fevereiro. Ela acolhe todos como seus filhos e oferece cura emocional através de suas águas.',
+    mythology: 'Iemanjá é a grande mãe das águas, origem de todos os orixás. No Brasil, seu culto se fundiu com Nossa Senhora e é celebrada especialmente em 2 de fevereiro. Ela acolhe todos como seus filhos e oferece cura emocional através de suas águas',
   ),
 
   const GoddessModel(
     name: 'Oxum',
     emoji: '💛',
-    description: 'Orixá das águas doces, amor, beleza e fertilidade. Senhora do ouro e da vaidade, rege os rios e cachoeiras.',
+    description: 'Orixá das águas doces, amor, beleza e fertilidade. Senhora do ouro e da vaidade, rege os rios e cachoeiras',
     origin: GoddessOrigin.brazilian,
     aspects: [GoddessAspect.love, GoddessAspect.beauty, GoddessAspect.fertility],
     imageUrl: 'assets/images/deusas/oxum.jpg',
@@ -361,13 +361,13 @@ final List<GoddessModel> goddessesPt = [
       'Cante para ela perto da água',
       'Banhos com camomila e mel',
     ],
-    mythology: 'Oxum é a segunda esposa de Xangô e dona de toda a doçura do mundo. Quando os orixás desceram à Terra, ela foi a única que conseguiu chegar até Olodumaré transformada em pavão, garantindo a comunicação entre céu e terra. Ela ensina sobre a importância do amor-próprio.',
+    mythology: 'Oxum é a segunda esposa de Xangô e dona de toda a doçura do mundo. Quando os orixás desceram à Terra, ela foi a única que conseguiu chegar até Olodumaré transformada em pavão, garantindo a comunicação entre céu e terra. Ela ensina sobre a importância do amor-próprio',
   ),
 
   const GoddessModel(
     name: 'Iansã',
     emoji: '⚡',
-    description: 'Orixá dos ventos, tempestades e raios. Guerreira poderosa, senhora dos eguns (espíritos dos mortos).',
+    description: 'Orixá dos ventos, tempestades e raios. Guerreira poderosa, senhora dos eguns (espíritos dos mortos)',
     origin: GoddessOrigin.brazilian,
     aspects: [GoddessAspect.war, GoddessAspect.transformation, GoddessAspect.death],
     imageUrl: 'assets/images/deusas/iansa.jpg',
@@ -390,14 +390,14 @@ final List<GoddessModel> goddessesPt = [
       'Dance para ela',
       'Trabalhe com fogo e vento',
     ],
-    mythology: 'Iansã foi esposa de Ogum e depois de Xangô. Ela roubou o segredo dos eguns e pode controlar os espíritos dos mortos. Representa a mulher livre, apaixonada e guerreira que não aceita submissão.',
+    mythology: 'Iansã foi esposa de Ogum e depois de Xangô. Ela roubou o segredo dos eguns e pode controlar os espíritos dos mortos. Representa a mulher livre, apaixonada e guerreira que não aceita submissão',
   ),
 
   // Deusas Hindus
   const GoddessModel(
     name: 'Lakshmi',
     emoji: '🪷',
-    description: 'Deusa hindu da prosperidade, fortuna, beleza e fertilidade. Consorte de Vishnu, ela traz abundância a todos os aspectos da vida.',
+    description: 'Deusa hindu da prosperidade, fortuna, beleza e fertilidade. Consorte de Vishnu, ela traz abundância a todos os aspectos da vida',
     origin: GoddessOrigin.hindu,
     aspects: [GoddessAspect.fertility, GoddessAspect.beauty, GoddessAspect.protection],
     imageUrl: 'assets/images/deusas/lakshmi.jpg',
@@ -420,13 +420,13 @@ final List<GoddessModel> goddessesPt = [
       'Recite o mantra: Om Shreem Mahalakshmiyei Namaha',
       'Trabalhe especialmente em Diwali',
     ],
-    mythology: 'Lakshmi emergiu do oceano de leite quando deuses e demônios o bateram para obter o néctar da imortalidade. Ela escolheu Vishnu como consorte e renasce com ele em cada encarnação. Ela ensina que a verdadeira prosperidade inclui saúde, sabedoria e felicidade.',
+    mythology: 'Lakshmi emergiu do oceano de leite quando deuses e demônios o bateram para obter o néctar da imortalidade. Ela escolheu Vishnu como consorte e renasce com ele em cada encarnação. Ela ensina que a verdadeira prosperidade inclui saúde, sabedoria e felicidade',
   ),
 
   const GoddessModel(
     name: 'Kali',
     emoji: '🔱',
-    description: 'Deusa hindu da destruição e transformação. Aspecto feroz de Shakti que destrói o ego e a ignorância.',
+    description: 'Deusa hindu da destruição e transformação. Aspecto feroz de Shakti que destrói o ego e a ignorância',
     origin: GoddessOrigin.hindu,
     aspects: [GoddessAspect.death, GoddessAspect.transformation, GoddessAspect.protection, GoddessAspect.magic],
     imageUrl: 'assets/images/deusas/kali.jpg',
@@ -449,6 +449,6 @@ final List<GoddessModel> goddessesPt = [
       'Use preto e vermelho',
       'Medite sobre libertação do ego',
     ],
-    mythology: 'Kali nasceu da testa de Durga para destruir demônios. Ela dança sobre o corpo de Shiva, seu consorte, representando a destruição que precede a criação. Apesar de sua aparência terrível, ela é a mãe amorosa que liberta seus filhos da ignorância.',
+    mythology: 'Kali nasceu da testa de Durga para destruir demônios. Ela dança sobre o corpo de Shiva, seu consorte, representando a destruição que precede a criação. Apesar de sua aparência terrível, ela é a mãe amorosa que liberta seus filhos da ignorância',
   ),
 ];

@@ -14,7 +14,7 @@ const Map<int, WeekdayText> weekdayTextsEs = {
       'Hábitos y rutina',
     ],
     suggestion:
-        'Un buen día para trabajos de intuición y sueños: anota lo que soñaste, medita y cuida tus emociones.',
+        'Un buen día para trabajos de intuición y sueños: anota lo que soñaste, medita y cuida tus emociones',
   ),
   DateTime.tuesday: (
     theme: 'día de Marte — coraje y fuerza',
@@ -26,7 +26,7 @@ const Map<int, WeekdayText> weekdayTextsEs = {
       'Asertividad',
     ],
     suggestion:
-        'Aprovecha la energía de Marte para hechizos de coraje y protección — y para enfrentar lo que vienes postergando.',
+        'Aprovecha la energía de Marte para hechizos de coraje y protección — y para enfrentar lo que vienes postergando',
   ),
   DateTime.wednesday: (
     theme: 'día de Mercurio — comunicación y conocimiento',
@@ -38,7 +38,7 @@ const Map<int, WeekdayText> weekdayTextsEs = {
       'Creatividad',
     ],
     suggestion:
-        'Día perfecto para estudiar, escribir y resolver conversaciones pendientes. Los hechizos de comunicación fluyen mejor hoy.',
+        'Día perfecto para estudiar, escribir y resolver conversaciones pendientes. Los hechizos de comunicación fluyen mejor hoy',
   ),
   DateTime.thursday: (
     theme: 'día de Júpiter — prosperidad y expansión',
@@ -50,7 +50,7 @@ const Map<int, WeekdayText> weekdayTextsEs = {
       'Optimismo',
     ],
     suggestion:
-        'Júpiter expande lo que plantes: gran día para hechizos de prosperidad, solicitudes de empleo y nuevos proyectos.',
+        'Júpiter expande lo que plantes: gran día para hechizos de prosperidad, solicitudes de empleo y nuevos proyectos',
   ),
   DateTime.friday: (
     theme: 'día de Venus — amor y belleza',
@@ -62,7 +62,7 @@ const Map<int, WeekdayText> weekdayTextsEs = {
       'Fertilidad',
     ],
     suggestion:
-        'Venus rige el día: hechizos de amor y amor propio, baños de belleza y encuentros con quien te hace bien.',
+        'Venus rige el día: hechizos de amor y amor propio, baños de belleza y encuentros con quien te hace bien',
   ),
   DateTime.saturday: (
     theme: 'día de Saturno — limpieza y protección',
@@ -74,7 +74,7 @@ const Map<int, WeekdayText> weekdayTextsEs = {
       'Cierres',
     ],
     suggestion:
-        'Saturno ayuda a cerrar y limpiar: buen día para destierros, limpieza energética y poner límites.',
+        'Saturno ayuda a cerrar y limpiar: buen día para destierros, limpieza energética y poner límites',
   ),
   DateTime.sunday: (
     theme: 'día del Sol — éxito y vitalidad',
@@ -86,33 +86,33 @@ const Map<int, WeekdayText> weekdayTextsEs = {
       'Empoderamiento',
     ],
     suggestion:
-        'El Sol favorece brillar: hechizos de éxito y vitalidad, agua solar y actividades que te recarguen.',
+        'El Sol favorece brillar: hechizos de éxito y vitalidad, agua solar y actividades que te recarguen',
   ),
 };
 
 const Map<MagicDayPeriod, DayPeriodText> dayPeriodTextsEs = {
   MagicDayPeriod.sunrise: (
     title: 'Amanecer',
-    goodFor: 'Nuevos comienzos, energías nuevas, purificar, sanar, estudiar, iniciativa.',
+    goodFor: 'Nuevos comienzos, energías nuevas, purificar, sanar, estudiar, iniciativa',
   ),
   MagicDayPeriod.day: (
     title: 'Durante el día',
-    goodFor: 'Expansión, inteligencia, liderazgo, mente consciente.',
+    goodFor: 'Expansión, inteligencia, liderazgo, mente consciente',
   ),
   MagicDayPeriod.noon: (
     title: 'Mediodía',
-    goodFor: 'Poder, salud, dinero, éxito, fuerza, protección, oportunidad, vitalidad.',
+    goodFor: 'Poder, salud, dinero, éxito, fuerza, protección, oportunidad, vitalidad',
   ),
   MagicDayPeriod.sunset: (
     title: 'Atardecer',
-    goodFor: 'Encontrar la verdad, dejar ir, desterrar, romper malos hábitos, cierres.',
+    goodFor: 'Encontrar la verdad, dejar ir, desterrar, romper malos hábitos, cierres',
   ),
   MagicDayPeriod.night: (
     title: 'Noche',
-    goodFor: 'Inventar, autodesarrollo, conciencia, liberar estrés y preocupaciones, sanar heridas.',
+    goodFor: 'Inventar, autodesarrollo, conciencia, liberar estrés y preocupaciones, sanar heridas',
   ),
   MagicDayPeriod.midnight: (
     title: 'Medianoche',
-    goodFor: 'Destierro, adivinación, sanación, superación personal.',
+    goodFor: 'Destierro, adivinación, sanación, superación personal',
   ),
 };

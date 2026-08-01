@@ -13,22 +13,22 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The prince of the heavenly hosts, strength and protection',
     origin: 'Jewish, Christian and Islamic traditions (Mikael)',
     history:
-        'Mentioned in the Book of Daniel and in Revelation, Michael ("Who is like God?") is the commander of the heavenly hosts who defeats the dragon. Devotion to him swept through medieval Christendom, with hilltop shrines all across Europe.',
+        'Mentioned in the Book of Daniel and in Revelation, Michael ("Who is like God?") is the commander of the heavenly hosts who defeats the dragon. Devotion to him swept through medieval Christendom, with hilltop shrines all across Europe',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
         view:
-            'Warrior archangel and psychopomp: he protects the faithful, weighs souls and leads the battle against evil.',
+            'Warrior archangel and psychopomp: he protects the faithful, weighs souls and leads the battle against evil',
       ),
       ArcanePerspective(
         tradition: 'Occult',
         view:
-            'In ceremonial magic he rules the South and the element of Fire (in some schools, the East and Air), invoked in banishing rituals such as the LBRP.',
+            'In ceremonial magic he rules the South and the element of Fire (in some schools, the East and Air), invoked in banishing rituals such as the LBRP',
       ),
       ArcanePerspective(
         tradition: 'Folk/Popular',
         view:
-            'Patron of police officers and soldiers; invoked in prayers of protection against physical and spiritual dangers.',
+            'Patron of police officers and soldiers; invoked in prayers of protection against physical and spiritual dangers',
       ),
     ],
     characteristics: ['Courage', 'Justice', 'Leadership', 'Cutting harmful ties'],
@@ -47,7 +47,7 @@ const List<ArcaneEntry> angelsEn = [
       'Meditations for cutting energetic cords',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['The Guardian (Archetypes)', 'Sacred Symbols'],
   ),
   ArcaneEntry(
@@ -56,22 +56,22 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The messenger: announcements, revelations and the power of the word',
     origin: 'Jewish, Christian and Islamic traditions (Jibril)',
     history:
-        'Gabriel ("Strength of God") appears in Daniel interpreting visions and, in the New Testament, announces the births of John the Baptist and Jesus. In Islam, it is Jibril who reveals the Quran to Muhammad — the great intermediary between heaven and humankind.',
+        'Gabriel ("Strength of God") appears in Daniel interpreting visions and, in the New Testament, announces the births of John the Baptist and Jesus. In Islam, it is Jibril who reveals the Quran to Muhammad — the great intermediary between heaven and humankind',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
         view:
-            'The divine herald par excellence: bearer of revelations, birth announcements and prophetic callings.',
+            'The divine herald par excellence: bearer of revelations, birth announcements and prophetic callings',
       ),
       ArcanePerspective(
         tradition: 'Occult',
         view:
-            'Associated with the West, Water and the Moon in ceremonial magic; he rules dreams, intuition and the mysteries of the lunar cycle.',
+            'Associated with the West, Water and the Moon in ceremonial magic; he rules dreams, intuition and the mysteries of the lunar cycle',
       ),
       ArcanePerspective(
         tradition: 'Literary',
         view:
-            'Present from Milton to contemporary works as the trumpeter of judgment and the reluctant messenger.',
+            'Present from Milton to contemporary works as the trumpeter of judgment and the reluctant messenger',
       ),
     ],
     characteristics: ['Communication', 'Revelation', 'Intuition', 'Fertility of ideas'],
@@ -90,7 +90,7 @@ const List<ArcaneEntry> angelsEn = [
       'Intuition work and lucid dreaming',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['The Seer (Archetypes)', 'Dreams & Visions'],
   ),
   ArcaneEntry(
@@ -99,22 +99,22 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The medicine of God: healing, journeys and fortunate meetings',
     origin: 'Book of Tobit (Judeo-Christian tradition); Israfil in Islam plays another role',
     history:
-        'In the Book of Tobit, Raphael ("God heals") travels in disguise beside young Tobias, teaches him remedies and cures his father\'s blindness — which is why he is the patron of travelers, physicians and matchmakers.',
+        'In the Book of Tobit, Raphael ("God heals") travels in disguise beside young Tobias, teaches him remedies and cures his father\'s blindness — which is why he is the patron of travelers, physicians and matchmakers',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
         view:
-            'Archangel of healing and companion of the road: he protects journeys and restores health of body and soul.',
+            'Archangel of healing and companion of the road: he protects journeys and restores health of body and soul',
       ),
       ArcanePerspective(
         tradition: 'Occult',
         view:
-            'In ceremonial magic he rules the East and Air (in some schools, Mercury), tied to the knowledge that heals.',
+            'In ceremonial magic he rules the East and Air (in some schools, Mercury), tied to the knowledge that heals',
       ),
       ArcanePerspective(
         tradition: 'Folk/Popular',
         view:
-            'Invoked in novenas for health, successful surgeries and fortunate encounters.',
+            'Invoked in novenas for health, successful surgeries and fortunate encounters',
       ),
     ],
     characteristics: ['Healing', 'Protective companionship', 'Serene joy', 'Practical knowledge'],
@@ -133,7 +133,7 @@ const List<ArcaneEntry> angelsEn = [
       'Travel blessings and protection of one\'s paths',
     ],
     cautions:
-        'Spiritual practices do not replace medical treatment. Historical, informative content.',
+        'Spiritual practices do not replace medical treatment. Historical, informative content',
     related: ['The Healer (Archetypes)', 'Energy & Healing'],
   ),
   ArcaneEntry(
@@ -142,22 +142,22 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The fire of God: intellectual illumination and truth',
     origin: 'Jewish apocryphal literature (2 Esdras, Book of Enoch)',
     history:
-        'Uriel ("Fire/Light of God") appears in the apocrypha as the angel who guides Ezra and watches over the gates. Outside the official canon of the major churches, he became a central figure of esoteric and Anglican angelology.',
+        'Uriel ("Fire/Light of God") appears in the apocrypha as the angel who guides Ezra and watches over the gates. Outside the official canon of the major churches, he became a central figure of esoteric and Anglican angelology',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
         view:
-            'Revered in some Eastern and Anglican churches as the archangel of wisdom; absent from the current Catholic canon.',
+            'Revered in some Eastern and Anglican churches as the archangel of wisdom; absent from the current Catholic canon',
       ),
       ArcanePerspective(
         tradition: 'Occult',
         view:
-            'He rules the North and the element of Earth in ceremonial magic; guardian of the mysteries and of the inner light.',
+            'He rules the North and the element of Earth in ceremonial magic; guardian of the mysteries and of the inner light',
       ),
       ArcanePerspective(
         tradition: 'Literary',
         view:
-            'In Milton, he is the "sharpest-sighted spirit of all in Heaven" — the watcher who sees far.',
+            'In Milton, he is the "sharpest-sighted spirit of all in Heaven" — the watcher who sees far',
       ),
     ],
     characteristics: ['Wisdom', 'Discernment', 'Study', 'Plain-spoken truth'],
@@ -176,7 +176,7 @@ const List<ArcaneEntry> angelsEn = [
       'Rituals to illuminate paths and studies',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['The Wise Woman (Archetypes)', 'The Alchemist (Archetypes)'],
   ),
   ArcaneEntry(
@@ -185,21 +185,21 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The light-bearing angel: the morning star before and after the fall',
     origin: 'Latin lucifer ("light-bearer", the morning star); Isaiah 14',
     history:
-        'Originally the Latin name of Venus as the morning star, "Lucifer" became attached to the fallen king of Isaiah 14 and, from there, to the rebel angel. Milton made him the tragic anti-hero of Paradise Lost; Romantic and occult currents reread him as a symbol of knowledge and luminous rebellion.',
+        'Originally the Latin name of Venus as the morning star, "Lucifer" became attached to the fallen king of Isaiah 14 and, from there, to the rebel angel. Milton made him the tragic anti-hero of Paradise Lost; Romantic and occult currents reread him as a symbol of knowledge and luminous rebellion',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
-        view: 'The angel who fell through pride; identified with Satan in the Christian tradition.',
+        view: 'The angel who fell through pride; identified with Satan in the Christian tradition',
       ),
       ArcanePerspective(
         tradition: 'Literary',
         view:
-            'In Milton and in Romanticism, the magnificent rebel — "better to reign in Hell than serve in Heaven".',
+            'In Milton and in Romanticism, the magnificent rebel — "better to reign in Hell than serve in Heaven"',
       ),
       ArcanePerspective(
         tradition: 'Modern occult',
         view:
-            'A symbol of free thought and the pursuit of knowledge (philosophical Luciferianism), distinct from popular Satanism.',
+            'A symbol of free thought and the pursuit of knowledge (philosophical Luciferianism), distinct from popular Satanism',
       ),
     ],
     characteristics: ['Pride', 'Intellectual brilliance', 'Rebellion', 'Fall and quest'],
@@ -218,7 +218,7 @@ const List<ArcaneEntry> angelsEn = [
       'Contemplation of Venus in the morning sky',
     ],
     cautions:
-        'Historical, informative content. No practice here involves or encourages harm.',
+        'Historical, informative content. No practice here involves or encourages harm',
     related: ['The Alchemist (Archetypes)', 'Sacred Symbols'],
   ),
   ArcaneEntry(
@@ -227,17 +227,17 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The celestial scribe and the geometry of the cosmos',
     origin: 'Jewish mysticism (Talmud, Hekhalot literature, Kabbalah)',
     history:
-        'In the Jewish mystical tradition, Metatron is the scribe who records all things and, in some currents, the prophet Enoch transfigured. In Kabbalah he is linked to the sefirah Kether — the point closest to the ineffable.',
+        'In the Jewish mystical tradition, Metatron is the scribe who records all things and, in some currents, the prophet Enoch transfigured. In Kabbalah he is linked to the sefirah Kether — the point closest to the ineffable',
     perspectives: [
       ArcanePerspective(
         tradition: 'Jewish mysticism',
         view:
-            'The "prince of the presence": divine scribe and transmitting voice; a figure for advanced study, not for worship.',
+            'The "prince of the presence": divine scribe and transmitting voice; a figure for advanced study, not for worship',
       ),
       ArcanePerspective(
         tradition: 'Occult/New Age',
         view:
-            'Linked to "Metatron\'s Cube", a sacred-geometry figure said to contain the Platonic solids — a modern reading without an ancient source.',
+            'Linked to "Metatron\'s Cube", a sacred-geometry figure said to contain the Platonic solids — a modern reading without an ancient source',
       ),
     ],
     characteristics: ['Record-keeping', 'Cosmic order', 'Ascension', 'Deep study'],
@@ -256,7 +256,7 @@ const List<ArcaneEntry> angelsEn = [
       'Rituals of recording and reviewing cycles',
     ],
     cautions:
-        'Distinguish ancient sources from modern rereadings as you study. Historical, informative content.',
+        'Distinguish ancient sources from modern rereadings as you study. Historical, informative content',
     related: ['Sacred Symbols', 'The Weaver (Archetypes)'],
   ),
   ArcaneEntry(
@@ -265,17 +265,17 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'Metatron\'s spiritual twin brother, lord of music and prayers',
     origin: 'Jewish mysticism; associated with the prophet Elijah',
     history:
-        'In the mystical tradition, Sandalphon gathers human prayers and weaves them into crowns. Like Metatron/Enoch, he is said to be the prophet Elijah raised on high — the link between the cry of the earth and heaven.',
+        'In the mystical tradition, Sandalphon gathers human prayers and weaves them into crowns. Like Metatron/Enoch, he is said to be the prophet Elijah raised on high — the link between the cry of the earth and heaven',
     perspectives: [
       ArcanePerspective(
         tradition: 'Jewish mysticism',
         view:
-            'The angel who carries prayers to the throne; associated with the sefirah Malkuth, the earthly kingdom.',
+            'The angel who carries prayers to the throne; associated with the sefirah Malkuth, the earthly kingdom',
       ),
       ArcanePerspective(
         tradition: 'New Age',
         view:
-            'Invoked as the patron of music and musicians, of the arts that uplift.',
+            'Invoked as the patron of music and musicians, of the arts that uplift',
       ),
     ],
     characteristics: ['Devotion', 'Music', 'Groundedness', 'Bridge between earth and heaven'],
@@ -294,7 +294,7 @@ const List<ArcaneEntry> angelsEn = [
       'Grounding practices before energy work',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['Metatron', 'Affirmations (Journal)'],
   ),
   ArcaneEntry(
@@ -303,17 +303,17 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The keeper of secrets and of the book of mysteries',
     origin: 'Kabbalah and Jewish mystical literature (Sefer Raziel HaMalakh)',
     history:
-        'Raziel ("Secret of God") is said to have handed Adam a book holding all the mysteries of the universe — the legendary Sefer Raziel, whose medieval version circulated as a grimoire of protection.',
+        'Raziel ("Secret of God") is said to have handed Adam a book holding all the mysteries of the universe — the legendary Sefer Raziel, whose medieval version circulated as a grimoire of protection',
     perspectives: [
       ArcanePerspective(
         tradition: 'Kabbalistic',
         view:
-            'Associated with the sefirah Chokmah (wisdom); the hidden knowledge that precedes form.',
+            'Associated with the sefirah Chokmah (wisdom); the hidden knowledge that precedes form',
       ),
       ArcanePerspective(
         tradition: 'Occult',
         view:
-            'The medieval Sefer Raziel was copied as an amulet: keeping the book at home was said to protect against fire.',
+            'The medieval Sefer Raziel was copied as an amulet: keeping the book at home was said to protect against fire',
       ),
     ],
     characteristics: ['Mystery', 'Esoteric knowledge', 'Protection through knowing'],
@@ -332,7 +332,7 @@ const List<ArcaneEntry> angelsEn = [
       'Meditations for reaching inner knowledge',
     ],
     cautions:
-        'Historical grimoires reflect their times: study them critically. Historical, informative content.',
+        'Historical grimoires reflect their times: study them critically. Historical, informative content',
     related: ['My Grimoire', 'The Alchemist (Archetypes)'],
   ),
   ArcaneEntry(
@@ -341,22 +341,22 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The personal companion: the universal belief in an individual protector',
     origin: 'Greco-Roman antiquity (daimon/genius) and the Abrahamic traditions',
     history:
-        'The idea of a personal protective spirit predates Christianity: the Greeks had the daimon, the Romans the genius. Christianity consolidated the individual guardian angel, and ceremonial magic made contact with the "Holy Guardian Angel" its great work.',
+        'The idea of a personal protective spirit predates Christianity: the Greeks had the daimon, the Romans the genius. Christianity consolidated the individual guardian angel, and ceremonial magic made contact with the "Holy Guardian Angel" its great work',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
         view:
-            'Each person has an appointed angel who protects and intercedes — with a liturgical memorial on October 2nd.',
+            'Each person has an appointed angel who protects and intercedes — with a liturgical memorial on October 2nd',
       ),
       ArcanePerspective(
         tradition: 'Occult',
         view:
-            'In the Abramelin tradition and the Golden Dawn, the "Knowledge and Conversation of the Holy Guardian Angel" is the central goal of magical work — read by many as the Higher Self.',
+            'In the Abramelin tradition and the Golden Dawn, the "Knowledge and Conversation of the Holy Guardian Angel" is the central goal of magical work — read by many as the Higher Self',
       ),
       ArcanePerspective(
         tradition: 'Folk',
         view:
-            'Popular prayers ("Angel of God, my guardian dear...") and the everyday belief in narrow escapes.',
+            'Popular prayers ("Angel of God, my guardian dear...") and the everyday belief in narrow escapes',
       ),
     ],
     characteristics: ['Constant presence', 'Intuitive warning', 'Comfort'],
@@ -374,7 +374,7 @@ const List<ArcaneEntry> angelsEn = [
       'A weekly white candle in gratitude',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['The Guardian (Archetypes)', 'Mystic Counselor'],
   ),
   ArcaneEntry(
@@ -383,17 +383,17 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The burning ones: the order closest to the throne',
     origin: 'Isaiah\'s vision (Old Testament)',
     history:
-        'Isaiah describes them with six wings, crying "Holy, Holy, Holy". Their name derives from "to burn" — they are divine love in an incandescent state, the summit of Pseudo-Dionysius\'s angelic hierarchy.',
+        'Isaiah describes them with six wings, crying "Holy, Holy, Holy". Their name derives from "to burn" — they are divine love in an incandescent state, the summit of Pseudo-Dionysius\'s angelic hierarchy',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
         view:
-            'The highest order, consumed in perpetual adoration before the throne.',
+            'The highest order, consumed in perpetual adoration before the throne',
       ),
       ArcanePerspective(
         tradition: 'Mystical',
         view:
-            'The seraphic fire as a metaphor for spiritual ecstasy — the love that purifies as it burns.',
+            'The seraphic fire as a metaphor for spiritual ecstasy — the love that purifies as it burns',
       ),
     ],
     characteristics: ['Ardor', 'Purity', 'Adoration', 'Intensity'],
@@ -411,7 +411,7 @@ const List<ArcaneEntry> angelsEn = [
       'Red candles in devotional practices',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['Uriel', 'Elements: Fire'],
   ),
   ArcaneEntry(
@@ -420,17 +420,17 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The guardians of the throne and of Eden — nothing like winged babies',
     origin: 'Genesis, Ezekiel and Mesopotamian art',
     history:
-        'The biblical cherubim guard Eden with a flaming sword and bear the divine throne in Ezekiel\'s visions — imposing tetramorphic beings, kin to the Assyrian lamassu. The image of winged babies (putti) is an invention of Renaissance art.',
+        'The biblical cherubim guard Eden with a flaming sword and bear the divine throne in Ezekiel\'s visions — imposing tetramorphic beings, kin to the Assyrian lamassu. The image of winged babies (putti) is an invention of Renaissance art',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
         view:
-            'Guardians of the sacred and bearers of the throne; sculpted upon the Ark of the Covenant.',
+            'Guardians of the sacred and bearers of the throne; sculpted upon the Ark of the Covenant',
       ),
       ArcanePerspective(
         tradition: 'Art-historical',
         view:
-            'From fearsome tetramorph to decorative putto: a textbook case of iconographic transformation.',
+            'From fearsome tetramorph to decorative putto: a textbook case of iconographic transformation',
       ),
     ],
     characteristics: ['Unyielding guardianship', 'Majesty', 'Knowledge'],
@@ -449,7 +449,7 @@ const List<ArcaneEntry> angelsEn = [
       'Iconographic study as meditation',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['The Guardian (Archetypes)', 'Michael'],
   ),
   ArcaneEntry(
@@ -458,19 +458,19 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The lion of God, angel of nature and the elements',
     origin: 'Hebrew Ari\'el ("lion of God"); Kabbalistic and occult traditions',
     history:
-        'Cited in apocryphal texts and grimoires as the angel who rules wild nature, animals and the elemental spirits. In Renaissance magic he appears as ruler of Air (and, in some sources, of Earth), and Shakespeare immortalized him as the spirit of The Tempest.',
+        'Cited in apocryphal texts and grimoires as the angel who rules wild nature, animals and the elemental spirits. In Renaissance magic he appears as ruler of Air (and, in some sources, of Earth), and Shakespeare immortalized him as the spirit of The Tempest',
     perspectives: [
       ArcanePerspective(
         tradition: 'Kabbalistic',
-        view: 'An angelic name tied to the wild face of the sacred: the lion\'s strength in service of creation.',
+        view: 'An angelic name tied to the wild face of the sacred: the lion\'s strength in service of creation',
       ),
       ArcanePerspective(
         tradition: 'Occult',
-        view: 'Ruler of elemental spirits; invoked in workings of harmony with nature.',
+        view: 'Ruler of elemental spirits; invoked in workings of harmony with nature',
       ),
       ArcanePerspective(
         tradition: 'Literary',
-        view: 'Shakespeare\'s nimble spirit: the wind that serves, enchants and is at last set free.',
+        view: 'Shakespeare\'s nimble spirit: the wind that serves, enchants and is at last set free',
       ),
     ],
     characteristics: ['Connection with nature', 'Environmental healing', 'Gentle courage', 'Elementals'],
@@ -489,7 +489,7 @@ const List<ArcaneEntry> angelsEn = [
       'Blessings for gardens, plants and animals',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['The Huntress (Archetypes)', 'Elements'],
   ),
   ArcaneEntry(
@@ -498,19 +498,19 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The grace of God: angel of Venus, of love and of the moon',
     origin: 'Hebrew Hana\'el ("grace of God"); Kabbalistic angelology',
     history:
-        'In Kabbalah, Haniel rules the sphere of Netzach, associated with Venus, beauty and victory. Tradition ties him to the cycles of the moon and to the feminine mysteries, making him one of the angels most invoked in Venusian planetary magic.',
+        'In Kabbalah, Haniel rules the sphere of Netzach, associated with Venus, beauty and victory. Tradition ties him to the cycles of the moon and to the feminine mysteries, making him one of the angels most invoked in Venusian planetary magic',
     perspectives: [
       ArcanePerspective(
         tradition: 'Kabbalistic',
-        view: 'Ruler of Netzach: beauty, elevated desire and the persistence of life.',
+        view: 'Ruler of Netzach: beauty, elevated desire and the persistence of life',
       ),
       ArcanePerspective(
         tradition: 'Occult',
-        view: 'Planetary angel of Venus, invoked on Fridays in workings of self-love and harmony.',
+        view: 'Planetary angel of Venus, invoked on Fridays in workings of self-love and harmony',
       ),
       ArcanePerspective(
         tradition: 'Popular',
-        view: 'Angel of grace and charm: he helps you see beauty in your own cycles.',
+        view: 'Angel of grace and charm: he helps you see beauty in your own cycles',
       ),
     ],
     characteristics: ['Self-love', 'Harmony', 'Lunar intuition', 'Charm'],
@@ -529,7 +529,7 @@ const List<ArcaneEntry> angelsEn = [
       'Lunar workings of intuition and beauty',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['The Maiden (Archetypes)', 'Goddesses'],
   ),
   ArcaneEntry(
@@ -538,19 +538,19 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The angel of death and of passages, comfort for those who cross',
     origin: 'Islamic and Jewish traditions (Azra\'il, "the one whom God helps")',
     history:
-        'In Islam, Azrael is the angel who gathers souls with compassion; in Jewish folklore, the messenger of passages. Far from the grim popular figure, the sources describe him as a devoted servant who accompanies every crossing with mercy.',
+        'In Islam, Azrael is the angel who gathers souls with compassion; in Jewish folklore, the messenger of passages. Far from the grim popular figure, the sources describe him as a devoted servant who accompanies every crossing with mercy',
     perspectives: [
       ArcanePerspective(
         tradition: 'Religious',
-        view: 'The angel charged with the passage of souls, who acts only at divine command.',
+        view: 'The angel charged with the passage of souls, who acts only at divine command',
       ),
       ArcanePerspective(
         tradition: 'Folk',
-        view: 'The scribe who records births and erases names at the hour of departure.',
+        view: 'The scribe who records births and erases names at the hour of departure',
       ),
       ArcanePerspective(
         tradition: 'Modern occult',
-        view: 'A psychopomp invoked in rites of mourning and in the respectful honoring of ancestors.',
+        view: 'A psychopomp invoked in rites of mourning and in the respectful honoring of ancestors',
       ),
     ],
     characteristics: ['Compassion', 'Crossings', 'Grief and comfort', 'Memory of the departed'],
@@ -569,7 +569,7 @@ const List<ArcaneEntry> angelsEn = [
       'Meditations for accepting great changes',
     ],
     cautions:
-        'Historical, informative content. Deep grief also deserves human and professional support.',
+        'Historical, informative content. Deep grief also deserves human and professional support',
     related: ['The Dark Queen (Archetypes)', 'Wheel of the Year'],
   ),
   ArcaneEntry(
@@ -578,19 +578,19 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The venom of God: the stern angel between light and shadow',
     origin: 'Talmud and rabbinic literature; Sama\'el ("venom of God")',
     history:
-        'An ambiguous figure in Jewish angelology: archangel of severity and heavenly accuser, sometimes identified with the angel of death, sometimes with Mars. In Kabbalistic folklore he is named the consort of Lilith — one of the most discussed pairings in occultism.',
+        'An ambiguous figure in Jewish angelology: archangel of severity and heavenly accuser, sometimes identified with the angel of death, sometimes with Mars. In Kabbalistic folklore he is named the consort of Lilith — one of the most discussed pairings in occultism',
     perspectives: [
       ArcanePerspective(
         tradition: 'Rabbinic',
-        view: 'The accuser who tests the righteous: severity that serves rather than destroys.',
+        view: 'The accuser who tests the righteous: severity that serves rather than destroys',
       ),
       ArcanePerspective(
         tradition: 'Kabbalistic',
-        view: 'Associated with Gevurah and Mars: the force that cuts what needs to be cut.',
+        view: 'Associated with Gevurah and Mars: the force that cuts what needs to be cut',
       ),
       ArcanePerspective(
         tradition: 'Occult',
-        view: 'A symbol of shadow work: facing the inner accuser and integrating it.',
+        view: 'A symbol of shadow work: facing the inner accuser and integrating it',
       ),
     ],
     characteristics: ['Severity', 'Hard justice', 'Boundaries', 'Integrated shadow'],
@@ -609,7 +609,7 @@ const List<ArcaneEntry> angelsEn = [
       'Symbolic study of the Samael-Lilith pair in folklore',
     ],
     cautions:
-        'Historical, informative content. No practice here involves or encourages harm.',
+        'Historical, informative content. No practice here involves or encourages harm',
     related: ['Lilith (Demons)', 'The Dark Queen (Archetypes)'],
   ),
   ArcaneEntry(
@@ -618,19 +618,19 @@ const List<ArcaneEntry> angelsEn = [
     summary: 'The righteousness of God: angel of mercy and transmutation',
     origin: 'Hebrew Tzadki\'el ("righteousness of God"); Kabbalistic angelology',
     history:
-        'Associated in Kabbalah with the sphere of Chesed (mercy) and with Jupiter, Zadkiel is remembered as the angel who stayed Abraham\'s hand. Modern esotericism linked him to the "violet flame" of transmutation popularized by the Theosophical schools.',
+        'Associated in Kabbalah with the sphere of Chesed (mercy) and with Jupiter, Zadkiel is remembered as the angel who stayed Abraham\'s hand. Modern esotericism linked him to the "violet flame" of transmutation popularized by the Theosophical schools',
     perspectives: [
       ArcanePerspective(
         tradition: 'Kabbalistic',
-        view: 'Ruler of Chesed: the generosity that expands and forgives.',
+        view: 'Ruler of Chesed: the generosity that expands and forgives',
       ),
       ArcanePerspective(
         tradition: 'Theosophical/New Age',
-        view: 'Keeper of the violet flame: transmuting heavy memories into learning.',
+        view: 'Keeper of the violet flame: transmuting heavy memories into learning',
       ),
       ArcanePerspective(
         tradition: 'Religious',
-        view: 'The angel of mercy who halts unnecessary sacrifices.',
+        view: 'The angel of mercy who halts unnecessary sacrifices',
       ),
     ],
     characteristics: ['Forgiveness', 'Generosity', 'Transmutation', 'Just abundance'],
@@ -649,7 +649,7 @@ const List<ArcaneEntry> angelsEn = [
       'Transmutation meditations with the violet flame',
     ],
     cautions:
-        'Historical, informative content: traditions diverge and no single reading is definitive.',
+        'Historical, informative content: traditions diverge and no single reading is definitive',
     related: ['The Healer (Archetypes)', 'Crystals'],
   ),
 ];

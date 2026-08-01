@@ -114,10 +114,10 @@ class _YourDayPageState extends State<YourDayPage>
               // Consulta lunar logo abaixo da Lua, onde ela faz sentido.
               const NextMoonPhasesCard(),
               const SpellRecommendationsCard(),
+              const DailyRitesCard(),
               const MagicalMomentCard(),
               const MagicalWeatherCard(),
               const DailyAffirmationCard(),
-              const DailyRitesCard(),
               const ContinueTrailCard(),
               const ShortcutsGrid(),
             ],

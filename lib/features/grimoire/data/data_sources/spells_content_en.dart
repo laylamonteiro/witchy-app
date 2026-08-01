@@ -31,7 +31,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let the candle burn all the way down
 8. Carry the rose quartz with you''',
     observations:
-        'Best done on a Friday (the day of Venus). Keep your heart open to new possibilities.',
+        'Best done on a Friday (the day of Venus). Keep your heart open to new possibilities',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Banho de Rosas para Amor'):
@@ -52,7 +52,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Immerse yourself 3 times
 7. Let your skin dry naturally''',
     observations:
-        'Can be done under the full or waxing moon. Wonderful for opening the heart after heartbreak.',
+        'Can be done under the full or waxing moon. Wonderful for opening the heart after heartbreak',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Sache de Amor'):
@@ -74,7 +74,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Say: "This love is mine, for the good of all and the harm of none"
 6. Carry it in your bag or keep it near your bed
 7. Recharge it under the full moon''',
-    observations: 'Replace the herbs every 3 months or whenever you feel the need.',
+    observations: 'Replace the herbs every 3 months or whenever you feel the need',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Feitiço do Espelho do Amor'):
@@ -94,7 +94,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Look into the mirror and say: "I am worthy of love, I deserve love, I attract love"
 6. Let the candle burn down
 7. Keep the mirror in a special place''',
-    observations: 'This spell works on self-love and attraction at the same time.',
+    observations: 'This spell works on self-love and attraction at the same time',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Mel para Adoçar Relacionamento'):
@@ -115,7 +115,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Let them burn down
 7. Bury the remains in a garden''',
     observations:
-        'Only for relationships that already exist. It does not work against free will.',
+        'Only for relationships that already exist. It does not work against free will',
   ),
 
   // ============================================
@@ -139,7 +139,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Do this for 5-10 minutes
 7. Repeat daily for one week''',
     observations:
-        'It may feel strange at first, but with persistence it is transformative.',
+        'It may feel strange at first, but with persistence it is transformative',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Banho de Amor Próprio'):
@@ -161,7 +161,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Say: "I love and accept myself completely"
 7. Relax for 20 minutes
 8. Let your skin dry naturally''',
-    observations: 'Do this whenever you need to reconnect with yourself.',
+    observations: 'Do this whenever you need to reconnect with yourself',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Frasco de Amor Próprio'):
@@ -184,7 +184,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Close it and keep it somewhere visible
 7. Hold it whenever you need strength''',
     observations:
-        'Add new slips of paper with qualities whenever you discover more about yourself.',
+        'Add new slips of paper with qualities whenever you discover more about yourself',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Lista de Gratidão'):
@@ -204,7 +204,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Read them out loud
 7. Thank yourself
 8. Repeat weekly''',
-    observations: 'Gratitude transforms the way we see ourselves.',
+    observations: 'Gratitude transforms the way we see ourselves',
   ),
 
   // ============================================
@@ -224,7 +224,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 4. Repeat in the corners of the room
 5. Renew monthly or whenever you feel the need''',
     observations:
-        'The simplest and most powerful protection there is. Works for a home, bedroom or altar.',
+        'The simplest and most powerful protection there is. Works for a home, bedroom or altar',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Sache de Proteção'):
@@ -245,7 +245,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 4. Say: "Protection with me always, no harm shall reach me"
 5. Carry it in your bag or backpack
 6. Renew it at each new moon''',
-    observations: 'Keep away from children and pets (rue is toxic).',
+    observations: 'Keep away from children and pets (rue is toxic)',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Banho de Proteção'):
@@ -266,7 +266,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Say: "I am cleansed and protected"
 6. Do not towel off — let your skin dry naturally''',
     observations:
-        'Do it after heavy situations, or weekly for maintenance.',
+        'Do it after heavy situations, or weekly for maintenance',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Garrafa de Bruxa'):
@@ -289,7 +289,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Say: "This home is protected"
 6. Bury it at the entrance of the home or hide it near the door
 7. Never open it''',
-    observations: 'A very powerful traditional protection. Lasts for years.',
+    observations: 'A very powerful traditional protection. Lasts for years',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Vassoura de Proteção'):
@@ -308,7 +308,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Say: "I sweep all negativity out of this home"
 6. Gather the salt and discard it far from the house
 7. Keep the broom behind the door''',
-    observations: 'Do this after heavy visits or arguments at home.',
+    observations: 'Do this after heavy visits or arguments at home',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Pentagrama de Proteção'):
@@ -327,7 +327,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Draw one in each direction (north, south, east, west)
 7. Feel yourself wrapped in protection''',
     observations:
-        'Can be done mentally, anywhere, whenever you feel the need.',
+        'Can be done mentally, anywhere, whenever you feel the need',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Proteção com Espelho'):
@@ -347,7 +347,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Say: "May all negativity be reflected back to its source, transformed into light"
 6. Let the candle burn down''',
     observations:
-        'The mirror must always face outward, never into the home.',
+        'The mirror must always face outward, never into the home',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Óleo de Proteção'):
@@ -368,7 +368,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 4. Say: "This oil protects me from all harm"
 5. Leave it on the windowsill under the waning moon for 3 nights
 6. Strain and use it to anoint candles, doors, windows, or yourself''',
-    observations: 'Long-lasting. Keep in a cool, dark place.',
+    observations: 'Long-lasting. Keep in a cool, dark place',
   ),
 
   // ============================================
@@ -392,7 +392,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Say: "My prosperity grows every day"
 7. Let the wind carry the ashes, or cast them into running water''',
     observations:
-        'Can be done whenever you feel the need. Trust the timing of the universe.',
+        'Can be done whenever you feel the need. Trust the timing of the universe',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Banho de Manjericão'):
@@ -411,7 +411,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 4. Visualize paths opening and money flowing in
 5. Say: "Prosperity flows to me with ease"
 6. Let your skin dry naturally''',
-    observations: 'Excellent before interviews or important meetings.',
+    observations: 'Excellent before interviews or important meetings',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Vela Verde da Abundância'):
@@ -432,7 +432,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Let it burn all the way down
 7. Carry the coin in your wallet''',
     observations:
-        'Best on a Thursday (the day of Jupiter). Repeat whenever you feel the need.',
+        'Best on a Thursday (the day of Jupiter). Repeat whenever you feel the need',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Frasco da Prosperidade'):
@@ -457,7 +457,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Keep it near where you store your money
 8. Add coins whenever money comes in''',
     observations:
-        'Never open it or take anything out. It is a permanent prosperity magnet.',
+        'Never open it or take anything out. It is a permanent prosperity magnet',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Carteira Magnetizada'):
@@ -478,7 +478,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Never leave the wallet completely empty
 7. Always keep at least one note inside''',
     observations:
-        'Renew the herbs at each new moon. The note must never be spent.',
+        'Renew the herbs at each new moon. The note must never be spent',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Ritual da Chuva de Moedas'):
@@ -499,7 +499,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let the water absorb the lunar energy
 8. The next morning, use that water to water your plants''',
     observations:
-        'Prosperity will "grow" like the plants. The coins may be given away.',
+        'Prosperity will "grow" like the plants. The coins may be given away',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Sigilo de Prosperidade'):
@@ -519,7 +519,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Burn the paper with the sigil, or keep it in your wallet
 7. Forget about it (let the universe do its work)''',
     observations:
-        'A chaos magic technique. The less you think about it afterward, the better it works.',
+        'A chaos magic technique. The less you think about it afterward, the better it works',
   ),
 
   // ============================================
@@ -546,7 +546,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Stay for at least 15 minutes
 8. Let your skin dry naturally''',
     observations:
-        'Not a substitute for medical treatment. It complements healing processes.',
+        'Not a substitute for medical treatment. It complements healing processes',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Vela de Cura'):
@@ -568,7 +568,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Say: "May [name] be healed for their highest good"
 8. Let the candle burn all the way down''',
     observations:
-        'Always ask permission before working magic for others. Respect free will.',
+        'Always ask permission before working magic for others. Respect free will',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Chá Mágico de Cura'):
@@ -590,7 +590,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Say: "This potion heals me, cell by cell"
 7. Drink slowly, with full attention
 8. Feel the healing moving through your body''',
-    observations: 'May be done daily during a healing process.',
+    observations: 'May be done daily during a healing process',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Grade de Cristais Curativa'):
@@ -613,7 +613,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 8. Leave it set up for 3 days
 9. Carry the center crystal with you''',
     observations:
-        'A potent amplifier of healing energy. Recharge the crystals after use.',
+        'A potent amplifier of healing energy. Recharge the crystals after use',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Poppet de Cura'):
@@ -637,7 +637,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Keep it in a safe place
 8. Unstitch it when the healing is complete''',
     observations:
-        'A traditional technique. Treat the poppet with care, as if it were the person.',
+        'A traditional technique. Treat the poppet with care, as if it were the person',
   ),
 
   // ============================================
@@ -661,7 +661,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Open the windows to let the energy out
 8. Let the rosemary burn out completely''',
     observations:
-        'Do this whenever the space feels heavy, or after arguments.',
+        'Do this whenever the space feels heavy, or after arguments',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Limpeza com Sálvia Branca'):
@@ -681,7 +681,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Say: "With this sacred smoke, I cleanse and purify"
 7. Extinguish it by pressing it into sand or earth''',
     observations:
-        'Buy from ethical sources. White sage is sacred to Indigenous peoples.',
+        'Buy from ethical sources. White sage is sacred to Indigenous peoples',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Spray de Limpeza Lunar'):
@@ -703,7 +703,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. To use: spritz the space or yourself
 6. Say: "I am cleansed and protected"
 7. Recharge the spray at the next full moon''',
-    observations: 'Handy for quick cleansings. Keep refrigerated.',
+    observations: 'Handy for quick cleansings. Keep refrigerated',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Sal nos Cantos'):
@@ -719,7 +719,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 4. Leave it for 24 hours
 5. Sweep it up and throw the salt away (never reuse it)
 6. Wash the floor with water and vinegar''',
-    observations: 'A simple and very effective method. Do it monthly.',
+    observations: 'A simple and very effective method. Do it monthly',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Banho de Descarrego Completo'):
@@ -743,7 +743,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let your skin dry naturally
 8. Put on clean clothes''',
     observations:
-        'For after very heavy situations. A potent energetic cleansing.',
+        'For after very heavy situations. A potent energetic cleansing',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Limpeza com Som'):
@@ -761,7 +761,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Say: "With this sound, I cleanse and renew this space"
 7. Finish back at the front door''',
     observations:
-        'A smoke-free method, great for anyone with respiratory sensitivity.',
+        'A smoke-free method, great for anyone with respiratory sensitivity',
   ),
 
   // ============================================
@@ -786,7 +786,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Wash your hands well
 8. Do not look back''',
     observations:
-        'Only for toxic situations/people. Use with responsibility.',
+        'Only for toxic situations/people. Use with responsibility',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Vela Preta de Banimento'):
@@ -809,7 +809,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let it burn all the way down
 8. Bury or discard the remains far from home''',
     observations:
-        'Always finish with a personal cleansing and protection.',
+        'Always finish with a personal cleansing and protection',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Corda de Banimento'):
@@ -830,7 +830,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Say: "I am free"
 8. Cast the ashes to the wind or into running water''',
     observations:
-        'Powerful for ending relationships or energetic attachments.',
+        'Powerful for ending relationships or energetic attachments',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Freezer Spell (Congelamento)'):
@@ -850,7 +850,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Keep it frozen until the situation resolves
 7. Once resolved, thaw it and throw it away''',
     observations:
-        'It causes no harm — it only immobilizes negative action. Ethical for self-defense.',
+        'It causes no harm — it only immobilizes negative action. Ethical for self-defense',
   ),
 
   // ============================================
@@ -877,7 +877,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Carry it with you
 6. Touch the pouch whenever you need luck
 7. Recharge it under the full moon''',
-    observations: 'The more you believe, the better it works.',
+    observations: 'The more you believe, the better it works',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Vela Laranja da Oportunidade'):
@@ -899,7 +899,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let it burn for 30 minutes
 8. Snuff it out and repeat for 3 days in a row''',
     observations:
-        'Great before important events or life changes.',
+        'Great before important events or life changes',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Mão da Sorte'):
@@ -918,7 +918,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Blow the mixture into the wind (away from you)
 6. Do not wash your hands right away
 7. Use that hand to play/bet''',
-    observations: 'Magic does not guarantee a win. Play responsibly.',
+    observations: 'Magic does not guarantee a win. Play responsibly',
   ),
 
   // ============================================
@@ -943,7 +943,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Work on your project with the candle burning
 7. Repeat whenever you need to''',
     observations:
-        'The flame represents the creative spark. Keep it burning while you work.',
+        'The flame represents the creative spark. Keep it burning while you work',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Chá da Inspiração'):
@@ -964,7 +964,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Drink while visualizing ideas flowing
 6. Sit down to create right afterward''',
     observations:
-        'Works as a ritual for entering a creative state.',
+        'Works as a ritual for entering a creative state',
   ),
 
   // ============================================
@@ -986,7 +986,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Use before important conversations
 6. Stay mindful of what you say''',
     observations:
-        'Before interviews, presentations or difficult conversations.',
+        'Before interviews, presentations or difficult conversations',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Vela Azul da Comunicação Clara'):
@@ -1008,7 +1008,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let it burn while you visualize communication flowing
 8. Carry the crystal when you need to communicate''',
     observations:
-        'Works with the throat chakra. Great for anyone who struggles to express themselves.',
+        'Works with the throat chakra. Great for anyone who struggles to express themselves',
   ),
 
   // ============================================
@@ -1033,7 +1033,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 5. Keep a dream journal by the bed
 6. Write in it as soon as you wake''',
     observations:
-        'Mugwort is potent for dreams. It may bring intense dreaming.',
+        'Mugwort is potent for dreams. It may bring intense dreaming',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Água Lunar dos Sonhos'):
@@ -1053,7 +1053,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Say: "This moon water clarifies my dreams"
 7. Write down your dreams when you wake''',
     observations:
-        'Moon water deepens the connection with the unconscious.',
+        'Moon water deepens the connection with the unconscious',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Óleo de Unção para Sonhos'):
@@ -1075,7 +1075,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Say: "I am conscious within my dreams"
 7. Sleep with the intention of dreaming lucidly''',
     observations:
-        'Practice lucid dreaming techniques along with the oil for better results.',
+        'Practice lucid dreaming techniques along with the oil for better results',
   ),
 
   // ============================================
@@ -1101,7 +1101,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let it burn while you do something active
 8. Carry the crystal for steady energy''',
     observations:
-        'No substitute for needed rest. Use when you need extra energy.',
+        'No substitute for needed rest. Use when you need extra energy',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Banho Energizante'):
@@ -1124,7 +1124,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let your skin dry naturally
 8. Wear vibrant clothes if you can''',
     observations:
-        'Best in the morning, to start the day with energy.',
+        'Best in the morning, to start the day with energy',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Cristal de Energia Pessoal'):
@@ -1143,7 +1143,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Place it in the sun for 2 hours
 7. Carry it with you
 8. Hold it whenever you need energy''',
-    observations: 'Recharge the crystal in the sun monthly.',
+    observations: 'Recharge the crystal in the sun monthly',
   ),
 
   // ============================================
@@ -1170,7 +1170,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Finish at the front door
 8. Let the candle burn all the way down''',
     observations:
-        'Do it when moving in, or monthly to renew the energy.',
+        'Do it when moving in, or monthly to renew the energy',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Vassoura de Bruxa para Lar'):
@@ -1191,7 +1191,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Gather the salt and discard it far from home
 7. Keep the broom behind the door or in a cupboard''',
     observations:
-        'Weekly, or after heavy energy in the home.',
+        'Weekly, or after heavy energy in the home',
   ),
 
   // ============================================
@@ -1217,7 +1217,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Study with the candle burning
 7. Let it burn for at least 30 minutes''',
     observations:
-        'Purple is the color of wisdom and the third eye. Use before exams or while studying.',
+        'Purple is the color of wisdom and the third eye. Use before exams or while studying',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Chá da Concentração'):
@@ -1239,7 +1239,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Drink slowly before studying
 7. Feel the mental clarity arriving''',
     observations:
-        'Mint and rosemary are herbs of mental clarity. Brew it fresh for best results.',
+        'Mint and rosemary are herbs of mental clarity. Brew it fresh for best results',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Sachê do Estudante'):
@@ -1262,7 +1262,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Smell the sachet before studying or taking exams
 7. Recharge it at each new moon''',
     observations:
-        'Rosemary has been used for memory since ancient Greece.',
+        'Rosemary has been used for memory since ancient Greece',
   ),
 
   // ============================================
@@ -1288,7 +1288,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let it burn all the way down
 8. Carry the crystal when you need courage''',
     observations:
-        'Red is the color of Mars, planet of courage and action. Use before challenging situations.',
+        'Red is the color of Mars, planet of courage and action. Use before challenging situations',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Amuleto do Guerreiro'):
@@ -1311,7 +1311,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Visualize yourself as an invincible warrior
 7. Carry it in your pocket in difficult moments''',
     observations:
-        'Touch the amulet when you feel fear or insecurity, to remember your strength.',
+        'Touch the amulet when you feel fear or insecurity, to remember your strength',
   ),
 
   // ============================================
@@ -1337,7 +1337,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 7. Let it burn down
 8. Go out and socialize (magic needs opportunity!)''',
     observations:
-        'Orange is the color of joy and sociability. Magic opens paths, but you must walk them.',
+        'Orange is the color of joy and sociability. Magic opens paths, but you must walk them',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Nó de Amizade'):
@@ -1356,7 +1356,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Keep the tied ribbons, or gift one to your friend
 7. Let the candle burn down''',
     observations:
-        'Knot magic is ancient and powerful. Undo the knots only if the friendship ends.',
+        'Knot magic is ancient and powerful. Undo the knots only if the friendship ends',
   ),
 
   // ============================================
@@ -1384,7 +1384,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 8. Let it burn all the way down
 9. Carry the crystal to interviews/work''',
     observations:
-        'Thursday (the day of Jupiter) is ideal for work and career spells.',
+        'Thursday (the day of Jupiter) is ideal for work and career spells',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Óleo de Unção para Entrevista'):
@@ -1431,7 +1431,7 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 6. Or drink a sip before doing readings
 7. Say: "My vision is clear, my intuition is strong"''',
     observations:
-        'Water charged under the full moon carries strong psychic energy.',
+        'Water charged under the full moon carries strong psychic energy',
   ),
 
   SqfliteSpellLocalStore.preloadedSpellId('Ritual de Abertura do Terceiro Olho'):
@@ -1454,6 +1454,6 @@ final Map<String, SpellContentOverlay> spellOverlaysEn = {
 8. Meditate for 10-15 minutes
 9. Write down any visions or sensations''',
     observations:
-        'Do it for 7 nights in a row for best results. Keep a journal of your experiences.',
+        'Do it for 7 nights in a row for best results. Keep a journal of your experiences',
   ),
 };

@@ -4,14 +4,14 @@ import 'sabbat_model.dart';
 /// Sabbats (Samhain, Yule...) son nombres propios invariantes.
 /// Paridade verificada em test/content_models_parity_test.dart.
 const Map<SabbatType, String> sabbatDescriptionsEs = {
-  SabbatType.samhain: 'Año Nuevo de las Brujas. El velo entre mundos está fino. Honra a tus ancestros y seres queridos. Inicio del otoño/invierno, período de recogimiento.',
-  SabbatType.yule: 'Solsticio de Invierno. La noche más larga del año. Renacimiento de la luz. En Brasil coincide con las fiestas juninas que mantienen la tradición del fuego sagrado.',
-  SabbatType.imbolc: 'Festival de la luz creciente. La Tierra despierta con las primeras señales de la primavera. Tiempo de limpieza, purificación y preparación del nuevo crecimiento.',
-  SabbatType.ostara: 'Equinoccio de Primavera. Equilibrio perfecto entre luz y oscuridad. La naturaleza despierta plenamente. Tiempo de nuevos comienzos.',
-  SabbatType.beltane: 'Festival del fuego y la fertilidad. Celebración de la vida en plenitud. Coincide con el Día de los Difuntos en Brasil, pero energéticamente se trata de celebrar la vida y el amor.',
-  SabbatType.litha: 'Solsticio de Verano. El día más largo, pico del poder solar. En Brasil coincide con las fiestas de fin de año. Momento de celebración y gratitud.',
-  SabbatType.lammas: 'Primera cosecha. Tras el verano abundante, es tiempo de agradecer y compartir. Reconocemos el sacrificio necesario para la abundancia.',
-  SabbatType.mabon: 'Equinoccio de Otoño. Segunda cosecha y segundo equilibrio del año. Preparación para el otoño. Tiempo de gratitud y equilibrio.',
+  SabbatType.samhain: 'Año Nuevo de las Brujas. El velo entre mundos está fino. Honra a tus ancestros y seres queridos. Inicio del otoño/invierno, período de recogimiento',
+  SabbatType.yule: 'Solsticio de Invierno. La noche más larga del año. Renacimiento de la luz. En Brasil coincide con las fiestas juninas que mantienen la tradición del fuego sagrado',
+  SabbatType.imbolc: 'Festival de la luz creciente. La Tierra despierta con las primeras señales de la primavera. Tiempo de limpieza, purificación y preparación del nuevo crecimiento',
+  SabbatType.ostara: 'Equinoccio de Primavera. Equilibrio perfecto entre luz y oscuridad. La naturaleza despierta plenamente. Tiempo de nuevos comienzos',
+  SabbatType.beltane: 'Festival del fuego y la fertilidad. Celebración de la vida en plenitud. Coincide con el Día de los Difuntos en Brasil, pero energéticamente se trata de celebrar la vida y el amor',
+  SabbatType.litha: 'Solsticio de Verano. El día más largo, pico del poder solar. En Brasil coincide con las fiestas de fin de año. Momento de celebración y gratitud',
+  SabbatType.lammas: 'Primera cosecha. Tras el verano abundante, es tiempo de agradecer y compartir. Reconocemos el sacrificio necesario para la abundancia',
+  SabbatType.mabon: 'Equinoccio de Otoño. Segunda cosecha y segundo equilibrio del año. Preparación para el otoño. Tiempo de gratitud y equilibrio',
 };
 
 const Map<SabbatType, String> sabbatSouthDatesEs = {

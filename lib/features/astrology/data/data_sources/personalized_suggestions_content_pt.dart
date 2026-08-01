@@ -8,7 +8,7 @@ const PersonalizedSuggestionsContent personalizedSuggestionsContentPt =
     'premiumUnlockSubtitle': 'Desbloqueie sugestões personalizadas completas',
     'chartNeededTitle': 'Mapa Astral Necessário',
     'chartNeededBody':
-        'Para receber sugestões personalizadas baseadas nos trânsitos astrológicos, você precisa criar seu mapa astral primeiro.',
+        'Para receber sugestões personalizadas baseadas nos trânsitos astrológicos, você precisa criar seu mapa astral primeiro',
     'fillChartButton': 'Preencher Mapa Astral',
     'today': 'Hoje',
     'infoBanner':
@@ -24,10 +24,10 @@ const PersonalizedSuggestionsContent personalizedSuggestionsContentPt =
     'relevantAspectsLabel': 'Aspectos Relevantes:',
     'noSuggestionsTitle': 'Sem Sugestões Especiais',
     'noSuggestionsBody':
-        'Não há trânsitos significativos afetando seu mapa natal neste dia. Continue suas práticas regulares.',
+        'Não há trânsitos significativos afetando seu mapa natal neste dia. Continue suas práticas regulares',
     'errorLoadChart':
-        'Erro ao carregar mapa astral. Por favor, crie seu mapa astral primeiro.',
-    'errorGenerate': 'Erro ao gerar sugestões. Tente novamente mais tarde.',
+        'Erro ao carregar mapa astral. Por favor, crie seu mapa astral primeiro',
+    'errorGenerate': 'Erro ao gerar sugestões. Tente novamente mais tarde',
   },
   retrogradeInfo: {
     Planet.mercury: RetrogradePlanetInfo(

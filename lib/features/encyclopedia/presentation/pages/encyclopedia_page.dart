@@ -44,6 +44,10 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   // do app; a última aba visitada deixou de ser restaurada de propósito.
   late TabController _tabController;
 
+  /// Trocado para recriar o TabBarView quando o re-toque na bottom bar pede
+  /// "voltar ao início" já estando na primeira aba.
+  int _viewEpoch = 0;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -66,9 +70,15 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   }
 
   void _onResetRequested() {
-    if (mounted && _tabController.index != 0) {
+    if (!mounted) return;
+    if (_tabController.index != 0) {
       _tabController.animateTo(0);
+      return;
     }
+    // Já na primeira aba: recria a view para o conteúdo voltar ao topo
+    // (as sub-páginas não mantêm estado fora de cena, então trocar de aba
+    // já volta ao topo sozinho — este é o único caso que faltava).
+    setState(() => _viewEpoch++);
   }
 
   /// Deep link para uma sub-aba da Enciclopédia (lua cheia → Lua, sabbat →
@@ -168,6 +178,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
         ),
       ),
       body: TabBarView(
+        key: ValueKey(_viewEpoch),
         controller: _tabController,
         // MESMA ordem dos Tabs acima — mudou lá, muda aqui.
         children: [

@@ -12,9 +12,9 @@ const ElementsContent elementsContentEs = ElementsContent(
   introBody:
       'En la Wicca y en la brujería tradicional, los cuatro elementos - Tierra, Agua, Fuego y Aire - '
       'son fuerzas fundamentales de la naturaleza y de la existencia. No son solo sustancias físicas, '
-      'sino energías primordiales que componen toda la creación.',
+      'sino energías primordiales que componen toda la creación',
   introHint:
-      'Explora cada elemento abajo para comprender sus cualidades, correspondencias y cómo trabajar con ellos.',
+      'Explora cada elemento abajo para comprender sus cualidades, correspondencias y cómo trabajar con ellos',
   essenceLabel: 'Esencia',
   qualitiesLabel: 'Cualidades',
   directionLabel: 'Dirección Cardinal',
@@ -31,7 +31,7 @@ const ElementsContent elementsContentEs = ElementsContent(
       essence:
           'La Tierra representa estabilidad, solidez, crecimiento y manifestación física. '
           'Es el elemento de la materia, del cuerpo, de la abundancia material y de la conexión con el mundo natural. '
-          'La Tierra es donde las ideas se vuelven realidad.',
+          'La Tierra es donde las ideas se vuelven realidad',
       qualities:
           'Estable, fértil, nutritiva, confiable, práctica, paciente, enraizada',
       direction: 'Norte',
@@ -60,7 +60,7 @@ const ElementsContent elementsContentEs = ElementsContent(
       essence:
           'El Agua representa emociones, intuición, sanación y purificación. '
           'Es el elemento de los sentimientos profundos, del subconsciente, de los sueños y de la psique. '
-          'El Agua fluye, se adapta y refleja la verdad interior.',
+          'El Agua fluye, se adapta y refleja la verdad interior',
       qualities:
           'Fluida, adaptable, emocional, intuitiva, sanadora, purificadora, reflexiva',
       direction: 'Oeste',
@@ -89,7 +89,7 @@ const ElementsContent elementsContentEs = ElementsContent(
       essence:
           'El Fuego representa transformación, pasión, voluntad y poder personal. '
           'Es el elemento de la energía vital, del coraje, de la creatividad y de la acción. '
-          'El Fuego consume, transforma e ilumina.',
+          'El Fuego consume, transforma e ilumina',
       qualities:
           'Dinámico, transformador, purificador, apasionado, valiente, energético, creativo',
       direction: 'Sur',
@@ -118,7 +118,7 @@ const ElementsContent elementsContentEs = ElementsContent(
       essence:
           'El Aire representa intelecto, comunicación, pensamiento e inspiración. '
           'Es el elemento de la mente, de las ideas, de la sabiduría y del conocimiento. '
-          'El Aire lleva mensajes, dispersa y renueva.',
+          'El Aire lleva mensajes, dispersa y renueva',
       qualities:
           'Ligero, móvil, comunicativo, intelectual, inspirador, libre, renovador',
       direction: 'Este',
@@ -165,26 +165,26 @@ const ElementsContent elementsContentEs = ElementsContent(
     ElementPractice(
       'Meditación Elemental',
       'Siéntate con un objeto que represente cada elemento y medita sobre sus cualidades. '
-          'Siente la energía del elemento fluyendo a través de ti.',
+          'Siente la energía del elemento fluyendo a través de ti',
     ),
     ElementPractice(
       'Círculo Mágico',
       'Al trazar un círculo, invoca cada elemento en su dirección cardinal. '
-          'Esto crea un espacio sagrado equilibrado y protegido.',
+          'Esto crea un espacio sagrado equilibrado y protegido',
     ),
     ElementPractice(
       'Altar Elemental',
-      'Mantén representaciones de los cuatro elementos en tu altar para conservar el equilibrio energético.',
+      'Mantén representaciones de los cuatro elementos en tu altar para conservar el equilibrio energético',
     ),
     ElementPractice(
       'Hechizos Específicos',
       'Trabaja con el elemento correspondiente a tu intención: '
-          'Tierra para prosperidad, Agua para amor, Fuego para coraje, Aire para sabiduría.',
+          'Tierra para prosperidad, Agua para amor, Fuego para coraje, Aire para sabiduría',
     ),
     ElementPractice(
       'Conexión Diaria',
       'Pasa tiempo en la naturaleza conectándote con los elementos: '
-          'camina descalza (Tierra), toma un baño ritual (Agua), enciende velas (Fuego), practica la respiración (Aire).',
+          'camina descalza (Tierra), toma un baño ritual (Agua), enciende velas (Fuego), practica la respiración (Aire)',
     ),
   ],
   honoringTitle: 'Honrando los Elementos',
@@ -193,5 +193,5 @@ const ElementsContent elementsContentEs = ElementsContent(
       'Al trabajar con los elementos, nos estamos conectando con los propios cimientos del universo. '
       '\n\nRespeta cada elemento, aprende sus lecciones y permite que sus energías guíen y fortalezcan tu práctica. '
       'Con el tiempo, desarrollarás una relación profunda con cada elemento, reconociendo su presencia '
-      'tanto en el mundo exterior como dentro de ti misma.',
+      'tanto en el mundo exterior como dentro de ti misma',
 );

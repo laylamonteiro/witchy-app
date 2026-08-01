@@ -4,14 +4,14 @@ import 'sabbat_model.dart';
 /// Sabbats (Samhain, Yule...) são nomes próprios invariantes.
 /// Paridade verificada em test/content_models_parity_test.dart.
 const Map<SabbatType, String> sabbatDescriptionsPt = {
-  SabbatType.samhain: 'Ano Novo Bruxo. Véu entre mundos está fino. Honre ancestrais e entes queridos. Início do outono/inverno, período de recolhimento.',
-  SabbatType.yule: 'Solstício de Inverno. A noite mais longa do ano. Renascimento da luz. Coincide com festas juninas que mantêm a tradição do fogo sagrado.',
-  SabbatType.imbolc: 'Festival da luz crescente. Despertar da Terra, primeiros sinais da primavera. Tempo de limpeza, purificação e preparação para o novo crescimento.',
-  SabbatType.ostara: 'Equinócio de Primavera. Equilíbrio perfeito entre luz e escuridão. A natureza desperta plenamente. Tempo de novos começos.',
-  SabbatType.beltane: 'Festival do fogo e fertilidade. Celebração da vida em plenitude. Coincide com Finados, mas energeticamente é sobre celebrar a vida e o amor.',
-  SabbatType.litha: 'Solstício de Verão. O dia mais longo, pico do poder solar. Coincide com festas de fim de ano. Momento de celebração e gratidão.',
-  SabbatType.lammas: 'Primeira colheita. Após o verão abundante, é tempo de agradecer e compartilhar. Reconhecemos o sacrifício necessário para a abundância.',
-  SabbatType.mabon: 'Equinócio de Outono. Segunda colheita e segundo equilíbrio do ano. Preparação para o outono. Tempo de gratidão e equilíbrio.',
+  SabbatType.samhain: 'Ano Novo Bruxo. Véu entre mundos está fino. Honre ancestrais e entes queridos. Início do outono/inverno, período de recolhimento',
+  SabbatType.yule: 'Solstício de Inverno. A noite mais longa do ano. Renascimento da luz. Coincide com festas juninas que mantêm a tradição do fogo sagrado',
+  SabbatType.imbolc: 'Festival da luz crescente. Despertar da Terra, primeiros sinais da primavera. Tempo de limpeza, purificação e preparação para o novo crescimento',
+  SabbatType.ostara: 'Equinócio de Primavera. Equilíbrio perfeito entre luz e escuridão. A natureza desperta plenamente. Tempo de novos começos',
+  SabbatType.beltane: 'Festival do fogo e fertilidade. Celebração da vida em plenitude. Coincide com Finados, mas energeticamente é sobre celebrar a vida e o amor',
+  SabbatType.litha: 'Solstício de Verão. O dia mais longo, pico do poder solar. Coincide com festas de fim de ano. Momento de celebração e gratidão',
+  SabbatType.lammas: 'Primeira colheita. Após o verão abundante, é tempo de agradecer e compartilhar. Reconhecemos o sacrifício necessário para a abundância',
+  SabbatType.mabon: 'Equinócio de Outono. Segunda colheita e segundo equilíbrio do ano. Preparação para o outono. Tempo de gratidão e equilíbrio',
 };
 
 const Map<SabbatType, String> sabbatSouthDatesPt = {

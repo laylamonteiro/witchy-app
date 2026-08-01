@@ -18,12 +18,12 @@ const String sigilWhatIsDescPt =
     'Sigilos são símbolos mágicos criados para manifestar intenções. '
     'Ao transformar palavras em símbolos abstratos, você cria uma marca '
     'energética que carrega o poder da sua vontade, sem revelar sua intenção '
-    'para outras pessoas.';
+    'para outras pessoas';
 
 /// Como o método funciona (introdução da etapa 1).
 const String sigilHowIntroPt =
     'Defina sua intenção, escolha uma palavra que a represente, e o app '
-    'criará automaticamente seu sigilo único.';
+    'criará automaticamente seu sigilo único';
 
 /// Sugestões de palavras de intenção.
 const List<String> sigilIntentionExamplesPt = [
@@ -36,7 +36,7 @@ const List<String> sigilIntentionExamplesPt = [
 
 /// Dica sobre a escolha da palavra de intenção.
 const String sigilWordTipPt =
-    'Dica: Escolha palavras positivas e específicas que ressoem com você.';
+    'Dica: Escolha palavras positivas e específicas que ressoem com você';
 
 /// Introdução à explicação da simplificação das letras (etapa 2).
 const String sigilSimplifiedIntroPt =
@@ -53,28 +53,28 @@ const List<String> sigilSimplificationStepsPt = [
 /// Nota sobre a Roda das Bruxas (etapa 2).
 const String sigilWheelNotePt =
     'Esta sequência simplificada será conectada na Roda das Bruxas para '
-    'formar o símbolo mágico do seu sigilo.';
+    'formar o símbolo mágico do seu sigilo';
 
 /// Como usar o sigilo pronto (etapa 3) — título + descrição de cada passo.
 const List<({String title, String description})> sigilUsageStepsPt = [
   (
     title: '1. Copie este desenho',
     description:
-        'Reproduza o traçado em seu caderno, altar, vela, ou papel ritual.',
+        'Reproduza o traçado em seu caderno, altar, vela, ou papel ritual',
   ),
   (
     title: '2. Personalize',
     description:
-        'Simplifique, gire, ou adicione detalhes. Torná-lo seu faz parte da magia.',
+        'Simplifique, gire, ou adicione detalhes. Torná-lo seu faz parte da magia',
   ),
   (
     title: '3. Ative o sigilo',
     description:
-        'Use em meditação, queime em ritual, ou carregue consigo para focar sua intenção.',
+        'Use em meditação, queime em ritual, ou carregue consigo para focar sua intenção',
   ),
 ];
 
 /// Lembrete interpretativo final (etapa 3).
 const String sigilRememberNotePt =
     'Lembre-se: a magia está na sua intenção e no ato de criar, não apenas '
-    'no desenho final.';
+    'no desenho final';

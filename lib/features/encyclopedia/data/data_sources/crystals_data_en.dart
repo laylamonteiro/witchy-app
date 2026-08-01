@@ -9,7 +9,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Agate',
     description:
-        'A stone of balance, harmony and gentle protection. It stabilizes energies and soothes.',
+        'A stone of balance, harmony and gentle protection. It stabilizes energies and soothes',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/agata.jpg',
     intentions: [
@@ -55,7 +55,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Amethyst',
     description:
-        'A stone of spirituality and protection. It calms the mind and fosters mental clarity.',
+        'A stone of spirituality and protection. It calms the mind and fosters mental clarity',
     element: Element.air,
     imageUrl: 'assets/images/crystals/ametista.jpg',
     intentions: [
@@ -107,7 +107,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Citrine',
     description:
-        'The stone of prosperity and abundance. It draws success, joy and positive energy.',
+        'The stone of prosperity and abundance. It draws success, joy and positive energy',
     element: Element.fire,
     imageUrl: 'assets/images/crystals/citrino.jpg',
     intentions: [
@@ -161,7 +161,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Carnelian',
     description:
-        'A stone of creativity, courage and vitality. It sparks motivation and confidence.',
+        'A stone of creativity, courage and vitality. It sparks motivation and confidence',
     element: Element.fire,
     imageUrl: 'assets/images/crystals/cornalina.jpg',
     intentions: [
@@ -207,7 +207,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Fluorite',
     description:
-        'A stone of focus, learning and mental organization. Excellent for study sessions.',
+        'A stone of focus, learning and mental organization. Excellent for study sessions',
     element: Element.air,
     imageUrl: 'assets/images/crystals/fluorita.jpg',
     intentions: [
@@ -257,7 +257,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Howlite',
     description:
-        'A calming stone of patience and awareness. Excellent for insomnia and anxiety.',
+        'A calming stone of patience and awareness. Excellent for insomnia and anxiety',
     element: Element.air,
     imageUrl: 'assets/images/crystals/howlita.jpg',
     intentions: [
@@ -303,7 +303,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Red Jasper',
     description:
-        'A stone of grounding, strength and stability. It connects you to the energy of the Earth.',
+        'A stone of grounding, strength and stability. It connects you to the energy of the Earth',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/jaspe_vermelho.jpg',
     intentions: [
@@ -349,7 +349,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Labradorite',
     description:
-        'A mystical stone of transformation and magic. It shields against negative energies and sharpens intuition.',
+        'A mystical stone of transformation and magic. It shields against negative energies and sharpens intuition',
     element: Element.air,
     imageUrl: 'assets/images/crystals/labradorita.jpg',
     intentions: [
@@ -395,7 +395,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Lapis Lazuli',
     description:
-        'The stone of wisdom, truth and spiritual vision. It opens the third eye.',
+        'The stone of wisdom, truth and spiritual vision. It opens the third eye',
     element: Element.air,
     imageUrl: 'assets/images/crystals/lapis_lazuli.jpg',
     intentions: [
@@ -445,7 +445,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Black Obsidian',
     description:
-        'A powerful stone of protection and grounding. It absorbs and transmutes negative energies.',
+        'A powerful stone of protection and grounding. It absorbs and transmutes negative energies',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/obsidiana_negra.jpg',
     intentions: [
@@ -494,7 +494,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: "Tiger's Eye",
     description:
-        'A stone of courage, protection and prosperity. It strengthens confidence and brings good luck.',
+        'A stone of courage, protection and prosperity. It strengthens confidence and brings good luck',
     element: Element.fire,
     imageUrl: 'assets/images/crystals/olho_de_tigre.jpg',
     intentions: [
@@ -540,7 +540,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Moonstone',
     description:
-        'The sacred stone of the moon and the feminine. It connects you to lunar cycles and intuition.',
+        'The sacred stone of the moon and the feminine. It connects you to lunar cycles and intuition',
     element: Element.water,
     imageUrl: 'assets/images/crystals/pedra_da_lua.jpg',
     intentions: [
@@ -588,7 +588,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Pyrite',
     description:
-        'A stone of prosperity and manifestation. It attracts abundance and wards off negativity.',
+        'A stone of prosperity and manifestation. It attracts abundance and wards off negativity',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/pirita.jpg',
     intentions: [
@@ -638,7 +638,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Rose Quartz',
     description:
-        'The stone of self-love and unconditional love. It fosters inner peace and emotional healing.',
+        'The stone of self-love and unconditional love. It fosters inner peace and emotional healing',
     element: Element.water,
     imageUrl: 'assets/images/crystals/quartzo_rosa.jpg',
     intentions: [
@@ -695,7 +695,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Clear Quartz',
     description:
-        'The master healer and amplifier. It can be programmed for any intention.',
+        'The master healer and amplifier. It can be programmed for any intention',
     element: Element.spirit,
     imageUrl: 'assets/images/crystals/quartzo_transparente.jpg',
     intentions: [
@@ -749,7 +749,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Selenite',
     description:
-        'A stone of peace and purification. Self-cleansing, it rarely needs to be cleansed.',
+        'A stone of peace and purification. Self-cleansing, it rarely needs to be cleansed',
     element: Element.air,
     imageUrl: 'assets/images/crystals/selenita.jpg',
     intentions: [
@@ -804,7 +804,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Sodalite',
     description:
-        'A stone of logic, truth and communication. It stimulates rational thinking and intuition.',
+        'A stone of logic, truth and communication. It stimulates rational thinking and intuition',
     element: Element.air,
     imageUrl: 'assets/images/crystals/sodalita.jpg',
     intentions: [
@@ -850,7 +850,7 @@ final List<CrystalModel> crystalsEn = [
   const CrystalModel(
     name: 'Black Tourmaline',
     description:
-        'A powerful stone of protection and grounding. It blocks negative energies.',
+        'A powerful stone of protection and grounding. It blocks negative energies',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/turmalina_negra.jpg',
     intentions: [

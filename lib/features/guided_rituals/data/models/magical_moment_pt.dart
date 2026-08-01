@@ -14,7 +14,7 @@ const Map<int, WeekdayText> weekdayTextsPt = {
       'Hábitos e rotina',
     ],
     suggestion:
-        'Um bom dia para trabalhos de intuição e sonhos: anote o que sonhou, medite e cuide das suas emoções.',
+        'Um bom dia para trabalhos de intuição e sonhos: anote o que sonhou, medite e cuide das suas emoções',
   ),
   DateTime.tuesday: (
     theme: 'dia de Marte — coragem e força',
@@ -26,7 +26,7 @@ const Map<int, WeekdayText> weekdayTextsPt = {
       'Assertividade',
     ],
     suggestion:
-        'Aproveite a energia de Marte para feitiços de coragem e proteção — e para encarar aquilo que você vem adiando.',
+        'Aproveite a energia de Marte para feitiços de coragem e proteção — e para encarar aquilo que você vem adiando',
   ),
   DateTime.wednesday: (
     theme: 'dia de Mercúrio — comunicação e conhecimento',
@@ -38,7 +38,7 @@ const Map<int, WeekdayText> weekdayTextsPt = {
       'Criatividade',
     ],
     suggestion:
-        'Dia perfeito para estudar, escrever e resolver conversas pendentes. Feitiços de comunicação fluem melhor hoje.',
+        'Dia perfeito para estudar, escrever e resolver conversas pendentes. Feitiços de comunicação fluem melhor hoje',
   ),
   DateTime.thursday: (
     theme: 'dia de Júpiter — prosperidade e expansão',
@@ -50,7 +50,7 @@ const Map<int, WeekdayText> weekdayTextsPt = {
       'Otimismo',
     ],
     suggestion:
-        'Júpiter expande o que você plantar: ótimo dia para feitiços de prosperidade, pedidos de emprego e novos projetos.',
+        'Júpiter expande o que você plantar: ótimo dia para feitiços de prosperidade, pedidos de emprego e novos projetos',
   ),
   DateTime.friday: (
     theme: 'dia de Vênus — amor e beleza',
@@ -62,7 +62,7 @@ const Map<int, WeekdayText> weekdayTextsPt = {
       'Fertilidade',
     ],
     suggestion:
-        'Vênus rege o dia: feitiços de amor e amor próprio, banhos de beleza e encontros com quem faz bem.',
+        'Vênus rege o dia: feitiços de amor e amor próprio, banhos de beleza e encontros com quem faz bem',
   ),
   DateTime.saturday: (
     theme: 'dia de Saturno — limpeza e proteção',
@@ -74,7 +74,7 @@ const Map<int, WeekdayText> weekdayTextsPt = {
       'Encerramentos',
     ],
     suggestion:
-        'Saturno ajuda a encerrar e limpar: bom dia para banimentos, faxina energética e colocar limites.',
+        'Saturno ajuda a encerrar e limpar: bom dia para banimentos, faxina energética e colocar limites',
   ),
   DateTime.sunday: (
     theme: 'dia do Sol — sucesso e vitalidade',
@@ -86,33 +86,33 @@ const Map<int, WeekdayText> weekdayTextsPt = {
       'Empoderamento',
     ],
     suggestion:
-        'O Sol favorece brilhar: feitiços de sucesso e vitalidade, água solar e atividades que recarreguem você.',
+        'O Sol favorece brilhar: feitiços de sucesso e vitalidade, água solar e atividades que recarreguem você',
   ),
 };
 
 const Map<MagicDayPeriod, DayPeriodText> dayPeriodTextsPt = {
   MagicDayPeriod.sunrise: (
     title: 'Nascer do sol',
-    goodFor: 'Novos começos, novas energias, purificar, curar, estudar, iniciativa.',
+    goodFor: 'Novos começos, novas energias, purificar, curar, estudar, iniciativa',
   ),
   MagicDayPeriod.day: (
     title: 'Durante o dia',
-    goodFor: 'Expansão, inteligência, liderança, mente consciente.',
+    goodFor: 'Expansão, inteligência, liderança, mente consciente',
   ),
   MagicDayPeriod.noon: (
     title: 'Meio-dia',
-    goodFor: 'Poder, saúde, dinheiro, sucesso, força, proteção, oportunidade, vitalidade.',
+    goodFor: 'Poder, saúde, dinheiro, sucesso, força, proteção, oportunidade, vitalidade',
   ),
   MagicDayPeriod.sunset: (
     title: 'Pôr do sol',
-    goodFor: 'Encontrar a verdade, deixar ir, banir, romper maus hábitos, encerramentos.',
+    goodFor: 'Encontrar a verdade, deixar ir, banir, romper maus hábitos, encerramentos',
   ),
   MagicDayPeriod.night: (
     title: 'Noite',
-    goodFor: 'Inventar, autodesenvolvimento, consciência, liberar estresse e preocupações, curar feridas.',
+    goodFor: 'Inventar, autodesenvolvimento, consciência, liberar estresse e preocupações, curar feridas',
   ),
   MagicDayPeriod.midnight: (
     title: 'Meia-noite',
-    goodFor: 'Banimento, adivinhação, cura, aprimoramento pessoal.',
+    goodFor: 'Banimento, adivinhação, cura, aprimoramento pessoal',
   ),
 };

@@ -108,71 +108,71 @@ String _aspectText(String key) => ContentLocale.instance.select(
     )[key]!;
 
 const Map<String, String> _aspectTextsPt = {
-  'connectionHarmonious': 'Conexão harmoniosa entre {p1} e {p2}.',
-  'connectionChallenging': 'Conexão desafiadora entre {p1} e {p2}.',
-  'connectionNeutral': 'Conexão neutra entre {p1} e {p2}.',
+  'connectionHarmonious': 'Conexão harmoniosa entre {p1} e {p2}',
+  'connectionChallenging': 'Conexão desafiadora entre {p1} e {p2}',
+  'connectionNeutral': 'Conexão neutra entre {p1} e {p2}',
   'sunMoonHarmonious':
-      'Integração do masculino e feminino. Equilíbrio entre ação e intuição.',
+      'Integração do masculino e feminino. Equilíbrio entre ação e intuição',
   'sunMoonChallenging':
-      'Conflito entre ego e emoção. Trabalhe a integração através de rituais de equilíbrio.',
+      'Conflito entre ego e emoção. Trabalhe a integração através de rituais de equilíbrio',
   'moonNeptuneHarmonious':
-      'Forte intuição psíquica. Ótimo para divinação e trabalho com sonhos.',
+      'Forte intuição psíquica. Ótimo para divinação e trabalho com sonhos',
   'moonNeptuneChallenging':
-      'Confusão emocional. Use cristais de ancoragem em seus rituais.',
+      'Confusão emocional. Use cristais de ancoragem em seus rituais',
   'mercuryNeptuneHarmonious':
-      'Canalização e comunicação espiritual facilitadas.',
+      'Canalização e comunicação espiritual facilitadas',
   'mercuryNeptuneChallenging':
-      'Dificuldade em distinguir intuição de imaginação. Ancore-se antes de rituais.',
-  'venusHarmonious': 'Energia favorável para feitiços de amor e beleza.',
-  'venusChallenging': 'Revise suas intenções em feitiços de atração.',
-  'marsHarmonious': 'Energia poderosa para feitiços de proteção e banimento.',
+      'Dificuldade em distinguir intuição de imaginação. Ancore-se antes de rituais',
+  'venusHarmonious': 'Energia favorável para feitiços de amor e beleza',
+  'venusChallenging': 'Revise suas intenções em feitiços de atração',
+  'marsHarmonious': 'Energia poderosa para feitiços de proteção e banimento',
   'marsChallenging':
-      'Cuidado com impulsividade em rituais. Trabalhe o autocontrole.',
+      'Cuidado com impulsividade em rituais. Trabalhe o autocontrole',
 };
 
 const Map<String, String> _aspectTextsEn = {
-  'connectionHarmonious': 'Harmonious connection between {p1} and {p2}.',
-  'connectionChallenging': 'Challenging connection between {p1} and {p2}.',
-  'connectionNeutral': 'Neutral connection between {p1} and {p2}.',
+  'connectionHarmonious': 'Harmonious connection between {p1} and {p2}',
+  'connectionChallenging': 'Challenging connection between {p1} and {p2}',
+  'connectionNeutral': 'Neutral connection between {p1} and {p2}',
   'sunMoonHarmonious':
-      'Integration of the masculine and feminine. Balance between action and intuition.',
+      'Integration of the masculine and feminine. Balance between action and intuition',
   'sunMoonChallenging':
-      'Conflict between ego and emotion. Work on integration through balancing rituals.',
+      'Conflict between ego and emotion. Work on integration through balancing rituals',
   'moonNeptuneHarmonious':
-      'Strong psychic intuition. Great for divination and dream work.',
+      'Strong psychic intuition. Great for divination and dream work',
   'moonNeptuneChallenging':
-      'Emotional confusion. Use grounding crystals in your rituals.',
+      'Emotional confusion. Use grounding crystals in your rituals',
   'mercuryNeptuneHarmonious':
-      'Channeling and spiritual communication come easily.',
+      'Channeling and spiritual communication come easily',
   'mercuryNeptuneChallenging':
-      'Difficulty telling intuition from imagination. Ground yourself before rituals.',
-  'venusHarmonious': 'Favorable energy for love and beauty spells.',
-  'venusChallenging': 'Review your intentions in attraction spells.',
-  'marsHarmonious': 'Powerful energy for protection and banishing spells.',
+      'Difficulty telling intuition from imagination. Ground yourself before rituals',
+  'venusHarmonious': 'Favorable energy for love and beauty spells',
+  'venusChallenging': 'Review your intentions in attraction spells',
+  'marsHarmonious': 'Powerful energy for protection and banishing spells',
   'marsChallenging':
-      'Beware of impulsiveness in rituals. Work on self-control.',
+      'Beware of impulsiveness in rituals. Work on self-control',
 };
 
 const Map<String, String> _aspectTextsEs = {
-  'connectionHarmonious': 'Conexión armoniosa entre {p1} y {p2}.',
-  'connectionChallenging': 'Conexión desafiante entre {p1} y {p2}.',
-  'connectionNeutral': 'Conexión neutra entre {p1} y {p2}.',
+  'connectionHarmonious': 'Conexión armoniosa entre {p1} y {p2}',
+  'connectionChallenging': 'Conexión desafiante entre {p1} y {p2}',
+  'connectionNeutral': 'Conexión neutra entre {p1} y {p2}',
   'sunMoonHarmonious':
-      'Integración de lo masculino y lo femenino. Equilibrio entre acción e intuición.',
+      'Integración de lo masculino y lo femenino. Equilibrio entre acción e intuición',
   'sunMoonChallenging':
-      'Conflicto entre ego y emoción. Trabaja la integración a través de rituales de equilibrio.',
+      'Conflicto entre ego y emoción. Trabaja la integración a través de rituales de equilibrio',
   'moonNeptuneHarmonious':
-      'Fuerte intuición psíquica. Excelente para la adivinación y el trabajo con sueños.',
+      'Fuerte intuición psíquica. Excelente para la adivinación y el trabajo con sueños',
   'moonNeptuneChallenging':
-      'Confusión emocional. Usa cristales de anclaje en tus rituales.',
+      'Confusión emocional. Usa cristales de anclaje en tus rituales',
   'mercuryNeptuneHarmonious':
-      'Canalización y comunicación espiritual facilitadas.',
+      'Canalización y comunicación espiritual facilitadas',
   'mercuryNeptuneChallenging':
-      'Dificultad para distinguir la intuición de la imaginación. Ánclate antes de los rituales.',
-  'venusHarmonious': 'Energía favorable para hechizos de amor y belleza.',
-  'venusChallenging': 'Revisa tus intenciones en hechizos de atracción.',
+      'Dificultad para distinguir la intuición de la imaginación. Ánclate antes de los rituales',
+  'venusHarmonious': 'Energía favorable para hechizos de amor y belleza',
+  'venusChallenging': 'Revisa tus intenciones en hechizos de atracción',
   'marsHarmonious':
-      'Energía poderosa para hechizos de protección y destierro.',
+      'Energía poderosa para hechizos de protección y destierro',
   'marsChallenging':
-      'Cuidado con la impulsividad en los rituales. Trabaja el autocontrol.',
+      'Cuidado con la impulsividad en los rituales. Trabaja el autocontrol',
 };

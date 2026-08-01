@@ -4,14 +4,14 @@ import 'sabbat_model.dart';
 /// invariant proper nouns.
 /// Paridade verificada em test/content_models_parity_test.dart.
 const Map<SabbatType, String> sabbatDescriptionsEn = {
-  SabbatType.samhain: 'The Witches\' New Year. The veil between worlds is thin. Honor your ancestors and loved ones. Start of autumn/winter, a time of turning inward.',
-  SabbatType.yule: 'Winter Solstice. The longest night of the year. Rebirth of the light. In Brazil it coincides with the June festivals that keep the sacred-fire tradition.',
-  SabbatType.imbolc: 'Festival of the growing light. The Earth awakens with the first signs of spring. A time for cleansing, purification, and preparing new growth.',
-  SabbatType.ostara: 'Spring Equinox. Perfect balance between light and darkness. Nature fully awakens. A time of new beginnings.',
-  SabbatType.beltane: 'Festival of fire and fertility. A celebration of life in its fullness. It coincides with All Souls\' Day in Brazil, but energetically it is about celebrating life and love.',
-  SabbatType.litha: 'Summer Solstice. The longest day, the peak of solar power. In Brazil it coincides with year-end festivities. A moment of celebration and gratitude.',
-  SabbatType.lammas: 'First harvest. After the abundant summer, it is time to give thanks and share. We honor the sacrifice that abundance requires.',
-  SabbatType.mabon: 'Autumn Equinox. Second harvest and second balance of the year. Preparing for autumn. A time of gratitude and equilibrium.',
+  SabbatType.samhain: 'The Witches\' New Year. The veil between worlds is thin. Honor your ancestors and loved ones. Start of autumn/winter, a time of turning inward',
+  SabbatType.yule: 'Winter Solstice. The longest night of the year. Rebirth of the light. In Brazil it coincides with the June festivals that keep the sacred-fire tradition',
+  SabbatType.imbolc: 'Festival of the growing light. The Earth awakens with the first signs of spring. A time for cleansing, purification, and preparing new growth',
+  SabbatType.ostara: 'Spring Equinox. Perfect balance between light and darkness. Nature fully awakens. A time of new beginnings',
+  SabbatType.beltane: 'Festival of fire and fertility. A celebration of life in its fullness. It coincides with All Souls\' Day in Brazil, but energetically it is about celebrating life and love',
+  SabbatType.litha: 'Summer Solstice. The longest day, the peak of solar power. In Brazil it coincides with year-end festivities. A moment of celebration and gratitude',
+  SabbatType.lammas: 'First harvest. After the abundant summer, it is time to give thanks and share. We honor the sacrifice that abundance requires',
+  SabbatType.mabon: 'Autumn Equinox. Second harvest and second balance of the year. Preparing for autumn. A time of gratitude and equilibrium',
 };
 
 const Map<SabbatType, String> sabbatSouthDatesEn = {

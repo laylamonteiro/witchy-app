@@ -21,7 +21,7 @@ const List<String> dailyWeatherFallbackHeadingsEn = [
 
 /// Placeholder sentence shown blurred in place of the Premium forecast body.
 const String dailyWeatherPremiumPlaceholderEn =
-    'The influences of the day reveal personalized magical guidance and practices for this moment.';
+    'The influences of the day reveal personalized magical guidance and practices for this moment';
 
 // Localized names — the enum getters (`displayName`) return Portuguese text,
 // so the English template resolves names from these maps keyed by the
@@ -59,11 +59,11 @@ String dailyWeatherFallbackTextEn(DailyMagicalWeather weather) {
       .where((a) => a.energyLevel == EnergyLevel.challenging)
       .take(2)
       .map((a) =>
-          '- ${a.description}: act calmly and avoid reacting on impulse.')
+          '- ${a.description}: act calmly and avoid reacting on impulse')
       .toList();
   final cautions = challenges.isNotEmpty
       ? challenges.join('\n')
-      : '- No major tensions today. Even so, avoid rushed decisions and set aside a quiet moment to center yourself.';
+      : '- No major tensions today. Even so, avoid rushed decisions and set aside a quiet moment to center yourself';
 
   return '''## Energy of the Day
 

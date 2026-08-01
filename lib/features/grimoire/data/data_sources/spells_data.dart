@@ -35,7 +35,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe a vela queimar completamente
 8. Carregue o quartzo rosa com você''',
     duration: 1,
-    observations: 'Melhor feito numa sexta-feira (dia de Vênus). Mantenha o coração aberto para novas possibilidades.',
+    observations: 'Melhor feito numa sexta-feira (dia de Vênus). Mantenha o coração aberto para novas possibilidades',
     isPreloaded: true,
   ),
 
@@ -59,7 +59,7 @@ final List<SpellModel> preloadedSpells = [
 6. Mergulhe 3 vezes
 7. Deixe secar naturalmente''',
     duration: 1,
-    observations: 'Pode ser feito na lua cheia ou crescente. Excelente para abrir o coração após mágoas.',
+    observations: 'Pode ser feito na lua cheia ou crescente. Excelente para abrir o coração após mágoas',
     isPreloaded: true,
   ),
 
@@ -84,7 +84,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Este amor é meu, com o bem de todos e mal de ninguém"
 6. Carregue na bolsa ou perto da cama
 7. Energize na lua cheia''',
-    observations: 'Substitua as ervas a cada 3 meses ou quando sentir necessário.',
+    observations: 'Substitua as ervas a cada 3 meses ou quando sentir necessário',
     isPreloaded: true,
   ),
 
@@ -108,7 +108,7 @@ final List<SpellModel> preloadedSpells = [
 6. Deixe a vela queimar
 7. Mantenha o espelho em local especial''',
     duration: 1,
-    observations: 'Este feitiço trabalha amor próprio e atração simultâneos.',
+    observations: 'Este feitiço trabalha amor próprio e atração simultâneos',
     isPreloaded: true,
   ),
 
@@ -131,7 +131,7 @@ final List<SpellModel> preloadedSpells = [
 6. Deixe queimar
 7. Enterre os restos num jardim''',
     duration: 1,
-    observations: 'Apenas para relações já existentes. Não funciona contra o livre arbítrio.',
+    observations: 'Apenas para relações já existentes. Não funciona contra o livre arbítrio',
     isPreloaded: true,
   ),
 
@@ -158,7 +158,7 @@ final List<SpellModel> preloadedSpells = [
 6. Faça por 5-10 minutos
 7. Repita diariamente por uma semana''',
     duration: 7,
-    observations: 'Pode parecer estranho no início, mas é transformador com persistência.',
+    observations: 'Pode parecer estranho no início, mas é transformador com persistência',
     isPreloaded: true,
   ),
 
@@ -184,7 +184,7 @@ final List<SpellModel> preloadedSpells = [
 7. Relaxe por 20 minutos
 8. Deixe secar naturalmente''',
     duration: 1,
-    observations: 'Faça sempre que precisar se reconectar consigo mesmo.',
+    observations: 'Faça sempre que precisar se reconectar consigo mesmo',
     isPreloaded: true,
   ),
 
@@ -209,7 +209,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Eu sou amor, eu sou luz, eu sou suficiente"
 6. Feche e mantenha em local visível
 7. Segure sempre que precisar de força''',
-    observations: 'Adicione novos papéis com qualidades sempre que descobrir mais sobre si.',
+    observations: 'Adicione novos papéis com qualidades sempre que descobrir mais sobre si',
     isPreloaded: true,
   ),
 
@@ -233,7 +233,7 @@ final List<SpellModel> preloadedSpells = [
 7. Agradeça a si mesmo
 8. Repita semanalmente''',
     duration: 7,
-    observations: 'A gratidão transforma a percepção que temos de nós mesmos.',
+    observations: 'A gratidão transforma a percepção que temos de nós mesmos',
     isPreloaded: true,
   ),
 
@@ -255,7 +255,7 @@ final List<SpellModel> preloadedSpells = [
 3. Diga: "Este espaço está protegido, apenas amor e luz podem entrar"
 4. Repita nos cantos do ambiente
 5. Renovar mensalmente ou quando sentir necessário''',
-    observations: 'Mais simples e poderosa proteção. Funciona para casa, quarto ou altar.',
+    observations: 'Mais simples e poderosa proteção. Funciona para casa, quarto ou altar',
     isPreloaded: true,
   ),
 
@@ -278,7 +278,7 @@ final List<SpellModel> preloadedSpells = [
 4. Diga: "Proteção comigo sempre, mal algum me alcançará"
 5. Carregue na bolsa ou mochila
 6. Renovar a cada lua nova''',
-    observations: 'Mantenha longe de crianças e animais (arruda é tóxica).',
+    observations: 'Mantenha longe de crianças e animais (arruda é tóxica)',
     isPreloaded: true,
   ),
 
@@ -302,7 +302,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Estou limpo e protegido"
 6. Não se seque, deixe secar naturalmente''',
     duration: 1,
-    observations: 'Faça após situações pesadas ou semanalmente para manutenção.',
+    observations: 'Faça após situações pesadas ou semanalmente para manutenção',
     isPreloaded: true,
   ),
 
@@ -327,7 +327,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Esta casa está protegida"
 6. Enterre na entrada da casa ou esconda perto da porta
 7. Nunca abra''',
-    observations: 'Proteção tradicional muito poderosa. Dura anos.',
+    observations: 'Proteção tradicional muito poderosa. Dura anos',
     isPreloaded: true,
   ),
 
@@ -349,7 +349,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Varro toda negatividade desta casa"
 6. Junte o sal e jogue fora longe de casa
 7. Mantenha a vassoura atrás da porta''',
-    observations: 'Faça após visitas pesadas ou discussões em casa.',
+    observations: 'Faça após visitas pesadas ou discussões em casa',
     isPreloaded: true,
   ),
 
@@ -370,7 +370,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Estou protegido por este símbolo sagrado"
 6. Desenhe um em cada direção (norte, sul, leste, oeste)
 7. Sinta-se envolto em proteção''',
-    observations: 'Pode ser feito mentalmente em qualquer lugar quando sentir necessidade.',
+    observations: 'Pode ser feito mentalmente em qualquer lugar quando sentir necessidade',
     isPreloaded: true,
   ),
 
@@ -392,7 +392,7 @@ final List<SpellModel> preloadedSpells = [
 4. Coloque sal e alecrim em volta
 5. Diga: "Que toda negatividade seja refletida de volta a sua origem, transformada em luz"
 6. Deixe a vela queimar''',
-    observations: 'Espelho sempre virado para fora, nunca para dentro da casa.',
+    observations: 'Espelho sempre virado para fora, nunca para dentro da casa',
     isPreloaded: true,
   ),
 
@@ -415,7 +415,7 @@ final List<SpellModel> preloadedSpells = [
 4. Diga: "Este óleo me protege de todo mal"
 5. Deixe na janela na lua minguante por 3 noites
 6. Coe e use para ungir velas, portas, janelas, ou a si mesmo''',
-    observations: 'Durável. Mantenha em local fresco e escuro.',
+    observations: 'Durável. Mantenha em local fresco e escuro',
     isPreloaded: true,
   ),
 
@@ -442,7 +442,7 @@ final List<SpellModel> preloadedSpells = [
 6. Diga: "Minha prosperidade cresce a cada dia"
 7. Deixe as cinzas serem levadas pelo vento ou jogue em água corrente''',
     duration: 1,
-    observations: 'Pode ser feito sempre que sentir necessidade. Confie no timing do universo.',
+    observations: 'Pode ser feito sempre que sentir necessidade. Confie no timing do universo',
     isPreloaded: true,
   ),
 
@@ -465,7 +465,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Prosperidade flui para mim facilmente"
 6. Deixe secar naturalmente''',
     duration: 1,
-    observations: 'Excelente antes de entrevistas ou reuniões importantes.',
+    observations: 'Excelente antes de entrevistas ou reuniões importantes',
     isPreloaded: true,
   ),
 
@@ -489,7 +489,7 @@ final List<SpellModel> preloadedSpells = [
 6. Deixe queimar completamente
 7. Carregue a moeda na carteira''',
     duration: 1,
-    observations: 'Melhor em quinta-feira (dia de Júpiter). Repita quando sentir necessidade.',
+    observations: 'Melhor em quinta-feira (dia de Júpiter). Repita quando sentir necessidade',
     isPreloaded: true,
   ),
 
@@ -516,7 +516,7 @@ final List<SpellModel> preloadedSpells = [
 6. Diga: "Minha prosperidade cresce constantemente"
 7. Mantenha perto de onde guarda dinheiro
 8. Adicione moedas quando receber dinheiro''',
-    observations: 'Nunca abra ou retire. É um ímã permanente de prosperidade.',
+    observations: 'Nunca abra ou retire. É um ímã permanente de prosperidade',
     isPreloaded: true,
   ),
 
@@ -539,7 +539,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Dinheiro entra e se multiplica, sempre há o suficiente e mais"
 6. Nunca deixe a carteira completamente vazia
 7. Mantenha sempre ao menos uma nota''',
-    observations: 'Renove as ervas a cada lua nova. A nota nunca deve ser gasta.',
+    observations: 'Renove as ervas a cada lua nova. A nota nunca deve ser gasta',
     isPreloaded: true,
   ),
 
@@ -563,7 +563,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe a água absorver energia lunar
 8. Na manhã seguinte, use essa água para regar plantas''',
     duration: 1,
-    observations: 'A prosperidade "crescerá" como as plantas. As moedas podem ser doadas.',
+    observations: 'A prosperidade "crescerá" como as plantas. As moedas podem ser doadas',
     isPreloaded: true,
   ),
 
@@ -585,7 +585,7 @@ final List<SpellModel> preloadedSpells = [
 5. Acenda a vela
 6. Queime o papel com sigilo ou guarde na carteira
 7. Esqueça (deixe o universo trabalhar)''',
-    observations: 'Técnica de magia do caos. Quanto menos pensar depois, mais funciona.',
+    observations: 'Técnica de magia do caos. Quanto menos pensar depois, mais funciona',
     isPreloaded: true,
   ),
 
@@ -615,7 +615,7 @@ final List<SpellModel> preloadedSpells = [
 7. Fique pelo menos 15 minutos
 8. Deixe secar naturalmente''',
     duration: 1,
-    observations: 'Não substitui tratamento médico. Complementa processos de cura.',
+    observations: 'Não substitui tratamento médico. Complementa processos de cura',
     isPreloaded: true,
   ),
 
@@ -640,7 +640,7 @@ final List<SpellModel> preloadedSpells = [
 7. Diga: "Que [nome] seja curado(a) para o seu maior bem"
 8. Deixe a vela queimar completamente''',
     duration: 1,
-    observations: 'Sempre peça permissão antes de fazer magia para outros. Respeite o livre arbítrio.',
+    observations: 'Sempre peça permissão antes de fazer magia para outros. Respeite o livre arbítrio',
     isPreloaded: true,
   ),
 
@@ -666,7 +666,7 @@ final List<SpellModel> preloadedSpells = [
 7. Beba lentamente com atenção plena
 8. Sinta a cura percorrendo seu corpo''',
     duration: 1,
-    observations: 'Pode ser feito diariamente durante processo de cura.',
+    observations: 'Pode ser feito diariamente durante processo de cura',
     isPreloaded: true,
   ),
 
@@ -692,7 +692,7 @@ final List<SpellModel> preloadedSpells = [
 8. Deixe montada por 3 dias
 9. Carregue o cristal central com você''',
     duration: 3,
-    observations: 'Potente amplificador de energia curativa. Recarregue os cristais após uso.',
+    observations: 'Potente amplificador de energia curativa. Recarregue os cristais após uso',
     isPreloaded: true,
   ),
 
@@ -718,7 +718,7 @@ final List<SpellModel> preloadedSpells = [
 6. Diga: "Este boneco representa [nome] em perfeita saúde"
 7. Mantenha em local seguro
 8. Descosture quando a cura se completar''',
-    observations: 'Técnica tradicional. Trate o poppet com carinho como se fosse a pessoa.',
+    observations: 'Técnica tradicional. Trate o poppet com carinho como se fosse a pessoa',
     isPreloaded: true,
   ),
 
@@ -745,7 +745,7 @@ final List<SpellModel> preloadedSpells = [
 7. Abra janelas para energia sair
 8. Deixe o alecrim queimar completamente''',
     duration: 1,
-    observations: 'Faça sempre que o ambiente estiver pesado ou após discussões.',
+    observations: 'Faça sempre que o ambiente estiver pesado ou após discussões',
     isPreloaded: true,
   ),
 
@@ -768,7 +768,7 @@ final List<SpellModel> preloadedSpells = [
 6. Diga: "Com esta fumaça sagrada, limpo e purifico"
 7. Apague pressionando contra areia ou terra''',
     duration: 1,
-    observations: 'Compre de fontes éticas. Sálvia branca é sagrada para povos indígenas.',
+    observations: 'Compre de fontes éticas. Sálvia branca é sagrada para povos indígenas',
     isPreloaded: true,
   ),
 
@@ -793,7 +793,7 @@ final List<SpellModel> preloadedSpells = [
 5. Para usar: borrife no ambiente ou em você
 6. Diga: "Estou limpo e protegido"
 7. Recarregue o spray na próxima lua cheia''',
-    observations: 'Prático para limpezas rápidas. Mantenha refrigerado.',
+    observations: 'Prático para limpezas rápidas. Mantenha refrigerado',
     isPreloaded: true,
   ),
 
@@ -813,7 +813,7 @@ final List<SpellModel> preloadedSpells = [
 5. Varra e jogue o sal fora (não reutilize)
 6. Lave o chão com água e vinagre''',
     duration: 1,
-    observations: 'Método simples e muito efetivo. Faça mensalmente.',
+    observations: 'Método simples e muito efetivo. Faça mensalmente',
     isPreloaded: true,
   ),
 
@@ -840,7 +840,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe secar naturalmente
 8. Vista roupas limpas''',
     duration: 1,
-    observations: 'Pós situações muito pesadas. Potente limpeza energética.',
+    observations: 'Pós situações muito pesadas. Potente limpeza energética',
     isPreloaded: true,
   ),
 
@@ -861,7 +861,7 @@ final List<SpellModel> preloadedSpells = [
 6. Diga: "Com este som, limpo e renovo este espaço"
 7. Termine na porta de entrada novamente''',
     duration: 1,
-    observations: 'Método sem fumaça, ótimo para quem tem sensibilidade respiratória.',
+    observations: 'Método sem fumaça, ótimo para quem tem sensibilidade respiratória',
     isPreloaded: true,
   ),
 
@@ -889,7 +889,7 @@ final List<SpellModel> preloadedSpells = [
 7. Lave bem as mãos
 8. Não olhe para trás''',
     duration: 1,
-    observations: 'Apenas para situações/pessoas tóxicas. Use com responsabilidade.',
+    observations: 'Apenas para situações/pessoas tóxicas. Use com responsabilidade',
     isPreloaded: true,
   ),
 
@@ -915,7 +915,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe queimar completamente
 8. Enterre ou jogue fora os restos longe de casa''',
     duration: 1,
-    observations: 'Sempre finalize com limpeza pessoal e proteção.',
+    observations: 'Sempre finalize com limpeza pessoal e proteção',
     isPreloaded: true,
   ),
 
@@ -939,7 +939,7 @@ final List<SpellModel> preloadedSpells = [
 7. Diga: "Estou livre"
 8. Jogue as cinzas ao vento ou água corrente''',
     duration: 1,
-    observations: 'Poderoso para encerrar relacionamentos ou vícios energéticos.',
+    observations: 'Poderoso para encerrar relacionamentos ou vícios energéticos',
     isPreloaded: true,
   ),
 
@@ -960,7 +960,7 @@ final List<SpellModel> preloadedSpells = [
 5. Coloque no freezer
 6. Deixe congelado até a situação resolver
 7. Quando resolver, descongele e jogue fora''',
-    observations: 'Não prejudica, apenas imobiliza ação negativa. Ético para autodefesa.',
+    observations: 'Não prejudica, apenas imobiliza ação negativa. Ético para autodefesa',
     isPreloaded: true,
   ),
 
@@ -990,7 +990,7 @@ final List<SpellModel> preloadedSpells = [
 5. Carregue com você
 6. Toque no saquinho ao precisar de sorte
 7. Recarregue na lua cheia''',
-    observations: 'Quanto mais você acredita, mais funciona.',
+    observations: 'Quanto mais você acredita, mais funciona',
     isPreloaded: true,
   ),
 
@@ -1015,7 +1015,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe queimar por 30 minutos
 8. Apague e repita por 3 dias seguidos''',
     duration: 3,
-    observations: 'Ótimo antes de eventos importantes ou mudanças de vida.',
+    observations: 'Ótimo antes de eventos importantes ou mudanças de vida',
     isPreloaded: true,
   ),
 
@@ -1038,7 +1038,7 @@ final List<SpellModel> preloadedSpells = [
 6. Não lave as mãos imediatamente
 7. Use essa mão para jogar/apostar''',
     duration: 1,
-    observations: 'Magia não garante vitória. Jogue responsavelmente.',
+    observations: 'Magia não garante vitória. Jogue responsavelmente',
     isPreloaded: true,
   ),
 
@@ -1065,7 +1065,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Criatividade flui através de mim"
 6. Trabalhe em seu projeto com a vela acesa
 7. Repita sempre que precisar''',
-    observations: 'A chama representa a faísca criativa. Mantenha acesa enquanto trabalha.',
+    observations: 'A chama representa a faísca criativa. Mantenha acesa enquanto trabalha',
     isPreloaded: true,
   ),
 
@@ -1089,7 +1089,7 @@ final List<SpellModel> preloadedSpells = [
 5. Beba enquanto visualiza ideias fluindo
 6. Sente-se para criar logo após''',
     duration: 1,
-    observations: 'Funciona como ritual para entrar em estado criativo.',
+    observations: 'Funciona como ritual para entrar em estado criativo',
     isPreloaded: true,
   ),
 
@@ -1114,7 +1114,7 @@ final List<SpellModel> preloadedSpells = [
 5. Use antes de conversas importantes
 6. Tenha consciência do que diz''',
     duration: 1,
-    observations: 'Antes de entrevistas, apresentações ou conversas difíceis.',
+    observations: 'Antes de entrevistas, apresentações ou conversas difíceis',
     isPreloaded: true,
   ),
 
@@ -1139,7 +1139,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe queimar enquanto visualiza comunicação fluindo
 8. Carregue o cristal quando for se comunicar''',
     duration: 1,
-    observations: 'Chakra laríngeo (garganta). Ótimo para quem tem dificuldade de se expressar.',
+    observations: 'Chakra laríngeo (garganta). Ótimo para quem tem dificuldade de se expressar',
     isPreloaded: true,
   ),
 
@@ -1166,7 +1166,7 @@ final List<SpellModel> preloadedSpells = [
 4. Antes de dormir, diga: "Lembro de meus sonhos claramente"
 5. Mantenha diário de sonhos perto da cama
 6. Anote ao acordar''',
-    observations: 'Artemísia é potente para sonhos. Pode causar sonhos intensos.',
+    observations: 'Artemísia é potente para sonhos. Pode causar sonhos intensos',
     isPreloaded: true,
   ),
 
@@ -1188,7 +1188,7 @@ final List<SpellModel> preloadedSpells = [
 5. Beba um gole antes de dormir
 6. Diga: "Esta água lunar clareia meus sonhos"
 7. Anote sonhos ao acordar''',
-    observations: 'Água lunar potencializa conexão com inconsciente.',
+    observations: 'Água lunar potencializa conexão com inconsciente',
     isPreloaded: true,
   ),
 
@@ -1212,7 +1212,7 @@ final List<SpellModel> preloadedSpells = [
 5. Unja pulsos também
 6. Diga: "Estou consciente em meus sonhos"
 7. Durma com intenção de sonhar lúcido''',
-    observations: 'Pratique técnicas de sonho lúcido junto com o óleo para melhores resultados.',
+    observations: 'Pratique técnicas de sonho lúcido junto com o óleo para melhores resultados',
     isPreloaded: true,
   ),
 
@@ -1241,7 +1241,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe queimar enquanto faz algo ativo
 8. Carregue o cristal para energia constante''',
     duration: 1,
-    observations: 'Não substitui descanso necessário. Use quando precisar de energia extra.',
+    observations: 'Não substitui descanso necessário. Use quando precisar de energia extra',
     isPreloaded: true,
   ),
 
@@ -1267,7 +1267,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe secar naturalmente
 8. Vista roupas vibrantes se possível''',
     duration: 1,
-    observations: 'Melhor pela manhã para começar o dia com energia.',
+    observations: 'Melhor pela manhã para começar o dia com energia',
     isPreloaded: true,
   ),
 
@@ -1289,7 +1289,7 @@ final List<SpellModel> preloadedSpells = [
 6. Coloque no sol por 2 horas
 7. Carregue com você
 8. Segure quando precisar de energia''',
-    observations: 'Recarregue o cristal ao sol mensalmente.',
+    observations: 'Recarregue o cristal ao sol mensalmente',
     isPreloaded: true,
   ),
 
@@ -1319,7 +1319,7 @@ final List<SpellModel> preloadedSpells = [
 7. Termine na porta de entrada
 8. Deixe a vela queimar completamente''',
     duration: 1,
-    observations: 'Faça ao se mudar ou mensalmente para renovar a energia.',
+    observations: 'Faça ao se mudar ou mensalmente para renovar a energia',
     isPreloaded: true,
   ),
 
@@ -1343,7 +1343,7 @@ final List<SpellModel> preloadedSpells = [
 6. Junte o sal e jogue fora longe de casa
 7. Mantenha vassoura atrás da porta ou em armário''',
     duration: 1,
-    observations: 'Semanalmente ou após energia pesada em casa.',
+    observations: 'Semanalmente ou após energia pesada em casa',
     isPreloaded: true,
   ),
 
@@ -1371,7 +1371,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Que a sabedoria flua através de mim, que eu compreenda e retenha conhecimento"
 6. Estude com a vela acesa
 7. Deixe queimar por pelo menos 30 minutos''',
-    observations: 'Roxa é a cor da sabedoria e terceiro olho. Use antes de provas ou ao estudar.',
+    observations: 'Roxa é a cor da sabedoria e terceiro olho. Use antes de provas ou ao estudar',
     isPreloaded: true,
   ),
 
@@ -1396,7 +1396,7 @@ final List<SpellModel> preloadedSpells = [
 6. Beba devagar antes de estudar
 7. Sinta a clareza mental chegando''',
     duration: 1,
-    observations: 'Hortelã e alecrim são ervas de clareza mental. Prepare fresco para melhores resultados.',
+    observations: 'Hortelã e alecrim são ervas de clareza mental. Prepare fresco para melhores resultados',
     isPreloaded: true,
   ),
 
@@ -1421,7 +1421,7 @@ final List<SpellModel> preloadedSpells = [
 5. Mantenha na mochila ou mesa de estudos
 6. Cheire o sachê antes de estudar ou fazer provas
 7. Recarregue a cada lua nova''',
-    observations: 'Alecrim é tradicionalmente usado para memória desde a Grécia antiga.',
+    observations: 'Alecrim é tradicionalmente usado para memória desde a Grécia antiga',
     isPreloaded: true,
   ),
 
@@ -1450,7 +1450,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe queimar completamente
 8. Carregue o cristal quando precisar de coragem''',
     duration: 1,
-    observations: 'Vermelho é a cor de Marte, planeta da coragem e ação. Use antes de situações desafiadoras.',
+    observations: 'Vermelho é a cor de Marte, planeta da coragem e ação. Use antes de situações desafiadoras',
     isPreloaded: true,
   ),
 
@@ -1474,7 +1474,7 @@ final List<SpellModel> preloadedSpells = [
 5. Diga: "Carrego a força de um guerreiro, nada me intimida"
 6. Visualize-se como um guerreiro invencível
 7. Carregue no bolso em momentos difíceis''',
-    observations: 'Toque o amuleto quando sentir medo ou insegurança para lembrar sua força.',
+    observations: 'Toque o amuleto quando sentir medo ou insegurança para lembrar sua força',
     isPreloaded: true,
   ),
 
@@ -1503,7 +1503,7 @@ final List<SpellModel> preloadedSpells = [
 7. Deixe queimar
 8. Saia e socialize (a magia precisa de oportunidade!)''',
     duration: 1,
-    observations: 'Laranja é cor de alegria e sociabilidade. A magia abre caminhos, mas você precisa andar neles.',
+    observations: 'Laranja é cor de alegria e sociabilidade. A magia abre caminhos, mas você precisa andar neles',
     isPreloaded: true,
   ),
 
@@ -1524,7 +1524,7 @@ final List<SpellModel> preloadedSpells = [
 5. Em cada nó diga: "Nossa amizade é forte, verdadeira e duradoura"
 6. Guarde as fitas amarradas ou presenteie uma ao amigo
 7. Deixe a vela queimar''',
-    observations: 'Magia de nó é antiga e poderosa. Desfaça os nós apenas se a amizade terminar.',
+    observations: 'Magia de nó é antiga e poderosa. Desfaça os nós apenas se a amizade terminar',
     isPreloaded: true,
   ),
 
@@ -1555,7 +1555,7 @@ final List<SpellModel> preloadedSpells = [
 8. Deixe queimar completamente
 9. Carregue o cristal para entrevistas/trabalho''',
     duration: 1,
-    observations: 'Quinta-feira (dia de Júpiter) é ideal para feitiços de trabalho e carreira.',
+    observations: 'Quinta-feira (dia de Júpiter) é ideal para feitiços de trabalho e carreira',
     isPreloaded: true,
   ),
 
@@ -1606,7 +1606,7 @@ final List<SpellModel> preloadedSpells = [
 5. Use essa água para limpar ferramentas divinatórias (tarô, runas, pêndulo)
 6. Ou beba um gole antes de fazer leituras
 7. Diga: "Minha visão é clara, minha intuição é forte"''',
-    observations: 'Água lunar carregada na lua cheia tem forte energia psíquica.',
+    observations: 'Água lunar carregada na lua cheia tem forte energia psíquica',
     isPreloaded: true,
   ),
 
@@ -1632,7 +1632,7 @@ final List<SpellModel> preloadedSpells = [
 8. Medite por 10-15 minutos
 9. Anote qualquer visão ou sensação''',
     duration: 7,
-    observations: 'Faça por 7 noites seguidas para melhores resultados. Mantenha diário das experiências.',
+    observations: 'Faça por 7 noites seguidas para melhores resultados. Mantenha diário das experiências',
     isPreloaded: true,
   ),
 ];
