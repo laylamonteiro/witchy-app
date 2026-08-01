@@ -8,6 +8,10 @@
 /// Vive em core/navigation porque [AppDeepLink] (também core) referencia
 /// seções em construtores const, e core não importa código de features.
 enum EncyclopediaSection {
+  /// A capa do livro: o sumário da Enciclopédia (não pode se chamar `index`,
+  /// que colide com o getter nativo `Enum.index`).
+  bookIndex,
+
   moon,
   sun,
   sabbats,

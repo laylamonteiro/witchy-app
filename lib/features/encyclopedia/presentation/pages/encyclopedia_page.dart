@@ -8,6 +8,7 @@ import 'altar_page.dart';
 import 'elements_page.dart';
 import 'goddesses_list_page.dart';
 import 'arcane_list_page.dart';
+import 'encyclopedia_index_page.dart';
 import 'encyclopedia_search_page.dart';
 import '../../data/data_sources/arcane_categories.dart';
 import '../../data/data_sources/archetypes_data.dart';
@@ -41,8 +42,8 @@ class EncyclopediaPage extends StatefulWidget {
 
 class _EncyclopediaPageState extends State<EncyclopediaPage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  // A Enciclopédia abre SEMPRE na aba da Lua (índice 0) — é a tela inicial
-  // do app; a última aba visitada deixou de ser restaurada de propósito.
+  // A Enciclopédia abre SEMPRE na capa do livro (Índice, aba 0); a última
+  // aba visitada deixou de ser restaurada de propósito.
   late TabController _tabController;
 
   /// Trocado para recriar o TabBarView quando o re-toque na bottom bar pede
@@ -71,6 +72,12 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
     widget.resetNotifier?.removeListener(_onResetRequested);
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// Sumário do livro-índice → abre a aba da seção escolhida.
+  void _openSection(EncyclopediaSection section) {
+    if (!mounted) return;
+    _tabController.animateTo(section.index);
   }
 
   void _onResetRequested() {
@@ -122,7 +129,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
       appBar: AppBar(
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).encyclopediaPageTitle),
         actions: [
-          // Busca global: um campo para as 15 abas (e as entradas pessoais).
+          // Busca global: um campo para todas as seções (e as entradas pessoais).
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => Navigator.of(context).push(
@@ -183,6 +190,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   /// vira erro de compilação, não aba em branco.
   String _labelFor(EncyclopediaSection section, AppLocalizations l10n) =>
       switch (section) {
+        EncyclopediaSection.bookIndex => l10n.encyTabIndex,
         EncyclopediaSection.moon => l10n.encyTabMoon,
         EncyclopediaSection.sun => l10n.encyTabSun,
         EncyclopediaSection.sabbats => l10n.encyTabSabbats,
@@ -203,6 +211,8 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   /// View de cada seção, na mesma ordem canônica.
   Widget _pageFor(EncyclopediaSection section, AppLocalizations l10n) =>
       switch (section) {
+        EncyclopediaSection.bookIndex =>
+          EncyclopediaIndexPage(onSectionSelected: _openSection),
         EncyclopediaSection.moon => const LunarCalendarPage(embedded: true),
         EncyclopediaSection.sun => const SunPage(),
         EncyclopediaSection.sabbats => const WheelOfYearPage(embedded: true),

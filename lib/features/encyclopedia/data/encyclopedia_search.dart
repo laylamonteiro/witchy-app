@@ -31,7 +31,7 @@ typedef EncyclopediaHit = ({
   WidgetBuilder open,
 });
 
-/// Busca em TODA a Enciclopédia (15 abas + entradas pessoais), sem acento.
+/// Busca em TODA a Enciclopédia (todas as seções + entradas pessoais), sem acento.
 ///
 /// Sem cache de propósito: as listas são getters trilíngues resolvidos pelo
 /// ContentLocale, então montar na hora garante que trocar o idioma nunca

@@ -10,6 +10,7 @@ import 'package:grimorio_de_bolso/core/navigation/encyclopedia_section.dart';
 void main() {
   test('a ordem canônica das seções está congelada', () {
     expect(EncyclopediaSection.values, const [
+      EncyclopediaSection.bookIndex,
       EncyclopediaSection.moon,
       EncyclopediaSection.sun,
       EncyclopediaSection.sabbats,
