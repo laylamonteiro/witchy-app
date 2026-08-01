@@ -114,13 +114,14 @@ class _YourDayPageState extends State<YourDayPage>
               // Enquanto o dia não chega: a faixa discreta de contagem, no
               // lugar de sempre.
               const RitualOfMomentCard(mode: RitualCardMode.countdown),
+              // Consulta lunar logo abaixo da Lua, onde ela faz sentido.
+              const NextMoonPhasesCard(),
+              const SpellRecommendationsCard(),
               const MagicalMomentCard(),
               const MagicalWeatherCard(),
               const DailyAffirmationCard(),
               const DailyRitesCard(),
               const ContinueTrailCard(),
-              const NextMoonPhasesCard(),
-              const SpellRecommendationsCard(),
               const ShortcutsGrid(),
             ],
           ),
