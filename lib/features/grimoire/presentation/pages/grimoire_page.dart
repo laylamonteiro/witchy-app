@@ -114,6 +114,85 @@ class _ToolsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    // Agrupadas por intenção: onze cards empilhados viravam uma lista longa
+    // e monótona, em que nada se destacava.
+    final practice = <_Tool>[
+      (
+        icon: const Text('📖', style: TextStyle(fontSize: 32)),
+        title: l10n.toolLivingGrimoireTitle,
+        description: l10n.toolLivingGrimoireDesc,
+        page: () => const LearningHomePage(),
+      ),
+      (
+        icon: const Text('🔮', style: TextStyle(fontSize: 32)),
+        title: l10n.toolMysticAdvisorTitle,
+        description: l10n.toolMysticAdvisorDesc,
+        page: () => const MysticAdvisorPage(),
+      ),
+      (
+        icon: const SigilIcon(size: 32),
+        title: l10n.toolSigilsTitle,
+        description: l10n.toolSigilsDesc,
+        page: () => const SigilStep1IntentionPage(),
+      ),
+    ];
+
+    final divination = <_Tool>[
+      (
+        icon: const Text('🎴', style: TextStyle(fontSize: 32)),
+        title: l10n.toolTarotTitle,
+        description: l10n.toolTarotDesc,
+        page: () => const TarotPage(),
+      ),
+      (
+        icon: const Text(' ᚱ ', style: TextStyle(fontSize: 32)),
+        title: l10n.toolRunesTitle,
+        description: l10n.toolRunesDesc,
+        page: () => const RuneReadingPage(),
+      ),
+      (
+        icon: const Text('🃏', style: TextStyle(fontSize: 32)),
+        title: l10n.toolOracleTitle,
+        description: l10n.toolOracleDesc,
+        page: () => const OracleCardsPage(),
+      ),
+      (
+        icon: const Text(' ⟟ ', style: TextStyle(fontSize: 32)),
+        title: l10n.toolPendulumTitle,
+        description: l10n.toolPendulumDesc,
+        page: () => const PendulumPage(),
+      ),
+      (
+        icon: const Text('🌙', style: TextStyle(fontSize: 32)),
+        title: l10n.toolDreamsTitle,
+        description: l10n.toolDreamsDesc,
+        page: () => const DreamToolsPage(),
+      ),
+      (
+        icon: const Text('🖐️', style: TextStyle(fontSize: 32)),
+        title: l10n.toolPalmistryTitle,
+        description: l10n.toolPalmistryDesc,
+        page: () => const PalmistryPage(),
+      ),
+    ];
+
+    final selfKnowledge = <_Tool>[
+      (
+        icon: const Text('🎭', style: TextStyle(fontSize: 32)),
+        title: l10n.toolArchetypeTitle,
+        description: l10n.toolArchetypeDesc,
+        page: () => const ArchetypeQuizPage(),
+      ),
+      (
+        icon: const Text('🔢', style: TextStyle(fontSize: 32)),
+        title: l10n.toolNumerologyTitle,
+        description: l10n.toolNumerologyDesc,
+        page: () => const NumerologyPage(),
+      ),
+    ];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
@@ -125,214 +204,101 @@ class _ToolsTab extends StatelessWidget {
                 const Text('‧ ⛦ ‧', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 Text(
-                  AppLocalizations.of(context).toolsHeaderTitle,
+                  l10n.toolsHeaderTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: context.gc.lilac,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context).toolsHeaderSubtitle,
+                  l10n.toolsHeaderSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.gc.softWhite.withOpacity(0.8),
+                        color: context.gc.textSecondary,
                       ),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
-          _buildToolCard(
-            context,
-            icon: const Text('📖', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolLivingGrimoireTitle,
-            description: AppLocalizations.of(context).toolLivingGrimoireDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const LearningHomePage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text('🔮', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolMysticAdvisorTitle,
-            description: AppLocalizations.of(context).toolMysticAdvisorDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MysticAdvisorPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text('🎴', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolTarotTitle,
-            description: AppLocalizations.of(context).toolTarotDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const TarotPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const SigilIcon(size: 40),
-            title: AppLocalizations.of(context).toolSigilsTitle,
-            description: AppLocalizations.of(context).toolSigilsDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const SigilStep1IntentionPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text('🌙', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolDreamsTitle,
-            description: AppLocalizations.of(context).toolDreamsDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const DreamToolsPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolPalmistryTitle,
-            description: AppLocalizations.of(context).toolPalmistryDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const PalmistryPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text('🎭', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolArchetypeTitle,
-            description: AppLocalizations.of(context).toolArchetypeDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const ArchetypeQuizPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text('🔢', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolNumerologyTitle,
-            description: AppLocalizations.of(context).toolNumerologyDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const NumerologyPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolPendulumTitle,
-            description: AppLocalizations.of(context).toolPendulumDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const PendulumPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolRunesTitle,
-            description: AppLocalizations.of(context).toolRunesDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const RuneReadingPage(),
-                ),
-              );
-            },
-          ),
-          _buildToolCard(
-            context,
-            icon: const Text('🃏', style: TextStyle(fontSize: 40)),
-            title: AppLocalizations.of(context).toolOracleTitle,
-            description: AppLocalizations.of(context).toolOracleDesc,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const OracleCardsPage(),
-                ),
-              );
-            },
-          ),
+          _buildGroup(context, l10n.toolsGroupPractice, practice),
+          _buildGroup(context, l10n.toolsGroupDivination, divination),
+          _buildGroup(context, l10n.toolsGroupSelfKnowledge, selfKnowledge),
         ],
       ),
     );
   }
 
-  Widget _buildToolCard(
-    BuildContext context, {
-    required Widget icon,
-    required String title,
-    required String description,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: MagicalCard(
-        child: Row(
-          children: [
-            icon,
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: context.gc.softWhite,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.softWhite.withOpacity(0.7),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: context.gc.lilac,
-              size: 16,
-            ),
-          ],
+  Widget _buildGroup(BuildContext context, String title, List<_Tool> tools) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+          child: Text(
+            title.toUpperCase(),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
         ),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          childAspectRatio: 0.95,
+          children:
+              tools.map((tool) => _buildToolCard(context, tool)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildToolCard(BuildContext context, _Tool tool) {
+    // O toque é do próprio MagicalCard: antes havia um InkWell POR FORA do
+    // card, então o ripple vazava e o alvo de toque ficava duplicado.
+    return MagicalCard(
+      margin: const EdgeInsets.all(8),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => tool.page()),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          tool.icon,
+          const SizedBox(height: 10),
+          Text(
+            tool.title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: context.gc.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: Text(
+              tool.description,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.gc.textSecondary,
+                  ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
+/// Uma ferramenta do Grimório: ícone, textos e a página que ela abre.
+typedef _Tool = ({
+  Widget icon,
+  String title,
+  String description,
+  Widget Function() page,
+});
