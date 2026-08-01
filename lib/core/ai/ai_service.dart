@@ -37,8 +37,10 @@ class AIService {
   static const String _visionModel = 'qwen/qwen3.6-27b';
 
   /// Modelo de visão principal (Google Gemini): identificação de plantas e
-  /// pedras de verdade, e leitura de mãos com detalhe real.
-  static const String _geminiVisionModel = 'gemini-2.5-flash';
+  /// pedras de verdade, e leitura de mãos com detalhe real. O 2.5-flash
+  /// fechou para chaves novas ("no longer available to new users") — o
+  /// 3.6-flash é o modelo GA vigente.
+  static const String _geminiVisionModel = 'gemini-3.6-flash';
 
   /// O Gemini está configurado? (Sem a chave, a visão cai para o Groq.)
   static bool get _hasGemini => GeminiCredentials.apiKey.isNotEmpty;
@@ -626,6 +628,9 @@ class AIService {
           'generationConfig': {
             'temperature': temperature,
             'maxOutputTokens': maxTokens,
+            // A família 3.x "pensa" por padrão e os pensamentos consomem os
+            // tokens de saída — visão aqui não precisa de raciocínio.
+            'thinkingConfig': {'thinkingBudget': 0},
           },
         },
       );
