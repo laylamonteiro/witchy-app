@@ -1957,6 +1957,16 @@
     }
   },
   "yourDayRitualCta": "Fazer o ritual guiado",
+  "yourDayHeroEyebrow": "Seu rito de hoje",
+  "yourDayHeroPrepareCta": "Preparar o ritual",
+  "yourDayStreakDays": "{days, plural, =0{Comece sua sequência hoje} one{1 dia seguido} other{{days} dias seguidos}}",
+  "@yourDayStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "num"
+      }
+    }
+  },
   "yourDayShortcutsTitle": "Atalhos",
   "yourDayShortcutsEdit": "Editar",
   "yourDayShortcutsEditTitle": "Escolha seus atalhos",
