@@ -384,34 +384,50 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
           const SizedBox(height: 10),
           Row(
             children: [
-              // Progresso em pontinhos, como nos onboardings de app.
-              for (var i = 0; i < _steps.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(right: 5),
-                  child: Container(
-                    width: i == _current ? 16 : 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: i == _current
-                          ? context.gc.lilac
-                          : context.gc.lilac.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
+              // Progresso em pontinhos, como nos onboardings de app. Dentro
+              // de Expanded + FittedBox: se os botões precisarem de espaço
+              // (ex.: "Vamos começar!"), os pontinhos encolhem — nunca
+              // estoura a largura.
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < _steps.length; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: Container(
+                            width: i == _current ? 16 : 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: i == _current
+                                  ? context.gc.lilac
+                                  : context.gc.lilac.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              const Spacer(),
-              TextButton(
-                onPressed: widget.onFinished,
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-                child: Text(
-                  l10n.salemTourSkip,
-                  style:
-                      TextStyle(color: context.gc.textSecondary, fontSize: 12),
-                ),
               ),
+              // No último passo o botão principal já encerra o tour —
+              // "Pular" seria redundante e o espaço é do "Vamos começar!".
+              if (!_isLast)
+                TextButton(
+                  onPressed: widget.onFinished,
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: Text(
+                    l10n.salemTourSkip,
+                    style: TextStyle(
+                        color: context.gc.textSecondary, fontSize: 12),
+                  ),
+                ),
               if (_current > 0)
                 IconButton(
                   onPressed: _back,
