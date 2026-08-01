@@ -9,9 +9,9 @@ const String sunIntroPt =
     'com o que é visível e consciente — a ação, o corpo, o brilho pessoal — '
     'e complementa a magia lunar, que cuida do invisível e do intuitivo.\n\n'
     'O Sol também marca a roda do ano: os solstícios e equinócios são as '
-    'quatro festas solares da bruxaria. E cada hora do dia carrega uma '
-    'energia própria, do nascer ao pôr do sol — saber usá-las é ter mais um '
-    'instrumento no seu grimório.';
+    'quatro grandes festas solares da bruxaria. E cada hora do dia carrega '
+    'uma energia própria, do nascer ao pôr do sol — saber usá-las é ter '
+    'mais um instrumento no seu grimório.';
 
 const List<SolarSabbat> sunSabbatsPt = [
   (

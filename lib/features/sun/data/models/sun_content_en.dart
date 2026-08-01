@@ -10,9 +10,9 @@ const String sunIntroEn =
     'body, personal shine — and complements lunar magic, which tends to the '
     'invisible and the intuitive.\n\n'
     'The Sun also marks the wheel of the year: the solstices and equinoxes '
-    'are the four solar festivals of witchcraft. And every hour of the day '
-    'carries its own energy, from sunrise to sunset — knowing how to use '
-    'them is one more instrument in your grimoire.';
+    'are the four solar festivals of witchcraft. Every hour of the day has '
+    'its own energy, from sunrise to sunset — one more tool in your '
+    'grimoire.';
 
 const List<SolarSabbat> sunSabbatsEn = [
   (

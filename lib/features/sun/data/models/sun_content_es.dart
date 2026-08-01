@@ -10,9 +10,9 @@ const String sunIntroEs =
     'personal — y complementa la magia lunar, que cuida de lo invisible y lo '
     'intuitivo.\n\n'
     'El Sol también marca la rueda del año: los solsticios y equinoccios son '
-    'las cuatro fiestas solares de la brujería. Y cada hora del día carga '
-    'una energía propia, del amanecer al atardecer — saber usarlas es tener '
-    'un instrumento más en tu grimorio.';
+    'las cuatro grandes fiestas solares de la brujería. Y cada hora del día '
+    'carga una energía propia, del amanecer al atardecer — saber usarlas es '
+    'tener un instrumento más en tu grimorio.';
 
 const List<SolarSabbat> sunSabbatsEs = [
   (
