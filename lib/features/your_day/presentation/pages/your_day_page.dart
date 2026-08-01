@@ -4,6 +4,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/mascot/tour_targets.dart';
 import '../../../guided_rituals/presentation/widgets/magical_moment_card.dart';
 import '../../../lunar/presentation/widgets/moon_day_carousel.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
@@ -64,13 +65,17 @@ class _YourDayPageState extends State<YourDayPage>
       appBar: AppBar(
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).yourDayTitle),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).push(
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
-              );
-            },
+          // Alvo do tour do Salem (passo das Configurações).
+          TourTarget(
+            id: TourTargetIds.settings,
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute(builder: (_) => const SettingsPage()),
+                );
+              },
+            ),
           ),
         ],
       ),

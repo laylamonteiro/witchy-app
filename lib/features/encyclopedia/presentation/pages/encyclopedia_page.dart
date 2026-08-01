@@ -24,6 +24,7 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/mascot/tour_targets.dart';
 
 class EncyclopediaPage extends StatefulWidget {
   /// Notificador da HomePage: re-toque na aba "Enciclopédia" volta para a
@@ -119,31 +120,35 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
           preferredSize: const Size.fromHeight(48),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: context.gc.lilac,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              padding: EdgeInsets.zero,
-              labelStyle: const TextStyle(fontSize: 14),
-              unselectedLabelStyle: const TextStyle(fontSize: 14),
-              tabs: [
-                Tab(text: AppLocalizations.of(context).encyTabMoon),
-                Tab(text: AppLocalizations.of(context).encyTabSun),
-                Tab(text: AppLocalizations.of(context).encyTabSabbats),
-                Tab(text: AppLocalizations.of(context).encyTabCrystals),
-                Tab(text: AppLocalizations.of(context).encyTabHerbs),
-                Tab(text: AppLocalizations.of(context).encyTabMetals),
-                Tab(text: AppLocalizations.of(context).encyTabColors),
-                Tab(text: AppLocalizations.of(context).encyTabGoddesses),
-                Tab(text: AppLocalizations.of(context).encyTabElements),
-                Tab(text: AppLocalizations.of(context).encyTabAltar),
-                Tab(text: AppLocalizations.of(context).encyTabRunes),
-                Tab(text: AppLocalizations.of(context).encyTabArchetypes),
-                Tab(text: AppLocalizations.of(context).encyTabAngels),
-                Tab(text: AppLocalizations.of(context).encyTabDemons),
-                Tab(text: AppLocalizations.of(context).encyTabSymbols),
-              ],
+            // Alvo do tour do Salem (passo dos sabbats e rituais guiados).
+            child: TourTarget(
+              id: TourTargetIds.encyclopediaTabs,
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: context.gc.lilac,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: EdgeInsets.zero,
+                labelStyle: const TextStyle(fontSize: 14),
+                unselectedLabelStyle: const TextStyle(fontSize: 14),
+                tabs: [
+                  Tab(text: AppLocalizations.of(context).encyTabMoon),
+                  Tab(text: AppLocalizations.of(context).encyTabSun),
+                  Tab(text: AppLocalizations.of(context).encyTabSabbats),
+                  Tab(text: AppLocalizations.of(context).encyTabCrystals),
+                  Tab(text: AppLocalizations.of(context).encyTabHerbs),
+                  Tab(text: AppLocalizations.of(context).encyTabMetals),
+                  Tab(text: AppLocalizations.of(context).encyTabColors),
+                  Tab(text: AppLocalizations.of(context).encyTabGoddesses),
+                  Tab(text: AppLocalizations.of(context).encyTabElements),
+                  Tab(text: AppLocalizations.of(context).encyTabAltar),
+                  Tab(text: AppLocalizations.of(context).encyTabRunes),
+                  Tab(text: AppLocalizations.of(context).encyTabArchetypes),
+                  Tab(text: AppLocalizations.of(context).encyTabAngels),
+                  Tab(text: AppLocalizations.of(context).encyTabDemons),
+                  Tab(text: AppLocalizations.of(context).encyTabSymbols),
+                ],
+              ),
             ),
           ),
         ),

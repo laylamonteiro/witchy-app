@@ -39,6 +39,13 @@ class MascotProvider with ChangeNotifier {
     if (!_hidden) return;
     _hidden = false;
     // Voltar do esconderijo = entrada em fumaça (espelho do sumiço).
+    materializeNext();
+  }
+
+  /// Pede que o Salem MATERIALIZE em fumaça da próxima vez que entrar em
+  /// cena — usado também ao fim do tour, quando o mascote real substitui o
+  /// Salem-guia do walk-through.
+  void materializeNext() {
     _appearPending = true;
     notifyListeners();
   }

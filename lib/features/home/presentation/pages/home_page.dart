@@ -14,6 +14,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
 import '../../../../core/widgets/mascot/salem_tour.dart';
+import '../../../../core/widgets/mascot/tour_targets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -91,6 +92,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final mascot = context.read<MascotProvider>();
     final userId = context.read<AuthProvider>().currentUser.id;
     mascot.markTourSeen(userId);
+    // O Salem-guia sai de cena e o mascote real entra em fumaça no lugar.
+    mascot.materializeNext();
     setState(() => _showTour = false);
   }
 
@@ -203,54 +206,77 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         if (didPop) return;
         _handleSystemBack();
       },
-      child: Scaffold(
-        body: Consumer<MascotProvider>(
-          builder: (context, mascot, _) {
-            if (mascot.tourRequested) {
-              // "Rever tour com o Salem" nas Configurações.
-              mascot.consumeTourRequest();
-              _showTour = true;
-            }
-            return Stack(
-              children: [
-                // Páginas principais — cada aba com seu próprio Navigator
-                IndexedStack(
-                  index: _selectedIndex,
-                  children: List.generate(4, _buildTabNavigator),
-                ),
-                if (!mascot.isHidden) ...[
-                  CatChatBubble(mascotPosition: _mascotPosition),
-                  // Mascote flutuando sobre o conteúdo — sobrepõe o balão
-                  DraggableCatMascot(
-                    initialX: 20,
-                    initialY: 120,
-                    size: 100,
-                    positionNotifier: _mascotPosition,
-                    onDismissed: mascot.hide,
-                    // Voltou do esconderijo → materializa em fumaça.
-                    appearInSmoke: mascot.appearPending,
-                    onAppeared: mascot.consumeAppearPending,
-                  ),
-                ] else
-                  // Salem escondido: contador invisível de toques para ele
-                  // voltar. Translucent = não bloqueia a UI de baixo.
-                  Positioned.fill(
-                    child: Listener(
-                      behavior: HitTestBehavior.translucent,
-                      onPointerDown: _onHiddenScreenTap,
-                    ),
-                  ),
-                if (_showTour)
-                  SalemTourOverlay(
+      child: Consumer<MascotProvider>(
+        builder: (context, mascot, _) {
+          if (mascot.tourRequested) {
+            // "Rever tour com o Salem" nas Configurações.
+            mascot.consumeTourRequest();
+            _showTour = true;
+          }
+          // O tour vive FORA do Scaffold para escurecer a tela inteira —
+          // inclusive a bottom bar, que ele ilumina item a item.
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: _buildScaffold(context, mascot),
+              ),
+              if (_showTour)
+                Positioned.fill(
+                  child: SalemTourOverlay(
                     onTabChange: (index) =>
                         setState(() => _selectedIndex = index),
                     onFinished: _finishTour,
                   ),
-              ],
-            );
-          },
-        ),
-        bottomNavigationBar: Container(
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, MascotProvider mascot) {
+    // Durante o tour quem aparece é o Salem-guia do overlay: o mascote real
+    // (e o contador de toques para trazê-lo de volta) fica fora de cena.
+    final showMascot = !mascot.isHidden && !_showTour;
+    final showReturnTapCounter = mascot.isHidden && !_showTour;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Páginas principais — cada aba com seu próprio Navigator
+          IndexedStack(
+            index: _selectedIndex,
+            children: List.generate(4, _buildTabNavigator),
+          ),
+          if (showMascot) ...[
+            CatChatBubble(mascotPosition: _mascotPosition),
+            // Mascote flutuando sobre o conteúdo — sobrepõe o balão
+            DraggableCatMascot(
+              initialX: 20,
+              initialY: 120,
+              size: 100,
+              positionNotifier: _mascotPosition,
+              onDismissed: mascot.hide,
+              // Voltou do esconderijo (ou do tour) → materializa em fumaça.
+              appearInSmoke: mascot.appearPending,
+              onAppeared: mascot.consumeAppearPending,
+            ),
+          ],
+          if (showReturnTapCounter)
+            // Salem escondido: contador invisível de toques para ele voltar.
+            // Translucent = não bloqueia a UI de baixo.
+            Positioned.fill(
+              child: Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: _onHiddenScreenTap,
+              ),
+            ),
+        ],
+      ),
+      bottomNavigationBar: TourTarget(
+        id: TourTargetIds.bottomBar,
+        child: Container(
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
