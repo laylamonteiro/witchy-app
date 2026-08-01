@@ -263,6 +263,10 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(widget.prefs)),
         ChangeNotifierProvider.value(value: _mascotProvider),
+        // ATENÇÃO À ORDEM: todo ChangeNotifierProxyProvider<AuthProvider, X>
+        // precisa vir DEPOIS desta linha — ele lê o AuthProvider do contexto
+        // acima de si mesmo, e não o encontra se for declarado antes.
+        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProxyProvider<AuthProvider, LearningProvider>(
           create: (_) => LearningProvider(),
           update: (_, auth, provider) {
@@ -278,7 +282,6 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             return provider;
           },
         ),
-        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProvider.value(value: PaymentService()),
         ChangeNotifierProvider(create: (_) => LanguageProvider(widget.prefs)),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
