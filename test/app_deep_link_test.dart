@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/navigation/app_deep_link.dart';
+import 'package:grimorio_de_bolso/core/navigation/encyclopedia_section.dart';
 import 'package:grimorio_de_bolso/features/guided_rituals/data/models/guided_rituals_data.dart';
 
 void main() {
@@ -25,24 +26,37 @@ void main() {
       expect(AppDeepLink.fromPayload('rota/inexistente'), isNull);
     });
 
-    test('destinos apontam para a aba certa (bottom bar e Enciclopédia)', () {
+    test('destinos apontam para a seção/aba certa', () {
       // Bottom bar: 0 = Seu Dia, 1 = Enciclopédia, 2 = Grimório, 3 = Diários.
       expect(AppDeepLink.yourDay.homeTab, 0);
-      expect(AppDeepLink.yourDay.encyclopediaTab, isNull);
+      expect(AppDeepLink.yourDay.encyclopediaSection, isNull);
       expect(AppDeepLink.moonEncyclopedia.homeTab, 1);
-      expect(AppDeepLink.moonEncyclopedia.encyclopediaTab, 0);
       expect(AppDeepLink.sunEncyclopedia.homeTab, 1);
-      expect(AppDeepLink.sunEncyclopedia.encyclopediaTab, 1);
       expect(AppDeepLink.sabbatsEncyclopedia.homeTab, 1);
-      expect(AppDeepLink.sabbatsEncyclopedia.encyclopediaTab, 2);
-      expect(AppDeepLink.guidedRitualSabbat.encyclopediaTab, 2);
-      expect(AppDeepLink.guidedRitualFullMoon.encyclopediaTab, 0);
-      expect(AppDeepLink.guidedRitualNewMoon.encyclopediaTab, 0);
-      expect(AppDeepLink.guidedRitualSunWater.encyclopediaTab, 1);
+      // Identidade por seção: reordenar abas nunca muda o destino.
+      expect(AppDeepLink.moonEncyclopedia.encyclopediaSection,
+          EncyclopediaSection.moon);
+      expect(AppDeepLink.sunEncyclopedia.encyclopediaSection,
+          EncyclopediaSection.sun);
+      expect(AppDeepLink.sabbatsEncyclopedia.encyclopediaSection,
+          EncyclopediaSection.sabbats);
+      expect(AppDeepLink.guidedRitualSabbat.encyclopediaSection,
+          EncyclopediaSection.sabbats);
+      expect(AppDeepLink.guidedRitualFullMoon.encyclopediaSection,
+          EncyclopediaSection.moon);
+      expect(AppDeepLink.guidedRitualNewMoon.encyclopediaSection,
+          EncyclopediaSection.moon);
+      expect(AppDeepLink.guidedRitualSunWater.encyclopediaSection,
+          EncyclopediaSection.sun);
+      // O índice numérico da aba deriva da ordem canônica do enum.
+      for (final link in AppDeepLink.values) {
+        expect(link.encyclopediaTab, link.encyclopediaSection?.index,
+            reason: link.name);
+      }
       // Diários → aba Sonhos (Gratidão 0, Afirmações 1, Escrita 2, Sonhos 3).
       expect(AppDeepLink.dreamsDiary.homeTab, 3);
       expect(AppDeepLink.dreamsDiary.diaryTab, 3);
-      expect(AppDeepLink.dreamsDiary.encyclopediaTab, isNull);
+      expect(AppDeepLink.dreamsDiary.encyclopediaSection, isNull);
       expect(AppDeepLink.moonEncyclopedia.diaryTab, isNull);
     });
 

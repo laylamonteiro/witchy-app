@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'encyclopedia_section.dart';
+
 /// Destinos internos do app alcançáveis por deep link (hoje, toques em
 /// notificações; no futuro, links externos ou atalhos).
 ///
@@ -15,37 +17,50 @@ enum AppDeepLink {
   /// Aba "Seu Dia" da bottom bar (hub diário).
   yourDay('today'),
 
-  /// Enciclopédia Mágica → aba Lua (notificações de lua cheia/nova).
-  moonEncyclopedia('encyclopedia/moon', homeTab: 1, encyclopediaTab: 0),
+  /// Enciclopédia Mágica → seção Lua (notificações de lua cheia/nova).
+  moonEncyclopedia('encyclopedia/moon',
+      homeTab: 1, encyclopediaSection: EncyclopediaSection.moon),
 
-  /// Enciclopédia Mágica → aba Sol.
-  sunEncyclopedia('encyclopedia/sun', homeTab: 1, encyclopediaTab: 1),
+  /// Enciclopédia Mágica → seção Sol.
+  sunEncyclopedia('encyclopedia/sun',
+      homeTab: 1, encyclopediaSection: EncyclopediaSection.sun),
 
-  /// Enciclopédia Mágica → aba Sabbats/Roda do Ano (notificações de sabbat).
-  sabbatsEncyclopedia('encyclopedia/sabbats', homeTab: 1, encyclopediaTab: 2),
+  /// Enciclopédia Mágica → seção Sabbats/Roda do Ano (notificações de sabbat).
+  sabbatsEncyclopedia('encyclopedia/sabbats',
+      homeTab: 1, encyclopediaSection: EncyclopediaSection.sabbats),
 
   /// Página guiada do ritual de um sabbat (payload emitido:
   /// `ritual/sabbat/<SabbatType.name>`, ex. `ritual/sabbat/imbolc`).
-  guidedRitualSabbat('ritual/sabbat', homeTab: 1, encyclopediaTab: 2),
+  guidedRitualSabbat('ritual/sabbat',
+      homeTab: 1, encyclopediaSection: EncyclopediaSection.sabbats),
 
   /// Página guiada do ritual de lua cheia.
   guidedRitualFullMoon('ritual/full_moon',
-      homeTab: 1, encyclopediaTab: 0, ritualId: 'full_moon'),
+      homeTab: 1,
+      encyclopediaSection: EncyclopediaSection.moon,
+      ritualId: 'full_moon'),
 
   /// Página guiada do ritual de lua nova.
   guidedRitualNewMoon('ritual/new_moon',
-      homeTab: 1, encyclopediaTab: 0, ritualId: 'new_moon'),
+      homeTab: 1,
+      encyclopediaSection: EncyclopediaSection.moon,
+      ritualId: 'new_moon'),
 
   /// Página guiada da água solar (notificação semanal opt-in) — abre sobre
-  /// a aba Sol.
+  /// a seção Sol.
   guidedRitualSunWater('ritual/sun_water',
-      homeTab: 1, encyclopediaTab: 1, ritualId: 'sun_water'),
+      homeTab: 1,
+      encyclopediaSection: EncyclopediaSection.sun,
+      ritualId: 'sun_water'),
 
   /// Diários → aba Sonhos (diário onírico).
   dreamsDiary('diary/dreams', homeTab: 3, diaryTab: 3);
 
   const AppDeepLink(this.payload,
-      {this.homeTab = 0, this.encyclopediaTab, this.diaryTab, this.ritualId});
+      {this.homeTab = 0,
+      this.encyclopediaSection,
+      this.diaryTab,
+      this.ritualId});
 
   /// Identificador estável usado como payload da notificação.
   final String payload;
@@ -54,8 +69,13 @@ enum AppDeepLink {
   /// 2 = Grimório, 3 = Diários).
   final int homeTab;
 
-  /// Sub-aba da Enciclopédia a abrir (null = não é um destino da Enciclopédia).
-  final int? encyclopediaTab;
+  /// Seção da Enciclopédia a abrir (null = não é um destino da Enciclopédia).
+  /// A aba correspondente é derivada da ordem canônica do enum — reordenar
+  /// as seções nunca quebra um deep link.
+  final EncyclopediaSection? encyclopediaSection;
+
+  /// Índice da sub-aba da Enciclopédia derivado de [encyclopediaSection].
+  int? get encyclopediaTab => encyclopediaSection?.index;
 
   /// Sub-aba dos Diários a abrir (null = não é um destino dos Diários).
   final int? diaryTab;

@@ -22,6 +22,7 @@ import '../../../wheel_of_year/presentation/pages/wheel_of_year_page.dart';
 import '../../../runes/presentation/pages/runes_list_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/app_deep_link.dart';
+import '../../../../core/navigation/encyclopedia_section.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -54,7 +55,10 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 15, vsync: this);
+    _tabController = TabController(
+      length: EncyclopediaSection.values.length,
+      vsync: this,
+    );
     widget.resetNotifier?.addListener(_onResetRequested);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
     // Notificação pode ter ABERTO o app: trata o link pendente ao montar.
@@ -152,25 +156,11 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
                 padding: EdgeInsets.zero,
                 labelStyle: const TextStyle(fontSize: 14),
                 unselectedLabelStyle: const TextStyle(fontSize: 14),
-                // Ordem por interesse: cósmico primeiro (Lua/Sol/Sabbats são
-                // destinos de deep link — índices 0/1/2 NÃO mudam), depois a
-                // consulta do dia a dia, e o nicho no fim.
+                // A ordem vem da declaração de EncyclopediaSection — a mesma
+                // fonte que gera as views abaixo e resolve os deep links.
                 tabs: [
-                  Tab(text: AppLocalizations.of(context).encyTabMoon),
-                  Tab(text: AppLocalizations.of(context).encyTabSun),
-                  Tab(text: AppLocalizations.of(context).encyTabSabbats),
-                  Tab(text: AppLocalizations.of(context).encyTabCrystals),
-                  Tab(text: AppLocalizations.of(context).encyTabHerbs),
-                  Tab(text: AppLocalizations.of(context).encyTabColors),
-                  Tab(text: AppLocalizations.of(context).encyTabGoddesses),
-                  Tab(text: AppLocalizations.of(context).encyTabElements),
-                  Tab(text: AppLocalizations.of(context).encyTabRunes),
-                  Tab(text: AppLocalizations.of(context).encyTabAltar),
-                  Tab(text: AppLocalizations.of(context).encyTabMetals),
-                  Tab(text: AppLocalizations.of(context).encyTabArchetypes),
-                  Tab(text: AppLocalizations.of(context).encyTabSymbols),
-                  Tab(text: AppLocalizations.of(context).encyTabAngels),
-                  Tab(text: AppLocalizations.of(context).encyTabDemons),
+                  for (final section in EncyclopediaSection.values)
+                    Tab(text: _labelFor(section, l10n)),
                 ],
               ),
             ),
@@ -180,45 +170,73 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
       body: TabBarView(
         key: ValueKey(_viewEpoch),
         controller: _tabController,
-        // MESMA ordem dos Tabs acima — mudou lá, muda aqui.
+        // MESMA fonte da TabBar acima: EncyclopediaSection.values.
         children: [
-          const LunarCalendarPage(embedded: true),
-          const SunPage(),
-          const WheelOfYearPage(embedded: true),
-          const CrystalsListPage(),
-          const HerbsListPage(),
-          const ColorsListPage(),
-          const GoddessesListPage(),
-          const ElementsPage(),
-          const RunesListPage(),
-          const AltarPage(),
-          const MetalsListPage(),
-          ArcaneListPage(
+          for (final section in EncyclopediaSection.values)
+            _pageFor(section, l10n),
+        ],
+      ),
+    );
+  }
+
+  /// Rótulo da aba de cada seção. Switch exaustivo: seção nova sem rótulo
+  /// vira erro de compilação, não aba em branco.
+  String _labelFor(EncyclopediaSection section, AppLocalizations l10n) =>
+      switch (section) {
+        EncyclopediaSection.moon => l10n.encyTabMoon,
+        EncyclopediaSection.sun => l10n.encyTabSun,
+        EncyclopediaSection.sabbats => l10n.encyTabSabbats,
+        EncyclopediaSection.crystals => l10n.encyTabCrystals,
+        EncyclopediaSection.herbs => l10n.encyTabHerbs,
+        EncyclopediaSection.colors => l10n.encyTabColors,
+        EncyclopediaSection.goddesses => l10n.encyTabGoddesses,
+        EncyclopediaSection.elements => l10n.encyTabElements,
+        EncyclopediaSection.runes => l10n.encyTabRunes,
+        EncyclopediaSection.altar => l10n.encyTabAltar,
+        EncyclopediaSection.metals => l10n.encyTabMetals,
+        EncyclopediaSection.archetypes => l10n.encyTabArchetypes,
+        EncyclopediaSection.symbols => l10n.encyCatSacredSymbols,
+        EncyclopediaSection.angels => l10n.encyTabAngels,
+        EncyclopediaSection.demons => l10n.encyTabDemons,
+      };
+
+  /// View de cada seção, na mesma ordem canônica.
+  Widget _pageFor(EncyclopediaSection section, AppLocalizations l10n) =>
+      switch (section) {
+        EncyclopediaSection.moon => const LunarCalendarPage(embedded: true),
+        EncyclopediaSection.sun => const SunPage(),
+        EncyclopediaSection.sabbats => const WheelOfYearPage(embedded: true),
+        EncyclopediaSection.crystals => const CrystalsListPage(),
+        EncyclopediaSection.herbs => const HerbsListPage(),
+        EncyclopediaSection.colors => const ColorsListPage(),
+        EncyclopediaSection.goddesses => const GoddessesListPage(),
+        EncyclopediaSection.elements => const ElementsPage(),
+        EncyclopediaSection.runes => const RunesListPage(),
+        EncyclopediaSection.altar => const AltarPage(),
+        EncyclopediaSection.metals => const MetalsListPage(),
+        EncyclopediaSection.archetypes => ArcaneListPage(
             category: ArcaneCategory.archetypes,
             title: l10n.encyTabArchetypes,
             intro: l10n.encyArcaneIntroArchetypes,
             entries: archetypesData,
           ),
-          ArcaneListPage(
+        EncyclopediaSection.symbols => ArcaneListPage(
             category: ArcaneCategory.sacredSymbols,
             title: l10n.encyCatSacredSymbols,
             intro: l10n.encyArcaneIntroSymbols,
             entries: sacredSymbolsData,
           ),
-          ArcaneListPage(
+        EncyclopediaSection.angels => ArcaneListPage(
             category: ArcaneCategory.angels,
             title: l10n.encyTabAngels,
             intro: l10n.encyArcaneIntroAngels,
             entries: angelsData,
           ),
-          ArcaneListPage(
+        EncyclopediaSection.demons => ArcaneListPage(
             category: ArcaneCategory.demons,
             title: l10n.encyTabDemons,
             intro: l10n.encyArcaneIntroDemons,
             entries: demonsData,
           ),
-        ],
-      ),
-    );
-  }
+      };
 }
