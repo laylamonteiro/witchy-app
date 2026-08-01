@@ -31,14 +31,25 @@ class EncyclopediaIndexPage extends StatefulWidget {
 
 class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
     with TickerProviderStateMixin {
-  /// Abertura da capa (one-shot na montagem).
+  /// A capa abre só na PRIMEIRA visita da sessão (estático porque o State
+  /// morre a cada troca de aba — as sub-páginas não mantêm estado).
+  static bool _coverOpenedThisSession = false;
+
+  /// A última saída do índice foi escolhendo uma seção? Se sim, a volta
+  /// "fecha o livro": a folha assenta de volta em vez de reabrir a capa.
+  static bool _leftViaSection = false;
+
+  /// Abertura da capa (one-shot na primeira visita).
   late final AnimationController _open;
 
-  /// Meia-virada da folha ao escolher uma seção.
+  /// Virada da folha ao escolher uma seção (reversa ao voltar).
   late final AnimationController _flip;
 
   /// Capa já saiu da árvore? (Depois de aberta, não custa mais nada.)
   bool _coverGone = false;
+
+  /// Esta montagem é a volta de uma seção (folha assentando)?
+  bool _closingOnReturn = false;
 
   /// Seção escolhida, entregue quando a virada termina.
   EncyclopediaSection? _pendingSection;
@@ -48,7 +59,7 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
     super.initState();
     _open = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 700),
     )..addStatusListener((status) {
         if (status == AnimationStatus.completed && mounted) {
           setState(() => _coverGone = true);
@@ -56,15 +67,34 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
       });
     _flip = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 380),
     )..addStatusListener(_onFlipStatus);
+
+    _closingOnReturn = _leftViaSection;
+    _leftViaSection = false;
+    if (_closingOnReturn || _coverOpenedThisSession) {
+      // Livro já aberto nesta sessão: monta sem capa; se estamos voltando de
+      // uma seção, a folha começa levantada e assenta no post-frame.
+      _coverGone = true;
+      if (_closingOnReturn) _flip.value = 1.0;
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (MediaQuery.disableAnimationsOf(context)) {
-        _open.value = 1.0;
-      } else {
-        _open.forward();
+      final noAnimations = MediaQuery.disableAnimationsOf(context);
+      if (_closingOnReturn) {
+        if (noAnimations) {
+          _flip.value = 0.0;
+        } else {
+          _flip.reverse();
+        }
+      } else if (!_coverGone) {
+        _coverOpenedThisSession = true;
+        if (noAnimations) {
+          _open.value = 1.0;
+        } else {
+          _open.forward();
+        }
       }
     });
   }
@@ -81,15 +111,14 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
     final section = _pendingSection;
     _pendingSection = null;
     if (section != null && mounted) {
+      // A próxima montagem do índice "fecha o livro" (folha assenta).
+      _leftViaSection = true;
       // Sequencial de propósito: a virada TERMINA e só então a aba desliza —
-      // nunca duas animações pesadas no mesmo frame.
+      // nunca duas animações pesadas no mesmo frame. A folha fica levantada
+      // durante o slide (mostrando a próxima página de papel), e este State
+      // morre junto com a saída da aba.
       widget.onSectionSelected(section);
     }
-    // A folha volta ao lugar fora de cena, para o swipe de volta ao índice
-    // encontrá-la plana.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _flip.reset();
-    });
   }
 
   void _selectSection(EncyclopediaSection section) {
@@ -237,22 +266,42 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       child: Stack(
         children: [
+          // A "próxima página" do livro: papel liso que aparece por baixo
+          // quando a folha levanta — folhear revela papel, não o fundo roxo.
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [BookInk.paperDark, BookInk.paperLight],
+                ),
+              ),
+            ),
+          ),
           // A folha do livro: em repouso é a página parada; ao escolher uma
-          // seção, faz meia-virada no eixo da lombada (esquerda).
+          // seção, levanta no eixo da lombada (anti-horário, como quem
+          // folheia) — e assenta de volta quando o índice é revisitado.
           Positioned.fill(
             child: AnimatedBuilder(
               animation: _flip,
               child: page,
               builder: (context, child) {
                 if (_flip.value == 0) return child!;
-                final angle =
-                    -pi / 2 * Curves.easeInCubic.transform(_flip.value);
+                final t = Curves.easeInOut.transform(_flip.value);
                 return Transform(
                   alignment: Alignment.centerLeft,
                   transform: Matrix4.identity()
                     ..setEntry(3, 2, 0.001)
-                    ..rotateY(angle),
-                  child: child,
+                    ..rotateY(pi / 2 * t),
+                  child: Container(
+                    foregroundDecoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.black.withValues(alpha: 0.15 * t),
+                    ),
+                    child: child,
+                  ),
                 );
               },
             ),
@@ -268,8 +317,9 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
                   animation: _open,
                   builder: (context, _) {
                     final t = Curves.easeInOutCubic.transform(_open.value);
-                    // Nunca exatamente pi: a matriz degenera no fim exato.
-                    final angle = -pi * min(t, 0.995);
+                    // Sentido anti-horário (a capa levanta em direção à
+                    // leitora) e nunca exatamente pi: a matriz degenera.
+                    final angle = pi * min(t, 0.995);
                     final showBack = t > 0.5;
                     return Transform(
                       alignment: Alignment.centerLeft,
