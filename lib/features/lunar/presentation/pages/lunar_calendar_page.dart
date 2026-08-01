@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/moon_content_data.dart';
+import '../providers/lunar_provider.dart';
+import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../auth/data/models/feature_access.dart';
@@ -26,35 +31,73 @@ class LunarCalendarPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final nowPhase = context.watch<LunarProvider>().getCurrentMoonPhase();
 
     final content = SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: StaggeredEntrance(
         children: [
-          // A Lua na bruxaria (premium)
-          MagicalCard(
-            child: PremiumContentSection(
-              feature: AppFeature.lunarCalendarDetails,
-              title: Text(
-                l10n.moonInWitchcraftTitle,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              subtitle: l10n.moonInWitchcraftSubtitle,
-              contentBuilder: (context) => Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Text(
-                  MoonContent.intro,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(height: 1.5),
-                ),
+          // Hero: a Lua respirando sobre o céu estrelado (a fase de HOJE
+          // vive no Seu Dia — aqui é o portal do saber lunar).
+          StarfieldBackground(
+            intensity: 0.6,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
+              child: Column(
+                children: [
+                  // Slot de altura fixa: o hero da Lua e o do Sol têm o MESMO
+                  // tamanho e formato, com o ícone centrado (emojis variam
+                  // de métrica). A lua que respira é a fase de HOJE.
+                  SizedBox(
+                    height: 110,
+                    child: Center(
+                      child: BreathingMoon(
+                        moonEmoji: nowPhase.emoji,
+                        size: 72,
+                        showStars: false,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.moonNowTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: context.gc.lilac,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${nowPhase.emoji}  ${nowPhase.displayName}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Slot fixo de 2 linhas: a frase varia de tamanho, mas o
+                  // hero da Lua e o do Sol terminam SEMPRE na mesma altura.
+                  SizedBox(
+                    height: 40,
+                    child: Text(
+                      nowPhase.description,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
+                            height: 1.4,
+                          ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
           // Água de Lua (free) → ritual guiado
-          MagicalCard(
+          MagicalCard.accent(
+            accent: context.gc.lilac,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) =>
@@ -92,7 +135,8 @@ class LunarCalendarPage extends StatelessWidget {
           ),
 
           // Águas mágicas no Grimório Vivo (trilha completa das águas)
-          MagicalCard(
+          MagicalCard.accent(
+            accent: context.gc.lilac,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => TrailPage(
@@ -128,6 +172,28 @@ class LunarCalendarPage extends StatelessWidget {
                 ),
                 Icon(Icons.chevron_right, color: context.gc.textSecondary),
               ],
+            ),
+          ),
+
+          // A Lua na bruxaria (premium)
+          MagicalCard(
+            child: PremiumContentSection(
+              feature: AppFeature.lunarCalendarDetails,
+              title: Text(
+                l10n.moonInWitchcraftTitle,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              subtitle: l10n.moonInWitchcraftSubtitle,
+              contentBuilder: (context) => Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  MoonContent.intro,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(height: 1.5),
+                ),
+              ),
             ),
           ),
 

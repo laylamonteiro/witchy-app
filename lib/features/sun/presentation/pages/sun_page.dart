@@ -3,7 +3,10 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/breathing_sun.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../encyclopedia/presentation/widgets/related_link.dart';
@@ -27,33 +30,65 @@ class SunPage extends StatelessWidget {
     final nowPeriod = MagicDayPeriod.fromHour(DateTime.now().hour);
 
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: StaggeredEntrance(
         children: [
-          // O Sol na bruxaria (premium)
-          MagicalCard(
-            child: PremiumContentSection(
-              feature: AppFeature.sunKnowledge,
-              title: Text(
-                l10n.sunInWitchcraftTitle,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              subtitle: l10n.sunInWitchcraftSubtitle,
-              contentBuilder: (context) => Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Text(
-                  SunContent.intro,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(height: 1.5),
-                ),
+          // Hero: o Sol respirando sobre um céu de estrelas douradas, com o
+          // período solar de agora integrado (era um card avulso).
+          StarfieldBackground(
+            color: context.gc.starYellow,
+            starCount: 18,
+            intensity: 0.5,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
+              child: Column(
+                children: [
+                  // Slot de altura fixa: o hero do Sol e o da Lua têm o MESMO
+                  // tamanho, com o ícone centrado (emojis variam de metrica).
+                  const SizedBox(
+                    height: 110,
+                    child: Center(child: BreathingSun(size: 72)),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.sunNowTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: context.gc.starYellow,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${nowPeriod.emoji}  ${nowPeriod.title}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Slot fixo de 2 linhas: a frase varia de tamanho, mas o
+                  // hero do Sol e o da Lua terminam SEMPRE na mesma altura.
+                  SizedBox(
+                    height: 40,
+                    child: Text(
+                      nowPeriod.goodFor,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
+                            height: 1.4,
+                          ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
           // Água Solar (free) → ritual guiado
-          MagicalCard(
+          MagicalCard.accent(
+            accent: context.gc.starYellow,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const GuidedRitualPage(ritualId: 'sun_water'),
@@ -88,7 +123,8 @@ class SunPage extends StatelessWidget {
           ),
 
           // Águas mágicas no Grimório Vivo (trilha completa das águas)
-          MagicalCard(
+          MagicalCard.accent(
+            accent: context.gc.starYellow,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => TrailPage(
@@ -125,34 +161,25 @@ class SunPage extends StatelessWidget {
             ),
           ),
 
-          // O Sol agora (free) — período solar do momento
+          // O Sol na bruxaria (premium)
           MagicalCard(
-            child: Column(
-              children: [
-                Text(
-                  l10n.sunNowTitle,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 12),
-                Text(nowPeriod.emoji, style: const TextStyle(fontSize: 48)),
-                const SizedBox(height: 8),
-                Text(
-                  nowPeriod.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: context.gc.starYellow,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  nowPeriod.goodFor,
-                  textAlign: TextAlign.center,
+            child: PremiumContentSection(
+              feature: AppFeature.sunKnowledge,
+              title: Text(
+                l10n.sunInWitchcraftTitle,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              subtitle: l10n.sunInWitchcraftSubtitle,
+              contentBuilder: (context) => Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  SunContent.intro,
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
-                      ?.copyWith(height: 1.4),
+                      ?.copyWith(height: 1.5),
                 ),
-              ],
+              ),
             ),
           ),
 

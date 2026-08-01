@@ -8,7 +8,7 @@ import '../../data/encyclopedia_search.dart';
 import '../../data/models/user_entry_model.dart';
 import '../providers/encyclopedia_provider.dart';
 
-/// Busca global da Enciclopédia: um campo, todas as 15 abas (e as entradas
+/// Busca global da Enciclopédia: um campo, todas as seções (e as entradas
 /// pessoais). Resultados agrupados por seção, cada um abrindo o verbete.
 class EncyclopediaSearchPage extends StatefulWidget {
   const EncyclopediaSearchPage({super.key});
