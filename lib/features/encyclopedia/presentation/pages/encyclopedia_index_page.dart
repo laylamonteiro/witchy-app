@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/navigation/encyclopedia_section.dart';
+import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/starfield_background.dart';
 import '../widgets/aged_paper.dart';
 import 'encyclopedia_search_page.dart';
 
@@ -266,16 +268,32 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       child: Stack(
         children: [
-          // A "próxima página" do livro: papel liso que aparece por baixo
-          // quando a folha levanta — folhear revela papel, não o fundo roxo.
+          // Por baixo da folha: o fundo do PRÓPRIO tema (o que a Bruxa
+          // escolheu nas Configurações) com um céu de estrelas — a virada
+          // revela o app se abrindo em magia, e a aba escolhida desliza
+          // por cima dessa transição mística.
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [BookInk.paperDark, BookInk.paperLight],
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                color: context.gc.background,
+                child: StarfieldBackground(
+                  starCount: 22,
+                  intensity: 0.85,
+                  child: Center(
+                    child: Text(
+                      '✨',
+                      style: TextStyle(
+                        fontSize: 34,
+                        shadows: [
+                          Shadow(
+                            color: context.gc.lilac.withValues(alpha: 0.8),
+                            blurRadius: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

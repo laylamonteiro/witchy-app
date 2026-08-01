@@ -41,12 +41,19 @@ class LunarCalendarPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
               child: Column(
                 children: [
-                  const BreathingMoon(
-                    moonEmoji: '🌕',
-                    size: 72,
-                    showStars: false,
+                  // Slot de altura fixa: o hero da Lua e o do Sol têm o MESMO
+                  // tamanho, com o ícone centrado (emojis variam de metrica).
+                  const SizedBox(
+                    height: 110,
+                    child: Center(
+                      child: BreathingMoon(
+                        moonEmoji: '🌕',
+                        size: 72,
+                        showStars: false,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
                     l10n.lunarCalendarTitle,
                     textAlign: TextAlign.center,

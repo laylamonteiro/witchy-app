@@ -42,19 +42,26 @@ class SunPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
               child: Column(
                 children: [
-                  const BreathingSun(size: 72),
-                  const SizedBox(height: 12),
+                  // Slot de altura fixa: o hero do Sol e o da Lua têm o MESMO
+                  // tamanho, com o ícone centrado (emojis variam de metrica).
+                  const SizedBox(
+                    height: 110,
+                    child: Center(child: BreathingSun(size: 72)),
+                  ),
+                  const SizedBox(height: 8),
                   Text(
                     l10n.sunNowTitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.textSecondary,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: context.gc.starYellow,
+                          fontWeight: FontWeight.w600,
                         ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${nowPeriod.emoji}  ${nowPeriod.title}',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: context.gc.starYellow,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                   ),
@@ -62,10 +69,10 @@ class SunPage extends StatelessWidget {
                   Text(
                     nowPeriod.goodFor,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.4),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                          height: 1.4,
+                        ),
                   ),
                 ],
               ),
