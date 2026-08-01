@@ -13,6 +13,7 @@ void main() {
       expect(AppDeepLink.guidedRitualFullMoon.payload, 'ritual/full_moon');
       expect(AppDeepLink.guidedRitualNewMoon.payload, 'ritual/new_moon');
       expect(AppDeepLink.guidedRitualSunWater.payload, 'ritual/sun_water');
+      expect(AppDeepLink.dreamsDiary.payload, 'diary/dreams');
       for (final link in AppDeepLink.values) {
         expect(AppDeepLink.fromPayload(link.payload), link);
       }
@@ -38,6 +39,11 @@ void main() {
       expect(AppDeepLink.guidedRitualFullMoon.encyclopediaTab, 0);
       expect(AppDeepLink.guidedRitualNewMoon.encyclopediaTab, 0);
       expect(AppDeepLink.guidedRitualSunWater.encyclopediaTab, 1);
+      // Diários → aba Sonhos (Gratidão 0, Afirmações 1, Escrita 2, Sonhos 3).
+      expect(AppDeepLink.dreamsDiary.homeTab, 3);
+      expect(AppDeepLink.dreamsDiary.diaryTab, 3);
+      expect(AppDeepLink.dreamsDiary.encyclopediaTab, isNull);
+      expect(AppDeepLink.moonEncyclopedia.diaryTab, isNull);
     });
 
     test('destinos de ritual carregam o ritualId certo', () {

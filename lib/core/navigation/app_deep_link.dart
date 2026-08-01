@@ -39,10 +39,13 @@ enum AppDeepLink {
   /// Página guiada da água solar (notificação semanal opt-in) — abre sobre
   /// a aba Sol.
   guidedRitualSunWater('ritual/sun_water',
-      homeTab: 1, encyclopediaTab: 1, ritualId: 'sun_water');
+      homeTab: 1, encyclopediaTab: 1, ritualId: 'sun_water'),
+
+  /// Diários → aba Sonhos (diário onírico).
+  dreamsDiary('diary/dreams', homeTab: 3, diaryTab: 3);
 
   const AppDeepLink(this.payload,
-      {this.homeTab = 0, this.encyclopediaTab, this.ritualId});
+      {this.homeTab = 0, this.encyclopediaTab, this.diaryTab, this.ritualId});
 
   /// Identificador estável usado como payload da notificação.
   final String payload;
@@ -53,6 +56,9 @@ enum AppDeepLink {
 
   /// Sub-aba da Enciclopédia a abrir (null = não é um destino da Enciclopédia).
   final int? encyclopediaTab;
+
+  /// Sub-aba dos Diários a abrir (null = não é um destino dos Diários).
+  final int? diaryTab;
 
   /// Ritual guiado fixo deste destino (null = sem ritual, ou o ritual vem do
   /// argumento do payload, como nos sabbats).

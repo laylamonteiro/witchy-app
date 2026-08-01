@@ -7,7 +7,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../diary/data/models/gratitude_model.dart';
 import '../../../diary/presentation/providers/gratitude_provider.dart';
-import '../../../diary/presentation/pages/dreams_list_page.dart';
+import '../../../../core/navigation/app_deep_link.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../providers/daily_checkin_provider.dart';
 
@@ -69,9 +69,9 @@ class DailyRitesCard extends StatelessWidget {
             label: l10n.yourDayRiteDream,
             onStart: () {
               _complete(context, DailyRites.dream);
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const DreamsListPage()),
-              );
+              // Vai para a aba Sonhos dos Diários (com a barra de abas), e
+              // não para a lista solta empilhada sobre o Seu Dia.
+              DeepLinkService.instance.dispatch(AppDeepLink.dreamsDiary);
             },
           ),
           _RiteTile(
