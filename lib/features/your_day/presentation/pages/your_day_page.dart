@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -107,10 +106,8 @@ class _YourDayPageState extends State<YourDayPage>
               const GreetingHeader(),
               // Só no DIA do evento: aí ele merece o topo da tela.
               const RitualOfMomentCard(mode: RitualCardMode.todayHero),
-              MoonDayCarousel(
-                onDayTap: () => DeepLinkService.instance
-                    .dispatch(AppDeepLink.moonEncyclopedia),
-              ),
+              // Sem ação no toque: o carrossel é leitura do dia, não atalho.
+              const MoonDayCarousel(),
               // Enquanto o dia não chega: a faixa discreta de contagem, no
               // lugar de sempre.
               const RitualOfMomentCard(mode: RitualCardMode.countdown),

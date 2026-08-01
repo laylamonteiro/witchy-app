@@ -34,19 +34,14 @@ class DailyCheckinProvider with ChangeNotifier {
   /// Maior sequência já alcançada.
   int get bestStreak => _bestStreak;
 
-  /// Ritos concluídos hoje.
+  /// Ritos marcados aqui. Gratidão e sonho NÃO passam por este caminho: eles
+  /// viram registro no diário, e o card os lê de lá — marcar no toque diria
+  /// "feito" para quem só espiou a tela.
   Set<String> get ritesToday => _ritesToday;
 
   bool get isLoaded => _loaded;
 
   bool isRiteDone(String riteId) => _ritesToday.contains(riteId);
-
-  /// Todos os ritos do dia concluídos?
-  bool get isDayComplete =>
-      DailyRites.all.every((rite) => _ritesToday.contains(rite));
-
-  int get ritesDoneCount =>
-      DailyRites.all.where((rite) => _ritesToday.contains(rite)).length;
 
   Future<void> setUserId(String userId) async {
     if (_userId == userId && _loaded) return;
@@ -64,17 +59,15 @@ class DailyCheckinProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Marca um rito como feito hoje. Devolve true quando ESTE toque fechou o
-  /// dia (os três ritos) — a UI usa para comemorar uma única vez.
-  Future<bool> completeRite(String riteId) async {
-    if (_ritesToday.contains(riteId)) return false;
-    final wasComplete = isDayComplete;
+  /// Marca um rito como concluído — só deve ser chamado quando a ação
+  /// REALMENTE aconteceu (ex.: a tiragem de tarot foi feita).
+  Future<void> completeRite(String riteId) async {
+    if (_ritesToday.contains(riteId)) return;
     _ritesToday = await _repository.completeRite(_userId, riteId);
     // O primeiro rito do dia pode ser também o primeiro check-in: a
     // sequência precisa refletir isso na hora.
     _streak = await _repository.currentStreak(_userId);
     if (_streak > _bestStreak) _bestStreak = _streak;
     notifyListeners();
-    return !wasComplete && isDayComplete;
   }
 }

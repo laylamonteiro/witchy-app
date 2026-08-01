@@ -3,11 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../diary/data/models/gratitude_model.dart';
+import '../../../diary/presentation/providers/dream_provider.dart';
 import '../../../diary/presentation/providers/gratitude_provider.dart';
-import '../../../../core/navigation/app_deep_link.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../providers/daily_checkin_provider.dart';
 
@@ -16,6 +17,10 @@ import '../providers/daily_checkin_provider.dart';
 /// A regra é atrito baixo — a gratidão se escreve aqui mesmo, o sonho vai
 /// para o diário onírico e a adivinhação abre o tarot. Concluir os três
 /// mantém a sequência viva, que é o que traz de volta amanhã.
+///
+/// Um rito só fica marcado quando a ação ACONTECEU: gratidão e sonho são
+/// lidos dos registros do dia (se existe a entrada, está feito) e o tarot é
+/// marcado pela própria tiragem. Tocar no rito apenas leva até a ação.
 class DailyRitesCard extends StatelessWidget {
   const DailyRitesCard({super.key});
 
@@ -25,9 +30,18 @@ class DailyRitesCard extends StatelessWidget {
     final checkin = context.watch<DailyCheckinProvider>();
     if (!checkin.isLoaded) return const SizedBox.shrink();
 
-    final done = checkin.ritesDoneCount;
+    // Provas de que a ação aconteceu de verdade.
+    final gratitudeDone = context
+        .watch<GratitudeProvider>()
+        .gratitudes
+        .any((g) => _isToday(g.createdAt));
+    final dreamDone =
+        context.watch<DreamProvider>().dreams.any((d) => _isToday(d.createdAt));
+    final tarotDone = checkin.isRiteDone(DailyRites.divination);
+
     final total = DailyRites.all.length;
-    final complete = checkin.isDayComplete;
+    final done = [gratitudeDone, dreamDone, tarotDone].where((e) => e).length;
+    final complete = done == total;
     final accent = complete ? context.gc.mint : context.gc.lilac;
 
     return MagicalCard(
@@ -58,32 +72,27 @@ class DailyRitesCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _RiteTile(
-            id: DailyRites.gratitude,
+            done: gratitudeDone,
             emoji: '🙏',
             label: l10n.yourDayRiteGratitude,
             onStart: () => _writeGratitude(context),
           ),
           _RiteTile(
-            id: DailyRites.dream,
+            done: dreamDone,
             emoji: '🌙',
             label: l10n.yourDayRiteDream,
-            onStart: () {
-              _complete(context, DailyRites.dream);
-              // Vai para a aba Sonhos dos Diários (com a barra de abas), e
-              // não para a lista solta empilhada sobre o Seu Dia.
-              DeepLinkService.instance.dispatch(AppDeepLink.dreamsDiary);
-            },
+            // Só leva até lá: quem marca é o sonho registrado.
+            onStart: () =>
+                DeepLinkService.instance.dispatch(AppDeepLink.dreamsDiary),
           ),
           _RiteTile(
-            id: DailyRites.divination,
+            done: tarotDone,
             emoji: '🎴',
             label: l10n.yourDayRiteTarot,
-            onStart: () {
-              _complete(context, DailyRites.divination);
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const TarotPage()),
-              );
-            },
+            // Quem marca é a tiragem, feita lá dentro.
+            onStart: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const TarotPage()),
+            ),
           ),
           const SizedBox(height: 6),
           AnimatedSwitcher(
@@ -119,19 +128,11 @@ class DailyRitesCard extends StatelessWidget {
     );
   }
 
-  /// Marca o rito e comemora quando ele foi o último do dia.
-  static Future<void> _complete(BuildContext context, String riteId) async {
-    final provider = context.read<DailyCheckinProvider>();
-    final messenger = ScaffoldMessenger.of(context);
-    final message = AppLocalizations.of(context).yourDayRitesComplete;
-
-    HapticFeedback.selectionClick();
-    final closedTheDay = await provider.completeRite(riteId);
-    if (closedTheDay) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
-      );
-    }
+  static bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   /// Gratidão em um gesto: uma linha, salvar, pronto — e o registro vai para
@@ -156,7 +157,9 @@ class DailyRitesCard extends StatelessWidget {
             tags: const [],
           ),
         );
-    if (context.mounted) await _complete(context, DailyRites.gratitude);
+    // A gratidão salva já é a prova do rito; o check-in do dia continua
+    // sendo registrado normalmente.
+    if (context.mounted) HapticFeedback.selectionClick();
   }
 }
 
@@ -238,13 +241,13 @@ class _GratitudeSheetState extends State<_GratitudeSheet> {
 
 /// Uma linha de rito: emoji, rótulo e o círculo que marca a conclusão.
 class _RiteTile extends StatelessWidget {
-  final String id;
+  final bool done;
   final String emoji;
   final String label;
   final VoidCallback onStart;
 
   const _RiteTile({
-    required this.id,
+    required this.done,
     required this.emoji,
     required this.label,
     required this.onStart,
@@ -252,9 +255,6 @@ class _RiteTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checkin = context.watch<DailyCheckinProvider>();
-    final done = checkin.isRiteDone(id);
-
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: done ? null : onStart,

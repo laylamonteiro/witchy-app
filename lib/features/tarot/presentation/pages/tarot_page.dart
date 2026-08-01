@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
@@ -209,6 +211,10 @@ class _SpreadTabState extends State<_SpreadTab> {
     }
 
     if (!mounted) return;
+    // A tiragem aconteceu: o rito de hoje pode se dar por cumprido.
+    unawaited(context.read<DailyCheckinProvider>().completeRite(
+          DailyRites.divination,
+        ));
     setState(() {
       _activeSpread = spread;
       _drawn = drawn;

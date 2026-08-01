@@ -14,10 +14,7 @@ import '../providers/lunar_provider.dart';
 /// ninguém descobria que dava para ver ontem e amanhã. Cada card calcula a
 /// própria fase com um LunarProvider temporário.
 class MoonDayCarousel extends StatefulWidget {
-  /// Toque em um card (ex.: navegar para a página da Lua).
-  final VoidCallback? onDayTap;
-
-  const MoonDayCarousel({super.key, this.onDayTap});
+  const MoonDayCarousel({super.key});
 
   @override
   State<MoonDayCarousel> createState() => _MoonDayCarouselState();
@@ -119,8 +116,8 @@ class _MoonDayCarouselState extends State<MoonDayCarousel> {
     final tempProvider = LunarProvider()..setSelectedDate(date);
     final phase = tempProvider.getCurrentMoonPhase();
 
+    // Sem onTap: a lua do dia é leitura, não atalho.
     return MagicalCard(
-      onTap: widget.onDayTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         child: Column(
