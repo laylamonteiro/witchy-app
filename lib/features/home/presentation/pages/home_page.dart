@@ -32,8 +32,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// Momento do último toque em "voltar" na raiz de uma aba — usado para o
   /// padrão de sair do app apenas com dois toques seguidos.
   DateTime? _lastBackPress;
+
+  /// Tamanho e ponto de partida do Salem: centro superior da tela. Vale para
+  /// toda entrada em cena — abertura, "refresh" de sessão e volta do
+  /// esconderijo (o mascote é recriado nos três casos, então nasce aqui).
+  static const double _mascotSize = 100;
+  static const double _mascotTop = 110;
+
   final ValueNotifier<Offset> _mascotPosition =
-      ValueNotifier(const Offset(20, 120));
+      ValueNotifier(const Offset(0, _mascotTop));
 
   /// Um Navigator aninhado por aba: as páginas de conteúdo (detalhes de
   /// cristais, feitiços, sigilos etc.) são empilhadas DENTRO da aba, mantendo
@@ -259,6 +266,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // (e o contador de toques para trazê-lo de volta) fica fora de cena.
     final showMascot = !mascot.isHidden && !_showTour;
     final showReturnTapCounter = mascot.isHidden && !_showTour;
+    final mascotLeft =
+        (MediaQuery.of(context).size.width - _mascotSize) / 2;
 
     return Scaffold(
       body: Stack(
@@ -272,9 +281,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             CatChatBubble(mascotPosition: _mascotPosition),
             // Mascote flutuando sobre o conteúdo — sobrepõe o balão
             DraggableCatMascot(
-              initialX: 20,
-              initialY: 120,
-              size: 100,
+              initialX: mascotLeft,
+              initialY: _mascotTop,
+              size: _mascotSize,
               positionNotifier: _mascotPosition,
               onDismissed: mascot.hide,
               // Voltou do esconderijo (ou do tour) → materializa em fumaça.
