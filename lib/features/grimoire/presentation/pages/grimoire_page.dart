@@ -147,6 +147,18 @@ class _ToolsTab extends StatelessWidget {
         page: () => const TarotPage(),
       ),
       (
+        icon: const Text('🌙', style: TextStyle(fontSize: 40)),
+        title: l10n.toolDreamsTitle,
+        description: l10n.toolDreamsDesc,
+        page: () => const DreamToolsPage(),
+      ),
+      (
+        icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
+        title: l10n.toolPalmistryTitle,
+        description: l10n.toolPalmistryDesc,
+        page: () => const PalmistryPage(),
+      ),
+      (
         icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
         title: l10n.toolRunesTitle,
         description: l10n.toolRunesDesc,
@@ -163,18 +175,6 @@ class _ToolsTab extends StatelessWidget {
         title: l10n.toolPendulumTitle,
         description: l10n.toolPendulumDesc,
         page: () => const PendulumPage(),
-      ),
-      (
-        icon: const Text('🌙', style: TextStyle(fontSize: 40)),
-        title: l10n.toolDreamsTitle,
-        description: l10n.toolDreamsDesc,
-        page: () => const DreamToolsPage(),
-      ),
-      (
-        icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
-        title: l10n.toolPalmistryTitle,
-        description: l10n.toolPalmistryDesc,
-        page: () => const PalmistryPage(),
       ),
     ];
 
