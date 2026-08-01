@@ -403,6 +403,20 @@ jobs:
 
           CREDENTIALS
 
+          cat > lib/core/ai/gemini_credentials.dart << 'CREDENTIALS'
+
+          /// Credentials for the Google Gemini API.
+
+          ///
+
+          class GeminiCredentials {
+
+            static const String apiKey = '${{ secrets.GEMINI_API_KEY }}';
+
+          }
+
+          CREDENTIALS
+
 
 
       - name: 🔐 Create Prokerala credentials file
@@ -676,6 +690,20 @@ jobs:
           class GroqCredentials {
 
             static const apiKey = '${{ secrets.GROQ_API_KEY }}';
+
+          }
+
+          CREDENTIALS
+
+          cat > lib/core/ai/gemini_credentials.dart << 'CREDENTIALS'
+
+          /// Credentials for the Google Gemini API.
+
+          ///
+
+          class GeminiCredentials {
+
+            static const String apiKey = '${{ secrets.GEMINI_API_KEY }}';
 
           }
 

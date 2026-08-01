@@ -56,6 +56,13 @@ jobs:
             static const apiKey = '';
           }
           CREDENTIALS
+          cat > lib/core/ai/gemini_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Google Gemini API.
+          ///
+          class GeminiCredentials {
+            static const String apiKey = '';
+          }
+          CREDENTIALS
           cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
           /// Credentials for the Prokerala API.
           ///
