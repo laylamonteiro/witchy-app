@@ -37,6 +37,7 @@ import 'features/diary/presentation/providers/gratitude_provider.dart';
 import 'features/diary/presentation/providers/affirmation_provider.dart';
 import 'features/diary/presentation/providers/free_writing_provider.dart';
 import 'features/learning/presentation/providers/learning_provider.dart';
+import 'features/your_day/presentation/providers/daily_checkin_provider.dart';
 import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart';
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
@@ -264,6 +265,14 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
         ChangeNotifierProvider.value(value: _mascotProvider),
         ChangeNotifierProxyProvider<AuthProvider, LearningProvider>(
           create: (_) => LearningProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
+        // Check-in diário: registra a visita e mantém a sequência de dias.
+        ChangeNotifierProxyProvider<AuthProvider, DailyCheckinProvider>(
+          create: (_) => DailyCheckinProvider(),
           update: (_, auth, provider) {
             provider!.setUserId(auth.currentUser.id);
             return provider;

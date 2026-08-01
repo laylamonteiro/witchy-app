@@ -695,7 +695,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         'daily_magical_weather',
         'learning_progress',
         'guided_ritual_logs',
-        'user_encyclopedia_entries'
+        'user_encyclopedia_entries',
+        'daily_checkins'
       ];
 
       for (final table in tables) {
@@ -795,7 +796,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
           'daily_magical_weather',
           'learning_progress',
           'guided_ritual_logs',
-          'user_encyclopedia_entries'
+          'user_encyclopedia_entries',
+          'daily_checkins'
         ];
 
         for (final table in tables) {
