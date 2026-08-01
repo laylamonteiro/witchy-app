@@ -110,7 +110,9 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
   }
 
   String get _greeting {
+    // Mesmas faixas do Seu Dia (greeting_header.dart): madrugada até as 5h.
     final hour = DateTime.now().hour;
+    if (hour < 5) return AppLocalizations.of(context).commonGoodDawn;
     if (hour < 12) return AppLocalizations.of(context).commonGoodMorning;
     if (hour < 18) return AppLocalizations.of(context).commonGoodAfternoon;
     return AppLocalizations.of(context).commonGoodEvening;
