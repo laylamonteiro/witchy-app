@@ -39,6 +39,10 @@ class _GrimoirePageState extends State<GrimoirePage>
   /// (duplo-toque em "Grimório" na bottom nav).
   static const int _defaultTabIndex = 1;
 
+  /// Trocado para recriar o TabBarView quando o re-toque na bottom bar pede
+  /// "voltar ao início" já estando na aba inicial.
+  int _viewEpoch = 0;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -61,9 +65,15 @@ class _GrimoirePageState extends State<GrimoirePage>
   }
 
   void _onResetRequested() {
-    if (mounted && _tabController.index != _defaultTabIndex) {
+    if (!mounted) return;
+    if (_tabController.index != _defaultTabIndex) {
       _tabController.animateTo(_defaultTabIndex);
+      return;
     }
+    // Já na aba inicial: recria a view para o conteúdo voltar ao topo
+    // (as sub-páginas não mantêm estado fora de cena, então trocar de aba
+    // já volta ao topo sozinho — este é o único caso que faltava).
+    setState(() => _viewEpoch++);
   }
 
   @override
@@ -98,6 +108,7 @@ class _GrimoirePageState extends State<GrimoirePage>
         ),
       ),
       body: TabBarView(
+        key: ValueKey(_viewEpoch),
         controller: _tabController,
         children: const [
           AstrologyTab(),
