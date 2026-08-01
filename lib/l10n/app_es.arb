@@ -1286,7 +1286,7 @@
   "salemTourBack": "Atrás",
   "salemTourDone": "¡Empecemos!",
   "settingsSalem": "Salem, el gatito",
-  "settingsSalemDesc": "Tu familiar: vuelve a ver el tour guiado. Secretito: 5 toques sobre él lo disuelven en humo — y 5 toques en la pantalla lo traen de vuelta.",
+  "settingsSalemDesc": "Tu familiar: vuelve a ver el tour guiado. Secretito: 5 toques sobre él lo disuelven en humo — y 5 toques rápidos en el mismo punto de la pantalla lo traen de vuelta.",
   "settingsReplayTour": "Volver a ver el tour con Salem",
   "encyAddTitle": "Agregar en {category}",
   "encyAddIntro": "Fotografía tu hierba, piedra o color: el Grimorio lo identifica, tú confirmas el nombre y se crea una página completa en tu enciclopedia, con tu foto.",
@@ -1375,6 +1375,6 @@
   "sunCorrespondencesSubtitle": "Cristales, hierbas y colores del Sol",
   "sunDeitiesTitle": "Deidades solares",
   "sunDeitiesSubtitle": "Rostros del Sol en las tradiciones",
-  "salemTourStep8": "¡Lista! Ah, un secreto: 5 toques en mí y desaparezco en humo; 5 toques en la pantalla y regreso. ¡Buen viaje! 🌙",
+  "salemTourStep8": "¡Listo! Ah, un secreto: 5 toques sobre mí y desaparezco en humo; 5 toques rápidos en el mismo punto de la pantalla y vuelvo. ¡Buen viaje! 🌙",
   "yourDayShortcutAiSpell": "Hechizo Místico"
 }

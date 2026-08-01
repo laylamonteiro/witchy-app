@@ -1854,7 +1854,7 @@
   "salemTourBack": "Voltar",
   "salemTourDone": "Vamos começar!",
   "settingsSalem": "Salem, o gatinho",
-  "settingsSalemDesc": "Seu familiar de estimação: reveja o tour guiado. Segredinho: 5 toques nele o dissolvem em fumaça — e 5 toques na tela o trazem de volta.",
+  "settingsSalemDesc": "Seu familiar de estimação: reveja o tour guiado. Segredinho: 5 toques nele o dissolvem em fumaça — e 5 toques rápidos no mesmo ponto da tela o trazem de volta.",
   "settingsReplayTour": "Rever tour com o Salem",
   "encyAddTitle": "Adicionar em {category}",
   "@encyAddTitle": {
@@ -2028,6 +2028,6 @@
   "sunCorrespondencesSubtitle": "Cristais, ervas e cores do Sol",
   "sunDeitiesTitle": "Divindades solares",
   "sunDeitiesSubtitle": "Rostos do Sol pelas tradições",
-  "salemTourStep8": "Prontinha! Ah, um segredo: 5 toques em mim e eu sumo em fumaça; 5 toques na tela e eu volto. Boa jornada! 🌙",
+  "salemTourStep8": "Prontinha! Ah, um segredo: 5 toques em mim e eu sumo em fumaça; 5 toques rápidos no mesmo ponto da tela e eu volto. Boa jornada! 🌙",
   "yourDayShortcutAiSpell": "Feitiço Místico"
 }

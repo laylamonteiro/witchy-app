@@ -1286,7 +1286,7 @@
   "salemTourBack": "Back",
   "salemTourDone": "Let's begin!",
   "settingsSalem": "Salem, the cat",
-  "settingsSalemDesc": "Your familiar: replay the guided tour. Little secret: 5 taps on him dissolve him into smoke — and 5 taps on the screen bring him back.",
+  "settingsSalemDesc": "Your familiar: replay the guided tour. Little secret: 5 taps on him dissolve him into smoke — and 5 quick taps on the same spot of the screen bring him back.",
   "settingsReplayTour": "Replay tour with Salem",
   "encyAddTitle": "Add to {category}",
   "encyAddIntro": "Photograph your herb, stone or color: the Grimoire identifies it, you confirm the name and a full page is created in your encyclopedia, with your photo.",
@@ -1375,6 +1375,6 @@
   "sunCorrespondencesSubtitle": "The Sun's crystals, herbs and colors",
   "sunDeitiesTitle": "Solar deities",
   "sunDeitiesSubtitle": "Faces of the Sun across traditions",
-  "salemTourStep8": "All set! Oh, a secret: tap me 5 times and I vanish in smoke; tap the screen 5 times and I return. Safe travels! 🌙",
+  "salemTourStep8": "All set! Oh, a secret: 5 taps on me and I vanish into smoke; 5 quick taps on the same spot of the screen and I am back. Enjoy the journey! 🌙",
   "yourDayShortcutAiSpell": "Mystic Spell"
 }

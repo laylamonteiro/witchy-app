@@ -62,9 +62,16 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// Tour do Salem em exibição?
   bool _showTour = false;
 
-  /// Contagem de toques seguidos na tela para o Salem escondido voltar.
+  /// Gesto secreto para o Salem escondido voltar: 5 toques rápidos NO MESMO
+  /// PONTO da tela. O ponto importa — contar toques em qualquer lugar fazia
+  /// ele reaparecer sozinho enquanto a Bruxa só navegava pelo app.
+  static const int _returnTapsNeeded = 5;
+  static const double _returnTapRadius = 48;
+  static const Duration _returnTapWindow = Duration(milliseconds: 900);
+
   int _returnTapCount = 0;
   DateTime? _lastReturnTap;
+  Offset? _returnTapAnchor;
 
   @override
   void initState() {
@@ -97,18 +104,30 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     setState(() => _showTour = false);
   }
 
-  /// Salem escondido: 5 toques seguidos em qualquer lugar da tela (janela de
-  /// 1,5s entre toques) o trazem de volta em fumaça.
-  void _onHiddenScreenTap(PointerDownEvent _) {
+  /// Salem escondido volta em fumaça com 5 toques rápidos no mesmo ponto.
+  /// Toque longe do anterior, ou depois da janela de tempo, recomeça a
+  /// contagem — navegar pelo app não é gesto secreto.
+  void _onHiddenScreenTap(PointerDownEvent event) {
     final now = DateTime.now();
-    if (_lastReturnTap != null &&
-        now.difference(_lastReturnTap!).inMilliseconds > 1500) {
-      _returnTapCount = 0;
-    }
+    final lastTap = _lastReturnTap;
+    final anchor = _returnTapAnchor;
+
+    final restarted = lastTap == null ||
+        now.difference(lastTap) > _returnTapWindow ||
+        anchor == null ||
+        (event.position - anchor).distance > _returnTapRadius;
+
     _lastReturnTap = now;
+    if (restarted) {
+      _returnTapCount = 1;
+      _returnTapAnchor = event.position;
+      return;
+    }
+
     _returnTapCount++;
-    if (_returnTapCount >= 5) {
+    if (_returnTapCount >= _returnTapsNeeded) {
       _returnTapCount = 0;
+      _returnTapAnchor = null;
       context.read<MascotProvider>().show();
     }
   }
