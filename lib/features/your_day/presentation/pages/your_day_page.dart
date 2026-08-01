@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/mascot/tour_targets.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../guided_rituals/presentation/widgets/magical_moment_card.dart';
 import '../../../lunar/presentation/widgets/moon_day_carousel.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../providers/daily_checkin_provider.dart';
 import '../widgets/continue_trail_card.dart';
 import '../widgets/daily_affirmation_card.dart';
 import '../widgets/daily_rites_card.dart';
@@ -18,9 +22,12 @@ import '../widgets/ritual_of_moment_card.dart';
 import '../widgets/shortcuts_grid.dart';
 import '../widgets/spell_recommendations_card.dart';
 
-/// Aba "Seu Dia" — o hub diário da Bruxa (primeira aba da bottom bar):
-/// saudação, lua de hoje, momento mágico, clima do dia (cache), afirmação,
-/// ritual do momento e atalhos personalizáveis. Tudo gratuito.
+/// Aba "Seu Dia" — o hub diário da Bruxa (primeira aba da bottom bar).
+///
+/// A ordem segue a intenção de quem abre o app: quem sou eu hoje (saudação,
+/// sequência, nível) → o que faço agora (rito em destaque) → ganhos rápidos
+/// (ritos do dia, afirmação) → retomar (trilha) → contexto (lua, momento,
+/// clima) → consulta (recolhida) → atalhos. Tudo gratuito.
 class YourDayPage extends StatefulWidget {
   final SectionResetNotifier? resetNotifier;
 
@@ -48,6 +55,12 @@ class _YourDayPageState extends State<YourDayPage>
     widget.resetNotifier?.removeListener(_onResetRequested);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Puxar para atualizar: recarrega a sequência/ritos do dia (o resto da
+  /// tela é derivado e se reconstrói junto).
+  Future<void> _refresh() async {
+    await context.read<DailyCheckinProvider>().load();
   }
 
   void _onResetRequested() {
@@ -81,29 +94,34 @@ class _YourDayPageState extends State<YourDayPage>
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Ordem: quem sou eu hoje → o que faço agora → ganhos rápidos →
-            // retomar o que comecei → contexto do dia → consulta → atalhos.
-            const GreetingHeader(),
-            const RitualOfMomentCard(),
-            const DailyRitesCard(),
-            const DailyAffirmationCard(),
-            const ContinueTrailCard(),
-            MoonDayCarousel(
-              onDayTap: () => DeepLinkService.instance
-                  .dispatch(AppDeepLink.moonEncyclopedia),
-            ),
-            const MagicalMomentCard(),
-            const MagicalWeatherCard(),
-            const NextMoonPhasesCard(),
-            const SpellRecommendationsCard(),
-            const ShortcutsGrid(),
-          ],
+      body: RefreshIndicator(
+        color: context.gc.lilac,
+        backgroundColor: context.gc.surface,
+        onRefresh: _refresh,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 24),
+          child: StaggeredEntrance(
+            children: [
+              // Ordem: quem sou eu hoje → o que faço agora → ganhos rápidos →
+              // retomar o que comecei → contexto do dia → consulta → atalhos.
+              const GreetingHeader(),
+              const RitualOfMomentCard(),
+              const DailyRitesCard(),
+              const DailyAffirmationCard(),
+              const ContinueTrailCard(),
+              MoonDayCarousel(
+                onDayTap: () => DeepLinkService.instance
+                    .dispatch(AppDeepLink.moonEncyclopedia),
+              ),
+              const MagicalMomentCard(),
+              const MagicalWeatherCard(),
+              const NextMoonPhasesCard(),
+              const SpellRecommendationsCard(),
+              const ShortcutsGrid(),
+            ],
+          ),
         ),
       ),
     );

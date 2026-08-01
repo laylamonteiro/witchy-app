@@ -94,6 +94,8 @@ class YourDayShortcuts {
     ),
   ];
 
+  /// Seis por padrão: a grade tem 3 colunas, então 6 fecha duas linhas
+  /// certinhas — 7 deixava um atalho órfão sozinho na última linha.
   static const List<String> defaults = [
     'living_grimoire',
     'tarot',
@@ -101,7 +103,6 @@ class YourDayShortcuts {
     'ai_spell',
     'oracle',
     'dreams',
-    'sigils',
   ];
 
   static ShortcutTool? byId(String id) {

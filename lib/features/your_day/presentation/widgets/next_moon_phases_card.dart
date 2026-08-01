@@ -4,12 +4,15 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 
-/// Próximas fases lunares importantes (migrado da página da Lua para o
-/// "Seu Dia"): cada item traz data, contagem e o significado básico da fase.
+/// Próximas fases lunares (migrado da página da Lua para o "Seu Dia"): cada
+/// item traz data, contagem e o significado básico da fase.
+///
+/// Recolhido por padrão: é consulta, não ação — expandido custava ~250px de
+/// rolagem todo dia para quem já sabe o que vem por aí.
 class NextMoonPhasesCard extends StatelessWidget {
   const NextMoonPhasesCard({super.key});
 
@@ -18,15 +21,12 @@ class NextMoonPhasesCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final lunarProvider = context.watch<LunarProvider>();
 
-    return MagicalCard(
+    return ExpansionMagicalCard(
+      emoji: '🌙',
+      title: l10n.lunarNextPhases,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.lunarNextPhases,
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 8),
           Text(
             l10n.lunarNextPhasesSub,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
