@@ -27,7 +27,7 @@ const List<String> dailyWeatherFallbackHeadingsPt = [
 
 /// Frase-placeholder exibida desfocada no lugar do corpo Premium da previsão.
 const String dailyWeatherPremiumPlaceholderPt =
-    'As influências do dia revelam orientações e práticas mágicas personalizadas para este momento.';
+    'As influências do dia revelam orientações e práticas mágicas personalizadas para este momento';
 
 /// Texto de fallback (markdown) usado quando a geração por IA falha. Mantém
 /// as MESMAS 7 seções do texto da IA (Energia, Lua, Oportunidades, Cuidados,
@@ -39,11 +39,11 @@ String dailyWeatherFallbackTextPt(DailyMagicalWeather weather) {
   final desafios = weather.aspects
       .where((a) => a.energyLevel == EnergyLevel.challenging)
       .take(2)
-      .map((a) => '- ${a.description}: aja com calma e evite reagir no impulso.')
+      .map((a) => '- ${a.description}: aja com calma e evite reagir no impulso')
       .toList();
   final cuidados = desafios.isNotEmpty
       ? desafios.join('\n')
-      : '- Sem tensões marcantes hoje. Ainda assim, evite decisões apressadas e reserve um momento de pausa para se centrar.';
+      : '- Sem tensões marcantes hoje. Ainda assim, evite decisões apressadas e reserve um momento de pausa para se centrar';
 
   return '''## Energia do Dia
 

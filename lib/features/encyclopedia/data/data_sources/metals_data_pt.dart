@@ -13,7 +13,7 @@ final List<MetalModel> metalsPt = [
     description:
         'Metal precioso do Sol, símbolo de poder divino, realeza e perfeição. '
         'Representa a luz espiritual, a iluminação e a energia vital. '
-        'Tradicionalmente usado para atrair prosperidade, sucesso e proteção.',
+        'Tradicionalmente usado para atrair prosperidade, sucesso e proteção',
     element: Element.fire,
     planet: Planet.sun,
     conductsPower: true,
@@ -47,7 +47,7 @@ final List<MetalModel> metalsPt = [
     traditionalUses:
         'Usado em coroas, cetros e objetos rituais de poder. '
         'Joias de ouro são tradicionalmente usadas para proteção '
-        'e para atrair a energia solar.',
+        'e para atrair a energia solar',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -55,7 +55,7 @@ final List<MetalModel> metalsPt = [
     description:
         'Metal sagrado da Lua, símbolo de intuição, mistério e proteção psíquica. '
         'Representa o feminino divino, os ciclos e a magia lunar. '
-        'É o metal mais usado em bruxaria para proteção e adivinhação.',
+        'É o metal mais usado em bruxaria para proteção e adivinhação',
     element: Element.water,
     planet: Planet.moon,
     conductsPower: true,
@@ -90,7 +90,7 @@ final List<MetalModel> metalsPt = [
     traditionalUses:
         'Tradicionalmente usada em amuletos, espelhos mágicos, '
         'cálices rituais e joias de proteção. Diz-se que a prata '
-        'escurece na presença de energia negativa.',
+        'escurece na presença de energia negativa',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -98,7 +98,7 @@ final List<MetalModel> metalsPt = [
     description:
         'Metal de Vênus, condutor supremo de energia mágica. '
         'Associado ao amor, beleza, harmonia e cura. '
-        'É o metal mais condutor de energia após a prata.',
+        'É o metal mais condutor de energia após a prata',
     element: Element.water,
     planet: Planet.venus,
     conductsPower: true,
@@ -133,7 +133,7 @@ final List<MetalModel> metalsPt = [
     traditionalUses:
         'Usado em varinhas, amuletos de amor, e ferramentas de cura. '
         'Pirâmides de cobre são usadas para amplificar energia. '
-        'Pulseiras de cobre são tradicionalmente usadas para aliviar dores.',
+        'Pulseiras de cobre são tradicionalmente usadas para aliviar dores',
     safetyWarnings: [
       'Pode manchar a pele de verde (não é perigoso, apenas oxidação)',
     ],
@@ -143,7 +143,7 @@ final List<MetalModel> metalsPt = [
     description:
         'Metal de Marte, símbolo de proteção, força e coragem. '
         'Tradicionalmente usado para afastar espíritos malignos e fadas. '
-        'Representa a força guerreira e a proteção física.',
+        'Representa a força guerreira e a proteção física',
     element: Element.fire,
     planet: Planet.mars,
     conductsPower: false,
@@ -179,7 +179,7 @@ final List<MetalModel> metalsPt = [
         'Ferraduras sobre portas para proteção. Pregos de ferro '
         'enterrados nos cantos da propriedade. Facas rituais (athames) '
         'com lâmina de ferro. Diz-se que fadas e espíritos malignos '
-        'não podem atravessar ferro.',
+        'não podem atravessar ferro',
     safetyWarnings: [
       'Enferruja facilmente - mantenha seco',
     ],
@@ -188,7 +188,7 @@ final List<MetalModel> metalsPt = [
     name: 'Estanho',
     description:
         'Metal de Júpiter, associado à expansão, crescimento e justiça. '
-        'Tradicionalmente usado para atrair prosperidade, sorte e proteção legal.',
+        'Tradicionalmente usado para atrair prosperidade, sorte e proteção legal',
     element: Element.air,
     planet: Planet.jupiter,
     conductsPower: true,
@@ -223,7 +223,7 @@ final List<MetalModel> metalsPt = [
     traditionalUses:
         'Usado em talismãs de sorte e prosperidade. '
         'Moedas de estanho são tradicionalmente carregadas para atrair dinheiro. '
-        'Também usado em sinos rituais.',
+        'Também usado em sinos rituais',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -231,7 +231,7 @@ final List<MetalModel> metalsPt = [
     description:
         'Metal de Saturno, associado ao tempo, limites e transformação profunda. '
         'Usado em magia de banimento, proteção pesada e quebra de vícios. '
-        'Representa limitações, disciplina e karma.',
+        'Representa limitações, disciplina e karma',
     element: Element.earth,
     planet: Planet.saturn,
     conductsPower: false,
@@ -266,7 +266,7 @@ final List<MetalModel> metalsPt = [
     traditionalUses:
         'Tradicionalmente usado para selar intenções negativas em caixas '
         'que são enterradas. Usado em pesos de proteção e em rituais '
-        'de banimento definitivo.',
+        'de banimento definitivo',
     safetyWarnings: [
       '⚠️ TÓXICO - Não ingerir, evitar contato prolongado com pele',
       'Lavar as mãos após manusear',
@@ -278,7 +278,7 @@ final List<MetalModel> metalsPt = [
     name: 'Bronze',
     description:
         'Liga antiga de cobre e estanho, representa tradição, antiguidade e conexão ancestral. '
-        'Usado desde tempos imemoriais em armas, escudos e objetos rituais.',
+        'Usado desde tempos imemoriais em armas, escudos e objetos rituais',
     element: Element.fire,
     planet: Planet.venus,
     conductsPower: true,
@@ -314,14 +314,14 @@ final List<MetalModel> metalsPt = [
         'Sinos de bronze são usados para limpar energia e marcar '
         'o início de rituais. Caldeirões de bronze são tradicionais '
         'em bruxaria celta. Espelhos de bronze polido eram usados '
-        'na antiguidade para adivinhação.',
+        'na antiguidade para adivinhação',
     safetyWarnings: [],
   ),
   const MetalModel(
     name: 'Latão',
     description:
         'Liga de cobre e zinco, associada à purificação, limpeza energética '
-        'e proteção contra negatividade. Brilha como ouro mas é mais acessível.',
+        'e proteção contra negatividade. Brilha como ouro mas é mais acessível',
     element: Element.fire,
     planet: Planet.sun,
     conductsPower: true,
@@ -356,14 +356,14 @@ final List<MetalModel> metalsPt = [
     traditionalUses:
         'Tradicionalmente usado em incensários e sinos de limpeza. '
         'Objetos de latão polido são usados em altares para refletir '
-        'energia negativa de volta. Substituto acessível do ouro em magia.',
+        'energia negativa de volta. Substituto acessível do ouro em magia',
     safetyWarnings: [],
   ),
   const MetalModel(
     name: 'Alumínio',
     description:
         'Metal moderno associado à proteção mental, bloqueio de influências '
-        'externas e preservação de energia. Leve e versátil.',
+        'externas e preservação de energia. Leve e versátil',
     element: Element.air,
     planet: Planet.mercury,
     conductsPower: true,
@@ -397,7 +397,7 @@ final List<MetalModel> metalsPt = [
     traditionalUses:
         'Papel alumínio é usado para embrulhar e proteger cartas de tarot, '
         'cristais e objetos mágicos. Também usado para refletir energia '
-        'negativa de volta à origem.',
+        'negativa de volta à origem',
     safetyWarnings: [],
   ),
 ];

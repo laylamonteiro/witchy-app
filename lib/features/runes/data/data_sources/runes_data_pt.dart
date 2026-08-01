@@ -14,7 +14,7 @@ const List<Rune> runesPt = [
     description: 'Fehu representa riqueza móvel, prosperidade e abundância. '
         'Simboliza o gado, que era uma forma de riqueza na antiguidade. '
         'Em leituras, sugere ganhos materiais, novos começos prósperos '
-        'e a energia necessária para manifestar seus objetivos.',
+        'e a energia necessária para manifestar seus objetivos',
   ),
   Rune(
     name: 'Uruz',
@@ -24,7 +24,7 @@ const List<Rune> runesPt = [
         'Uruz é a força bruta da natureza, a vitalidade do auroque selvagem. '
         'Representa força física e mental, resistência e boa saúde. '
         'Indica um período de grande energia, cura ou a necessidade '
-        'de enfrentar desafios com coragem.',
+        'de enfrentar desafios com coragem',
   ),
   Rune(
     name: 'Thurisaz',
@@ -34,7 +34,7 @@ const List<Rune> runesPt = [
         'Thurisaz é o espinho ou o martelo de Thor. Representa proteção, '
         'mas também conflito e desafio. Sugere a necessidade de defender-se '
         'ou de enfrentar obstáculos. Pode indicar uma situação que requer '
-        'cautela e preparação.',
+        'cautela e preparação',
   ),
   Rune(
     name: 'Ansuz',
@@ -44,7 +44,7 @@ const List<Rune> runesPt = [
         'Ansuz está ligada a Odin e representa comunicação divina, sabedoria '
         'e inspiração. Simboliza sinais, mensagens e conhecimento. '
         'Em leituras, sugere que você está recebendo orientação, '
-        'ou que deve prestar atenção aos sinais ao seu redor.',
+        'ou que deve prestar atenção aos sinais ao seu redor',
   ),
   Rune(
     name: 'Raidho',
@@ -54,7 +54,7 @@ const List<Rune> runesPt = [
         'Raidho é a runa da viagem e do movimento. Representa jornadas '
         'físicas e espirituais, progresso e evolução. Sugere que você '
         'está em um caminho de crescimento, ou que é hora de avançar '
-        'em alguma direção.',
+        'em alguma direção',
   ),
   Rune(
     name: 'Kenaz',
@@ -64,7 +64,7 @@ const List<Rune> runesPt = [
         'Kenaz é a tocha que ilumina a escuridão. Representa conhecimento, '
         'criatividade, inspiração e transformação através do aprendizado. '
         'Indica um período de descobertas, insights criativos ou '
-        'desenvolvimento de habilidades.',
+        'desenvolvimento de habilidades',
   ),
   Rune(
     name: 'Gebo',
@@ -74,7 +74,7 @@ const List<Rune> runesPt = [
         'Gebo representa presentes, generosidade e trocas equilibradas. '
         'Simboliza parcerias, relacionamentos e reciprocidade. '
         'Sugere que você está em um período de dar e receber, '
-        'ou que uma parceria importante está em destaque.',
+        'ou que uma parceria importante está em destaque',
   ),
   Rune(
     name: 'Wunjo',
@@ -83,7 +83,7 @@ const List<Rune> runesPt = [
     description:
         'Wunjo é a runa da alegria, harmonia e realização. Representa '
         'felicidade, contentamento e períodos de paz. Indica que você '
-        'está ou estará em um estado de harmonia e satisfação com a vida.',
+        'está ou estará em um estado de harmonia e satisfação com a vida',
   ),
   Rune(
     name: 'Hagalaz',
@@ -92,7 +92,7 @@ const List<Rune> runesPt = [
     description: 'Hagalaz é o granizo - uma força disruptiva da natureza. '
         'Representa mudanças súbitas, eventos inesperados e purificação. '
         'Pode indicar um período de desafios que levam a transformação '
-        'e crescimento.',
+        'e crescimento',
   ),
   Rune(
     name: 'Nauthiz',
@@ -101,7 +101,7 @@ const List<Rune> runesPt = [
     description: 'Nauthiz representa necessidade, restrição e resistência. '
         'Simboliza tempos difíceis que exigem paciência e perseverança. '
         'Sugere que você está enfrentando limitações, mas que pode '
-        'superá-las através da determinação.',
+        'superá-las através da determinação',
   ),
   Rune(
     name: 'Isa',
@@ -111,7 +111,7 @@ const List<Rune> runesPt = [
         'Isa é o gelo - imóvel e preservador. Representa pausa, estagnação '
         'e a necessidade de introspecção. Sugere um período de espera, '
         'reflexão ou congelamento de uma situação. Nem sempre é negativa; '
-        'às vezes precisamos parar para avaliar.',
+        'às vezes precisamos parar para avaliar',
   ),
   Rune(
     name: 'Jera',
@@ -120,7 +120,7 @@ const List<Rune> runesPt = [
     description: 'Jera representa a colheita e os ciclos naturais do tempo. '
         'Simboliza recompensas por esforços passados e a importância '
         'do timing. Sugere que você colherá o que plantou, ou que é '
-        'importante respeitar os ciclos naturais das coisas.',
+        'importante respeitar os ciclos naturais das coisas',
   ),
   Rune(
     name: 'Eihwaz',
@@ -129,7 +129,7 @@ const List<Rune> runesPt = [
     description:
         'Eihwaz é o teixo - árvore da vida e da morte. Representa proteção, '
         'resistência e transformação profunda. Simboliza a capacidade de '
-        'sobreviver e se adaptar, mesmo em condições difíceis.',
+        'sobreviver e se adaptar, mesmo em condições difíceis',
   ),
   Rune(
     name: 'Perthro',
@@ -139,7 +139,7 @@ const List<Rune> runesPt = [
         'Perthro é o copo de dados - representa mistério, destino e o '
         'desconhecido. Simboliza segredos, coisas ocultas e o elemento '
         'de chance na vida. Sugere que há forças em jogo além do que você '
-        'pode ver ou controlar.',
+        'pode ver ou controlar',
   ),
   Rune(
     name: 'Algiz',
@@ -148,7 +148,7 @@ const List<Rune> runesPt = [
     description: 'Algiz representa proteção divina e conexão espiritual. '
         'Simboliza a mão erguida em proteção ou os chifres do alce. '
         'Sugere que você está protegido, ou que deve buscar orientação '
-        'espiritual e confiar em sua intuição.',
+        'espiritual e confiar em sua intuição',
   ),
   Rune(
     name: 'Sowilo',
@@ -156,7 +156,7 @@ const List<Rune> runesPt = [
     keywords: ['Sucesso', 'Vitalidade', 'Iluminação'],
     description: 'Sowilo é o sol - fonte de vida e energia. Representa sucesso, '
         'vitalidade, clareza e iluminação. É uma runa extremamente positiva '
-        'que indica vitória, realização e energia solar radiante.',
+        'que indica vitória, realização e energia solar radiante',
   ),
   Rune(
     name: 'Tiwaz',
@@ -166,7 +166,7 @@ const List<Rune> runesPt = [
         'Tiwaz está ligada ao deus Tyr e representa justiça, honra e '
         'liderança. Simboliza sacrifício por um bem maior e a vitória '
         'através da integridade. Sugere que você deve agir com honra '
-        'e liderar pelo exemplo.',
+        'e liderar pelo exemplo',
   ),
   Rune(
     name: 'Berkano',
@@ -175,7 +175,7 @@ const List<Rune> runesPt = [
     description: 'Berkano é a bétula - árvore do renascimento e fertilidade. '
         'Representa novos começos, crescimento, cuidado e nutrição. '
         'Simboliza processos de crescimento gradual, tanto físicos quanto '
-        'espirituais.',
+        'espirituais',
   ),
   Rune(
     name: 'Ehwaz',
@@ -185,7 +185,7 @@ const List<Rune> runesPt = [
         'Ehwaz representa o cavalo - símbolo de parceria e confiança. '
         'Simboliza a relação entre cavalo e cavaleiro, sugerindo cooperação, '
         'lealdade e movimento conjunto. Indica parcerias harmoniosas e '
-        'progresso através da colaboração.',
+        'progresso através da colaboração',
   ),
   Rune(
     name: 'Mannaz',
@@ -195,7 +195,7 @@ const List<Rune> runesPt = [
         'Mannaz representa a humanidade e a autoconsciência. Simboliza '
         'a mente humana, a sociedade e nossa conexão uns com os outros. '
         'Sugere reflexão sobre seu papel na comunidade e desenvolvimento '
-        'da consciência.',
+        'da consciência',
   ),
   Rune(
     name: 'Laguz',
@@ -205,7 +205,7 @@ const List<Rune> runesPt = [
         'Laguz é a água - fonte da vida e do inconsciente. Representa '
         'intuição, emoções e o fluxo natural da vida. Sugere que você '
         'deve confiar em seus instintos e seguir o fluxo, adaptando-se '
-        'às circunstâncias.',
+        'às circunstâncias',
   ),
   Rune(
     name: 'Ingwaz',
@@ -215,7 +215,7 @@ const List<Rune> runesPt = [
         'Ingwaz está ligada ao deus Ing e representa fertilidade e potencial. '
         'Simboliza períodos de gestação - quando algo está se desenvolvendo '
         'internamente antes de se manifestar. Sugere que é um tempo de '
-        'preparação e cultivo.',
+        'preparação e cultivo',
   ),
   Rune(
     name: 'Dagaz',
@@ -225,7 +225,7 @@ const List<Rune> runesPt = [
         'Dagaz é o dia - o amanhecer após a noite. Representa transformação, '
         'despertar e novos começos. Simboliza o momento de clareza quando '
         'tudo se ilumina. Indica um ponto de virada importante ou '
-        'uma revelação transformadora.',
+        'uma revelação transformadora',
   ),
   Rune(
     name: 'Othala',
@@ -234,6 +234,6 @@ const List<Rune> runesPt = [
     description: 'Othala representa herança ancestral, lar e propriedade. '
         'Simboliza raízes, tradições familiares e legados. Sugere conexão '
         'com suas raízes, questões de lar e família, ou recebimento de '
-        'uma herança (material ou espiritual).',
+        'uma herança (material ou espiritual)',
   ),
 ];

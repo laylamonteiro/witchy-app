@@ -12,9 +12,9 @@ const ElementsContent elementsContentEn = ElementsContent(
   introBody:
       'In Wicca and traditional witchcraft, the four elements - Earth, Water, Fire, and Air - '
       'are fundamental forces of nature and existence. They are not merely physical substances, '
-      'but primordial energies that compose all of creation.',
+      'but primordial energies that compose all of creation',
   introHint:
-      'Explore each element below to understand its qualities, correspondences, and how to work with it.',
+      'Explore each element below to understand its qualities, correspondences, and how to work with it',
   essenceLabel: 'Essence',
   qualitiesLabel: 'Qualities',
   directionLabel: 'Cardinal Direction',
@@ -31,7 +31,7 @@ const ElementsContent elementsContentEn = ElementsContent(
       essence:
           'Earth represents stability, solidity, growth, and physical manifestation. '
           'It is the element of matter, of the body, of material abundance, and of connection with the natural world. '
-          'Earth is where ideas become reality.',
+          'Earth is where ideas become reality',
       qualities:
           'Stable, fertile, nurturing, reliable, practical, patient, rooted',
       direction: 'North',
@@ -60,7 +60,7 @@ const ElementsContent elementsContentEn = ElementsContent(
       essence:
           'Water represents emotions, intuition, healing, and purification. '
           'It is the element of deep feelings, of the subconscious, of dreams and the psyche. '
-          'Water flows, adapts, and reflects the inner truth.',
+          'Water flows, adapts, and reflects the inner truth',
       qualities:
           'Fluid, adaptable, emotional, intuitive, healing, purifying, reflective',
       direction: 'West',
@@ -89,7 +89,7 @@ const ElementsContent elementsContentEn = ElementsContent(
       essence:
           'Fire represents transformation, passion, will, and personal power. '
           'It is the element of vital energy, of courage, of creativity and action. '
-          'Fire consumes, transforms, and illuminates.',
+          'Fire consumes, transforms, and illuminates',
       qualities:
           'Dynamic, transformative, purifying, passionate, courageous, energetic, creative',
       direction: 'South',
@@ -118,7 +118,7 @@ const ElementsContent elementsContentEn = ElementsContent(
       essence:
           'Air represents intellect, communication, thought, and inspiration. '
           'It is the element of the mind, of ideas, of wisdom and knowledge. '
-          'Air carries messages, disperses, and renews.',
+          'Air carries messages, disperses, and renews',
       qualities:
           'Light, mobile, communicative, intellectual, inspiring, free, renewing',
       direction: 'East',
@@ -165,26 +165,26 @@ const ElementsContent elementsContentEn = ElementsContent(
     ElementPractice(
       'Elemental Meditation',
       'Sit with an object representing each element and meditate on its qualities. '
-          'Feel the energy of the element flowing through you.',
+          'Feel the energy of the element flowing through you',
     ),
     ElementPractice(
       'Magic Circle',
       'When casting a circle, invoke each element in its cardinal direction. '
-          'This creates a balanced and protected sacred space.',
+          'This creates a balanced and protected sacred space',
     ),
     ElementPractice(
       'Elemental Altar',
-      'Keep representations of the four elements on your altar to maintain energetic balance.',
+      'Keep representations of the four elements on your altar to maintain energetic balance',
     ),
     ElementPractice(
       'Specific Spells',
       'Work with the element corresponding to your intention: '
-          'Earth for prosperity, Water for love, Fire for courage, Air for wisdom.',
+          'Earth for prosperity, Water for love, Fire for courage, Air for wisdom',
     ),
     ElementPractice(
       'Daily Connection',
       'Spend time in nature connecting with the elements: '
-          'walk barefoot (Earth), take a ritual bath (Water), light candles (Fire), practice breathing (Air).',
+          'walk barefoot (Earth), take a ritual bath (Water), light candles (Fire), practice breathing (Air)',
     ),
   ],
   honoringTitle: 'Honoring the Elements',
@@ -193,5 +193,5 @@ const ElementsContent elementsContentEn = ElementsContent(
       'When working with the elements, we are connecting with the very foundations of the universe. '
       '\n\nRespect each element, learn its lessons, and allow its energies to guide and strengthen your practice. '
       'In time, you will develop a deep relationship with each element, recognizing its presence '
-      'both in the outer world and within yourself.',
+      'both in the outer world and within yourself',
 );

@@ -8,7 +8,7 @@ const PersonalizedSuggestionsContent personalizedSuggestionsContentEn =
     'premiumUnlockSubtitle': 'Unlock full personalized suggestions',
     'chartNeededTitle': 'Birth Chart Required',
     'chartNeededBody':
-        'To receive personalized suggestions based on the astrological transits, you need to create your birth chart first.',
+        'To receive personalized suggestions based on the astrological transits, you need to create your birth chart first',
     'fillChartButton': 'Fill In Birth Chart',
     'today': 'Today',
     'infoBanner':
@@ -24,10 +24,10 @@ const PersonalizedSuggestionsContent personalizedSuggestionsContentEn =
     'relevantAspectsLabel': 'Relevant Aspects:',
     'noSuggestionsTitle': 'No Special Suggestions',
     'noSuggestionsBody':
-        'There are no significant transits affecting your natal chart on this day. Keep up your regular practices.',
+        'There are no significant transits affecting your natal chart on this day. Keep up your regular practices',
     'errorLoadChart':
-        'Error loading birth chart. Please create your birth chart first.',
-    'errorGenerate': 'Error generating suggestions. Please try again later.',
+        'Error loading birth chart. Please create your birth chart first',
+    'errorGenerate': 'Error generating suggestions. Please try again later',
   },
   retrogradeInfo: {
     Planet.mercury: RetrogradePlanetInfo(

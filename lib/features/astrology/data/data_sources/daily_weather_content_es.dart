@@ -22,7 +22,7 @@ const List<String> dailyWeatherFallbackHeadingsEs = [
 
 /// Frase-placeholder mostrada desenfocada en lugar del cuerpo Premium.
 const String dailyWeatherPremiumPlaceholderEs =
-    'Las influencias del día revelan orientaciones y prácticas mágicas personalizadas para este momento.';
+    'Las influencias del día revelan orientaciones y prácticas mágicas personalizadas para este momento';
 
 // Nombres localizados — los getters de los enums (`displayName`) devuelven
 // texto en portugués, así que la plantilla en español resuelve los nombres
@@ -61,11 +61,11 @@ String dailyWeatherFallbackTextEs(DailyMagicalWeather weather) {
       .where((a) => a.energyLevel == EnergyLevel.challenging)
       .take(2)
       .map((a) =>
-          '- ${a.description}: actúa con calma y evita reaccionar por impulso.')
+          '- ${a.description}: actúa con calma y evita reaccionar por impulso')
       .toList();
   final cuidados = desafios.isNotEmpty
       ? desafios.join('\n')
-      : '- Sin tensiones marcadas hoy. Aun así, evita decisiones apresuradas y reserva un momento de pausa para centrarte.';
+      : '- Sin tensiones marcadas hoy. Aun así, evita decisiones apresuradas y reserva un momento de pausa para centrarte';
 
   return '''## Energía del Día
 

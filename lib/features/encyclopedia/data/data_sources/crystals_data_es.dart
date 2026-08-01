@@ -10,7 +10,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Ágata',
     description:
-        'Piedra de equilibrio, armonía y protección suave. Estabiliza las energías y calma.',
+        'Piedra de equilibrio, armonía y protección suave. Estabiliza las energías y calma',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/agata.jpg',
     intentions: [
@@ -56,7 +56,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Amatista',
     description:
-        'Piedra de la espiritualidad y la protección. Calma la mente y favorece la claridad mental.',
+        'Piedra de la espiritualidad y la protección. Calma la mente y favorece la claridad mental',
     element: Element.air,
     imageUrl: 'assets/images/crystals/ametista.jpg',
     intentions: [
@@ -108,7 +108,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Citrino',
     description:
-        'Piedra de la prosperidad y la abundancia. Atrae éxito, alegría y energía positiva.',
+        'Piedra de la prosperidad y la abundancia. Atrae éxito, alegría y energía positiva',
     element: Element.fire,
     imageUrl: 'assets/images/crystals/citrino.jpg',
     intentions: [
@@ -162,7 +162,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Cornalina',
     description:
-        'Piedra de la creatividad, el coraje y la vitalidad. Estimula la motivación y la confianza.',
+        'Piedra de la creatividad, el coraje y la vitalidad. Estimula la motivación y la confianza',
     element: Element.fire,
     imageUrl: 'assets/images/crystals/cornalina.jpg',
     intentions: [
@@ -208,7 +208,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Fluorita',
     description:
-        'Piedra del enfoque, el aprendizaje y la organización mental. Excelente para los estudios.',
+        'Piedra del enfoque, el aprendizaje y la organización mental. Excelente para los estudios',
     element: Element.air,
     imageUrl: 'assets/images/crystals/fluorita.jpg',
     intentions: [
@@ -258,7 +258,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Howlita',
     description:
-        'Piedra calmante de la paciencia y la consciencia. Excelente para el insomnio y la ansiedad.',
+        'Piedra calmante de la paciencia y la consciencia. Excelente para el insomnio y la ansiedad',
     element: Element.air,
     imageUrl: 'assets/images/crystals/howlita.jpg',
     intentions: [
@@ -304,7 +304,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Jaspe Rojo',
     description:
-        'Piedra de enraizamiento, fuerza y estabilidad. Conecta con la energía de la Tierra.',
+        'Piedra de enraizamiento, fuerza y estabilidad. Conecta con la energía de la Tierra',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/jaspe_vermelho.jpg',
     intentions: [
@@ -350,7 +350,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Labradorita',
     description:
-        'Piedra mística de la transformación y la magia. Protege contra energías negativas y agudiza la intuición.',
+        'Piedra mística de la transformación y la magia. Protege contra energías negativas y agudiza la intuición',
     element: Element.air,
     imageUrl: 'assets/images/crystals/labradorita.jpg',
     intentions: [
@@ -396,7 +396,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Lapislázuli',
     description:
-        'Piedra de la sabiduría, la verdad y la visión espiritual. Abre el tercer ojo.',
+        'Piedra de la sabiduría, la verdad y la visión espiritual. Abre el tercer ojo',
     element: Element.air,
     imageUrl: 'assets/images/crystals/lapis_lazuli.jpg',
     intentions: [
@@ -446,7 +446,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Obsidiana Negra',
     description:
-        'Poderosa piedra de protección y enraizamiento. Absorbe y transforma las energías negativas.',
+        'Poderosa piedra de protección y enraizamiento. Absorbe y transforma las energías negativas',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/obsidiana_negra.jpg',
     intentions: [
@@ -495,7 +495,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Ojo de Tigre',
     description:
-        'Piedra del coraje, la protección y la prosperidad. Fortalece la confianza y trae buena suerte.',
+        'Piedra del coraje, la protección y la prosperidad. Fortalece la confianza y trae buena suerte',
     element: Element.fire,
     imageUrl: 'assets/images/crystals/olho_de_tigre.jpg',
     intentions: [
@@ -541,7 +541,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Piedra Luna',
     description:
-        'Piedra sagrada de la luna y lo femenino. Conecta con los ciclos lunares y la intuición.',
+        'Piedra sagrada de la luna y lo femenino. Conecta con los ciclos lunares y la intuición',
     element: Element.water,
     imageUrl: 'assets/images/crystals/pedra_da_lua.jpg',
     intentions: [
@@ -589,7 +589,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Pirita',
     description:
-        'Piedra de la prosperidad y la manifestación. Atrae la abundancia y protege contra la negatividad.',
+        'Piedra de la prosperidad y la manifestación. Atrae la abundancia y protege contra la negatividad',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/pirita.jpg',
     intentions: [
@@ -639,7 +639,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Cuarzo Rosa',
     description:
-        'Piedra del amor propio y el amor incondicional. Favorece la paz interior y la sanación emocional.',
+        'Piedra del amor propio y el amor incondicional. Favorece la paz interior y la sanación emocional',
     element: Element.water,
     imageUrl: 'assets/images/crystals/quartzo_rosa.jpg',
     intentions: [
@@ -696,7 +696,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Cuarzo Transparente',
     description:
-        'Maestro sanador y amplificador. Puede programarse para cualquier intención.',
+        'Maestro sanador y amplificador. Puede programarse para cualquier intención',
     element: Element.spirit,
     imageUrl: 'assets/images/crystals/quartzo_transparente.jpg',
     intentions: [
@@ -750,7 +750,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Selenita',
     description:
-        'Piedra de la paz y la purificación. Se limpia sola, no necesita limpieza frecuente.',
+        'Piedra de la paz y la purificación. Se limpia sola, no necesita limpieza frecuente',
     element: Element.air,
     imageUrl: 'assets/images/crystals/selenita.jpg',
     intentions: [
@@ -805,7 +805,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Sodalita',
     description:
-        'Piedra de la lógica, la verdad y la comunicación. Estimula el pensamiento racional y la intuición.',
+        'Piedra de la lógica, la verdad y la comunicación. Estimula el pensamiento racional y la intuición',
     element: Element.air,
     imageUrl: 'assets/images/crystals/sodalita.jpg',
     intentions: [
@@ -851,7 +851,7 @@ final List<CrystalModel> crystalsEs = [
   const CrystalModel(
     name: 'Turmalina Negra',
     description:
-        'Poderosa piedra de protección y enraizamiento. Bloquea las energías negativas.',
+        'Poderosa piedra de protección y enraizamiento. Bloquea las energías negativas',
     element: Element.earth,
     imageUrl: 'assets/images/crystals/turmalina_negra.jpg',
     intentions: [

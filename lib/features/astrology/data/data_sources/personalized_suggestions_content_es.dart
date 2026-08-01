@@ -8,7 +8,7 @@ const PersonalizedSuggestionsContent personalizedSuggestionsContentEs =
     'premiumUnlockSubtitle': 'Desbloquea sugerencias personalizadas completas',
     'chartNeededTitle': 'Carta Natal Necesaria',
     'chartNeededBody':
-        'Para recibir sugerencias personalizadas basadas en los tránsitos astrológicos, primero necesitas crear tu carta natal.',
+        'Para recibir sugerencias personalizadas basadas en los tránsitos astrológicos, primero necesitas crear tu carta natal',
     'fillChartButton': 'Completar Carta Natal',
     'today': 'Hoy',
     'infoBanner':
@@ -24,11 +24,11 @@ const PersonalizedSuggestionsContent personalizedSuggestionsContentEs =
     'relevantAspectsLabel': 'Aspectos Relevantes:',
     'noSuggestionsTitle': 'Sin Sugerencias Especiales',
     'noSuggestionsBody':
-        'No hay tránsitos significativos afectando tu carta natal en este día. Continúa con tus prácticas habituales.',
+        'No hay tránsitos significativos afectando tu carta natal en este día. Continúa con tus prácticas habituales',
     'errorLoadChart':
-        'Error al cargar la carta natal. Por favor, crea primero tu carta natal.',
+        'Error al cargar la carta natal. Por favor, crea primero tu carta natal',
     'errorGenerate':
-        'Error al generar sugerencias. Inténtalo de nuevo más tarde.',
+        'Error al generar sugerencias. Inténtalo de nuevo más tarde',
   },
   retrogradeInfo: {
     Planet.mercury: RetrogradePlanetInfo(

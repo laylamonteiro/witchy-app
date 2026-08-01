@@ -12,7 +12,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Soberanía sobre el propio poder y el saber prohibido',
     origin: 'Universal — del folclore europeo a las curanderas de las Américas',
     history:
-        'De la sanadora de la aldea a la perseguida de las hogueras, la Bruja atravesó siglos como símbolo del poder femenino fuera del control institucional. En el siglo XX fue resignificada por los movimientos de brujería moderna como emblema de autonomía espiritual.',
+        'De la sanadora de la aldea a la perseguida de las hogueras, la Bruja atravesó siglos como símbolo del poder femenino fuera del control institucional. En el siglo XX fue resignificada por los movimientos de brujería moderna como emblema de autonomía espiritual',
     characteristics: [
       'Autosuficiencia e intimidad con la naturaleza',
       'Conocimiento de las hierbas, los ciclos y los misterios',
@@ -34,7 +34,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Meditación-espejo para integrar las partes rechazadas',
     ],
     cautions:
-        'Los arquetipos son espejos simbólicos, no identidades fijas — úsalos como herramienta de reflexión.',
+        'Los arquetipos son espejos simbólicos, no identidades fijas — úsalos como herramienta de reflexión',
     related: ['La Sabia', 'La Curandera', 'Hécate (Diosas)'],
   ),
   ArcaneEntry(
@@ -43,7 +43,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'El don de cuidar, restaurar y devolver el equilibrio',
     origin: 'Universal — chamanas, curanderas, parteras y herbolarias',
     history:
-        'Presente en todas las culturas, la Curandera guarda el conocimiento práctico de la sanación: plantas, toques, palabras y rezos. Curanderas y parteras mantuvieron viva esa estirpe incluso bajo persecución, transmitiendo el oficio de madre a hija.',
+        'Presente en todas las culturas, la Curandera guarda el conocimiento práctico de la sanación: plantas, toques, palabras y rezos. Curanderas y parteras mantuvieron viva esa estirpe incluso bajo persecución, transmitiendo el oficio de madre a hija',
     characteristics: [
       'Empatía profunda y una presencia que calma',
       'Conocimiento de remedios naturales y rituales de limpieza',
@@ -64,7 +64,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Rituales de sanación a distancia y bendiciones',
     ],
     cautions:
-        'Cuidar de los demás no sustituye cuidar de ti; la Curandera en sombra se agota en nombre del prójimo. Las prácticas energéticas no sustituyen la medicina.',
+        'Cuidar de los demás no sustituye cuidar de ti; la Curandera en sombra se agota en nombre del prójimo. Las prácticas energéticas no sustituyen la medicina',
     related: ['Hierbas (Enciclopedia)', 'La Madre', 'Brigid (Diosas)'],
   ),
   ArcaneEntry(
@@ -73,7 +73,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Ver más allá del velo: intuición, oráculos y profecía',
     origin: 'El Oráculo de Delfos, las sibilas romanas, las videntes del folclore',
     history:
-        'De las pitonisas griegas a las cartománticas de feria, la Vidente encarna la capacidad humana de leer señales y presentir. Siempre reverenciada y temida, su don desafía la lógica lineal del tiempo.',
+        'De las pitonisas griegas a las cartománticas de feria, la Vidente encarna la capacidad humana de leer señales y presentir. Siempre reverenciada y temida, su don desafía la lógica lineal del tiempo',
     characteristics: [
       'Intuición aguda y sueños significativos',
       'Comodidad con símbolos, presagios y ambigüedad',
@@ -94,7 +94,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Meditaciones para abrir la intuición',
     ],
     cautions:
-        'La intuición se educa con discernimiento: no todo presentimiento es profecía. Evita decisiones importantes basadas solo en señales.',
+        'La intuición se educa con discernimiento: no todo presentimiento es profecía. Evita decisiones importantes basadas solo en señales',
     related: ['Cartas del Oráculo', 'Runas', 'Péndulo', 'Sueños & Visiones'],
   ),
   ArcaneEntry(
@@ -103,7 +103,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Protección de los umbrales, las personas y los espacios sagrados',
     origin: 'Guardianas de templos, hogares y encrucijadas en todas las culturas',
     history:
-        'De los leones de piedra en los portales a los círculos de sal de la brujería, la Guardiana vigila fronteras: lo que entra, lo que sale, lo que no pasa. Es la fuerza que dice "hasta aquí" con amor y firmeza.',
+        'De los leones de piedra en los portales a los círculos de sal de la brujería, la Guardiana vigila fronteras: lo que entra, lo que sale, lo que no pasa. Es la fuerza que dice "hasta aquí" con amor y firmeza',
     characteristics: [
       'Sentido agudo de los límites y la justicia',
       'Lealtad y protección hacia los suyos',
@@ -124,7 +124,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Consagración de amuletos y talismanes',
     ],
     cautions:
-        'La protección en exceso se vuelve muralla: revisa si tus límites guardan o aíslan.',
+        'La protección en exceso se vuelve muralla: revisa si tus límites guardan o aíslan',
     related: ['Protección & Limpieza (Grimorio)', 'Símbolos Sagrados'],
   ),
   ArcaneEntry(
@@ -133,7 +133,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'La anciana interior: experiencia transformada en sabiduría',
     origin: 'La crone de los cuentos, abuelas y maestras de todas las tradiciones',
     history:
-        'Tercer rostro de la Diosa Triple, la Anciana guarda la sabiduría de los ciclos completos. En culturas ancestrales, las mayores eran consejeras de la comunidad; en los cuentos, es la vieja del bosque que pone a prueba y regala.',
+        'Tercer rostro de la Diosa Triple, la Anciana guarda la sabiduría de los ciclos completos. En culturas ancestrales, las mayores eran consejeras de la comunidad; en los cuentos, es la vieja del bosque que pone a prueba y regala',
     characteristics: [
       'Desapego de las apariencias y del juicio ajeno',
       'Visión a largo plazo y humor afilado',
@@ -154,7 +154,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Consejo interior en meditaciones profundas',
     ],
     cautions:
-        'La sombra de la Sabia es el cinismo: la sabiduría sin ternura endurece.',
+        'La sombra de la Sabia es el cinismo: la sabiduría sin ternura endurece',
     related: ['La Bruja', 'Hécate (Diosas)', 'Fases de la Luna'],
   ),
   ArcaneEntry(
@@ -163,7 +163,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Comienzos, frescura y la valentía del primer paso',
     origin: 'Primer rostro de la Diosa Triple; Perséfone antes del rapto',
     history:
-        'La Doncella es la primavera del ciclo: curiosidad, potencial e independencia juvenil. En los mitos, suele ser la que parte, explora e inaugura — la energía de todo lo que aún va a florecer.',
+        'La Doncella es la primavera del ciclo: curiosidad, potencial e independencia juvenil. En los mitos, suele ser la que parte, explora e inaugura — la energía de todo lo que aún va a florecer',
     characteristics: [
       'Entusiasmo, apertura y fe en lo posible',
       'Independencia y deseo de explorar',
@@ -184,7 +184,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Hechizos de inspiración y frescura creativa',
     ],
     cautions:
-        'La sombra de la Doncella es la eterna promesa que nunca madura: comenzar también pide continuar.',
+        'La sombra de la Doncella es la eterna promesa que nunca madura: comenzar también pide continuar',
     related: ['La Madre', 'La Sabia', 'Luna Creciente'],
   ),
   ArcaneEntry(
@@ -193,7 +193,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Nutrición, creación y la fuerza que hace crecer',
     origin: 'Diosas madre neolíticas, Deméter, Yemanjá, la Diosa Triple',
     history:
-        'Rostro central de la Diosa Triple, la Madre es la plenitud de la luna llena: gestar, parir y sostener — hijos, proyectos, comunidades. Las diosas madre están entre las figuras más antiguas de lo sagrado humano.',
+        'Rostro central de la Diosa Triple, la Madre es la plenitud de la luna llena: gestar, parir y sostener — hijos, proyectos, comunidades. Las diosas madre están entre las figuras más antiguas de lo sagrado humano',
     characteristics: [
       'Generosidad, abundancia y presencia',
       'Fertilidad en sentido amplio: hacer crecer',
@@ -214,7 +214,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Bendiciones de proyectos en crecimiento',
     ],
     cautions:
-        'La sombra de la Madre es el control disfrazado de cuidado y el olvido de sí misma.',
+        'La sombra de la Madre es el control disfrazado de cuidado y el olvido de sí misma',
     related: ['La Doncella', 'La Curandera', 'Luna Llena'],
   ),
   ArcaneEntry(
@@ -223,7 +223,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Enfoque, independencia y la flecha que no se desvía',
     origin: 'Artemisa/Diana y las señoras de la caza del folclore europeo',
     history:
-        'Señora de los bosques y protectora de los animales salvajes, la Cazadora corre libre fuera de los muros de la ciudad. Diana se convirtió, en la tradición de la brujería italiana y en la Wicca, en uno de los rostros centrales de la Diosa.',
+        'Señora de los bosques y protectora de los animales salvajes, la Cazadora corre libre fuera de los muros de la ciudad. Diana se convirtió, en la tradición de la brujería italiana y en la Wicca, en uno de los rostros centrales de la Diosa',
     characteristics: [
       'Enfoque absoluto en el objetivo elegido',
       'Autosuficiencia y amor por la libertad',
@@ -244,7 +244,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Rituales de reconexión con la naturaleza salvaje',
     ],
     cautions:
-        'La sombra de la Cazadora es la soledad orgullosa: pedir ayuda también es puntería.',
+        'La sombra de la Cazadora es la soledad orgullosa: pedir ayuda también es puntería',
     related: ['La Guardiana', 'Diana (Diosas)', 'Prosperidad & Caminos'],
   ),
   ArcaneEntry(
@@ -253,7 +253,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Destino, paciencia y el arte de entrelazar los hilos de la vida',
     origin: 'Las Moiras griegas, las Nornas nórdicas, la Abuela Araña de los pueblos originarios',
     history:
-        'En muchos mitos, el destino se teje: las Moiras hilan, miden y cortan; las Nornas riegan el árbol del mundo. La Tejedora recuerda que cada elección es un hilo — y que los patrones pueden rehacerse.',
+        'En muchos mitos, el destino se teje: las Moiras hilan, miden y cortan; las Nornas riegan el árbol del mundo. La Tejedora recuerda que cada elección es un hilo — y que los patrones pueden rehacerse',
     characteristics: [
       'Visión de patrones y conexiones invisibles',
       'La paciencia de quien construye punto a punto',
@@ -274,7 +274,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Rituales de reescritura de patrones en la menguante',
     ],
     cautions:
-        'No todo hilo es tuyo para tejer: respeta el libre albedrío ajeno.',
+        'No todo hilo es tuyo para tejer: respeta el libre albedrío ajeno',
     related: ['Sigilos', 'Sueños & Visiones', 'La Sabia'],
   ),
   ArcaneEntry(
@@ -283,7 +283,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Transmutar: transformar el plomo interior en oro',
     origin: 'Alquimia grecoegipcia, árabe y europea medieval',
     history:
-        'Más que precursores de la química, los alquimistas buscaban la transformación de la propia alma — el solve et coagula: disolver lo que se endureció y recomponerlo en forma más noble. Jung releyó la alquimia como mapa de la individuación.',
+        'Más que precursores de la química, los alquimistas buscaban la transformación de la propia alma — el solve et coagula: disolver lo que se endureció y recomponerlo en forma más noble. Jung releyó la alquimia como mapa de la individuación',
     characteristics: [
       'Fascinación por los procesos de transformación',
       'Disciplina experimental: probar, observar, refinar',
@@ -304,7 +304,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Trabajo con el caldero como athanor simbólico',
     ],
     cautions:
-        'La transformación real es lenta: desconfía del oro instantáneo.',
+        'La transformación real es lenta: desconfía del oro instantáneo',
     related: ['La Bruja', 'Metales (Enciclopedia)', 'Energía & Sanación'],
   ),
   ArcaneEntry(
@@ -313,7 +313,7 @@ const List<ArcaneEntry> archetypesEs = [
     summary: 'Soberanía sobre la propia sombra y los territorios profundos',
     origin: 'Perséfone en el inframundo, la Hel nórdica, la madrastra de los cuentos',
     history:
-        'Toda psique tiene sótanos. La Reina Sombría gobierna lo que fue exiliado: rabia, envidia, deseo, duelo. En los mitos, descender al inframundo — como Inanna o Perséfone — es el camino para reinar entera.',
+        'Toda psique tiene sótanos. La Reina Sombría gobierna lo que fue exiliado: rabia, envidia, deseo, duelo. En los mitos, descender al inframundo — como Inanna o Perséfone — es el camino para reinar entera',
     characteristics: [
       'Honestidad radical consigo misma',
       'Capacidad de sostener emociones difíciles sin huir',
@@ -334,7 +334,7 @@ const List<ArcaneEntry> archetypesEs = [
       'Destierros conscientes de lo que ya fue comprendido',
     ],
     cautions:
-        'El trabajo de sombra remueve material sensible: ve a tu ritmo y busca apoyo profesional cuando el dolor sea grande.',
+        'El trabajo de sombra remueve material sensible: ve a tu ritmo y busca apoyo profesional cuando el dolor sea grande',
     related: ['La Sabia', 'Hécate (Diosas)', 'Luna Nueva'],
   ),
 ];

@@ -13,7 +13,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'É hora de colher o que plantou',
     emoji: '🌕',
     guidance: 'A Lua Cheia ilumina sua jornada e traz à tona tudo que estava oculto. '
-        'Este é um momento de culminação e realização. Seus esforços estão dando frutos.',
+        'Este é um momento de culminação e realização. Seus esforços estão dando frutos',
     keywords: ['realização', 'iluminação', 'culminação'],
   ),
   OracleCard(
@@ -22,7 +22,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Novos começos aguardam',
     emoji: '🌑',
     guidance: 'A Lua Nova representa um portal para novos começos. '
-        'Plante suas intenções agora e veja-as crescer. Este é o momento perfeito para iniciar.',
+        'Plante suas intenções agora e veja-as crescer. Este é o momento perfeito para iniciar',
     keywords: ['novos começos', 'intenção', 'plantio'],
   ),
   OracleCard(
@@ -31,7 +31,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Transformação está em processo',
     emoji: '🪄',
     guidance: 'Dentro do caldeirão, elementos se misturam e se transformam. '
-        'Você está no meio de uma transformação profunda. Confie no processo.',
+        'Você está no meio de uma transformação profunda. Confie no processo',
     keywords: ['transformação', 'alquimia', 'mudança'],
   ),
   OracleCard(
@@ -40,7 +40,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Limpe o que não serve mais',
     emoji: '🧹',
     guidance: 'A vassoura varre energias estagnadas. É hora de uma limpeza profunda '
-        'em sua vida. Libere o velho para dar espaço ao novo.',
+        'em sua vida. Libere o velho para dar espaço ao novo',
     keywords: ['limpeza', 'liberação', 'renovação'],
   ),
   OracleCard(
@@ -49,7 +49,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Conhecimento ancestral está disponível',
     emoji: '📖',
     guidance: 'O grimório guarda sabedoria antiga. Estude, aprenda e conecte-se '
-        'com os ensinamentos dos antigos. O conhecimento é poder.',
+        'com os ensinamentos dos antigos. O conhecimento é poder',
     keywords: ['sabedoria', 'estudo', 'ancestralidade'],
   ),
   OracleCard(
@@ -58,7 +58,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Sua luz interior brilha forte',
     emoji: '🕯️',
     guidance: 'A chama da vela nunca vacila. Sua luz interior é poderosa e constante. '
-        'Confie em sua própria sabedoria e intuição.',
+        'Confie em sua própria sabedoria e intuição',
     keywords: ['luz interior', 'fé', 'clareza'],
   ),
   OracleCard(
@@ -67,7 +67,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Clareza e cura chegam',
     emoji: '💎',
     guidance: 'Cristais amplificam energia e trazem cura. Você está entrando em um '
-        'período de maior clareza e bem-estar. Permita-se curar.',
+        'período de maior clareza e bem-estar. Permita-se curar',
     keywords: ['cura', 'clareza', 'amplificação'],
   ),
   OracleCard(
@@ -76,7 +76,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Proteção divina está com você',
     emoji: '⭐',
     guidance: 'O pentagrama é um símbolo de proteção. Você está seguro e protegido '
-        'pelas forças divinas. Nada de mal pode alcançá-lo.',
+        'pelas forças divinas. Nada de mal pode alcançá-lo',
     keywords: ['proteção', 'segurança', 'divino'],
   ),
   OracleCard(
@@ -85,7 +85,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Corte o que não serve',
     emoji: '🗡️',
     guidance: 'O athame corta com precisão. É hora de tomar decisões firmes e '
-        'eliminar o que não ressoa mais com você.',
+        'eliminar o que não ressoa mais com você',
     keywords: ['decisão', 'corte', 'firmeza'],
   ),
   OracleCard(
@@ -94,7 +94,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Receba as bênçãos oferecidas',
     emoji: '🏆',
     guidance: 'O cálice está cheio de bênçãos esperando para serem recebidas. '
-        'Abra-se para receber amor, abundância e alegria.',
+        'Abra-se para receber amor, abundância e alegria',
     keywords: ['receber', 'bênçãos', 'abundância'],
   ),
   OracleCard(
@@ -103,7 +103,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Paixão e ação são necessárias',
     emoji: '🔥',
     guidance: 'O fogo queima, transforma e ilumina. É hora de agir com paixão '
-        'e determinação. Deixe seu fogo interior guiar você.',
+        'e determinação. Deixe seu fogo interior guiar você',
     keywords: ['paixão', 'ação', 'transformação'],
   ),
   OracleCard(
@@ -112,7 +112,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Estabilidade e manifestação',
     emoji: '🌍',
     guidance: 'A Terra oferece fundação sólida. Suas intenções estão se manifestando '
-        'no plano físico. Continue firme em seu caminho.',
+        'no plano físico. Continue firme em seu caminho',
     keywords: ['estabilidade', 'manifestação', 'aterramento'],
   ),
   OracleCard(
@@ -121,7 +121,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Novos pensamentos e ideias fluem',
     emoji: '💨',
     guidance: 'O Ar traz clareza mental e novas perspectivas. Abra sua mente para '
-        'novas ideias e formas de pensar.',
+        'novas ideias e formas de pensar',
     keywords: ['clareza mental', 'ideias', 'comunicação'],
   ),
   OracleCard(
@@ -130,7 +130,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Flua com suas emoções',
     emoji: '💧',
     guidance: 'A Água nos ensina a fluir. Permita-se sentir profundamente e '
-        'siga o fluxo de suas emoções com confiança.',
+        'siga o fluxo de suas emoções com confiança',
     keywords: ['emoções', 'intuição', 'fluidez'],
   ),
   OracleCard(
@@ -139,7 +139,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Sabedoria oculta se revela',
     emoji: '🦉',
     guidance: 'A Coruja vê através da escuridão. Segredos e sabedoria oculta '
-        'estão sendo revelados para você. Preste atenção.',
+        'estão sendo revelados para você. Preste atenção',
     keywords: ['sabedoria', 'revelação', 'visão'],
   ),
   OracleCard(
@@ -148,7 +148,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Magia está ao seu redor',
     emoji: '🐈‍⬛',
     guidance: 'O Gato Preto caminha entre mundos. Você está cercado de magia '
-        'e sincronicidades. Reconheça os sinais.',
+        'e sincronicidades. Reconheça os sinais',
     keywords: ['magia', 'mistério', 'sincronicidade'],
   ),
   OracleCard(
@@ -157,7 +157,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Renascimento e cura profunda',
     emoji: '🐍',
     guidance: 'A Serpente troca de pele e renasce. Você está passando por uma '
-        'transformação profunda. Deixe o velho morrer para renascer.',
+        'transformação profunda. Deixe o velho morrer para renascer',
     keywords: ['renascimento', 'cura', 'transformação'],
   ),
   OracleCard(
@@ -166,7 +166,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Você é a criadora de sua teia',
     emoji: '🕷️',
     guidance: 'A Aranha tece pacientemente sua teia. Você está criando sua própria '
-        'realidade. Tece com intenção e cuidado.',
+        'realidade. Tece com intenção e cuidado',
     keywords: ['criação', 'paciência', 'destino'],
   ),
   OracleCard(
@@ -175,7 +175,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Mensagens dos reinos invisíveis',
     emoji: '🐦‍⬛',
     guidance: 'O Corvo é mensageiro entre mundos. Preste atenção às mensagens '
-        'que chegam de formas inesperadas.',
+        'que chegam de formas inesperadas',
     keywords: ['mensagem', 'magia', 'mistério'],
   ),
   OracleCard(
@@ -184,7 +184,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Amor e beleza florescem',
     emoji: '🌹',
     guidance: 'A Rosa simboliza amor em sua forma mais pura. Abra seu coração '
-        'para dar e receber amor verdadeiro.',
+        'para dar e receber amor verdadeiro',
     keywords: ['amor', 'beleza', 'abertura'],
   ),
   OracleCard(
@@ -193,7 +193,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Raízes profundas e crescimento',
     emoji: '🌳',
     guidance: 'A Árvore está firme em suas raízes enquanto cresce em direção ao céu. '
-        'Equilibre aterramento com expansão.',
+        'Equilibre aterramento com expansão',
     keywords: ['aterramento', 'crescimento', 'equilíbrio'],
   ),
   OracleCard(
@@ -202,7 +202,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Esperança e orientação divina',
     emoji: '⭐',
     guidance: 'As Estrelas guiam os perdidos. Mesmo na escuridão, há luz e esperança. '
-        'Confie na orientação que você recebe.',
+        'Confie na orientação que você recebe',
     keywords: ['esperança', 'guia', 'orientação'],
   ),
   OracleCard(
@@ -220,7 +220,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Após a tempestade, vem a calma',
     emoji: '⛈️',
     guidance: 'Tempestades passam e trazem renovação. Se você está enfrentando desafios, '
-        'saiba que eles são temporários.',
+        'saiba que eles são temporários',
     keywords: ['desafio', 'renovação', 'temporário'],
   ),
   OracleCard(
@@ -229,7 +229,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Promessa de tempos melhores',
     emoji: '🌈',
     guidance: 'O Arco-Íris é sinal de esperança e promessa. Tempos melhores '
-        'estão chegando. Mantenha a fé.',
+        'estão chegando. Mantenha a fé',
     keywords: ['esperança', 'promessa', 'beleza'],
   ),
   OracleCard(
@@ -238,7 +238,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Você tem a chave da resposta',
     emoji: '🔑',
     guidance: 'A Chave que você procura está dentro de você. Você já sabe a resposta, '
-        'confie em sua sabedoria interior.',
+        'confie em sua sabedoria interior',
     keywords: ['resposta', 'sabedoria', 'confiança'],
   ),
   OracleCard(
@@ -247,7 +247,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Novas oportunidades se abrem',
     emoji: '🚪',
     guidance: 'Uma porta se abre quando outra se fecha. Novas oportunidades '
-        'estão se apresentando. Seja corajoso para cruzá-las.',
+        'estão se apresentando. Seja corajoso para cruzá-las',
     keywords: ['oportunidade', 'coragem', 'novo caminho'],
   ),
   OracleCard(
@@ -256,7 +256,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Olhe para dentro',
     emoji: '🪞',
     guidance: 'O Espelho reflete a verdade. É hora de olhar honestamente para si mesmo '
-        'e reconhecer suas próprias verdades.',
+        'e reconhecer suas próprias verdades',
     keywords: ['autoconhecimento', 'verdade', 'reflexão'],
   ),
   OracleCard(
@@ -265,7 +265,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'O timing divino está em ação',
     emoji: '⏳',
     guidance: 'A Ampulheta marca o tempo perfeito. Confie no timing divino. '
-        'Tudo acontece no momento certo.',
+        'Tudo acontece no momento certo',
     keywords: ['timing', 'paciência', 'confiança'],
   ),
   OracleCard(
@@ -274,7 +274,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Mantenha-se firme e estável',
     emoji: '⚓',
     guidance: 'A Âncora mantém o navio firme na tempestade. Encontre sua estabilidade '
-        'interior e mantenha-se centrado.',
+        'interior e mantenha-se centrado',
     keywords: ['estabilidade', 'firmeza', 'centro'],
   ),
   OracleCard(
@@ -283,7 +283,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Transformação completa está acontecendo',
     emoji: '🦋',
     guidance: 'A Borboleta emerge da crisálida transformada. Você está passando '
-        'por uma metamorfose profunda. Confie no processo.',
+        'por uma metamorfose profunda. Confie no processo',
     keywords: ['metamorfose', 'transformação', 'beleza'],
   ),
   OracleCard(
@@ -292,7 +292,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Busque equilíbrio e justiça',
     emoji: '⚖️',
     guidance: 'A Balança pesa com precisão. É hora de buscar equilíbrio em sua vida '
-        'e agir com justiça e integridade.',
+        'e agir com justiça e integridade',
     keywords: ['equilíbrio', 'justiça', 'integridade'],
   ),
   OracleCard(
@@ -301,7 +301,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Reconheça seu poder pessoal',
     emoji: '👑',
     guidance: 'Você é soberano de sua vida. É hora de reconhecer e reivindicar '
-        'seu poder pessoal. Você é digno.',
+        'seu poder pessoal. Você é digno',
     keywords: ['poder', 'soberania', 'dignidade'],
   ),
   OracleCard(
@@ -310,7 +310,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Siga a voz do seu coração',
     emoji: '❤️',
     guidance: 'O Coração sabe o caminho. Suas emoções e intuições são guias válidos. '
-        'Confie no que seu coração diz.',
+        'Confie no que seu coração diz',
     keywords: ['coração', 'amor', 'intuição'],
   ),
   OracleCard(
@@ -319,7 +319,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Ciclos mudam, tudo é transitório',
     emoji: '☸️',
     guidance: 'A Roda gira eternamente. Tudo é cíclico. Se está difícil agora, '
-        'a roda vai girar. Se está bom, aproveite.',
+        'a roda vai girar. Se está bom, aproveite',
     keywords: ['ciclos', 'mudança', 'impermanência'],
   ),
   OracleCard(
@@ -328,7 +328,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Confie na jornada',
     emoji: '🛤️',
     guidance: 'O Caminho se revela passo a passo. Você não precisa ver todo o trajeto, '
-        'apenas o próximo passo. Continue caminhando.',
+        'apenas o próximo passo. Continue caminhando',
     keywords: ['jornada', 'confiança', 'passo a passo'],
   ),
   OracleCard(
@@ -337,7 +337,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Abundância flui infinitamente',
     emoji: '⛲',
     guidance: 'A Fonte nunca seca. O universo é abundante e há o suficiente para todos. '
-        'Permita-se receber.',
+        'Permita-se receber',
     keywords: ['abundância', 'fluxo', 'receber'],
   ),
   OracleCard(
@@ -346,7 +346,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'O caminho pode ser tortuoso, mas leva ao centro',
     emoji: '🌀',
     guidance: 'O Labirinto não é uma prisão, mas uma jornada para o centro de si mesmo. '
-        'Cada volta tem um propósito.',
+        'Cada volta tem um propósito',
     keywords: ['jornada interior', 'propósito', 'paciência'],
   ),
   OracleCard(
@@ -355,7 +355,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Conexões importantes surgem',
     emoji: '🌉',
     guidance: 'A Ponte conecta dois lados. Você está criando conexões importantes '
-        'ou transitando entre fases da vida.',
+        'ou transitando entre fases da vida',
     keywords: ['conexão', 'transição', 'união'],
   ),
   OracleCard(
@@ -364,7 +364,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Grandes conquistas exigem esforço',
     emoji: '⛰️',
     guidance: 'A Montanha é alta, mas a vista do topo vale a pena. Continue subindo, '
-        'passo a passo. Você é capaz.',
+        'passo a passo. Você é capaz',
     keywords: ['desafio', 'conquista', 'perseverança'],
   ),
   OracleCard(
@@ -373,7 +373,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Profundezas emocionais pedem exploração',
     emoji: '🌊',
     guidance: 'O Oceano é vasto e profundo. Suas emoções também são. É hora de '
-        'mergulhar fundo e explorar o que está abaixo da superfície.',
+        'mergulhar fundo e explorar o que está abaixo da superfície',
     keywords: ['profundidade', 'emoção', 'exploração'],
   ),
   OracleCard(
@@ -382,7 +382,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Potencial infinito espera para germinar',
     emoji: '🌱',
     guidance: 'Dentro da Semente está todo o potencial de uma árvore. Dentro de você '
-        'está todo o potencial para criar sua vida. Nutra suas sementes.',
+        'está todo o potencial para criar sua vida. Nutra suas sementes',
     keywords: ['potencial', 'crescimento', 'início'],
   ),
   OracleCard(
@@ -391,7 +391,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Receba os frutos de seu trabalho',
     emoji: '🌾',
     guidance: 'A Colheita é generosa para quem plantou e cuidou. É hora de receber '
-        'os frutos de seu trabalho e dedicação.',
+        'os frutos de seu trabalho e dedicação',
     keywords: ['colheita', 'recompensa', 'abundância'],
   ),
   OracleCard(
@@ -400,7 +400,7 @@ const List<OracleCard> oracleCardsPt = [
     message: 'Você é eterno e ilimitado',
     emoji: '∞',
     guidance: 'O símbolo do Infinito lembra que você é mais do que este corpo e '
-        'este momento. Você é eterno, infinito e ilimitado.',
+        'este momento. Você é eterno, infinito e ilimitado',
     keywords: ['eternidade', 'infinito', 'ilimitado'],
   ),
 ];

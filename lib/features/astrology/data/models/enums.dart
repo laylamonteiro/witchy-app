@@ -539,31 +539,31 @@ const Map<Element, String> _elementNamesEs = {
 };
 
 const Map<Element, String> _elementMagicalPt = {
-  Element.fire: 'Ação, paixão, transformação. Magia de velas e rituais solares.',
+  Element.fire: 'Ação, paixão, transformação. Magia de velas e rituais solares',
   Element.earth:
-      'Manifestação, aterramento, prosperidade. Bruxaria verde e cristais.',
+      'Manifestação, aterramento, prosperidade. Bruxaria verde e cristais',
   Element.air:
-      'Comunicação, intelecto, adivinhação. Magia de palavras e incensos.',
+      'Comunicação, intelecto, adivinhação. Magia de palavras e incensos',
   Element.water:
-      'Intuição, emoção, magia lunar. Banhos rituais e trabalho com sonhos.',
+      'Intuição, emoção, magia lunar. Banhos rituais e trabalho com sonhos',
 };
 
 const Map<Element, String> _elementMagicalEn = {
-  Element.fire: 'Action, passion, transformation. Candle magic and solar rituals.',
+  Element.fire: 'Action, passion, transformation. Candle magic and solar rituals',
   Element.earth:
-      'Manifestation, grounding, prosperity. Green witchcraft and crystals.',
-  Element.air: 'Communication, intellect, divination. Word magic and incense.',
-  Element.water: 'Intuition, emotion, lunar magic. Ritual baths and dream work.',
+      'Manifestation, grounding, prosperity. Green witchcraft and crystals',
+  Element.air: 'Communication, intellect, divination. Word magic and incense',
+  Element.water: 'Intuition, emotion, lunar magic. Ritual baths and dream work',
 };
 
 const Map<Element, String> _elementMagicalEs = {
-  Element.fire: 'Acción, pasión, transformación. Magia de velas y rituales solares.',
+  Element.fire: 'Acción, pasión, transformación. Magia de velas y rituales solares',
   Element.earth:
-      'Manifestación, enraizamiento, prosperidad. Brujería verde y cristales.',
+      'Manifestación, enraizamiento, prosperidad. Brujería verde y cristales',
   Element.air:
-      'Comunicación, intelecto, adivinación. Magia de palabras e inciensos.',
+      'Comunicación, intelecto, adivinación. Magia de palabras e inciensos',
   Element.water:
-      'Intuición, emoción, magia lunar. Baños rituales y trabajo con sueños.',
+      'Intuición, emoción, magia lunar. Baños rituales y trabajo con sueños',
 };
 
 const Map<Modality, String> _modalityNamesPt = {
@@ -586,29 +586,29 @@ const Map<Modality, String> _modalityNamesEs = {
 
 const Map<Modality, String> _modalityDescPt = {
   Modality.cardinal:
-      'Iniciação, liderança, ação. Você é uma bruxa que inicia mudanças.',
+      'Iniciação, liderança, ação. Você é uma bruxa que inicia mudanças',
   Modality.fixed:
-      'Estabilidade, persistência, poder. Você é uma bruxa que mantém e fortalece.',
+      'Estabilidade, persistência, poder. Você é uma bruxa que mantém e fortalece',
   Modality.mutable:
-      'Adaptação, flexibilidade, transformação. Você é uma bruxa que flui e se adapta.',
+      'Adaptação, flexibilidade, transformação. Você é uma bruxa que flui e se adapta',
 };
 
 const Map<Modality, String> _modalityDescEn = {
   Modality.cardinal:
-      'Initiation, leadership, action. You are a witch who starts change.',
+      'Initiation, leadership, action. You are a witch who starts change',
   Modality.fixed:
-      'Stability, persistence, power. You are a witch who sustains and strengthens.',
+      'Stability, persistence, power. You are a witch who sustains and strengthens',
   Modality.mutable:
-      'Adaptation, flexibility, transformation. You are a witch who flows and adapts.',
+      'Adaptation, flexibility, transformation. You are a witch who flows and adapts',
 };
 
 const Map<Modality, String> _modalityDescEs = {
   Modality.cardinal:
-      'Iniciación, liderazgo, acción. Eres una bruja que inicia cambios.',
+      'Iniciación, liderazgo, acción. Eres una bruja que inicia cambios',
   Modality.fixed:
-      'Estabilidad, persistencia, poder. Eres una bruja que mantiene y fortalece.',
+      'Estabilidad, persistencia, poder. Eres una bruja que mantiene y fortalece',
   Modality.mutable:
-      'Adaptación, flexibilidad, transformación. Eres una bruja que fluye y se adapta.',
+      'Adaptación, flexibilidad, transformación. Eres una bruja que fluye y se adapta',
 };
 
 const Map<AspectType, String> _aspectNamesPt = {

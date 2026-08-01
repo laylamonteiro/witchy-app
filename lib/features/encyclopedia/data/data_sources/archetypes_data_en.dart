@@ -12,7 +12,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Sovereignty over one\'s own power and forbidden knowledge',
     origin: 'Universal — from European folklore to the folk healers of the Americas',
     history:
-        'From village healer to the persecuted of the pyres, the Witch has crossed centuries as a symbol of feminine power beyond institutional control. In the twentieth century she was reclaimed by modern witchcraft movements as an emblem of spiritual autonomy.',
+        'From village healer to the persecuted of the pyres, the Witch has crossed centuries as a symbol of feminine power beyond institutional control. In the twentieth century she was reclaimed by modern witchcraft movements as an emblem of spiritual autonomy',
     characteristics: [
       'Self-sufficiency and intimacy with nature',
       'Knowledge of herbs, cycles and mysteries',
@@ -34,7 +34,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Mirror meditation to integrate rejected parts',
     ],
     cautions:
-        'Archetypes are symbolic mirrors, not fixed identities — use them as a tool for reflection.',
+        'Archetypes are symbolic mirrors, not fixed identities — use them as a tool for reflection',
     related: ['The Wise Woman', 'The Healer', 'Hecate (Goddesses)'],
   ),
   ArcaneEntry(
@@ -43,7 +43,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'The gift of caring, restoring and returning balance',
     origin: 'Universal — shamans, folk healers, midwives and herbalists',
     history:
-        'Present in every culture, the Healer keeps the practical knowledge of healing: plants, touch, words and prayers. Folk healers and midwives kept this lineage alive even under persecution, passing the craft from mother to daughter.',
+        'Present in every culture, the Healer keeps the practical knowledge of healing: plants, touch, words and prayers. Folk healers and midwives kept this lineage alive even under persecution, passing the craft from mother to daughter',
     characteristics: [
       'Deep empathy and a presence that soothes',
       'Knowledge of natural remedies and cleansing rituals',
@@ -64,7 +64,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Distance healing rituals and blessings',
     ],
     cautions:
-        'Caring for others does not replace caring for yourself; the shadow Healer burns out in the name of others. Energy practices do not replace medicine.',
+        'Caring for others does not replace caring for yourself; the shadow Healer burns out in the name of others. Energy practices do not replace medicine',
     related: ['Herbs (Encyclopedia)', 'The Mother', 'Brigid (Goddesses)'],
   ),
   ArcaneEntry(
@@ -73,7 +73,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Seeing beyond the veil: intuition, oracles and prophecy',
     origin: 'The Oracle of Delphi, Roman sibyls, seers of folklore',
     history:
-        'From the Greek pythias to the fortune-tellers of the fair, the Seer embodies the human capacity to read signs and to sense what is coming. Always revered and feared, her gift defies the linear logic of time.',
+        'From the Greek pythias to the fortune-tellers of the fair, the Seer embodies the human capacity to read signs and to sense what is coming. Always revered and feared, her gift defies the linear logic of time',
     characteristics: [
       'Sharpened intuition and meaningful dreams',
       'Comfort with symbols, omens and ambiguity',
@@ -94,7 +94,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Meditations to open the intuition',
     ],
     cautions:
-        'Intuition is trained with discernment: not every hunch is prophecy. Avoid making important decisions based on signs alone.',
+        'Intuition is trained with discernment: not every hunch is prophecy. Avoid making important decisions based on signs alone',
     related: ['Oracle Cards', 'Runes', 'Pendulum', 'Dreams & Visions'],
   ),
   ArcaneEntry(
@@ -103,7 +103,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Protection of thresholds, people and sacred spaces',
     origin: 'Guardians of temples, homes and crossroads in every culture',
     history:
-        'From the stone lions at the gates to witchcraft\'s circles of salt, the Guardian watches over boundaries: what comes in, what goes out, what shall not pass. She is the force that says "this far and no further" with love and firmness.',
+        'From the stone lions at the gates to witchcraft\'s circles of salt, the Guardian watches over boundaries: what comes in, what goes out, what shall not pass. She is the force that says "this far and no further" with love and firmness',
     characteristics: [
       'A keen sense of boundaries and justice',
       'Loyalty and protection of her own',
@@ -124,7 +124,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Consecration of amulets and talismans',
     ],
     cautions:
-        'Too much protection becomes a wall: check whether your boundaries guard or isolate.',
+        'Too much protection becomes a wall: check whether your boundaries guard or isolate',
     related: ['Protection & Cleansing (Grimoire)', 'Sacred Symbols'],
   ),
   ArcaneEntry(
@@ -133,7 +133,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'The elder within: experience transformed into wisdom',
     origin: 'The crone of the tales, grandmothers and teachers of every tradition',
     history:
-        'Third face of the Triple Goddess, the Crone keeps the wisdom of completed cycles. In ancestral cultures, the eldest women were counselors of the community; in the tales, she is the old woman of the forest who tests and bestows gifts.',
+        'Third face of the Triple Goddess, the Crone keeps the wisdom of completed cycles. In ancestral cultures, the eldest women were counselors of the community; in the tales, she is the old woman of the forest who tests and bestows gifts',
     characteristics: [
       'Detachment from appearances and from others\' judgment',
       'Long-term vision and a sharp sense of humor',
@@ -154,7 +154,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Inner counsel in deep meditations',
     ],
     cautions:
-        'The shadow of the Wise Woman is cynicism: wisdom without tenderness hardens.',
+        'The shadow of the Wise Woman is cynicism: wisdom without tenderness hardens',
     related: ['The Witch', 'Hecate (Goddesses)', 'Moon Phases'],
   ),
   ArcaneEntry(
@@ -163,7 +163,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Beginnings, freshness and the courage of the first step',
     origin: 'First face of the Triple Goddess; Persephone before the abduction',
     history:
-        'The Maiden is the springtime of the cycle: curiosity, potential and youthful independence. In the myths, she is often the one who departs, explores and inaugurates — the energy of all that is yet to bloom.',
+        'The Maiden is the springtime of the cycle: curiosity, potential and youthful independence. In the myths, she is often the one who departs, explores and inaugurates — the energy of all that is yet to bloom',
     characteristics: [
       'Enthusiasm, openness and faith in the possible',
       'Independence and the desire to explore',
@@ -184,7 +184,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Spells for inspiration and creative freshness',
     ],
     cautions:
-        'The shadow of the Maiden is the eternal promise that never matures: beginning also asks for continuing.',
+        'The shadow of the Maiden is the eternal promise that never matures: beginning also asks for continuing',
     related: ['The Mother', 'The Wise Woman', 'Waxing Moon'],
   ),
   ArcaneEntry(
@@ -193,7 +193,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Nurturing, creation and the force that makes things grow',
     origin: 'Neolithic mother goddesses, Demeter, Yemanjá, the Triple Goddess',
     history:
-        'Central face of the Triple Goddess, the Mother is the fullness of the full moon: gestating, birthing and sustaining — children, projects, communities. The mother goddesses are among the oldest figures of the human sacred.',
+        'Central face of the Triple Goddess, the Mother is the fullness of the full moon: gestating, birthing and sustaining — children, projects, communities. The mother goddesses are among the oldest figures of the human sacred',
     characteristics: [
       'Generosity, abundance and presence',
       'Fertility in the broadest sense: making things grow',
@@ -214,7 +214,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Blessings for growing projects',
     ],
     cautions:
-        'The shadow of the Mother is control disguised as care and the forgetting of oneself.',
+        'The shadow of the Mother is control disguised as care and the forgetting of oneself',
     related: ['The Maiden', 'The Healer', 'Full Moon'],
   ),
   ArcaneEntry(
@@ -223,7 +223,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Focus, independence and the arrow that does not stray',
     origin: 'Artemis/Diana and the ladies of the hunt of European folklore',
     history:
-        'Lady of the woods and protector of wild animals, the Huntress runs free beyond the city walls. Diana became, in the tradition of Italian witchcraft and in Wicca, one of the central faces of the Goddess.',
+        'Lady of the woods and protector of wild animals, the Huntress runs free beyond the city walls. Diana became, in the tradition of Italian witchcraft and in Wicca, one of the central faces of the Goddess',
     characteristics: [
       'Absolute focus on the chosen target',
       'Self-sufficiency and love of freedom',
@@ -244,7 +244,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Rituals of reconnection with wild nature',
     ],
     cautions:
-        'The shadow of the Huntress is proud solitude: asking for help is also good aim.',
+        'The shadow of the Huntress is proud solitude: asking for help is also good aim',
     related: ['The Guardian', 'Diana (Goddesses)', 'Prosperity & Paths'],
   ),
   ArcaneEntry(
@@ -253,7 +253,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Destiny, patience and the art of interlacing the threads of life',
     origin: 'The Greek Moirai, the Norse Norns, Grandmother Spider of Indigenous peoples',
     history:
-        'In many myths, destiny is woven: the Moirai spin, measure and cut; the Norns water the world tree. The Weaver reminds us that every choice is a thread — and that patterns can be rewoven.',
+        'In many myths, destiny is woven: the Moirai spin, measure and cut; the Norns water the world tree. The Weaver reminds us that every choice is a thread — and that patterns can be rewoven',
     characteristics: [
       'A vision of patterns and invisible connections',
       'The patience of one who builds stitch by stitch',
@@ -274,7 +274,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Pattern-rewriting rituals during the waning moon',
     ],
     cautions:
-        'Not every thread is yours to weave: respect the free will of others.',
+        'Not every thread is yours to weave: respect the free will of others',
     related: ['Sigils', 'Dreams & Visions', 'The Wise Woman'],
   ),
   ArcaneEntry(
@@ -283,7 +283,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Transmutation: turning inner lead into gold',
     origin: 'Greco-Egyptian, Arabic and medieval European alchemy',
     history:
-        'More than precursors of chemistry, the alchemists sought the transformation of the soul itself — the solve et coagula: dissolving what has hardened and recomposing it in nobler form. Jung reread alchemy as a map of individuation.',
+        'More than precursors of chemistry, the alchemists sought the transformation of the soul itself — the solve et coagula: dissolving what has hardened and recomposing it in nobler form. Jung reread alchemy as a map of individuation',
     characteristics: [
       'Fascination with processes of transformation',
       'Experimental discipline: test, observe, refine',
@@ -304,7 +304,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Working with the cauldron as a symbolic athanor',
     ],
     cautions:
-        'Real transformation is slow: beware of instant gold.',
+        'Real transformation is slow: beware of instant gold',
     related: ['The Witch', 'Metals (Encyclopedia)', 'Energy & Healing'],
   ),
   ArcaneEntry(
@@ -313,7 +313,7 @@ const List<ArcaneEntry> archetypesEn = [
     summary: 'Sovereignty over one\'s own shadow and the deep territories',
     origin: 'Persephone in the underworld, the Norse Hel, the stepmother of the tales',
     history:
-        'Every psyche has its cellars. The Shadow Queen rules over what was exiled: anger, envy, desire, grief. In the myths, descending to the underworld — like Inanna or Persephone — is the path to reigning whole.',
+        'Every psyche has its cellars. The Shadow Queen rules over what was exiled: anger, envy, desire, grief. In the myths, descending to the underworld — like Inanna or Persephone — is the path to reigning whole',
     characteristics: [
       'Radical honesty with oneself',
       'The capacity to hold difficult emotions without fleeing',
@@ -334,7 +334,7 @@ const List<ArcaneEntry> archetypesEn = [
       'Conscious banishings of what has already been understood',
     ],
     cautions:
-        'Shadow work stirs sensitive material: go at your own pace and seek professional support when the pain runs deep.',
+        'Shadow work stirs sensitive material: go at your own pace and seek professional support when the pain runs deep',
     related: ['The Wise Woman', 'Hecate (Goddesses)', 'New Moon'],
   ),
 ];

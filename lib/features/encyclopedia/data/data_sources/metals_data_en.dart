@@ -13,7 +13,7 @@ final List<MetalModel> metalsEn = [
     description:
         'The precious metal of the Sun, symbol of divine power, royalty and perfection. '
         'It represents spiritual light, illumination and vital energy. '
-        'Traditionally used to attract prosperity, success and protection.',
+        'Traditionally used to attract prosperity, success and protection',
     element: Element.fire,
     planet: Planet.sun,
     conductsPower: true,
@@ -47,7 +47,7 @@ final List<MetalModel> metalsEn = [
     traditionalUses:
         'Used in crowns, scepters and ritual objects of power. '
         'Gold jewelry is traditionally worn for protection '
-        'and to draw in solar energy.',
+        'and to draw in solar energy',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -55,7 +55,7 @@ final List<MetalModel> metalsEn = [
     description:
         'The sacred metal of the Moon, symbol of intuition, mystery and psychic protection. '
         'It represents the divine feminine, cycles and lunar magic. '
-        'It is the metal most used in witchcraft for protection and divination.',
+        'It is the metal most used in witchcraft for protection and divination',
     element: Element.water,
     planet: Planet.moon,
     conductsPower: true,
@@ -90,7 +90,7 @@ final List<MetalModel> metalsEn = [
     traditionalUses:
         'Traditionally used in amulets, magic mirrors, '
         'ritual chalices and protective jewelry. Silver is said '
-        'to tarnish in the presence of negative energy.',
+        'to tarnish in the presence of negative energy',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -98,7 +98,7 @@ final List<MetalModel> metalsEn = [
     description:
         'The metal of Venus, supreme conductor of magical energy. '
         'Associated with love, beauty, harmony and healing. '
-        'It is the most energy-conductive metal after silver.',
+        'It is the most energy-conductive metal after silver',
     element: Element.water,
     planet: Planet.venus,
     conductsPower: true,
@@ -133,7 +133,7 @@ final List<MetalModel> metalsEn = [
     traditionalUses:
         'Used in wands, love amulets, and healing tools. '
         'Copper pyramids are used to amplify energy. '
-        'Copper bracelets are traditionally worn to ease aches and pains.',
+        'Copper bracelets are traditionally worn to ease aches and pains',
     safetyWarnings: [
       'May stain the skin green (not dangerous, just oxidation)',
     ],
@@ -143,7 +143,7 @@ final List<MetalModel> metalsEn = [
     description:
         'The metal of Mars, symbol of protection, strength and courage. '
         'Traditionally used to ward off evil spirits and faeries. '
-        'It represents warrior strength and physical protection.',
+        'It represents warrior strength and physical protection',
     element: Element.fire,
     planet: Planet.mars,
     conductsPower: false,
@@ -179,7 +179,7 @@ final List<MetalModel> metalsEn = [
         'Horseshoes over doors for protection. Iron nails '
         'buried at the corners of the property. Ritual knives (athames) '
         'with iron blades. Faeries and evil spirits are said '
-        'to be unable to cross iron.',
+        'to be unable to cross iron',
     safetyWarnings: [
       'Rusts easily - keep it dry',
     ],
@@ -188,7 +188,7 @@ final List<MetalModel> metalsEn = [
     name: 'Tin',
     description:
         'The metal of Jupiter, associated with expansion, growth and justice. '
-        'Traditionally used to attract prosperity, luck and legal protection.',
+        'Traditionally used to attract prosperity, luck and legal protection',
     element: Element.air,
     planet: Planet.jupiter,
     conductsPower: true,
@@ -223,7 +223,7 @@ final List<MetalModel> metalsEn = [
     traditionalUses:
         'Used in talismans for luck and prosperity. '
         'Tin coins are traditionally carried to attract money. '
-        'Also used in ritual bells.',
+        'Also used in ritual bells',
     safetyWarnings: [],
   ),
   const MetalModel(
@@ -231,7 +231,7 @@ final List<MetalModel> metalsEn = [
     description:
         'The metal of Saturn, associated with time, boundaries and deep transformation. '
         'Used in banishing magic, heavy protection and breaking addictions. '
-        'It represents limitations, discipline and karma.',
+        'It represents limitations, discipline and karma',
     element: Element.earth,
     planet: Planet.saturn,
     conductsPower: false,
@@ -266,7 +266,7 @@ final List<MetalModel> metalsEn = [
     traditionalUses:
         'Traditionally used to seal negative intentions inside boxes '
         'that are then buried. Used in protective weights and in rituals '
-        'of definitive banishing.',
+        'of definitive banishing',
     safetyWarnings: [
       '⚠️ TOXIC - Do not ingest, avoid prolonged skin contact',
       'Wash your hands after handling',
@@ -278,7 +278,7 @@ final List<MetalModel> metalsEn = [
     name: 'Bronze',
     description:
         'An ancient alloy of copper and tin, it represents tradition, antiquity and ancestral connection. '
-        'Used since time immemorial in weapons, shields and ritual objects.',
+        'Used since time immemorial in weapons, shields and ritual objects',
     element: Element.fire,
     planet: Planet.venus,
     conductsPower: true,
@@ -314,14 +314,14 @@ final List<MetalModel> metalsEn = [
         'Bronze bells are used to cleanse energy and mark '
         'the opening of rituals. Bronze cauldrons are traditional '
         'in Celtic witchcraft. Polished bronze mirrors were used '
-        'in antiquity for divination.',
+        'in antiquity for divination',
     safetyWarnings: [],
   ),
   const MetalModel(
     name: 'Brass',
     description:
         'An alloy of copper and zinc, associated with purification, energy cleansing '
-        'and protection against negativity. It shines like gold but is far more accessible.',
+        'and protection against negativity. It shines like gold but is far more accessible',
     element: Element.fire,
     planet: Planet.sun,
     conductsPower: true,
@@ -356,14 +356,14 @@ final List<MetalModel> metalsEn = [
     traditionalUses:
         'Traditionally used in censers and cleansing bells. '
         'Polished brass objects are placed on altars to reflect '
-        'negative energy away. An accessible substitute for gold in magic.',
+        'negative energy away. An accessible substitute for gold in magic',
     safetyWarnings: [],
   ),
   const MetalModel(
     name: 'Aluminum',
     description:
         'A modern metal associated with mental protection, blocking outside '
-        'influences and preserving energy. Light and versatile.',
+        'influences and preserving energy. Light and versatile',
     element: Element.air,
     planet: Planet.mercury,
     conductsPower: true,
@@ -397,7 +397,7 @@ final List<MetalModel> metalsEn = [
     traditionalUses:
         'Aluminum foil is used to wrap and protect tarot cards, '
         'crystals and magical objects. Also used to reflect negative '
-        'energy back to its source.',
+        'energy back to its source',
     safetyWarnings: [],
   ),
 ];

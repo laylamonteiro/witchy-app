@@ -12,94 +12,94 @@ final MagicalInterpreterTexts magicalInterpreterTextsEs =
     ZodiacSign.aries:
         'Tu esencia mágica es de pionerismo y coraje. Eres una bruja guerrera, '
             'que actúa con rapidez y decisión. Tus hechizos más poderosos implican iniciar nuevos '
-            'ciclos y romper barreras. Usa el fuego como tu elemento principal.',
+            'ciclos y romper barreras. Usa el fuego como tu elemento principal',
     ZodiacSign.taurus:
         'Tu esencia mágica está enraizada en la tierra y en la manifestación. Eres una bruja '
             'que trae el mundo espiritual al plano físico. Tus hechizos más poderosos implican '
-            'prosperidad, sensualidad y belleza. Trabaja con cristales y hierbas.',
+            'prosperidad, sensualidad y belleza. Trabaja con cristales y hierbas',
     ZodiacSign.gemini:
         'Tu esencia mágica fluye a través de la comunicación y el conocimiento. Eres una '
             'bruja estudiosa, que domina la magia mediante palabras y símbolos. Tus hechizos más '
-            'poderosos implican comunicación, aprendizaje y versatilidad.',
+            'poderosos implican comunicación, aprendizaje y versatilidad',
     ZodiacSign.cancer:
         'Tu esencia mágica fluye con las mareas lunares. Eres una bruja intuitiva, '
             'profundamente conectada con las emociones. Tus hechizos más poderosos implican protección '
-            'del hogar, sanación emocional y magia lunar.',
+            'del hogar, sanación emocional y magia lunar',
     ZodiacSign.leo:
         'Tu esencia mágica brilla como el Sol. Eres una bruja radiante, segura y '
             'creativa. Tus hechizos más poderosos implican autoexpresión, creatividad y '
-            'liderazgo. Usa rituales solares.',
+            'liderazgo. Usa rituales solares',
     ZodiacSign.virgo:
         'Tu esencia mágica está en la precisión y el servicio. Eres una bruja meticulosa, '
             'que domina los detalles de cada ritual. Tus hechizos más poderosos implican sanación, '
-            'purificación y magia herbal.',
+            'purificación y magia herbal',
     ZodiacSign.libra:
         'Tu esencia mágica busca el equilibrio y la armonía. Eres una bruja diplomática, '
             'que trabaja con energías de belleza y justicia. Tus hechizos más poderosos implican '
-            'relaciones, armonía y estética.',
+            'relaciones, armonía y estética',
     ZodiacSign.scorpio:
         'Tu esencia mágica se sumerge en las profundidades. Eres una bruja transformadora, '
             'que no teme a las sombras. Tus hechizos más poderosos implican transformación profunda, '
-            'magia sexual y renacimiento.',
+            'magia sexual y renacimiento',
     ZodiacSign.sagittarius:
         'Tu esencia mágica busca la sabiduría y la expansión. Eres una bruja filósofa, '
             'que explora diferentes tradiciones. Tus hechizos más poderosos implican crecimiento '
-            'espiritual, protección en los viajes y abundancia.',
+            'espiritual, protección en los viajes y abundancia',
     ZodiacSign.capricorn:
         'Tu esencia mágica es estructurada y ambiciosa. Eres una bruja disciplinada, '
             'que construye poder a lo largo del tiempo. Tus hechizos más poderosos implican manifestación '
-            'material, carrera y magia saturnina.',
+            'material, carrera y magia saturnina',
     ZodiacSign.aquarius:
         'Tu esencia mágica es innovadora y única. Eres una bruja revolucionaria, que '
             'rompe tradiciones y crea nuevos caminos. Tus hechizos más poderosos implican cambio '
-            'social, intuición y magia tecnológica.',
+            'social, intuición y magia tecnológica',
     ZodiacSign.pisces:
         'Tu esencia mágica disuelve fronteras. Eres una bruja mística, profundamente '
             'conectada con el inconsciente colectivo. Tus hechizos más poderosos implican sueños, '
-            'mediumnidad y compasión universal.',
+            'mediumnidad y compasión universal',
   },
   moonIntro: (signName, houseNumber) =>
       'Tu Luna en $signName en la Casa $houseNumber ',
   moonBySign: const {
     ZodiacSign.aries:
-        'trae intuiciones rápidas e instintivas. Confía en tus primeros impulsos.',
+        'trae intuiciones rápidas e instintivas. Confía en tus primeros impulsos',
     ZodiacSign.taurus:
-        'ofrece intuición a través de los sentidos. Trabaja con aromas, texturas y sabores.',
+        'ofrece intuición a través de los sentidos. Trabaja con aromas, texturas y sabores',
     ZodiacSign.cancer:
-        'amplifica tu sensibilidad psíquica. Eres naturalmente empática y receptiva.',
+        'amplifica tu sensibilidad psíquica. Eres naturalmente empática y receptiva',
     ZodiacSign.scorpio:
-        'se sumerge en las profundidades emocionales. Tienes dones psíquicos poderosos.',
+        'se sumerge en las profundidades emocionales. Tienes dones psíquicos poderosos',
     ZodiacSign.pisces:
-        'disuelve las fronteras entre mundos. Puedes tener sueños proféticos.',
+        'disuelve las fronteras entre mundos. Puedes tener sueños proféticos',
   },
   moonByElement: (elementName) =>
       'ofrece intuición en sintonía con $elementName. '
-      'Trabaja con ese elemento para fortalecer tu conexión.',
+      'Trabaja con ese elemento para fortalecer tu conexión',
   mercuryByElement: const {
     Element.fire:
         'Tu comunicación mágica es directa e inspiradora. Usa afirmaciones poderosas '
-            'y encantamientos pronunciados en voz alta.',
+            'y encantamientos pronunciados en voz alta',
     Element.earth:
         'Tu comunicación mágica es práctica y fundamentada. Escribe tus hechizos y '
-            'trabaja con grimorios físicos.',
+            'trabaja con grimorios físicos',
     Element.air:
         'Tu comunicación mágica es versátil y clara. Eres excelente en la lectura de runas, '
-            'tarot y otros sistemas adivinatorios basados en símbolos.',
+            'tarot y otros sistemas adivinatorios basados en símbolos',
     Element.water:
         'Tu comunicación mágica es intuitiva y emocional. Trabaja con poesía, música y '
-            'expresión creativa en tus rituales.',
+            'expresión creativa en tus rituales',
   },
   venus: (signName, elementName) =>
       'Tu Venus en $signName indica que atraes belleza y placer a través '
-      'de $elementName. Incorpora ese elemento en hechizos de amor y autocuidado.',
+      'de $elementName. Incorpora ese elemento en hechizos de amor y autocuidado',
   mars: (signName, elementName) =>
       'Tu Marte en $signName muestra que tu energía protectora se manifiesta a través '
-      'de $elementName. Usa ese elemento en hechizos de protección y destierro.',
+      'de $elementName. Usa ese elemento en hechizos de protección y destierro',
   house8Intro: (signName) =>
       'Tu Casa 8 (magia y ocultismo) está en $signName. ',
   house8NoPlanets:
       'Aunque no haya planetas aquí, aún puedes desarrollar tus habilidades '
-      'mágicas a través de la práctica consciente.',
+      'mágicas a través de la práctica consciente',
   house8WithPlanets: (count, planetNames) =>
       'Con $count planeta(s) aquí, tienes una fuerte afinidad natural '
       'con la magia: $planetNames. ',
@@ -108,7 +108,7 @@ final MagicalInterpreterTexts magicalInterpreterTextsEs =
   house12Intro: (signName) =>
       'Tu Casa 12 (espiritualidad) está en $signName. ',
   house12NoPlanets:
-      'Desarrolla tu conexión espiritual a través de la meditación y los sueños.',
+      'Desarrolla tu conexión espiritual a través de la meditación y los sueños',
   house12WithPlanets: (count, planetNames) =>
       'Con $count planeta(s) aquí, tienes una fuerte conexión con lo divino: '
       '$planetNames. ',

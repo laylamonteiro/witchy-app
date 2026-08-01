@@ -12,7 +12,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Rosmarinus officinalis',
     folkNames: 'Rosmaninho, Erva-da-graça',
     description:
-        'Erva poderosa de purificação e proteção. Amplamente usada na culinária e rituais.',
+        'Erva poderosa de purificação e proteção. Amplamente usada na culinária e rituais',
     element: HerbElement.fire,
     planet: Planet.sun,
     imageUrl: 'assets/images/herbs/alecrim.jpg',
@@ -44,7 +44,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Lippia sidoides',
     folkNames: 'Alecrim-do-nordeste',
     description:
-        'Erva brasileira de proteção forte e limpeza. Popular no Nordeste para afastar energias ruins.',
+        'Erva brasileira de proteção forte e limpeza. Popular no Nordeste para afastar energias ruins',
     element: HerbElement.fire,
     planet: Planet.mars,
     imageUrl: 'assets/images/herbs/alecrim_pimenta.jpg',
@@ -76,7 +76,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Ruta graveolens',
     folkNames: 'Arruda-fedorenta',
     description:
-        'Poderosa erva de proteção contra mau-olhado e inveja. Muito usada no Brasil.',
+        'Poderosa erva de proteção contra mau-olhado e inveja. Muito usada no Brasil',
     element: HerbElement.fire,
     planet: Planet.mars,
     imageUrl: 'assets/images/herbs/arruda.jpg',
@@ -110,7 +110,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Artemisia vulgaris',
     folkNames: 'Erva-de-São-João, Losna-brava',
     description:
-        'Erva lunar poderosa para sonhos, divinação e proteção. Sagrada para bruxas.',
+        'Erva lunar poderosa para sonhos, divinação e proteção. Sagrada para bruxas',
     element: HerbElement.earth,
     planet: Planet.moon,
     imageUrl: 'assets/images/herbs/artemisia.jpg',
@@ -143,7 +143,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Peumus boldus',
     folkNames: 'Boldo-do-chile',
     description:
-        'Erva protetora e purificadora, tradicionalmente usada no Brasil para proteção.',
+        'Erva protetora e purificadora, tradicionalmente usada no Brasil para proteção',
     element: HerbElement.earth,
     planet: Planet.saturn,
     imageUrl: 'assets/images/herbs/boldo.jpg',
@@ -176,7 +176,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Matricaria chamomilla',
     folkNames: 'Maçanilha',
     description:
-        'Erva suave de paz e cura. Amplamente usada em chás e rituais de tranquilidade.',
+        'Erva suave de paz e cura. Amplamente usada em chás e rituais de tranquilidade',
     element: HerbElement.water,
     planet: Planet.sun,
     imageUrl: 'assets/images/herbs/camomila.jpg',
@@ -208,7 +208,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Cinnamomum verum',
     folkNames: 'Canela-do-ceilão',
     description:
-        'Especiaria poderosa de prosperidade, proteção e amor. Acelera feitiços e atrai sucesso.',
+        'Especiaria poderosa de prosperidade, proteção e amor. Acelera feitiços e atrai sucesso',
     element: HerbElement.fire,
     planet: Planet.sun,
     imageUrl: 'assets/images/herbs/canela.jpg',
@@ -240,7 +240,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Syzygium aromaticum',
     folkNames: 'Cravo-da-índia',
     description:
-        'Erva de proteção forte, banimento e atração de dinheiro. Afasta energias negativas.',
+        'Erva de proteção forte, banimento e atração de dinheiro. Afasta energias negativas',
     element: HerbElement.fire,
     planet: Planet.jupiter,
     imageUrl: 'assets/images/herbs/cravo.jpg',
@@ -271,7 +271,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Eucalyptus globulus',
     folkNames: 'Eucalipto-comum',
     description:
-        'Erva purificadora e curativa. Limpa energias e protege contra doenças.',
+        'Erva purificadora e curativa. Limpa energias e protege contra doenças',
     element: HerbElement.air,
     planet: Planet.moon,
     imageUrl: 'assets/images/herbs/eucalipto.jpg',
@@ -303,7 +303,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Zingiber officinale',
     folkNames: 'Mangarataia',
     description:
-        'Raiz de poder, sucesso e amor. Acelera manifestações e traz energia.',
+        'Raiz de poder, sucesso e amor. Acelera manifestações e traz energia',
     element: HerbElement.fire,
     planet: Planet.mars,
     imageUrl: 'assets/images/herbs/gengibre.jpg',
@@ -334,7 +334,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Petiveria alliacea',
     folkNames: 'Tipi, Mucura-caá',
     description:
-        'Erva poderosa de proteção e limpeza, muito usada em religiões afro-brasileiras.',
+        'Erva poderosa de proteção e limpeza, muito usada em religiões afro-brasileiras',
     element: HerbElement.earth,
     planet: Planet.saturn,
     imageUrl: 'assets/images/herbs/guine.jpg',
@@ -366,7 +366,7 @@ const List<HerbModel> herbsPt = [
     name: 'Hortelã',
     scientificName: 'Mentha spicata',
     folkNames: 'Hortelã-comum',
-    description: 'Erva refrescante de cura, prosperidade e purificação.',
+    description: 'Erva refrescante de cura, prosperidade e purificação',
     element: HerbElement.air,
     planet: Planet.mercury,
     imageUrl: 'assets/images/herbs/hortela.jpg',
@@ -398,7 +398,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Lavandula angustifolia',
     folkNames: 'Alfazema',
     description:
-        'Erva calmante e purificadora. Associada à paz, amor e sono tranquilo.',
+        'Erva calmante e purificadora. Associada à paz, amor e sono tranquilo',
     element: HerbElement.air,
     planet: Planet.mercury,
     imageUrl: 'assets/images/herbs/lavanda.jpg',
@@ -429,7 +429,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Laurus nobilis',
     folkNames: 'Loureiro, Louro-nobre',
     description:
-        'Folha sagrada de vitória, sucesso e proteção. Usada para purificação e manifestação.',
+        'Folha sagrada de vitória, sucesso e proteção. Usada para purificação e manifestação',
     element: HerbElement.fire,
     planet: Planet.sun,
     imageUrl: 'assets/images/herbs/louro.jpg',
@@ -460,7 +460,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Ocimum basilicum',
     folkNames: 'Alfavaca',
     description:
-        'Erva de amor, prosperidade e proteção. Sagrada em várias tradições.',
+        'Erva de amor, prosperidade e proteção. Sagrada em várias tradições',
     element: HerbElement.fire,
     planet: Planet.mars,
     imageUrl: 'assets/images/herbs/manjericao.jpg',
@@ -491,7 +491,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Piper nigrum',
     folkNames: 'Pimenta-preta',
     description:
-        'Especiaria de proteção, banimento e quebra de feitiços. Afasta energias negativas.',
+        'Especiaria de proteção, banimento e quebra de feitiços. Afasta energias negativas',
     element: HerbElement.fire,
     planet: Planet.mars,
     imageUrl: 'assets/images/herbs/pimenta_do_reino.jpg',
@@ -519,10 +519,10 @@ const List<HerbModel> herbsPt = [
   ),
   HerbModel(
     name: 'Rosa',
-    scientificName: 'Rosa spp.',
+    scientificName: 'Rosa spp',
     folkNames: 'Rainha das flores',
     description:
-        'Flor do amor, beleza e magia do coração. Usada em rituais de amor e auto-cuidado.',
+        'Flor do amor, beleza e magia do coração. Usada em rituais de amor e auto-cuidado',
     element: HerbElement.water,
     planet: Planet.venus,
     imageUrl: 'assets/images/herbs/rosa.jpg',
@@ -553,7 +553,7 @@ const List<HerbModel> herbsPt = [
     scientificName: 'Salvia apiana',
     folkNames: 'White Sage',
     description:
-        'Erva sagrada de purificação. Muito usada em defumação para limpar energias.',
+        'Erva sagrada de purificação. Muito usada em defumação para limpar energias',
     element: HerbElement.air,
     planet: Planet.jupiter,
     imageUrl: 'assets/images/herbs/salvia_branca.jpg',
