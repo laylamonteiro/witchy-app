@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/navigation/app_deep_link.dart';
 import '../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../divination/presentation/pages/pendulum_page.dart';
-import '../../diary/presentation/pages/dream_interpretation_page.dart';
 import '../../grimoire/presentation/pages/ai_spell_creation_page.dart';
 import '../../grimoire/presentation/pages/mystic_advisor_page.dart';
 import '../../learning/presentation/pages/learning_home_page.dart';
@@ -23,14 +23,21 @@ class ShortcutTool {
   /// Rótulo localizado (reutiliza as chaves das ferramentas existentes).
   final String Function(AppLocalizations l10n) label;
 
-  final WidgetBuilder builder;
+  /// Página empilhada ao tocar (null quando o atalho usa [link]).
+  final WidgetBuilder? builder;
+
+  /// Destino interno do app. Usado quando a ferramenta VIVE dentro de uma
+  /// aba: empilhar a página solta a deixaria sem a navegação da seção.
+  final AppDeepLink? link;
 
   const ShortcutTool({
     required this.id,
     required this.emoji,
     required this.label,
-    required this.builder,
-  });
+    this.builder,
+    this.link,
+  }) : assert(builder != null || link != null,
+            'Um atalho precisa de uma página ou de um destino');
 }
 
 /// Catálogo dos atalhos personalizáveis do "Seu Dia".
@@ -68,11 +75,14 @@ class YourDayShortcuts {
       label: (l10n) => l10n.toolOracleTitle,
       builder: (_) => const OracleCardsPage(),
     ),
+    // Sonhos abre a ABA de sonhos dos Diários: lá dá para interpretar (quem
+    // tem acesso) e para registrar à mão — a tela de interpretação sozinha
+    // deixaria de fora quem não tem o recurso.
     ShortcutTool(
       id: 'dreams',
       emoji: '🌙',
       label: (l10n) => l10n.toolDreamsTitle,
-      builder: (_) => const DreamInterpretationPage(),
+      link: AppDeepLink.dreamsDiary,
     ),
     ShortcutTool(
       id: 'sigils',

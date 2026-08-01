@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -130,6 +131,17 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
         : result);
   }
 
+  /// Abre a ferramenta: destino interno (mantém a navegação da seção) ou
+  /// página empilhada.
+  void _open(BuildContext context, ShortcutTool tool) {
+    final link = tool.link;
+    if (link != null) {
+      DeepLinkService.instance.dispatch(link);
+      return;
+    }
+    Navigator.of(context).push(MaterialPageRoute(builder: tool.builder!));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -172,9 +184,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
             children: tools.map((tool) {
               return InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: tool.builder),
-                ),
+                onTap: () => _open(context, tool),
                 child: Container(
                   decoration: BoxDecoration(
                     color: context.gc.surface,
