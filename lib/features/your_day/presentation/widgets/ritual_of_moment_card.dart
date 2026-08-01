@@ -9,7 +9,6 @@ import '../../../grimoire/data/models/spell_model.dart';
 import '../../../guided_rituals/data/models/guided_rituals_data.dart';
 import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
-import '../../../wheel_of_year/data/models/sabbat_model.dart';
 import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 
 /// O que a Bruxa faz HOJE — a ação primária da tela, em card de destaque.
