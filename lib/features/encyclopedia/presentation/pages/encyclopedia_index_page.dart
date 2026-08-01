@@ -199,9 +199,15 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
         children: [
           Positioned.fill(
             child: AgedPaper(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(30, 30, 30, 96),
-                child: Column(
+              // A área de rolagem vive DENTRO da moldura ornamental (linha
+              // interna a 18px): o ClipRect corta o texto na borda, para
+              // nada aparecer por cima do friso ao rolar.
+              child: Padding(
+                padding: const EdgeInsets.all(21),
+                child: ClipRect(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(9, 9, 9, 75),
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
@@ -251,6 +257,8 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
                       ),
                     ),
                   ],
+                ),
+                  ),
                 ),
               ),
             ),
