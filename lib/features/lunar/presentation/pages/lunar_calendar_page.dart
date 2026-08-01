@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/moon_content_data.dart';
+import '../providers/lunar_provider.dart';
 import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -29,6 +31,7 @@ class LunarCalendarPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final nowPhase = context.watch<LunarProvider>().getCurrentMoonPhase();
 
     final content = SingleChildScrollView(
       child: StaggeredEntrance(
@@ -42,12 +45,13 @@ class LunarCalendarPage extends StatelessWidget {
               child: Column(
                 children: [
                   // Slot de altura fixa: o hero da Lua e o do Sol têm o MESMO
-                  // tamanho, com o ícone centrado (emojis variam de metrica).
-                  const SizedBox(
+                  // tamanho e formato, com o ícone centrado (emojis variam
+                  // de métrica). A lua que respira é a fase de HOJE.
+                  SizedBox(
                     height: 110,
                     child: Center(
                       child: BreathingMoon(
-                        moonEmoji: '🌕',
+                        moonEmoji: nowPhase.emoji,
                         size: 72,
                         showStars: false,
                       ),
@@ -55,7 +59,7 @@ class LunarCalendarPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    l10n.lunarCalendarTitle,
+                    l10n.moonNowTitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: context.gc.lilac,
@@ -64,10 +68,19 @@ class LunarCalendarPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    l10n.moonInWitchcraftSubtitle,
+                    '${nowPhase.emoji}  ${nowPhase.displayName}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    nowPhase.description,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: context.gc.textSecondary,
+                          height: 1.4,
                         ),
                   ),
                 ],
