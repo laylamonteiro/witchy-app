@@ -686,7 +686,6 @@
   "aiSpellManifesting": "Manifesting...",
   "aiSpellManifest": "Manifest Spell ✨",
   "aiSpellSeeDetails": "See Details",
-  "learnUnlockPrevious": "Complete the previous lesson to unlock this one.",
   "learnLessonN": "Lesson {number} — {title}",
   "learnPageWritten": "Page written: \"{title}\"",
   "learnPremiumLesson": "Premium Lesson",

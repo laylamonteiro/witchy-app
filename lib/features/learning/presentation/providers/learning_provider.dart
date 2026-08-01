@@ -78,11 +78,9 @@ class LearningProvider with ChangeNotifier {
   bool isTrailComplete(LearningTrail trail) =>
       completedInTrail(trail) == trail.lessons.length;
 
-  /// Uma lição destrava quando a anterior foi concluída (a primeira é livre).
-  bool isLessonUnlocked(LearningTrail trail, int index) {
-    if (index == 0) return true;
-    return _completed.contains(trail.lessons[index - 1].id);
-  }
+  // Não há cadeado entre lições: todas ficam abertas, e a Bruxa escolhe por
+  // onde começar. A ordem é sugestão (a trilha é linear no conteúdo), nunca
+  // uma trava — explorar livremente vale mais que forçar a sequência.
 
   int get totalPagesWritten => _completed.length;
 
