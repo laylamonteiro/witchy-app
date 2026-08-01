@@ -3,7 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 
@@ -16,24 +16,12 @@ class SpellRecommendationsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final lunarProvider = context.watch<LunarProvider>();
 
-    return MagicalCard(
+    return ExpansionMagicalCard(
+      emoji: '💡',
+      title: AppLocalizations.of(context).lunarRecommendations,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.lightbulb_outline,
-                color: context.gc.starYellow,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                AppLocalizations.of(context).lunarRecommendations,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           _buildSpellRecommendation(
             context,
             lunarProvider,
@@ -57,24 +45,22 @@ class SpellRecommendationsCard extends StatelessWidget {
   ) {
     final isGoodTime = lunarProvider.isGoodTimeForSpell(spellType);
     final recommendation = lunarProvider.getSpellRecommendation(spellType);
+    // Paleta mística: dourado quando a lua favorece, lilás quando é hora de
+    // esperar. Verde/azul de "sistema" quebravam a imersão.
+    final accent = isGoodTime ? context.gc.starYellow : context.gc.lilac;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isGoodTime
-            ? context.gc.success.withValues(alpha: 0.1)
-            : context.gc.info.withValues(alpha: 0.1),
+        color: accent.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isGoodTime ? context.gc.success : context.gc.info,
-          width: 1,
-        ),
+        border: Border.all(color: accent, width: 1),
       ),
       child: Row(
         children: [
           Icon(
-            isGoodTime ? Icons.check_circle : Icons.info,
-            color: isGoodTime ? context.gc.success : context.gc.info,
+            isGoodTime ? Icons.auto_awesome : Icons.hourglass_bottom,
+            color: accent,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -83,10 +69,10 @@ class SpellRecommendationsCard extends StatelessWidget {
               children: [
                 Text(
                   spellType.displayName,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color:
-                            isGoodTime ? context.gc.success : context.gc.info,
-                      ),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(color: accent),
                 ),
                 Text(
                   recommendation,

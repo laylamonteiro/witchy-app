@@ -55,6 +55,9 @@
   "commonConfirm": "Confirmar",
   "toolsHeaderTitle": "Ferramentas Mágicas",
   "toolsHeaderSubtitle": "Recursos para auxiliar em suas práticas de magia e manifestação",
+  "toolsGroupPractice": "Prática",
+  "toolsGroupDivination": "Adivinhação",
+  "toolsGroupSelfKnowledge": "Autoconhecimento",
   "toolMysticAdvisorTitle": "Conselheiro Místico",
   "toolMysticAdvisorDesc": "Sabedoria ancestral para suas dúvidas de bruxaria e magia",
   "toolOracleTitle": "Cartas do Oráculo",
@@ -829,7 +832,6 @@
   "aiSpellManifesting": "Manifestando...",
   "aiSpellManifest": "Manifestar Feitiço ✨",
   "aiSpellSeeDetails": "Ver Detalhes",
-  "learnUnlockPrevious": "Complete a lição anterior para destravar esta.",
   "learnLessonN": "Lição {number} — {title}",
   "learnPageWritten": "Página escrita: \"{title}\"",
   "learnPremiumLesson": "Lição Premium",
@@ -1473,6 +1475,7 @@
   "subsRestored": "Compras restauradas com sucesso!",
   "subsNoPurchases": "Nenhuma compra encontrada",
   "encyNothingFound": "Nada encontrado 🔍",
+  "encySearchAll": "Buscar em toda a Enciclopédia…",
   "encyArcaneSearchHint": "Buscar em {category}...",
   "@encyArcaneSearchHint": {
     "placeholders": {
@@ -1833,6 +1836,11 @@
   },
   "notifSunWaterTitle": "🌞 Domingo, dia do Sol",
   "notifSunWaterBody": "Manhã perfeita para preparar sua Água Solar. Toque para ver o passo a passo.",
+  "notifDailyTitle": "🐈‍⬛ O Salem te chama",
+  "notifDailyBody": "Sua lua, seu momento mágico e os ritos de hoje esperam por você.",
+  "settingsDailyReminder": "Lembrete diário do Salem",
+  "settingsDailyReminderDesc": "Um toque por dia para não perder a sua sequência",
+  "settingsDailyReminderTime": "Horário do lembrete",
   "settingsSunWater": "Água Solar (domingos)",
   "settingsSunWaterDesc": "Lembrete semanal no dia do Sol para preparar sua água solar",
   "salemTourStep1": "Miau! Eu sou o Salem, seu familiar neste grimório. 🐈‍⬛ Vou te mostrar tudo o que este lugar mágico guarda, Bruxa. Vem comigo!",
@@ -1847,7 +1855,7 @@
   "salemTourBack": "Voltar",
   "salemTourDone": "Vamos começar!",
   "settingsSalem": "Salem, o gatinho",
-  "settingsSalemDesc": "Seu familiar de estimação: reveja o tour guiado. Segredinho: 5 toques nele o dissolvem em fumaça — e 5 toques na tela o trazem de volta.",
+  "settingsSalemDesc": "Seu familiar de estimação: reveja o tour guiado. Segredinho: 5 toques nele o dissolvem em fumaça — e 5 toques rápidos no mesmo ponto da tela o trazem de volta.",
   "settingsReplayTour": "Rever tour com o Salem",
   "encyAddTitle": "Adicionar em {category}",
   "@encyAddTitle": {
@@ -1957,6 +1965,43 @@
     }
   },
   "yourDayRitualCta": "Fazer o ritual guiado",
+  "yourDayHeroEyebrow": "Seu rito de hoje",
+  "yourDayStreakDays": "{days, plural, =0{Comece sua sequência hoje} one{1 dia seguido} other{{days} dias seguidos}}",
+  "yourDayTrailContinueTitle": "Continue sua trilha",
+  "yourDayTrailStartTitle": "Comece uma trilha",
+  "yourDayTrailCtaContinue": "Continuar",
+  "yourDayTrailCtaStart": "Começar",
+  "yourDayTrailNext": "Próxima: {title}",
+  "@yourDayTrailNext": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "yourDayRitesTitle": "Ritos de hoje",
+  "yourDayRitesProgress": "{done} de {total}",
+  "@yourDayRitesProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "yourDayRiteGratitude": "Registrar uma gratidão",
+  "yourDayRiteDream": "Registrar um sonho",
+  "yourDayRiteTarot": "Tirar uma carta de tarot",
+  "yourDayRitesComplete": "Dia completo! A sua sequência continua. ✨",
+  "yourDayRitesHint": "Cada rito alimenta suas Jornadas Mágicas",
+  "yourDayGratitudeHint": "Pelo que você é grata hoje?",
+  "@yourDayStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "num"
+      }
+    }
+  },
   "yourDayShortcutsTitle": "Atalhos",
   "yourDayShortcutsEdit": "Editar",
   "yourDayShortcutsEditTitle": "Escolha seus atalhos",
@@ -1984,6 +2029,6 @@
   "sunCorrespondencesSubtitle": "Cristais, ervas e cores do Sol",
   "sunDeitiesTitle": "Divindades solares",
   "sunDeitiesSubtitle": "Rostos do Sol pelas tradições",
-  "salemTourStep8": "Prontinha! Ah, um segredo: 5 toques em mim e eu sumo em fumaça; 5 toques na tela e eu volto. Boa jornada! 🌙",
+  "salemTourStep8": "Prontinha! Ah, um segredo: 5 toques em mim e eu sumo em fumaça; 5 toques rápidos no mesmo ponto da tela e eu volto. Boa jornada! 🌙",
   "yourDayShortcutAiSpell": "Feitiço Místico"
 }

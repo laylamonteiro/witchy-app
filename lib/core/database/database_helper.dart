@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 17,
+      version: 18,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -279,6 +279,23 @@ class DatabaseHelper {
         UNIQUE(user_id, date)
       )
     ''');
+
+    // Check-in diário: um registro por dia visitado (sequência de dias) com
+    // os "ritos do dia" concluídos, separados por vírgula.
+    await db.execute('''
+      CREATE TABLE daily_checkins (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        date TEXT NOT NULL,
+        rites TEXT NOT NULL DEFAULT '',
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0,
+        UNIQUE(user_id, date)
+      )
+    ''');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_daily_checkins_user_id ON daily_checkins(user_id)');
 
     // Tabela de Códigos Premium para acesso Premium
     await db.execute('''
@@ -1011,6 +1028,24 @@ class DatabaseHelper {
       ''');
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_user_ency_entries_user_id ON user_encyclopedia_entries(user_id)');
+    }
+
+    // Migração para versão 18: check-in diário (sequência de dias + ritos)
+    if (oldVersion < 18) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS daily_checkins (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT 'local_user',
+          date TEXT NOT NULL,
+          rites TEXT NOT NULL DEFAULT '',
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          synced INTEGER NOT NULL DEFAULT 0,
+          UNIQUE(user_id, date)
+        )
+      ''');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_daily_checkins_user_id ON daily_checkins(user_id)');
     }
   }
 

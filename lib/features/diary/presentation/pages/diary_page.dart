@@ -8,6 +8,7 @@ import 'desires_list_page.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 
 class DiaryPage extends StatefulWidget {
@@ -41,13 +42,29 @@ class _DiaryPageState extends State<DiaryPage>
       initialIndex: _defaultTabIndex,
     );
     widget.resetNotifier?.addListener(_onResetRequested);
+    DeepLinkService.instance.pending.addListener(_onDeepLink);
+    // Notificação/atalho pode ter aberto o app: trata o link ao montar.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLink());
   }
 
   @override
   void dispose() {
+    DeepLinkService.instance.pending.removeListener(_onDeepLink);
     widget.resetNotifier?.removeListener(_onResetRequested);
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// Deep link para uma sub-aba dos Diários (ex.: o rito "registrar um sonho"
+  /// abre a aba Sonhos aqui dentro, com a bottom bar à vista, em vez de
+  /// empilhar a lista solta). Destinos de outras seções são ignorados.
+  void _onDeepLink() {
+    final target = DeepLinkService.instance.pending.value?.link.diaryTab;
+    if (target == null || !mounted) return;
+    if (_tabController.index != target) {
+      _tabController.animateTo(target);
+    }
+    DeepLinkService.instance.consume();
   }
 
   void _onResetRequested() {

@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -72,7 +73,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
               Text(
                 l10n.yourDayShortcutsEditHint,
                 style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
-                      color: context.gc.textSecondary,
+                      color: sheetContext.gc.textSecondary,
                     ),
               ),
               const SizedBox(height: 16),
@@ -84,8 +85,8 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
                   return FilterChip(
                     selected: isSelected,
                     label: Text('${tool.emoji} ${tool.label(l10n)}'),
-                    selectedColor: context.gc.lilac.withValues(alpha: 0.3),
-                    checkmarkColor: context.gc.lilac,
+                    selectedColor: sheetContext.gc.lilac.withValues(alpha: 0.3),
+                    checkmarkColor: sheetContext.gc.lilac,
                     onSelected: (value) {
                       setSheetState(() {
                         if (value) {
@@ -103,8 +104,8 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: context.gc.lilac,
-                    foregroundColor: context.gc.onPrimary,
+                    backgroundColor: sheetContext.gc.lilac,
+                    foregroundColor: sheetContext.gc.onPrimary,
                   ),
                   onPressed: () {
                     // Preserva a ordem canônica do registry.
@@ -128,6 +129,17 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
     setState(() => _ids = result.isEmpty
         ? List.of(YourDayShortcuts.defaults)
         : result);
+  }
+
+  /// Abre a ferramenta: destino interno (mantém a navegação da seção) ou
+  /// página empilhada.
+  void _open(BuildContext context, ShortcutTool tool) {
+    final link = tool.link;
+    if (link != null) {
+      DeepLinkService.instance.dispatch(link);
+      return;
+    }
+    Navigator.of(context).push(MaterialPageRoute(builder: tool.builder!));
   }
 
   @override
@@ -172,9 +184,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
             children: tools.map((tool) {
               return InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: tool.builder),
-                ),
+                onTap: () => _open(context, tool),
                 child: Container(
                   decoration: BoxDecoration(
                     color: context.gc.surface,

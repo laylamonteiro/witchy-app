@@ -849,6 +849,55 @@ class SettingsPage extends StatelessWidget {
                           }
                         },
                       ),
+                      Divider(color: context.gc.textPrimary10),
+                      _NotificationTile(
+                        icon: '🐈‍⬛',
+                        title: AppLocalizations.of(context)
+                            .settingsDailyReminder,
+                        subtitle: AppLocalizations.of(context)
+                            .settingsDailyReminderDesc,
+                        value: notificationProvider.dailyReminder,
+                        onChanged: (value) async {
+                          await notificationProvider.setDailyReminder(value);
+                          if (context.mounted) {
+                            _scheduleNotifications(context);
+                          }
+                        },
+                      ),
+                      // Horário só aparece com o lembrete ligado.
+                      if (notificationProvider.dailyReminder)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.schedule,
+                              color: context.gc.lilac, size: 20),
+                          title: Text(
+                            AppLocalizations.of(context)
+                                .settingsDailyReminderTime,
+                            style: TextStyle(color: context.gc.textPrimary),
+                          ),
+                          trailing: Text(
+                            '${notificationProvider.dailyReminderHour.toString().padLeft(2, '0')}:00',
+                            style: TextStyle(
+                              color: context.gc.lilac,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onTap: () async {
+                            final picked = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay(
+                                hour: notificationProvider.dailyReminderHour,
+                                minute: 0,
+                              ),
+                            );
+                            if (picked == null) return;
+                            await notificationProvider
+                                .setDailyReminderHour(picked.hour);
+                            if (context.mounted) {
+                              _scheduleNotifications(context);
+                            }
+                          },
+                        ),
                     ],
                   );
                 },

@@ -10,7 +10,8 @@ import '../../data/models/trail_model.dart';
 import '../providers/learning_provider.dart';
 import 'lesson_page.dart';
 
-/// Uma trilha do Grimório Vivo: lista de lições com destrave sequencial.
+/// Uma trilha do Grimório Vivo: todas as lições ficam abertas — a ordem é
+/// sugestão, não trava, para a Bruxa explorar por onde quiser.
 /// A primeira lição é gratuita; as demais são Premium.
 class TrailPage extends StatelessWidget {
   final LearningTrail trail;
@@ -54,18 +55,15 @@ class TrailPage extends StatelessWidget {
   ) {
     final lesson = trail.lessons[index];
     final completed = learning.isLessonCompleted(lesson.id);
-    final unlocked = learning.isLessonUnlocked(trail, index);
+    // Sem cadeado entre lições: a única porta é a Premium (a 1ª é livre).
     final needsPremium = index > 0 && !isPremium;
-    final accessible = unlocked && !needsPremium;
+    final accessible = !needsPremium;
 
     IconData icon;
     Color color;
     if (completed) {
       icon = Icons.check_circle;
       color = context.gc.success;
-    } else if (!unlocked) {
-      icon = Icons.lock_outline;
-      color = context.gc.textSecondary;
     } else if (needsPremium) {
       icon = Icons.star_outline;
       color = context.gc.starYellow;
@@ -76,16 +74,6 @@ class TrailPage extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        if (!unlocked) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text(AppLocalizations.of(context).learnUnlockPrevious),
-              backgroundColor: context.gc.alert,
-            ),
-          );
-          return;
-        }
         if (needsPremium) {
           showModalBottomSheet(
             context: context,
@@ -124,7 +112,7 @@ class TrailPage extends StatelessWidget {
                   Text(
                     completed
                         ? AppLocalizations.of(context).learnPageWritten(lesson.pageTitle)
-                        : needsPremium && unlocked
+                        : needsPremium
                             ? AppLocalizations.of(context).learnPremiumLesson
                             : AppLocalizations.of(context).learnCreatesPage(lesson.pageTitle),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

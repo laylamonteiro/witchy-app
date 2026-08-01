@@ -9,6 +9,7 @@ import '../../../../core/utils/accents.dart';
 import '../../data/data_sources/goddesses_data.dart';
 import 'goddess_detail_page.dart';
 import '../widgets/entry_pager.dart';
+import '../../../../core/widgets/magical_search_field.dart';
 
 class GoddessesListPage extends StatefulWidget {
   const GoddessesListPage({super.key});
@@ -61,29 +62,11 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Buscar deusas...',
-                      prefixIcon: Icon(Icons.search, color: context.gc.lilac),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                _filterGoddesses('');
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: context.gc.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    onChanged: _filterGoddesses,
-                  ),
+                  child: MagicalSearchField(
+            controller: _searchController,
+            hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabGoddesses),
+            onChanged: _filterGoddesses,
+          ),
                 ),
                 const SizedBox(width: 8),
                 PopupMenuButton<String>(

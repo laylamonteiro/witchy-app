@@ -127,6 +127,7 @@ class NotificationService {
   /// Id fixo da notificação semanal de água solar (agendamento recorrente,
   /// um único slot).
   static const int sunWaterNotificationId = 700001;
+  static const int dailyReminderNotificationId = 800001;
 
   @visibleForTesting
   static int notificationId(String type, DateTime eventDate) {
@@ -248,6 +249,28 @@ class NotificationService {
     );
   }
 
+  /// Lembrete diário do Salem, no horário escolhido pela Bruxa.
+  ///
+  /// É a única notificação que não depende de evento astronômico: existe para
+  /// sustentar o hábito (e a sequência de dias) nos dias comuns.
+  Future<void> scheduleDailyReminder({required int hour, int minute = 0}) async {
+    final now = DateTime.now();
+    var next = DateTime(now.year, now.month, now.day, hour, minute);
+    if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
+
+    await _notifications.zonedSchedule(
+      dailyReminderNotificationId,
+      _l10n.notifDailyTitle,
+      _l10n.notifDailyBody,
+      tz.TZDateTime.from(next.toUtc(), tz.UTC),
+      _moonDetails(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      // Mesmo horário todo dia.
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: AppDeepLink.yourDay.payload,
+    );
+  }
+
   NotificationDetails _moonDetails() => NotificationDetails(
         android: AndroidNotificationDetails(
           'moon_notifications',
@@ -299,6 +322,8 @@ class NotificationService {
     required List<DateTime> newMoonDates,
     required List<Sabbat> sabbats,
     bool sunWater = false,
+    bool dailyReminder = false,
+    int dailyReminderHour = 9,
   }) async {
     try {
       final granted = await requestPermissions();
@@ -324,6 +349,9 @@ class NotificationService {
       }
       if (sunWater) {
         await scheduleSunWaterNotification();
+      }
+      if (dailyReminder) {
+        await scheduleDailyReminder(hour: dailyReminderHour);
       }
       final pending = await _notifications.pendingNotificationRequests();
       return NotificationScheduleResult(

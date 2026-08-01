@@ -780,7 +780,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'daily_magical_weather',
         'learning_progress',
         'guided_ritual_logs',
-        'user_encyclopedia_entries'
+        'user_encyclopedia_entries',
+        'daily_checkins'
       ];
 
       for (final table in tables) {
@@ -879,7 +880,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
           'daily_magical_weather',
           'learning_progress',
           'guided_ritual_logs',
-          'user_encyclopedia_entries'
+          'user_encyclopedia_entries',
+          'daily_checkins'
         ];
 
         for (final table in tables) {

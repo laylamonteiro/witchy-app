@@ -15,6 +15,9 @@ class NotificationProvider with ChangeNotifier {
   bool _sabbatNotifications = true;
   // Água solar é opt-in (semanal, aos domingos) para não virar spam.
   bool _sunWaterNotifications = false;
+  // Lembrete diário do Salem: opt-in, com horário escolhido pela Bruxa.
+  bool _dailyReminder = false;
+  int _dailyReminderHour = 9;
   bool _initialized = false;
   bool? _permissionGranted;
   int _scheduledCount = 0;
@@ -31,6 +34,8 @@ class NotificationProvider with ChangeNotifier {
   bool get newMoonNotifications => _newMoonNotifications;
   bool get sabbatNotifications => _sabbatNotifications;
   bool get sunWaterNotifications => _sunWaterNotifications;
+  bool get dailyReminder => _dailyReminder;
+  int get dailyReminderHour => _dailyReminderHour;
   bool? get permissionGranted => _permissionGranted;
   int get scheduledCount => _scheduledCount;
   String? get lastError => _lastError;
@@ -77,6 +82,8 @@ class NotificationProvider with ChangeNotifier {
     _newMoonNotifications = _prefs.getBool('newMoonNotifications') ?? true;
     _sabbatNotifications = _prefs.getBool('sabbatNotifications') ?? true;
     _sunWaterNotifications = _prefs.getBool('sunWaterNotifications') ?? false;
+    _dailyReminder = _prefs.getBool('dailyReminder') ?? false;
+    _dailyReminderHour = _prefs.getInt('dailyReminderHour') ?? 9;
   }
 
   Future<void> setFullMoonNotifications(bool value) async {
@@ -100,6 +107,18 @@ class NotificationProvider with ChangeNotifier {
   Future<void> setSunWaterNotifications(bool value) async {
     _sunWaterNotifications = value;
     await _prefs.setBool('sunWaterNotifications', value);
+    notifyListeners();
+  }
+
+  Future<void> setDailyReminder(bool value) async {
+    _dailyReminder = value;
+    await _prefs.setBool('dailyReminder', value);
+    notifyListeners();
+  }
+
+  Future<void> setDailyReminderHour(int hour) async {
+    _dailyReminderHour = hour;
+    await _prefs.setInt('dailyReminderHour', hour);
     notifyListeners();
   }
 
@@ -139,10 +158,12 @@ class NotificationProvider with ChangeNotifier {
     final sabbats =
         _sabbatNotifications ? wheelProvider.getAllSabbats() : <Sabbat>[];
 
+    // Nenhum aviso ligado (incluindo o lembrete diário) = cancela tudo.
     if (!_fullMoonNotifications &&
         !_newMoonNotifications &&
         !_sabbatNotifications &&
-        !_sunWaterNotifications) {
+        !_sunWaterNotifications &&
+        !_dailyReminder) {
       await _notificationService.cancelAllNotifications();
       _permissionGranted = true;
       _scheduledCount = 0;
@@ -156,6 +177,8 @@ class NotificationProvider with ChangeNotifier {
       newMoonDates: newMoons,
       sabbats: sabbats,
       sunWater: _sunWaterNotifications,
+      dailyReminder: _dailyReminder,
+      dailyReminderHour: _dailyReminderHour,
     );
     _permissionGranted = result.permissionGranted;
     _scheduledCount = result.scheduledCount;

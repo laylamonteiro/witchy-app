@@ -37,6 +37,7 @@ import 'features/diary/presentation/providers/gratitude_provider.dart';
 import 'features/diary/presentation/providers/affirmation_provider.dart';
 import 'features/diary/presentation/providers/free_writing_provider.dart';
 import 'features/learning/presentation/providers/learning_provider.dart';
+import 'features/your_day/presentation/providers/daily_checkin_provider.dart';
 import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart';
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
@@ -262,6 +263,10 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(widget.prefs)),
         ChangeNotifierProvider.value(value: _mascotProvider),
+        // ATENÇÃO À ORDEM: todo ChangeNotifierProxyProvider<AuthProvider, X>
+        // precisa vir DEPOIS desta linha — ele lê o AuthProvider do contexto
+        // acima de si mesmo, e não o encontra se for declarado antes.
+        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
         ChangeNotifierProxyProvider<AuthProvider, LearningProvider>(
           create: (_) => LearningProvider(),
           update: (_, auth, provider) {
@@ -269,7 +274,14 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             return provider;
           },
         ),
-        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
+        // Check-in diário: registra a visita e mantém a sequência de dias.
+        ChangeNotifierProxyProvider<AuthProvider, DailyCheckinProvider>(
+          create: (_) => DailyCheckinProvider(),
+          update: (_, auth, provider) {
+            provider!.setUserId(auth.currentUser.id);
+            return provider;
+          },
+        ),
         ChangeNotifierProvider.value(value: PaymentService()),
         ChangeNotifierProvider(create: (_) => LanguageProvider(widget.prefs)),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
