@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
+import '../../navigation/app_deep_link.dart';
 import '../../theme/grimoire_colors.dart';
 import 'tour_targets.dart';
 
@@ -11,9 +12,14 @@ import 'tour_targets.dart';
 typedef _TourSpot = ({String id, int? slot, int slots});
 
 /// Um passo do tour: aba a exibir + feature iluminada + fala do Salem.
+///
+/// [link] leva a seção até o conteúdo certo (ex.: a Enciclopédia abre na aba
+/// dos Sabbats) — sem ele, o tour falaria de uma coisa mostrando outra,
+/// qualquer que fosse a última sub-aba visitada.
 typedef _TourStep = ({
   int tab,
   _TourSpot? target,
+  AppDeepLink? link,
   String Function(AppLocalizations) text,
 });
 
@@ -62,14 +68,32 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
       (id: TourTargetIds.settings, slot: null, slots: 1);
 
   static const List<_TourStep> _steps = [
-    (tab: 0, target: null, text: _step1), // boas-vindas
-    (tab: 0, target: _navYourDay, text: _step2), // Seu Dia
-    (tab: 1, target: _navEncyclopedia, text: _step3), // Enciclopédia
-    (tab: 1, target: _encyclopediaTabs, text: _step4), // Sabbats/rituais
-    (tab: 2, target: _navGrimoire, text: _step5), // Grimório
-    (tab: 3, target: _navDiaries, text: _step6), // Diários
-    (tab: 0, target: _settings, text: _step7), // Configurações
-    (tab: 0, target: null, text: _step8), // segredo/despedida
+    // boas-vindas
+    (tab: 0, target: null, link: null, text: _step1),
+    // Seu Dia
+    (tab: 0, target: _navYourDay, link: null, text: _step2),
+    // Enciclopédia (abre na Lua, a primeira aba)
+    (
+      tab: 1,
+      target: _navEncyclopedia,
+      link: AppDeepLink.moonEncyclopedia,
+      text: _step3
+    ),
+    // Sabbats e rituais guiados (leva até a aba dos Sabbats)
+    (
+      tab: 1,
+      target: _encyclopediaTabs,
+      link: AppDeepLink.sabbatsEncyclopedia,
+      text: _step4
+    ),
+    // Grimório
+    (tab: 2, target: _navGrimoire, link: null, text: _step5),
+    // Diários
+    (tab: 3, target: _navDiaries, link: null, text: _step6),
+    // Configurações
+    (tab: 0, target: _settings, link: null, text: _step7),
+    // segredo/despedida
+    (tab: 0, target: null, link: null, text: _step8),
   ];
 
   static String _step1(AppLocalizations l10n) => l10n.salemTourStep1;
@@ -159,7 +183,11 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
 
   void _goTo(int index) {
     setState(() => _current = index);
-    widget.onTabChange(_steps[index].tab);
+    final step = _steps[index];
+    widget.onTabChange(step.tab);
+    // A seção leva o conteúdo até onde a fala aponta (ex.: aba dos Sabbats).
+    final link = step.link;
+    if (link != null) DeepLinkService.instance.dispatch(link);
     // A aba nova só existe no próximo frame; o pulso de sincronia cobre os
     // casos em que o layout demora mais que isso.
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncTarget());
