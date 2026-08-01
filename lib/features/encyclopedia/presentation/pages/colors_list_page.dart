@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/encyclopedia_provider.dart';
@@ -10,6 +11,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'color_detail_page.dart';
 import '../widgets/entry_pager.dart';
+import '../../../../core/widgets/magical_search_field.dart';
 
 class ColorsListPage extends StatefulWidget {
   const ColorsListPage({super.key});
@@ -45,32 +47,10 @@ class _ColorsListPageState extends State<ColorsListPage> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: TextField(
+          child: MagicalSearchField(
             controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Buscar cores...',
-              prefixIcon: Icon(Icons.search, color: context.gc.lilac),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: context.gc.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
+            hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabColors),
+            onChanged: (value) => setState(() => _searchQuery = value),
           ),
         ),
         Padding(

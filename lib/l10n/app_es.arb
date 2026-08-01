@@ -1012,6 +1012,7 @@
   "subsRestored": "¡Compras restauradas con éxito!",
   "subsNoPurchases": "Ninguna compra encontrada",
   "encyNothingFound": "Nada encontrado 🔍",
+  "encySearchAll": "Buscar en toda la Enciclopedia…",
   "encyArcaneSearchHint": "Buscar en {category}...",
   "encyCatSacredSymbols": "Símbolos Sagrados",
   "encyArcaneIntroArchetypes": "Figuras universales de los mitos y la psique — espejos para el autoconocimiento en el camino mágico.",

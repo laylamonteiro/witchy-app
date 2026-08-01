@@ -8,6 +8,7 @@ import 'altar_page.dart';
 import 'elements_page.dart';
 import 'goddesses_list_page.dart';
 import 'arcane_list_page.dart';
+import 'encyclopedia_search_page.dart';
 import '../../data/data_sources/arcane_categories.dart';
 import '../../data/data_sources/archetypes_data.dart';
 import '../../data/data_sources/angels_data.dart';
@@ -107,6 +108,16 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
       appBar: AppBar(
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).encyclopediaPageTitle),
         actions: [
+          // Busca global: um campo para as 15 abas (e as entradas pessoais).
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const EncyclopediaSearchPage(),
+              ),
+            ),
+            tooltip: AppLocalizations.of(context).commonSearch,
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             // rootNavigator: Configurações cobre a bottom bar (tela cheia)
@@ -131,22 +142,25 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
                 padding: EdgeInsets.zero,
                 labelStyle: const TextStyle(fontSize: 14),
                 unselectedLabelStyle: const TextStyle(fontSize: 14),
+                // Ordem por interesse: cósmico primeiro (Lua/Sol/Sabbats são
+                // destinos de deep link — índices 0/1/2 NÃO mudam), depois a
+                // consulta do dia a dia, e o nicho no fim.
                 tabs: [
                   Tab(text: AppLocalizations.of(context).encyTabMoon),
                   Tab(text: AppLocalizations.of(context).encyTabSun),
                   Tab(text: AppLocalizations.of(context).encyTabSabbats),
                   Tab(text: AppLocalizations.of(context).encyTabCrystals),
                   Tab(text: AppLocalizations.of(context).encyTabHerbs),
-                  Tab(text: AppLocalizations.of(context).encyTabMetals),
                   Tab(text: AppLocalizations.of(context).encyTabColors),
                   Tab(text: AppLocalizations.of(context).encyTabGoddesses),
                   Tab(text: AppLocalizations.of(context).encyTabElements),
-                  Tab(text: AppLocalizations.of(context).encyTabAltar),
                   Tab(text: AppLocalizations.of(context).encyTabRunes),
+                  Tab(text: AppLocalizations.of(context).encyTabAltar),
+                  Tab(text: AppLocalizations.of(context).encyTabMetals),
                   Tab(text: AppLocalizations.of(context).encyTabArchetypes),
+                  Tab(text: AppLocalizations.of(context).encyTabSymbols),
                   Tab(text: AppLocalizations.of(context).encyTabAngels),
                   Tab(text: AppLocalizations.of(context).encyTabDemons),
-                  Tab(text: AppLocalizations.of(context).encyTabSymbols),
                 ],
               ),
             ),
@@ -155,23 +169,30 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
       ),
       body: TabBarView(
         controller: _tabController,
+        // MESMA ordem dos Tabs acima — mudou lá, muda aqui.
         children: [
           const LunarCalendarPage(embedded: true),
           const SunPage(),
           const WheelOfYearPage(embedded: true),
           const CrystalsListPage(),
           const HerbsListPage(),
-          const MetalsListPage(),
           const ColorsListPage(),
           const GoddessesListPage(),
           const ElementsPage(),
-          const AltarPage(),
           const RunesListPage(),
+          const AltarPage(),
+          const MetalsListPage(),
           ArcaneListPage(
             category: ArcaneCategory.archetypes,
             title: l10n.encyTabArchetypes,
             intro: l10n.encyArcaneIntroArchetypes,
             entries: archetypesData,
+          ),
+          ArcaneListPage(
+            category: ArcaneCategory.sacredSymbols,
+            title: l10n.encyCatSacredSymbols,
+            intro: l10n.encyArcaneIntroSymbols,
+            entries: sacredSymbolsData,
           ),
           ArcaneListPage(
             category: ArcaneCategory.angels,
@@ -184,12 +205,6 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
             title: l10n.encyTabDemons,
             intro: l10n.encyArcaneIntroDemons,
             entries: demonsData,
-          ),
-          ArcaneListPage(
-            category: ArcaneCategory.sacredSymbols,
-            title: l10n.encyCatSacredSymbols,
-            intro: l10n.encyArcaneIntroSymbols,
-            entries: sacredSymbolsData,
           ),
         ],
       ),

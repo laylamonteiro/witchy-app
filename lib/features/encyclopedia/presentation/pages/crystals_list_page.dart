@@ -13,6 +13,7 @@ import '../widgets/entry_pager.dart';
 import '../widgets/user_entry_helpers.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'crystal_detail_page.dart';
+import '../../../../core/widgets/magical_search_field.dart';
 
 class CrystalsListPage extends StatefulWidget {
   const CrystalsListPage({super.key});
@@ -56,34 +57,10 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: TextField(
+          child: MagicalSearchField(
             controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Buscar cristais...',
-              prefixIcon: Icon(Icons.search, color: context.gc.lilac),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _searchQuery = '';
-                        });
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: context.gc.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
+            hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabCrystals),
+            onChanged: (value) => setState(() => _searchQuery = value),
           ),
         ),
         Padding(

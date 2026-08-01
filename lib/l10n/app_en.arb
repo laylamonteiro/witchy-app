@@ -1012,6 +1012,7 @@
   "subsRestored": "Purchases restored successfully!",
   "subsNoPurchases": "No purchases found",
   "encyNothingFound": "Nothing found 🔍",
+  "encySearchAll": "Search the whole Encyclopedia…",
   "encyArcaneSearchHint": "Search in {category}...",
   "encyCatSacredSymbols": "Sacred Symbols",
   "encyArcaneIntroArchetypes": "Universal figures of myth and psyche — mirrors for self-knowledge on the magical path.",

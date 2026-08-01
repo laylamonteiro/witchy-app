@@ -1475,6 +1475,7 @@
   "subsRestored": "Compras restauradas com sucesso!",
   "subsNoPurchases": "Nenhuma compra encontrada",
   "encyNothingFound": "Nada encontrado 🔍",
+  "encySearchAll": "Buscar em toda a Enciclopédia…",
   "encyArcaneSearchHint": "Buscar em {category}...",
   "@encyArcaneSearchHint": {
     "placeholders": {
