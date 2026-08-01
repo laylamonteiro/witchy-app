@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -12,11 +14,98 @@ import 'encyclopedia_search_page.dart';
 /// As entradas são geradas de [EncyclopediaSection.values] — o MESMO enum que
 /// gera a TabBar e o TabBarView —, então reordenar uma aba reordena o sumário
 /// junto, automaticamente.
-class EncyclopediaIndexPage extends StatelessWidget {
+///
+/// Whimsy sem fricção: ao montar, a capa do livro "abre sozinha" (~600ms,
+/// pulável com um toque); ao escolher uma seção, a folha faz meia-virada
+/// (~300ms) e então a aba desliza. Com animações desativadas no sistema,
+/// tudo acontece instantaneamente.
+class EncyclopediaIndexPage extends StatefulWidget {
   /// Chamado quando a Bruxa escolhe uma seção no sumário.
   final ValueChanged<EncyclopediaSection> onSectionSelected;
 
   const EncyclopediaIndexPage({super.key, required this.onSectionSelected});
+
+  @override
+  State<EncyclopediaIndexPage> createState() => _EncyclopediaIndexPageState();
+}
+
+class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
+    with TickerProviderStateMixin {
+  /// Abertura da capa (one-shot na montagem).
+  late final AnimationController _open;
+
+  /// Meia-virada da folha ao escolher uma seção.
+  late final AnimationController _flip;
+
+  /// Capa já saiu da árvore? (Depois de aberta, não custa mais nada.)
+  bool _coverGone = false;
+
+  /// Seção escolhida, entregue quando a virada termina.
+  EncyclopediaSection? _pendingSection;
+
+  @override
+  void initState() {
+    super.initState();
+    _open = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed && mounted) {
+          setState(() => _coverGone = true);
+        }
+      });
+    _flip = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    )..addStatusListener(_onFlipStatus);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _open.value = 1.0;
+      } else {
+        _open.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _open.dispose();
+    _flip.dispose();
+    super.dispose();
+  }
+
+  void _onFlipStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) return;
+    final section = _pendingSection;
+    _pendingSection = null;
+    if (section != null && mounted) {
+      // Sequencial de propósito: a virada TERMINA e só então a aba desliza —
+      // nunca duas animações pesadas no mesmo frame.
+      widget.onSectionSelected(section);
+    }
+    // A folha volta ao lugar fora de cena, para o swipe de volta ao índice
+    // encontrá-la plana.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _flip.reset();
+    });
+  }
+
+  void _selectSection(EncyclopediaSection section) {
+    if (_flip.isAnimating || !_coverGone) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      widget.onSectionSelected(section);
+      return;
+    }
+    _pendingSection = section;
+    _flip.forward();
+  }
+
+  /// Toque durante a abertura pula direto para o livro aberto.
+  void _skipOpening() {
+    if (_open.isAnimating) _open.value = 1.0;
+  }
 
   /// Emoji de cada seção no sumário (apresentação do livro; os rótulos são
   /// as mesmas chaves l10n das abas).
@@ -64,85 +153,202 @@ class EncyclopediaIndexPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.45),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: AgedPaper(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(30, 30, 30, 96),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.encyIndexTitle,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.cinzelDecorative(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: BookInk.ink,
-                        ),
+    final page = Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: AgedPaper(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(30, 30, 30, 96),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.encyIndexTitle,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.cinzelDecorative(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: BookInk.ink,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.encyIndexSubtitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                          color: BookInk.ink.withValues(alpha: 0.65),
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.encyIndexSubtitle,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: BookInk.ink.withValues(alpha: 0.65),
                       ),
-                      const SizedBox(height: 10),
-                      const _OrnamentDivider(),
-                      const SizedBox(height: 6),
-                      // O sumário: uma linha por seção, na ordem canônica
-                      // (pulando a própria capa).
-                      for (final section
-                          in EncyclopediaSection.values.skip(1)) ...[
-                        _IndexEntry(
-                          emoji: _emojiFor(section),
-                          label: _labelFor(section, l10n),
-                          onTap: () => onSectionSelected(section),
-                        ),
-                      ],
-                      const SizedBox(height: 6),
-                      const _OrnamentDivider(),
-                      const SizedBox(height: 6),
-                      // Última linha: a busca global, para quem já sabe o
-                      // que procura.
+                    ),
+                    const SizedBox(height: 10),
+                    const _OrnamentDivider(),
+                    const SizedBox(height: 6),
+                    // O sumário: uma linha por seção, na ordem canônica
+                    // (pulando a própria capa).
+                    for (final section
+                        in EncyclopediaSection.values.skip(1)) ...[
                       _IndexEntry(
-                        emoji: '🔍',
-                        label: l10n.commonSearch,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const EncyclopediaSearchPage(),
-                          ),
-                        ),
+                        emoji: _emojiFor(section),
+                        label: _labelFor(section, l10n),
+                        onTap: () => _selectSection(section),
                       ),
                     ],
-                  ),
+                    const SizedBox(height: 6),
+                    const _OrnamentDivider(),
+                    const SizedBox(height: 6),
+                    // Última linha: a busca global, para quem já sabe o
+                    // que procura (empilha por cima, sem virar página).
+                    _IndexEntry(
+                      emoji: '🔍',
+                      label: l10n.commonSearch,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const EncyclopediaSearchPage(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const Positioned(
-              right: 26,
-              bottom: 24,
-              child: WaxSeal(),
+          ),
+          const Positioned(
+            right: 26,
+            bottom: 24,
+            child: WaxSeal(),
+          ),
+        ],
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      child: Stack(
+        children: [
+          // A folha do livro: em repouso é a página parada; ao escolher uma
+          // seção, faz meia-virada no eixo da lombada (esquerda).
+          Positioned.fill(
+            child: AnimatedBuilder(
+              animation: _flip,
+              child: page,
+              builder: (context, child) {
+                if (_flip.value == 0) return child!;
+                final angle =
+                    -pi / 2 * Curves.easeInCubic.transform(_flip.value);
+                return Transform(
+                  alignment: Alignment.centerLeft,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateY(angle),
+                  child: child,
+                );
+              },
             ),
-          ],
+          ),
+          // A capa: cobre a página e vira no eixo da lombada até sair de
+          // cena. Depois de aberta, sai da árvore (custo zero).
+          if (!_coverGone)
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _skipOpening,
+                child: AnimatedBuilder(
+                  animation: _open,
+                  builder: (context, _) {
+                    final t = Curves.easeInOutCubic.transform(_open.value);
+                    // Nunca exatamente pi: a matriz degenera no fim exato.
+                    final angle = -pi * min(t, 0.995);
+                    final showBack = t > 0.5;
+                    return Transform(
+                      alignment: Alignment.centerLeft,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.0015)
+                        ..rotateY(angle),
+                      child: showBack
+                          ? Transform.flip(
+                              flipX: true, child: const _CoverBack())
+                          : const _CoverFront(),
+                    );
+                  },
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Frente da capa: couro roxo profundo com filete dourado e a lua.
+class _CoverFront extends StatelessWidget {
+  const _CoverFront();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF31234F), Color(0xFF1E1533)],
+        ),
+        border: Border.all(
+          color: const Color(0xFFC9A653).withValues(alpha: 0.8),
+          width: 1.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 16,
+            offset: const Offset(4, 6),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(26),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: const Color(0xFFC9A653).withValues(alpha: 0.65),
+            ),
+          ),
+          child: const Text(
+            '☾',
+            style: TextStyle(fontSize: 54, color: Color(0xFFC9A653)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Verso da capa (aparece na metade final da virada): papel creme liso.
+class _CoverBack extends StatelessWidget {
+  const _CoverBack();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [BookInk.paperDark, BookInk.paperLight],
         ),
       ),
     );
