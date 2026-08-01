@@ -318,7 +318,9 @@ class _SpreadTabState extends State<_SpreadTab> {
               ),
             ),
             // Pergunta opcional: o Conselheiro Místico ancora a leitura nela.
-            MagicalCard(
+            // Caixa dourada de destaque — é o convite principal da tiragem.
+            MagicalCard.accent(
+              accent: context.gc.gold,
               child: TextField(
                 controller: _questionController,
                 maxLines: 2,
@@ -327,27 +329,31 @@ class _SpreadTabState extends State<_SpreadTab> {
                 style: TextStyle(color: context.gc.textPrimary),
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context).tarotQuestionOptional,
-                  labelStyle: TextStyle(color: context.gc.textSecondary),
+                  labelStyle: TextStyle(
+                    color: context.gc.gold,
+                    fontWeight: FontWeight.w600,
+                  ),
                   hintText: AppLocalizations.of(context).tarotQuestionHint,
                   hintStyle: TextStyle(
-                    color: context.gc.textSecondary.withValues(alpha: 0.6),
+                    color: context.gc.starYellow.withValues(alpha: 0.7),
                     fontSize: 13,
                   ),
                   prefixIcon:
-                      Icon(Icons.help_outline, color: context.gc.lilac),
+                      Icon(Icons.auto_awesome, color: context.gc.gold),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                        color: context.gc.lilac.withValues(alpha: 0.3)),
+                        color: context.gc.gold.withValues(alpha: 0.5)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                        color: context.gc.lilac.withValues(alpha: 0.3)),
+                        color: context.gc.gold.withValues(alpha: 0.5)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.gc.lilac),
+                    borderSide:
+                        BorderSide(color: context.gc.gold, width: 1.5),
                   ),
                 ),
               ),
