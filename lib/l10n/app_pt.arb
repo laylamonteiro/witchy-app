@@ -1960,6 +1960,34 @@
   "yourDayHeroEyebrow": "Seu rito de hoje",
   "yourDayHeroPrepareCta": "Preparar o ritual",
   "yourDayStreakDays": "{days, plural, =0{Comece sua sequência hoje} one{1 dia seguido} other{{days} dias seguidos}}",
+  "yourDayTrailContinueTitle": "Continue sua trilha",
+  "yourDayTrailStartTitle": "Comece uma trilha",
+  "yourDayTrailCtaContinue": "Continuar",
+  "yourDayTrailCtaStart": "Começar",
+  "yourDayTrailNext": "Próxima: {title}",
+  "@yourDayTrailNext": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "yourDayRitesTitle": "Ritos de hoje",
+  "yourDayRitesProgress": "{done} de {total}",
+  "@yourDayRitesProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "yourDayRiteGratitude": "Registrar uma gratidão",
+  "yourDayRiteAffirmation": "Ler a afirmação do dia",
+  "yourDayRiteDivination": "Consultar o oráculo",
+  "yourDayRitesComplete": "Dia completo! A sua sequência continua. ✨",
+  "yourDayRitesHint": "Cada rito alimenta suas Jornadas Mágicas",
+  "yourDayGratitudeHint": "Pelo que você é grata hoje?",
   "@yourDayStreakDays": {
     "placeholders": {
       "days": {

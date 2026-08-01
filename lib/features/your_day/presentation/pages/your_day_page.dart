@@ -8,7 +8,9 @@ import '../../../../core/widgets/mascot/tour_targets.dart';
 import '../../../guided_rituals/presentation/widgets/magical_moment_card.dart';
 import '../../../lunar/presentation/widgets/moon_day_carousel.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../widgets/continue_trail_card.dart';
 import '../widgets/daily_affirmation_card.dart';
+import '../widgets/daily_rites_card.dart';
 import '../widgets/greeting_header.dart';
 import '../widgets/magical_weather_card.dart';
 import '../widgets/next_moon_phases_card.dart';
@@ -85,15 +87,19 @@ class _YourDayPageState extends State<YourDayPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Ordem: quem sou eu hoje → o que faço agora → ganhos rápidos →
+            // retomar o que comecei → contexto do dia → consulta → atalhos.
             const GreetingHeader(),
+            const RitualOfMomentCard(),
+            const DailyRitesCard(),
+            const DailyAffirmationCard(),
+            const ContinueTrailCard(),
             MoonDayCarousel(
               onDayTap: () => DeepLinkService.instance
                   .dispatch(AppDeepLink.moonEncyclopedia),
             ),
-            const RitualOfMomentCard(),
             const MagicalMomentCard(),
             const MagicalWeatherCard(),
-            const DailyAffirmationCard(),
             const NextMoonPhasesCard(),
             const SpellRecommendationsCard(),
             const ShortcutsGrid(),
