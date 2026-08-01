@@ -11,13 +11,25 @@ import '../../../guided_rituals/presentation/pages/guided_ritual_page.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 
-/// O que a Bruxa faz HOJE — a ação primária da tela, em card de destaque.
+/// Como o rito aparece na tela.
+enum RitualCardMode {
+  /// Só quando o evento é HOJE: card de destaque no topo da página.
+  todayHero,
+
+  /// Só quando o evento AINDA VEM: faixa discreta com a contagem, no lugar
+  /// de sempre (depois do carrossel da lua).
+  countdown,
+}
+
+/// O rito do momento.
 ///
-/// Prioridade: sabbat de hoje → lua cheia/nova de hoje → contagem para o
-/// próximo evento (com o ritual já aberto para preparar). Só existe UM card
-/// hero por tela: é ele que diz "faça isto agora".
+/// No dia do sabbat (ou da lua cheia/nova) ele vira o card de destaque no
+/// topo — é O dia, merece a tela. Enquanto o dia não chega, volta a ser a
+/// faixa pequena de contagem regressiva: informação, não chamado.
 class RitualOfMomentCard extends StatelessWidget {
-  const RitualOfMomentCard({super.key});
+  final RitualCardMode mode;
+
+  const RitualOfMomentCard({super.key, required this.mode});
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +39,7 @@ class RitualOfMomentCard extends StatelessWidget {
 
     // 1. É sabbat hoje?
     if (wheel.isTodaySabbat()) {
+      if (mode != RitualCardMode.todayHero) return const SizedBox.shrink();
       final sabbat = wheel.getTodaySabbat()!;
       final ritual = AllGuidedRituals.forSabbat(sabbat.type);
       return _HeroRitual(
@@ -42,6 +55,7 @@ class RitualOfMomentCard extends StatelessWidget {
     // 2. É lua cheia ou nova hoje?
     final phase = lunar.getCurrentMoonPhase();
     if (phase == MoonPhase.fullMoon || phase == MoonPhase.newMoon) {
+      if (mode != RitualCardMode.todayHero) return const SizedBox.shrink();
       final ritualId = phase == MoonPhase.fullMoon ? 'full_moon' : 'new_moon';
       final ritual = AllGuidedRituals.byId(ritualId);
       return _HeroRitual(
@@ -55,8 +69,11 @@ class RitualOfMomentCard extends StatelessWidget {
       );
     }
 
-    // 3. Contagem para o evento mais próximo — o CTA já abre o ritual para
-    // a Bruxa se preparar (materiais, quando fazer).
+    // 3. Não é hoje: só o modo de contagem desenha algo.
+    if (mode != RitualCardMode.countdown) return const SizedBox.shrink();
+
+    // Contagem para o evento mais próximo — o toque já abre o ritual para a
+    // Bruxa se preparar (materiais, quando fazer).
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final candidates =
@@ -100,14 +117,26 @@ class RitualOfMomentCard extends StatelessWidget {
     final targetDay = DateTime(next.date.year, next.date.month, next.date.day);
     final days = targetDay.difference(today).inDays.clamp(1, 9999);
 
-    return _HeroRitual(
-      accent: next.isMoon ? context.gc.lilac : context.gc.starYellow,
-      emoji: next.emoji,
-      title: l10n.yourDayRitualCountdown(days, next.name),
-      subtitle: AllGuidedRituals.byId(next.ritualId)?.timing ?? '',
-      cta: l10n.yourDayHeroPrepareCta,
-      ritualId: next.ritualId,
-      daysBadge: days,
+    final accent = next.isMoon ? context.gc.lilac : context.gc.starYellow;
+    return MagicalCard(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => GuidedRitualPage(ritualId: next.ritualId),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.hourglass_bottom, color: accent),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              l10n.yourDayRitualCountdown(days, '${next.emoji} ${next.name}'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          Icon(Icons.chevron_right, color: context.gc.textSecondary),
+        ],
+      ),
     );
   }
 }
@@ -120,11 +149,8 @@ class _HeroRitual extends StatelessWidget {
   final String cta;
   final String ritualId;
 
-  /// Quando presente, a lua respira no lugar do emoji estático (só no dia).
+  /// Quando presente, a lua respira no lugar do emoji estático.
   final MoonPhase? breathingPhase;
-
-  /// Dias restantes, exibidos como selo no canto (só na contagem).
-  final int? daysBadge;
 
   const _HeroRitual({
     required this.accent,
@@ -134,7 +160,6 @@ class _HeroRitual extends StatelessWidget {
     required this.cta,
     required this.ritualId,
     this.breathingPhase,
-    this.daysBadge,
   });
 
   @override
@@ -152,36 +177,13 @@ class _HeroRitual extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.yourDayHeroEyebrow.toUpperCase(),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.gc.textSecondary,
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.w700,
-                      ),
+          Text(
+            l10n.yourDayHeroEyebrow.toUpperCase(),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
                 ),
-              ),
-              if (daysBadge != null)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: accent.withValues(alpha: 0.6)),
-                  ),
-                  child: Text(
-                    'D-$daysBadge',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: accent,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                ),
-            ],
           ),
           const SizedBox(height: 12),
           Row(

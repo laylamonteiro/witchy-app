@@ -104,19 +104,21 @@ class _YourDayPageState extends State<YourDayPage>
           padding: const EdgeInsets.only(bottom: 24),
           child: StaggeredEntrance(
             children: [
-              // Ordem: quem sou eu hoje → o que faço agora → ganhos rápidos →
-              // retomar o que comecei → contexto do dia → consulta → atalhos.
               const GreetingHeader(),
-              const RitualOfMomentCard(),
-              const DailyRitesCard(),
-              const DailyAffirmationCard(),
-              const ContinueTrailCard(),
+              // Só no DIA do evento: aí ele merece o topo da tela.
+              const RitualOfMomentCard(mode: RitualCardMode.todayHero),
               MoonDayCarousel(
                 onDayTap: () => DeepLinkService.instance
                     .dispatch(AppDeepLink.moonEncyclopedia),
               ),
+              // Enquanto o dia não chega: a faixa discreta de contagem, no
+              // lugar de sempre.
+              const RitualOfMomentCard(mode: RitualCardMode.countdown),
               const MagicalMomentCard(),
               const MagicalWeatherCard(),
+              const DailyAffirmationCard(),
+              const DailyRitesCard(),
+              const ContinueTrailCard(),
               const NextMoonPhasesCard(),
               const SpellRecommendationsCard(),
               const ShortcutsGrid(),

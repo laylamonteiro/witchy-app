@@ -120,19 +120,19 @@ class _ToolsTab extends StatelessWidget {
     // e monótona, em que nada se destacava.
     final practice = <_Tool>[
       (
-        icon: const Text('📖', style: TextStyle(fontSize: 32)),
+        icon: const Text('📖', style: TextStyle(fontSize: 40)),
         title: l10n.toolLivingGrimoireTitle,
         description: l10n.toolLivingGrimoireDesc,
         page: () => const LearningHomePage(),
       ),
       (
-        icon: const Text('🔮', style: TextStyle(fontSize: 32)),
+        icon: const Text('🔮', style: TextStyle(fontSize: 40)),
         title: l10n.toolMysticAdvisorTitle,
         description: l10n.toolMysticAdvisorDesc,
         page: () => const MysticAdvisorPage(),
       ),
       (
-        icon: const SigilIcon(size: 32),
+        icon: const SigilIcon(size: 40),
         title: l10n.toolSigilsTitle,
         description: l10n.toolSigilsDesc,
         page: () => const SigilStep1IntentionPage(),
@@ -141,37 +141,37 @@ class _ToolsTab extends StatelessWidget {
 
     final divination = <_Tool>[
       (
-        icon: const Text('🎴', style: TextStyle(fontSize: 32)),
+        icon: const Text('🎴', style: TextStyle(fontSize: 40)),
         title: l10n.toolTarotTitle,
         description: l10n.toolTarotDesc,
         page: () => const TarotPage(),
       ),
       (
-        icon: const Text(' ᚱ ', style: TextStyle(fontSize: 32)),
+        icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
         title: l10n.toolRunesTitle,
         description: l10n.toolRunesDesc,
         page: () => const RuneReadingPage(),
       ),
       (
-        icon: const Text('🃏', style: TextStyle(fontSize: 32)),
+        icon: const Text('🃏', style: TextStyle(fontSize: 40)),
         title: l10n.toolOracleTitle,
         description: l10n.toolOracleDesc,
         page: () => const OracleCardsPage(),
       ),
       (
-        icon: const Text(' ⟟ ', style: TextStyle(fontSize: 32)),
+        icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
         title: l10n.toolPendulumTitle,
         description: l10n.toolPendulumDesc,
         page: () => const PendulumPage(),
       ),
       (
-        icon: const Text('🌙', style: TextStyle(fontSize: 32)),
+        icon: const Text('🌙', style: TextStyle(fontSize: 40)),
         title: l10n.toolDreamsTitle,
         description: l10n.toolDreamsDesc,
         page: () => const DreamToolsPage(),
       ),
       (
-        icon: const Text('🖐️', style: TextStyle(fontSize: 32)),
+        icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
         title: l10n.toolPalmistryTitle,
         description: l10n.toolPalmistryDesc,
         page: () => const PalmistryPage(),
@@ -180,13 +180,13 @@ class _ToolsTab extends StatelessWidget {
 
     final selfKnowledge = <_Tool>[
       (
-        icon: const Text('🎭', style: TextStyle(fontSize: 32)),
+        icon: const Text('🎭', style: TextStyle(fontSize: 40)),
         title: l10n.toolArchetypeTitle,
         description: l10n.toolArchetypeDesc,
         page: () => const ArchetypeQuizPage(),
       ),
       (
-        icon: const Text('🔢', style: TextStyle(fontSize: 32)),
+        icon: const Text('🔢', style: TextStyle(fontSize: 40)),
         title: l10n.toolNumerologyTitle,
         description: l10n.toolNumerologyDesc,
         page: () => const NumerologyPage(),
@@ -233,7 +233,7 @@ class _ToolsTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
           child: Text(
             title.toUpperCase(),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -243,15 +243,7 @@ class _ToolsTab extends StatelessWidget {
                 ),
           ),
         ),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          childAspectRatio: 0.95,
-          children:
-              tools.map((tool) => _buildToolCard(context, tool)).toList(),
-        ),
+        ...tools.map((tool) => _buildToolCard(context, tool)),
       ],
     );
   }
@@ -260,35 +252,35 @@ class _ToolsTab extends StatelessWidget {
     // O toque é do próprio MagicalCard: antes havia um InkWell POR FORA do
     // card, então o ripple vazava e o alvo de toque ficava duplicado.
     return MagicalCard(
-      margin: const EdgeInsets.all(8),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => tool.page()),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           tool.icon,
-          const SizedBox(height: 10),
-          Text(
-            tool.title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: context.gc.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              tool.description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tool.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  tool.description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.textSecondary,
+                      ),
+                ),
+              ],
             ),
           ),
+          Icon(Icons.arrow_forward_ios, color: context.gc.lilac, size: 16),
         ],
       ),
     );

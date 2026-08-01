@@ -7,14 +7,17 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../diary/data/models/gratitude_model.dart';
 import '../../../diary/presentation/providers/gratitude_provider.dart';
-import '../../../divination/presentation/pages/oracle_cards_page.dart';
+import '../../../learning/presentation/pages/lesson_page.dart';
+import '../../../learning/presentation/providers/learning_provider.dart';
+import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../providers/daily_checkin_provider.dart';
+import 'continue_trail_card.dart' show resumeTrail;
 
 /// Os ritos de hoje: três práticas curtas que fecham o dia da Bruxa.
 ///
-/// A regra é atrito baixo — a gratidão se escreve aqui mesmo, a afirmação já
-/// está na tela e a adivinhação abre o oráculo. Concluir os três mantém a
-/// sequência viva, que é o que traz de volta amanhã.
+/// A regra é atrito baixo — a gratidão se escreve aqui mesmo, a trilha abre
+/// na lição em que a Bruxa parou e a adivinhação abre o tarot. Concluir os
+/// três mantém a sequência viva, que é o que traz de volta amanhã.
 class DailyRitesCard extends StatelessWidget {
   const DailyRitesCard({super.key});
 
@@ -23,6 +26,7 @@ class DailyRitesCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final checkin = context.watch<DailyCheckinProvider>();
     if (!checkin.isLoaded) return const SizedBox.shrink();
+    final resume = resumeTrail(context.watch<LearningProvider>());
 
     final done = checkin.ritesDoneCount;
     final total = DailyRites.all.length;
@@ -62,21 +66,33 @@ class DailyRitesCard extends StatelessWidget {
             label: l10n.yourDayRiteGratitude,
             onStart: () => _writeGratitude(context),
           ),
-          _RiteTile(
-            id: DailyRites.affirmation,
-            emoji: '🌿',
-            label: l10n.yourDayRiteAffirmation,
-            // A afirmação já está logo abaixo na tela: marcar é o gesto.
-            onStart: () => _complete(context, DailyRites.affirmation),
-          ),
+          if (resume != null)
+            _RiteTile(
+              id: DailyRites.trail,
+              emoji: '📖',
+              label: resume.started
+                  ? l10n.yourDayRiteTrailContinue
+                  : l10n.yourDayRiteTrailStart,
+              onStart: () {
+                _complete(context, DailyRites.trail);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => LessonPage(
+                      trail: resume.trail,
+                      lesson: resume.lesson,
+                    ),
+                  ),
+                );
+              },
+            ),
           _RiteTile(
             id: DailyRites.divination,
-            emoji: '🃏',
-            label: l10n.yourDayRiteDivination,
+            emoji: '🎴',
+            label: l10n.yourDayRiteTarot,
             onStart: () {
               _complete(context, DailyRites.divination);
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const OracleCardsPage()),
+                MaterialPageRoute(builder: (_) => const TarotPage()),
               );
             },
           ),

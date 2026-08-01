@@ -10,6 +10,43 @@ import '../../../learning/data/models/trail_model.dart';
 import '../../../learning/presentation/pages/lesson_page.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
 
+/// Trilha a retomar (a em andamento; senão a primeira ainda não começada) e
+/// a próxima lição dela. Null quando tudo já foi encadernado.
+///
+/// Compartilhado pelo card "continue sua trilha" e pelo rito do dia — os dois
+/// precisam apontar exatamente para a mesma lição.
+({LearningTrail trail, TrailLesson lesson, bool started})? resumeTrail(
+  LearningProvider learning,
+) {
+  final trails = learningTrails;
+  if (trails.isEmpty) return null;
+
+  LearningTrail? target;
+  for (final trail in trails) {
+    final done = learning.completedInTrail(trail);
+    if (done > 0 && done < trail.lessons.length) {
+      target = trail;
+      break;
+    }
+  }
+  target ??= trails.cast<LearningTrail?>().firstWhere(
+        (trail) => learning.completedInTrail(trail!) == 0,
+        orElse: () => null,
+      );
+  if (target == null) return null;
+
+  final trail = target;
+  final lesson = trail.lessons.firstWhere(
+    (l) => !learning.isLessonCompleted(l.id),
+    orElse: () => trail.lessons.last,
+  );
+  return (
+    trail: trail,
+    lesson: lesson,
+    started: learning.completedInTrail(trail) > 0,
+  );
+}
+
 /// "Continue de onde parou" do Grimório Vivo.
 ///
 /// Retomar algo já começado é o convite mais forte de todos: mostra a trilha
@@ -21,35 +58,14 @@ class ContinueTrailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final learning = context.watch<LearningProvider>();
-    final trails = learningTrails;
-    if (trails.isEmpty) return const SizedBox.shrink();
+    final resume = resumeTrail(learning);
+    if (resume == null) return const SizedBox.shrink();
 
-    // Trilha em andamento; se não houver, a primeira ainda não começada.
-    LearningTrail? target;
-    for (final trail in trails) {
-      final done = learning.completedInTrail(trail);
-      if (done > 0 && done < trail.lessons.length) {
-        target = trail;
-        break;
-      }
-    }
-    target ??= trails.cast<LearningTrail?>().firstWhere(
-          (trail) => learning.completedInTrail(trail!) == 0,
-          orElse: () => null,
-        );
-    // Tudo encadernado: nada a retomar.
-    if (target == null) return const SizedBox.shrink();
-
-    final done = learning.completedInTrail(target);
-    final total = target.lessons.length;
-    final started = done > 0;
-
-    // A trilha é linear: a próxima é a primeira lição ainda não concluída.
-    final nextLesson = target.lessons.firstWhere(
-      (lesson) => !learning.isLessonCompleted(lesson.id),
-      orElse: () => target!.lessons.last,
-    );
-    final trail = target;
+    final trail = resume.trail;
+    final nextLesson = resume.lesson;
+    final started = resume.started;
+    final done = learning.completedInTrail(trail);
+    final total = trail.lessons.length;
 
     return MagicalCard.accent(
       accent: context.gc.mint,

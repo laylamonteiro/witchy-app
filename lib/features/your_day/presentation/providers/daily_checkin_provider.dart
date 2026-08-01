@@ -8,10 +8,14 @@ class DailyRites {
   const DailyRites._();
 
   static const String gratitude = 'gratitude';
-  static const String affirmation = 'affirmation';
+
+  /// Retomar o Grimório Vivo (a lição em que a Bruxa parou).
+  static const String trail = 'trail';
+
+  /// Uma tiragem de tarot.
   static const String divination = 'divination';
 
-  static const List<String> all = [gratitude, affirmation, divination];
+  static const List<String> all = [gratitude, trail, divination];
 }
 
 /// Estado do check-in diário: sequência de dias e ritos concluídos hoje.
