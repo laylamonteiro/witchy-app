@@ -5,10 +5,12 @@ import 'package:flutter/widgets.dart';
 import 'package:uuid/uuid.dart';
 
 import '../i18n/gender.dart';
+import '../utils/accents.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../features/astrology/data/models/enums.dart';
 import '../../features/astrology/data/models/magical_profile_model.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
+import 'gemini_credentials.dart';
 import 'groq_credentials.dart';
 import 'prompts/ai_prompts.dart';
 
@@ -28,10 +30,18 @@ class AIService {
   /// Modelo de texto padrão do Groq.
   static const String _textModel = 'llama-3.3-70b-versatile';
 
-  /// Modelo de visão do Groq (usado na leitura de mãos). O Groq descontinua
-  /// modelos com frequência — a família Llama 4 (Scout/Maverick) foi
-  /// aposentada em 2026, então trocar aqui atualiza toda a visão do app.
+  /// Modelo de visão do Groq (fallback). O Groq descontinua modelos com
+  /// frequência — a família Llama 4 (Scout/Maverick) foi aposentada em 2026
+  /// e o preview que sobrou é fraco em identificação fina; por isso a visão
+  /// principal é o Gemini (abaixo) quando a chave está configurada.
   static const String _visionModel = 'qwen/qwen3.6-27b';
+
+  /// Modelo de visão principal (Google Gemini): identificação de plantas e
+  /// pedras de verdade, e leitura de mãos com detalhe real.
+  static const String _geminiVisionModel = 'gemini-2.5-flash';
+
+  /// O Gemini está configurado? (Sem a chave, a visão cai para o Groq.)
+  static bool get _hasGemini => GeminiCredentials.apiKey.isNotEmpty;
 
   final Dio _dio = Dio();
   Locale _locale = const Locale('pt', 'BR');
@@ -568,63 +578,113 @@ class AIService {
     }
   }
 
-  /// Leitura de mãos por imagem (Premium). Usa o modelo de visão do Groq;
-  /// a imagem é enviada em memória e não é armazenada.
+  /// Chamada de visão (texto + foto): Gemini quando a chave está
+  /// configurada; sem ela, cai para o modelo preview do Groq. A imagem é
+  /// enviada em memória e não é armazenada por nenhum dos serviços.
+  Future<String> _visionRequest({
+    required String systemPrompt,
+    required String userText,
+    required List<int> jpegBytes,
+    double temperature = 0.2,
+    int maxTokens = 1024,
+  }) async {
+    final base64Image = base64Encode(jpegBytes);
+    final timeouts = Options(
+      receiveTimeout: const Duration(seconds: 60),
+      sendTimeout: const Duration(seconds: 60),
+    );
+
+    if (_hasGemini) {
+      final response = await _dio.post(
+        'https://generativelanguage.googleapis.com/v1beta/models/'
+        '$_geminiVisionModel:generateContent',
+        options: timeouts.copyWith(headers: {
+          'x-goog-api-key': GeminiCredentials.apiKey,
+          'Content-Type': 'application/json',
+        }),
+        data: {
+          if (systemPrompt.isNotEmpty)
+            'system_instruction': {
+              'parts': [
+                {'text': systemPrompt},
+              ],
+            },
+          'contents': [
+            {
+              'role': 'user',
+              'parts': [
+                {'text': userText},
+                {
+                  'inline_data': {
+                    'mime_type': 'image/jpeg',
+                    'data': base64Image,
+                  },
+                },
+              ],
+            },
+          ],
+          'generationConfig': {
+            'temperature': temperature,
+            'maxOutputTokens': maxTokens,
+          },
+        },
+      );
+      final parts =
+          (response.data['candidates'][0]['content']['parts'] as List?) ??
+              const [];
+      return parts.map((p) => '${p['text'] ?? ''}').join().trim();
+    }
+
+    final response = await _dio.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      options: timeouts.copyWith(headers: {
+        'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+        'Content-Type': 'application/json',
+      }),
+      data: {
+        'model': _visionModel,
+        'messages': [
+          if (systemPrompt.isNotEmpty)
+            {'role': 'system', 'content': systemPrompt},
+          {
+            'role': 'user',
+            'content': [
+              {'type': 'text', 'text': userText},
+              {
+                'type': 'image_url',
+                'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
+              },
+            ],
+          },
+        ],
+        'temperature': temperature,
+        'max_tokens': maxTokens,
+        // qwen3 é modelo de raciocínio: desliga o "pensamento" para vir só
+        // a resposta final.
+        'reasoning_effort': 'none',
+      },
+    );
+    // O fallback é um modelo de raciocínio (Qwen3): remove o bloco
+    // <think>...</think> para entregar só a resposta final.
+    return _stripReasoning(
+        '${response.data['choices'][0]['message']['content']}');
+  }
+
+  /// Leitura de mãos por imagem (Premium).
   Future<String> analyzePalm({
     required List<int> jpegBytes,
     Gender? gender,
   }) async {
     gender ??= _gender;
     try {
-      final base64Image = base64Encode(jpegBytes);
-      final requestData = {
-        'model': _visionModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': '${_localizedInstruction()}\n\n'
-                '${_prompts.palmistrySystemPrompt(gender)}',
-          },
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'text',
-                'text': _prompts.palmUserMessage,
-              },
-              {
-                'type': 'image_url',
-                'image_url': {
-                  'url': 'data:image/jpeg;base64,$base64Image',
-                },
-              },
-            ],
-          },
-        ],
-        'temperature': 0.6,
-        'max_tokens': 1600,
-        // qwen3 é modelo de raciocínio: desliga o "pensamento" para vir só
-        // a leitura final (uma leitura simbólica não precisa de reasoning).
-        'reasoning_effort': 'none',
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 60),
-          sendTimeout: const Duration(seconds: 60),
-        ),
-        data: requestData,
+      return await _visionRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.palmistrySystemPrompt(gender)}',
+        userText: _prompts.palmUserMessage,
+        jpegBytes: jpegBytes,
+        temperature: 0.6,
+        maxTokens: 1600,
       );
-
-      final content = response.data['choices'][0]['message']['content'];
-      // O modelo de visão é um modelo de raciocínio (Qwen3): remove o bloco
-      // <think>...</think> para entregar só a leitura final.
-      return _stripReasoning(content.toString());
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
         throw const AiRateLimitException();
@@ -644,56 +704,88 @@ class AIService {
   /// [categoryKey]: `crystal` | `herb` | `color` (invariante).
   /// Retorna `{"identified": bool, "name": String, "confidence": String}`.
   /// A imagem é enviada em memória e não é armazenada pelo serviço.
+  ///
+  /// Auto-consistência: o modelo de visão disponível é fraco em espécies e
+  /// alucina confiança (a mesma foto rendia nomes diferentes, sempre "high").
+  /// Pedimos até 3 opiniões independentes e só aceitamos um nome com
+  /// CONSENSO entre duas delas; sem consenso, respondemos honestamente que
+  /// não identificamos — a página já convida a digitar o nome.
   Future<Map<String, dynamic>> identifyEncyclopediaItem({
     required List<int> jpegBytes,
     required String categoryKey,
   }) async {
+    final votes = <Map<String, dynamic>>[];
+    for (var attempt = 0; attempt < 3; attempt++) {
+      votes.add(await _identifyOnce(
+        jpegBytes: jpegBytes,
+        categoryKey: categoryKey,
+      ));
+      final winner = _identifyConsensus(votes);
+      if (winner != null) return winner;
+    }
+    return {'identified': false, 'name': '', 'confidence': 'low'};
+  }
+
+  /// Consenso entre os votos até agora: dois nomes equivalentes elegem o
+  /// vencedor; dois "não sei" encerram como não identificado. Null = ainda
+  /// sem decisão (peça mais um voto).
+  Map<String, dynamic>? _identifyConsensus(List<Map<String, dynamic>> votes) {
+    if (votes.length < 2) return null;
+
+    String normalize(Object? name) {
+      final lower = removeAccents('$name').toLowerCase();
+      return lower
+          .replaceAll(RegExp(r'[-_]'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+    }
+
+    bool sameName(String a, String b) {
+      if (a.isEmpty || b.isEmpty) return false;
+      if (a == b) return true;
+      // "flor de seda" vs "flor de seda comum": um contém o outro.
+      return a.length >= 4 && b.length >= 4 && (a.contains(b) || b.contains(a));
+    }
+
+    final identified =
+        votes.where((v) => v['identified'] == true).toList(growable: false);
+    for (var i = 0; i < identified.length; i++) {
+      for (var j = i + 1; j < identified.length; j++) {
+        final a = identified[i];
+        final b = identified[j];
+        if (sameName(normalize(a['name']), normalize(b['name']))) {
+          return {
+            'identified': true,
+            'name': a['name'],
+            // Consenso de primeira mantém a confiança declarada; consenso
+            // que precisou de desempate fica em "medium" no máximo.
+            'confidence':
+                votes.length == 2 ? (a['confidence'] ?? 'medium') : 'medium',
+          };
+        }
+      }
+    }
+
+    final unsure = votes.length - identified.length;
+    if (unsure >= 2) {
+      return {'identified': false, 'name': '', 'confidence': 'low'};
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _identifyOnce({
+    required List<int> jpegBytes,
+    required String categoryKey,
+  }) async {
     try {
-      final base64Image = base64Encode(jpegBytes);
-      final requestData = {
-        'model': _visionModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': '${_localizedInstruction()}\n\n'
-                '${_prompts.encyIdentifySystemPrompt(categoryKey)}',
-          },
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'text',
-                'text': _prompts.encyIdentifyUserMessage,
-              },
-              {
-                'type': 'image_url',
-                'image_url': {
-                  'url': 'data:image/jpeg;base64,$base64Image',
-                },
-              },
-            ],
-          },
-        ],
-        'temperature': 0.2,
-        'max_tokens': 300,
-        'reasoning_effort': 'none',
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 60),
-          sendTimeout: const Duration(seconds: 60),
-        ),
-        data: requestData,
+      final content = await _visionRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.encyIdentifySystemPrompt(categoryKey)}',
+        userText: _prompts.encyIdentifyUserMessage,
+        jpegBytes: jpegBytes,
+        temperature: 0.2,
+        maxTokens: 300,
       );
-
-      final content =
-          _stripReasoning('${response.data['choices'][0]['message']['content']}');
       return _extractJsonObject(content);
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
@@ -790,7 +882,7 @@ class AIService {
   }
 
   /// Nome do modelo de visão em uso (exposto para o diagnóstico admin).
-  String get visionModel => _visionModel;
+  String get visionModel => _hasGemini ? _geminiVisionModel : _visionModel;
 
   /// Diagnóstico admin da leitura de mãos: executa a chamada de visão e
   /// devolve os detalhes CRUS (modelo, status HTTP, corpo do erro, tempo)
@@ -800,46 +892,18 @@ class AIService {
     required List<int> jpegBytes,
   }) async {
     final sw = Stopwatch()..start();
-    final base64Image = base64Encode(jpegBytes);
     try {
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 60),
-          sendTimeout: const Duration(seconds: 60),
-        ),
-        data: {
-          'model': _visionModel,
-          'messages': [
-            {
-              'role': 'user',
-              'content': [
-                {
-                  'type': 'text',
-                  'text': _prompts.palmDebugUserMessage,
-                },
-                {
-                  'type': 'image_url',
-                  'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
-                },
-              ],
-            },
-          ],
-          'max_tokens': 300,
-          'reasoning_effort': 'none',
-        },
+      final content = await _visionRequest(
+        systemPrompt: '',
+        userText: _prompts.palmDebugUserMessage,
+        jpegBytes: jpegBytes,
+        maxTokens: 300,
       );
       sw.stop();
-      final content =
-          response.data['choices'][0]['message']['content'].toString().trim();
       return {
         'ok': true,
-        'model': _visionModel,
-        'statusCode': response.statusCode,
+        'model': visionModel,
+        'statusCode': 200,
         'elapsedMs': sw.elapsedMilliseconds,
         'imageBytes': jpegBytes.length,
         'body': content,
@@ -848,7 +912,7 @@ class AIService {
       sw.stop();
       return {
         'ok': false,
-        'model': _visionModel,
+        'model': visionModel,
         'statusCode': e.response?.statusCode,
         'elapsedMs': sw.elapsedMilliseconds,
         'imageBytes': jpegBytes.length,
@@ -860,7 +924,7 @@ class AIService {
       sw.stop();
       return {
         'ok': false,
-        'model': _visionModel,
+        'model': visionModel,
         'statusCode': null,
         'elapsedMs': sw.elapsedMilliseconds,
         'imageBytes': jpegBytes.length,

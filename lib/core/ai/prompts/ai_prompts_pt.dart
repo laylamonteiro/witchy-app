@@ -266,10 +266,17 @@ Limites:
       _ => 'a cor predominante',
     };
     return 'Você é especialista em identificação visual para um app de bruxaria. '
-        'Analise a foto e identifique $alvo mostrado(a). '
+        'Examine a foto com calma ANTES de nomear: observe formato, cores, folhas, '
+        'disposição e qualquer traço distintivo de $alvo. '
+        'Só afirme um nome se as características visíveis corresponderem de fato a algo '
+        'que você reconhece — NUNCA chute um nome plausível. '
+        'Seja honesto na confiança: "high" apenas com certeza real; se estiver na dúvida '
+        'entre espécies parecidas, use "medium" ou "low". '
+        'Se a imagem estiver ausente, ilegível ou você não tiver certeza, responda '
+        '"identified": false com "name" vazio — isso é MELHOR do que errar. '
         'Responda APENAS com JSON válido, sem nenhum texto extra, no formato: '
-        '{"identified": true/false, "name": "nome popular em português", "confidence": "high"/"medium"/"low"}. '
-        'Se não conseguir identificar com segurança, use "identified": false e "name" vazio.';
+        '{"identified": true/false, "name": "nome popular em português", '
+        '"scientific": "nome científico ou vazio", "confidence": "high"/"medium"/"low"}.';
   },
   encyIdentifyUserMessage:
       'O que é isto? Identifique para a minha enciclopédia mágica.',
