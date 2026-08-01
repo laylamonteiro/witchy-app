@@ -9,13 +9,13 @@ class DailyRites {
 
   static const String gratitude = 'gratitude';
 
-  /// Retomar o Grimório Vivo (a lição em que a Bruxa parou).
-  static const String trail = 'trail';
+  /// Registrar um sonho no diário onírico.
+  static const String dream = 'dream';
 
   /// Uma tiragem de tarot.
   static const String divination = 'divination';
 
-  static const List<String> all = [gratitude, trail, divination];
+  static const List<String> all = [gratitude, dream, divination];
 }
 
 /// Estado do check-in diário: sequência de dias e ritos concluídos hoje.

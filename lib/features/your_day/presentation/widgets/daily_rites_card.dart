@@ -7,17 +7,15 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../diary/data/models/gratitude_model.dart';
 import '../../../diary/presentation/providers/gratitude_provider.dart';
-import '../../../learning/presentation/pages/lesson_page.dart';
-import '../../../learning/presentation/providers/learning_provider.dart';
+import '../../../diary/presentation/pages/dreams_list_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../providers/daily_checkin_provider.dart';
-import 'continue_trail_card.dart' show resumeTrail;
 
 /// Os ritos de hoje: três práticas curtas que fecham o dia da Bruxa.
 ///
-/// A regra é atrito baixo — a gratidão se escreve aqui mesmo, a trilha abre
-/// na lição em que a Bruxa parou e a adivinhação abre o tarot. Concluir os
-/// três mantém a sequência viva, que é o que traz de volta amanhã.
+/// A regra é atrito baixo — a gratidão se escreve aqui mesmo, o sonho vai
+/// para o diário onírico e a adivinhação abre o tarot. Concluir os três
+/// mantém a sequência viva, que é o que traz de volta amanhã.
 class DailyRitesCard extends StatelessWidget {
   const DailyRitesCard({super.key});
 
@@ -26,7 +24,6 @@ class DailyRitesCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final checkin = context.watch<DailyCheckinProvider>();
     if (!checkin.isLoaded) return const SizedBox.shrink();
-    final resume = resumeTrail(context.watch<LearningProvider>());
 
     final done = checkin.ritesDoneCount;
     final total = DailyRites.all.length;
@@ -66,25 +63,17 @@ class DailyRitesCard extends StatelessWidget {
             label: l10n.yourDayRiteGratitude,
             onStart: () => _writeGratitude(context),
           ),
-          if (resume != null)
-            _RiteTile(
-              id: DailyRites.trail,
-              emoji: '📖',
-              label: resume.started
-                  ? l10n.yourDayRiteTrailContinue
-                  : l10n.yourDayRiteTrailStart,
-              onStart: () {
-                _complete(context, DailyRites.trail);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => LessonPage(
-                      trail: resume.trail,
-                      lesson: resume.lesson,
-                    ),
-                  ),
-                );
-              },
-            ),
+          _RiteTile(
+            id: DailyRites.dream,
+            emoji: '🌙',
+            label: l10n.yourDayRiteDream,
+            onStart: () {
+              _complete(context, DailyRites.dream);
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const DreamsListPage()),
+              );
+            },
+          ),
           _RiteTile(
             id: DailyRites.divination,
             emoji: '🎴',
@@ -148,9 +137,6 @@ class DailyRitesCard extends StatelessWidget {
   /// Gratidão em um gesto: uma linha, salvar, pronto — e o registro vai para
   /// o Diário de Gratidão como qualquer outro.
   static Future<void> _writeGratitude(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController();
-
     final text = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -158,56 +144,9 @@ class DailyRitesCard extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.yourDayRiteGratitude,
-              style: Theme.of(sheetContext).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              maxLines: 3,
-              minLines: 1,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                hintText: l10n.yourDayGratitudeHint,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onSubmitted: (value) =>
-                  Navigator.of(sheetContext).pop(value.trim()),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.gc.lilac,
-                  foregroundColor: context.gc.onPrimary,
-                ),
-                onPressed: () =>
-                    Navigator.of(sheetContext).pop(controller.text.trim()),
-                child: Text(l10n.commonSave),
-              ),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => const _GratitudeSheet(),
     );
 
-    controller.dispose();
     if (text == null || text.isEmpty || !context.mounted) return;
 
     await context.read<GratitudeProvider>().addGratitude(
@@ -218,6 +157,82 @@ class DailyRitesCard extends StatelessWidget {
           ),
         );
     if (context.mounted) await _complete(context, DailyRites.gratitude);
+  }
+}
+
+/// Folha de gratidão rápida.
+///
+/// É um StatefulWidget de propósito: o TextEditingController morre junto com
+/// ela, e todo `Theme.of`/`Provider.of` usa o contexto DA FOLHA. Fazer isso
+/// pelo contexto de fora quebrava a árvore quando a folha fechava
+/// (`_dependents.isEmpty`).
+class _GratitudeSheet extends StatefulWidget {
+  const _GratitudeSheet();
+
+  @override
+  State<_GratitudeSheet> createState() => _GratitudeSheetState();
+}
+
+class _GratitudeSheetState extends State<_GratitudeSheet> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() => Navigator.of(context).pop(_controller.text.trim());
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.yourDayRiteGratitude,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            maxLines: 3,
+            minLines: 1,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: l10n.yourDayGratitudeHint,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onSubmitted: (_) => _save(),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.gc.lilac,
+                foregroundColor: context.gc.onPrimary,
+              ),
+              onPressed: _save,
+              child: Text(l10n.commonSave),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

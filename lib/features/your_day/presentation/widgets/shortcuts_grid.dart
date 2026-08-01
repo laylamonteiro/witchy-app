@@ -72,7 +72,7 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
               Text(
                 l10n.yourDayShortcutsEditHint,
                 style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
-                      color: context.gc.textSecondary,
+                      color: sheetContext.gc.textSecondary,
                     ),
               ),
               const SizedBox(height: 16),
@@ -84,8 +84,8 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
                   return FilterChip(
                     selected: isSelected,
                     label: Text('${tool.emoji} ${tool.label(l10n)}'),
-                    selectedColor: context.gc.lilac.withValues(alpha: 0.3),
-                    checkmarkColor: context.gc.lilac,
+                    selectedColor: sheetContext.gc.lilac.withValues(alpha: 0.3),
+                    checkmarkColor: sheetContext.gc.lilac,
                     onSelected: (value) {
                       setSheetState(() {
                         if (value) {
@@ -103,8 +103,8 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: context.gc.lilac,
-                    foregroundColor: context.gc.onPrimary,
+                    backgroundColor: sheetContext.gc.lilac,
+                    foregroundColor: sheetContext.gc.onPrimary,
                   ),
                   onPressed: () {
                     // Preserva a ordem canônica do registry.
