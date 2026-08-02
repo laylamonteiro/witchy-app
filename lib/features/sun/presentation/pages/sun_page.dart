@@ -161,25 +161,38 @@ class SunPage extends StatelessWidget {
             ),
           ),
 
-          // O Sol na bruxaria (premium)
+          // O Sol na bruxaria (free): a explicação introdutória é aberta —
+          // as demais seções de conhecimento continuam Premium.
           MagicalCard(
-            child: PremiumContentSection(
-              feature: AppFeature.sunKnowledge,
-              title: Text(
-                l10n.sunInWitchcraftTitle,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              subtitle: l10n.sunInWitchcraftSubtitle,
-              contentBuilder: (context) => Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Text(
-                  SunContent.intro,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(height: 1.5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.sunInWitchcraftTitle,
+                  style: Theme.of(context).textTheme.headlineMedium,
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.sunInWitchcraftSubtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.7),
+                        height: 1.35,
+                      ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    SunContent.intro,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(height: 1.5),
+                  ),
+                ),
+              ],
             ),
           ),
 
