@@ -38,11 +38,18 @@ subprojects {
 // com código nativo (ex.: sweph/libsweph.so) compilam com o NDK do PRÓPRIO
 // plugin, que pode ser antigo e gerar .so desalinhado. Força o NDK 28 (que
 // alinha em 16 KB por padrão) em todos os subprojetos Android.
-subprojects {
-    afterEvaluate { project ->
+subprojects { project ->
+    def forceNdk = {
         if (project.hasProperty('android')) {
             project.android.ndkVersion = "28.2.13676358"
         }
+    }
+    // O :app já foi avaliado pelo evaluationDependsOn acima — nele o ajuste
+    // é imediato; nos plugins, após a avaliação de cada um.
+    if (project.state.executed) {
+        forceNdk()
+    } else {
+        project.afterEvaluate { forceNdk() }
     }
 }
 
