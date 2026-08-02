@@ -1343,6 +1343,7 @@
   "yourDayAffirmationSaved": "Favorita 💜",
   "yourDayRitualTodayTitle": "¡Es hoy: {event}!",
   "yourDayRitualCountdown": "{days, plural, one{Falta 1 día para {event}} other{Faltan {days} días para {event}}}",
+  "yourDayRitualEve": "¡Es mañana! Prepara tus materiales 🕯️",
   "yourDayRitualCta": "Hacer el ritual guiado",
   "yourDayHeroEyebrow": "Tu rito de hoy",
   "yourDayStreakDays": "{days, plural, =0{Empieza tu racha hoy} one{1 día seguido} other{{days} días seguidos}}",

@@ -106,11 +106,11 @@ class _YourDayPageState extends State<YourDayPage>
               const GreetingHeader(),
               // Só no DIA do evento: aí ele merece o topo da tela.
               const RitualOfMomentCard(mode: RitualCardMode.todayHero),
+              // Enquanto o dia não chega: a contagem regressiva vem antes da
+              // leitura do dia — é o próximo compromisso da Bruxa.
+              const RitualOfMomentCard(mode: RitualCardMode.countdown),
               // Sem ação no toque: o carrossel é leitura do dia, não atalho.
               const MoonDayCarousel(),
-              // Enquanto o dia não chega: a faixa discreta de contagem, no
-              // lugar de sempre.
-              const RitualOfMomentCard(mode: RitualCardMode.countdown),
               // Consulta lunar logo abaixo da Lua, onde ela faz sentido.
               const NextMoonPhasesCard(),
               const SpellRecommendationsCard(),

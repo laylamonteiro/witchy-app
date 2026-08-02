@@ -55,15 +55,39 @@ class _DailyAffirmationCardState extends State<DailyAffirmationCard> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(
-                '“${affirmation.text}”',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      height: 1.4,
-                    ),
+              const SizedBox(height: 4),
+              // Pull-quote: a frase é a protagonista do card — centralizada,
+              // corpo maior e aspas decorativas em lilás. O texto usa a cor
+              // padrão do tema (não o acento) para seguir legível em todos
+              // os temas.
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: [
+                      Text(
+                        '❝',
+                        style: TextStyle(
+                          fontSize: 36,
+                          height: 1.1,
+                          color: context.gc.lilac.withValues(alpha: 0.55),
+                        ),
+                      ),
+                      Text(
+                        affirmation.text,
+                        textAlign: TextAlign.center,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.45,
+                                ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
