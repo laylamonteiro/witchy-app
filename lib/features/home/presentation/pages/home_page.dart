@@ -184,20 +184,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// 2) páginas de detalhe empilhadas dentro da aba ativa; 3) raiz de outra
   /// aba volta para o Seu Dia; 4) só no Seu Dia, um segundo toque em 2s sai
   /// de fato do app.
-  void _handleSystemBack() {
+  Future<void> _handleSystemBack() async {
     // 1. Rotas empilhadas no Navigator raiz (tela cheia sobre a home).
+    // O guard canPop evita recursão: na raiz, maybePop dispararia o
+    // próprio PopScope desta página de novo.
     final rootNavigator = Navigator.of(context);
     if (rootNavigator.canPop()) {
-      rootNavigator.pop();
+      await rootNavigator.maybePop();
       return;
     }
 
-    // 2. Páginas de detalhe dentro da aba ativa.
+    // 2. Páginas de detalhe dentro da aba ativa. maybePop (e não pop)
+    // respeita o PopScope interno das páginas — ex.: o stepper da lição
+    // volta passo a passo antes de sair, e a Escrita Livre salva ao sair.
     final tabNavigator = _navigatorKeys[_selectedIndex].currentState;
-    if (tabNavigator != null && tabNavigator.canPop()) {
-      tabNavigator.pop();
+    if (tabNavigator != null && await tabNavigator.maybePop()) {
       return;
     }
+    if (!mounted) return;
 
     // 3. Raiz de outra aba: voltar leva à tela principal (Seu Dia) — nunca
     // fecha o app a partir daqui.
@@ -280,10 +284,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return Scaffold(
       body: Stack(
         children: [
-          // Páginas principais — cada aba com seu próprio Navigator
-          IndexedStack(
-            index: _selectedIndex,
-            children: List.generate(4, _buildTabNavigator),
+          // Páginas principais — cada aba com seu próprio Navigator.
+          // O NotificationListener ABSORVE as NavigationNotification dos
+          // navigators aninhados: com o predictive back do Android
+          // (targetSdk 36), quando um navigator de aba esvaziava ele
+          // avisava o sistema "não tenho mais nada a tratar"
+          // (setFrameworkHandlesBack(false)) e o gesto seguinte fechava o
+          // app sem consultar o PopScope desta página. Quem manda no back
+          // é sempre o PopScope raiz (canPop: false).
+          NotificationListener<NavigationNotification>(
+            onNotification: (_) => true,
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: List.generate(4, _buildTabNavigator),
+            ),
           ),
           if (showMascot) ...[
             CatChatBubble(mascotPosition: _mascotPosition),

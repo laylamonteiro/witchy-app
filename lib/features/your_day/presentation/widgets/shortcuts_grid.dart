@@ -131,9 +131,14 @@ class _ShortcutsGridState extends State<ShortcutsGrid> {
         : result);
   }
 
-  /// Abre a ferramenta: destino interno (mantém a navegação da seção) ou
-  /// página empilhada.
+  /// Abre a ferramenta: ação customizada, destino interno (mantém a
+  /// navegação da seção) ou página empilhada.
   void _open(BuildContext context, ShortcutTool tool) {
+    final onTap = tool.onTap;
+    if (onTap != null) {
+      onTap(context);
+      return;
+    }
     final link = tool.link;
     if (link != null) {
       DeepLinkService.instance.dispatch(link);

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/services/ad_service.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -219,6 +220,10 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
       if (!mounted) return;
 
       if (chart != null) {
+        // Anúncio ANTES do mapa (free): a usuária quer o resultado. O ad
+        // fecha e SÓ ENTÃO navega — sem competir com a transição de rota.
+        await AdService.instance.showBeforeResult();
+        if (!mounted) return;
         // Navegar para visualização (o fuso/horário de verão é mostrado no mapa).
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(

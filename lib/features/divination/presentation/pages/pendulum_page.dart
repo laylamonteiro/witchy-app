@@ -91,18 +91,19 @@ class _PendulumPageState extends State<PendulumPage>
     _showAnswer(); // Chamar diretamente após parar
   }
 
-  void _showAnswer() {
+  Future<void> _showAnswer() async {
     // Gerar resposta aleatória
     final answers = PendulumAnswer.values;
     final random = Random();
+
+    // Anúncio ANTES de revelar a resposta (free, cooldown interno).
+    await AdService.instance.showBeforeResult();
+    if (!mounted) return;
 
     setState(() {
       _answer = answers[random.nextInt(answers.length)];
       _isSwinging = false;
     });
-
-    // Anúncio intersticial para usuários free (cooldown interno).
-    AdService.instance.maybeShowInterstitial();
 
     // Salvar histórico
     _saveConsultation();

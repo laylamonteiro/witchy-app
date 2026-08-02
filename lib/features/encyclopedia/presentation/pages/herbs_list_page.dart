@@ -55,7 +55,8 @@ class _HerbsListPageState extends State<HerbsListPage> {
     // Ordena alfabeticamente
     final herbs = _sortHerbs(unsortedHerbs);
 
-    // Entradas pessoais (foto + IA) aparecem antes das oficiais.
+    // Entradas pessoais (foto + IA) entram na MESMA ordem alfabética das
+    // oficiais — uma lista só, cada item sabendo se é da Bruxa.
     final lowerQuery = _searchQuery.toLowerCase();
     final userEntries = provider
         .userEntries(UserEntryCategory.herb)
@@ -63,10 +64,16 @@ class _HerbsListPageState extends State<HerbsListPage> {
             _searchQuery.isEmpty ||
             e.name.toLowerCase().contains(lowerQuery))
         .toList();
-    final combined = [
-      ...userEntries.map((e) => e.toHerbModel()),
-      if (!_onlyMine) ...herbs,
-    ];
+    final combined = <({HerbModel model, UserEncyclopediaEntry? userEntry})>[
+      ...userEntries.map((e) => (model: e.toHerbModel(), userEntry: e)),
+      if (!_onlyMine) ...herbs.map((h) => (model: h, userEntry: null)),
+    ]..sort((a, b) => removeAccents(a.model.name.toUpperCase())
+        .compareTo(removeAccents(b.model.name.toUpperCase())));
+
+    // Filtro Minhas ativo sem NENHUMA entrada pessoal: escurece a página e
+    // destaca o botão Adicionar (spotlight estilo tour).
+    final spotlightAdd =
+        _onlyMine && provider.userEntries(UserEntryCategory.herb).isEmpty;
 
     return Stack(
       children: [
@@ -106,8 +113,9 @@ class _HerbsListPageState extends State<HerbsListPage> {
             padding: const EdgeInsets.only(bottom: 88),
             itemCount: combined.length,
             itemBuilder: (context, index) {
-              final herb = combined[index];
-              final isUserEntry = index < userEntries.length;
+              final item = combined[index];
+              final herb = item.model;
+              final userEntry = item.userEntry;
               return MagicalCard(
                 onTap: () {
                   Navigator.push(
@@ -116,13 +124,16 @@ class _HerbsListPageState extends State<HerbsListPage> {
                       builder: (context) => EntryPager(
                         itemCount: combined.length,
                         initialIndex: index,
-                        itemBuilder: (_, i) => HerbDetailPage(herb: combined[i]),
+                        itemBuilder: (_, i) => HerbDetailPage(
+                          herb: combined[i].model,
+                          userEntry: combined[i].userEntry,
+                        ),
                       ),
                     ),
                   );
                 },
-                onLongPress: isUserEntry
-                    ? () => confirmDeleteUserEntry(context, userEntries[index])
+                onLongPress: userEntry != null
+                    ? () => confirmDeleteUserEntry(context, userEntry)
                     : null,
                 child: Row(
                   children: [
@@ -231,7 +242,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
         ),
       ],
         ),
-        AddUserEntryFab(category: UserEntryCategory.herb),
+        if (spotlightAdd) const MineEmptySpotlight(),
+        AddUserEntryFab(
+          category: UserEntryCategory.herb,
+          highlight: spotlightAdd,
+        ),
       ],
     );
   }

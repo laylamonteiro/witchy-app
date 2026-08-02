@@ -13,6 +13,8 @@ import '../../../diary/presentation/pages/affirmation_form_page.dart';
 import '../../../diary/presentation/pages/desire_form_page.dart';
 import '../../../diary/presentation/pages/dream_form_page.dart';
 import '../../../diary/presentation/pages/gratitude_form_page.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../diary/presentation/providers/affirmation_provider.dart';
 import '../../../diary/presentation/providers/desire_provider.dart';
 import '../../../diary/presentation/providers/dream_provider.dart';
@@ -53,6 +55,25 @@ class _LessonPageState extends State<LessonPage> {
   int _step = 0; // 0 ensino · 1 prática · 2 página
   bool _practiceDone = false;
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Gate central: só a 1ª lição de cada trilha é gratuita. Qualquer
+    // caminho que chegue aqui (trilha, card do Seu Dia, futuros atalhos)
+    // passa pela mesma porta — free vê o paywall e a página se fecha.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
+  }
+
+  Future<void> _ensureAccess() async {
+    if (!mounted) return;
+    final index =
+        widget.trail.lessons.indexWhere((l) => l.id == widget.lesson.id);
+    final isPremium = context.read<AuthProvider>().isPremiumEffective;
+    if (index > 0 && !isPremium) {
+      await showPaywallThenPop(context);
+    }
+  }
 
   late final _titleController =
       TextEditingController(text: widget.lesson.pageTitle);

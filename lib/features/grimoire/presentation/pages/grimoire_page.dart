@@ -16,6 +16,7 @@ import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../diary/presentation/pages/dream_tools_page.dart';
 import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
+import '../../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
 import '../../../learning/presentation/pages/learning_home_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
@@ -134,19 +135,26 @@ class _ToolsTab extends StatelessWidget {
         icon: const Text('📖', style: TextStyle(fontSize: 40)),
         title: l10n.toolLivingGrimoireTitle,
         description: l10n.toolLivingGrimoireDesc,
-        page: () => const LearningHomePage(),
+        open: () => _push(context, const LearningHomePage()),
       ),
       (
         icon: const Text('🔮', style: TextStyle(fontSize: 40)),
         title: l10n.toolMysticAdvisorTitle,
         description: l10n.toolMysticAdvisorDesc,
-        page: () => const MysticAdvisorPage(),
+        open: () => _push(context, const MysticAdvisorPage()),
       ),
       (
         icon: const SigilIcon(size: 40),
         title: l10n.toolSigilsTitle,
         description: l10n.toolSigilsDesc,
-        page: () => const SigilStep1IntentionPage(),
+        open: () => _push(context, const SigilStep1IntentionPage()),
+      ),
+      (
+        icon: const Text('🍃', style: TextStyle(fontSize: 40)),
+        title: l10n.toolNatureGuideTitle,
+        description: l10n.toolNatureGuideDesc,
+        // Antes da página vem o seletor: o que vamos identificar?
+        open: () => openNatureGuide(context),
       ),
     ];
 
@@ -155,37 +163,37 @@ class _ToolsTab extends StatelessWidget {
         icon: const Text('🎴', style: TextStyle(fontSize: 40)),
         title: l10n.toolTarotTitle,
         description: l10n.toolTarotDesc,
-        page: () => const TarotPage(),
+        open: () => _push(context, const TarotPage()),
       ),
       (
         icon: const Text('🌙', style: TextStyle(fontSize: 40)),
         title: l10n.toolDreamsTitle,
         description: l10n.toolDreamsDesc,
-        page: () => const DreamToolsPage(),
+        open: () => _push(context, const DreamToolsPage()),
       ),
       (
         icon: const Text('🖐️', style: TextStyle(fontSize: 40)),
         title: l10n.toolPalmistryTitle,
         description: l10n.toolPalmistryDesc,
-        page: () => const PalmistryPage(),
+        open: () => _push(context, const PalmistryPage()),
       ),
       (
         icon: const Text(' ᚱ ', style: TextStyle(fontSize: 40)),
         title: l10n.toolRunesTitle,
         description: l10n.toolRunesDesc,
-        page: () => const RuneReadingPage(),
+        open: () => _push(context, const RuneReadingPage()),
       ),
       (
         icon: const Text('🃏', style: TextStyle(fontSize: 40)),
         title: l10n.toolOracleTitle,
         description: l10n.toolOracleDesc,
-        page: () => const OracleCardsPage(),
+        open: () => _push(context, const OracleCardsPage()),
       ),
       (
         icon: const Text(' ⟟ ', style: TextStyle(fontSize: 40)),
         title: l10n.toolPendulumTitle,
         description: l10n.toolPendulumDesc,
-        page: () => const PendulumPage(),
+        open: () => _push(context, const PendulumPage()),
       ),
     ];
 
@@ -194,13 +202,13 @@ class _ToolsTab extends StatelessWidget {
         icon: const Text('🎭', style: TextStyle(fontSize: 40)),
         title: l10n.toolArchetypeTitle,
         description: l10n.toolArchetypeDesc,
-        page: () => const ArchetypeQuizPage(),
+        open: () => _push(context, const ArchetypeQuizPage()),
       ),
       (
         icon: const Text('🔢', style: TextStyle(fontSize: 40)),
         title: l10n.toolNumerologyTitle,
         description: l10n.toolNumerologyDesc,
-        page: () => const NumerologyPage(),
+        open: () => _push(context, const NumerologyPage()),
       ),
     ];
 
@@ -259,13 +267,17 @@ class _ToolsTab extends StatelessWidget {
     );
   }
 
+  void _push(BuildContext context, Widget page) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => page),
+    );
+  }
+
   Widget _buildToolCard(BuildContext context, _Tool tool) {
     // O toque é do próprio MagicalCard: antes havia um InkWell POR FORA do
     // card, então o ripple vazava e o alvo de toque ficava duplicado.
     return MagicalCard(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => tool.page()),
-      ),
+      onTap: tool.open,
       child: Row(
         children: [
           tool.icon,
@@ -298,10 +310,11 @@ class _ToolsTab extends StatelessWidget {
   }
 }
 
-/// Uma ferramenta do Grimório: ícone, textos e a página que ela abre.
+/// Uma ferramenta do Grimório: ícone, textos e a ação do toque (em geral
+/// um push aninhado; o Guia da Natureza abre um seletor antes).
 typedef _Tool = ({
   Widget icon,
   String title,
   String description,
-  Widget Function() page,
+  VoidCallback open,
 });

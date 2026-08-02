@@ -507,14 +507,21 @@ jobs:
           REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ADMOB_ANDROID_INTERSTITIAL_ID: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
         run: |
+          # Sem o secret do AdMob, NÃO passa o define — o app usa o id de
+          # teste do Google (um define vazio derrubaria os anúncios).
+          ADMOB_FLAG=""
+          if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
+            ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
+          fi
           flutter build apk --release \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
-            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD"
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG
 
 
 
@@ -814,13 +821,19 @@ jobs:
         # caracteres especiais de shell (;, &, $, quebras de linha) nao
         # quebram o script nem vazam no log.
         run: |
+          # Sem o secret do AdMob, NÃO passa o define — o app usa o id de
+          # teste do Google (um define vazio derrubaria os anúncios).
+          ADMOB_FLAG=""
+          if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
+            ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
+          fi
           flutter build appbundle --release \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
-            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD"
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
 
@@ -833,6 +846,8 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
 
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+
+          ADMOB_ANDROID_INTERSTITIAL_ID: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
 
           ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
 

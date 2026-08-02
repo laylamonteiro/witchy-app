@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,8 +26,9 @@ class AdConfig {
           : androidInterstitialId;
 }
 
-/// Anúncios intersticiais para usuários free, exibidos após ações principais
-/// que retornam resultado (tiragens, leituras, feitiço IA).
+/// Anúncios intersticiais para usuários free, exibidos ANTES de revelar o
+/// resultado de uma ação (tiragens, leituras, feitiço IA, mapa astral):
+/// a usuária quer o resultado, então o anúncio é assistido, não ignorado.
 ///
 /// Regras:
 /// - Nunca para Premium ([PremiumAccess]); nunca na web/desktop.
@@ -88,9 +91,11 @@ class AdService {
     return '${now.year}-${now.month}-${now.day}';
   }
 
-  /// Mostra um intersticial se (e só se) todas as regras permitirem.
-  /// Fire-and-forget: chame após revelar o resultado da ação.
-  Future<void> maybeShowInterstitial() async {
+  /// Mostra um intersticial ANTES do resultado, se (e só se) todas as
+  /// regras permitirem. Aguarde este Future e SÓ ENTÃO revele o resultado:
+  /// ele completa quando o anúncio é fechado — ou imediatamente quando não
+  /// há anúncio a mostrar (premium, cooldown, teto, nada carregado).
+  Future<void> showBeforeResult() async {
     if (!_supported || !_initialized) return;
     if (PremiumAccess.instance.isPremium) return;
 
@@ -115,20 +120,23 @@ class AdService {
     }
     _loadedAd = null;
 
+    // O resultado espera o anúncio FECHAR — não só aparecer.
+    final dismissed = Completer<void>();
+    void finish(InterstitialAd ad) {
+      ad.dispose();
+      _preload();
+      if (!dismissed.isCompleted) dismissed.complete();
+    }
+
     ad.fullScreenContentCallback = FullScreenContentCallback(
-      onAdDismissedFullScreenContent: (ad) {
-        ad.dispose();
-        _preload();
-      },
-      onAdFailedToShowFullScreenContent: (ad, error) {
-        ad.dispose();
-        _preload();
-      },
+      onAdDismissedFullScreenContent: finish,
+      onAdFailedToShowFullScreenContent: (ad, _) => finish(ad),
     );
 
     await prefs.setInt(
         _lastShownKey, DateTime.now().millisecondsSinceEpoch);
     await prefs.setString(_dailyCountKey, '$today|${count + 1}');
     await ad.show();
+    await dismissed.future;
   }
 }

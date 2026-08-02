@@ -44,6 +44,14 @@ class _ColorsListPageState extends State<ColorsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Filtro Minhas ativo sem NENHUMA entrada pessoal: escurece a página e
+    // destaca o botão Adicionar (spotlight estilo tour).
+    final spotlightAdd = _onlyMine &&
+        context
+            .watch<EncyclopediaProvider>()
+            .userEntries(UserEntryCategory.color)
+            .isEmpty;
+
     return Stack(
       children: [
         Column(
@@ -87,7 +95,8 @@ class _ColorsListPageState extends State<ColorsListPage> {
               // Ordena alfabeticamente
               final colors = _sortColors(unsortedColors);
 
-              // Entradas pessoais (foto + IA) aparecem antes das oficiais.
+              // Entradas pessoais (foto + IA) entram na MESMA ordem
+              // alfabética das oficiais — uma lista só.
               final lowerQuery = _searchQuery.toLowerCase();
               final userEntries = provider
                   .userEntries(UserEntryCategory.color)
@@ -95,17 +104,22 @@ class _ColorsListPageState extends State<ColorsListPage> {
                       _searchQuery.isEmpty ||
                       e.name.toLowerCase().contains(lowerQuery))
                   .toList();
-              final combined = [
-                ...userEntries.map((e) => e.toColorModel()),
-                if (!_onlyMine) ...colors,
-              ];
+              final combined =
+                  <({ColorModel model, UserEncyclopediaEntry? userEntry})>[
+                ...userEntries
+                    .map((e) => (model: e.toColorModel(), userEntry: e)),
+                if (!_onlyMine)
+                  ...colors.map((c) => (model: c, userEntry: null)),
+              ]..sort((a, b) => removeAccents(a.model.name.toUpperCase())
+                  .compareTo(removeAccents(b.model.name.toUpperCase())));
 
               return ListView.builder(
                 padding: const EdgeInsets.only(bottom: 88),
                 itemCount: combined.length,
                 itemBuilder: (context, index) {
-                  final colorModel = combined[index];
-                  final isUserEntry = index < userEntries.length;
+                  final item = combined[index];
+                  final colorModel = item.model;
+                  final userEntry = item.userEntry;
                   return MagicalCard(
                     onTap: () {
                       Navigator.push(
@@ -114,15 +128,16 @@ class _ColorsListPageState extends State<ColorsListPage> {
                           builder: (_) => EntryPager(
                             itemCount: combined.length,
                             initialIndex: index,
-                            itemBuilder: (_, i) =>
-                                ColorDetailPage(colorModel: combined[i]),
+                            itemBuilder: (_, i) => ColorDetailPage(
+                              colorModel: combined[i].model,
+                              userEntry: combined[i].userEntry,
+                            ),
                           ),
                         ),
                       );
                     },
-                    onLongPress: isUserEntry
-                        ? () =>
-                            confirmDeleteUserEntry(context, userEntries[index])
+                    onLongPress: userEntry != null
+                        ? () => confirmDeleteUserEntry(context, userEntry)
                         : null,
                     child: Row(
                       children: [
@@ -207,7 +222,11 @@ class _ColorsListPageState extends State<ColorsListPage> {
         ),
       ],
         ),
-        AddUserEntryFab(category: UserEntryCategory.color),
+        if (spotlightAdd) const MineEmptySpotlight(),
+        AddUserEntryFab(
+          category: UserEntryCategory.color,
+          highlight: spotlightAdd,
+        ),
       ],
     );
   }

@@ -18,6 +18,9 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/user_entry_model.dart';
 import '../providers/encyclopedia_provider.dart';
+import 'color_detail_page.dart';
+import 'crystal_detail_page.dart';
+import 'herb_detail_page.dart';
 
 /// Adicionar entrada pessoal à enciclopédia (Premium): a Bruxa fotografa a
 /// erva/pedra/cor, a IA identifica, ela confirma ou corrige o nome, a IA
@@ -193,7 +196,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
       // científico embutido): salva ele, não o texto digitado — corrige
       // erros de digitação e nomes extensos de uma vez.
       final canonicalName = '${data['name'] ?? ''}'.trim();
-      await context.read<EncyclopediaProvider>().addUserEntry(
+      final entry = await context.read<EncyclopediaProvider>().addUserEntry(
             category: widget.category,
             name: canonicalName.isNotEmpty
                 ? canonicalName
@@ -207,7 +210,26 @@ class _AddEntryPageState extends State<AddEntryPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.encyAddSaved)),
       );
-      Navigator.of(context).pop();
+      // Direto para a página recém-criada (voltar dela cai na lista);
+      // a lixeira do AppBar já funciona porque a entrada vai junto.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => switch (widget.category) {
+            UserEntryCategory.herb => HerbDetailPage(
+                herb: entry.toHerbModel(),
+                userEntry: entry,
+              ),
+            UserEntryCategory.crystal => CrystalDetailPage(
+                crystal: entry.toCrystalModel(),
+                userEntry: entry,
+              ),
+            UserEntryCategory.color => ColorDetailPage(
+                colorModel: entry.toColorModel(),
+                userEntry: entry,
+              ),
+          },
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() {

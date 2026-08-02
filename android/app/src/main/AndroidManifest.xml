@@ -53,12 +53,12 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- AdMob APPLICATION_ID: este é o ID DE TESTE oficial do Google.
-             Troque pelo ID real do app quando a conta AdMob for criada
-             (Configurações do app no AdMob > ID do aplicativo). -->
+        <!-- AdMob APPLICATION_ID real da conta (Grimório de Bolso Android).
+             Os IDS DE BLOCO seguem por dart-define no build de release;
+             sem o secret, o app usa os blocos de teste do Google. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-4923325421853205~1406168703" />
 
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"

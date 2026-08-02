@@ -1,28 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../auth/data/models/feature_access.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../encyclopedia/presentation/widgets/related_link.dart';
 import '../../data/models/guided_ritual_model.dart';
 import '../../data/models/guided_rituals_data.dart';
 import 'ritual_player_page.dart';
 
 /// Página guiada de um ritual (sabbat, lua ou água mágica), aberta por
-/// notificação (deep link), pelo detalhe do sabbat ou pelo calendário lunar.
+/// notificação (deep link), pelo detalhe do sabbat, pelo calendário lunar
+/// ou pela contagem regressiva do Seu Dia.
 ///
-/// O conteúdo (intro, quando fazer, materiais, correspondências, usos) é
-/// gratuito; o player passo a passo tem preview free + gate premium.
-class GuidedRitualPage extends StatelessWidget {
+/// Recurso Premium por inteiro: free vê o paywall ao abrir (mesmo padrão
+/// da AddEntryPage) e a página se fecha em seguida.
+class GuidedRitualPage extends StatefulWidget {
   final String ritualId;
 
   const GuidedRitualPage({super.key, required this.ritualId});
 
   @override
+  State<GuidedRitualPage> createState() => _GuidedRitualPageState();
+}
+
+class _GuidedRitualPageState extends State<GuidedRitualPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
+  }
+
+  Future<void> _ensureAccess() async {
+    final access = context
+        .read<AuthProvider>()
+        .checkFeatureAccess(AppFeature.guidedRitualPlayer);
+    if (!access.hasFullAccess && mounted) {
+      await showPaywallThenPop(context);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final ritual = AllGuidedRituals.byId(ritualId);
+    final ritual = AllGuidedRituals.byId(widget.ritualId);
     final l10n = AppLocalizations.of(context);
 
     if (ritual == null) {
