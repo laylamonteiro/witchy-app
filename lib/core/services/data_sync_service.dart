@@ -30,6 +30,7 @@ enum SyncEntity {
   oracleReadings,
   dailyMagicalWeather,
   learningProgress,
+  userEncyclopediaEntries,
 }
 
 /// Status de sincronização
@@ -570,6 +571,8 @@ class DataSyncService {
         return SupabaseTables.dailyMagicalWeather;
       case SyncEntity.learningProgress:
         return SupabaseTables.learningProgress;
+      case SyncEntity.userEncyclopediaEntries:
+        return SupabaseTables.userEncyclopediaEntries;
     }
   }
 
@@ -608,6 +611,8 @@ class DataSyncService {
         return 'daily_magical_weather';
       case SyncEntity.learningProgress:
         return 'learning_progress';
+      case SyncEntity.userEncyclopediaEntries:
+        return 'user_encyclopedia_entries';
     }
   }
 
@@ -665,6 +670,7 @@ class DataSyncService {
     'rune_readings': {'reading_data'},
     'oracle_readings': {'reading_data'},
     'daily_magical_weather': {'weather_data'},
+    'user_encyclopedia_entries': {'data'},
   };
 
   static const _dateFields = {
@@ -684,6 +690,7 @@ class DataSyncService {
     'oracle_readings': {'date', 'created_at', 'updated_at'},
     'daily_magical_weather': {'created_at', 'updated_at'},
     'learning_progress': {'completed_at', 'updated_at'},
+    'user_encyclopedia_entries': {'created_at', 'updated_at'},
   };
 
   @visibleForTesting
