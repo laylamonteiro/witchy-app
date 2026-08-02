@@ -71,6 +71,7 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
               ),
               const SizedBox(width: 8),
               MineFilterButton(
+                category: UserEntryCategory.crystal,
                 selected: _onlyMine,
                 onChanged: (v) => setState(() => _onlyMine = v),
               ),

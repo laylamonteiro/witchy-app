@@ -85,6 +85,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
               ),
               const SizedBox(width: 8),
               MineFilterButton(
+                category: UserEntryCategory.herb,
                 selected: _onlyMine,
                 onChanged: (v) => setState(() => _onlyMine = v),
               ),

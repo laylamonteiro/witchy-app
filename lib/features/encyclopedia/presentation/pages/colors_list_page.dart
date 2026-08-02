@@ -61,6 +61,7 @@ class _ColorsListPageState extends State<ColorsListPage> {
               ),
               const SizedBox(width: 8),
               MineFilterButton(
+                category: UserEntryCategory.color,
                 selected: _onlyMine,
                 onChanged: (v) => setState(() => _onlyMine = v),
               ),
