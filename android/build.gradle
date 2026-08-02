@@ -42,6 +42,11 @@ subprojects { project ->
     def forceNdk = {
         if (project.hasProperty('android')) {
             project.android.ndkVersion = "28.2.13676358"
+            // O app é minSdk 24; plugins que declaram menos (sweph: 16)
+            // compilariam o C contra uma plataforma onde fseeko/ftello não
+            // existem em 32-bit — e o clang do NDK 28 trata declaração
+            // implícita como ERRO. Nivelar em 24 resolve.
+            project.android.defaultConfig.minSdk = 24
         }
     }
     // O :app já foi avaliado pelo evaluationDependsOn acima — nele o ajuste
