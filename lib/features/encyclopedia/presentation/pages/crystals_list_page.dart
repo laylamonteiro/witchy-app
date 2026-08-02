@@ -66,6 +66,11 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
             onChanged: (value) => setState(() => _searchQuery = value),
           ),
         ),
+        MineFilterChip(
+          category: UserEntryCategory.crystal,
+          selected: _onlyMine,
+          onChanged: (v) => setState(() => _onlyMine = v),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Text(
@@ -74,11 +79,6 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                   color: context.gc.textSecondary,
                 ),
           ),
-        ),
-        MineFilterChip(
-          category: UserEntryCategory.crystal,
-          selected: _onlyMine,
-          onChanged: (v) => setState(() => _onlyMine = v),
         ),
         Expanded(
           child: Consumer<EncyclopediaProvider>(

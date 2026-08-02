@@ -80,6 +80,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
             onChanged: (value) => setState(() => _searchQuery = value),
           ),
         ),
+        MineFilterChip(
+          category: UserEntryCategory.herb,
+          selected: _onlyMine,
+          onChanged: (v) => setState(() => _onlyMine = v),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Text(
@@ -88,11 +93,6 @@ class _HerbsListPageState extends State<HerbsListPage> {
                   color: context.gc.textSecondary,
                 ),
           ),
-        ),
-        MineFilterChip(
-          category: UserEntryCategory.herb,
-          selected: _onlyMine,
-          onChanged: (v) => setState(() => _onlyMine = v),
         ),
         Expanded(
           child: ListView.builder(

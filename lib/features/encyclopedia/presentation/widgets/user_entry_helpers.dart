@@ -11,8 +11,9 @@ import '../pages/add_entry_page.dart';
 import '../providers/encyclopedia_provider.dart';
 
 /// Chip "Minhas" das listas de cristais/ervas/cores: filtra para mostrar só
-/// as entradas pessoais. A marcação de "minha" é interna (isUserEntry) — o
-/// chip só aparece quando a Bruxa já criou alguma entrada na categoria.
+/// as entradas pessoais. A marcação de "minha" é interna (isUserEntry) — e o
+/// chip aparece SEMPRE, mesmo sem entradas, para a Bruxa descobrir que pode
+/// criar as suas.
 class MineFilterChip extends StatelessWidget {
   final UserEntryCategory category;
   final bool selected;
@@ -27,10 +28,6 @@ class MineFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasEntries =
-        context.watch<EncyclopediaProvider>().userEntries(category).isNotEmpty;
-    if (!hasEntries) return const SizedBox.shrink();
-
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
