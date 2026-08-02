@@ -95,15 +95,14 @@ class _MysticAdvisorPageState extends State<MysticAdvisorPage>
       // Incrementar uso do Conselheiro
       await authProvider.incrementAdvisorConsultations();
 
+      // Anúncio ANTES de revelar a resposta (free, cooldown interno).
+      await AdService.instance.showBeforeResult();
       if (!mounted) return;
 
       setState(() {
         _answer = answer;
       });
       _startTypewriter(answer);
-
-      // Anúncio intersticial para usuários free (cooldown interno).
-      AdService.instance.maybeShowInterstitial();
     } catch (e) {
       if (!mounted) return;
 

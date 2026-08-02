@@ -224,6 +224,14 @@ class _SpreadTabState extends State<_SpreadTab> {
     }
 
     if (!mounted) return;
+    // Anúncio ANTES de revelar as cartas (free, não na carta do dia): a
+    // usuária quer o resultado, então o anúncio é visto — e as cartas só
+    // aparecem quando ele fecha.
+    if (spread != TarotSpread.daily) {
+      await AdService.instance.showBeforeResult();
+      if (!mounted) return;
+    }
+
     // A tiragem aconteceu: o rito de hoje pode se dar por cumprido.
     unawaited(context.read<DailyCheckinProvider>().completeRite(
           DailyRites.divination,
@@ -247,11 +255,6 @@ class _SpreadTabState extends State<_SpreadTab> {
       _revealed = true;
       if (saved != null) _aiReading = saved;
     });
-
-    // Anúncio intersticial para usuários free (não na carta do dia).
-    if (spread != TarotSpread.daily) {
-      AdService.instance.maybeShowInterstitial();
-    }
   }
 
   Future<void> _askCounselor() async {
@@ -302,7 +305,20 @@ class _SpreadTabState extends State<_SpreadTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    // Voltar desfaz por camadas: com uma tiragem aberta, o gesto de voltar
+    // fecha a tiragem (volta ao seletor) em vez de sair da página inteira.
+    return PopScope(
+      canPop: _activeSpread == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        setState(() {
+          _activeSpread = null;
+          _drawn = [];
+          _aiReading = null;
+          _question = '';
+        });
+      },
+      child: SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -608,6 +624,7 @@ class _SpreadTabState extends State<_SpreadTab> {
           ],
           const SizedBox(height: 24),
         ],
+      ),
       ),
     );
   }

@@ -98,15 +98,16 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     // Incrementar uso de runas
     await authProvider.incrementRuneReadings();
 
+    // Anúncio ANTES de revelar as runas (free, cooldown interno).
+    await AdService.instance.showBeforeResult();
+    if (!mounted) return;
+
     setState(() {
       _drawnRunes = drawn;
       _isDrawing = false;
     });
 
     _animController.forward(from: 0);
-
-    // Anúncio intersticial para usuários free (cooldown interno).
-    AdService.instance.maybeShowInterstitial();
 
     // Salvar leitura
     await _saveReading(drawn);

@@ -87,14 +87,13 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
       // Incrementar uso de IA
       await authProvider.incrementAiConsultations();
 
+      // Anúncio ANTES de revelar o feitiço (free, cooldown interno).
+      await AdService.instance.showBeforeResult();
       if (!mounted) return;
 
       setState(() {
         _generatedSpell = spell;
       });
-
-      // Anúncio intersticial para usuários free (cooldown interno).
-      AdService.instance.maybeShowInterstitial();
     } catch (e) {
       if (!mounted) return;
 

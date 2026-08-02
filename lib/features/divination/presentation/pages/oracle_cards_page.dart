@@ -88,15 +88,16 @@ class _OracleCardsPageState extends State<OracleCardsPage>
     // Incrementar uso de oracle
     await authProvider.incrementOracleReadings();
 
+    // Anúncio ANTES de revelar as cartas (free, cooldown interno).
+    await AdService.instance.showBeforeResult();
+    if (!mounted) return;
+
     setState(() {
       _drawnCards = drawn;
       _isDrawing = false;
     });
 
     _animController.forward(from: 0);
-
-    // Anúncio intersticial para usuários free (cooldown interno).
-    AdService.instance.maybeShowInterstitial();
 
     // Salvar leitura
     await _saveReading(drawn);
