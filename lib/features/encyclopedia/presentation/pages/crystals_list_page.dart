@@ -164,6 +164,8 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                   Expanded(
                                     child: Text(
                                       crystal.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.cinzelDecorative(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -171,8 +173,6 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                       ),
                                     ),
                                   ),
-                                  if (isUserEntry)
-                                    const UserEntryBadge(),
                                 ],
                               ),
                               const SizedBox(height: 4),

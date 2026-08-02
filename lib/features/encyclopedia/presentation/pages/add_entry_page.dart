@@ -186,9 +186,15 @@ class _AddEntryPageState extends State<AddEntryPage> {
       }
 
       if (!mounted) return;
+      // O verbete gerado traz o nome CANÔNICO (grafia correta, sem nome
+      // científico embutido): salva ele, não o texto digitado — corrige
+      // erros de digitação e nomes extensos de uma vez.
+      final canonicalName = '${data['name'] ?? ''}'.trim();
       await context.read<EncyclopediaProvider>().addUserEntry(
             category: widget.category,
-            name: _nameController.text.trim(),
+            name: canonicalName.isNotEmpty
+                ? canonicalName
+                : _nameController.text.trim(),
             imagePath: savedPath,
             data: data,
           );

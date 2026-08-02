@@ -160,6 +160,8 @@ class _HerbsListPageState extends State<HerbsListPage> {
                               Expanded(
                                 child: Text(
                                   herb.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.cinzelDecorative(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -167,7 +169,6 @@ class _HerbsListPageState extends State<HerbsListPage> {
                                   ),
                                 ),
                               ),
-                              if (isUserEntry) const UserEntryBadge(),
                               if (herb.toxic)
                                 Icon(
                                   Icons.warning_amber_rounded,

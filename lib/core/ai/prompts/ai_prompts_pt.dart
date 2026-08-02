@@ -284,6 +284,9 @@ Limites:
     const commonPt =
         'Você é uma bruxa erudita escrevendo verbetes para a enciclopédia mágica pessoal de uma praticante. '
         'Escreva em português, com tom acolhedor e prático. '
+        'O campo "name" é o nome popular CANÔNICO e curto, com grafia e capitalização corretas — '
+        'corrija erros de digitação do nome informado e NUNCA inclua o nome científico nele '
+        '(científico vai no campo próprio, quando houver). '
         'Responda APENAS com JSON válido, sem texto extra. As CHAVES do JSON e os valores de enum são SEMPRE em inglês; os TEXTOS, em português.';
     switch (categoryKey) {
       case 'crystal':
