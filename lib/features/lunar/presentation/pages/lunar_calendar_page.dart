@@ -175,38 +175,25 @@ class LunarCalendarPage extends StatelessWidget {
             ),
           ),
 
-          // A Lua na bruxaria (free): a explicação introdutória é aberta —
-          // as seções seguintes (fases, esbats) continuam Premium.
+          // A Lua na bruxaria (premium)
           MagicalCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.moonInWitchcraftTitle,
-                  style: Theme.of(context).textTheme.headlineMedium,
+            child: PremiumContentSection(
+              feature: AppFeature.lunarCalendarDetails,
+              title: Text(
+                l10n.moonInWitchcraftTitle,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              subtitle: l10n.moonInWitchcraftSubtitle,
+              contentBuilder: (context) => Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  MoonContent.intro,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(height: 1.5),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.moonInWitchcraftSubtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7),
-                        height: 1.35,
-                      ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    MoonContent.intro,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.5),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
 
