@@ -181,8 +181,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   /// Gesto/botão de voltar: SEMPRE prioriza voltar de página em vez de sair.
   /// Ordem: 1) fluxos de tela cheia sobre a home (Configurações, Assinatura);
-  /// 2) páginas de detalhe empilhadas dentro da aba ativa; 3) só na raiz de
-  /// uma aba, exige um segundo toque em 2s para de fato sair do app.
+  /// 2) páginas de detalhe empilhadas dentro da aba ativa; 3) raiz de outra
+  /// aba volta para o Seu Dia; 4) só no Seu Dia, um segundo toque em 2s sai
+  /// de fato do app.
   void _handleSystemBack() {
     // 1. Rotas empilhadas no Navigator raiz (tela cheia sobre a home).
     final rootNavigator = Navigator.of(context);
@@ -198,7 +199,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       return;
     }
 
-    // 3. Raiz de uma aba: sair só com toque duplo.
+    // 3. Raiz de outra aba: voltar leva à tela principal (Seu Dia) — nunca
+    // fecha o app a partir daqui.
+    if (_selectedIndex != 0) {
+      setState(() => _selectedIndex = 0);
+      return;
+    }
+
+    // 4. Seu Dia: sair só com toque duplo.
     final now = DateTime.now();
     if (_lastBackPress == null ||
         now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
