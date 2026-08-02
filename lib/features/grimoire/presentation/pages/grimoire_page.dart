@@ -15,9 +15,8 @@ import '../../../numerology/presentation/pages/numerology_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../diary/presentation/pages/dream_tools_page.dart';
-import '../../../encyclopedia/data/models/user_entry_model.dart';
-import '../../../encyclopedia/presentation/pages/add_entry_page.dart';
 import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
+import '../../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
 import '../../../learning/presentation/pages/learning_home_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
@@ -155,7 +154,7 @@ class _ToolsTab extends StatelessWidget {
         title: l10n.toolNatureGuideTitle,
         description: l10n.toolNatureGuideDesc,
         // Antes da página vem o seletor: o que vamos identificar?
-        open: () => _openNatureGuide(context),
+        open: () => openNatureGuide(context),
       ),
     ];
 
@@ -271,72 +270,6 @@ class _ToolsTab extends StatelessWidget {
   void _push(BuildContext context, Widget page) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => page),
-    );
-  }
-
-  /// Guia da Natureza: pergunta O QUE identificar (erva/pedra/cor) e leva
-  /// ao fluxo de foto + IA da enciclopédia. O gate Premium é da própria
-  /// AddEntryPage — aqui não se duplica paywall.
-  Future<void> _openNatureGuide(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final category = await showModalBottomSheet<UserEntryCategory>(
-      context: context,
-      backgroundColor: context.gc.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: sheetContext.gc.surfaceBorder,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                l10n.toolNatureGuideSheetTitle,
-                style: Theme.of(sheetContext).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              _categoryTile(
-                  sheetContext, '🌿', l10n.encyTabHerbs, UserEntryCategory.herb),
-              _categoryTile(sheetContext, '💎', l10n.encyTabCrystals,
-                  UserEntryCategory.crystal),
-              _categoryTile(sheetContext, '🎨', l10n.encyTabColors,
-                  UserEntryCategory.color),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (category == null || !context.mounted) return;
-    _push(context, AddEntryPage(category: category));
-  }
-
-  Widget _categoryTile(
-    BuildContext context,
-    String emoji,
-    String label,
-    UserEntryCategory category,
-  ) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: context.gc.lilac.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(emoji, style: const TextStyle(fontSize: 22)),
-      ),
-      title: Text(label),
-      onTap: () => Navigator.pop(context, category),
     );
   }
 

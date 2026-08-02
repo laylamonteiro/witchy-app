@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_progress.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../learning/data/data_sources/trails_data.dart';
 import '../../../learning/data/models/trail_model.dart';
 import '../../../learning/presentation/pages/lesson_page.dart';
@@ -67,13 +69,31 @@ class ContinueTrailCard extends StatelessWidget {
     final done = learning.completedInTrail(trail);
     final total = trail.lessons.length;
 
+    // Mesma regra da TrailPage: só a 1ª lição de cada trilha é gratuita.
+    // Free com a próxima lição além da 1ª vê cadeado e paywall.
+    final isPremium = context.watch<AuthProvider>().isPremiumEffective;
+    final lessonIndex =
+        trail.lessons.indexWhere((l) => l.id == nextLesson.id);
+    final locked = lessonIndex > 0 && !isPremium;
+
     return MagicalCard.accent(
-      accent: context.gc.mint,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => LessonPage(trail: trail, lesson: nextLesson),
-        ),
-      ),
+      accent: locked ? context.gc.starYellow : context.gc.mint,
+      onTap: () {
+        if (locked) {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => const PremiumUpgradeSheet(),
+          );
+          return;
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => LessonPage(trail: trail, lesson: nextLesson),
+          ),
+        );
+      },
       child: Row(
         children: [
           MagicalProgressRing(
@@ -126,14 +146,20 @@ class ContinueTrailCard extends StatelessWidget {
           const SizedBox(width: 8),
           Column(
             children: [
-              Icon(Icons.play_circle_fill, color: context.gc.mint, size: 30),
+              Icon(
+                locked ? Icons.lock : Icons.play_circle_fill,
+                color: locked ? context.gc.starYellow : context.gc.mint,
+                size: 30,
+              ),
               const SizedBox(height: 4),
               Text(
                 started
                     ? l10n.yourDayTrailCtaContinue
                     : l10n.yourDayTrailCtaStart,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.gc.mint,
+                      color: locked
+                          ? context.gc.starYellow
+                          : context.gc.mint,
                       fontWeight: FontWeight.w700,
                     ),
               ),

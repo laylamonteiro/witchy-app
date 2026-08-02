@@ -5,9 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/navigation/app_deep_link.dart';
 import '../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../divination/presentation/pages/pendulum_page.dart';
+import '../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
 import '../../grimoire/presentation/pages/ai_spell_creation_page.dart';
 import '../../grimoire/presentation/pages/mystic_advisor_page.dart';
 import '../../learning/presentation/pages/learning_home_page.dart';
+import '../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../runes/presentation/pages/rune_reading_page.dart';
 import '../../sigils/presentation/pages/sigil_step1_intention_page.dart';
 import '../../tarot/presentation/pages/tarot_page.dart';
@@ -23,12 +25,16 @@ class ShortcutTool {
   /// Rótulo localizado (reutiliza as chaves das ferramentas existentes).
   final String Function(AppLocalizations l10n) label;
 
-  /// Página empilhada ao tocar (null quando o atalho usa [link]).
+  /// Página empilhada ao tocar (null quando o atalho usa [link] ou [onTap]).
   final WidgetBuilder? builder;
 
   /// Destino interno do app. Usado quando a ferramenta VIVE dentro de uma
   /// aba: empilhar a página solta a deixaria sem a navegação da seção.
   final AppDeepLink? link;
+
+  /// Ação customizada (ex.: Guia da Natureza abre um seletor antes da
+  /// página). Tem prioridade sobre [builder] e [link].
+  final void Function(BuildContext context)? onTap;
 
   const ShortcutTool({
     required this.id,
@@ -36,8 +42,9 @@ class ShortcutTool {
     required this.label,
     this.builder,
     this.link,
-  }) : assert(builder != null || link != null,
-            'Um atalho precisa de uma página ou de um destino');
+    this.onTap,
+  }) : assert(builder != null || link != null || onTap != null,
+            'Um atalho precisa de uma página, um destino ou uma ação');
 }
 
 /// Catálogo dos atalhos personalizáveis do "Seu Dia".
@@ -97,6 +104,18 @@ class YourDayShortcuts {
       builder: (_) => const MysticAdvisorPage(),
     ),
     ShortcutTool(
+      id: 'palmistry',
+      emoji: '🖐️',
+      label: (l10n) => l10n.toolPalmistryTitle,
+      builder: (_) => const PalmistryPage(),
+    ),
+    ShortcutTool(
+      id: 'nature_guide',
+      emoji: '🍃',
+      label: (l10n) => l10n.toolNatureGuideTitle,
+      onTap: openNatureGuide,
+    ),
+    ShortcutTool(
       id: 'pendulum',
       emoji: ' ⟟ ',
       label: (l10n) => l10n.toolPendulumTitle,
@@ -106,12 +125,14 @@ class YourDayShortcuts {
 
   /// Seis por padrão: a grade tem 3 colunas, então 6 fecha duas linhas
   /// certinhas — 7 deixava um atalho órfão sozinho na última linha.
+  /// Prioridade para os recursos Premium (Conselheiro, Guia da Natureza,
+  /// Quiromancia, Feitiço Místico, Sonhos); os demais ficam no Editar.
   static const List<String> defaults = [
     'living_grimoire',
-    'tarot',
-    'runes',
+    'mystic_advisor',
+    'nature_guide',
+    'palmistry',
     'ai_spell',
-    'oracle',
     'dreams',
   ];
 
