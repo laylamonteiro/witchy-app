@@ -22,4 +22,16 @@ class AffirmationLocalizer {
     if (overlay == null) return affirmation;
     return affirmation.copyWith(text: overlay);
   }
+
+  /// Texto PT canônico de um texto que foi persistido TRADUZIDO (bug antigo:
+  /// favoritar gravava o texto de exibição no banco, congelando o idioma).
+  /// Null = o texto já é o PT canônico (ou é da própria usuária).
+  static String? canonicalPtFor(String text) {
+    for (final overlay in [affirmationOverlaysEn, affirmationOverlaysEs]) {
+      for (final entry in overlay.entries) {
+        if (entry.value == text) return entry.key;
+      }
+    }
+    return null;
+  }
 }
