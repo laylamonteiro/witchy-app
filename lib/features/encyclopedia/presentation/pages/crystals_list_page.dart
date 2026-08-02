@@ -173,17 +173,23 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                               Row(
                                 children: [
                                   Expanded(
-                                    child: Text(
-                                      crystal.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.cinzelDecorative(
+                                child: FittedBox(
+                                  // Uma linha SEMPRE: nomes longos
+                                  // encolhem a fonte — o card fica
+                                  // do tamanho padrão da lista.
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    crystal.name,
+                                    maxLines: 1,
+                                    style: GoogleFonts.cinzelDecorative(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: context.gc.lilac,
                                       ),
-                                    ),
                                   ),
+                                ),
+                              ),
                                 ],
                               ),
                               const SizedBox(height: 4),
