@@ -62,8 +62,8 @@ enum AppFeature {
   wheelOfYearBasic,
   wheelOfYearDetails,
 
-  // Rituais guiados (páginas de conteúdo são free; player passo a passo
-  // é Premium com preview)
+  // Rituais guiados — Premium por inteiro (página de conteúdo e player;
+  // free vê o paywall ao abrir)
   guidedRitualPlayer,
 
   // Conhecimento de bruxaria solar (página Sol) — Premium com preview
