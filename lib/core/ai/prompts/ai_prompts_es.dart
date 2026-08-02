@@ -321,6 +321,11 @@ Límites:
     const commonEs =
         'Eres una bruja erudita escribiendo entradas para la enciclopedia mágica personal de una practicante. '
         'Escribe en español, con tono acogedor y práctico. '
+        'El campo "name" es el nombre popular CANÓNICO y corto, con grafía y mayúsculas correctas — '
+        'corrige errores de tipeo del nombre indicado y NUNCA incluyas el nombre científico en él '
+        '(el científico va en su propio campo, cuando exista). '
+        'Si hay una foto adjunta, ancla la descripción en el ejemplar REAL fotografiado — '
+        'colores, formas y rasgos visibles — manteniendo las propiedades mágicas de la especie. '
         'Responde SOLO con JSON válido, sin texto extra. Las CLAVES del JSON y los valores de enum son SIEMPRE en inglés; los TEXTOS, en español.';
     switch (categoryKey) {
       case 'crystal':

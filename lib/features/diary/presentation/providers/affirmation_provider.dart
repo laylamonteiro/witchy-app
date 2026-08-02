@@ -12,9 +12,14 @@ class AffirmationProvider with ChangeNotifier {
   AffirmationCategory? _selectedCategory;
   String _currentUserId = 'local_user';
 
-  List<AffirmationModel> get affirmations => _selectedCategory == null
-      ? _affirmations
-      : _affirmations.where((a) => a.category == _selectedCategory).toList();
+  /// A lista em memória guarda o texto CRU do banco (PT nas pré-carregadas);
+  /// a tradução é aplicada aqui, na exibição — trocar o idioma do app
+  /// retraduz na hora, sem depender de recarga.
+  List<AffirmationModel> get affirmations => (_selectedCategory == null
+          ? _affirmations
+          : _affirmations.where((a) => a.category == _selectedCategory))
+      .map(AffirmationLocalizer.localize)
+      .toList();
 
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -41,9 +46,23 @@ class AffirmationProvider with ChangeNotifier {
             .insertAll(AffirmationModel.getPreloadedAffirmations());
       }
 
-      _affirmations = (await _repository.getAll(_currentUserId))
-          .map(AffirmationLocalizer.localize)
-          .toList();
+      // Guarda o texto CRU; a tradução acontece na exibição. De quebra,
+      // repara linhas pré-carregadas que um favoritar antigo persistiu
+      // traduzidas (o banco volta ao PT canônico, chave dos overlays).
+      final rows = await _repository.getAll(_currentUserId);
+      final repaired = <AffirmationModel>[];
+      for (final row in rows) {
+        final canonical =
+            row.isPreloaded ? AffirmationLocalizer.canonicalPtFor(row.text) : null;
+        if (canonical != null && canonical != row.text) {
+          final fixed = row.copyWith(text: canonical);
+          await _repository.update(fixed);
+          repaired.add(fixed);
+        } else {
+          repaired.add(row);
+        }
+      }
+      _affirmations = repaired;
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -72,7 +91,14 @@ class AffirmationProvider with ChangeNotifier {
 
   Future<void> toggleFavorite(AffirmationModel affirmation) async {
     try {
-      final updated = affirmation.copyWith(isFavorite: !affirmation.isFavorite);
+      // O modelo vindo da UI pode estar com o texto TRADUZIDO (exibição);
+      // persiste sempre a linha crua do banco, achada por id — nunca gravar
+      // texto de exibição é o que mantém o PT canônico das pré-carregadas.
+      final raw = _affirmations.firstWhere(
+        (a) => a.id == affirmation.id,
+        orElse: () => affirmation,
+      );
+      final updated = raw.copyWith(isFavorite: !affirmation.isFavorite);
       await _repository.update(updated.copyWith(userId: _currentUserId));
       await loadAffirmations();
     } catch (e) {
@@ -92,7 +118,10 @@ class AffirmationProvider with ChangeNotifier {
   }
 
   List<AffirmationModel> getFavorites() {
-    return _affirmations.where((a) => a.isFavorite).toList();
+    return _affirmations
+        .where((a) => a.isFavorite)
+        .map(AffirmationLocalizer.localize)
+        .toList();
   }
 
   /// Afirmação do dia (Seu Dia): determinística por data sobre as
@@ -104,6 +133,7 @@ class AffirmationProvider with ChangeNotifier {
     if (preloaded.isEmpty) return null;
     final dayOfYear =
         date.difference(DateTime(date.year, 1, 1)).inDays + 1;
-    return preloaded[dayOfYear % preloaded.length];
+    // Tradução na exibição: trocar o idioma retraduz na hora.
+    return AffirmationLocalizer.localize(preloaded[dayOfYear % preloaded.length]);
   }
 }

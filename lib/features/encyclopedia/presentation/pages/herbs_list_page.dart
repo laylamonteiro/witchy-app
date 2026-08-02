@@ -26,6 +26,9 @@ class _HerbsListPageState extends State<HerbsListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// Filtro "Minhas": mostra só as entradas pessoais.
+  bool _onlyMine = false;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -62,7 +65,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
         .toList();
     final combined = [
       ...userEntries.map((e) => e.toHerbModel()),
-      ...herbs,
+      if (!_onlyMine) ...herbs,
     ];
 
     return Stack(
@@ -76,6 +79,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
             hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabHerbs),
             onChanged: (value) => setState(() => _searchQuery = value),
           ),
+        ),
+        MineFilterChip(
+          category: UserEntryCategory.herb,
+          selected: _onlyMine,
+          onChanged: (v) => setState(() => _onlyMine = v),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -160,6 +168,8 @@ class _HerbsListPageState extends State<HerbsListPage> {
                               Expanded(
                                 child: Text(
                                   herb.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.cinzelDecorative(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -167,7 +177,6 @@ class _HerbsListPageState extends State<HerbsListPage> {
                                   ),
                                 ),
                               ),
-                              if (isUserEntry) const UserEntryBadge(),
                               if (herb.toxic)
                                 Icon(
                                   Icons.warning_amber_rounded,

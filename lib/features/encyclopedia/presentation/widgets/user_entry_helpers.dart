@@ -10,25 +10,41 @@ import '../../data/models/user_entry_model.dart';
 import '../pages/add_entry_page.dart';
 import '../providers/encyclopedia_provider.dart';
 
-/// Selo "Minha" das entradas pessoais nas listas da enciclopédia.
-class UserEntryBadge extends StatelessWidget {
-  const UserEntryBadge({super.key});
+/// Chip "Minhas" das listas de cristais/ervas/cores: filtra para mostrar só
+/// as entradas pessoais. A marcação de "minha" é interna (isUserEntry) — e o
+/// chip aparece SEMPRE, mesmo sem entradas, para a Bruxa descobrir que pode
+/// criar as suas.
+class MineFilterChip extends StatelessWidget {
+  final UserEntryCategory category;
+  final bool selected;
+  final ValueChanged<bool> onChanged;
+
+  const MineFilterChip({
+    super.key,
+    required this.category,
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.gc.mint.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: context.gc.mint),
-      ),
-      child: Text(
-        AppLocalizations.of(context).encyUserEntryBadge,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.gc.mint,
-              fontWeight: FontWeight.w700,
-            ),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: FilterChip(
+          label: Text(AppLocalizations.of(context).encyFilterMine),
+          selected: selected,
+          onSelected: onChanged,
+          backgroundColor: context.gc.surface,
+          selectedColor: context.gc.lilac.withValues(alpha: 0.25),
+          checkmarkColor: context.gc.lilac,
+          labelStyle: TextStyle(
+            color: selected ? context.gc.lilac : context.gc.textSecondary,
+            fontWeight: FontWeight.w600,
+          ),
+          side: BorderSide(color: context.gc.lilac.withValues(alpha: 0.4)),
+        ),
       ),
     );
   }

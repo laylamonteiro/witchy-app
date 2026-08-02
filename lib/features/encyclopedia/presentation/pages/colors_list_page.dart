@@ -24,6 +24,9 @@ class _ColorsListPageState extends State<ColorsListPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// Filtro "Minhas": mostra só as entradas pessoais.
+  bool _onlyMine = false;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -52,6 +55,11 @@ class _ColorsListPageState extends State<ColorsListPage> {
             hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabColors),
             onChanged: (value) => setState(() => _searchQuery = value),
           ),
+        ),
+        MineFilterChip(
+          category: UserEntryCategory.color,
+          selected: _onlyMine,
+          onChanged: (v) => setState(() => _onlyMine = v),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -82,7 +90,7 @@ class _ColorsListPageState extends State<ColorsListPage> {
                   .toList();
               final combined = [
                 ...userEntries.map((e) => e.toColorModel()),
-                ...colors,
+                if (!_onlyMine) ...colors,
               ];
 
               return ListView.builder(
@@ -133,6 +141,8 @@ class _ColorsListPageState extends State<ColorsListPage> {
                                   Expanded(
                                     child: Text(
                                       colorModel.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.cinzelDecorative(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -140,7 +150,6 @@ class _ColorsListPageState extends State<ColorsListPage> {
                                       ),
                                     ),
                                   ),
-                                  if (isUserEntry) const UserEntryBadge(),
                                 ],
                               ),
                               const SizedBox(height: 4),

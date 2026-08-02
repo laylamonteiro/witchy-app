@@ -814,8 +814,24 @@ class AIService {
   Future<Map<String, dynamic>> generateEncyclopediaEntry({
     required String name,
     required String categoryKey,
+    List<int>? jpegBytes,
   }) async {
     try {
+      // Com a foto em mãos, o verbete é gerado pelo caminho de visão: a
+      // descrição se ancora no exemplar REAL fotografado (cores e traços
+      // visíveis), não numa descrição genérica da espécie.
+      if (jpegBytes != null && _hasGemini) {
+        final content = await _visionRequest(
+          systemPrompt: '${_localizedInstruction()}\n\n'
+              '${_prompts.encyGenerateSystemPrompt(categoryKey, name)}',
+          userText: _prompts.encyGenerateUserMessage(name),
+          jpegBytes: jpegBytes,
+          temperature: 0.5,
+          maxTokens: 1600,
+        );
+        return _extractJsonObject(content);
+      }
+
       final requestData = {
         'model': _textModel,
         'messages': [
@@ -900,45 +916,123 @@ class AIService {
     required List<int> jpegBytes,
   }) async {
     final sw = Stopwatch()..start();
-    try {
-      final content = await _visionRequest(
-        systemPrompt: '',
-        userText: _prompts.palmDebugUserMessage,
-        jpegBytes: jpegBytes,
-        maxTokens: 640,
-      );
-      sw.stop();
-      return {
-        'ok': true,
-        'model': visionModel,
-        'statusCode': 200,
-        'elapsedMs': sw.elapsedMilliseconds,
-        'imageBytes': jpegBytes.length,
-        'body': content,
-      };
-    } on DioException catch (e) {
-      sw.stop();
-      return {
-        'ok': false,
-        'model': visionModel,
-        'statusCode': e.response?.statusCode,
-        'elapsedMs': sw.elapsedMilliseconds,
-        'imageBytes': jpegBytes.length,
-        'body': e.response?.data?.toString() ??
-            e.message ??
-            _prompts.errorUnknown,
-      };
-    } catch (e) {
-      sw.stop();
-      return {
-        'ok': false,
-        'model': visionModel,
-        'statusCode': null,
-        'elapsedMs': sw.elapsedMilliseconds,
-        'imageBytes': jpegBytes.length,
-        'body': '$e',
-      };
+
+    // Sem Gemini configurado: uma chamada única pelo fallback (Groq).
+    if (!_hasGemini) {
+      try {
+        final content = await _visionRequest(
+          systemPrompt: '',
+          userText: _prompts.palmDebugUserMessage,
+          jpegBytes: jpegBytes,
+          maxTokens: 640,
+        );
+        sw.stop();
+        return {
+          'ok': true,
+          'model': visionModel,
+          'statusCode': 200,
+          'elapsedMs': sw.elapsedMilliseconds,
+          'imageBytes': jpegBytes.length,
+          'body': 'provider: groq (fallback)\n\n$content',
+        };
+      } on DioException catch (e) {
+        sw.stop();
+        return {
+          'ok': false,
+          'model': visionModel,
+          'statusCode': e.response?.statusCode,
+          'elapsedMs': sw.elapsedMilliseconds,
+          'imageBytes': jpegBytes.length,
+          'body': 'provider: groq (fallback)\n\n'
+              '${e.response?.data?.toString() ?? e.message ?? _prompts.errorUnknown}',
+        };
+      } catch (e) {
+        sw.stop();
+        return {
+          'ok': false,
+          'model': visionModel,
+          'statusCode': null,
+          'elapsedMs': sw.elapsedMilliseconds,
+          'imageBytes': jpegBytes.length,
+          'body': 'provider: groq (fallback)\n\n$e',
+        };
+      }
     }
+
+    // Gemini configurado: três sondas em camadas, para apontar EXATAMENTE
+    // qual campo do payload o modelo rejeita quando dá INVALID_ARGUMENT.
+    final base64Image = base64Encode(jpegBytes);
+    final contents = [
+      {
+        'role': 'user',
+        'parts': [
+          {'text': _prompts.palmDebugUserMessage},
+          {
+            'inline_data': {'mime_type': 'image/jpeg', 'data': base64Image},
+          },
+        ],
+      },
+    ];
+
+    Future<(int?, String)> probe(Map<String, dynamic> data) async {
+      try {
+        final response = await _dio.post(
+          'https://generativelanguage.googleapis.com/v1beta/models/'
+          '$_geminiVisionModel:generateContent',
+          options: Options(
+            headers: {
+              'x-goog-api-key': GeminiCredentials.apiKey,
+              'Content-Type': 'application/json',
+            },
+            receiveTimeout: const Duration(seconds: 60),
+            sendTimeout: const Duration(seconds: 60),
+          ),
+          data: data,
+        );
+        final parts =
+            (response.data['candidates']?[0]?['content']?['parts'] as List?) ??
+                const [];
+        final text = parts.map((p) => '${p['text'] ?? ''}').join().trim();
+        return (response.statusCode, text.isEmpty ? '(sem texto)' : text);
+      } on DioException catch (e) {
+        return (
+          e.response?.statusCode,
+          e.response?.data?.toString() ?? e.message ?? _prompts.errorUnknown,
+        );
+      } catch (e) {
+        return (null, '$e');
+      }
+    }
+
+    String clip(String s) => s.length > 350 ? '${s.substring(0, 350)}…' : s;
+
+    final (statusA, bodyA) = await probe({'contents': contents});
+    final (statusB, bodyB) = await probe({
+      'contents': contents,
+      'generationConfig': {'temperature': 0.2, 'maxOutputTokens': 640},
+    });
+    final (statusC, bodyC) = await probe({
+      'contents': contents,
+      'generationConfig': {
+        'temperature': 0.2,
+        'maxOutputTokens': 640,
+        'thinkingConfig': {'thinkingLevel': 'low'},
+      },
+    });
+    sw.stop();
+
+    return {
+      'ok': statusC == 200,
+      'model': visionModel,
+      'statusCode': statusC,
+      'elapsedMs': sw.elapsedMilliseconds,
+      'imageBytes': jpegBytes.length,
+      'body': 'provider: gemini\n\n'
+          'SONDA A (só contents): $statusA\n${clip(bodyA)}\n\n'
+          'SONDA B (+temperature/maxOutputTokens): $statusB\n${clip(bodyB)}\n\n'
+          'SONDA C (+thinkingConfig low — config de produção): $statusC\n'
+          '${clip(bodyC)}',
+    };
   }
 
   /// Interpretar uma tiragem de tarot já sorteada no app (Premium).

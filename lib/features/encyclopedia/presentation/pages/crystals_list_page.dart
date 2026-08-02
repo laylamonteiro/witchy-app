@@ -26,6 +26,9 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// Filtro "Minhas": mostra só as entradas pessoais.
+  bool _onlyMine = false;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -63,6 +66,11 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
             onChanged: (value) => setState(() => _searchQuery = value),
           ),
         ),
+        MineFilterChip(
+          category: UserEntryCategory.crystal,
+          selected: _onlyMine,
+          onChanged: (v) => setState(() => _onlyMine = v),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Text(
@@ -89,7 +97,10 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                   .toList();
               final userModels =
                   userEntries.map((e) => e.toCrystalModel()).toList();
-              final combined = [...userModels, ...crystals];
+              final combined = [
+                ...userModels,
+                if (!_onlyMine) ...crystals,
+              ];
 
               return ListView.builder(
                 padding: const EdgeInsets.only(bottom: 88),
@@ -164,6 +175,8 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                   Expanded(
                                     child: Text(
                                       crystal.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.cinzelDecorative(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -171,8 +184,6 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                                       ),
                                     ),
                                   ),
-                                  if (isUserEntry)
-                                    const UserEntryBadge(),
                                 ],
                               ),
                               const SizedBox(height: 4),

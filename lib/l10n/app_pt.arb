@@ -31,6 +31,7 @@
   "diaryTabDreams": "Sonhos",
   "diaryTabDesires": "Desejos",
   "encyclopediaPageTitle": "Enciclopédia Mágica",
+  "encyFilterMine": "Minhas",
   "encyTabIndex": "Índice",
   "encyIndexTitle": "Índice",
   "encyIndexSubtitle": "Toque numa seção para abrir",
@@ -1907,7 +1908,6 @@
   "encyAddImageTooLarge": "Imagem muito grande. Tente outra foto",
   "encyAddNameRequired": "Digite um nome para gerar o verbete",
   "encyAddFabTooltip": "Adicionar com foto",
-  "encyUserEntryBadge": "Minha",
   "encyDeleteEntryTitle": "Excluir verbete?",
   "encyDeleteEntryBody": "\"{name}\" e a foto associada serão removidos da sua enciclopédia",
   "@encyDeleteEntryBody": {

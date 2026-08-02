@@ -78,8 +78,10 @@ class _CatChatBubbleState extends State<CatChatBubble>
     fontWeight: FontWeight.w500,
   );
 
-  /// Mensagem do dia (fixada no initState).
-  late final String _message =
+  /// Mensagem do dia, resolvida a CADA build: trocar o idioma do app com o
+  /// balão aberto retraduz na hora (a rotação por dia do ano é estável entre
+  /// idiomas, então é a mesma mensagem em outra língua).
+  String get _message =>
       widget.message ?? CatBubbleMessages.messageForDate(DateTime.now());
 
   /// Pop de entrada: escala elástica (o balão "estoura" na tela).
@@ -87,9 +89,9 @@ class _CatChatBubbleState extends State<CatChatBubble>
   late final Animation<double> _scale;
   late final Animation<double> _fade;
 
-  /// Typewriter: revela o texto letra a letra.
+  /// Typewriter: revela o texto por FRAÇÃO do controller (não por contagem
+  /// fixa de letras) — o comprimento pode mudar com o idioma.
   late final AnimationController _typeController;
-  late final Animation<int> _typedChars;
 
   @override
   void initState() {
@@ -113,9 +115,6 @@ class _CatChatBubbleState extends State<CatChatBubble>
     _typeController = AnimationController(
       duration: Duration(milliseconds: (_message.length * 32).clamp(600, 2600)),
       vsync: this,
-    );
-    _typedChars = StepTween(begin: 0, end: _message.length).animate(
-      CurvedAnimation(parent: _typeController, curve: Curves.linear),
     );
 
     _checkAndShow();
@@ -182,16 +181,18 @@ class _CatChatBubbleState extends State<CatChatBubble>
   /// compartilham exatamente as mesmas quebras, posição e altura.
   Widget _buildTypewriterText() {
     return AnimatedBuilder(
-      animation: _typedChars,
+      animation: _typeController,
       builder: (context, _) {
-        final count = _typedChars.value;
+        final message = _message;
+        final count =
+            (_typeController.value * message.length).round().clamp(0, message.length);
         return Text.rich(
           key: const Key('cat-bubble-typewriter'),
           TextSpan(
             children: [
-              TextSpan(text: _message.substring(0, count)),
+              TextSpan(text: message.substring(0, count)),
               TextSpan(
-                text: _message.substring(count),
+                text: message.substring(count),
                 style: const TextStyle(color: Colors.transparent),
               ),
             ],

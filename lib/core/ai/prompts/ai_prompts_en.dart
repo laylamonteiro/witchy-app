@@ -320,6 +320,11 @@ Limits:
     const commonEn =
         'You are a learned witch writing entries for a practitioner\'s personal magical encyclopedia. '
         'Write in English, with a welcoming, practical tone. '
+        'The "name" field is the short CANONICAL common name, correctly spelled and capitalized — '
+        'fix any typos in the provided name and NEVER include the scientific name in it '
+        '(the scientific name goes in its own field, when present). '
+        'If a photo is attached, anchor the description in the ACTUAL specimen shown — '
+        'visible colors, shapes and traits — while keeping the species\' magical properties. '
         'Reply ONLY with valid JSON, no extra text. JSON KEYS and enum values are ALWAYS in English.';
     switch (categoryKey) {
       case 'crystal':
