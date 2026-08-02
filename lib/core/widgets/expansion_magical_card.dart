@@ -32,7 +32,9 @@ class _ExpansionMagicalCardState extends State<ExpansionMagicalCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      // Margem vertical no MESMO ritmo dos MagicalCard (8+8 = 16 entre
+      // cards), para a rolagem do Seu Dia respirar por igual.
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(20),

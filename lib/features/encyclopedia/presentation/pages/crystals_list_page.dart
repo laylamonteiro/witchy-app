@@ -60,16 +60,23 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: MagicalSearchField(
-            controller: _searchController,
-            hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabCrystals),
-            onChanged: (value) => setState(() => _searchQuery = value),
+          child: Row(
+            children: [
+              Expanded(
+                child: MagicalSearchField(
+                  controller: _searchController,
+                  hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabCrystals),
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ),
+              const SizedBox(width: 8),
+              MineFilterButton(
+                category: UserEntryCategory.crystal,
+                selected: _onlyMine,
+                onChanged: (v) => setState(() => _onlyMine = v),
+              ),
+            ],
           ),
-        ),
-        MineFilterChip(
-          category: UserEntryCategory.crystal,
-          selected: _onlyMine,
-          onChanged: (v) => setState(() => _onlyMine = v),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -173,17 +180,23 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                               Row(
                                 children: [
                                   Expanded(
-                                    child: Text(
-                                      crystal.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.cinzelDecorative(
+                                child: FittedBox(
+                                  // Uma linha SEMPRE: nomes longos
+                                  // encolhem a fonte — o card fica
+                                  // do tamanho padrão da lista.
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    crystal.name,
+                                    maxLines: 1,
+                                    style: GoogleFonts.cinzelDecorative(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: context.gc.lilac,
                                       ),
-                                    ),
                                   ),
+                                ),
+                              ),
                                 ],
                               ),
                               const SizedBox(height: 4),

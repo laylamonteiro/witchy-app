@@ -228,6 +228,19 @@ class _AddEntryPageState extends State<AddEntryPage> {
     }
   }
 
+  /// Intro menciona apenas o elemento da categoria aberta ("Fotografe sua
+  /// pedra..." em Cristais), não a lista genérica erva/pedra/cor.
+  String _intro(AppLocalizations l10n) {
+    switch (widget.category) {
+      case UserEntryCategory.crystal:
+        return l10n.encyAddIntroCrystal;
+      case UserEntryCategory.herb:
+        return l10n.encyAddIntroHerb;
+      case UserEntryCategory.color:
+        return l10n.encyAddIntroColor;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -248,7 +261,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.encyAddIntro,
+                    _intro(l10n),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),

@@ -4,11 +4,14 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../models/user_entry_model.dart';
 
-/// Entradas pessoais da enciclopédia no banco local (local-only na v1).
+/// Entradas pessoais da enciclopédia: banco local + sincronização em nuvem
+/// (Supabase, Premium). A FOTO é local — o verbete viaja; a imagem, não.
 class UserEncyclopediaRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final DataSyncService _syncService = DataSyncService();
 
   Future<List<UserEncyclopediaEntry>> entriesFor(
     String userId,
@@ -51,6 +54,7 @@ class UserEncyclopediaRepository {
       entry.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    _syncService.syncItem(SyncEntity.userEncyclopediaEntries, entry.toMap());
     return entry;
   }
 
@@ -62,6 +66,7 @@ class UserEncyclopediaRepository {
       where: 'id = ?',
       whereArgs: [entry.id],
     );
+    _syncService.deleteItem(SyncEntity.userEncyclopediaEntries, entry.id);
     final path = entry.imagePath;
     if (path != null && path.isNotEmpty) {
       try {

@@ -10,42 +10,44 @@ import '../../data/models/user_entry_model.dart';
 import '../pages/add_entry_page.dart';
 import '../providers/encyclopedia_provider.dart';
 
-/// Chip "Minhas" das listas de cristais/ervas/cores: filtra para mostrar só
-/// as entradas pessoais. A marcação de "minha" é interna (isUserEntry) — e o
-/// chip aparece SEMPRE, mesmo sem entradas, para a Bruxa descobrir que pode
-/// criar as suas.
-class MineFilterChip extends StatelessWidget {
+/// Filtro "Minhas"/"Meus" das listas de cristais/ervas/cores: ao lado da
+/// busca, no MESMO padrão do filtro de origem das Deusas (ícone que acende
+/// em lilás quando ativo). Mostra só as entradas pessoais; a marcação é
+/// interna (isUserEntry) e o botão aparece sempre, mesmo sem entradas.
+/// O rótulo concorda em gênero com a categoria (Meus cristais, Minhas
+/// ervas/cores — e no espanhol color é masculino).
+class MineFilterButton extends StatelessWidget {
   final UserEntryCategory category;
   final bool selected;
   final ValueChanged<bool> onChanged;
 
-  const MineFilterChip({
+  const MineFilterButton({
     super.key,
     required this.category,
     required this.selected,
     required this.onChanged,
   });
 
+  String _label(AppLocalizations l10n) {
+    switch (category) {
+      case UserEntryCategory.crystal:
+        return l10n.encyFilterMineCrystals;
+      case UserEntryCategory.herb:
+        return l10n.encyFilterMineHerbs;
+      case UserEntryCategory.color:
+        return l10n.encyFilterMineColors;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: FilterChip(
-          label: Text(AppLocalizations.of(context).encyFilterMine),
-          selected: selected,
-          onSelected: onChanged,
-          backgroundColor: context.gc.surface,
-          selectedColor: context.gc.lilac.withValues(alpha: 0.25),
-          checkmarkColor: context.gc.lilac,
-          labelStyle: TextStyle(
-            color: selected ? context.gc.lilac : context.gc.textSecondary,
-            fontWeight: FontWeight.w600,
-          ),
-          side: BorderSide(color: context.gc.lilac.withValues(alpha: 0.4)),
-        ),
+    return IconButton(
+      icon: Icon(
+        Icons.filter_list,
+        color: selected ? context.gc.lilac : context.gc.softWhite,
       ),
+      tooltip: _label(AppLocalizations.of(context)),
+      onPressed: () => onChanged(!selected),
     );
   }
 }

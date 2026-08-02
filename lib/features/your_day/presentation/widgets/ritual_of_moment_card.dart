@@ -118,26 +118,48 @@ class RitualOfMomentCard extends StatelessWidget {
     final days = targetDay.difference(today).inDays.clamp(1, 9999);
 
     final accent = next.isMoon ? context.gc.lilac : context.gc.starYellow;
-    return MagicalCard(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => GuidedRitualPage(ritualId: next.ritualId),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.hourglass_bottom, color: accent),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              l10n.yourDayRitualCountdown(days, '${next.emoji} ${next.name}'),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+    void open() => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => GuidedRitualPage(ritualId: next.ritualId),
           ),
-          Icon(Icons.chevron_right, color: context.gc.textSecondary),
-        ],
-      ),
+        );
+    final content = Row(
+      children: [
+        Icon(Icons.hourglass_bottom, color: accent),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.yourDayRitualCountdown(
+                    days, '${next.emoji} ${next.name}'),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              // Véspera: o card convida a preparar em vez de só contar.
+              if (days == 1) ...[
+                const SizedBox(height: 2),
+                Text(
+                  l10n.yourDayRitualEve,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Icon(Icons.chevron_right, color: context.gc.textSecondary),
+      ],
     );
+
+    // Urgência progressiva: a 3 dias ou menos do evento o card "esquenta"
+    // com a borda/brilho na cor dele (lilás pra lua, dourado pra sabbat).
+    if (days <= 3) {
+      return MagicalCard.accent(accent: accent, onTap: open, child: content);
+    }
+    return MagicalCard(onTap: open, child: content);
   }
 }
 

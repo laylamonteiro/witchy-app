@@ -7,6 +7,7 @@ import '../../../../core/i18n/gender.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_progress.dart';
 import '../../../../core/widgets/starfield_background.dart';
+import '../../../analytics/presentation/pages/magical_analytics_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../learning/presentation/pages/learning_home_page.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
@@ -34,9 +35,11 @@ class GreetingHeader extends StatelessWidget {
     final checkin = context.watch<DailyCheckinProvider>();
     final learning = context.watch<LearningProvider>();
 
+    // Só o PRIMEIRO nome: "Boa noite, Layla" é caloroso; o nome completo
+    // soa formulário. O perfil continua guardando o nome inteiro.
     final displayName = user.displayName?.trim();
     final name = (displayName != null && displayName.isNotEmpty)
-        ? displayName
+        ? displayName.split(RegExp(r'\s+')).first
         : GenderText.select(
             preference: user.gender,
             feminine: l10n.witchTreatmentFeminine,
@@ -109,6 +112,7 @@ class GreetingHeader extends StatelessWidget {
 }
 
 /// Selo da sequência de dias — a chama pulsa de leve para chamar o olhar.
+/// Toque abre as Estatísticas Mágicas, onde a sequência vive em detalhe.
 class _StreakPill extends StatelessWidget {
   final int streak;
 
@@ -121,32 +125,39 @@ class _StreakPill extends StatelessWidget {
 
     return Semantics(
       label: l10n.yourDayStreakDays(streak),
+      button: true,
       child: TweenAnimationBuilder<double>(
         tween: Tween<double>(begin: 0.9, end: 1),
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeOutBack,
         builder: (context, scale, child) =>
             Transform.scale(scale: scale, child: child),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withValues(alpha: 0.55)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🔥', style: TextStyle(fontSize: 14)),
-              const SizedBox(width: 6),
-              Text(
-                l10n.yourDayStreakDays(streak),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color.withValues(alpha: 0.55)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('🔥', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.yourDayStreakDays(streak),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
