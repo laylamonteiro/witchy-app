@@ -1784,7 +1784,6 @@
   "guidedRitualFoodsTitle": "Comidas",
   "guidedRitualUsesTitle": "Como usar depois",
   "guidedRitualStartCta": "Iniciar ritual guiado",
-  "guidedRitualCreateSpellCta": "Criar feitiço deste momento",
   "guidedRitualOpenCta": "Fazer o ritual guiado",
   "guidedRitualProgress": "{done} de {total} passos concluídos",
   "@guidedRitualProgress": {

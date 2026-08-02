@@ -1252,7 +1252,6 @@
   "guidedRitualFoodsTitle": "Foods",
   "guidedRitualUsesTitle": "How to use it afterwards",
   "guidedRitualStartCta": "Start guided ritual",
-  "guidedRitualCreateSpellCta": "Create a spell for this moment",
   "guidedRitualOpenCta": "Do the guided ritual",
   "guidedRitualProgress": "{done} of {total} steps completed",
   "guidedRitualLockedStepsTitle": "{count} more guided steps",
