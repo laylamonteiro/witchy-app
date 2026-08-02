@@ -50,16 +50,22 @@ class _ColorsListPageState extends State<ColorsListPage> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: MagicalSearchField(
-            controller: _searchController,
-            hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabColors),
-            onChanged: (value) => setState(() => _searchQuery = value),
+          child: Row(
+            children: [
+              Expanded(
+                child: MagicalSearchField(
+                  controller: _searchController,
+                  hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabColors),
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ),
+              const SizedBox(width: 8),
+              MineFilterButton(
+                selected: _onlyMine,
+                onChanged: (v) => setState(() => _onlyMine = v),
+              ),
+            ],
           ),
-        ),
-        MineFilterChip(
-          category: UserEntryCategory.color,
-          selected: _onlyMine,
-          onChanged: (v) => setState(() => _onlyMine = v),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),

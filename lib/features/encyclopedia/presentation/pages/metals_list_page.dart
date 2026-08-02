@@ -47,10 +47,20 @@ class _MetalsListPageState extends State<MetalsListPage> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: MagicalSearchField(
-            controller: _searchController,
-            hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabMetals),
-            onChanged: (value) => setState(() => _searchQuery = value),
+          child: Row(
+            children: [
+              Expanded(
+                child: MagicalSearchField(
+                  controller: _searchController,
+                  hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabMetals),
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ),
+              // Espaçador do tamanho do botão de filtro das outras abas,
+              // para a caixa de busca ter a MESMA largura em todas
+              const SizedBox(width: 8),
+              const SizedBox(width: 48),
+            ],
           ),
         ),
         Padding(
