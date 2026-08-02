@@ -196,8 +196,10 @@ class AddUserEntryFab extends StatelessWidget {
   }
 }
 
-/// Confirmação de exclusão de uma entrada pessoal (long-press na lista).
-Future<void> confirmDeleteUserEntry(
+/// Confirmação de exclusão de uma entrada pessoal (long-press na lista ou
+/// lixeira da página de detalhe). Retorna true se a entrada foi excluída —
+/// a página de detalhe usa isso para se fechar em seguida.
+Future<bool> confirmDeleteUserEntry(
   BuildContext context,
   UserEncyclopediaEntry entry,
 ) async {
@@ -225,5 +227,7 @@ Future<void> confirmDeleteUserEntry(
   );
   if (confirmed == true && context.mounted) {
     await context.read<EncyclopediaProvider>().deleteUserEntry(entry);
+    return true;
   }
+  return false;
 }

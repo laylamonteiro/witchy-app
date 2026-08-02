@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../data/models/color_model.dart';
+import '../../data/models/user_entry_model.dart';
+import '../widgets/user_entry_helpers.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -10,13 +12,31 @@ import '../../../auth/auth.dart';
 class ColorDetailPage extends StatelessWidget {
   final ColorModel colorModel;
 
-  const ColorDetailPage({super.key, required this.colorModel});
+  /// Presente quando a página exibe uma entrada criada pela Bruxa: habilita
+  /// a lixeira no AppBar (mesmo padrão dos feitiços do Grimório).
+  final UserEncyclopediaEntry? userEntry;
+
+  const ColorDetailPage({super.key, required this.colorModel, this.userEntry});
 
   @override
   Widget build(BuildContext context) {
+    final entry = userEntry;
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(colorModel.name),
+        actions: [
+          if (entry != null)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              tooltip: AppLocalizations.of(context).commonDelete,
+              onPressed: () async {
+                final deleted = await confirmDeleteUserEntry(context, entry);
+                if (deleted && context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

@@ -105,24 +105,28 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
               // Ordena alfabeticamente
               final crystals = _sortCrystals(unsortedCrystals);
 
-              // Entradas pessoais (foto + IA) aparecem antes das oficiais.
+              // Entradas pessoais (foto + IA) entram na MESMA ordem
+              // alfabética das oficiais — uma lista só.
               final userEntries = provider
                   .userEntries(UserEntryCategory.crystal)
                   .where((e) => _matchesQuery(e.toCrystalModel()))
                   .toList();
-              final userModels =
-                  userEntries.map((e) => e.toCrystalModel()).toList();
-              final combined = [
-                ...userModels,
-                if (!_onlyMine) ...crystals,
-              ];
+              final combined =
+                  <({CrystalModel model, UserEncyclopediaEntry? userEntry})>[
+                ...userEntries
+                    .map((e) => (model: e.toCrystalModel(), userEntry: e)),
+                if (!_onlyMine)
+                  ...crystals.map((c) => (model: c, userEntry: null)),
+              ]..sort((a, b) => removeAccents(a.model.name.toUpperCase())
+                  .compareTo(removeAccents(b.model.name.toUpperCase())));
 
               return ListView.builder(
                 padding: const EdgeInsets.only(bottom: 88),
                 itemCount: combined.length,
                 itemBuilder: (context, index) {
-                  final crystal = combined[index];
-                  final isUserEntry = index < userEntries.length;
+                  final item = combined[index];
+                  final crystal = item.model;
+                  final userEntry = item.userEntry;
                   return MagicalCard(
                     onTap: () {
                       Navigator.push(
@@ -131,15 +135,16 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                           builder: (_) => EntryPager(
                             itemCount: combined.length,
                             initialIndex: index,
-                            itemBuilder: (_, i) =>
-                                CrystalDetailPage(crystal: combined[i]),
+                            itemBuilder: (_, i) => CrystalDetailPage(
+                              crystal: combined[i].model,
+                              userEntry: combined[i].userEntry,
+                            ),
                           ),
                         ),
                       );
                     },
-                    onLongPress: isUserEntry
-                        ? () => confirmDeleteUserEntry(
-                            context, userEntries[index])
+                    onLongPress: userEntry != null
+                        ? () => confirmDeleteUserEntry(context, userEntry)
                         : null,
                     child: Row(
                       children: [
