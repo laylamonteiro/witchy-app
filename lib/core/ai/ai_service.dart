@@ -721,15 +721,42 @@ class AIService {
     required List<int> jpegBytes,
     required String categoryKey,
   }) async {
-    final votes = <Map<String, dynamic>>[];
-    for (var attempt = 0; attempt < 3; attempt++) {
-      votes.add(await _identifyOnce(
-        jpegBytes: jpegBytes,
-        categoryKey: categoryKey,
-      ));
-      final winner = _identifyConsensus(votes);
-      if (winner != null) return winner;
+    Object? lastError;
+    Future<Map<String, dynamic>?> vote() async {
+      try {
+        return await _identifyOnce(
+          jpegBytes: jpegBytes,
+          categoryKey: categoryKey,
+        );
+      } catch (e) {
+        // 503/429 transitórios não derrubam a identificação inteira: o voto
+        // perdido é reposto pela rodada extra abaixo.
+        lastError = e;
+        return null;
+      }
     }
+
+    // Dois votos em PARALELO: no caso comum (concordância), a latência é a
+    // de UMA chamada.
+    final votes = (await Future.wait([vote(), vote()]))
+        .whereType<Map<String, dynamic>>()
+        .toList();
+    var winner = _identifyConsensus(votes);
+
+    if (winner == null && votes.isNotEmpty) {
+      // Desempate — ou reposição de um voto perdido por erro transitório.
+      final extra = await vote();
+      if (extra != null) votes.add(extra);
+      winner = _identifyConsensus(votes);
+    }
+
+    if (winner != null) return winner;
+    if (votes.isEmpty) {
+      throw lastError ?? Exception(_prompts.errorUnknown);
+    }
+    // Uma única opinião válida (as outras falharam): melhor entregá-la do
+    // que errar por excesso de rigor.
+    if (votes.length == 1) return votes.single;
     return {'identified': false, 'name': '', 'confidence': 'low'};
   }
 
@@ -916,123 +943,45 @@ class AIService {
     required List<int> jpegBytes,
   }) async {
     final sw = Stopwatch()..start();
-
-    // Sem Gemini configurado: uma chamada única pelo fallback (Groq).
-    if (!_hasGemini) {
-      try {
-        final content = await _visionRequest(
-          systemPrompt: '',
-          userText: _prompts.palmDebugUserMessage,
-          jpegBytes: jpegBytes,
-          maxTokens: 640,
-        );
-        sw.stop();
-        return {
-          'ok': true,
-          'model': visionModel,
-          'statusCode': 200,
-          'elapsedMs': sw.elapsedMilliseconds,
-          'imageBytes': jpegBytes.length,
-          'body': 'provider: groq (fallback)\n\n$content',
-        };
-      } on DioException catch (e) {
-        sw.stop();
-        return {
-          'ok': false,
-          'model': visionModel,
-          'statusCode': e.response?.statusCode,
-          'elapsedMs': sw.elapsedMilliseconds,
-          'imageBytes': jpegBytes.length,
-          'body': 'provider: groq (fallback)\n\n'
-              '${e.response?.data?.toString() ?? e.message ?? _prompts.errorUnknown}',
-        };
-      } catch (e) {
-        sw.stop();
-        return {
-          'ok': false,
-          'model': visionModel,
-          'statusCode': null,
-          'elapsedMs': sw.elapsedMilliseconds,
-          'imageBytes': jpegBytes.length,
-          'body': 'provider: groq (fallback)\n\n$e',
-        };
-      }
+    final provider = _hasGemini ? 'gemini' : 'groq (fallback)';
+    try {
+      final content = await _visionRequest(
+        systemPrompt: '',
+        userText: _prompts.palmDebugUserMessage,
+        jpegBytes: jpegBytes,
+        maxTokens: 640,
+      );
+      sw.stop();
+      return {
+        'ok': true,
+        'model': visionModel,
+        'statusCode': 200,
+        'elapsedMs': sw.elapsedMilliseconds,
+        'imageBytes': jpegBytes.length,
+        'body': 'provider: $provider\n\n$content',
+      };
+    } on DioException catch (e) {
+      sw.stop();
+      return {
+        'ok': false,
+        'model': visionModel,
+        'statusCode': e.response?.statusCode,
+        'elapsedMs': sw.elapsedMilliseconds,
+        'imageBytes': jpegBytes.length,
+        'body': 'provider: $provider\n\n'
+            '${e.response?.data?.toString() ?? e.message ?? _prompts.errorUnknown}',
+      };
+    } catch (e) {
+      sw.stop();
+      return {
+        'ok': false,
+        'model': visionModel,
+        'statusCode': null,
+        'elapsedMs': sw.elapsedMilliseconds,
+        'imageBytes': jpegBytes.length,
+        'body': 'provider: $provider\n\n$e',
+      };
     }
-
-    // Gemini configurado: três sondas em camadas, para apontar EXATAMENTE
-    // qual campo do payload o modelo rejeita quando dá INVALID_ARGUMENT.
-    final base64Image = base64Encode(jpegBytes);
-    final contents = [
-      {
-        'role': 'user',
-        'parts': [
-          {'text': _prompts.palmDebugUserMessage},
-          {
-            'inline_data': {'mime_type': 'image/jpeg', 'data': base64Image},
-          },
-        ],
-      },
-    ];
-
-    Future<(int?, String)> probe(Map<String, dynamic> data) async {
-      try {
-        final response = await _dio.post(
-          'https://generativelanguage.googleapis.com/v1beta/models/'
-          '$_geminiVisionModel:generateContent',
-          options: Options(
-            headers: {
-              'x-goog-api-key': GeminiCredentials.apiKey,
-              'Content-Type': 'application/json',
-            },
-            receiveTimeout: const Duration(seconds: 60),
-            sendTimeout: const Duration(seconds: 60),
-          ),
-          data: data,
-        );
-        final parts =
-            (response.data['candidates']?[0]?['content']?['parts'] as List?) ??
-                const [];
-        final text = parts.map((p) => '${p['text'] ?? ''}').join().trim();
-        return (response.statusCode, text.isEmpty ? '(sem texto)' : text);
-      } on DioException catch (e) {
-        return (
-          e.response?.statusCode,
-          e.response?.data?.toString() ?? e.message ?? _prompts.errorUnknown,
-        );
-      } catch (e) {
-        return (null, '$e');
-      }
-    }
-
-    String clip(String s) => s.length > 350 ? '${s.substring(0, 350)}…' : s;
-
-    final (statusA, bodyA) = await probe({'contents': contents});
-    final (statusB, bodyB) = await probe({
-      'contents': contents,
-      'generationConfig': {'temperature': 0.2, 'maxOutputTokens': 640},
-    });
-    final (statusC, bodyC) = await probe({
-      'contents': contents,
-      'generationConfig': {
-        'temperature': 0.2,
-        'maxOutputTokens': 640,
-        'thinkingConfig': {'thinkingLevel': 'low'},
-      },
-    });
-    sw.stop();
-
-    return {
-      'ok': statusC == 200,
-      'model': visionModel,
-      'statusCode': statusC,
-      'elapsedMs': sw.elapsedMilliseconds,
-      'imageBytes': jpegBytes.length,
-      'body': 'provider: gemini\n\n'
-          'SONDA A (só contents): $statusA\n${clip(bodyA)}\n\n'
-          'SONDA B (+temperature/maxOutputTokens): $statusB\n${clip(bodyB)}\n\n'
-          'SONDA C (+thinkingConfig low — config de produção): $statusC\n'
-          '${clip(bodyC)}',
-    };
   }
 
   /// Interpretar uma tiragem de tarot já sorteada no app (Premium).
