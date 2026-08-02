@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
