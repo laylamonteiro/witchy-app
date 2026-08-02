@@ -1252,7 +1252,6 @@
   "guidedRitualFoodsTitle": "Comidas",
   "guidedRitualUsesTitle": "Cómo usarla después",
   "guidedRitualStartCta": "Iniciar ritual guiado",
-  "guidedRitualCreateSpellCta": "Crear un hechizo de este momento",
   "guidedRitualOpenCta": "Hacer el ritual guiado",
   "guidedRitualProgress": "{done} de {total} pasos completados",
   "guidedRitualLockedStepsTitle": "{count} pasos guiados más",

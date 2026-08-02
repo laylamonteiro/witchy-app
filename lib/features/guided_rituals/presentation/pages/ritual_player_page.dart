@@ -11,7 +11,6 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/guided_ritual_model.dart';
 import '../../data/repositories/guided_ritual_log_repository.dart';
-import '../widgets/ritual_spell_generator.dart';
 
 /// Player passo a passo de um ritual guiado: checkboxes, progresso e XP ao
 /// concluir. Free vê o primeiro passo liberado e o restante como preview
@@ -191,12 +190,6 @@ class _RitualPlayerPageState extends State<RitualPlayerPage> {
                   fontWeight: FontWeight.w700,
                 ),
             textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          MagicalButton(
-            text: l10n.guidedRitualCreateSpellCta,
-            icon: Icons.auto_fix_high,
-            onPressed: () => generateRitualSpell(context, widget.ritual),
           ),
         ],
       ),

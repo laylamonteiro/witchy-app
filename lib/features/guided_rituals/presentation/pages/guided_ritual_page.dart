@@ -8,7 +8,6 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../encyclopedia/presentation/widgets/related_link.dart';
 import '../../data/models/guided_ritual_model.dart';
 import '../../data/models/guided_rituals_data.dart';
-import '../widgets/ritual_spell_generator.dart';
 import 'ritual_player_page.dart';
 
 /// Página guiada de um ritual (sabbat, lua ou água mágica), aberta por
@@ -66,13 +65,6 @@ class GuidedRitualPage extends StatelessWidget {
                         ),
                       );
                     },
-                  ),
-                  const SizedBox(height: 12),
-                  MagicalButton(
-                    text: l10n.guidedRitualCreateSpellCta,
-                    icon: Icons.auto_fix_high,
-                    isOutlined: true,
-                    onPressed: () => generateRitualSpell(context, ritual),
                   ),
                 ],
               ),
