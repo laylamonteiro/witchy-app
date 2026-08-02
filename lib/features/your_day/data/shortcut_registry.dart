@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/navigation/app_deep_link.dart';
+import '../../astrology/presentation/pages/birth_chart_input_page.dart';
+import '../../astrology/presentation/pages/birth_chart_view_page.dart';
+import '../../astrology/presentation/providers/astrology_provider.dart';
 import '../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../divination/presentation/pages/pendulum_page.dart';
 import '../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
@@ -114,6 +118,23 @@ class YourDayShortcuts {
       emoji: '🍃',
       label: (l10n) => l10n.toolNatureGuideTitle,
       onTap: openNatureGuide,
+    ),
+    // Mesma rota da aba Astrologia: quem já tem mapa vê o mapa; quem não
+    // tem cai na criação.
+    ShortcutTool(
+      id: 'birth_chart',
+      emoji: '🌟',
+      label: (l10n) => l10n.astroBirthChart,
+      onTap: (context) {
+        final hasChart = context.read<AstrologyProvider>().hasBirthChart;
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => hasChart
+                ? const BirthChartViewPage()
+                : const BirthChartInputPage(),
+          ),
+        );
+      },
     ),
     ShortcutTool(
       id: 'pendulum',
