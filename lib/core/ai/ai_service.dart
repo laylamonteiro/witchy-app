@@ -814,8 +814,24 @@ class AIService {
   Future<Map<String, dynamic>> generateEncyclopediaEntry({
     required String name,
     required String categoryKey,
+    List<int>? jpegBytes,
   }) async {
     try {
+      // Com a foto em mãos, o verbete é gerado pelo caminho de visão: a
+      // descrição se ancora no exemplar REAL fotografado (cores e traços
+      // visíveis), não numa descrição genérica da espécie.
+      if (jpegBytes != null && _hasGemini) {
+        final content = await _visionRequest(
+          systemPrompt: '${_localizedInstruction()}\n\n'
+              '${_prompts.encyGenerateSystemPrompt(categoryKey, name)}',
+          userText: _prompts.encyGenerateUserMessage(name),
+          jpegBytes: jpegBytes,
+          temperature: 0.5,
+          maxTokens: 1600,
+        );
+        return _extractJsonObject(content);
+      }
+
       final requestData = {
         'model': _textModel,
         'messages': [

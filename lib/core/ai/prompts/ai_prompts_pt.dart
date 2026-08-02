@@ -287,6 +287,8 @@ Limites:
         'O campo "name" é o nome popular CANÔNICO e curto, com grafia e capitalização corretas — '
         'corrija erros de digitação do nome informado e NUNCA inclua o nome científico nele '
         '(científico vai no campo próprio, quando houver). '
+        'Se uma foto estiver anexada, ancore a descrição no exemplar REAL fotografado — '
+        'cores, formas e traços visíveis — mantendo as propriedades mágicas da espécie. '
         'Responda APENAS com JSON válido, sem texto extra. As CHAVES do JSON e os valores de enum são SEMPRE em inglês; os TEXTOS, em português.';
     switch (categoryKey) {
       case 'crystal':

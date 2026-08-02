@@ -153,6 +153,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
       final data = await AIService.instance.generateEncyclopediaEntry(
         name: name,
         categoryKey: widget.category.key,
+        // O verbete considera a foto real: a descrição fala do exemplar
+        // fotografado, não de uma versão genérica da espécie.
+        jpegBytes: _jpegBytes,
       );
       if (!mounted) return;
       setState(() {
