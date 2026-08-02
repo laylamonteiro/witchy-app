@@ -26,6 +26,9 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// Filtro "Minhas": mostra só as entradas pessoais.
+  bool _onlyMine = false;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -72,6 +75,11 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                 ),
           ),
         ),
+        MineFilterChip(
+          category: UserEntryCategory.crystal,
+          selected: _onlyMine,
+          onChanged: (v) => setState(() => _onlyMine = v),
+        ),
         Expanded(
           child: Consumer<EncyclopediaProvider>(
             builder: (context, provider, _) {
@@ -89,7 +97,10 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                   .toList();
               final userModels =
                   userEntries.map((e) => e.toCrystalModel()).toList();
-              final combined = [...userModels, ...crystals];
+              final combined = [
+                ...userModels,
+                if (!_onlyMine) ...crystals,
+              ];
 
               return ListView.builder(
                 padding: const EdgeInsets.only(bottom: 88),

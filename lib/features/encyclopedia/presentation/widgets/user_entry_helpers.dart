@@ -10,6 +10,49 @@ import '../../data/models/user_entry_model.dart';
 import '../pages/add_entry_page.dart';
 import '../providers/encyclopedia_provider.dart';
 
+/// Chip "Minhas" das listas de cristais/ervas/cores: filtra para mostrar só
+/// as entradas pessoais. A marcação de "minha" é interna (isUserEntry) — o
+/// chip só aparece quando a Bruxa já criou alguma entrada na categoria.
+class MineFilterChip extends StatelessWidget {
+  final UserEntryCategory category;
+  final bool selected;
+  final ValueChanged<bool> onChanged;
+
+  const MineFilterChip({
+    super.key,
+    required this.category,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasEntries =
+        context.watch<EncyclopediaProvider>().userEntries(category).isNotEmpty;
+    if (!hasEntries) return const SizedBox.shrink();
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: FilterChip(
+          label: Text(AppLocalizations.of(context).encyFilterMine),
+          selected: selected,
+          onSelected: onChanged,
+          backgroundColor: context.gc.surface,
+          selectedColor: context.gc.lilac.withValues(alpha: 0.25),
+          checkmarkColor: context.gc.lilac,
+          labelStyle: TextStyle(
+            color: selected ? context.gc.lilac : context.gc.textSecondary,
+            fontWeight: FontWeight.w600,
+          ),
+          side: BorderSide(color: context.gc.lilac.withValues(alpha: 0.4)),
+        ),
+      ),
+    );
+  }
+}
+
 /// FAB "+" das listas de cristais/ervas/cores: abre o fluxo de entrada
 /// pessoal (Premium — free vê paywall dentro da página).
 class AddUserEntryFab extends StatelessWidget {

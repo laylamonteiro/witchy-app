@@ -26,6 +26,9 @@ class _HerbsListPageState extends State<HerbsListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// Filtro "Minhas": mostra só as entradas pessoais.
+  bool _onlyMine = false;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -62,7 +65,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
         .toList();
     final combined = [
       ...userEntries.map((e) => e.toHerbModel()),
-      ...herbs,
+      if (!_onlyMine) ...herbs,
     ];
 
     return Stack(
@@ -85,6 +88,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
                   color: context.gc.textSecondary,
                 ),
           ),
+        ),
+        MineFilterChip(
+          category: UserEntryCategory.herb,
+          selected: _onlyMine,
+          onChanged: (v) => setState(() => _onlyMine = v),
         ),
         Expanded(
           child: ListView.builder(

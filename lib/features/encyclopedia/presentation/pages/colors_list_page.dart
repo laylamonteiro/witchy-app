@@ -24,6 +24,9 @@ class _ColorsListPageState extends State<ColorsListPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// Filtro "Minhas": mostra só as entradas pessoais.
+  bool _onlyMine = false;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -62,6 +65,11 @@ class _ColorsListPageState extends State<ColorsListPage> {
                 ),
           ),
         ),
+        MineFilterChip(
+          category: UserEntryCategory.color,
+          selected: _onlyMine,
+          onChanged: (v) => setState(() => _onlyMine = v),
+        ),
         Expanded(
           child: Consumer<EncyclopediaProvider>(
             builder: (context, provider, _) {
@@ -82,7 +90,7 @@ class _ColorsListPageState extends State<ColorsListPage> {
                   .toList();
               final combined = [
                 ...userEntries.map((e) => e.toColorModel()),
-                ...colors,
+                if (!_onlyMine) ...colors,
               ];
 
               return ListView.builder(
