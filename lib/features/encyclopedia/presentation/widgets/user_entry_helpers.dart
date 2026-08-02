@@ -52,19 +52,122 @@ class MineFilterButton extends StatelessWidget {
   }
 }
 
-/// FAB "+" das listas de cristais/ervas/cores: abre o fluxo de entrada
-/// pessoal (Premium — free vê paywall dentro da página).
-class AddUserEntryFab extends StatelessWidget {
-  final UserEntryCategory category;
-
-  const AddUserEntryFab({super.key, required this.category});
+/// Véu escuro sobre a lista quando o filtro Minhas está ativo e ainda não
+/// existe nenhuma entrada pessoal: escurece a página como o tour do Salem
+/// e deixa só o botão Adicionar em evidência. Puramente visual
+/// (IgnorePointer) — a busca e o filtro continuam tocáveis por baixo.
+class MineEmptySpotlight extends StatelessWidget {
+  const MineEmptySpotlight({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          color: Colors.black.withValues(alpha: 0.55),
+        ),
+      ),
+    );
+  }
+}
+
+/// Halo lilás pulsante em volta do FAB durante o spotlight.
+class _FabHalo extends StatefulWidget {
+  final Widget child;
+
+  const _FabHalo({required this.child});
+
+  @override
+  State<_FabHalo> createState() => _FabHaloState();
+}
+
+class _FabHaloState extends State<_FabHalo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      // Acessibilidade: brilho fixo, sem pulsar.
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: context.gc.lilac.withValues(alpha: 0.55),
+              blurRadius: 24,
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: widget.child,
+      );
+    }
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(_controller.value);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: context.gc.lilac.withValues(alpha: 0.35 + 0.35 * t),
+                blurRadius: 18 + 14 * t,
+                spreadRadius: 2 + 6 * t,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// FAB "+" das listas de cristais/ervas/cores: abre o fluxo de entrada
+/// pessoal (Premium — free vê paywall dentro da página). Com [highlight],
+/// ganha o halo pulsante do spotlight de lista vazia.
+class AddUserEntryFab extends StatelessWidget {
+  final UserEntryCategory category;
+  final bool highlight;
+
+  const AddUserEntryFab({
+    super.key,
+    required this.category,
+    this.highlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget fab = _buildFab(context);
+    if (highlight) fab = _FabHalo(child: fab);
     return Positioned(
       right: 16,
       bottom: 16,
-      child: FloatingActionButton(
+      child: fab,
+    );
+  }
+
+  Widget _buildFab(BuildContext context) {
+    return FloatingActionButton(
         heroTag: 'add_user_entry_${category.key}',
         backgroundColor: context.gc.lilac,
         foregroundColor: context.gc.onPrimary,
@@ -89,8 +192,7 @@ class AddUserEntryFab extends StatelessWidget {
           );
         },
         child: const Icon(Icons.add_a_photo_outlined),
-      ),
-    );
+      );
   }
 }
 

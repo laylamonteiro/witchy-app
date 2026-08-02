@@ -68,6 +68,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
       if (!_onlyMine) ...herbs,
     ];
 
+    // Filtro Minhas ativo sem NENHUMA entrada pessoal: escurece a página e
+    // destaca o botão Adicionar (spotlight estilo tour).
+    final spotlightAdd =
+        _onlyMine && provider.userEntries(UserEntryCategory.herb).isEmpty;
+
     return Stack(
       children: [
         Column(
@@ -231,7 +236,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
         ),
       ],
         ),
-        AddUserEntryFab(category: UserEntryCategory.herb),
+        if (spotlightAdd) const MineEmptySpotlight(),
+        AddUserEntryFab(
+          category: UserEntryCategory.herb,
+          highlight: spotlightAdd,
+        ),
       ],
     );
   }

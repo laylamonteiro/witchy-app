@@ -44,6 +44,14 @@ class _ColorsListPageState extends State<ColorsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Filtro Minhas ativo sem NENHUMA entrada pessoal: escurece a página e
+    // destaca o botão Adicionar (spotlight estilo tour).
+    final spotlightAdd = _onlyMine &&
+        context
+            .watch<EncyclopediaProvider>()
+            .userEntries(UserEntryCategory.color)
+            .isEmpty;
+
     return Stack(
       children: [
         Column(
@@ -207,7 +215,11 @@ class _ColorsListPageState extends State<ColorsListPage> {
         ),
       ],
         ),
-        AddUserEntryFab(category: UserEntryCategory.color),
+        if (spotlightAdd) const MineEmptySpotlight(),
+        AddUserEntryFab(
+          category: UserEntryCategory.color,
+          highlight: spotlightAdd,
+        ),
       ],
     );
   }

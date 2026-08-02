@@ -54,6 +54,14 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Filtro Meus ativo sem NENHUMA entrada pessoal: escurece a página e
+    // destaca o botão Adicionar (spotlight estilo tour).
+    final spotlightAdd = _onlyMine &&
+        context
+            .watch<EncyclopediaProvider>()
+            .userEntries(UserEntryCategory.crystal)
+            .isEmpty;
+
     return Stack(
       children: [
         Column(
@@ -234,7 +242,11 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
         ),
       ],
         ),
-        AddUserEntryFab(category: UserEntryCategory.crystal),
+        if (spotlightAdd) const MineEmptySpotlight(),
+        AddUserEntryFab(
+          category: UserEntryCategory.crystal,
+          highlight: spotlightAdd,
+        ),
       ],
     );
   }
