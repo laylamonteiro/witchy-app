@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
@@ -13,6 +14,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../../core/services/ad_service.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 class OracleCardsPage extends StatefulWidget {
   const OracleCardsPage({super.key});
@@ -101,6 +103,11 @@ class _OracleCardsPageState extends State<OracleCardsPage>
 
     // Salvar leitura
     await _saveReading(drawn);
+    // A tiragem aconteceu: se o oráculo é o rito de hoje, está cumprido.
+    if (mounted) {
+      unawaited(
+          context.read<DailyCheckinProvider>().completeRite(DailyRites.oracle));
+    }
   }
 
   Future<void> _saveReading(List<OracleCardPosition> positions) async {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -14,6 +15,7 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/presentation/pages/free_writing_tab.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 /// Leitura de Mãos (Quiromancia) — exclusiva Premium.
 ///
@@ -106,6 +108,12 @@ class _PalmistryPageState extends State<PalmistryPage> {
       setState(() => _reading = reading);
       // Só conta quando a leitura foi gerada com sucesso.
       await context.read<AuthProvider>().incrementPalmistryReadings();
+      // A leitura saiu: se a quiromancia é o rito de hoje, está cumprida.
+      if (mounted) {
+        unawaited(context
+            .read<DailyCheckinProvider>()
+            .completeRite(DailyRites.palmistry));
+      }
     } catch (e) {
       if (!mounted) return;
       final message = e is AiRateLimitException

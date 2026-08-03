@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
@@ -14,6 +15,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../../core/services/ad_service.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 class RuneReadingPage extends StatefulWidget {
   const RuneReadingPage({super.key});
@@ -111,6 +113,11 @@ class _RuneReadingPageState extends State<RuneReadingPage>
 
     // Salvar leitura
     await _saveReading(drawn);
+    // A tiragem aconteceu: se as runas são o rito de hoje, está cumprido.
+    if (mounted) {
+      unawaited(
+          context.read<DailyCheckinProvider>().completeRite(DailyRites.runes));
+    }
   }
 
   Future<void> _saveReading(List<RunePosition> positions) async {

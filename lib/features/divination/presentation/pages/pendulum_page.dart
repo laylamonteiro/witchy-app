@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +12,7 @@ import '../../../../core/services/data_sync_service.dart';
 import '../../../auth/auth.dart';
 import '../../data/models/pendulum_model.dart';
 import '../../../../core/services/ad_service.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 class PendulumPage extends StatefulWidget {
   const PendulumPage({super.key});
@@ -107,6 +109,9 @@ class _PendulumPageState extends State<PendulumPage>
 
     // Salvar histórico
     _saveConsultation();
+    // A resposta veio: se o pêndulo é o rito de hoje, está cumprido.
+    unawaited(
+        context.read<DailyCheckinProvider>().completeRite(DailyRites.pendulum));
   }
 
   Future<void> _saveConsultation() async {
