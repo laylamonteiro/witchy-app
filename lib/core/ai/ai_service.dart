@@ -23,19 +23,20 @@ class AiRateLimitException implements Exception {
   const AiRateLimitException();
 }
 
-/// Serviço de IA: Gemini como provedor principal (texto e visão) quando a
-/// chave está configurada, com o Groq como fallback automático em caso de
-/// falha ou de chave ausente. Os logs de debug (tag AI) registram qual
-/// provedor respondeu cada chamada.
+/// Serviço de IA: Groq como provedor principal de TEXTO (mais rápido, sem
+/// etapa de "pensamento") e Gemini como principal de VISÃO — cada chamada
+/// cai automaticamente para o outro provedor em caso de falha ou de chave
+/// ausente. Os logs de debug (tag AI) registram qual provedor respondeu
+/// cada chamada.
 class AIService {
   static final AIService instance = AIService._();
 
   AIService._();
 
-  /// Modelo de texto do Groq (fallback).
+  /// Modelo de texto principal (Groq).
   static const String _textModel = 'llama-3.3-70b-versatile';
 
-  /// Modelo de texto principal (Google Gemini) — o mesmo GA da visão.
+  /// Modelo de texto do fallback (Google Gemini) — o mesmo GA da visão.
   static const String _geminiTextModel = 'gemini-3.6-flash';
 
   /// Modelo de visão do Groq (fallback). O Groq descontinua modelos com
@@ -474,11 +475,12 @@ class AIService {
     }
   }
 
-  /// Chamada de TEXTO: Gemini como provedor principal (mesma chave da
-  /// visão). Sem chave configurada — ou em falha do Gemini (limite,
-  /// instabilidade, resposta vazia) — cai para o Groq automaticamente,
-  /// então o recurso nunca fica refém de um provedor só. O provedor que
-  /// respondeu fica nos logs de debug (tag AI).
+  /// Chamada de TEXTO: Groq como provedor principal — responde mais
+  /// rápido e sem a etapa de "pensamento" do Gemini, que deixava análises
+  /// longas (sonhos, quiromancia) lentas e truncadas. Em falha do Groq
+  /// (limite, instabilidade) cai para o Gemini automaticamente quando a
+  /// chave está configurada, então o recurso nunca fica refém de um
+  /// provedor só. O provedor que respondeu fica nos logs de debug (tag AI).
   Future<String> _textRequest({
     required String systemPrompt,
     required String userText,
@@ -488,90 +490,89 @@ class AIService {
     bool jsonResponse = false,
     Duration receiveTimeout = const Duration(seconds: 60),
   }) async {
-    if (_hasGemini) {
-      try {
-        final response = await _dio.post(
-          'https://generativelanguage.googleapis.com/v1beta/models/'
-          '$_geminiTextModel:generateContent',
-          options: Options(
-            headers: {
-              'x-goog-api-key': GeminiCredentials.apiKey,
-              'Content-Type': 'application/json',
-            },
-            receiveTimeout: receiveTimeout,
-            sendTimeout: const Duration(seconds: 30),
-          ),
-          data: {
-            if (systemPrompt.isNotEmpty)
-              'system_instruction': {
-                'parts': [
-                  {'text': systemPrompt},
-                ],
-              },
-            'contents': [
-              {
-                'role': 'user',
-                'parts': [
-                  {'text': userText},
-                ],
-              },
-            ],
-            'generationConfig': {
-              'temperature': temperature,
-              // Folga: no 3.x o "pensamento" mínimo consome tokens de
-              // saída junto com a resposta.
-              'maxOutputTokens': maxTokens + 512,
-              'thinkingConfig': {'thinkingLevel': 'low'},
-              if (jsonResponse) 'responseMimeType': 'application/json',
-            },
+    try {
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+            'Content-Type': 'application/json',
           },
-        );
-        final candidate = response.data['candidates'][0];
-        final parts =
-            (candidate['content']['parts'] as List?) ?? const [];
-        var text = parts.map((p) => '${p['text'] ?? ''}').join().trim();
-        if (text.isEmpty) {
-          throw const FormatException('resposta vazia');
-        }
-        if (!jsonResponse && candidate['finishReason'] == 'MAX_TOKENS') {
-          text = _trimToLastSentence(text);
-        }
-        unawaited(debugLog('AI', '$tag: gemini'));
-        return text;
-      } on DioException catch (e) {
-        unawaited(debugLog(
-            'AI',
-            '$tag: gemini falhou '
-            '(HTTP ${e.response?.statusCode ?? e.message}) — usando groq'));
-      } catch (e) {
-        unawaited(debugLog('AI', '$tag: gemini falhou ($e) — usando groq'));
-      }
+          receiveTimeout: receiveTimeout,
+          sendTimeout: const Duration(seconds: 30),
+        ),
+        data: {
+          'model': _textModel,
+          'messages': [
+            if (systemPrompt.isNotEmpty)
+              {'role': 'system', 'content': systemPrompt},
+            {'role': 'user', 'content': userText},
+          ],
+          'temperature': temperature,
+          'max_tokens': maxTokens,
+          if (jsonResponse) 'response_format': {'type': 'json_object'},
+        },
+      );
+      unawaited(debugLog('AI', '$tag: groq'));
+      return _contentFromResponse(response);
+    } on DioException catch (e) {
+      if (!_hasGemini) rethrow;
+      unawaited(debugLog(
+          'AI',
+          '$tag: groq falhou '
+          '(HTTP ${e.response?.statusCode ?? e.message}) — usando gemini'));
+    } catch (e) {
+      if (!_hasGemini) rethrow;
+      unawaited(debugLog('AI', '$tag: groq falhou ($e) — usando gemini'));
     }
 
     final response = await _dio.post(
-      'https://api.groq.com/openai/v1/chat/completions',
+      'https://generativelanguage.googleapis.com/v1beta/models/'
+      '$_geminiTextModel:generateContent',
       options: Options(
         headers: {
-          'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+          'x-goog-api-key': GeminiCredentials.apiKey,
           'Content-Type': 'application/json',
         },
         receiveTimeout: receiveTimeout,
         sendTimeout: const Duration(seconds: 30),
       ),
       data: {
-        'model': _textModel,
-        'messages': [
-          if (systemPrompt.isNotEmpty)
-            {'role': 'system', 'content': systemPrompt},
-          {'role': 'user', 'content': userText},
+        if (systemPrompt.isNotEmpty)
+          'system_instruction': {
+            'parts': [
+              {'text': systemPrompt},
+            ],
+          },
+        'contents': [
+          {
+            'role': 'user',
+            'parts': [
+              {'text': userText},
+            ],
+          },
         ],
-        'temperature': temperature,
-        'max_tokens': maxTokens,
-        if (jsonResponse) 'response_format': {'type': 'json_object'},
+        'generationConfig': {
+          'temperature': temperature,
+          // Folga: no 3.x o "pensamento" mínimo consome tokens de
+          // saída junto com a resposta.
+          'maxOutputTokens': maxTokens + 512,
+          'thinkingConfig': {'thinkingLevel': 'low'},
+          if (jsonResponse) 'responseMimeType': 'application/json',
+        },
       },
     );
-    unawaited(debugLog('AI', '$tag: groq'));
-    return _contentFromResponse(response);
+    final candidate = response.data['candidates'][0];
+    final parts = (candidate['content']['parts'] as List?) ?? const [];
+    var text = parts.map((p) => '${p['text'] ?? ''}').join().trim();
+    if (text.isEmpty) {
+      throw const FormatException('resposta vazia');
+    }
+    if (!jsonResponse && candidate['finishReason'] == 'MAX_TOKENS') {
+      text = _trimToLastSentence(text);
+    }
+    unawaited(debugLog('AI', '$tag: gemini'));
+    return text;
   }
 
   /// Chamada de visão (texto + foto): Gemini quando a chave está
@@ -1033,8 +1034,8 @@ class AIService {
         tag: 'sonho',
         temperature: 0.6,
         // Formato em duas camadas por elemento + síntese rica: teto maior
-        // para até 6 elementos sem truncar.
-        maxTokens: 1400,
+        // para até 6 elementos sem truncar (1400 cortava no 4º elemento).
+        maxTokens: 2000,
         receiveTimeout: const Duration(seconds: 45),
       );
       return content.trim();
