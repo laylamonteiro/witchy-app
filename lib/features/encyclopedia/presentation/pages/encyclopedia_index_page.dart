@@ -229,7 +229,20 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
                         color: BookInk.ink.withValues(alpha: 0.65),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
+                    // A busca global logo abaixo da instrução, para quem
+                    // já sabe o que procura (empilha por cima, sem virar
+                    // página) — é o único acesso à busca da enciclopédia.
+                    _IndexEntry(
+                      emoji: '🔍',
+                      label: l10n.commonSearch,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const EncyclopediaSearchPage(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     const _OrnamentDivider(),
                     const SizedBox(height: 6),
                     // O sumário: uma linha por seção, na ordem canônica
@@ -244,18 +257,6 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
                     ],
                     const SizedBox(height: 6),
                     const _OrnamentDivider(),
-                    const SizedBox(height: 6),
-                    // Última linha: a busca global, para quem já sabe o
-                    // que procura (empilha por cima, sem virar página).
-                    _IndexEntry(
-                      emoji: '🔍',
-                      label: l10n.commonSearch,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const EncyclopediaSearchPage(),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                   ),

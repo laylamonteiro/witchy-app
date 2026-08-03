@@ -9,7 +9,6 @@ import 'elements_page.dart';
 import 'goddesses_list_page.dart';
 import 'arcane_list_page.dart';
 import 'encyclopedia_index_page.dart';
-import 'encyclopedia_search_page.dart';
 import '../../data/data_sources/arcane_categories.dart';
 import '../../data/data_sources/archetypes_data.dart';
 import '../../data/data_sources/angels_data.dart';
@@ -127,18 +126,10 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
+        // Sem a lupa (a busca vive no Índice) o título ganha o centro.
+        centerTitle: true,
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).encyclopediaPageTitle),
         actions: [
-          // Busca global: um campo para todas as seções (e as entradas pessoais).
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const EncyclopediaSearchPage(),
-              ),
-            ),
-            tooltip: AppLocalizations.of(context).commonSearch,
-          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             // rootNavigator: Configurações cobre a bottom bar (tela cheia)
