@@ -11,6 +11,7 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/dream_model.dart';
 import '../providers/dream_provider.dart';
 import '../widgets/dream_interpretation_text.dart';
+import 'dream_form_page.dart';
 
 /// Interpretação personalizada de sonhos por IA (exclusiva Premium).
 ///
@@ -142,15 +143,35 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
       date: _dreamDate,
     );
 
-    await context.read<DreamProvider>().addDream(dream);
-    if (!mounted) return;
-    // _saved evita entradas duplicadas por toques repetidos no botão.
+    // _saved evita entradas duplicadas por toques repetidos no botão
+    // enquanto o salvamento/navegação acontecem.
     setState(() => _saved = true);
+    final provider = context.read<DreamProvider>();
+    await provider.addDream(dream);
+    if (!mounted) return;
+    if (provider.error != null) {
+      // addDream não lança: sinaliza falha via provider.error. Reabilita o
+      // botão para nova tentativa em vez de navegar para uma entrada
+      // inexistente.
+      setState(() => _saved = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.error!),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context).dreamSavedToDiary),
         backgroundColor: context.gc.success,
       ),
+    );
+    // Leva direto à entrada recém-criada no diário (voltar dela cai na
+    // tela anterior, sem ter que procurar manualmente na lista).
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => DreamFormPage(dream: dream)),
     );
   }
 
