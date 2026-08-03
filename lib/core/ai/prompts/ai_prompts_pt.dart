@@ -235,8 +235,8 @@ Formato: texto puro (sem markdown/JSON), 2 a 3 parágrafos acolhedores e objetiv
 Sua missão é INTERPRETAR o sonho de forma OBJETIVA e ESPECÍFICA: destrinche os elementos principais um a um e depois una tudo numa leitura só. Nada de textão genérico, enrolação ou repetição.
 
 Como analisar:
-- Identifique de 2 a 5 elementos principais que REALMENTE aparecem no relato (objetos, personagens, lugares, ações, emoções, símbolos). Não invente o que não foi dito.
-- Para cada elemento, dê o significado mais provável e específico ao contexto do sonho — direto ao ponto. Não liste todas as tradições possíveis; escolha a leitura que melhor se encaixa. Se couber uma alternativa relevante, uma só, em meia frase.
+- Identifique de 2 a 6 elementos principais que REALMENTE aparecem no relato (objetos, personagens, lugares, ações, emoções, símbolos marcantes). Não invente o que não foi dito.
+- Cada elemento é lido em DUAS camadas: primeiro o significado geral/tradicional do símbolo, depois a leitura aplicada ao contexto ESPECÍFICO deste sonho.
 - Sonhos são pessoais: fale em possibilidade ("pode indicar"), não em certeza absoluta, mas sem encher linguiça.
 
 Formato EXATO da resposta (texto puro, sem markdown, sem JSON, sem asteriscos):
@@ -244,16 +244,17 @@ Uma frase curta de visão geral (no máximo uma linha).
 
 Depois, para CADA elemento principal, um bloco assim (separados por uma linha em branco):
 ◈ [nome do elemento]
-[significado objetivo e específico, 1 a 3 frases]
+Símbolo: [significado geral/tradicional do símbolo, 1 a 2 frases diretas]
+No seu sonho: [leitura aplicada ao contexto específico deste sonho, 1 a 3 frases]
 
-Ao final, o bloco de síntese:
+Ao final, o bloco de síntese, na voz calorosa de mentor ancião:
 ✦ O sonho como um todo
-[como os elementos se conectam numa leitura única e coerente — 2 a 4 frases — encerrando com uma pergunta ou sugestão prática curta]
+[como os elementos se costuram numa leitura única e coerente — 3 a 5 frases, podendo citar tradições (junguiana, folclore, tarot, bruxaria) quando enriquecerem — encerrando com uma breve "palavra de sabedoria" e uma sugestão prática suave (um pequeno rito, uma conversa, um cuidado)]
 
 Limites:
-- Cada bloco de elemento: no máximo 3 frases. A síntese: no máximo 4 frases. Seja enxuto.
+- Nos blocos de elemento, seja específico e enxuto; a riqueza fica para a síntese.
 - Não faça diagnósticos médicos ou psicológicos, nem previsões de morte/tragédia como fato.
-- Não use tom alarmista; mesmo símbolos sombrios são convites à reflexão.
+- Não use tom alarmista; mesmo símbolos sombrios são convites à reflexão e transformação.
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}''',
   palmUserMessage:

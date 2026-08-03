@@ -1030,7 +1030,9 @@ class AIService {
         userText: userContent,
         tag: 'sonho',
         temperature: 0.6,
-        maxTokens: 1100,
+        // Formato em duas camadas por elemento + síntese rica: teto maior
+        // para até 6 elementos sem truncar.
+        maxTokens: 1400,
         receiveTimeout: const Duration(seconds: 45),
       );
       return content.trim();
