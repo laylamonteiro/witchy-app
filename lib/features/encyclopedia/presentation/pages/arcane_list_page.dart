@@ -211,6 +211,16 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                     ),
                                   ],
                                 ),
+                                const SizedBox(height: 4),
+                                // Descrição em até 2 linhas: fecha a MESMA
+                                // estrutura (e altura) dos cards de
+                                // Metais/Deusas/Pedras.
+                                Text(
+                                  entry.summary,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
                               ],
                             ),
                           ),
