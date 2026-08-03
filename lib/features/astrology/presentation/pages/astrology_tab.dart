@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../grimoire/presentation/widgets/grimoire_header_card.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_input_page.dart';
 import 'birth_chart_view_page.dart';
@@ -51,28 +52,11 @@ class _AstrologyTabState extends State<AstrologyTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
-              MagicalCard(
-                child: Column(
-                  children: [
-                    const Text('‧ ☽◯☾ ‧', style: TextStyle(fontSize: 45)),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppLocalizations.of(context).astroMysticTitle,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: context.gc.lilac,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppLocalizations.of(context).astroMysticSubtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: context.gc.softWhite.withOpacity(0.8),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+              // Header — mesmo card (cores e altura) da aba Ferramentas.
+              GrimoireHeaderCard(
+                glyph: '‧ ☽◯☾ ‧',
+                title: AppLocalizations.of(context).astroMysticTitle,
+                subtitle: AppLocalizations.of(context).astroMysticSubtitle,
               ),
 
               // Signos do Zodíaco
@@ -205,7 +189,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     Text(
                       AppLocalizations.of(context).astroAboutText,
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.8),
+                        color: context.gc.textSecondary,
                         height: 1.5,
                       ),
                     ),
@@ -213,7 +197,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
                     Text(
                       AppLocalizations.of(context).astroHaveOnHand,
                       style: TextStyle(
-                        color: context.gc.softWhite,
+                        color: context.gc.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -242,54 +226,54 @@ class _AstrologyTabState extends State<AstrologyTab> {
     assert(icon != null || iconWidget != null,
         'Informe um emoji em icon ou um widget em iconWidget.');
 
-    return InkWell(
+    // O toque é do próprio MagicalCard (mesmo padrão da aba Ferramentas):
+    // antes o InkWell por fora fazia o ripple vazar do card. As cores dos
+    // textos são os tokens do tema, iguais às outras abas.
+    return MagicalCard(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: MagicalCard(
-        child: Row(
-          children: [
-            SizedBox(
-              width: 40,
-              height: 40,
-              child: Center(
-                child: iconWidget ??
-                    Text(
-                      icon!,
-                      // 32 dentro da caixa de 40: o glifo do emoji é mais alto
-                      // que o corpo da fonte e em 40 estourava o padrão visual.
-                      style: const TextStyle(fontSize: 32),
-                    ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: Center(
+              child: iconWidget ??
                   Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: context.gc.softWhite,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    icon!,
+                    // 32 dentro da caixa de 40: o glifo do emoji é mais alto
+                    // que o corpo da fonte e em 40 estourava o padrão visual.
+                    style: const TextStyle(fontSize: 32),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.softWhite.withOpacity(0.7),
-                        ),
-                  ),
-                ],
-              ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: context.gc.lilac,
-              size: 16,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.textSecondary,
+                      ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            color: context.gc.lilac,
+            size: 16,
+          ),
+        ],
       ),
     );
   }
@@ -311,7 +295,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
             child: Text(
               text,
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.8),
+                color: context.gc.textSecondary,
               ),
             ),
           ),
@@ -330,11 +314,11 @@ class _AstrologyTabState extends State<AstrologyTab> {
         backgroundColor: context.gc.cardBackground,
         title: Text(
           AppLocalizations.of(context).astroRecalcTitle,
-          style: TextStyle(color: context.gc.softWhite),
+          style: TextStyle(color: context.gc.textPrimary),
         ),
         content: Text(
           AppLocalizations.of(context).astroRecalcConfirm,
-          style: TextStyle(color: context.gc.softWhite),
+          style: TextStyle(color: context.gc.textPrimary),
         ),
         actions: [
           TextButton(
