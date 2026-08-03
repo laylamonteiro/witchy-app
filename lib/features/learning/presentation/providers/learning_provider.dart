@@ -5,6 +5,7 @@ import '../../data/data_sources/trails_data.dart';
 import '../../data/models/trail_model.dart';
 import '../../data/repositories/learning_progress_repository.dart';
 import '../../../../core/content/content_locale.dart';
+import '../../../../core/database/database_helper.dart';
 
 /// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
 AppLocalizations get _l10n =>
@@ -32,6 +33,14 @@ class LearningProvider with ChangeNotifier {
   static const int xpPerPage = 25;
   static const int xpPerTrailBound = 100;
 
+  /// XP UNIFICADO: as práticas também alimentam o nível, com pesos menores
+  /// que o estudo — criar algo (registro, sigilo, página da enciclopédia)
+  /// vale mais que consultar (tiragens), e o ritual guiado fica no meio.
+  /// Assim "XP" significa a mesma coisa no app inteiro.
+  static const int xpPerGuidedRitual = 10;
+  static const int xpPerCreation = 5;
+  static const int xpPerDivination = 2;
+
   /// Níveis com nomes no idioma atual (limiares de XP invariantes).
   static List<LearningLevel> get levels => [
         LearningLevel(_l10n.learnLevelApprentice, '🕯️', 0),
@@ -45,6 +54,7 @@ class LearningProvider with ChangeNotifier {
   Set<String> _completed = {};
   bool _loaded = false;
   String _currentUserId = 'local_user';
+  int _practiceXp = 0;
 
   bool get isLoaded => _loaded;
 
@@ -57,8 +67,67 @@ class LearningProvider with ChangeNotifier {
   Future<void> load() async {
     await _migrateLegacyPrefs();
     _completed = await _repository.completedLessonIds(_currentUserId);
+    _practiceXp = await _computePracticeXp();
     _loaded = true;
     notifyListeners();
+  }
+
+  /// Recalcula só a parcela de práticas (chamado pelas telas de resumo,
+  /// já que as práticas acontecem espalhadas pelo app).
+  Future<void> refreshPracticeXp() async {
+    _practiceXp = await _computePracticeXp();
+    notifyListeners();
+  }
+
+  /// XP das práticas direto do banco: criações (registros do grimório,
+  /// diários, sigilos, páginas da enciclopédia pessoal), tiragens (runas,
+  /// oráculo, pêndulo) e rituais guiados concluídos.
+  Future<int> _computePracticeXp() async {
+    const creationTables = [
+      'spells',
+      'dreams',
+      'gratitudes',
+      'affirmations',
+      'desires',
+      'sigils',
+      'user_encyclopedia_entries',
+    ];
+    const divinationTables = [
+      'rune_readings',
+      'oracle_readings',
+      'pendulum_consultations',
+    ];
+
+    Future<int> count(dynamic db, String table) async {
+      try {
+        final preloadedFilter = (table == 'spells' || table == 'affirmations')
+            ? ' AND is_preloaded = 0'
+            : '';
+        final result = await db.rawQuery(
+          'SELECT COUNT(*) as count FROM $table '
+          'WHERE user_id = ?$preloadedFilter',
+          [_currentUserId],
+        );
+        return result.first['count'] as int? ?? 0;
+      } catch (_) {
+        return 0;
+      }
+    }
+
+    try {
+      final db = await DatabaseHelper.instance.database;
+      var xp = 0;
+      for (final t in creationTables) {
+        xp += await count(db, t) * xpPerCreation;
+      }
+      for (final t in divinationTables) {
+        xp += await count(db, t) * xpPerDivination;
+      }
+      xp += await count(db, 'guided_ritual_logs') * xpPerGuidedRitual;
+      return xp;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Progresso antigo (SharedPreferences) vira linhas no banco uma única vez.
@@ -87,8 +156,15 @@ class LearningProvider with ChangeNotifier {
   int get boundTrails =>
       learningTrails.where(isTrailComplete).length;
 
-  int get xp =>
+  /// Parcela do estudo (lições e trilhas).
+  int get lessonXp =>
       totalPagesWritten * xpPerPage + boundTrails * xpPerTrailBound;
+
+  /// Parcela das práticas (criações, tiragens e rituais guiados).
+  int get practiceXp => _practiceXp;
+
+  /// XP total unificado — é este que define o nível exibido no app.
+  int get xp => lessonXp + _practiceXp;
 
   LearningLevel get level {
     var current = levels.first;

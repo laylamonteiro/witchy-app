@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +12,8 @@ import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../grimoire/presentation/pages/user_spells_list_page.dart';
+import '../../../journeys/presentation/pages/journeys_page.dart';
+import '../../../learning/presentation/providers/learning_provider.dart';
 import '../../../your_day/data/daily_checkin_repository.dart';
 import '../../../diary/presentation/pages/dreams_list_page.dart';
 import '../../../diary/presentation/pages/gratitudes_list_page.dart';
@@ -55,6 +59,9 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
 
   Future<void> _loadStats() async {
     setState(() => _isLoading = true);
+
+    // O XP de práticas vem do banco: recalcula ao abrir/atualizar a tela.
+    unawaited(context.read<LearningProvider>().refreshPracticeXp());
 
     try {
       final authProvider = context.read<AuthProvider>();
@@ -355,6 +362,13 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                     _buildSummaryCard(),
                     const SizedBox(height: 20),
 
+                    // Régua única de progresso: nível/XP unificado do
+                    // Grimório Vivo + atalho para as Jornadas Mágicas.
+                    _buildLearningCard(),
+                    const SizedBox(height: 12),
+                    _buildJourneysCard(),
+                    const SizedBox(height: 20),
+
                     // Streaks e conquistas
                     _buildStreaksCard(),
                     const SizedBox(height: 20),
@@ -461,6 +475,156 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Nível mágico unificado: XP total (estudo + práticas), barra até o
+  /// próximo nível e o resumo do Grimório Vivo.
+  Widget _buildLearningCard() {
+    final l10n = AppLocalizations.of(context);
+    final learning = context.watch<LearningProvider>();
+    final level = learning.level;
+    final next = learning.nextLevel;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.gc.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gc.textPrimary10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.menu_book, color: context.gc.lilac, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.toolLivingGrimoireTitle,
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Text(
+                '${level.emoji} ${level.title}',
+                style: TextStyle(
+                  color: context.gc.lilac,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${learning.xp} XP',
+                style: TextStyle(
+                  color: context.gc.starYellow,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                next != null
+                    ? l10n.analyticsNextLevel(next.title)
+                    : l10n.analyticsMaxLevel,
+                style: TextStyle(
+                  color:
+                      next != null ? context.gc.textSecondary : context.gc.mint,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: learning.levelProgress,
+              minHeight: 6,
+              backgroundColor: context.gc.surfaceBorder,
+              valueColor: AlwaysStoppedAnimation(context.gc.lilac),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.analyticsXpBreakdown(learning.lessonXp, learning.practiceXp),
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${l10n.analyticsPagesWritten(learning.totalPagesWritten)} · '
+            '${l10n.analyticsTrailsBound(learning.boundTrails)}',
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Atalho para as Jornadas Mágicas — as conquistas moram junto das
+  /// outras réguas de progresso.
+  Widget _buildJourneysCard() {
+    final l10n = AppLocalizations.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const JourneysPage()),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.gc.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.gc.textPrimary10),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.emoji_events, color: context.gc.starYellow, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.profileMagicalJourneys,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.analyticsJourneysSub,
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.gc.lilac),
+          ],
+        ),
+      ),
     );
   }
 

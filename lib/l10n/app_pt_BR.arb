@@ -1152,6 +1152,43 @@
   "analyticsStreakKeepGoing": "Continue assim! {count, plural, one{1 dia} other{{count} dias}} de gratidão!",
   "analyticsOracle": "Oráculo",
   "analyticsSpellsByType": "Feitiços por Tipo",
+  "analyticsPagesWritten": "{count, plural, one{1 página escrita} other{{count} páginas escritas}}",
+  "@analyticsPagesWritten": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsTrailsBound": "{count, plural, one{1 trilha encadernada} other{{count} trilhas encadernadas}}",
+  "@analyticsTrailsBound": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsNextLevel": "Próximo nível: {title}",
+  "@analyticsNextLevel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "analyticsMaxLevel": "Nível máximo alcançado ✨",
+  "analyticsXpBreakdown": "{lesson} XP de estudo + {practice} XP de prática",
+  "@analyticsXpBreakdown": {
+    "placeholders": {
+      "lesson": {
+        "type": "num"
+      },
+      "practice": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsJourneysSub": "Conquistas e medalhas das suas práticas",
   "analyticsSequences": "Sequências",
   "analyticsDailyPractice": "Prática diária",
   "analyticsStreakDays": "{count, plural, one{1 dia} other{{count} dias}}",

@@ -1152,6 +1152,43 @@
   "analyticsStreakKeepGoing": "Keep it up! {count, plural, one{1 day} other{{count} days}} of gratitude!",
   "analyticsOracle": "Oracle",
   "analyticsSpellsByType": "Spells by Type",
+  "analyticsPagesWritten": "{count, plural, one{1 page written} other{{count} pages written}}",
+  "@analyticsPagesWritten": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsTrailsBound": "{count, plural, one{1 trail bound} other{{count} trails bound}}",
+  "@analyticsTrailsBound": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsNextLevel": "Next level: {title}",
+  "@analyticsNextLevel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "analyticsMaxLevel": "Highest level reached ✨",
+  "analyticsXpBreakdown": "{lesson} XP from study + {practice} XP from practice",
+  "@analyticsXpBreakdown": {
+    "placeholders": {
+      "lesson": {
+        "type": "num"
+      },
+      "practice": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsJourneysSub": "Achievements and badges from your practices",
   "analyticsSequences": "Streaks",
   "analyticsDailyPractice": "Daily practice",
   "analyticsStreakDays": "{count, plural, one{1 day} other{{count} days}}",
