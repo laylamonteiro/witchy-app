@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:uuid/uuid.dart';
 
 import '../i18n/gender.dart';
+import '../services/debug_log_service.dart';
 import '../utils/accents.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
 import '../../features/astrology/data/models/enums.dart';
@@ -21,14 +23,20 @@ class AiRateLimitException implements Exception {
   const AiRateLimitException();
 }
 
-/// Serviço de IA usando Groq (gratuito, sem API key necessária)
+/// Serviço de IA: Gemini como provedor principal (texto e visão) quando a
+/// chave está configurada, com o Groq como fallback automático em caso de
+/// falha ou de chave ausente. Os logs de debug (tag AI) registram qual
+/// provedor respondeu cada chamada.
 class AIService {
   static final AIService instance = AIService._();
 
   AIService._();
 
-  /// Modelo de texto padrão do Groq.
+  /// Modelo de texto do Groq (fallback).
   static const String _textModel = 'llama-3.3-70b-versatile';
+
+  /// Modelo de texto principal (Google Gemini) — o mesmo GA da visão.
+  static const String _geminiTextModel = 'gemini-3.6-flash';
 
   /// Modelo de visão do Groq (fallback). O Groq descontinua modelos com
   /// frequência — a família Llama 4 (Scout/Maverick) foi aposentada em 2026
@@ -81,54 +89,32 @@ class AIService {
     return true;
   }
 
-  /// Gerar feitiço com IA usando Groq
+  /// Gerar feitiço com IA
   Future<SpellModel> generateSpell(
     String userIntention, {
     Gender? gender,
   }) async {
-    return _generateWithGroq(
+    return _generateSpellWithAi(
       userIntention,
       gender: gender ?? _gender,
     );
   }
 
-  Future<SpellModel> _generateWithGroq(
+  Future<SpellModel> _generateSpellWithAi(
     String intention, {
     required Gender gender,
   }) async {
     try {
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': _buildSystemPrompt(gender),
-          },
-          {
-            'role': 'user',
-            'content': intention,
-          },
-        ],
-        'temperature': 0.8,
-        'max_tokens': 1024,
-        'response_format': {'type': 'json_object'},
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 30),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
+      final content = await _textRequest(
+        systemPrompt: _buildSystemPrompt(gender),
+        userText: intention,
+        tag: 'feitiço',
+        temperature: 0.8,
+        maxTokens: 1024,
+        jsonResponse: true,
+        receiveTimeout: const Duration(seconds: 30),
       );
-
-      final content = response.data['choices'][0]['message']['content'];
-      final spellData = jsonDecode(content);
+      final spellData = _extractJsonObject(content);
       return _parseSpellData(spellData);
     } on DioException catch (e) {
       if (e.response?.statusCode == 400) {
@@ -223,38 +209,13 @@ class AIService {
     try {
       final chartSummary = _buildChartSummary(birthChart, profile);
 
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': _buildMagicalProfileSystemPrompt(
-              gender ?? _gender,
-            ),
-          },
-          {
-            'role': 'user',
-            'content': chartSummary,
-          },
-        ],
-        'temperature': 0.7,
-        'max_tokens': 2048,
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 60),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
+      return await _textRequest(
+        systemPrompt: _buildMagicalProfileSystemPrompt(gender ?? _gender),
+        userText: chartSummary,
+        tag: 'perfil mágico',
+        temperature: 0.7,
+        maxTokens: 2048,
       );
-
-      return _contentFromResponse(response);
     } catch (e) {
       rethrow;
     }
@@ -281,36 +242,13 @@ class AIService {
         aspects: aspects,
       );
 
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': _buildDailyWeatherSystemPrompt(gender),
-          },
-          {
-            'role': 'user',
-            'content': weatherSummary,
-          },
-        ],
-        'temperature': 0.8,
-        'max_tokens': 1536,
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 60),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
+      return await _textRequest(
+        systemPrompt: _buildDailyWeatherSystemPrompt(gender),
+        userText: weatherSummary,
+        tag: 'clima do dia',
+        temperature: 0.8,
+        maxTokens: 1536,
       );
-
-      return _contentFromResponse(response);
     } catch (e) {
       rethrow;
     }
@@ -479,38 +417,16 @@ class AIService {
     try {
       final prompt = _prompts.affirmationUserPrompt(category, userContext);
 
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': _buildAffirmationSystemPrompt(gender),
-          },
-          {
-            'role': 'user',
-            'content': prompt,
-          },
-        ],
-        'temperature': 0.9,
-        'max_tokens': 256,
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 30),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
+      final content = await _textRequest(
+        systemPrompt: _buildAffirmationSystemPrompt(gender),
+        userText: prompt,
+        tag: 'afirmação',
+        temperature: 0.9,
+        maxTokens: 256,
+        receiveTimeout: const Duration(seconds: 30),
       );
-
-      final content = response.data['choices'][0]['message']['content'];
       // Limpar aspas se houver
-      return content.toString().replaceAll('"', '').trim();
+      return content.replaceAll('"', '').trim();
     } catch (e) {
       rethrow;
     }
@@ -535,37 +451,15 @@ class AIService {
   }) async {
     gender ??= _gender;
     try {
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': _buildMysticAdvisorSystemPrompt(gender),
-          },
-          {
-            'role': 'user',
-            'content': question,
-          },
-        ],
-        'temperature': 0.7,
-        'max_tokens': 1024,
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 30),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
+      final content = await _textRequest(
+        systemPrompt: _buildMysticAdvisorSystemPrompt(gender),
+        userText: question,
+        tag: 'conselheiro',
+        temperature: 0.7,
+        maxTokens: 1024,
+        receiveTimeout: const Duration(seconds: 30),
       );
-
-      final content = response.data['choices'][0]['message']['content'];
-      return content.toString().trim();
+      return content.trim();
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw Exception(_prompts.errorAuthentication);
@@ -578,6 +472,106 @@ class AIService {
     } catch (e) {
       throw Exception(_prompts.errorProcessing(e));
     }
+  }
+
+  /// Chamada de TEXTO: Gemini como provedor principal (mesma chave da
+  /// visão). Sem chave configurada — ou em falha do Gemini (limite,
+  /// instabilidade, resposta vazia) — cai para o Groq automaticamente,
+  /// então o recurso nunca fica refém de um provedor só. O provedor que
+  /// respondeu fica nos logs de debug (tag AI).
+  Future<String> _textRequest({
+    required String systemPrompt,
+    required String userText,
+    required String tag,
+    double temperature = 0.7,
+    int maxTokens = 1024,
+    bool jsonResponse = false,
+    Duration receiveTimeout = const Duration(seconds: 60),
+  }) async {
+    if (_hasGemini) {
+      try {
+        final response = await _dio.post(
+          'https://generativelanguage.googleapis.com/v1beta/models/'
+          '$_geminiTextModel:generateContent',
+          options: Options(
+            headers: {
+              'x-goog-api-key': GeminiCredentials.apiKey,
+              'Content-Type': 'application/json',
+            },
+            receiveTimeout: receiveTimeout,
+            sendTimeout: const Duration(seconds: 30),
+          ),
+          data: {
+            if (systemPrompt.isNotEmpty)
+              'system_instruction': {
+                'parts': [
+                  {'text': systemPrompt},
+                ],
+              },
+            'contents': [
+              {
+                'role': 'user',
+                'parts': [
+                  {'text': userText},
+                ],
+              },
+            ],
+            'generationConfig': {
+              'temperature': temperature,
+              // Folga: no 3.x o "pensamento" mínimo consome tokens de
+              // saída junto com a resposta.
+              'maxOutputTokens': maxTokens + 512,
+              'thinkingConfig': {'thinkingLevel': 'low'},
+              if (jsonResponse) 'responseMimeType': 'application/json',
+            },
+          },
+        );
+        final candidate = response.data['candidates'][0];
+        final parts =
+            (candidate['content']['parts'] as List?) ?? const [];
+        var text = parts.map((p) => '${p['text'] ?? ''}').join().trim();
+        if (text.isEmpty) {
+          throw const FormatException('resposta vazia');
+        }
+        if (!jsonResponse && candidate['finishReason'] == 'MAX_TOKENS') {
+          text = _trimToLastSentence(text);
+        }
+        unawaited(debugLog('AI', '$tag: gemini'));
+        return text;
+      } on DioException catch (e) {
+        unawaited(debugLog(
+            'AI',
+            '$tag: gemini falhou '
+            '(HTTP ${e.response?.statusCode ?? e.message}) — usando groq'));
+      } catch (e) {
+        unawaited(debugLog('AI', '$tag: gemini falhou ($e) — usando groq'));
+      }
+    }
+
+    final response = await _dio.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+          'Content-Type': 'application/json',
+        },
+        receiveTimeout: receiveTimeout,
+        sendTimeout: const Duration(seconds: 30),
+      ),
+      data: {
+        'model': _textModel,
+        'messages': [
+          if (systemPrompt.isNotEmpty)
+            {'role': 'system', 'content': systemPrompt},
+          {'role': 'user', 'content': userText},
+        ],
+        'temperature': temperature,
+        'max_tokens': maxTokens,
+        if (jsonResponse) 'response_format': {'type': 'json_object'},
+      },
+    );
+    unawaited(debugLog('AI', '$tag: groq'));
+    return _contentFromResponse(response);
   }
 
   /// Chamada de visão (texto + foto): Gemini quando a chave está
@@ -859,39 +853,16 @@ class AIService {
         return _extractJsonObject(content);
       }
 
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': '${_localizedInstruction()}\n\n'
-                '${_prompts.encyGenerateSystemPrompt(categoryKey, name)}',
-          },
-          {
-            'role': 'user',
-            'content': _prompts.encyGenerateUserMessage(name),
-          },
-        ],
-        'temperature': 0.5,
-        'max_tokens': 1200,
-        'response_format': {'type': 'json_object'},
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 60),
-          sendTimeout: const Duration(seconds: 60),
-        ),
-        data: requestData,
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.encyGenerateSystemPrompt(categoryKey, name)}',
+        userText: _prompts.encyGenerateUserMessage(name),
+        tag: 'página enciclopédia',
+        temperature: 0.5,
+        maxTokens: 1200,
+        jsonResponse: true,
       );
-
-      final content = response.data['choices'][0]['message']['content'];
-      return _extractJsonObject(content.toString());
+      return _extractJsonObject(content);
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
         throw const AiRateLimitException();
@@ -997,38 +968,16 @@ class AIService {
         ? summary
         : '$summary\n${_prompts.tarotQuestionIntro}\n"$trimmedQuestion"';
     try {
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': '${_localizedInstruction()}\n\n'
-                '${_prompts.tarotSpreadSystemPrompt(gender)}',
-          },
-          {
-            'role': 'user',
-            'content': userContent,
-          },
-        ],
-        'temperature': 0.7,
-        'max_tokens': 1100,
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 40),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.tarotSpreadSystemPrompt(gender)}',
+        userText: userContent,
+        tag: 'tarot',
+        temperature: 0.7,
+        maxTokens: 1100,
+        receiveTimeout: const Duration(seconds: 40),
       );
-
-      final content = response.data['choices'][0]['message']['content'];
-      return content.toString().trim();
+      return content.trim();
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
         throw Exception(_prompts.errorRateLimit);
@@ -1046,38 +995,16 @@ class AIService {
   }) async {
     gender ??= _gender;
     try {
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': '${_localizedInstruction()}\n\n'
-                '${_prompts.numerologySystemPrompt(gender)}',
-          },
-          {
-            'role': 'user',
-            'content': summary,
-          },
-        ],
-        'temperature': 0.7,
-        'max_tokens': 900,
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 30),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.numerologySystemPrompt(gender)}',
+        userText: summary,
+        tag: 'numerologia',
+        temperature: 0.7,
+        maxTokens: 900,
+        receiveTimeout: const Duration(seconds: 30),
       );
-
-      final content = response.data['choices'][0]['message']['content'];
-      return content.toString().trim();
+      return content.trim();
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
         throw Exception(_prompts.errorRateLimit);
@@ -1098,37 +1025,15 @@ class AIService {
     try {
       final userContent = _prompts.dreamUserPrompt(dreamDescription, feelings);
 
-      final requestData = {
-        'model': _textModel,
-        'messages': [
-          {
-            'role': 'system',
-            'content': _buildDreamInterpreterSystemPrompt(gender),
-          },
-          {
-            'role': 'user',
-            'content': userContent,
-          },
-        ],
-        'temperature': 0.6,
-        'max_tokens': 1100,
-      };
-
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: const Duration(seconds: 45),
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: requestData,
+      final content = await _textRequest(
+        systemPrompt: _buildDreamInterpreterSystemPrompt(gender),
+        userText: userContent,
+        tag: 'sonho',
+        temperature: 0.6,
+        maxTokens: 1100,
+        receiveTimeout: const Duration(seconds: 45),
       );
-
-      final content = response.data['choices'][0]['message']['content'];
-      return content.toString().trim();
+      return content.trim();
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw Exception(_prompts.errorAuthentication);

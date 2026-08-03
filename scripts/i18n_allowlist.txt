@@ -26,6 +26,9 @@ lib/core/ai/ai_service\.dart:
 lib/core/diagnostic/diagnostic_page\.dart:
 lib/core/diagnostic/debug_logs_page\.dart:
 lib/core/services/debug_log_service\.dart:
+# Logs de debug do AdService (tag ADS) — dev-only, visíveis só na página
+# de logs (admin).
+lib/core/services/ad_service\.dart:
 lib/features/settings/presentation/pages/beta_codes_debug_page\.dart:
 
 # Nome-marca do app — invariante entre idiomas (inclui a forma abreviada
