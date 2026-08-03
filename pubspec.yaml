@@ -1,7 +1,8 @@
 name: grimorio_de_bolso
 description: Um grimório vivo, agenda mágica e companheiro de jornada para bruxas e bruxos iniciantes
 publish_to: 'none'
-version: 1.0.0+101
+
+version: 2.0.0+101
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

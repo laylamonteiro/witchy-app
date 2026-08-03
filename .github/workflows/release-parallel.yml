@@ -112,7 +112,7 @@ jobs:
 
  
 
-      - name: 🔢 Auto-increment build number
+      - name: 🔢 Auto-increment versão (patch + build)
 
         id: increment
 
@@ -124,7 +124,7 @@ jobs:
 
           echo "📌 Versão atual: $CURRENT_VERSION"
 
- 
+
 
           # Separa version name e version code
 
@@ -132,19 +132,30 @@ jobs:
 
           VERSION_CODE=$(echo $CURRENT_VERSION | cut -d'+' -f2)
 
- 
 
-          # Incrementa apenas o build number
+
+          # Incrementa o PATCH da versão (2.0.0 → 2.0.1 → 2.0.2...) e o
+          # build number. Major/minor sobem manualmente no pubspec.yaml
+          # quando um release merecer (aí o patch recomeça do que estiver
+          # escrito lá).
+
+          MAJOR=$(echo $VERSION_NAME | cut -d'.' -f1)
+
+          MINOR=$(echo $VERSION_NAME | cut -d'.' -f2)
+
+          PATCH=$(echo $VERSION_NAME | cut -d'.' -f3)
+
+          NEW_VERSION_NAME="${MAJOR}.${MINOR}.$((PATCH + 1))"
 
           NEW_VERSION_CODE=$((VERSION_CODE + 1))
 
-          NEW_VERSION="${VERSION_NAME}+${NEW_VERSION_CODE}"
+          NEW_VERSION="${NEW_VERSION_NAME}+${NEW_VERSION_CODE}"
 
- 
+
 
           echo "✨ Nova versão: $NEW_VERSION"
 
- 
+
 
           # Atualiza pubspec.yaml
 
