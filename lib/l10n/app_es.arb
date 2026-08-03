@@ -1139,6 +1139,48 @@
   "analyticsStreakKeepGoing": "¡Sigue así! ¡{count, plural, one{1 día} other{{count} días}} de gratitud!",
   "analyticsOracle": "Oráculo",
   "analyticsSpellsByType": "Hechizos por Tipo",
+  "analyticsSequences": "Rachas",
+  "analyticsDailyPractice": "Práctica diaria",
+  "analyticsStreakDays": "{count, plural, one{1 día} other{{count} días}}",
+  "@analyticsStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsYourPractices": "Tus Prácticas",
+  "analyticsManifestations": "Manifestaciones",
+  "analyticsPending": "Pendientes",
+  "analyticsManifested": "Manifestados",
+  "analyticsManifestRate": "{percent}% de tasa de manifestación",
+  "@analyticsManifestRate": {
+    "placeholders": {
+      "percent": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsAwaitingDesires": "{count, plural, one{1 deseo esperando el momento adecuado ✨} other{{count} deseos esperando el momento adecuado ✨}}",
+  "@analyticsAwaitingDesires": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsStartDesires": "Empieza a registrar tus deseos ✨",
+  "analyticsToday": "Hoy",
+  "analyticsThisWeek": "Esta semana",
+  "analyticsThisMonth": "Este mes",
+  "analyticsPracticeDays": "Días de práctica en {month}",
+  "@analyticsPracticeDays": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "wheelNextSabbat": "Próximo Sabbat",
   "wheelCalendar": "Calendario de los Sabbats",
   "wheelAbout": "Sobre la Rueda del Año",
