@@ -56,10 +56,8 @@ class _MetalsListPageState extends State<MetalsListPage> {
                   onChanged: (value) => setState(() => _searchQuery = value),
                 ),
               ),
-              // Espaçador do tamanho do botão de filtro das outras abas,
-              // para a caixa de busca ter a MESMA largura em todas
-              const SizedBox(width: 8),
-              const SizedBox(width: 48),
+              // Sem filtro nesta aba: a caixa de busca ocupa a largura
+              // toda, como nas abas arcanas.
             ],
           ),
         ),
