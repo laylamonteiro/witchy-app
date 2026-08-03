@@ -684,7 +684,9 @@ class AIService {
         userText: _prompts.palmUserMessage,
         jpegBytes: jpegBytes,
         temperature: 0.6,
-        maxTokens: 1600,
+        // A leitura completa (7 pontos + síntese) truncava em 1600 — o
+        // "pensamento" do Gemini 3.x também consome tokens de saída.
+        maxTokens: 2400,
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {

@@ -35,6 +35,51 @@ class DreamInterpretationText extends StatelessWidget {
     return null;
   }
 
+  /// Cabeçalho ◈/✦. Quando o conteúdo vem NA MESMA linha (padrão da
+  /// quiromancia: "◈ Formato da mão: texto..."), só o cabeçalho ganha cor
+  /// e o resto segue como texto normal — antes o parágrafo inteiro saía
+  /// colorido, ilegível. Linha curta sem conteúdo (padrão dos sonhos)
+  /// fica toda colorida, como título.
+  Widget _headerLine(
+    BuildContext context,
+    String line,
+    Color color,
+    double fontSize,
+    TextStyle? body,
+  ) {
+    final headerStyle = TextStyle(
+      color: color,
+      fontWeight: FontWeight.bold,
+      fontSize: fontSize,
+    );
+    final colon = line.indexOf(':');
+    if (colon != -1 && colon < 60 && colon < line.length - 1) {
+      return Text.rich(
+        TextSpan(children: [
+          TextSpan(text: line.substring(0, colon + 1), style: headerStyle),
+          TextSpan(
+            text: ' ${line.substring(colon + 1).trimLeft()}',
+            style: body?.copyWith(height: 1.5),
+          ),
+        ]),
+      );
+    }
+    if (line.length > 60) {
+      // Parágrafo longo iniciado pelo marcador, sem dois-pontos: colore
+      // só o marcador para não pintar o bloco inteiro.
+      return Text.rich(
+        TextSpan(children: [
+          TextSpan(text: line.substring(0, 1), style: headerStyle),
+          TextSpan(
+            text: ' ${line.substring(1).trimLeft()}',
+            style: body?.copyWith(height: 1.5),
+          ),
+        ]),
+      );
+    }
+    return Text(line, style: headerStyle);
+  }
+
   /// Linha "Rótulo: conteúdo" com o rótulo colorido e o resto em texto
   /// normal, com um leve recuo para aninhar sob o nome do elemento.
   Widget _labeledLine(
@@ -79,26 +124,12 @@ class DreamInterpretationText extends StatelessWidget {
       } else if (line.startsWith('✦')) {
         widgets.add(Padding(
           padding: const EdgeInsets.only(top: 6, bottom: 4),
-          child: Text(
-            line,
-            style: TextStyle(
-              color: context.gc.starYellow,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
+          child: _headerLine(context, line, context.gc.starYellow, 16, body),
         ));
       } else if (line.startsWith('◈')) {
         widgets.add(Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 2),
-          child: Text(
-            line,
-            style: TextStyle(
-              color: context.gc.lilac,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
-          ),
+          child: _headerLine(context, line, context.gc.lilac, 15, body),
         ));
       } else if (symbolLabel != null) {
         widgets.add(
