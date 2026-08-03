@@ -168,18 +168,33 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  _displayCardTitle(entry),
-                                  style: GoogleFonts.cinzelDecorative(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: context.gc.lilac,
-                                  ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: FittedBox(
+                                        // Uma linha SEMPRE: títulos longos
+                                        // encolhem a fonte — mesma altura
+                                        // de card das listas de Metais/
+                                        // Deusas/Pedras.
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          _displayCardTitle(entry),
+                                          maxLines: 1,
+                                          style: GoogleFonts.cinzelDecorative(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: context.gc.lilac,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   entry.summary,
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
