@@ -192,11 +192,24 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
-                                  entry.summary,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                // Linha de referência com emoji, como o
+                                // planeta nos Metais e a origem nas
+                                // Deusas: aqui, a origem cultural.
+                                Row(
+                                  children: [
+                                    const Text('📜'),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        entry.origin,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
