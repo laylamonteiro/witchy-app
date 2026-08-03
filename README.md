@@ -1,324 +1,295 @@
-# Grimório de Bolso
+# 🔮 Grimório de Bolso
 
+Um grimório vivo, agenda mágica e companheiro de jornada para bruxas e bruxos iniciantes
 
-Um grimório vivo, agenda mágica e companheiro de jornada para bruxas e bruxos iniciantes.
+**Versão atual:** 2.0.0 · **Plataforma:** Android (Google Play, produção) · **Idiomas:** 🇧🇷 pt-BR · 🇺🇸 en · 🇪🇸 es
 
-## Sobre o App
+---
 
-**Grimório de Bolso** é um aplicativo móvel desenvolvido especialmente para bruxas e bruxos iniciantes, principalmente no Brasil, que estão estudando sozinhos e desejam organizar sua prática mágica. O app combina:
+## Sobre o app
 
-- Organização de feitiços, rituais e registros (Meu Grimório)
-- Diários de sonhos, desejos, gratidão, afirmações e reflexões
-- Calendário lunar adaptado e astrologia completa (mapa astral, clima mágico)
-- Enciclopédia mágica (cristais, ervas, cores, deusas, arquétipos, anjos, demônios, símbolos...)
-- Ferramentas místicas: Tarot, Oráculo, Runas, Pêndulo, Sigilos, Numerologia, Quiromancia
-- Grimório Vivo: trilhas de aprendizado gamificadas que escrevem o próprio grimório
-- Conselheiro Místico (IA) com respostas no idioma e gênero da pessoa usuária
+**Grimório de Bolso** é um aplicativo Flutter para quem está começando na bruxaria e estuda sozinho — organizando a prática, guardando registros e aprendendo com conteúdo curado, sem dogma e sem sensacionalismo
 
-## Identidade Visual
+O app é **local-first**: tudo funciona offline no SQLite do aparelho, com sincronização opcional na nuvem (Supabase) para quem cria conta. A pessoa usuária escolhe o idioma, o tema visual e como quer ser tratada (feminino, masculino ou neutro) — e todo o conteúdo, inclusive as respostas da IA, respeita essas escolhas
 
-### Estilo
-- **Mood**: Whimsical + Whimsigoth + Pastel Goth
-- **Sensação**: Magia aconchegante, bruxa de quarto com velas, gatos, plantas
-- **Elementos**: Lua, estrelas, cristais, gatos, velas, pentagrama, roda da lua
+---
 
-### Paleta de Cores
+## As quatro abas
 
-#### Fundos e bases
-- Fundo principal: `#0B0A16` - quase preto com tom roxo profundo
-- Cards/superfícies: `#171425` - roxo bem escuro para cards
-- Bordas: `#26213A` - roxo mais claro para separar seções
+| Aba | O que vive nela |
+|---|---|
+| ✨ **Seu Dia** | O ritual diário: saudação com nível e sequência, clima mágico do dia, contagem regressiva do próximo sabbat, carrossel lunar, ritos de hoje, continue sua trilha e atalhos personalizáveis |
+| 📖 **Enciclopédia** | 15 seções de conteúdo mágico curado, abertas por um índice em papel envelhecido, com busca global |
+| 🔮 **Grimório** | Astrologia mística, ferramentas de prática e adivinhação, e o seu grimório pessoal de feitiços e registros |
+| 📕 **Diários** | Sonhos, desejos, gratidão, afirmações e escrita livre |
 
-#### Pastéis principais
-- Lilás: `#C9A7FF` - magia, espiritualidade, lua
-- Rosa: `#F1A7C5` - amor próprio, afeto, fofura
-- Menta: `#A7F0D8` - cura, natureza, bruxaria verde
-- Amarelo estrela: `#FFE8A3` - brilho, glitter, feedback positivo
+---
 
-#### Texto
-- Principal: `#F6F4FF` - branquinho suave
-- Secundário: `#B7B2D6` - texto secundário/placeholder
+## Funcionalidades
 
-#### Status
-- Sucesso/proteção: `#7EE08A`
-- Alerta/cuidado: `#FF6B81`
-- Info/neutro: `#A7C7FF`
+### ✨ Seu Dia — o ritual diário
+- **Nível e sequência** no topo: XP unificado (Aprendiz 🕯️ → Iniciada 🌙 → Praticante ⭐ → Adepta 🔮 → Mestra 👑 → Guardiã 📜) e dias seguidos de prática
+- **Ritos de hoje**: gratidão e sonho fixos + um rito exploratório que se reveza a cada dia entre tarot, oráculo, quiromancia, runas, identificação na natureza e pêndulo
+- **Clima mágico do dia** e **Momento Mágico** (dias e horas planetárias)
+- **Contagem regressiva** do próximo sabbat com atalho para o ritual guiado
+- **Continue sua trilha**: retoma a próxima lição do Grimório Vivo
+- **Atalhos editáveis**: a pessoa escolhe quais ferramentas ficam à mão
+- **Salem**, o gato mascote, que guia o tour e aparece com dicas — e pode sumir em fumaça quando não for bem-vindo
 
-### Tipografia
-- Títulos: Nunito (bold/semibold)
-- Corpo de texto: Nunito (regular)
+### 📖 Enciclopédia Mágica
+Índice ilustrado (livro de papel envelhecido, com animação de abertura e virada de página) dando acesso a 15 seções:
 
-## Funcionalidades - Fase 1 (MVP Local-First)
+🌙 Lua · ☀️ Sol · 🔥 Sabbats · 💎 Cristais · 🌿 Ervas · 🎨 Cores · 🏛️ Deusas · 🌍 Elementos · 🗿 Runas · 🕯️ Altar · 🔩 Metais · 🎭 Arquétipos · ✨ Símbolos Sagrados · 😇 Anjos · 😈 Demônios
 
-### Calendário Lunar
-- Fases da lua (nova, crescente, cheia, minguante)
-- Datas das próximas fases importantes
-- Significado de cada fase
-- Recomendações para tipos de feitiços
+- **Busca global** que atravessa todas as seções e também as entradas pessoais
+- **Enciclopédia pessoal** (Premium): fotografe uma planta, pedra ou cor, a IA identifica e monta o verbete no formato da categoria — com a sua foto guardada no aparelho
+- Verbetes arcanos com perspectivas por tradição (religiosa, folclórica, ocultista, literária) e tags "Veja também" clicáveis
 
-### Grimório Digital
-- CRUD completo de feitiços
-- Campos: nome, propósito, tipo (atração/banimento), fase lunar, ingredientes, passos, duração, observações
-- Busca e filtros por tipo, propósito, fase lunar
-- Visualização detalhada de cada feitiço
+### 🔮 Grimório Digital
 
-### Diários
+**Astrologia Mística**
+- Mapa astral completo (efemérides Swiss Ephemeris), signos, casas e aspectos
+- Perfil mágico personalizado e sugestões a partir do mapa
+- Clima mágico diário baseado em trânsitos
 
-#### Diário de Sonhos
-- Registro de sonhos com título, descrição, data
-- Tags para categorização (pesadelo, recorrente, lúcido, etc.)
-- Campo para sentimentos ao acordar
-- Busca por conteúdo e tags
+**Ferramentas Mágicas**
+- 🎴 Tarot (78 cartas, tiragens, biblioteca e tutor de estudo)
+- 🃏 Oráculo · ᚱ Runas (24 do Futhark Antigo) · ⟟ Pêndulo
+- ✨ Sigilos (desenho na tela, salvar na galeria ou no Diário de Desejos)
+- 🖐️ Quiromancia por foto · 🍃 Guia da Natureza (identificação por foto)
+- 🔢 Numerologia · 🌟 Mapa Astral · 🔮 Conselheiro Místico
 
-#### Diário de Desejos
-- Lista de desejos/intenções
-- Status: Em Aberto, Manifestando, Manifestado, Liberado
-- Campo de evolução para acompanhar progresso
-- Possibilidade de criar feitiços a partir de desejos
+**Meu Grimório**
+- Feitiços por categoria, com fase lunar recomendada, ingredientes e passos
+- Criação assistida por IA a partir de uma intenção
+- Registros e páginas do Grimório Vivo
 
-### Enciclopédia Mágica
+### 📕 Diários
+Sonhos (com interpretação por IA em duas camadas: símbolo tradicional + leitura aplicada ao seu sonho), desejos com status de manifestação, gratidão, afirmações e escrita livre com salvamento automático
 
-#### Cristais
-- Nome, descrição, elemento
-- Intenções e correspondências
-- Formas de uso
-- Métodos de limpeza e recarga
-- 6 cristais básicos incluídos: Quartzo Rosa, Ametista, Citrino, Turmalina Negra, Quartzo Transparente, Selenita
+### 📚 Grimório Vivo — trilhas de aprendizado
+9 trilhas com 88 lições no total: Magia Branca, Magia Negra, Magia Verde, Wicca, Bruxaria Tradicional, Magia do Caos, Tarot, Quiromancia e Águas Mágicas
 
-#### Cores
-- Significado mágico de cada cor
-- Intenções associadas
-- Dicas de uso em velas, roupas, objetos
-- 12 cores incluídas: Branco, Preto, Vermelho, Rosa, Laranja, Amarelo, Verde, Azul, Roxo/Violeta, Marrom, Dourado, Prateado
+Cada lição tem três atos — **Ensino → Prática → A Página** — e termina com uma página escrita pela própria pessoa, guardada no lugar certo do app (feitiço, registro, diário ou junto de uma ferramenta). Completar uma trilha "encaderna o capítulo" no grimório. A primeira lição de cada trilha é gratuita
+
+### 🕯️ Rituais guiados
+46 rituais passo a passo (sabbats, fases lunares e momentos mágicos) com player guiado que registra a prática
+
+### 📊 Estatísticas Mágicas
+Total de práticas por período, grid por categoria, sequências (prática diária e gratidão), calendário do mês com os dias praticados, manifestações e o progresso do Grimório Vivo — com atalho para as Jornadas Mágicas (conquistas)
+
+---
+
+## Conteúdo curado
+
+Todo o conteúdo editorial existe nos três idiomas, com paridade verificada por testes bloqueantes no CI:
+
+| Seção | Entradas |
+|---|---|
+| Cristais · Ervas · Cores | 18 cada |
+| Deusas | 15 |
+| Anjos · Demônios | 16 · 15 |
+| Arquétipos · Símbolos Sagrados | 11 cada |
+| Metais | 9 |
+| Runas | 24 |
+| Cartas de tarot | 78 |
+| Rituais guiados | 46 |
+| Lições das trilhas | 88 |
+| Chaves de interface | 1.400 × 4 arquivos |
+
+---
+
+## Planos
+
+**Free** — enciclopédia completa, calendário lunar, sabbats, grimório pessoal, diários, ferramentas de adivinhação com limites diários e a primeira lição de cada trilha. Anúncios intersticiais aparecem antes de resultados (tarot, runas, oráculo, pêndulo, feitiço por IA, conselheiro, mapa astral), com intervalo mínimo de 3 minutos e teto diário
+
+**Premium** — mapa astral e perfil mágico, interpretação de sonhos por IA, quiromancia, enciclopédia pessoal, trilhas completas, rituais guiados e sincronização na nuvem. Assinaturas via RevenueCat
+
+O acesso a cada recurso é decidido em um lugar só: `AppFeature` + `FeatureAccess` (`lib/features/auth/data/models/feature_access.dart`)
+
+---
+
+## Inteligência artificial
+
+Na interface o recurso se chama **Conselheiro Místico** — a sigla "IA" nunca aparece para a pessoa usuária
+
+O provedor de cada ponto do app é **parametrizado** no topo de `lib/core/ai/ai_service.dart`:
+
+```dart
+static const AiProvider defaultTextProvider = AiProvider.groq;   // texto
+static const Map<String, AiProvider> textProviders = {};         // exceções por tag
+static const AiProvider visionProvider = AiProvider.gemini;      // foto
+```
+
+- **Texto** (sonhos, conselheiro, feitiços, tarot, numerologia, clima, afirmações, perfil mágico, verbetes): Groq `llama-3.3-70b-versatile`
+- **Visão** (quiromancia, identificação de plantas/pedras/cores): Google Gemini `gemini-3.6-flash`
+- Toda chamada cai automaticamente para o outro provedor se o principal falhar, e os logs de debug (tag `AI`) registram quem respondeu
+- Os prompts vivem por idioma em `lib/core/ai/prompts/ai_prompts_{pt,en,es}.dart`, com tratamento de gênero
+
+---
+
+## Identidade visual
+
+**Mood:** Whimsical + Whimsigoth + Pastel Goth — magia aconchegante, bruxa de quarto com velas, gatos e plantas
+
+O app tem **6 temas selecionáveis** (Vinho Orquídea, Azul Celeste, Esmeralda Jade, Ardósia Lavanda, Clássico e Lavanda Névoa). As cores **nunca** são escritas direto no código: vêm sempre dos tokens do tema via `context.gc.*` — `lilac`, `pink`, `mint`, `starYellow`, `textPrimary`, `textSecondary`, `surface`, `alert`, `success`
+
+**Tipografia:** Nunito no corpo e Cinzel Decorative nos títulos ornamentais (nomes de verbetes, capa do índice)
+
+---
 
 ## Arquitetura
 
-O app foi desenvolvido seguindo princípios de Clean Architecture e Feature-First:
+Clean Architecture + Feature-First: cada módulo carrega os próprios `data/` (models, repositories, data_sources) e `presentation/` (providers, pages, widgets)
 
 ```
 lib/
 ├── core/
-│   ├── database/         # SQLite database helper
-│   ├── theme/            # App theme e paleta de cores
-│   └── widgets/          # Componentes UI reutilizáveis
+│   ├── ai/              # AIService (provedores parametrizados) + prompts por idioma
+│   ├── content/         # ContentLocale: seleciona o conteúdo do idioma ativo
+│   ├── database/        # SQLite (v18) + migrações aditivas
+│   ├── i18n/            # Gênero e helpers de linguagem
+│   ├── navigation/      # Deep links e EncyclopediaSection (ordem canônica)
+│   ├── services/        # Anúncios, sync, notificações, pagamentos, logs
+│   ├── theme/           # Presets de tema e tokens de cor
+│   └── widgets/         # MagicalCard, MagicalFAB, Salem (mascote), tour...
 │
-├── features/
-│   ├── home/             # Tela principal e navegação
-│   ├── lunar/            # Calendário lunar
-│   │   ├── data/
-│   │   └── presentation/
-│   │       ├── providers/
-│   │       └── pages/
-│   │
-│   ├── grimoire/         # Grimório digital
-│   │   ├── data/
-│   │   │   ├── models/
-│   │   │   └── repositories/
-│   │   └── presentation/
-│   │       ├── providers/
-│   │       └── pages/
-│   │
-│   ├── diary/            # Diários (sonhos e desejos)
-│   │   ├── data/
-│   │   │   ├── models/
-│   │   │   └── repositories/
-│   │   └── presentation/
-│   │       ├── providers/
-│   │       └── pages/
-│   │
-│   └── encyclopedia/     # Enciclopédia de cristais e cores
-│       ├── data/
-│       │   ├── models/
-│       │   └── data_sources/
-│       └── presentation/
-│           ├── providers/
-│           └── pages/
+├── features/            # 22 módulos
+│   ├── your_day/        # A aba inicial: ritos, clima, atalhos
+│   ├── encyclopedia/    # 15 seções + enciclopédia pessoal
+│   ├── grimoire/        # Feitiços, registros, ferramentas
+│   ├── diary/           # Sonhos, desejos, gratidão, afirmações, escrita livre
+│   ├── learning/        # Grimório Vivo (trilhas e lições)
+│   ├── guided_rituals/  # Rituais passo a passo
+│   ├── astrology/       # Mapa astral, perfil mágico, clima
+│   ├── tarot/ runes/ divination/ sigils/ numerology/ palmistry/
+│   ├── lunar/ sun/ wheel_of_year/
+│   ├── analytics/ journeys/   # Estatísticas e conquistas
+│   ├── auth/ subscription/    # Conta, planos e paywall
+│   ├── home/ settings/
 │
+├── l10n/                # 4 arquivos ARB (pt, pt_BR, en, es)
 └── main.dart
 ```
 
-## Tecnologias Utilizadas
+---
 
-### Framework e Linguagem
-- Flutter 3.x
-- Dart 3.x
+## Tecnologias
 
-### Gerenciamento de Estado
-- Provider
+**Flutter 3.x · Dart 3** com `provider` para estado
 
-### Persistência Local
-- SQLite (sqflite)
-- SharedPreferences
-
-### Cálculos Lunares
-- lunar package (cálculos de fases da lua)
-
-### Utilitários
-- intl (formatação de datas)
-- uuid (geração de IDs únicos)
-- google_fonts (tipografia Nunito)
-
-### Notificações
-- flutter_local_notifications
-- timezone
-
-## Como Executar
-
-### Pré-requisitos
-- Flutter SDK 3.0 ou superior
-- Android Studio / Xcode (para emuladores)
-- Dispositivo físico ou emulador Android/iOS
-
-### Instalação
-
-1. Clone o repositório:
-```bash
-git clone https://github.com/laylamonteiro/witchy-app.git
-cd witchy-app
-```
-
-2. Instale as dependências:
-```bash
-flutter pub get
-```
-
-3. Execute o app:
-```bash
-flutter run
-```
-
-## Como configurar os secrets do GitHub Actions (pipeline do APK)
-
-Para a esteira de build e envio de APK funcionar, configure os secrets do repositório no GitHub:
-
-1. Acesse **Settings → Secrets and variables → Actions** no repositório.
-2. Clique em **New repository secret** e crie os seguintes itens obrigatórios (fornecidos pelo seu provedor SMTP):
-   - `EMAIL_SERVER` (endereço do servidor SMTP, ex.: `smtp.gmail.com` ou `smtp.office365.com`)
-   - `EMAIL_PORT` (porta de envio, geralmente `587` para STARTTLS ou `465` para SSL)
-   - `EMAIL_USERNAME`
-   - `EMAIL_PASSWORD`
-   - `EMAIL_FROM`
-3. (Opcional) Crie o secret `APK_RECIPIENTS` com o(s) e-mail(s) destino separados por vírgula para definir explicitamente quem recebe o APK. Se não definir, a pipeline tenta usar o e-mail do push (pusher/autor/committer) e, se indisponível, usa o endereço `noreply` do seu usuário GitHub.
-4. Salve cada secret. Após isso, basta rodar o workflow via push para `main` ou manualmente em **Actions → Build and Send Android APK → Run workflow**.
-
-> Dica rápida: se você só tem o endereço de e-mail, consulte a documentação do seu provedor para descobrir o host e a porta SMTP. Exemplos comuns:
-> - Gmail / Google Workspace: `EMAIL_SERVER=smtp.gmail.com`, `EMAIL_PORT=587` (requer "App Password" com 2FA ativo).
-> - Outlook/Office 365: `EMAIL_SERVER=smtp.office365.com`, `EMAIL_PORT=587`.
-> - Provedores de hospedagem (cPanel, etc.): procure por "Configurações SMTP" no painel, o host costuma ser `mail.seudominio.com` e a porta 587.
-
-## Diretrizes de Desenvolvimento
-
-### Tradução (i18n) é obrigatória em TODA alteração
-
-O app é multilíngue (pt, pt_BR, en, es). **Nenhum texto visível ao usuário
-pode ser escrito direto no código.** Ao criar ou alterar qualquer elemento
-de interface:
-
-1. **Adicione a chave nos 4 arquivos ARB** em `lib/l10n/`:
-   `app_pt.arb` (template), `app_pt_BR.arb`, `app_en.arb` e `app_es.arb`.
-   Os quatro devem ter sempre o mesmo conjunto de chaves.
-2. **Use no código** via `AppLocalizations.of(context)!.suaChave`
-   (import: `package:grimorio_de_bolso/l10n/generated/app_localizations.dart`).
-   Os getters são gerados automaticamente pelo `flutter run` / `flutter gen-l10n`.
-3. **Placeholders**: valores dinâmicos usam `{nome}` no ARB e exigem um
-   bloco `@suaChave` com `placeholders` no `app_pt.arb` (template).
-4. **Nunca use `const`** em um widget/lista que contenha um valor de
-   `AppLocalizations` — é valor de runtime e quebra o build.
-5. **Widgets sem `BuildContext`** (ex.: `CustomPainter`, helpers estáticos)
-   recebem os textos prontos pelo construtor — nunca chame
-   `AppLocalizations.of(context)` onde não há `context` válido.
-6. **Conteúdo editorial** (verbetes da Enciclopédia, cartas, runas,
-   números, trilhas, feitiços, prompts de IA) vive em arquivos por locale —
-   `*_pt.dart` / `*_en.dart` / `*_es.dart` — selecionados em runtime pelo
-   `ContentLocale` (`lib/core/content/content_locale.dart`). Ao alterar
-   conteúdo, edite as TRÊS variantes; a paridade (mesmas chaves/contagens)
-   é verificada por testes bloqueantes no CI (`test/*_parity_test.dart`).
-7. A IA (Conselheiro Místico) responde no idioma ativo: os prompts por
-   idioma vivem em `lib/core/ai/prompts/ai_prompts_{pt,en,es}.dart` e usam
-   `GenderText`/helpers de gênero por idioma. Conteúdo escrito pela pessoa
-   usuária NUNCA é traduzido.
-8. **Identidades persistidas são invariantes**: seeds de feitiços/
-   afirmações ficam congeladas em PT (tradução só na exibição, via
-   `SpellLocalizer`/`AffirmationLocalizer`); ids, enums e slugs de assets
-   não mudam com o idioma.
-9. **Prova de completude**: `bash scripts/check_hardcoded_pt.sh` precisa
-   passar limpo (é bloqueante no CI de branch) e
-   `bash scripts/check_arb_sync.sh` garante a paridade dos ARBs.
-
-#### Como adicionar um novo idioma
-
-1. Crie `lib/l10n/app_<código>.arb` com TODAS as chaves do template
-   `app_pt.arb` traduzidas.
-2. Adicione o locale em `LanguageProvider.supportedLocales` e no seletor
-   (`settings_page.dart`).
-3. Acrescente o parâmetro do novo idioma em `ContentLocale.select` e crie
-   as variantes `*_<código>.dart` de cada arquivo de conteúdo (o compilador
-   aponta todos os pontos pendentes).
-4. Crie `ai_prompts_<código>.dart` e os títulos do clima diário no novo
-   idioma (`daily_weather_content_<código>.dart` + `looksComplete`).
-5. Estenda os testes de paridade e o smoke (`test/i18n_smoke_test.dart`).
-
-> O seletor de idioma (pt-BR/EN/ES) está ativo nas Configurações. O idioma
-> inicial segue o do dispositivo (fallback pt-BR) e a escolha manual fica
-> persistida; trocar o idioma reagenda as notificações no novo idioma.
-
-### Outras regras do projeto
-
-- **Cores**: sempre via tema (`context.gc.*`), nunca hardcoded — o app tem
-  presets de tema selecionáveis.
-- **Termos de IA**: na interface o recurso se chama "Conselheiro Místico";
-  nunca exiba "IA/AI" para o usuário (painel de admin pode ser técnico).
-- **Novas funcionalidades místicas/IA**: exclusivas Premium (paywall via
-  `FeatureAccess`/`PremiumUpgradeSheet`); as pré-existentes mantêm limites
-  Free diários.
-- **Banco de dados**: migrações SQLite sempre aditivas (nova versão em
-  `database_helper.dart`) + espelho idempotente em
-  `supabase/restore_database.sql`; novas tabelas sincronizáveis entram em
-  `SyncEntity`/`SupabaseTables` e nas listas de `claimLegacyData`/
-  `clearAllTables`.
-- **Credenciais de admin**: via `--dart-define` (`ADMIN_EMAIL`/
-  `ADMIN_PASSWORD`, secrets do GitHub Actions); em builds de debug
-  `admin`/`admin` funciona automaticamente.
-
-## Próximas Fases
-
-### Fase 2 - Backend + Conta + IA Básica
-- Cadastro/login de usuários
-- Sincronização na nuvem
-- Assistente IA para criação de feitiços
-- Feature toggles para planos
-
-### Fase 3 - Premium 1.0
-- Monetização com assinaturas
-- Planos free vs premium
-- Limites ajustados por plano
-- Backup em nuvem
-
-### Fase 4 - Premium 2.0: Astrologia
-- Mapa astral completo
-- Perfil mágico personalizado
-- Clima mágico diário
-- Jornadas gamificadas
-
-### Fase 5 - Refinos e Conteúdo
-- Analytics mágicos
-- Busca natural por IA
-- Runas e divinação
-- Packs mensais de conteúdo
-
-## Contribuindo
-
-Este é um projeto em desenvolvimento. Sugestões e melhorias são bem-vindas!
-
-## Licença
-
-Este projeto está sob licença proprietária. Todos os direitos reservados.
-
-## Contato
-
-Para dúvidas ou sugestões sobre o app:
-- GitHub: [laylamonteiro](https://github.com/laylamonteiro)
+| Área | Pacotes |
+|---|---|
+| Persistência | `sqflite`, `shared_preferences`, `path_provider` |
+| Backend | `supabase_flutter` (auth + sync), `firebase_auth` + `google_sign_in` (login social) |
+| Assinaturas | `purchases_flutter` / `purchases_ui_flutter` (RevenueCat) |
+| Anúncios | `google_mobile_ads` (AdMob) |
+| IA | `dio` (Groq e Gemini via REST) |
+| Astrologia | `sweph` (Swiss Ephemeris), `geocoding`, `geolocator` |
+| Lua | `lunar` |
+| Mídia | `image_picker`, `image_cropper`, `flutter_image_compress`, `gal` |
+| Interface | `google_fonts`, `flutter_svg`, `flutter_markdown`, `flutter_drawing_board` |
+| Sistema | `flutter_local_notifications`, `timezone`, `share_plus`, `url_launcher`, `package_info_plus` |
 
 ---
 
-Feito com magia e código por bruxas, para bruxas
+## Como executar
+
+**Pré-requisitos:** Flutter SDK 3.24+, Android Studio ou Xcode, e um aparelho ou emulador
+
+```bash
+git clone https://github.com/laylamonteiro/witchy-app.git
+cd witchy-app
+flutter pub get
+flutter run
+```
+
+### Credenciais
+
+Os arquivos de credencial são **gitignorados** e precisam existir localmente:
+
+```
+lib/core/ai/groq_credentials.dart
+lib/core/ai/gemini_credentials.dart
+lib/features/astrology/data/services/prokerala_credentials.dart
+```
+
+Cada um expõe uma classe com as chaves (ex.: `class GroqCredentials { static const apiKey = '...'; }`). No CI eles são gerados vazios — analyze e testes não chamam APIs reais
+
+Admin e AdMob entram por `--dart-define`:
+
+```bash
+flutter run \
+  --dart-define=ADMIN_EMAIL=... \
+  --dart-define=ADMIN_PASSWORD=... \
+  --dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=...
+```
+
+Em builds de debug, `admin`/`admin` funciona automaticamente. Sem o id do AdMob, o app usa os anúncios de teste do Google
+
+---
+
+## CI/CD
+
+Dois workflows, ambos em `.github/workflows/`:
+
+**✅ `branch-validate.yml`** — gate de qualidade nas branches `claude/**`
+`flutter analyze` (bloqueante em erros e warnings) → testes de i18n e conteúdo (bloqueantes) → suíte completa (informativa) → paridade dos ARBs → scanner de português hardcoded. O build de APK debug só roda quando `android/` ou `pubspec` mudam, e pushes em sequência cancelam o run anterior — economia de minutos
+
+**🚀 `release-parallel.yml`** — push na `main`
+Incrementa a versão (patch + build: `2.0.1+102`, `2.0.2+103`...), valida, builda **APK e AAB em paralelo**, gera debug symbols e publica a GitHub Release. Major e minor sobem manualmente no `pubspec.yaml`
+
+**Scripts de apoio:**
+
+```bash
+bash scripts/check_arb_sync.sh       # paridade das chaves nos 4 ARBs
+bash scripts/check_hardcoded_pt.sh   # nenhum texto PT fora da camada de i18n
+```
+
+---
+
+## Diretrizes de desenvolvimento
+
+### Tradução (i18n) é obrigatória em TODA alteração
+
+O app é multilíngue (pt, pt_BR, en, es). **Nenhum texto visível ao usuário pode ser escrito direto no código.** Ao criar ou alterar qualquer elemento de interface:
+
+1. **Adicione a chave nos 4 arquivos ARB** em `lib/l10n/`: `app_pt.arb` (template), `app_pt_BR.arb`, `app_en.arb` e `app_es.arb` — os quatro devem ter sempre o mesmo conjunto de chaves
+2. **Use no código** via `AppLocalizations.of(context).suaChave` (import: `package:grimorio_de_bolso/l10n/generated/app_localizations.dart`); os getters são gerados pelo `flutter run` / `flutter gen-l10n`
+3. **Placeholders**: valores dinâmicos usam `{nome}` no ARB e exigem um bloco `@suaChave` com `placeholders` no template; plurais usam a sintaxe ICU (`{count, plural, one{...} other{...}}`)
+4. **Nunca use `const`** em um widget que contenha um valor de `AppLocalizations` — é valor de runtime e quebra o build
+5. **Widgets sem `BuildContext`** (ex.: `CustomPainter`, helpers estáticos) recebem os textos prontos pelo construtor
+6. **Conteúdo editorial** (verbetes, cartas, runas, números, trilhas, feitiços, prompts de IA) vive em arquivos por locale — `*_pt.dart` / `*_en.dart` / `*_es.dart` — selecionados em runtime pelo `ContentLocale`. Ao alterar conteúdo, edite as TRÊS variantes; a paridade é verificada por testes bloqueantes (`test/*_parity_test.dart`)
+7. **A IA responde no idioma ativo**: os prompts por idioma vivem em `lib/core/ai/prompts/` e usam os helpers de gênero. Conteúdo escrito pela pessoa usuária NUNCA é traduzido
+8. **Identidades persistidas são invariantes**: seeds de feitiços e afirmações ficam congeladas em PT (tradução só na exibição, via `SpellLocalizer`/`AffirmationLocalizer`); ids, enums e slugs de assets não mudam com o idioma
+
+#### Como adicionar um novo idioma
+
+1. Crie `lib/l10n/app_<código>.arb` com TODAS as chaves do template traduzidas
+2. Adicione o locale em `LanguageProvider.supportedLocales` e no seletor (`settings_page.dart`)
+3. Acrescente o parâmetro em `ContentLocale.select` e crie as variantes `*_<código>.dart` de cada arquivo de conteúdo — o compilador aponta todos os pontos pendentes
+4. Crie `ai_prompts_<código>.dart` e os títulos do clima diário no novo idioma
+5. Estenda os testes de paridade e o smoke (`test/i18n_smoke_test.dart`)
+
+### Outras regras do projeto
+
+- **Cores**: sempre via tema (`context.gc.*`), nunca hardcoded — o app tem 6 presets selecionáveis e cor fixa quebra em tema claro
+- **Termos de IA**: na interface o recurso se chama "Conselheiro Místico"; nunca exiba "IA/AI" para a pessoa usuária (o painel de admin pode ser técnico)
+- **Novas funcionalidades místicas ou de IA**: exclusivas Premium (paywall via `FeatureAccess`/`PremiumUpgradeSheet`); as pré-existentes mantêm limites Free diários
+- **Banco de dados**: migrações SQLite sempre aditivas (nova versão em `database_helper.dart`) + espelho idempotente em `supabase/restore_database.sql`; novas tabelas sincronizáveis entram em `SyncEntity`/`SupabaseTables` e nas listas de `claimLegacyData`/`clearAllTables`
+- **Salvar leva à entrada criada**: fluxos que geram um registro (sonho interpretado, leitura de quiromancia, feitiço de IA, verbete da enciclopédia) navegam direto para a página recém-criada em vez de travar na tela de origem
+- **Textos do app não terminam em ponto final** e nunca levam ponto antes de emoji
+
+---
+
+## Licença
+
+Projeto sob licença proprietária. Todos os direitos reservados
+
+## Contato
+
+GitHub: [@laylamonteiro](https://github.com/laylamonteiro)
+
+---
+
+Feito com magia e código por bruxas, para bruxas 🌙
