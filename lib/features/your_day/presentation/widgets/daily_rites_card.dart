@@ -9,20 +9,63 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../diary/data/models/gratitude_model.dart';
 import '../../../diary/presentation/providers/dream_provider.dart';
 import '../../../diary/presentation/providers/gratitude_provider.dart';
+import '../../../divination/presentation/pages/oracle_cards_page.dart';
+import '../../../divination/presentation/pages/pendulum_page.dart';
+import '../../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
+import '../../../palmistry/presentation/pages/palmistry_page.dart';
+import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../providers/daily_checkin_provider.dart';
 
 /// Os ritos de hoje: três práticas curtas que fecham o dia da Bruxa.
 ///
 /// A regra é atrito baixo — a gratidão se escreve aqui mesmo, o sonho vai
-/// para o diário onírico e a adivinhação abre o tarot. Concluir os três
-/// mantém a sequência viva, que é o que traz de volta amanhã.
+/// para o diário onírico e o terceiro slot REVEZA a cada dia entre as
+/// ferramentas (tarot, oráculo, quiromancia, runas, identificação na
+/// natureza, pêndulo), levando a pessoa a conhecer outras partes do app.
+/// Concluir os três mantém a sequência viva, que é o que traz de volta
+/// amanhã.
 ///
 /// Um rito só fica marcado quando a ação ACONTECEU: gratidão e sonho são
-/// lidos dos registros do dia (se existe a entrada, está feito) e o tarot é
-/// marcado pela própria tiragem. Tocar no rito apenas leva até a ação.
+/// lidos dos registros do dia (se existe a entrada, está feito) e o rito
+/// exploratório é marcado pela própria ferramenta ao concluir a ação.
+/// Tocar no rito apenas leva até lá.
 class DailyRitesCard extends StatelessWidget {
   const DailyRitesCard({super.key});
+
+  /// Emoji, rótulo e ação do rito exploratório do dia (emojis do
+  /// ShortcutRegistry, para a identidade se manter).
+  static (String, String, VoidCallback) _featuredSpec(
+    BuildContext context,
+    AppLocalizations l10n,
+    String riteId,
+  ) {
+    switch (riteId) {
+      case DailyRites.oracle:
+        return ('🃏', l10n.yourDayRiteOracle,
+            () => _push(context, const OracleCardsPage()));
+      case DailyRites.palmistry:
+        return ('🖐️', l10n.yourDayRitePalm,
+            () => _push(context, const PalmistryPage()));
+      case DailyRites.runes:
+        return (' ᚱ ', l10n.yourDayRiteRunes,
+            () => _push(context, const RuneReadingPage()));
+      case DailyRites.natureIdentify:
+        return ('🍃', l10n.yourDayRiteNature,
+            () => openNatureGuide(context));
+      case DailyRites.pendulum:
+        return (' ⟟ ', l10n.yourDayRitePendulum,
+            () => _push(context, const PendulumPage()));
+      case DailyRites.divination:
+      default:
+        return ('🎴', l10n.yourDayRiteTarot,
+            () => _push(context, const TarotPage()));
+    }
+  }
+
+  static void _push(BuildContext context, Widget page) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +80,13 @@ class DailyRitesCard extends StatelessWidget {
         .any((g) => _isToday(g.createdAt));
     final dreamDone =
         context.watch<DreamProvider>().dreams.any((d) => _isToday(d.createdAt));
-    final tarotDone = checkin.isRiteDone(DailyRites.divination);
+    final featuredId = DailyRites.featuredToday();
+    final featured = _featuredSpec(context, l10n, featuredId);
+    final featuredDone = checkin.isRiteDone(featuredId);
 
-    final total = DailyRites.all.length;
-    final done = [gratitudeDone, dreamDone, tarotDone].where((e) => e).length;
+    const total = 3;
+    final done =
+        [gratitudeDone, dreamDone, featuredDone].where((e) => e).length;
     final complete = done == total;
     final accent = complete ? context.gc.mint : context.gc.lilac;
 
@@ -85,14 +131,12 @@ class DailyRitesCard extends StatelessWidget {
             onStart: () =>
                 DeepLinkService.instance.dispatch(AppDeepLink.dreamsDiary),
           ),
+          // Terceiro slot rotativo: quem marca é a ferramenta, lá dentro.
           _RiteTile(
-            done: tarotDone,
-            emoji: '🎴',
-            label: l10n.yourDayRiteTarot,
-            // Quem marca é a tiragem, feita lá dentro.
-            onStart: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const TarotPage()),
-            ),
+            done: featuredDone,
+            emoji: featured.$1,
+            label: featured.$2,
+            onStart: featured.$3,
           ),
           const SizedBox(height: 6),
           AnimatedSwitcher(

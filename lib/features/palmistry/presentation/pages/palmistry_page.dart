@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -12,7 +13,9 @@ import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/presentation/pages/free_writing_tab.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 /// Leitura de Mãos (Quiromancia) — exclusiva Premium.
 ///
@@ -105,6 +108,12 @@ class _PalmistryPageState extends State<PalmistryPage> {
       setState(() => _reading = reading);
       // Só conta quando a leitura foi gerada com sucesso.
       await context.read<AuthProvider>().incrementPalmistryReadings();
+      // A leitura saiu: se a quiromancia é o rito de hoje, está cumprida.
+      if (mounted) {
+        unawaited(context
+            .read<DailyCheckinProvider>()
+            .completeRite(DailyRites.palmistry));
+      }
     } catch (e) {
       if (!mounted) return;
       final message = e is AiRateLimitException
@@ -128,16 +137,38 @@ class _PalmistryPageState extends State<PalmistryPage> {
     final now = DateTime.now();
     final date = '${now.day.toString().padLeft(2, '0')}/'
         '${now.month.toString().padLeft(2, '0')}/${now.year}';
-    await context.read<FreeWritingProvider>().save(
-          FreeWritingModel(content: '🖐️ ${AppLocalizations.of(context).palmReadingHeader} — $date\n\n$reading'),
-        );
-    if (!mounted) return;
+    // _saved marcado antes do await bloqueia toques repetidos no botão.
     setState(() => _saved = true);
+    final writing = FreeWritingModel(
+      content:
+          '🖐️ ${AppLocalizations.of(context).palmReadingHeader} — $date\n\n$reading',
+    );
+    final provider = context.read<FreeWritingProvider>();
+    await provider.save(writing);
+    if (!mounted) return;
+    if (provider.error != null) {
+      // save não lança: sinaliza falha via provider.error. Reabilita o
+      // botão para nova tentativa em vez de navegar para uma reflexão
+      // inexistente.
+      setState(() => _saved = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.error!),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context).palmSavedToReflections),
         backgroundColor: context.gc.success,
       ),
+    );
+    // Leva direto à reflexão recém-criada (voltar dela cai na tela
+    // anterior, sem ter que procurar manualmente na Escrita Livre).
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => FreeWritingTab(initial: writing)),
     );
   }
 

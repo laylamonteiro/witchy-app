@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -404,6 +405,7 @@ class _LessonPageState extends State<LessonPage> {
         ),
         body: Column(
           children: [
+            _buildLessonHeader(context),
             _buildStepper(context),
             Expanded(
               child: AnimatedSwitcher(
@@ -421,6 +423,111 @@ class _LessonPageState extends State<LessonPage> {
     );
   }
 
+  /// Cabeçalho persistente da lição: título completo (o do AppBar pode
+  /// truncar), posição na trilha e o XP que a conclusão vale — visível em
+  /// TODOS os passos, não só no Ensino.
+  Widget _buildLessonHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final index =
+        widget.trail.lessons.indexWhere((l) => l.id == widget.lesson.id);
+    final total = widget.trail.lessons.length;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(context.gc.surface, context.gc.lilac, 0.22)!,
+            Color.lerp(context.gc.surface, context.gc.pink, 0.18)!,
+          ],
+        ),
+        border: Border.all(color: context.gc.lilac.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(widget.trail.emoji, style: const TextStyle(fontSize: 26)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.lesson.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: context.gc.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${l10n.learnLessonOfTrail(index + 1, total)} · '
+                      '${widget.trail.title}',
+                      style: TextStyle(
+                        color: context.gc.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: context.gc.starYellow.withValues(alpha: 0.15),
+                ),
+                child: Text(
+                  '+${LearningProvider.xpPerPage} XP',
+                  style: TextStyle(
+                    color: context.gc.starYellow,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Progresso na trilha: a lição atual pintada sobre o total.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: LinearProgressIndicator(
+              value: total == 0 ? 0 : (index + 1) / total,
+              minHeight: 3,
+              backgroundColor: context.gc.surfaceBorder,
+              valueColor: AlwaysStoppedAnimation(context.gc.lilac),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Toque nos passos: voltar é livre, a Prática é sempre acessível e A
+  /// Página exige a prática marcada — com aviso em vez de toque morto.
+  void _onStepTap(int i) {
+    if (i == _step) return;
+    if (i <= 1 || _practiceDone) {
+      setState(() => _step = i);
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).learnCompletePracticeFirst),
+        backgroundColor: context.gc.warning,
+      ),
+    );
+  }
+
   Widget _buildStepper(BuildContext context) {
     final labels = [
       AppLocalizations.of(context).learnStepTeaching,
@@ -428,30 +535,79 @@ class _LessonPageState extends State<LessonPage> {
       AppLocalizations.of(context).learnStepPage,
     ];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
       child: Row(
         children: [
           for (var i = 0; i < labels.length; i++) ...[
             Expanded(
               child: InkWell(
-                onTap: i < _step ? () => setState(() => _step = i) : null,
+                onTap: () => _onStepTap(i),
                 borderRadius: BorderRadius.circular(8),
                 child: Column(
                   children: [
-                    Text(
-                      labels[i],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight:
-                            i == _step ? FontWeight.bold : FontWeight.normal,
-                        color: i <= _step
-                            ? context.gc.lilac
-                            : context.gc.textSecondary,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Bolinha numerada: check nos passos concluídos,
+                        // preenchida no atual — "onde estou" deixa de
+                        // parecer barra de progresso.
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 220),
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i < _step
+                                ? context.gc.mint.withValues(alpha: 0.18)
+                                : i == _step
+                                    ? context.gc.lilac
+                                    : Colors.transparent,
+                            border: Border.all(
+                              color: i < _step
+                                  ? context.gc.mint
+                                  : i == _step
+                                      ? context.gc.lilac
+                                      : context.gc.surfaceBorder,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: i < _step
+                                ? Icon(Icons.check,
+                                    size: 12, color: context.gc.mint)
+                                : Text(
+                                    '${i + 1}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: i == _step
+                                          ? context.gc.onPrimary
+                                          : context.gc.textSecondary,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            labels[i],
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: i == _step
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: i <= _step
+                                  ? context.gc.lilac
+                                  : context.gc.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 6),
                     Container(
-                      height: 4,
+                      height: 3,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(2),
                         color: i <= _step
@@ -496,56 +652,8 @@ class _LessonPageState extends State<LessonPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Cabeçalho colorido da lição
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.lerp(context.gc.surface, context.gc.lilac, 0.22)!,
-                  Color.lerp(context.gc.surface, context.gc.pink, 0.18)!,
-                ],
-              ),
-              border: Border.all(
-                color: context.gc.lilac.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Row(
-              children: [
-                Text(widget.trail.emoji,
-                    style: const TextStyle(fontSize: 34)),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.lesson.title,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: context.gc.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        widget.lesson.pagePurpose,
-                        style: TextStyle(
-                          color: context.gc.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Parágrafos do ensino em seções coloridas com título
+          // Parágrafos do ensino em seções coloridas com título (o
+          // cabeçalho da lição vive acima do stepper, em todos os passos)
           for (var i = 0; i < paragraphs.length; i++)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -649,9 +757,72 @@ class _LessonPageState extends State<LessonPage> {
     );
   }
 
+  /// Quebra o "Como fazer" em passos numerados escaneáveis. As práticas
+  /// são redigidas como frases sequenciais ("Primeiro... Depois... Por
+  /// fim..."); com 3+ frases, a lista numerada é mais fácil de seguir do
+  /// que o parágrafo corrido. Textos curtos ou já estruturados pelo autor
+  /// (com quebras de linha) permanecem como estão.
+  static List<String>? _practiceStepsOf(String text) {
+    if (text.contains('\n')) return null;
+    final sentences = text
+        .split(RegExp(r'(?<=[.!?…])\s+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (sentences.length < 3) return null;
+    return [
+      // Sem ponto final no fim de cada passo (padrão de texto do app).
+      for (final s in sentences) s.replaceFirst(RegExp(r'\.$'), ''),
+    ];
+  }
+
+  Widget _practiceStepRow(BuildContext context, int number, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            margin: const EdgeInsets.only(top: 1),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: context.gc.mint.withValues(alpha: 0.15),
+              border: Border.all(
+                color: context.gc.mint.withValues(alpha: 0.6),
+              ),
+            ),
+            child: Center(
+              child: Text(
+                '$number',
+                style: TextStyle(
+                  color: context.gc.mint,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(height: 1.5, fontSize: 15),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPractice(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tool = _toolFor(l10n);
+    final steps = _practiceStepsOf(widget.lesson.practice);
 
     return SingleChildScrollView(
       key: const ValueKey('practice'),
@@ -680,13 +851,22 @@ class _LessonPageState extends State<LessonPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.lesson.practice,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(height: 1.6, fontSize: 15),
-                ),
+                if (steps != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = 0; i < steps.length; i++)
+                        _practiceStepRow(context, i + 1, steps[i]),
+                    ],
+                  )
+                else
+                  Text(
+                    widget.lesson.practice,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(height: 1.6, fontSize: 15),
+                  ),
                 if (tool != null) ...[
                   const SizedBox(height: 14),
                   Container(
@@ -762,21 +942,43 @@ class _LessonPageState extends State<LessonPage> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: CheckboxListTile(
-              value: _practiceDone,
-              onChanged: (v) => setState(() => _practiceDone = v ?? false),
-              contentPadding: EdgeInsets.zero,
-              activeColor: context.gc.lilac,
-              title: Text(
-                l10n.learnDidPractice,
-                style: TextStyle(
-                  color: context.gc.textPrimary,
-                  fontSize: 14,
+            // O check é o portão do próximo passo: ganha moldura própria
+            // (menta quando marcado) e resposta tátil, para a ligação com
+            // o botão abaixo ficar visível.
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: _practiceDone
+                    ? context.gc.mint.withValues(alpha: 0.08)
+                    : context.gc.lilac.withValues(alpha: 0.06),
+                border: Border.all(
+                  color: _practiceDone
+                      ? context.gc.mint.withValues(alpha: 0.55)
+                      : context.gc.lilac.withValues(alpha: 0.35),
                 ),
               ),
-              controlAffinity: ListTileControlAffinity.leading,
+              child: CheckboxListTile(
+                value: _practiceDone,
+                onChanged: (v) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _practiceDone = v ?? false);
+                },
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8),
+                activeColor: context.gc.mint,
+                title: Text(
+                  l10n.learnDidPractice,
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
+                    fontSize: 14,
+                  ),
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
             ),
           ),
+          const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: ElevatedButton.icon(
@@ -786,6 +988,18 @@ class _LessonPageState extends State<LessonPage> {
               label: Text(l10n.learnWriteMyPage),
             ),
           ),
+          if (!_practiceDone) ...[
+            const SizedBox(height: 6),
+            // Explica o botão desabilitado em vez de deixá-lo mudo.
+            Text(
+              l10n.learnMarkPracticeHint,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: context.gc.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
         ],
       ),
@@ -873,7 +1087,10 @@ class _LessonPageState extends State<LessonPage> {
                             ),
                           )
                         : const Icon(Icons.menu_book, size: 18),
-                    label: Text(l10n.learnSealPage),
+                    // A recompensa aparece na hora da decisão, não só no
+                    // selo de conclusão.
+                    label: Text(
+                        '${l10n.learnSealPage} · +${LearningProvider.xpPerPage} XP'),
                   ),
                 ),
               ],

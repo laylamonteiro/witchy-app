@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ import '../providers/encyclopedia_provider.dart';
 import 'color_detail_page.dart';
 import 'crystal_detail_page.dart';
 import 'herb_detail_page.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 /// Adicionar entrada pessoal à enciclopédia (Premium): a Bruxa fotografa a
 /// erva/pedra/cor, a IA identifica, ela confirma ou corrige o nome, a IA
@@ -131,6 +133,13 @@ class _AddEntryPageState extends State<AddEntryPage> {
         _confidence = result['confidence']?.toString();
         _nameController.text = identified ? '${result['name'] ?? ''}' : '';
       });
+      // Identificou de verdade: se a identificação na natureza é o rito de
+      // hoje, está cumprida.
+      if (identified) {
+        unawaited(context
+            .read<DailyCheckinProvider>()
+            .completeRite(DailyRites.natureIdentify));
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {

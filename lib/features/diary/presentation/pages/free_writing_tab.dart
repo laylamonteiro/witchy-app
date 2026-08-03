@@ -12,7 +12,11 @@ import 'free_writings_list_page.dart';
 /// Superfície fluida e sem pressão — a pessoa simplesmente escreve. O texto é
 /// salvo apenas por ação explícita, guardado no histórico e sincronizado.
 class FreeWritingTab extends StatefulWidget {
-  const FreeWritingTab({super.key});
+  /// Reflexão a abrir já carregada no canvas (ex.: leitura de quiromancia
+  /// recém-salva). Null = canvas em branco, comportamento da aba do Diário.
+  final FreeWritingModel? initial;
+
+  const FreeWritingTab({super.key, this.initial});
 
   @override
   State<FreeWritingTab> createState() => _FreeWritingTabState();
@@ -29,6 +33,14 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
   @override
   void initState() {
     super.initState();
+    // Preenche antes de registrar o listener para não disparar setState
+    // durante o initState.
+    final initial = widget.initial;
+    if (initial != null) {
+      _current = initial;
+      _originalContent = initial.content;
+      _controller.text = initial.content;
+    }
     _controller.addListener(_onChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FreeWritingProvider>().loadFreeWritings();

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/utils/accents.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +10,11 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../grimoire/data/models/spell_model.dart';
 import '../../../grimoire/presentation/pages/user_spells_list_page.dart';
+import '../../../journeys/presentation/pages/journeys_page.dart';
+import '../../../learning/presentation/providers/learning_provider.dart';
+import '../../../your_day/data/daily_checkin_repository.dart';
 import '../../../diary/presentation/pages/dreams_list_page.dart';
 import '../../../diary/presentation/pages/gratitudes_list_page.dart';
 import '../../../diary/presentation/pages/affirmations_list_page.dart';
@@ -35,8 +42,26 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     _loadStats();
   }
 
+  /// Tabelas que contam como "prática" — a MESMA lista alimenta o total do
+  /// herói, os períodos (hoje/semana/mês) e o calendário de dias, para os
+  /// números baterem entre si e com a soma dos cards do grid.
+  static const List<String> _practiceTables = [
+    'spells',
+    'dreams',
+    'gratitudes',
+    'affirmations',
+    'sigils',
+    'rune_readings',
+    'oracle_readings',
+    'pendulum_consultations',
+    'desires',
+  ];
+
   Future<void> _loadStats() async {
     setState(() => _isLoading = true);
+
+    // O XP de práticas vem do banco: recalcula ao abrir/atualizar a tela.
+    unawaited(context.read<LearningProvider>().refreshPracticeXp());
 
     try {
       final authProvider = context.read<AuthProvider>();
@@ -57,12 +82,20 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       final pendulumCount =
           await _countRecords(db, 'pendulum_consultations', userId);
 
-      // Estatísticas por período
-      final spellsThisMonth =
-          await _countRecordsThisMonth(db, 'spells', userId);
-      final dreamsThisWeek = await _countRecordsThisWeek(db, 'dreams', userId);
-      final gratitudesToday =
-          await _countRecordsToday(db, 'gratitudes', userId);
+      // Períodos: TODAS as práticas em cada janela (hoje ⊆ semana ⊆ mês*),
+      // não uma tabela diferente por período como era antes.
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final startOfWeekDay = now.subtract(Duration(days: now.weekday - 1));
+      final startOfWeek =
+          DateTime(startOfWeekDay.year, startOfWeekDay.month, startOfWeekDay.day);
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final practicesToday = await _countAllSince(db, userId, startOfDay);
+      final practicesThisWeek = await _countAllSince(db, userId, startOfWeek);
+      final practicesThisMonth = await _countAllSince(db, userId, startOfMonth);
+
+      // Dias do mês corrente com pelo menos uma prática (calendário).
+      final practiceDays = await _practiceDaysThisMonth(db, userId);
 
       // Desejos por status
       final desiresPending = await _countDesiresByStatus(db, userId, 'open');
@@ -72,8 +105,10 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       // Feitiços por tipo
       final spellsByType = await _getSpellsByType(db, userId);
 
-      // Streak de gratidão
+      // Streaks: gratidão + prática diária (check-in do Seu Dia)
       final gratitudeStreak = await _calculateGratitudeStreak(db, userId);
+      final checkinStreak =
+          await DailyCheckinRepository().currentStreak(userId);
 
       if (!mounted) return;
       setState(() {
@@ -89,9 +124,10 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           'oracleReadings': oracleReadingsCount,
           'pendulum': pendulumCount,
           // Por período
-          'spellsThisMonth': spellsThisMonth,
-          'dreamsThisWeek': dreamsThisWeek,
-          'gratitudesToday': gratitudesToday,
+          'practicesToday': practicesToday,
+          'practicesThisWeek': practicesThisWeek,
+          'practicesThisMonth': practicesThisMonth,
+          'practiceDays': practiceDays,
           // Desejos
           'desiresPending': desiresPending,
           'desiresManifested': desiresManifested,
@@ -99,14 +135,17 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           'spellsByType': spellsByType,
           // Streaks
           'gratitudeStreak': gratitudeStreak,
-          // Total de práticas
+          'checkinStreak': checkinStreak,
+          // Total de práticas = soma dos cards do grid (mesmo critério).
           'totalPractices': spellsCount +
               dreamsCount +
               gratitudesCount +
               affirmationsCount +
+              sigilsCount +
               runeReadingsCount +
               oracleReadingsCount +
-              pendulumCount,
+              pendulumCount +
+              desiresCount,
         };
         _isLoading = false;
       });
@@ -114,6 +153,65 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       if (mounted) setState(() => _isLoading = false);
       debugPrint('Erro ao carregar estatísticas: $e');
     }
+  }
+
+  /// Soma as práticas de todas as tabelas criadas a partir de [since].
+  Future<int> _countAllSince(
+      dynamic db, String userId, DateTime since) async {
+    var total = 0;
+    for (final table in _practiceTables) {
+      total += await _countSince(db, table, userId, since);
+    }
+    return total;
+  }
+
+  Future<int> _countSince(
+      dynamic db, String table, String userId, DateTime since) async {
+    try {
+      // Para spells e affirmations, contar apenas os criados pelo usuário.
+      final preloadedFilter = (table == 'spells' || table == 'affirmations')
+          ? ' AND is_preloaded = 0'
+          : '';
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM $table '
+        'WHERE user_id = ? AND created_at >= ?$preloadedFilter',
+        [userId, since.millisecondsSinceEpoch],
+      );
+      return result.first['count'] as int? ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Dias (1..31) do mês corrente com pelo menos uma prática registrada.
+  Future<Set<int>> _practiceDaysThisMonth(dynamic db, String userId) async {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final days = <int>{};
+    for (final table in _practiceTables) {
+      try {
+        final preloadedFilter = (table == 'spells' || table == 'affirmations')
+            ? ' AND is_preloaded = 0'
+            : '';
+        final result = await db.rawQuery(
+          "SELECT DISTINCT date(created_at / 1000, 'unixepoch', 'localtime') "
+          'as day FROM $table '
+          'WHERE user_id = ? AND created_at >= ?$preloadedFilter',
+          [userId, startOfMonth.millisecondsSinceEpoch],
+        );
+        for (final row in result) {
+          final dayStr = row['day'] as String?;
+          if (dayStr == null) continue;
+          final parsed = DateTime.tryParse(dayStr);
+          if (parsed != null && parsed.month == now.month) {
+            days.add(parsed.day);
+          }
+        }
+      } catch (e) {
+        // Tabela indisponível: segue com as demais.
+      }
+    }
+    return days;
   }
 
   Future<void> _openAndReload(Widget page) async {
@@ -136,66 +234,6 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       }
 
       final result = await db.rawQuery(query, [userId]);
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  Future<int> _countRecordsThisMonth(
-      dynamic db, String table, String userId) async {
-    try {
-      final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
-
-      // Para spells e affirmations, contar apenas os criados pelo usuário (is_preloaded = 0)
-      String query;
-      if (table == 'spells' || table == 'affirmations') {
-        query =
-            'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ? AND is_preloaded = 0';
-      } else {
-        query =
-            'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?';
-      }
-
-      final result = await db.rawQuery(
-        query,
-        [userId, startOfMonth.millisecondsSinceEpoch],
-      );
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  Future<int> _countRecordsThisWeek(
-      dynamic db, String table, String userId) async {
-    try {
-      final now = DateTime.now();
-      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?',
-        [
-          userId,
-          DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day)
-              .millisecondsSinceEpoch
-        ],
-      );
-      return result.first['count'] as int? ?? 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  Future<int> _countRecordsToday(
-      dynamic db, String table, String userId) async {
-    try {
-      final now = DateTime.now();
-      final startOfDay = DateTime(now.year, now.month, now.day);
-      final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM $table WHERE user_id = ? AND created_at >= ?',
-        [userId, startOfDay.millisecondsSinceEpoch],
-      );
       return result.first['count'] as int? ?? 0;
     } catch (e) {
       return 0;
@@ -324,8 +362,19 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                     _buildSummaryCard(),
                     const SizedBox(height: 20),
 
+                    // Régua única de progresso: nível/XP unificado do
+                    // Grimório Vivo + atalho para as Jornadas Mágicas.
+                    _buildLearningCard(),
+                    const SizedBox(height: 12),
+                    _buildJourneysCard(),
+                    const SizedBox(height: 20),
+
                     // Streaks e conquistas
                     _buildStreaksCard(),
+                    const SizedBox(height: 20),
+
+                    // Calendário de dias com prática no mês
+                    _buildPracticeDaysCard(),
                     const SizedBox(height: 20),
 
                     // Práticas por categoria
@@ -392,12 +441,12 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildMiniStat('Este mes', '${_stats['spellsThisMonth'] ?? 0}',
-                  Icons.calendar_month),
-              _buildMiniStat('Esta semana', '${_stats['dreamsThisWeek'] ?? 0}',
-                  Icons.date_range),
-              _buildMiniStat(
-                  'Hoje', '${_stats['gratitudesToday'] ?? 0}', Icons.today),
+              _buildMiniStat(AppLocalizations.of(context).analyticsToday,
+                  '${_stats['practicesToday'] ?? 0}', Icons.today),
+              _buildMiniStat(AppLocalizations.of(context).analyticsThisWeek,
+                  '${_stats['practicesThisWeek'] ?? 0}', Icons.date_range),
+              _buildMiniStat(AppLocalizations.of(context).analyticsThisMonth,
+                  '${_stats['practicesThisMonth'] ?? 0}', Icons.calendar_month),
             ],
           ),
         ],
@@ -429,8 +478,13 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     );
   }
 
-  Widget _buildStreaksCard() {
-    final gratitudeStreak = _stats['gratitudeStreak'] ?? 0;
+  /// Nível mágico unificado: XP total (estudo + práticas), barra até o
+  /// próximo nível e o resumo do Grimório Vivo.
+  Widget _buildLearningCard() {
+    final l10n = AppLocalizations.of(context);
+    final learning = context.watch<LearningProvider>();
+    final level = learning.level;
+    final next = learning.nextLevel;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -444,10 +498,157 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.local_fire_department, color: Colors.orange, size: 24),
-              SizedBox(width: 8),
+              Icon(Icons.menu_book, color: context.gc.lilac, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.toolLivingGrimoireTitle,
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
               Text(
-                'Sequencias',
+                '${level.emoji} ${level.title}',
+                style: TextStyle(
+                  color: context.gc.lilac,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${learning.xp} XP',
+                style: TextStyle(
+                  color: context.gc.starYellow,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                next != null
+                    ? l10n.analyticsNextLevel(next.title)
+                    : l10n.analyticsMaxLevel,
+                style: TextStyle(
+                  color:
+                      next != null ? context.gc.textSecondary : context.gc.mint,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: learning.levelProgress,
+              minHeight: 6,
+              backgroundColor: context.gc.surfaceBorder,
+              valueColor: AlwaysStoppedAnimation(context.gc.lilac),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.analyticsXpBreakdown(learning.lessonXp, learning.practiceXp),
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${l10n.analyticsPagesWritten(learning.totalPagesWritten)} · '
+            '${l10n.analyticsTrailsBound(learning.boundTrails)}',
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Atalho para as Jornadas Mágicas — as conquistas moram junto das
+  /// outras réguas de progresso.
+  Widget _buildJourneysCard() {
+    final l10n = AppLocalizations.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const JourneysPage()),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.gc.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.gc.textPrimary10),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.emoji_events, color: context.gc.starYellow, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.profileMagicalJourneys,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.analyticsJourneysSub,
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.gc.lilac),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStreaksCard() {
+    final gratitudeStreak = _stats['gratitudeStreak'] ?? 0;
+    final checkinStreak = _stats['checkinStreak'] ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.gc.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gc.textPrimary10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department,
+                  color: Colors.orange, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                AppLocalizations.of(context).analyticsSequences,
                 style: TextStyle(
                   color: context.gc.textPrimary,
                   fontSize: 18,
@@ -461,6 +662,15 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             children: [
               Expanded(
                 child: _buildStreakItem(
+                  AppLocalizations.of(context).analyticsDailyPractice,
+                  checkinStreak,
+                  context.gc.lilac,
+                  Icons.auto_awesome,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStreakItem(
                   AppLocalizations.of(context).diaryTabGratitude,
                   gratitudeStreak,
                   Colors.orange,
@@ -469,7 +679,9 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               ),
             ],
           ),
-          if (gratitudeStreak > 0) ...[
+          // Troféu só quando é conquista de verdade (7+ dias) — antes ele
+          // repetia a informação do card com "1 dia".
+          if (gratitudeStreak >= 7) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -486,10 +698,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                     child: Text(
                       gratitudeStreak >= 30
                           ? AppLocalizations.of(context).analyticsStreak30
-                          : gratitudeStreak >= 7
-                              ? AppLocalizations.of(context).analyticsStreak7
-                              : AppLocalizations.of(context)
-                                  .analyticsStreakKeepGoing(gratitudeStreak),
+                          : AppLocalizations.of(context).analyticsStreak7,
                       style: const TextStyle(
                         color: Colors.orange,
                         fontSize: 13,
@@ -500,6 +709,89 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Mini-calendário do mês: cada dia vira um quadradinho, aceso quando
+  /// houve pelo menos uma prática — a constância fica visível de relance e
+  /// dá vontade de "pintar" o dia seguinte.
+  Widget _buildPracticeDaysCard() {
+    final practiceDays = _stats['practiceDays'] as Set<int>? ?? const <int>{};
+    final now = DateTime.now();
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final locale = Localizations.localeOf(context).toString();
+    var monthName = DateFormat.MMMM(locale).format(now);
+    monthName = monthName[0].toUpperCase() + monthName.substring(1);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.gc.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gc.textPrimary10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_month, color: context.gc.mint, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context).analyticsPracticeDays(monthName),
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 7,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+            children: List.generate(daysInMonth, (i) {
+              final day = i + 1;
+              final practiced = practiceDays.contains(day);
+              final isToday = day == now.day;
+              final isFuture = day > now.day;
+              return Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: practiced
+                      ? context.gc.lilac.withValues(alpha: 0.35)
+                      : context.gc.textPrimary10.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: isToday
+                      ? Border.all(color: context.gc.starYellow, width: 1.5)
+                      : practiced
+                          ? Border.all(
+                              color: context.gc.lilac.withValues(alpha: 0.6))
+                          : null,
+                ),
+                child: Text(
+                  '$day',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight:
+                        practiced || isToday ? FontWeight.bold : FontWeight.normal,
+                    color: practiced
+                        ? context.gc.textPrimary
+                        : context.gc.textSecondary.withValues(
+                            alpha: isFuture ? 0.35 : 0.7),
+                  ),
+                ),
+              );
+            }),
+          ),
         ],
       ),
     );
@@ -527,7 +819,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '$count dias',
+                AppLocalizations.of(context).analyticsStreakDays(count),
                 style: TextStyle(
                   color: color,
                   fontSize: 24,
@@ -553,7 +845,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Suas Praticas',
+          AppLocalizations.of(context).analyticsYourPractices,
           style: TextStyle(
             color: context.gc.textPrimary,
             fontSize: 18,
@@ -628,7 +920,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               onTap: () => _openAndReload(const PendulumPage()),
             ),
             _buildCategoryCard(
-              'Desejos',
+              AppLocalizations.of(context).diaryTabDesires,
               _stats['desires'] ?? 0,
               Icons.star,
               Colors.orange,
@@ -642,15 +934,20 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
 
   Widget _buildCategoryCard(String label, int count, IconData icon, Color color,
       {VoidCallback? onTap}) {
+    // Práticas ainda não iniciadas ficam discretas: os zeros não competem
+    // em peso visual com o que a pessoa realmente pratica.
+    final dimmed = count == 0;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Container(
+      child: Opacity(
+        opacity: dimmed ? 0.45 : 1,
+        child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: context.gc.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(color: color.withValues(alpha: dimmed ? 0.15 : 0.3)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -677,6 +974,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -698,10 +996,10 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.star, color: Colors.amber, size: 24),
-              SizedBox(width: 8),
+              const Icon(Icons.star, color: Colors.amber, size: 24),
+              const SizedBox(width: 8),
               Text(
-                'Manifestacoes',
+                AppLocalizations.of(context).analyticsManifestations,
                 style: TextStyle(
                   color: context.gc.textPrimary,
                   fontSize: 18,
@@ -714,21 +1012,28 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           Row(
             children: [
               Expanded(
-                child: _buildDesiresStat('Pendentes', pending, Colors.orange),
+                child: _buildDesiresStat(
+                    AppLocalizations.of(context).analyticsPending,
+                    pending,
+                    Colors.orange),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child:
-                    _buildDesiresStat('Manifestados', manifested, Colors.green),
+                child: _buildDesiresStat(
+                    AppLocalizations.of(context).analyticsManifested,
+                    manifested,
+                    Colors.green),
               ),
             ],
           ),
-          if (total > 0) ...[
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
+          if (manifested > 0) ...[
+            // Barra + taxa só quando já existe manifestação: 0% com barra
+            // vazia parecia derrota (e bug) para quem está começando.
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: total > 0 ? manifested / total : 0,
+                value: manifested / total,
                 backgroundColor: Colors.orange.withValues(alpha: 0.3),
                 valueColor: const AlwaysStoppedAnimation(Colors.green),
                 minHeight: 8,
@@ -736,15 +1041,23 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              total > 0
-                  ? '${((manifested / total) * 100).toStringAsFixed(0)}% de taxa de manifestacao'
-                  : 'Comece a registrar seus desejos!',
+              AppLocalizations.of(context).analyticsManifestRate(
+                  ((manifested / total) * 100).round()),
               style: TextStyle(
                 color: context.gc.textSecondary,
                 fontSize: 12,
               ),
             ),
-          ],
+          ] else
+            Text(
+              pending > 0
+                  ? AppLocalizations.of(context).analyticsAwaitingDesires(pending)
+                  : AppLocalizations.of(context).analyticsStartDesires,
+              style: TextStyle(
+                color: context.gc.textSecondary,
+                fontSize: 12,
+              ),
+            ),
         ],
       ),
     );
@@ -814,7 +1127,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                     Expanded(
                       flex: 2,
                       child: Text(
-                        entry.key,
+                        _typeLabel(entry.key),
                         style: TextStyle(color: context.gc.textSecondary),
                       ),
                     ),
@@ -852,8 +1165,25 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     );
   }
 
+  /// Rótulo localizado do tipo: a coluna `type` persiste o enum.name
+  /// ('attraction'/'banishment') — exibir o cru vazava inglês na interface.
+  String _typeLabel(String type) {
+    for (final t in SpellType.values) {
+      if (t.name == type) return t.displayName;
+    }
+    return type;
+  }
+
   Color _getTypeColor(String type) {
-    // Valores persistidos historicamente em PT; compara sem acentos.
+    // Tipos atuais: as mesmas cores dos chips na página do feitiço
+    // (atração = menta, banimento = rosa).
+    switch (type) {
+      case 'attraction':
+        return context.gc.mint;
+      case 'banishment':
+        return context.gc.pink;
+    }
+    // Valores legados persistidos em PT; compara sem acentos.
     switch (removeAccents(type.toLowerCase())) {
       case 'protecao':
         return Colors.blue;

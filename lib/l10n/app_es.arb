@@ -841,8 +841,21 @@
   "learnPlaceDesires": "Diario de Deseos",
   "learnSection1": "Fundamento",
   "learnSection2": "Profundizando",
-  "learnSection3": "En la práctica",
+  "learnSection3": "En lo cotidiano",
   "learnSection4": "Para llevar contigo",
+  "learnLessonOfTrail": "Lección {number} de {total}",
+  "@learnLessonOfTrail": {
+    "placeholders": {
+      "number": {
+        "type": "num"
+      },
+      "total": {
+        "type": "num"
+      }
+    }
+  },
+  "learnMarkPracticeHint": "Marca la práctica de arriba para continuar",
+  "learnCompletePracticeFirst": "Completa la práctica antes de escribir tu página",
   "notifChannelMoonName": "Fases de la Luna",
   "notifChannelMoonDesc": "Notificaciones sobre fases lunares importantes",
   "notifChannelSabbatName": "Sabbats",
@@ -1139,6 +1152,85 @@
   "analyticsStreakKeepGoing": "¡Sigue así! ¡{count, plural, one{1 día} other{{count} días}} de gratitud!",
   "analyticsOracle": "Oráculo",
   "analyticsSpellsByType": "Hechizos por Tipo",
+  "analyticsPagesWritten": "{count, plural, one{1 página escrita} other{{count} páginas escritas}}",
+  "@analyticsPagesWritten": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsTrailsBound": "{count, plural, one{1 ruta encuadernada} other{{count} rutas encuadernadas}}",
+  "@analyticsTrailsBound": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsNextLevel": "Siguiente nivel: {title}",
+  "@analyticsNextLevel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "analyticsMaxLevel": "Nivel máximo alcanzado ✨",
+  "analyticsXpBreakdown": "{lesson} XP de estudio + {practice} XP de práctica",
+  "@analyticsXpBreakdown": {
+    "placeholders": {
+      "lesson": {
+        "type": "num"
+      },
+      "practice": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsJourneysSub": "Logros y medallas de tus prácticas",
+  "analyticsSequences": "Rachas",
+  "analyticsDailyPractice": "Práctica diaria",
+  "analyticsStreakDays": "{count, plural, one{1 día} other{{count} días}}",
+  "@analyticsStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsYourPractices": "Tus Prácticas",
+  "analyticsManifestations": "Manifestaciones",
+  "analyticsPending": "Pendientes",
+  "analyticsManifested": "Manifestados",
+  "analyticsManifestRate": "{percent}% de tasa de manifestación",
+  "@analyticsManifestRate": {
+    "placeholders": {
+      "percent": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsAwaitingDesires": "{count, plural, one{1 deseo esperando el momento adecuado ✨} other{{count} deseos esperando el momento adecuado ✨}}",
+  "@analyticsAwaitingDesires": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "analyticsStartDesires": "Empieza a registrar tus deseos ✨",
+  "analyticsToday": "Hoy",
+  "analyticsThisWeek": "Esta semana",
+  "analyticsThisMonth": "Este mes",
+  "analyticsPracticeDays": "Días de práctica en {month}",
+  "@analyticsPracticeDays": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "wheelNextSabbat": "Próximo Sabbat",
   "wheelCalendar": "Calendario de los Sabbats",
   "wheelAbout": "Sobre la Rueda del Año",
@@ -1360,6 +1452,11 @@
   "yourDayRiteGratitude": "Registrar una gratitud",
   "yourDayRiteDream": "Registrar un sueño",
   "yourDayRiteTarot": "Sacar una carta de tarot",
+  "yourDayRiteOracle": "Sacar una carta del oráculo",
+  "yourDayRitePalm": "Leer las líneas de tu mano",
+  "yourDayRiteRunes": "Consultar las runas",
+  "yourDayRiteNature": "Identificar una planta, piedra o color que te encantó",
+  "yourDayRitePendulum": "Hacer una pregunta al péndulo",
   "yourDayRitesComplete": "¡Día completo! Tu racha sigue ✨",
   "yourDayRitesHint": "Cada rito alimenta tus Viajes Mágicos",
   "yourDayGratitudeHint": "¿Por qué estás agradecida hoy?",

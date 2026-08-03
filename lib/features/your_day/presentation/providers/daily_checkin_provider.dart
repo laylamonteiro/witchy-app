@@ -15,7 +15,34 @@ class DailyRites {
   /// Uma tiragem de tarot.
   static const String divination = 'divination';
 
+  /// Ritos exploratórios: cada página marca o seu quando a ação acontece.
+  static const String palmistry = 'palmistry';
+  static const String natureIdentify = 'nature_identify';
+  static const String oracle = 'oracle';
+  static const String runes = 'runes';
+  static const String pendulum = 'pendulum';
+
   static const List<String> all = [gratitude, dream, divination];
+
+  /// Revezamento do terceiro slot do card: gratidão e sonho são fixos, e o
+  /// rito exploratório muda a cada dia para apresentar outras partes do
+  /// app. Determinístico pela data — estável durante o dia inteiro.
+  static const List<String> rotation = [
+    divination,
+    oracle,
+    palmistry,
+    runes,
+    natureIdentify,
+    pendulum,
+  ];
+
+  static String featuredToday({DateTime? now}) {
+    final date = now ?? DateTime.now();
+    final days = DateTime(date.year, date.month, date.day)
+        .difference(DateTime(2020, 1, 1))
+        .inDays;
+    return rotation[days % rotation.length];
+  }
 }
 
 /// Estado do check-in diário: sequência de dias e ritos concluídos hoje.
