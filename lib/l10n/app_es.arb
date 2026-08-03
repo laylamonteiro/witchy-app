@@ -841,8 +841,21 @@
   "learnPlaceDesires": "Diario de Deseos",
   "learnSection1": "Fundamento",
   "learnSection2": "Profundizando",
-  "learnSection3": "En la práctica",
+  "learnSection3": "En lo cotidiano",
   "learnSection4": "Para llevar contigo",
+  "learnLessonOfTrail": "Lección {number} de {total}",
+  "@learnLessonOfTrail": {
+    "placeholders": {
+      "number": {
+        "type": "num"
+      },
+      "total": {
+        "type": "num"
+      }
+    }
+  },
+  "learnMarkPracticeHint": "Marca la práctica de arriba para continuar",
+  "learnCompletePracticeFirst": "Completa la práctica antes de escribir tu página",
   "notifChannelMoonName": "Fases de la Luna",
   "notifChannelMoonDesc": "Notificaciones sobre fases lunares importantes",
   "notifChannelSabbatName": "Sabbats",

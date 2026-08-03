@@ -1090,8 +1090,21 @@
   "learnPlaceDesires": "Diário de Desejos",
   "learnSection1": "Fundamento",
   "learnSection2": "Aprofundando",
-  "learnSection3": "Na prática",
+  "learnSection3": "No cotidiano",
   "learnSection4": "Para levar consigo",
+  "learnLessonOfTrail": "Lição {number} de {total}",
+  "@learnLessonOfTrail": {
+    "placeholders": {
+      "number": {
+        "type": "num"
+      },
+      "total": {
+        "type": "num"
+      }
+    }
+  },
+  "learnMarkPracticeHint": "Marque a prática acima para continuar",
+  "learnCompletePracticeFirst": "Complete a prática antes de escrever a página",
   "@learnOpenTool": {
     "placeholders": {
       "tool": {
