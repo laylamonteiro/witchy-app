@@ -23,20 +23,26 @@ class AiRateLimitException implements Exception {
   const AiRateLimitException();
 }
 
-/// Serviço de IA: Groq como provedor principal de TEXTO (mais rápido, sem
-/// etapa de "pensamento") e Gemini como principal de VISÃO — cada chamada
-/// cai automaticamente para o outro provedor em caso de falha ou de chave
-/// ausente. Os logs de debug (tag AI) registram qual provedor respondeu
-/// cada chamada.
+/// Provedores de IA disponíveis. Qual atende cada ponto do app é decidido
+/// pela configuração no topo do [AIService] — não por código espalhado.
+enum AiProvider { groq, gemini }
+
+/// Serviço de IA: o provedor de cada funcionalidade é PARAMETRIZADO na
+/// configuração logo abaixo dos modelos ([AIService.defaultTextProvider],
+/// [AIService.textProviders] e [AIService.visionProvider]) — trocar a IA de
+/// um ponto específico é editar uma linha ali. Em falha do provedor
+/// escolhido (limite, instabilidade, chave ausente) a chamada cai
+/// automaticamente para o outro. Os logs de debug (tag AI) registram qual
+/// provedor respondeu cada chamada.
 class AIService {
   static final AIService instance = AIService._();
 
   AIService._();
 
-  /// Modelo de texto principal (Groq).
+  /// Modelo de texto do Groq.
   static const String _textModel = 'llama-3.3-70b-versatile';
 
-  /// Modelo de texto do fallback (Google Gemini) — o mesmo GA da visão.
+  /// Modelo de texto do Google Gemini — o mesmo GA da visão.
   static const String _geminiTextModel = 'gemini-3.6-flash';
 
   /// Modelo de visão do Groq (fallback). O Groq descontinua modelos com
@@ -51,7 +57,27 @@ class AIService {
   /// 3.6-flash é o modelo GA vigente.
   static const String _geminiVisionModel = 'gemini-3.6-flash';
 
-  /// O Gemini está configurado? (Sem a chave, a visão cai para o Groq.)
+  // ===== Configuração de provedores (edite AQUI para trocar a IA) =====
+
+  /// Provedor de TEXTO padrão. O Groq responde mais rápido (sem etapa de
+  /// "pensamento" do Gemini, que deixava análises longas lentas e
+  /// truncadas).
+  static const AiProvider defaultTextProvider = AiProvider.groq;
+
+  /// Exceções por funcionalidade — a chave é a mesma `tag` que aparece nos
+  /// logs [AI] ('sonho', 'feitiço', 'perfil mágico', 'clima do dia',
+  /// 'afirmação', 'conselheiro', 'página enciclopédia', 'tarot',
+  /// 'numerologia'). Uma tag ausente usa [defaultTextProvider].
+  /// Ex.: { 'sonho': AiProvider.gemini } manda só os sonhos pro Gemini.
+  static const Map<String, AiProvider> textProviders = {};
+
+  /// Provedor de VISÃO (identificação por foto e quiromancia). O Gemini
+  /// identifica plantas/pedras de verdade; o preview do Groq é fraco.
+  static const AiProvider visionProvider = AiProvider.gemini;
+
+  // ====================================================================
+
+  /// O Gemini está configurado? (Sem a chave, tudo roda no Groq.)
   static bool get _hasGemini => GeminiCredentials.apiKey.isNotEmpty;
 
   final Dio _dio = Dio();
@@ -475,12 +501,11 @@ class AIService {
     }
   }
 
-  /// Chamada de TEXTO: Groq como provedor principal — responde mais
-  /// rápido e sem a etapa de "pensamento" do Gemini, que deixava análises
-  /// longas (sonhos, quiromancia) lentas e truncadas. Em falha do Groq
-  /// (limite, instabilidade) cai para o Gemini automaticamente quando a
-  /// chave está configurada, então o recurso nunca fica refém de um
-  /// provedor só. O provedor que respondeu fica nos logs de debug (tag AI).
+  /// Chamada de TEXTO. O provedor vem da configuração no topo da classe
+  /// (parâmetro explícito > [textProviders] por tag > [defaultTextProvider]);
+  /// em falha (limite, instabilidade) a chamada cai automaticamente para o
+  /// outro provedor, então o recurso nunca fica refém de um só. O provedor
+  /// que respondeu fica nos logs de debug (tag AI).
   Future<String> _textRequest({
     required String systemPrompt,
     required String userText,
@@ -489,43 +514,130 @@ class AIService {
     int maxTokens = 1024,
     bool jsonResponse = false,
     Duration receiveTimeout = const Duration(seconds: 60),
+    AiProvider? provider,
   }) async {
+    var primary = provider ?? textProviders[tag] ?? defaultTextProvider;
+    // Gemini sem chave configurada: roda tudo no Groq, sem fallback.
+    if (primary == AiProvider.gemini && !_hasGemini) {
+      primary = AiProvider.groq;
+    }
+    final fallback = primary == AiProvider.groq
+        ? (_hasGemini ? AiProvider.gemini : null)
+        : AiProvider.groq;
+
     try {
-      final response = await _dio.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${GroqCredentials.apiKey}',
-            'Content-Type': 'application/json',
-          },
-          receiveTimeout: receiveTimeout,
-          sendTimeout: const Duration(seconds: 30),
-        ),
-        data: {
-          'model': _textModel,
-          'messages': [
-            if (systemPrompt.isNotEmpty)
-              {'role': 'system', 'content': systemPrompt},
-            {'role': 'user', 'content': userText},
-          ],
-          'temperature': temperature,
-          'max_tokens': maxTokens,
-          if (jsonResponse) 'response_format': {'type': 'json_object'},
-        },
+      return await _textCall(
+        primary,
+        systemPrompt: systemPrompt,
+        userText: userText,
+        tag: tag,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        jsonResponse: jsonResponse,
+        receiveTimeout: receiveTimeout,
       );
-      unawaited(debugLog('AI', '$tag: groq'));
-      return _contentFromResponse(response);
     } on DioException catch (e) {
-      if (!_hasGemini) rethrow;
+      if (fallback == null) rethrow;
       unawaited(debugLog(
           'AI',
-          '$tag: groq falhou '
-          '(HTTP ${e.response?.statusCode ?? e.message}) — usando gemini'));
+          '$tag: ${primary.name} falhou '
+          '(HTTP ${e.response?.statusCode ?? e.message}) '
+          '— usando ${fallback.name}'));
     } catch (e) {
-      if (!_hasGemini) rethrow;
-      unawaited(debugLog('AI', '$tag: groq falhou ($e) — usando gemini'));
+      if (fallback == null) rethrow;
+      unawaited(debugLog(
+          'AI', '$tag: ${primary.name} falhou ($e) — usando ${fallback.name}'));
     }
 
+    return _textCall(
+      fallback,
+      systemPrompt: systemPrompt,
+      userText: userText,
+      tag: tag,
+      temperature: temperature,
+      maxTokens: maxTokens,
+      jsonResponse: jsonResponse,
+      receiveTimeout: receiveTimeout,
+    );
+  }
+
+  /// Despacha a chamada de texto para o provedor pedido.
+  Future<String> _textCall(
+    AiProvider provider, {
+    required String systemPrompt,
+    required String userText,
+    required String tag,
+    required double temperature,
+    required int maxTokens,
+    required bool jsonResponse,
+    required Duration receiveTimeout,
+  }) {
+    return switch (provider) {
+      AiProvider.groq => _groqText(
+          systemPrompt: systemPrompt,
+          userText: userText,
+          tag: tag,
+          temperature: temperature,
+          maxTokens: maxTokens,
+          jsonResponse: jsonResponse,
+          receiveTimeout: receiveTimeout,
+        ),
+      AiProvider.gemini => _geminiText(
+          systemPrompt: systemPrompt,
+          userText: userText,
+          tag: tag,
+          temperature: temperature,
+          maxTokens: maxTokens,
+          jsonResponse: jsonResponse,
+          receiveTimeout: receiveTimeout,
+        ),
+    };
+  }
+
+  Future<String> _groqText({
+    required String systemPrompt,
+    required String userText,
+    required String tag,
+    required double temperature,
+    required int maxTokens,
+    required bool jsonResponse,
+    required Duration receiveTimeout,
+  }) async {
+    final response = await _dio.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer ${GroqCredentials.apiKey}',
+          'Content-Type': 'application/json',
+        },
+        receiveTimeout: receiveTimeout,
+        sendTimeout: const Duration(seconds: 30),
+      ),
+      data: {
+        'model': _textModel,
+        'messages': [
+          if (systemPrompt.isNotEmpty)
+            {'role': 'system', 'content': systemPrompt},
+          {'role': 'user', 'content': userText},
+        ],
+        'temperature': temperature,
+        'max_tokens': maxTokens,
+        if (jsonResponse) 'response_format': {'type': 'json_object'},
+      },
+    );
+    unawaited(debugLog('AI', '$tag: groq'));
+    return _contentFromResponse(response);
+  }
+
+  Future<String> _geminiText({
+    required String systemPrompt,
+    required String userText,
+    required String tag,
+    required double temperature,
+    required int maxTokens,
+    required bool jsonResponse,
+    required Duration receiveTimeout,
+  }) async {
     final response = await _dio.post(
       'https://generativelanguage.googleapis.com/v1beta/models/'
       '$_geminiTextModel:generateContent',
@@ -575,23 +687,79 @@ class AIService {
     return text;
   }
 
-  /// Chamada de visão (texto + foto): Gemini quando a chave está
-  /// configurada; sem ela, cai para o modelo preview do Groq. A imagem é
-  /// enviada em memória e não é armazenada por nenhum dos serviços.
+  /// Chamada de visão (texto + foto). O provedor vem de [visionProvider]
+  /// (Gemini sem chave configurada vira Groq); em falha, cai para o outro
+  /// provedor, como no texto. A imagem é enviada em memória e não é
+  /// armazenada por nenhum dos serviços.
   Future<String> _visionRequest({
     required String systemPrompt,
     required String userText,
     required List<int> jpegBytes,
     double temperature = 0.2,
     int maxTokens = 1024,
+    String tag = 'visão',
+    AiProvider? provider,
   }) async {
     final base64Image = base64Encode(jpegBytes);
+
+    var primary = provider ?? visionProvider;
+    if (primary == AiProvider.gemini && !_hasGemini) {
+      primary = AiProvider.groq;
+    }
+    final fallback = primary == AiProvider.groq
+        ? (_hasGemini ? AiProvider.gemini : null)
+        : AiProvider.groq;
+
+    try {
+      return await _visionCall(
+        primary,
+        systemPrompt: systemPrompt,
+        userText: userText,
+        base64Image: base64Image,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        tag: tag,
+      );
+    } on DioException catch (e) {
+      if (fallback == null) rethrow;
+      unawaited(debugLog(
+          'AI',
+          '$tag: ${primary.name} falhou '
+          '(HTTP ${e.response?.statusCode ?? e.message}) '
+          '— usando ${fallback.name}'));
+    } catch (e) {
+      if (fallback == null) rethrow;
+      unawaited(debugLog(
+          'AI', '$tag: ${primary.name} falhou ($e) — usando ${fallback.name}'));
+    }
+
+    return _visionCall(
+      fallback,
+      systemPrompt: systemPrompt,
+      userText: userText,
+      base64Image: base64Image,
+      temperature: temperature,
+      maxTokens: maxTokens,
+      tag: tag,
+    );
+  }
+
+  /// Despacha a chamada de visão para o provedor pedido.
+  Future<String> _visionCall(
+    AiProvider provider, {
+    required String systemPrompt,
+    required String userText,
+    required String base64Image,
+    required double temperature,
+    required int maxTokens,
+    required String tag,
+  }) async {
     final timeouts = Options(
       receiveTimeout: const Duration(seconds: 60),
       sendTimeout: const Duration(seconds: 60),
     );
 
-    if (_hasGemini) {
+    if (provider == AiProvider.gemini) {
       final response = await _dio.post(
         'https://generativelanguage.googleapis.com/v1beta/models/'
         '$_geminiVisionModel:generateContent',
@@ -634,7 +802,12 @@ class AIService {
       final parts =
           (response.data['candidates'][0]['content']['parts'] as List?) ??
               const [];
-      return parts.map((p) => '${p['text'] ?? ''}').join().trim();
+      final text = parts.map((p) => '${p['text'] ?? ''}').join().trim();
+      if (text.isEmpty) {
+        throw const FormatException('resposta vazia');
+      }
+      unawaited(debugLog('AI', '$tag: gemini'));
+      return text;
     }
 
     final response = await _dio.post(
@@ -666,8 +839,9 @@ class AIService {
         'reasoning_effort': 'none',
       },
     );
-    // O fallback é um modelo de raciocínio (Qwen3): remove o bloco
-    // <think>...</think> para entregar só a resposta final.
+    unawaited(debugLog('AI', '$tag: groq'));
+    // O Qwen3 é modelo de raciocínio: remove o bloco <think>...</think>
+    // para entregar só a resposta final.
     return _stripReasoning(
         '${response.data['choices'][0]['message']['content']}');
   }
@@ -688,6 +862,7 @@ class AIService {
         // A leitura completa (7 pontos + síntese) truncava em 1600 — o
         // "pensamento" do Gemini 3.x também consome tokens de saída.
         maxTokens: 2400,
+        tag: 'quiromancia',
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {
@@ -817,6 +992,7 @@ class AIService {
         temperature: 0.2,
         // Folga para o "pensamento" mínimo do Gemini 3.x + o JSON.
         maxTokens: 640,
+        tag: 'identificação',
       );
       return _extractJsonObject(content);
     } on DioException catch (e) {
@@ -852,6 +1028,7 @@ class AIService {
           jpegBytes: jpegBytes,
           temperature: 0.5,
           maxTokens: 1600,
+          tag: 'página com foto',
         );
         return _extractJsonObject(content);
       }
@@ -907,7 +1084,10 @@ class AIService {
   }
 
   /// Nome do modelo de visão em uso (exposto para o diagnóstico admin).
-  String get visionModel => _hasGemini ? _geminiVisionModel : _visionModel;
+  String get visionModel =>
+      (visionProvider == AiProvider.gemini && _hasGemini)
+          ? _geminiVisionModel
+          : _visionModel;
 
   /// Diagnóstico admin da leitura de mãos: executa a chamada de visão e
   /// devolve os detalhes CRUS (modelo, status HTTP, corpo do erro, tempo)
@@ -917,7 +1097,9 @@ class AIService {
     required List<int> jpegBytes,
   }) async {
     final sw = Stopwatch()..start();
-    final provider = _hasGemini ? 'gemini' : 'groq (fallback)';
+    final provider = (visionProvider == AiProvider.gemini && _hasGemini)
+        ? 'gemini'
+        : 'groq';
     try {
       final content = await _visionRequest(
         systemPrompt: '',
