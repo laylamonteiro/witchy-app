@@ -29,6 +29,9 @@ lib/core/services/debug_log_service\.dart:
 # Logs de debug do AdService (tag ADS) — dev-only, visíveis só na página
 # de logs (admin).
 lib/core/services/ad_service\.dart:
+# Marcadores de PARSING da resposta da IA (Símbolo:/No seu sonho: nos 3
+# idiomas) — o texto exibido vem da própria IA no idioma da pessoa.
+lib/features/diary/presentation/widgets/dream_interpretation_text\.dart:
 lib/features/settings/presentation/pages/beta_codes_debug_page\.dart:
 
 # Nome-marca do app — invariante entre idiomas (inclui a forma abreviada
