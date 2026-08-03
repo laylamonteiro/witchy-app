@@ -1088,9 +1088,15 @@ class _LessonPageState extends State<LessonPage> {
                           )
                         : const Icon(Icons.menu_book, size: 18),
                     // A recompensa aparece na hora da decisão, não só no
-                    // selo de conclusão.
-                    label: Text(
-                        '${l10n.learnSealPage} · +${LearningProvider.xpPerPage} XP'),
+                    // selo de conclusão. FittedBox: o rótulo encolhe o
+                    // necessário para ficar SEMPRE em uma linha.
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${l10n.learnSealPage} · +${LearningProvider.xpPerPage} XP',
+                        maxLines: 1,
+                      ),
+                    ),
                   ),
                 ),
               ],
