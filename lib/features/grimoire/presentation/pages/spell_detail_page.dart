@@ -12,7 +12,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import 'spell_form_page.dart';
 import 'record_form_page.dart';
 
-class SpellDetailPage extends StatelessWidget {
+class SpellDetailPage extends StatefulWidget {
   final SpellModel spell;
   final bool showSaveButton;
 
@@ -22,11 +22,38 @@ class SpellDetailPage extends StatelessWidget {
     this.showSaveButton = false,
   });
 
-  Future<void> _saveSpell(BuildContext context) async {
+  @override
+  State<SpellDetailPage> createState() => _SpellDetailPageState();
+}
+
+class _SpellDetailPageState extends State<SpellDetailPage> {
+  /// Depois de salvar, a página permanece aberta e passa a se comportar
+  /// como a de um feitiço do grimório (editar/excluir no lugar do salvar) —
+  /// antes ela dava dois pops e expulsava a pessoa da entrada recém-criada.
+  bool _saved = false;
+
+  SpellModel get spell => widget.spell;
+
+  Future<void> _saveSpell() async {
+    if (_saved) return;
+    // Marca antes do await para bloquear toques repetidos no ícone.
+    setState(() => _saved = true);
     final provider = context.read<SpellProvider>();
     await provider.addSpell(spell);
 
-    if (!context.mounted) return;
+    if (!mounted) return;
+    if (provider.error != null) {
+      // addSpell não lança: sinaliza falha via provider.error. Reabilita o
+      // botão para nova tentativa.
+      setState(() => _saved = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.error!),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -34,10 +61,6 @@ class SpellDetailPage extends StatelessWidget {
         backgroundColor: context.gc.success,
       ),
     );
-
-    // Voltar duas páginas (SpellDetailPage e AISpellCreationPage)
-    Navigator.of(context).pop();
-    Navigator.of(context).pop();
   }
 
   @override
@@ -50,11 +73,11 @@ class SpellDetailPage extends StatelessWidget {
             ? AppLocalizations.of(context).recordDetails
             : AppLocalizations.of(context).spellDetails),
         actions: [
-          if (showSaveButton) ...[
+          if (widget.showSaveButton && !_saved) ...[
             IconButton(
               icon: const Icon(Icons.save),
               tooltip: AppLocalizations.of(context).spellSaveToGrimoire,
-              onPressed: () => _saveSpell(context),
+              onPressed: _saveSpell,
             ),
           ] else if (!spell.isPreloaded) ...[
             // Feitiços ancestrais (pré-carregados) são somente leitura.
