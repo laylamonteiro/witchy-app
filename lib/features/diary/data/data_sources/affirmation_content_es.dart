@@ -1,80 +1,84 @@
-/// Overlay de exibición de las 38 afirmaciones precargadas (ES). Clave =
-/// texto PT congelado persistido en la base — nunca reescribir filas.
+/// Overlay de exhibición de las 40 afirmaciones precargadas (ES). La clave
+/// es el texto PT congelado en la base de datos — nunca reescribir filas.
 const Map<String, String> affirmationOverlaysEs = {
-  'Sou um ímã para a prosperidade e abundância em todas as formas':
-      'Soy un imán para la prosperidad y la abundancia en todas sus formas',
-  'O universo conspira a meu favor, trazendo riqueza e oportunidades':
-      'El universo conspira a mi favor, trayendo riqueza y oportunidades',
-  'Minha energia atrai recursos infinitos e bênçãos constantes':
-      'Mi energía atrae recursos infinitos y bendiciones constantes',
-  'Recebo com gratidão as dádivas do universo em forma de ouro e luz':
-      'Recibo con gratitud los dones del universo en forma de oro y luz',
-  'Estou protegido por uma luz branca divina que afasta toda negatividade':
-      'Estoy protegido por una luz blanca divina que aleja toda negatividad',
-  'Minha aura é um escudo impenetrável de energia sagrada':
-      'Mi aura es un escudo impenetrable de energía sagrada',
-  'Anjos e espíritos guardiões caminham ao meu lado sempre':
-      'Ángeles y espíritus guardianes caminan siempre a mi lado',
-  'Sou envolvido por um círculo mágico de proteção e segurança':
-      'Estoy envuelto en un círculo mágico de protección y seguridad',
-  'Meu coração irradia amor incondicional para mim e para o mundo':
-      'Mi corazón irradia amor incondicional hacia mí y hacia el mundo',
-  'Sou digno de amor puro, verdadeiro e mágico':
-      'Soy digno de un amor puro, verdadero y mágico',
-  'O amor flui através de mim como um rio de luz cristalina':
-      'El amor fluye a través de mí como un río de luz cristalina',
-  'Atraio relacionamentos que nutrem minha alma e elevam meu espírito':
-      'Atraigo relaciones que nutren mi alma y elevan mi espíritu',
-  'Me amo completamente, com toda minha magia e imperfeições':
-      'Me amo por completo, con toda mi magia y mis imperfecciones',
-  'Meu corpo é um templo sagrado de cura e regeneração':
-      'Mi cuerpo es un templo sagrado de sanación y regeneración',
-  'Cada célula do meu ser vibra em harmonia e saúde perfeita':
-      'Cada célula de mi ser vibra en armonía y salud perfecta',
-  'A energia curativa do universo flui através de mim':
-      'La energía sanadora del universo fluye a través de mí',
-  'Liberto traumas do passado e abraço a cura do presente':
-      'Libero los traumas del pasado y abrazo la sanación del presente',
-  'Sou curado pelas forças místicas da natureza e do cosmos':
-      'Soy sanado por las fuerzas místicas de la naturaleza y el cosmos',
-  'Possuo poder ilimitado para criar minha realidade':
-      'Poseo un poder ilimitado para crear mi realidad',
-  'Sou a bruxa/bruxo da minha própria vida, moldando meu destino':
-      'Soy la bruja/el brujo de mi propia vida, moldeando mi destino',
-  'Minha vontade é forte como fogo, meu poder é inesgotável':
-      'Mi voluntad es fuerte como el fuego, mi poder es inagotable',
-  'Comando minha energia com confiança e propósito':
-      'Dirijo mi energía con confianza y propósito',
-  'Sou soberano do meu reino interior e exterior':
-      'Soy soberano de mi reino interior y exterior',
-  'A sabedoria ancestral flui através das minhas veias':
-      'La sabiduría ancestral fluye por mis venas',
-  'Confio na minha intuição, ela é minha bússola mágica':
-      'Confío en mi intuición; es mi brújula mágica',
-  'Tenho acesso à biblioteca infinita do conhecimento universal':
-      'Tengo acceso a la biblioteca infinita del conocimiento universal',
-  'Cada experiência me traz lições valiosas e crescimento espiritual':
-      'Cada experiencia me trae lecciones valiosas y crecimiento espiritual',
-  'Sou guiado pela luz da sabedoria divina em cada decisão':
-      'Soy guiado por la luz de la sabiduría divina en cada decisión',
-  'Meus pensamentos se tornam realidade com facilidade mágica':
-      'Mis pensamientos se vuelven realidad con facilidad mágica',
-  'Manifesto meus sonhos sob a luz da lua cheia':
-      'Manifiesto mis sueños bajo la luz de la luna llena',
-  'Sou cocriador do universo, moldando minha vida com intenção':
-      'Soy cocreador del universo, moldeando mi vida con intención',
-  'Cada palavra que falo é um feitiço de manifestação':
-      'Cada palabra que pronuncio es un hechizo de manifestación',
-  'O poder de manifestação corre em meu sangue místico':
-      'El poder de la manifestación corre por mi sangre mística',
-  'Transformo-me como a lua, ciclicamente renovado e poderoso':
-      'Me transformo como la luna, cíclicamente renovado y poderoso',
-  'Abraço mudanças como portais para novas dimensões do meu ser':
-      'Abrazo los cambios como portales a nuevas dimensiones de mi ser',
-  'Sou fênix renascida das cinzas da minha antiga versão':
-      'Soy un fénix renacido de las cenizas de mi antigua versión',
-  'Cada final é um novo começo mágico em minha jornada':
-      'Cada final es un nuevo comienzo mágico en mi camino',
-  'Metamorfoseio-me em versões cada vez mais elevadas de mim':
-      'Me metamorfoseo en versiones cada vez más elevadas de mí',
+  'Reconheço a abundância que já existe na minha vida':
+      'Reconozco la abundancia que ya existe en mi vida',
+  'Cuido bem do que tenho, e o que tenho floresce':
+      'Cuido bien lo que tengo, y lo que tengo florece',
+  'Mereço prosperidade sem sentir culpa':
+      'Merezco prosperidad sin sentir culpa',
+  'Meu trabalho abre caminhos, e eu sei receber o que chega':
+      'Mi trabajo abre caminos, y sé recibir lo que llega',
+  'Tenho o bastante para hoje, e hoje é o que existe':
+      'Tengo lo suficiente para hoy, y hoy es lo que existe',
+  'Escolho onde ponho minha energia — isso já é proteção':
+      'Elijo dónde pongo mi energía — eso ya es protección',
+  'Meus limites são o meu círculo mágico':
+      'Mis límites son mi círculo mágico',
+  'Tenho o direito de dizer não sem me explicar':
+      'Tengo derecho a decir no sin dar explicaciones',
+  'O que não me pertence, eu devolvo':
+      'Lo que no me pertenece, lo devuelvo',
+  'Estou em segurança neste corpo, neste instante':
+      'Estoy a salvo en este cuerpo, en este instante',
+  'Meu afeto começa em mim e transborda daqui':
+      'Mi afecto empieza en mí y desborda desde aquí',
+  'Mereço um amor que não me peça para diminuir':
+      'Merezco un amor que no me pida encogerme',
+  'Falo comigo com a doçura que ofereço a quem amo':
+      'Me hablo con la dulzura que ofrezco a quienes amo',
+  'Meu coração se abre no meu tempo, não no tempo dos outros':
+      'Mi corazón se abre a mi tiempo, no al de los demás',
+  'Aceito minha magia e minhas falhas no mesmo abraço':
+      'Acepto mi magia y mis fallas en el mismo abrazo',
+  'Meu corpo pede coisas simples, e eu escuto':
+      'Mi cuerpo pide cosas simples, y yo escucho',
+  'Descansar também é um ato de cura':
+      'Descansar también es un acto de sanación',
+  'O que dói hoje não é tudo o que eu sou':
+      'Lo que duele hoy no es todo lo que soy',
+  'Devolvo à terra aquilo que já não me serve':
+      'Devuelvo a la tierra lo que ya no me sirve',
+  'Sigo no meu ritmo, e meu ritmo basta':
+      'Voy a mi ritmo, y mi ritmo basta',
+  'Conduzo a minha própria vida, mesmo devagar':
+      'Conduzco mi propia vida, aunque sea despacio',
+  'Minha vontade tem força, e eu a uso com cuidado':
+      'Mi voluntad tiene fuerza, y la uso con cuidado',
+  'Tenho poder sobre o que faço agora':
+      'Tengo poder sobre lo que hago ahora',
+  'Minha voz merece ser ouvida, a começar por mim':
+      'Mi voz merece ser escuchada, empezando por mí',
+  'Escolho meus caminhos, inclusive os difíceis':
+      'Elijo mis caminos, incluso los difíciles',
+  'Minha intuição fala baixo, e eu aprendo a escutar':
+      'Mi intuición habla bajito, y aprendo a escucharla',
+  'Não preciso saber tudo para começar':
+      'No necesito saberlo todo para empezar',
+  'Cada erro me ensina o que o acerto não ensinaria':
+      'Cada error me enseña lo que el acierto no enseñaría',
+  'Pergunto sem vergonha e aprendo sem pressa':
+      'Pregunto sin vergüenza y aprendo sin prisa',
+  'Carrego comigo o saber de quem veio antes de mim':
+      'Llevo conmigo el saber de quienes vinieron antes',
+  'Digo com clareza o que quero — a clareza já é magia':
+      'Digo con claridad lo que quiero — la claridad ya es magia',
+  'Dou o primeiro passo, e o caminho responde':
+      'Doy el primer paso, y el camino responde',
+  'Minha intenção fica viva quando eu a pratico':
+      'Mi intención sigue viva cuando la practico',
+  'Escrevo meus desejos para não perdê-los de vista':
+      'Escribo mis deseos para no perderlos de vista',
+  'O que planto hoje tem seu próprio tempo de brotar':
+      'Lo que siembro hoy tiene su propio tiempo de brotar',
+  'Mudo como a lua muda: por fases, não de uma vez':
+      'Cambio como cambia la luna: por fases, no de golpe',
+  'Posso recomeçar quantas vezes for preciso':
+      'Puedo volver a empezar cuantas veces haga falta',
+  'Deixo ir o que já cumpriu seu papel':
+      'Suelto lo que ya cumplió su papel',
+  'Não sou quem eu era ontem, e tudo bem':
+      'No soy quien era ayer, y está bien',
+  'Todo fim que atravessei me trouxe até aqui':
+      'Cada final que atravesé me trajo hasta aquí',
 };
