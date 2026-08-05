@@ -12,6 +12,7 @@ import '../../../diary/presentation/providers/gratitude_provider.dart';
 import '../../../divination/presentation/pages/oracle_cards_page.dart';
 import '../../../divination/presentation/pages/pendulum_page.dart';
 import '../../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
+import '../../../learning/presentation/providers/learning_provider.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
@@ -87,6 +88,15 @@ class DailyRitesCard extends StatelessWidget {
     const total = 3;
     final done =
         [gratitudeDone, dreamDone, featuredDone].where((e) => e).length;
+
+    // Sela o dia quando os três caem. Gratidão e sonho vêm dos registros
+    // do diário, então o fechamento só pode ser detectado aqui — o selo
+    // gravado é o que vale o bônus de XP (completeRite é idempotente).
+    if (done == total && !checkin.isRiteDone(DailyRites.dayComplete)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        checkin.completeRite(DailyRites.dayComplete);
+      });
+    }
     final complete = done == total;
     final accent = complete ? context.gc.mint : context.gc.lilac;
 
@@ -152,7 +162,8 @@ class DailyRitesCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          l10n.yourDayRitesComplete,
+                          l10n.yourDayRitesComplete(
+                              LearningProvider.xpPerFullDay),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: context.gc.mint,

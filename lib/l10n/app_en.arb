@@ -1348,7 +1348,7 @@
     }
   },
   "journeysHowXp": "How to earn XP",
-  "journeysHowXpBody": "Lesson page written: 25 · Trail bound: 100 · Guided ritual completed: 10 · Record created (spell, dream, gratitude, desire, affirmation, sigil or encyclopedia page): 5 · Rune, oracle or pendulum reading: 2",
+  "journeysHowXpBody": "Trail bound: 100 · Lesson page written: 25 · All three daily rites done: 15 · Guided ritual completed: 10 · Record created (spell, dream, gratitude, desire, affirmation, sigil or encyclopedia page): 5 · Each daily rite: 3",
   "avatarUseCamera": "Use the device camera",
   "avatarResetDefault": "Return to the default avatar",
   "profileAdminOptions": "Admin Options",
@@ -1490,7 +1490,14 @@
   "yourDayRiteRunes": "Consult the runes",
   "yourDayRiteNature": "Identify a plant, stone or color that charmed you",
   "yourDayRitePendulum": "Ask the pendulum a question",
-  "yourDayRitesComplete": "Day complete! Your streak lives on ✨",
+  "yourDayRitesComplete": "Day complete! +{xp} XP and your streak lives on ✨",
+  "@yourDayRitesComplete": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
   "yourDayGratitudeHint": "What are you grateful for today?",
   "yourDayShortcutsTitle": "Shortcuts",
   "yourDayShortcutsEdit": "Edit",

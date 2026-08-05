@@ -22,6 +22,10 @@ class DailyRites {
   static const String runes = 'runes';
   static const String pendulum = 'pendulum';
 
+  /// Marcador do dia fechado (os três ritos cumpridos). Não é um rito que
+  /// se faz — é o selo que o card grava, e vale o bônus de XP do dia.
+  static const String dayComplete = 'day_complete';
+
   static const List<String> all = [gratitude, dream, divination];
 
   /// Revezamento do terceiro slot do card: gratidão e sonho são fixos, e o

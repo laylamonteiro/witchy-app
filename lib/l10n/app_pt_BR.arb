@@ -1348,7 +1348,7 @@
     }
   },
   "journeysHowXp": "Como ganhar XP",
-  "journeysHowXpBody": "Página de lição escrita: 25 · Trilha encadernada: 100 · Ritual guiado concluído: 10 · Registro criado (feitiço, sonho, gratidão, desejo, afirmação, sigilo ou página da enciclopédia): 5 · Tiragem de runas, oráculo ou pêndulo: 2",
+  "journeysHowXpBody": "Trilha encadernada: 100 · Página de lição escrita: 25 · Os três ritos do dia cumpridos: 15 · Ritual guiado concluído: 10 · Registro criado (feitiço, sonho, gratidão, desejo, afirmação, sigilo ou página da enciclopédia): 5 · Cada rito do dia: 3",
   "avatarUseCamera": "Use a câmera do dispositivo",
   "avatarResetDefault": "Voltar ao avatar padrão",
   "profileAdminOptions": "Opções de Admin",
@@ -1490,7 +1490,14 @@
   "yourDayRiteRunes": "Consultar as runas",
   "yourDayRiteNature": "Identificar uma planta, pedra ou cor que te encantou",
   "yourDayRitePendulum": "Fazer uma pergunta ao pêndulo",
-  "yourDayRitesComplete": "Dia completo! A sua sequência continua ✨",
+  "yourDayRitesComplete": "Dia completo! +{xp} XP e a sequência segue viva ✨",
+  "@yourDayRitesComplete": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
   "yourDayGratitudeHint": "Pelo que você é grata hoje?",
   "yourDayShortcutsTitle": "Atalhos",
   "yourDayShortcutsEdit": "Editar",
