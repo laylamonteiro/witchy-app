@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../data/daily_checkin_repository.dart';
 
@@ -46,7 +46,14 @@ class DailyRites {
 }
 
 /// Estado do check-in diário: sequência de dias e ritos concluídos hoje.
-class DailyCheckinProvider with ChangeNotifier {
+class DailyCheckinProvider with ChangeNotifier, WidgetsBindingObserver {
+  DailyCheckinProvider() {
+    // O Android mantém o processo vivo por dias: sem observar o ciclo de
+    // vida, reabrir o app num dia novo não registrava a visita e o streak
+    // congelava no valor do último load.
+    WidgetsBinding.instance.addObserver(this);
+  }
+
   final DailyCheckinRepository _repository = DailyCheckinRepository();
 
   String _userId = 'local_user';
@@ -54,6 +61,26 @@ class DailyCheckinProvider with ChangeNotifier {
   int _bestStreak = 0;
   Set<String> _ritesToday = {};
   bool _loaded = false;
+
+  /// Dia (YYYY-MM-DD local) do último load — para detectar a virada.
+  String? _loadedDay;
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Voltou do background num dia diferente do último load: registra a
+    // visita de hoje e recarrega sequência + ritos (o load é idempotente).
+    if (state == AppLifecycleState.resumed &&
+        _loaded &&
+        _loadedDay != DailyCheckinRepository.dayKey(DateTime.now())) {
+      load();
+    }
+  }
 
   /// Dias seguidos de prática (inclui hoje).
   int get streak => _streak;
@@ -82,6 +109,7 @@ class DailyCheckinProvider with ChangeNotifier {
     _streak = await _repository.currentStreak(_userId);
     _bestStreak = await _repository.bestStreak(_userId);
     _ritesToday = await _repository.ritesToday(_userId);
+    _loadedDay = DailyCheckinRepository.dayKey(DateTime.now());
     _loaded = true;
     notifyListeners();
   }
@@ -95,6 +123,7 @@ class DailyCheckinProvider with ChangeNotifier {
     // sequência precisa refletir isso na hora.
     _streak = await _repository.currentStreak(_userId);
     if (_streak > _bestStreak) _bestStreak = _streak;
+    _loadedDay = DailyCheckinRepository.dayKey(DateTime.now());
     notifyListeners();
   }
 }
