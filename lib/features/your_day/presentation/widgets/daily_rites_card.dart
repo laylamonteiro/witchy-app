@@ -139,6 +139,9 @@ class DailyRitesCard extends StatelessWidget {
             onStart: featured.$3,
           ),
           const SizedBox(height: 6),
+          // Só a celebração do dia completo: a linha de apoio prometia que
+          // "cada rito alimenta suas Jornadas Mágicas", mas nem toda ação
+          // daqui gera XP — melhor não prometer do que prometer errado.
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: complete
@@ -159,13 +162,7 @@ class DailyRitesCard extends StatelessWidget {
                       ),
                     ],
                   )
-                : Text(
-                    l10n.yourDayRitesHint,
-                    key: const ValueKey('hint'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.textSecondary,
-                        ),
-                  ),
+                : const SizedBox.shrink(key: ValueKey('hint')),
           ),
         ],
       ),
