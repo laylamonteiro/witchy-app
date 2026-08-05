@@ -790,21 +790,26 @@ class AIService {
           ],
           'generationConfig': {
             'temperature': temperature,
-            'maxOutputTokens': maxTokens,
-            // A família 3.x "pensa" por padrão e os pensamentos consomem os
-            // tokens de saída. Ela usa thinkingLevel (o thinkingBudget
-            // legado do 2.5 causa 400 INVALID_ARGUMENT aqui) — "low" é o
-            // mínimo aceito.
+            // Mesma folga do caminho de texto: a família 3.x "pensa" por
+            // padrão e os pensamentos consomem os tokens de SAÍDA, então
+            // sem margem a resposta chegava cortada no meio da frase.
+            'maxOutputTokens': maxTokens + 512,
+            // Ela usa thinkingLevel (o thinkingBudget legado do 2.5 causa
+            // 400 INVALID_ARGUMENT aqui) — "low" é o mínimo aceito.
             'thinkingConfig': {'thinkingLevel': 'low'},
           },
         },
       );
-      final parts =
-          (response.data['candidates'][0]['content']['parts'] as List?) ??
-              const [];
-      final text = parts.map((p) => '${p['text'] ?? ''}').join().trim();
+      final candidate = response.data['candidates'][0];
+      final parts = (candidate['content']['parts'] as List?) ?? const [];
+      var text = parts.map((p) => '${p['text'] ?? ''}').join().trim();
       if (text.isEmpty) {
         throw const FormatException('resposta vazia');
+      }
+      // Estourou mesmo com a folga: apara na última frase completa em vez
+      // de exibir o corte cru ("...refinamento perceptivo e").
+      if (candidate['finishReason'] == 'MAX_TOKENS') {
+        text = _trimToLastSentence(text);
       }
       unawaited(debugLog('AI', '$tag: gemini'));
       return text;
@@ -842,8 +847,11 @@ class AIService {
     unawaited(debugLog('AI', '$tag: groq'));
     // O Qwen3 é modelo de raciocínio: remove o bloco <think>...</think>
     // para entregar só a resposta final.
-    return _stripReasoning(
-        '${response.data['choices'][0]['message']['content']}');
+    final choice = response.data['choices'][0];
+    final content = _stripReasoning('${choice['message']['content']}');
+    return choice['finish_reason'] == 'length'
+        ? _trimToLastSentence(content)
+        : content;
   }
 
   /// Leitura de mãos por imagem (Premium).
@@ -859,9 +867,11 @@ class AIService {
         userText: _prompts.palmUserMessage,
         jpegBytes: jpegBytes,
         temperature: 0.6,
-        // A leitura completa (7 pontos + síntese) truncava em 1600 — o
-        // "pensamento" do Gemini 3.x também consome tokens de saída.
-        maxTokens: 2400,
+        // A leitura completa são 8 parágrafos técnicos (7 pontos + a
+        // síntese ✦): 1600 cortava no meio e 2400 ainda truncava o último
+        // ponto. Com a folga do "pensamento" somada no _visionCall, 3000
+        // cobre a leitura inteira.
+        maxTokens: 3000,
         tag: 'quiromancia',
       );
     } on DioException catch (e) {

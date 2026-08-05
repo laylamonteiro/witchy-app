@@ -1316,6 +1316,39 @@
   "birthChartSearchFailed": "No se pudo buscar ahora. Verifica tu conexión e inténtalo de nuevo en unos instantes",
   "birthChartNoCityFound": "Ninguna ciudad encontrada. Prueba otra grafía o incluye el estado/país (ej.: \"Campinas, São Paulo\")",
   "journeysTabBeginner": "Principiante",
+  "journeysEmpty": "Ninguna ruta disponible",
+  "journeysLevelsTitle": "Niveles de tu camino",
+  "journeysLevelsIntro": "Cada práctica y cada página escrita suman XP. A medida que el total crece, tu título cambia — y el anillo en la parte superior de Tu Día lo acompaña",
+  "journeysLevelCurrent": "Estás aquí",
+  "journeysLevelLocked": "{xp} XP",
+  "@journeysLevelLocked": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
+  "journeysXpToNext": "Faltan {xp} XP para {title}",
+  "@journeysXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "journeysXpTotal": "{xp} XP en total",
+  "@journeysXpTotal": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
+  "journeysHowXp": "Cómo ganar XP",
+  "journeysHowXpBody": "Ruta encuadernada: 100 · Página de lección escrita: 25 · Los tres ritos del día cumplidos: 15 · Ritual guiado completado: 10 · Registro creado (hechizo, sueño, gratitud, deseo, afirmación, sigilo o página de la enciclopedia): 5 · Cada rito del día: 3",
   "avatarUseCamera": "Usa la cámara del dispositivo",
   "avatarResetDefault": "Volver al avatar predeterminado",
   "profileAdminOptions": "Opciones de Admin",
@@ -1457,8 +1490,14 @@
   "yourDayRiteRunes": "Consultar las runas",
   "yourDayRiteNature": "Identificar una planta, piedra o color que te encantó",
   "yourDayRitePendulum": "Hacer una pregunta al péndulo",
-  "yourDayRitesComplete": "¡Día completo! Tu racha sigue ✨",
-  "yourDayRitesHint": "Cada rito alimenta tus Viajes Mágicos",
+  "yourDayRitesComplete": "¡Día completo! +{xp} XP y tu racha sigue ✨",
+  "@yourDayRitesComplete": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
   "yourDayGratitudeHint": "¿Por qué estás agradecida hoy?",
   "yourDayShortcutsTitle": "Atajos",
   "yourDayShortcutsEdit": "Editar",

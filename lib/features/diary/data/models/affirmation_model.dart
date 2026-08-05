@@ -133,211 +133,231 @@ class AffirmationModel {
     );
   }
 
-  // Afirmações pré-carregadas
+  /// Versão da semeadura das afirmações. Subir este número faz o app
+  /// substituir as pré-carregadas antigas na próxima abertura (as que a
+  /// pessoa favoritou são preservadas).
+  static const int seedVersion = 2;
+
+  /// Afirmações pré-carregadas.
+  ///
+  /// Escritas para soarem verdadeiras na boca de quem lê: presente,
+  /// concretas, com agência na própria pessoa e SEM flexão de gênero
+  /// (nada de "protegido/protegida"). Evitam promessa absoluta — o que
+  /// a mente rejeita, ela não repete.
   static List<AffirmationModel> getPreloadedAffirmations() {
     return [
       // Abundância
       AffirmationModel(
-        text: 'Sou um ímã para a prosperidade e abundância em todas as formas',
+        text: 'Reconheço a abundância que já existe na minha vida',
         category: AffirmationCategory.abundance,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'O universo conspira a meu favor, trazendo riqueza e oportunidades',
+        text: 'Cuido bem do que tenho, e o que tenho floresce',
         category: AffirmationCategory.abundance,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Minha energia atrai recursos infinitos e bênçãos constantes',
+        text: 'Mereço prosperidade sem sentir culpa',
         category: AffirmationCategory.abundance,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Recebo com gratidão as dádivas do universo em forma de ouro e luz',
+        text: 'Meu trabalho abre caminhos, e eu sei receber o que chega',
+        category: AffirmationCategory.abundance,
+        isPreloaded: true,
+      ),
+      AffirmationModel(
+        text: 'Tenho o bastante para hoje, e hoje é o que existe',
         category: AffirmationCategory.abundance,
         isPreloaded: true,
       ),
 
       // Proteção
       AffirmationModel(
-        text: 'Estou protegido por uma luz branca divina que afasta toda negatividade',
+        text: 'Escolho onde ponho minha energia — isso já é proteção',
         category: AffirmationCategory.protection,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Minha aura é um escudo impenetrável de energia sagrada',
+        text: 'Meus limites são o meu círculo mágico',
         category: AffirmationCategory.protection,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Anjos e espíritos guardiões caminham ao meu lado sempre',
+        text: 'Tenho o direito de dizer não sem me explicar',
         category: AffirmationCategory.protection,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Sou envolvido por um círculo mágico de proteção e segurança',
+        text: 'O que não me pertence, eu devolvo',
+        category: AffirmationCategory.protection,
+        isPreloaded: true,
+      ),
+      AffirmationModel(
+        text: 'Estou em segurança neste corpo, neste instante',
         category: AffirmationCategory.protection,
         isPreloaded: true,
       ),
 
       // Amor
       AffirmationModel(
-        text: 'Meu coração irradia amor incondicional para mim e para o mundo',
+        text: 'Meu afeto começa em mim e transborda daqui',
         category: AffirmationCategory.love,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Sou digno de amor puro, verdadeiro e mágico',
+        text: 'Mereço um amor que não me peça para diminuir',
         category: AffirmationCategory.love,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'O amor flui através de mim como um rio de luz cristalina',
+        text: 'Falo comigo com a doçura que ofereço a quem amo',
         category: AffirmationCategory.love,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Atraio relacionamentos que nutrem minha alma e elevam meu espírito',
+        text: 'Meu coração se abre no meu tempo, não no tempo dos outros',
         category: AffirmationCategory.love,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Me amo completamente, com toda minha magia e imperfeições',
+        text: 'Aceito minha magia e minhas falhas no mesmo abraço',
         category: AffirmationCategory.love,
         isPreloaded: true,
       ),
 
       // Cura
       AffirmationModel(
-        text: 'Meu corpo é um templo sagrado de cura e regeneração',
+        text: 'Meu corpo pede coisas simples, e eu escuto',
         category: AffirmationCategory.healing,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Cada célula do meu ser vibra em harmonia e saúde perfeita',
+        text: 'Descansar também é um ato de cura',
         category: AffirmationCategory.healing,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'A energia curativa do universo flui através de mim',
+        text: 'O que dói hoje não é tudo o que eu sou',
         category: AffirmationCategory.healing,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Liberto traumas do passado e abraço a cura do presente',
+        text: 'Devolvo à terra aquilo que já não me serve',
         category: AffirmationCategory.healing,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Sou curado pelas forças místicas da natureza e do cosmos',
+        text: 'Sigo no meu ritmo, e meu ritmo basta',
         category: AffirmationCategory.healing,
         isPreloaded: true,
       ),
 
       // Poder Pessoal
       AffirmationModel(
-        text: 'Possuo poder ilimitado para criar minha realidade',
+        text: 'Conduzo a minha própria vida, mesmo devagar',
         category: AffirmationCategory.power,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Sou a bruxa/bruxo da minha própria vida, moldando meu destino',
+        text: 'Minha vontade tem força, e eu a uso com cuidado',
         category: AffirmationCategory.power,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Minha vontade é forte como fogo, meu poder é inesgotável',
+        text: 'Tenho poder sobre o que faço agora',
         category: AffirmationCategory.power,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Comando minha energia com confiança e propósito',
+        text: 'Minha voz merece ser ouvida, a começar por mim',
         category: AffirmationCategory.power,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Sou soberano do meu reino interior e exterior',
+        text: 'Escolho meus caminhos, inclusive os difíceis',
         category: AffirmationCategory.power,
         isPreloaded: true,
       ),
 
       // Sabedoria
       AffirmationModel(
-        text: 'A sabedoria ancestral flui através das minhas veias',
+        text: 'Minha intuição fala baixo, e eu aprendo a escutar',
         category: AffirmationCategory.wisdom,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Confio na minha intuição, ela é minha bússola mágica',
+        text: 'Não preciso saber tudo para começar',
         category: AffirmationCategory.wisdom,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Tenho acesso à biblioteca infinita do conhecimento universal',
+        text: 'Cada erro me ensina o que o acerto não ensinaria',
         category: AffirmationCategory.wisdom,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Cada experiência me traz lições valiosas e crescimento espiritual',
+        text: 'Pergunto sem vergonha e aprendo sem pressa',
         category: AffirmationCategory.wisdom,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Sou guiado pela luz da sabedoria divina em cada decisão',
+        text: 'Carrego comigo o saber de quem veio antes de mim',
         category: AffirmationCategory.wisdom,
         isPreloaded: true,
       ),
 
       // Manifestação
       AffirmationModel(
-        text: 'Meus pensamentos se tornam realidade com facilidade mágica',
+        text: 'Digo com clareza o que quero — a clareza já é magia',
         category: AffirmationCategory.manifestation,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Manifesto meus sonhos sob a luz da lua cheia',
+        text: 'Dou o primeiro passo, e o caminho responde',
         category: AffirmationCategory.manifestation,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Sou cocriador do universo, moldando minha vida com intenção',
+        text: 'Minha intenção fica viva quando eu a pratico',
         category: AffirmationCategory.manifestation,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Cada palavra que falo é um feitiço de manifestação',
+        text: 'Escrevo meus desejos para não perdê-los de vista',
         category: AffirmationCategory.manifestation,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'O poder de manifestação corre em meu sangue místico',
+        text: 'O que planto hoje tem seu próprio tempo de brotar',
         category: AffirmationCategory.manifestation,
         isPreloaded: true,
       ),
 
       // Transformação
       AffirmationModel(
-        text: 'Transformo-me como a lua, ciclicamente renovado e poderoso',
+        text: 'Mudo como a lua muda: por fases, não de uma vez',
         category: AffirmationCategory.transformation,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Abraço mudanças como portais para novas dimensões do meu ser',
+        text: 'Posso recomeçar quantas vezes for preciso',
         category: AffirmationCategory.transformation,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Sou fênix renascida das cinzas da minha antiga versão',
+        text: 'Deixo ir o que já cumpriu seu papel',
         category: AffirmationCategory.transformation,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Cada final é um novo começo mágico em minha jornada',
+        text: 'Não sou quem eu era ontem, e tudo bem',
         category: AffirmationCategory.transformation,
         isPreloaded: true,
       ),
       AffirmationModel(
-        text: 'Metamorfoseio-me em versões cada vez mais elevadas de mim',
+        text: 'Todo fim que atravessei me trouxe até aqui',
         category: AffirmationCategory.transformation,
         isPreloaded: true,
       ),

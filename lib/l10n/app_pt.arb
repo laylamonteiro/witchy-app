@@ -1832,6 +1832,39 @@
   "birthChartSearchFailed": "Não foi possível buscar agora. Verifique sua conexão e tente novamente em instantes",
   "birthChartNoCityFound": "Nenhuma cidade encontrada. Tente outra grafia ou inclua o estado/país (ex.: \"Campinas, São Paulo\")",
   "journeysTabBeginner": "Iniciante",
+  "journeysEmpty": "Nenhuma jornada disponível",
+  "journeysLevelsTitle": "Níveis da sua jornada",
+  "journeysLevelsIntro": "Cada prática e cada página escrita somam XP. Conforme o total cresce, o seu título muda — e o anel no topo do Seu Dia acompanha",
+  "journeysLevelCurrent": "Você está aqui",
+  "journeysLevelLocked": "{xp} XP",
+  "@journeysLevelLocked": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
+  "journeysXpToNext": "Faltam {xp} XP para {title}",
+  "@journeysXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "journeysXpTotal": "{xp} XP no total",
+  "@journeysXpTotal": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
+  "journeysHowXp": "Como ganhar XP",
+  "journeysHowXpBody": "Trilha encadernada: 100 · Página de lição escrita: 25 · Os três ritos do dia cumpridos: 15 · Ritual guiado concluído: 10 · Registro criado (feitiço, sonho, gratidão, desejo, afirmação, sigilo ou página da enciclopédia): 5 · Cada rito do dia: 3",
   "avatarUseCamera": "Use a câmera do dispositivo",
   "avatarResetDefault": "Voltar ao avatar padrão",
   "profileAdminOptions": "Opções de Admin",
@@ -2108,8 +2141,14 @@
   "yourDayRiteRunes": "Consultar as runas",
   "yourDayRiteNature": "Identificar uma planta, pedra ou cor que te encantou",
   "yourDayRitePendulum": "Fazer uma pergunta ao pêndulo",
-  "yourDayRitesComplete": "Dia completo! A sua sequência continua ✨",
-  "yourDayRitesHint": "Cada rito alimenta suas Jornadas Mágicas",
+  "yourDayRitesComplete": "Dia completo! +{xp} XP e a sequência segue viva ✨",
+  "@yourDayRitesComplete": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
   "yourDayGratitudeHint": "Pelo que você é grata hoje?",
   "@yourDayStreakDays": {
     "placeholders": {

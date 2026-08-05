@@ -9,7 +9,7 @@ import '../../../../core/widgets/magical_progress.dart';
 import '../../../../core/widgets/starfield_background.dart';
 import '../../../analytics/presentation/pages/magical_analytics_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../learning/presentation/pages/learning_home_page.dart';
+import '../../../journeys/presentation/pages/journeys_page.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
 import '../providers/daily_checkin_provider.dart';
 
@@ -81,14 +81,15 @@ class GreetingHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // Anel do nível do Grimório Vivo — toque leva às trilhas.
+            // Anel do nível — toque leva às Jornadas Mágicas, onde o nível
+            // e a escada completa de títulos vivem.
             Semantics(
               label: '${level.title} · ${learning.xp} XP',
               button: true,
               child: InkWell(
                 borderRadius: BorderRadius.circular(30),
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const LearningHomePage()),
+                  MaterialPageRoute(builder: (_) => const JourneysPage()),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(4),

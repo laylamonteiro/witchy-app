@@ -6,6 +6,7 @@ import '../../data/models/trail_model.dart';
 import '../../data/repositories/learning_progress_repository.dart';
 import '../../../../core/content/content_locale.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 /// Strings do idioma atual sem BuildContext; o locale vem do ContentLocale.
 AppLocalizations get _l10n =>
@@ -35,11 +36,19 @@ class LearningProvider with ChangeNotifier {
 
   /// XP UNIFICADO: as práticas também alimentam o nível, com pesos menores
   /// que o estudo — criar algo (registro, sigilo, página da enciclopédia)
-  /// vale mais que consultar (tiragens), e o ritual guiado fica no meio.
+  /// vale mais que consultar, e o ritual guiado fica no meio.
   /// Assim "XP" significa a mesma coisa no app inteiro.
   static const int xpPerGuidedRitual = 10;
   static const int xpPerCreation = 5;
-  static const int xpPerDivination = 2;
+
+  /// Consultar (tarot, oráculo, runas, pêndulo, quiromancia, identificação)
+  /// premia pelo RITO do dia, não por tiragem: assim o tarot conta como as
+  /// demais (as tiragens dele não são gravadas em tabela) e ninguém ganha
+  /// nível repetindo a mesma consulta dez vezes seguidas.
+  static const int xpPerRite = 3;
+
+  /// Bônus por fechar os três ritos do dia — a recompensa de constância.
+  static const int xpPerFullDay = 15;
 
   /// Níveis com nomes no idioma atual (limiares de XP invariantes).
   static List<LearningLevel> get levels => [
@@ -80,8 +89,8 @@ class LearningProvider with ChangeNotifier {
   }
 
   /// XP das práticas direto do banco: criações (registros do grimório,
-  /// diários, sigilos, páginas da enciclopédia pessoal), tiragens (runas,
-  /// oráculo, pêndulo) e rituais guiados concluídos.
+  /// diários, sigilos, páginas da enciclopédia pessoal), ritos do dia
+  /// cumpridos, dias fechados e rituais guiados concluídos.
   Future<int> _computePracticeXp() async {
     const creationTables = [
       'spells',
@@ -91,11 +100,6 @@ class LearningProvider with ChangeNotifier {
       'desires',
       'sigils',
       'user_encyclopedia_entries',
-    ];
-    const divinationTables = [
-      'rune_readings',
-      'oracle_readings',
-      'pendulum_consultations',
     ];
 
     Future<int> count(dynamic db, String table) async {
@@ -120,11 +124,38 @@ class LearningProvider with ChangeNotifier {
       for (final t in creationTables) {
         xp += await count(db, t) * xpPerCreation;
       }
-      for (final t in divinationTables) {
-        xp += await count(db, t) * xpPerDivination;
-      }
       xp += await count(db, 'guided_ritual_logs') * xpPerGuidedRitual;
+      xp += await _riteXp(db);
       return xp;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// XP dos ritos: cada rito exploratório marcado (uma vez por dia, seja
+  /// tarot, oráculo, runas, pêndulo, quiromancia ou identificação) mais o
+  /// bônus dos dias em que os três ritos foram fechados.
+  Future<int> _riteXp(dynamic db) async {
+    try {
+      final rows = await db.rawQuery(
+        'SELECT rites FROM daily_checkins WHERE user_id = ?',
+        [_currentUserId],
+      );
+      var rites = 0;
+      var fullDays = 0;
+      for (final row in rows) {
+        final raw = row['rites'] as String? ?? '';
+        if (raw.isEmpty) continue;
+        for (final id in raw.split(',')) {
+          if (id.isEmpty) continue;
+          if (id == DailyRites.dayComplete) {
+            fullDays++;
+          } else {
+            rites++;
+          }
+        }
+      }
+      return rites * xpPerRite + fullDays * xpPerFullDay;
     } catch (_) {
       return 0;
     }

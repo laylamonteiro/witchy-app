@@ -15,6 +15,7 @@ import '../../../grimoire/presentation/pages/user_spells_list_page.dart';
 import '../../../journeys/presentation/pages/journeys_page.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
 import '../../../your_day/data/daily_checkin_repository.dart';
+import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../diary/presentation/pages/dreams_list_page.dart';
 import '../../../diary/presentation/pages/gratitudes_list_page.dart';
 import '../../../diary/presentation/pages/affirmations_list_page.dart';
@@ -62,6 +63,9 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
 
     // O XP de práticas vem do banco: recalcula ao abrir/atualizar a tela.
     unawaited(context.read<LearningProvider>().refreshPracticeXp());
+    // A sequência mostrada aqui precisa contar o dia de hoje: garante que a
+    // visita está registrada antes de ler o streak.
+    await context.read<DailyCheckinProvider>().ensureToday();
 
     try {
       final authProvider = context.read<AuthProvider>();

@@ -81,6 +81,18 @@ class AffirmationRepository {
     return result;
   }
 
+  /// Apaga as afirmações pré-carregadas para dar lugar a uma semeadura
+  /// nova, PRESERVANDO as que a pessoa favoritou — se ela guardou aquela
+  /// frase, a frase é dela agora.
+  Future<int> deletePreloadedExceptFavorites() async {
+    final db = await _dbHelper.database;
+    return db.delete(
+      'affirmations',
+      where: 'is_preloaded = ? AND is_favorite = ?',
+      whereArgs: [1, 0],
+    );
+  }
+
   Future<int> delete(String id) async {
     final db = await _dbHelper.database;
     final result = await db.delete(

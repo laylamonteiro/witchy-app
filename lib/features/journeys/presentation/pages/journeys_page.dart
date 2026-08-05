@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../learning/presentation/providers/learning_provider.dart';
 import '../../data/models/journey_model.dart';
 
 /// Página de Jornadas Mágicas Gamificadas
@@ -20,7 +21,6 @@ class _JourneysPageState extends State<JourneysPage>
   late TabController _tabController;
   bool _isLoading = true;
   Map<String, int> _userStats = {};
-  int _totalXp = 0;
 
   @override
   void initState() {
@@ -68,9 +68,6 @@ class _JourneysPageState extends State<JourneysPage>
       _userStats['all_readings'] = (_userStats['rune_readings'] ?? 0) +
           (_userStats['oracle_readings'] ?? 0) +
           (_userStats['pendulum_consultations'] ?? 0);
-
-      // Calcular XP total baseado no progresso
-      _totalXp = _calculateTotalXp();
 
       if (mounted) setState(() => _isLoading = false);
     } catch (e) {
@@ -167,21 +164,6 @@ class _JourneysPageState extends State<JourneysPage>
     }
   }
 
-  int _calculateTotalXp() {
-    int xp = 0;
-
-    for (final journey in AvailableJourneys.all) {
-      for (final step in journey.steps) {
-        final progress = _getStepProgress(step);
-        if (progress >= step.requiredCount) {
-          xp += step.xpReward;
-        }
-      }
-    }
-
-    return xp;
-  }
-
   int _getStepProgress(JourneyStep step) {
     if (step.type == StepType.streak) {
       return _userStats['${step.targetEntity}_streak'] ??
@@ -236,7 +218,10 @@ class _JourneysPageState extends State<JourneysPage>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildJourneysList(AvailableJourneys.all),
+                      // A escada de níveis abre a aba "Todas": é a
+                      // explicação do que o número do topo significa.
+                      _buildJourneysList(AvailableJourneys.all,
+                          showLevels: true),
                       _buildJourneysList(AvailableJourneys.byCategory(
                           JourneyCategory.iniciante)),
                       _buildJourneysList([
@@ -258,10 +243,15 @@ class _JourneysPageState extends State<JourneysPage>
     );
   }
 
+  /// Cabeçalho do nível — a MESMA escada do Grimório Vivo e das
+  /// Estatísticas (LearningProvider), não uma contagem paralela: antes
+  /// esta tela tinha níveis próprios ("Nivel 1 - Iniciante", 500 XP por
+  /// nível) que diziam um número diferente do resto do app.
   Widget _buildXpHeader() {
-    final level = (_totalXp / 500).floor() + 1;
-    final xpInLevel = _totalXp % 500;
-    final xpForNextLevel = 500;
+    final l10n = AppLocalizations.of(context);
+    final learning = context.watch<LearningProvider>();
+    final level = learning.level;
+    final next = learning.nextLevel;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -289,12 +279,8 @@ class _JourneysPageState extends State<JourneysPage>
             ),
             child: Center(
               child: Text(
-                '$level',
-                style: TextStyle(
-                  color: context.gc.textPrimary,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                level.emoji,
+                style: const TextStyle(fontSize: 26),
               ),
             ),
           ),
@@ -304,7 +290,7 @@ class _JourneysPageState extends State<JourneysPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nivel $level - ${_getLevelTitle(level)}',
+                  level.title,
                   style: TextStyle(
                     color: context.gc.textPrimary,
                     fontSize: 16,
@@ -313,7 +299,7 @@ class _JourneysPageState extends State<JourneysPage>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$_totalXp XP total',
+                  l10n.journeysXpTotal(learning.xp),
                   style: TextStyle(
                     color: context.gc.textSecondary,
                     fontSize: 12,
@@ -323,21 +309,23 @@ class _JourneysPageState extends State<JourneysPage>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: xpInLevel / xpForNextLevel,
-                    backgroundColor: context.gc.textSecondary,
+                    value: learning.levelProgress,
+                    backgroundColor: context.gc.textPrimary10,
                     valueColor:
                         AlwaysStoppedAnimation(context.gc.starYellow),
                     minHeight: 6,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '$xpInLevel / $xpForNextLevel XP para o proximo nivel',
-                  style: TextStyle(
-                    color: context.gc.textSecondary,
-                    fontSize: 10,
+                if (next != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.journeysXpToNext(next.minXp - learning.xp, next.title),
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
+                      fontSize: 10,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -346,20 +334,157 @@ class _JourneysPageState extends State<JourneysPage>
     );
   }
 
-  String _getLevelTitle(int level) {
-    if (level >= 20) return 'Arquimago';
-    if (level >= 15) return 'Mestre';
-    if (level >= 10) return 'Adepto';
-    if (level >= 5) return 'Praticante';
-    if (level >= 3) return 'Aprendiz';
-    return 'Iniciante';
+  /// A escada completa de títulos: sem isto, ninguém descobria que
+  /// existem Praticante, Adepta, Mestra e Guardiã depois de Iniciada.
+  Widget _buildLevelsSection() {
+    final l10n = AppLocalizations.of(context);
+    final learning = context.watch<LearningProvider>();
+    final current = learning.level;
+    final levels = LearningProvider.levels;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.gc.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gc.textPrimary10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.military_tech, color: context.gc.starYellow, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.journeysLevelsTitle,
+                  style: TextStyle(
+                    color: context.gc.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.journeysLevelsIntro,
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          for (final level in levels) ...[
+            _buildLevelRow(
+              level: level,
+              reached: learning.xp >= level.minXp,
+              isCurrent: level.title == current.title,
+            ),
+            if (level != levels.last) const SizedBox(height: 8),
+          ],
+          const SizedBox(height: 16),
+          Divider(color: context.gc.textPrimary10),
+          const SizedBox(height: 10),
+          Text(
+            l10n.journeysHowXp,
+            style: TextStyle(
+              color: context.gc.lilac,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.journeysHowXpBody,
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildJourneysList(List<JourneyModel> journeys) {
-    if (journeys.isEmpty) {
+  Widget _buildLevelRow({
+    required LearningLevel level,
+    required bool reached,
+    required bool isCurrent,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    return Opacity(
+      // Níveis ainda não alcançados ficam discretos, mas visíveis: são o
+      // caminho à frente, não um segredo.
+      opacity: reached ? 1 : 0.5,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: isCurrent
+              ? context.gc.lilac.withValues(alpha: 0.15)
+              : Colors.transparent,
+          border: isCurrent
+              ? Border.all(color: context.gc.lilac.withValues(alpha: 0.6))
+              : null,
+        ),
+        child: Row(
+          children: [
+            Text(level.emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    level.title,
+                    style: TextStyle(
+                      color: context.gc.textPrimary,
+                      fontWeight:
+                          isCurrent ? FontWeight.bold : FontWeight.w500,
+                    ),
+                  ),
+                  if (isCurrent) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.journeysLevelCurrent,
+                      style: TextStyle(
+                        color: context.gc.lilac,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Text(
+              l10n.journeysLevelLocked(level.minXp),
+              style: TextStyle(
+                color: reached ? context.gc.starYellow : context.gc.textSecondary,
+                fontSize: 12,
+                fontWeight: reached ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildJourneysList(
+    List<JourneyModel> journeys, {
+    bool showLevels = false,
+  }) {
+    if (journeys.isEmpty && !showLevels) {
       return Center(
         child: Text(
-          'Nenhuma jornada disponivel',
+          AppLocalizations.of(context).journeysEmpty,
           style: TextStyle(color: context.gc.textSecondary),
         ),
       );
@@ -370,8 +495,12 @@ class _JourneysPageState extends State<JourneysPage>
       color: context.gc.lilac,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: journeys.length,
+        itemCount: journeys.length + (showLevels ? 1 : 0),
         itemBuilder: (context, index) {
+          if (showLevels) {
+            if (index == 0) return _buildLevelsSection();
+            return _buildJourneyCard(journeys[index - 1]);
+          }
           return _buildJourneyCard(journeys[index]);
         },
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/data_sources/affirmation_localizer.dart';
 import '../../data/models/affirmation_model.dart';
 import '../../data/repositories/affirmation_repository.dart';
@@ -31,20 +32,33 @@ class AffirmationProvider with ChangeNotifier {
     await loadAffirmations();
   }
 
+  static const String _seedVersionKey = 'affirmations_seed_version';
+
+  /// Semeia as afirmações padrão na primeira vez e, quando o conteúdo é
+  /// revisado (seedVersion sobe), troca as antigas pelas novas na próxima
+  /// abertura. As favoritadas ficam — viraram escolha da pessoa.
+  Future<void> _ensureSeed() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seeded = prefs.getInt(_seedVersionKey) ??
+        // Sem marca: quem já tem linhas veio da semeadura 1; banco vazio
+        // ainda não foi semeado.
+        (await _repository.hasPreloadedData() ? 1 : 0);
+    if (seeded >= AffirmationModel.seedVersion) return;
+
+    if (seeded > 0) {
+      await _repository.deletePreloadedExceptFavorites();
+    }
+    await _repository.insertAll(AffirmationModel.getPreloadedAffirmations());
+    await prefs.setInt(_seedVersionKey, AffirmationModel.seedVersion);
+  }
+
   Future<void> loadAffirmations() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // Verificar se já existem afirmações pré-carregadas
-      final hasPreloaded = await _repository.hasPreloadedData();
-
-      // Se não existirem, carregar as afirmações padrão
-      if (!hasPreloaded) {
-        await _repository
-            .insertAll(AffirmationModel.getPreloadedAffirmations());
-      }
+      await _ensureSeed();
 
       // Guarda o texto CRU; a tradução acontece na exibição. De quebra,
       // repara linhas pré-carregadas que um favoritar antigo persistiu
