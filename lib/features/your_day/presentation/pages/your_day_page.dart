@@ -47,6 +47,11 @@ class _YourDayPageState extends State<YourDayPage>
   void initState() {
     super.initState();
     widget.resetNotifier?.addListener(_onResetRequested);
+    // A aba fica viva (wantKeepAlive) enquanto o app existir: sem isto, o
+    // dia podia virar sem que a visita de hoje fosse registrada.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<DailyCheckinProvider>().ensureToday();
+    });
   }
 
   @override

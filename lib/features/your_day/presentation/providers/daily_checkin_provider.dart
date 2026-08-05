@@ -73,13 +73,19 @@ class DailyCheckinProvider with ChangeNotifier, WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Voltou do background num dia diferente do último load: registra a
-    // visita de hoje e recarrega sequência + ritos (o load é idempotente).
-    if (state == AppLifecycleState.resumed &&
-        _loaded &&
-        _loadedDay != DailyCheckinRepository.dayKey(DateTime.now())) {
-      load();
-    }
+    // Voltou do background: se o dia virou desde o último load, registra a
+    // visita de hoje e recarrega sequência + ritos.
+    if (state == AppLifecycleState.resumed) ensureToday();
+  }
+
+  /// Garante que a visita de HOJE está registrada. Custa nada quando o dia
+  /// já foi carregado (comparação de string), então pode ser chamado de
+  /// qualquer tela que mostre a sequência — é a rede de segurança para o
+  /// app que fica dias vivo em background sem passar por um load novo.
+  Future<void> ensureToday() async {
+    if (!_loaded) return;
+    if (_loadedDay == DailyCheckinRepository.dayKey(DateTime.now())) return;
+    await load();
   }
 
   /// Dias seguidos de prática (inclui hoje).
