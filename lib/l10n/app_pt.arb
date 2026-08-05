@@ -1832,6 +1832,39 @@
   "birthChartSearchFailed": "Não foi possível buscar agora. Verifique sua conexão e tente novamente em instantes",
   "birthChartNoCityFound": "Nenhuma cidade encontrada. Tente outra grafia ou inclua o estado/país (ex.: \"Campinas, São Paulo\")",
   "journeysTabBeginner": "Iniciante",
+  "journeysEmpty": "Nenhuma jornada disponível",
+  "journeysLevelsTitle": "Níveis da sua jornada",
+  "journeysLevelsIntro": "Cada prática e cada página escrita somam XP. Conforme o total cresce, o seu título muda — e o anel no topo do Seu Dia acompanha",
+  "journeysLevelCurrent": "Você está aqui",
+  "journeysLevelLocked": "{xp} XP",
+  "@journeysLevelLocked": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
+  "journeysXpToNext": "Faltam {xp} XP para {title}",
+  "@journeysXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "journeysXpTotal": "{xp} XP no total",
+  "@journeysXpTotal": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
+  "journeysHowXp": "Como ganhar XP",
+  "journeysHowXpBody": "Página de lição escrita: 25 · Trilha encadernada: 100 · Ritual guiado concluído: 10 · Registro criado (feitiço, sonho, gratidão, desejo, afirmação, sigilo ou página da enciclopédia): 5 · Tiragem de runas, oráculo ou pêndulo: 2",
   "avatarUseCamera": "Use a câmera do dispositivo",
   "avatarResetDefault": "Voltar ao avatar padrão",
   "profileAdminOptions": "Opções de Admin",

@@ -1316,6 +1316,39 @@
   "birthChartSearchFailed": "Couldn't search right now. Check your connection and try again in a moment",
   "birthChartNoCityFound": "No city found. Try another spelling or include the state/country (e.g. \"Campinas, São Paulo\")",
   "journeysTabBeginner": "Beginner",
+  "journeysEmpty": "No journeys available",
+  "journeysLevelsTitle": "Levels of your journey",
+  "journeysLevelsIntro": "Every practice and every page you write adds XP. As the total grows, your title changes — and the ring at the top of Your Day follows along",
+  "journeysLevelCurrent": "You are here",
+  "journeysLevelLocked": "{xp} XP",
+  "@journeysLevelLocked": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
+  "journeysXpToNext": "{xp} XP to go until {title}",
+  "@journeysXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "journeysXpTotal": "{xp} XP in total",
+  "@journeysXpTotal": {
+    "placeholders": {
+      "xp": {
+        "type": "num"
+      }
+    }
+  },
+  "journeysHowXp": "How to earn XP",
+  "journeysHowXpBody": "Lesson page written: 25 · Trail bound: 100 · Guided ritual completed: 10 · Record created (spell, dream, gratitude, desire, affirmation, sigil or encyclopedia page): 5 · Rune, oracle or pendulum reading: 2",
   "avatarUseCamera": "Use the device camera",
   "avatarResetDefault": "Return to the default avatar",
   "profileAdminOptions": "Admin Options",
