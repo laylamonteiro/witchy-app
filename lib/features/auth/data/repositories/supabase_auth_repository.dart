@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import 'auth_repository.dart';
+import '../../../../core/config/captcha_config.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/debug_log_service.dart';
 
@@ -453,7 +454,16 @@ class SupabaseAuthRepository implements AuthRepository {
     String message = e.message;
     final normalizedMessage = message.toLowerCase().replaceAll('_', ' ');
 
-    if (normalizedMessage.contains('email not confirmed') ||
+    // Captcha ligado no projeto e recusado. Duas causas bem diferentes:
+    // sem a site key compilada, o app sequer sabe gerar token — é uma
+    // versão antiga, e o único caminho é atualizar. Com a chave compilada,
+    // foi o desafio em si que falhou e vale tentar de novo.
+    if (normalizedMessage.contains('captcha')) {
+      code = AuthErrorCode.captchaRequired;
+      message = CaptchaConfig.isConfigured
+          ? _l10n.authCaptchaFailed
+          : _l10n.authErrCaptchaOutdated;
+    } else if (normalizedMessage.contains('email not confirmed') ||
         normalizedMessage.contains('email is not confirmed')) {
       message =
           'Confirme seu email antes de entrar. Verifique sua caixa de entrada.';

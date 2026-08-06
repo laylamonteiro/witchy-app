@@ -35,6 +35,9 @@ enum AuthErrorCode {
   weakPassword,
   networkError,
   tooManyRequests,
+  /// O projeto exige captcha e esta versão do app não sabe enviá-lo —
+  /// só acontece com quem ainda não atualizou.
+  captchaRequired,
   unknown,
 }
 

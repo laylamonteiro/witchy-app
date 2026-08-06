@@ -1296,6 +1296,7 @@
   "authCaptchaTitle": "Só um instante, Bruxa",
   "authCaptchaSubtitle": "Uma verificação rápida para separar gente de robôs — quase sempre passa sozinha",
   "authCaptchaFailed": "Não deu para concluir a verificação. Tente de novo",
+  "authErrCaptchaOutdated": "Atualize o app na Play Store para continuar — esta versão não passa pela nova verificação de segurança",
   "authErrConnection": "Erro de conexão: {error}",
   "@authErrConnection": {
     "placeholders": {
