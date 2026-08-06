@@ -91,6 +91,7 @@ class LocalAuthRepository implements AuthRepository {
     required String email,
     required String password,
     String? displayName,
+    String? captchaToken,
   }) async {
     await Future.delayed(const Duration(milliseconds: 500));
 
