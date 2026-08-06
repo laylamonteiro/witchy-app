@@ -519,10 +519,24 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    final captchaToken = await CaptchaGate.resolve(context);
+    if (!mounted) return;
+    if (CaptchaConfig.isConfigured && captchaToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).authCaptchaFailed),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final authRepo = SupabaseAuthRepository();
-      final result = await authRepo.signInWithGoogle();
+      final result = await authRepo.signInWithGoogle(
+        captchaToken: captchaToken,
+      );
 
       if (!mounted) return;
 
