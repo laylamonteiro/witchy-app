@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 18,
+      version: 19,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -1046,6 +1046,103 @@ class DatabaseHelper {
       ''');
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_daily_checkins_user_id ON daily_checkins(user_id)');
+    }
+
+    if (oldVersion < 19) {
+      // ORDEM IMPORTA: o clima antigo é a prova de que o app foi aberto
+      // naquele dia (a linha só nasce quando alguém abre a página), então
+      // ele alimenta a reconstrução das visitas ANTES de ser podado.
+      await _backfillCheckinsFromHistory(db);
+      await _keepLatestWeatherPerUser(db);
+    }
+  }
+
+  /// Reconstrói `daily_checkins` a partir do rastro que o app já tinha:
+  /// conteúdo criado, lições concluídas e climas consultados. Conserta a
+  /// sequência de quem usou o app antes de o check-in existir (ou antes de
+  /// ele passar a gravar todo dia).
+  Future<void> _backfillCheckinsFromHistory(Database db) async {
+    const evidence = <String, String>{
+      'spells': 'created_at',
+      'dreams': 'created_at',
+      'gratitudes': 'created_at',
+      'affirmations': 'created_at',
+      'desires': 'created_at',
+      'sigils': 'created_at',
+      'rune_readings': 'created_at',
+      'oracle_readings': 'created_at',
+      'pendulum_consultations': 'created_at',
+      'user_encyclopedia_entries': 'created_at',
+      'guided_ritual_logs': 'created_at',
+      'learning_progress': 'completed_at',
+    };
+
+    final found = <String, Set<String>>{};
+
+    Future<void> collect(String sql) async {
+      try {
+        for (final row in await db.rawQuery(sql)) {
+          final user = row['user_id'] as String?;
+          final day = row['day'] as String?;
+          if (user == null || day == null || day.isEmpty) continue;
+          found.putIfAbsent(user, () => <String>{}).add(day);
+        }
+      } catch (_) {
+        // Tabela ausente nesta base: segue com as demais.
+      }
+    }
+
+    for (final entry in evidence.entries) {
+      await collect(
+        'SELECT DISTINCT user_id, '
+        "date(${entry.value} / 1000, 'unixepoch', 'localtime') AS day "
+        'FROM ${entry.key}',
+      );
+    }
+    await collect(
+      'SELECT DISTINCT user_id, date AS day FROM daily_magical_weather',
+    );
+
+    if (found.isEmpty) return;
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final batch = db.batch();
+    for (final entry in found.entries) {
+      for (final day in entry.value) {
+        batch.insert(
+          'daily_checkins',
+          {
+            'id': '${entry.key}_$day',
+            'user_id': entry.key,
+            'date': day,
+            'rites': '',
+            'created_at': stamp,
+            'updated_at': stamp,
+            'synced': 0,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    }
+    await batch.commit(noResult: true);
+  }
+
+  /// Deixa só o clima mais recente de cada pessoa: ele vale por um dia e
+  /// nenhuma tela lê data passada, então o histórico era acúmulo puro.
+  Future<void> _keepLatestWeatherPerUser(Database db) async {
+    try {
+      await db.execute('''
+        DELETE FROM daily_magical_weather
+        WHERE id NOT IN (
+          SELECT id FROM daily_magical_weather AS w
+          WHERE w.date = (
+            SELECT MAX(date) FROM daily_magical_weather AS m
+            WHERE m.user_id = w.user_id
+          )
+        )
+      ''');
+    } catch (_) {
+      // Base sem a tabela: nada a podar.
     }
   }
 

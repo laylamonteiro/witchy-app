@@ -178,7 +178,11 @@ class DailyWeatherRepository {
     return cache.contextKey == contextKey ? cache : null;
   }
 
-  /// Salva clima no cache
+  /// Salva clima no cache — e apaga o resto.
+  ///
+  /// O clima vale por UM dia e nenhuma tela lê data passada, então guardar
+  /// o histórico só engordava o banco (e a nuvem) para sempre: fica
+  /// exatamente uma linha por pessoa, substituída a cada recálculo.
   Future<void> saveWeatherCache(DailyWeatherCache cache) async {
     final db = await _db.database;
 
@@ -188,7 +192,22 @@ class DailyWeatherRepository {
       data,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    await keepOnlyDate(cache.userId, cache.date);
     await _syncService.syncItem(SyncEntity.dailyMagicalWeather, data);
+    await _syncService.pruneOtherDays(
+      SyncEntity.dailyMagicalWeather,
+      cache.date,
+    );
+  }
+
+  /// Mantém só o dia informado no cache da pessoa.
+  Future<void> keepOnlyDate(String userId, String date) async {
+    final db = await _db.database;
+    await db.delete(
+      'daily_magical_weather',
+      where: 'user_id = ? AND date != ?',
+      whereArgs: [userId, date],
+    );
   }
 
   /// Gera e retorna clima mágico diário
@@ -269,16 +288,4 @@ class DailyWeatherRepository {
     return cache;
   }
 
-  /// Limpa caches antigos (mais de 7 dias)
-  Future<void> cleanOldCache() async {
-    final db = await _db.database;
-    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-    final dateStr = _formatDate(sevenDaysAgo);
-
-    await db.delete(
-      'daily_magical_weather',
-      where: 'date < ?',
-      whereArgs: [dateStr],
-    );
-  }
 }

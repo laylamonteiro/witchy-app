@@ -867,6 +867,27 @@ class DataSyncService {
     }
   }
 
+  /// Apaga na nuvem as linhas da pessoa que NÃO são do dia informado.
+  ///
+  /// Para as tabelas de um-dia-só (clima mágico): sem isto o
+  /// [fullDownload] baixaria de volta todo o histórico que a poda local
+  /// acabou de apagar, porque ele traz todas as linhas do usuário.
+  Future<void> pruneOtherDays(SyncEntity entity, String date) async {
+    if (!PremiumAccess.instance.isPremium) return;
+    if (!isReady) return;
+    if (!await cloudSyncEnabled) return;
+
+    try {
+      await _supabase!
+          .from(_getTableName(entity))
+          .delete()
+          .eq('user_id', currentUserId!)
+          .neq('date', date);
+    } catch (e) {
+      debugPrint('Erro ao podar dias antigos no Supabase: $e');
+    }
+  }
+
   /// Deleta um item do Supabase
   /// NOTA: Só funciona para usuários Premium
   Future<void> deleteItem(SyncEntity entity, dynamic id) async {
