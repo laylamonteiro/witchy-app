@@ -73,10 +73,9 @@ class _CaptchaSheet extends StatelessWidget {
           const SizedBox(height: 20),
           SizedBox(
             height: 90,
-            child: CloudFlareTurnstile(
+            child: CloudflareTurnstile(
               siteKey: CaptchaConfig.siteKey,
               options: TurnstileOptions(
-                mode: TurnstileMode.managed,
                 theme: TurnstileTheme.dark,
                 refreshExpired: TurnstileRefreshExpired.auto,
               ),
