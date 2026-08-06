@@ -1070,6 +1070,7 @@ class DatabaseHelper {
       'pendulum_consultations',
       'oracle_readings',
       'daily_magical_weather',
+      'daily_checkins',
       'learning_progress',
       'guided_ritual_logs',
       'user_encyclopedia_entries',
@@ -1087,6 +1088,10 @@ class DatabaseHelper {
           table,
           {'user_id': userId, 'synced': 0},
           where: "user_id IN ('local_user', 'current_user')",
+          // Tabelas com UNIQUE(user_id, date) podem já ter o dia gravado
+          // sob a conta real: nesse caso a linha anônima é descartada em
+          // vez de derrubar a adoção inteira.
+          conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
 
@@ -1166,6 +1171,7 @@ class DatabaseHelper {
       'pendulum_consultations',
       'oracle_readings',
       'daily_magical_weather',
+      'daily_checkins',
       'learning_progress',
       'guided_ritual_logs',
       'user_encyclopedia_entries',

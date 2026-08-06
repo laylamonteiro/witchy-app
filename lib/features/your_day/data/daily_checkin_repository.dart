@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/database/database_helper.dart';
+import '../../../core/services/data_sync_service.dart';
 
 /// Um dia de prática: a data (YYYY-MM-DD local) e os ritos concluídos nela.
 typedef DailyCheckin = ({String date, Set<String> rites});
@@ -9,10 +10,30 @@ typedef DailyCheckin = ({String date, Set<String> rites});
 /// Check-in diário — a base do "streak" (dias seguidos) e dos ritos do dia.
 ///
 /// Um registro por usuário por dia (UNIQUE(user_id, date)), como o cache do
-/// clima mágico. Local-only por enquanto: não entra no pipeline de sync.
+/// clima mágico. Sincroniza na nuvem: a sequência é memória de uso, e
+/// perdê-la ao reinstalar o app ou trocar de aparelho apaga meses de
+/// constância.
 class DailyCheckinRepository {
   static const String _table = 'daily_checkins';
   static const _uuid = Uuid();
+
+  final DataSyncService _syncService = DataSyncService();
+
+  /// Tabelas cujo `created_at` prova que o app foi aberto naquele dia —
+  /// criar qualquer uma destas coisas exige ter entrado no app.
+  static const List<String> _evidenceTables = [
+    'spells',
+    'dreams',
+    'gratitudes',
+    'affirmations',
+    'desires',
+    'sigils',
+    'rune_readings',
+    'oracle_readings',
+    'pendulum_consultations',
+    'user_encyclopedia_entries',
+    'guided_ritual_logs',
+  ];
 
   /// Chave do dia em horário LOCAL — nunca UTC, senão o dia "vira" na hora
   /// errada para quem está longe de Greenwich.
@@ -27,20 +48,92 @@ class DailyCheckinRepository {
     final today = dayKey(now ?? DateTime.now());
     final stamp = DateTime.now().millisecondsSinceEpoch;
 
-    await db.insert(
+    final row = {
+      'id': _uuid.v4(),
+      'user_id': userId,
+      'date': today,
+      'rites': '',
+      'created_at': stamp,
+      'updated_at': stamp,
+      'synced': 0,
+    };
+    final inserted = await db.insert(
       _table,
-      {
-        'id': _uuid.v4(),
-        'user_id': userId,
-        'date': today,
-        'rites': '',
-        'created_at': stamp,
-        'updated_at': stamp,
-        'synced': 0,
-      },
+      row,
       // Já existe check-in hoje? Mantém o registro (e os ritos) intactos.
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
+    // insert devolve 0 quando o conflito foi ignorado: só sobe para a nuvem
+    // o dia que acabou de nascer.
+    if (inserted != 0) {
+      await _syncService.syncItem(SyncEntity.dailyCheckins, row);
+    }
+  }
+
+  /// Reconstrói o histórico de visitas a partir das provas que o app
+  /// guardou: conteúdo criado, lições concluídas e o clima mágico
+  /// consultado. Serve para reparar o que se perdeu antes de a sequência
+  /// existir (ou antes de sincronizar) — quem ficou só folheando a
+  /// Enciclopédia num dia não deixou rastro e esse dia é irrecuperável.
+  ///
+  /// As linhas reconstruídas ficam com `rites` vazio de propósito: elas
+  /// provam presença, não prática premiada, então não geram XP.
+  Future<int> backfillFromPractice(String userId) async {
+    final db = await DatabaseHelper.instance.database;
+    final days = <String>{};
+
+    Future<void> collect(String sql) async {
+      try {
+        final rows = await db.rawQuery(sql, [userId]);
+        for (final row in rows) {
+          final day = row['day'] as String?;
+          if (day != null && day.isNotEmpty) days.add(day);
+        }
+      } catch (_) {
+        // Tabela ausente numa base antiga: segue com as demais.
+      }
+    }
+
+    for (final table in _evidenceTables) {
+      await collect(
+        "SELECT DISTINCT date(created_at / 1000, 'unixepoch', 'localtime') "
+        'AS day FROM $table WHERE user_id = ?',
+      );
+    }
+    // Lição concluída tem carimbo próprio.
+    await collect(
+      "SELECT DISTINCT date(completed_at / 1000, 'unixepoch', 'localtime') "
+      'AS day FROM learning_progress WHERE user_id = ?',
+    );
+    // O clima do dia só existe porque alguém abriu a página naquele dia —
+    // é a prova de quem só consultou e não criou nada.
+    await collect(
+      'SELECT DISTINCT date AS day FROM daily_magical_weather '
+      'WHERE user_id = ?',
+    );
+
+    if (days.isEmpty) return 0;
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final batch = db.batch();
+    for (final day in days) {
+      batch.insert(
+        _table,
+        {
+          'id': _uuid.v4(),
+          'user_id': userId,
+          'date': day,
+          'rites': '',
+          'created_at': stamp,
+          'updated_at': stamp,
+          'synced': 0,
+        },
+        // O UNIQUE(user_id, date) descarta os dias que já existem.
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+    final results = await batch.commit(noResult: false);
+    return results.where((r) => r != 0).length;
   }
 
   /// Ritos concluídos hoje.
@@ -81,6 +174,17 @@ class DailyCheckinRepository {
       where: 'user_id = ? AND date = ?',
       whereArgs: [userId, today],
     );
+
+    // Sobe a linha inteira do dia (o upsert remoto casa por user_id+date).
+    final rows = await db.query(
+      _table,
+      where: 'user_id = ? AND date = ?',
+      whereArgs: [userId, today],
+      limit: 1,
+    );
+    if (rows.isNotEmpty) {
+      await _syncService.syncItem(SyncEntity.dailyCheckins, rows.first);
+    }
     return updated;
   }
 
