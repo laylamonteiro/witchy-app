@@ -114,8 +114,14 @@ class DailyCheckinProvider with ChangeNotifier, WidgetsBindingObserver {
   }
 
   /// Registra a visita de hoje e recarrega sequência + ritos.
+  ///
+  /// A reconstrução do histórico roda junto: é barata (só consultas de
+  /// datas distintas, com `INSERT OR IGNORE`) e conserta tanto o passado
+  /// anterior à sequência quanto a reinstalação, em que o conteúdo desce
+  /// da nuvem depois que o app já abriu.
   Future<void> load() async {
     await _repository.registerVisit(_userId);
+    await _repository.backfillFromPractice(_userId);
     _streak = await _repository.currentStreak(_userId);
     _bestStreak = await _repository.bestStreak(_userId);
     _ritesToday = await _repository.ritesToday(_userId);

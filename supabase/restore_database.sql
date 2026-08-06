@@ -234,6 +234,18 @@ CREATE TABLE IF NOT EXISTS daily_magical_weather (
   UNIQUE(user_id, date)
 );
 
+-- Check-in diário: um registro por dia visitado, com os ritos concluídos
+-- separados por vírgula. É a memória da sequência de dias — sem ela na
+-- nuvem, reinstalar o app apagava meses de constância.
+CREATE TABLE IF NOT EXISTS daily_checkins (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  date DATE NOT NULL,
+  rites TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, date)
+);
+
 -- ----------------------------------------------------------------------------
 -- 3. COLUNA updated_at EM TODAS AS TABELAS DE SYNC
 -- ----------------------------------------------------------------------------
@@ -255,6 +267,7 @@ ALTER TABLE rune_readings          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP
 ALTER TABLE pendulum_consultations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE oracle_readings        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE daily_magical_weather  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE daily_checkins         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
 -- ----------------------------------------------------------------------------
 -- 4. ÍNDICES
@@ -296,6 +309,7 @@ ALTER TABLE rune_readings          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pendulum_consultations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE oracle_readings        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_magical_weather  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_checkins         ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de profiles (id = auth.uid())
 DROP POLICY IF EXISTS "Users can view own profile"   ON profiles;
@@ -336,6 +350,7 @@ SELECT create_user_policy('rune_readings');
 SELECT create_user_policy('pendulum_consultations');
 SELECT create_user_policy('oracle_readings');
 SELECT create_user_policy('daily_magical_weather');
+SELECT create_user_policy('daily_checkins');
 
 -- ----------------------------------------------------------------------------
 -- 6. TRIGGER: cria profile automaticamente no signup

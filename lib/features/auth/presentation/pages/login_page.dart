@@ -11,6 +11,8 @@ import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'forgot_password_page.dart';
 import 'signup_page.dart';
+import '../../../../core/config/captcha_config.dart';
+import '../widgets/captcha_gate.dart';
 
 /// Tela de login com email e senha
 class LoginPage extends StatefulWidget {
@@ -467,8 +469,18 @@ class _LoginPageState extends State<LoginPage> {
         throw Exception(AppLocalizations.of(context).authSystemNotConfigured);
       }
 
+      final captchaToken = await CaptchaGate.resolve(context);
+      if (!mounted) return;
+      if (CaptchaConfig.isConfigured && captchaToken == null) {
+        throw Exception(AppLocalizations.of(context).authCaptchaFailed);
+      }
+
       final authRepo = SupabaseAuthRepository();
-      final result = await authRepo.signInWithEmail(email, password);
+      final result = await authRepo.signInWithEmail(
+        email,
+        password,
+        captchaToken: captchaToken,
+      );
 
       if (!result.success) {
         throw Exception(result.errorMessage ?? AppLocalizations.of(context).authLoginError);

@@ -1293,6 +1293,9 @@
       }
     }
   },
+  "authCaptchaTitle": "Só um instante, Bruxa",
+  "authCaptchaSubtitle": "Uma verificação rápida para separar gente de robôs — quase sempre passa sozinha",
+  "authCaptchaFailed": "Não deu para concluir a verificação. Tente de novo",
   "authErrConnection": "Erro de conexão: {error}",
   "@authErrConnection": {
     "placeholders": {

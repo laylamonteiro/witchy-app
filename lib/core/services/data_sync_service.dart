@@ -29,6 +29,7 @@ enum SyncEntity {
   pendulumConsultations,
   oracleReadings,
   dailyMagicalWeather,
+  dailyCheckins,
   learningProgress,
   userEncyclopediaEntries,
 }
@@ -569,6 +570,8 @@ class DataSyncService {
         return SupabaseTables.oracleReadings;
       case SyncEntity.dailyMagicalWeather:
         return SupabaseTables.dailyMagicalWeather;
+      case SyncEntity.dailyCheckins:
+        return SupabaseTables.dailyCheckins;
       case SyncEntity.learningProgress:
         return SupabaseTables.learningProgress;
       case SyncEntity.userEncyclopediaEntries:
@@ -609,6 +612,8 @@ class DataSyncService {
         return 'oracle_readings';
       case SyncEntity.dailyMagicalWeather:
         return 'daily_magical_weather';
+      case SyncEntity.dailyCheckins:
+        return 'daily_checkins';
       case SyncEntity.learningProgress:
         return 'learning_progress';
       case SyncEntity.userEncyclopediaEntries:
@@ -640,7 +645,10 @@ class DataSyncService {
   /// Envia item para o Supabase
   Future<void> _uploadItem(String table, Map<String, dynamic> item) async {
     final remoteItem = _toRemote(table, item);
-    if (table == 'daily_magical_weather') {
+    // Tabelas com uma linha por DIA: cada aparelho gera um uuid próprio,
+    // então o conflito de verdade é (user_id, date) — sem isto, dois
+    // aparelhos criariam linhas duplicadas do mesmo dia.
+    if (table == 'daily_magical_weather' || table == 'daily_checkins') {
       await _supabase!
           .from(table)
           .upsert(remoteItem, onConflict: 'user_id,date');
@@ -689,6 +697,10 @@ class DataSyncService {
     'pendulum_consultations': {'date', 'created_at', 'updated_at'},
     'oracle_readings': {'date', 'created_at', 'updated_at'},
     'daily_magical_weather': {'created_at', 'updated_at'},
+    // `date` fica de fora de propósito nas duas: já é a string YYYY-MM-DD
+    // do dia local, e converter para timestamp faria o dia "virar" para
+    // quem está longe de Greenwich.
+    'daily_checkins': {'created_at', 'updated_at'},
     'learning_progress': {'completed_at', 'updated_at'},
     'user_encyclopedia_entries': {'created_at', 'updated_at'},
   };
@@ -852,6 +864,27 @@ class DataSyncService {
       await _markAsSynced(localTable, item['id']);
     } catch (e) {
       debugPrint('Erro ao sincronizar item: $e');
+    }
+  }
+
+  /// Apaga na nuvem as linhas da pessoa que NÃO são do dia informado.
+  ///
+  /// Para as tabelas de um-dia-só (clima mágico): sem isto o
+  /// [fullDownload] baixaria de volta todo o histórico que a poda local
+  /// acabou de apagar, porque ele traz todas as linhas do usuário.
+  Future<void> pruneOtherDays(SyncEntity entity, String date) async {
+    if (!PremiumAccess.instance.isPremium) return;
+    if (!isReady) return;
+    if (!await cloudSyncEnabled) return;
+
+    try {
+      await _supabase!
+          .from(_getTableName(entity))
+          .delete()
+          .eq('user_id', currentUserId!)
+          .neq('date', date);
+    } catch (e) {
+      debugPrint('Erro ao podar dias antigos no Supabase: $e');
     }
   }
 

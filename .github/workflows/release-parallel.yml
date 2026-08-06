@@ -519,6 +519,7 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ADMOB_ANDROID_INTERSTITIAL_ID: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
         run: |
           # Sem o secret do AdMob, NÃO passa o define — o app usa o id de
           # teste do Google (um define vazio derrubaria os anúncios).
@@ -526,13 +527,17 @@ jobs:
           if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
             ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
           fi
+          CAPTCHA_FLAG=""
+          if [ -n "$TURNSTILE_SITE_KEY" ]; then
+            CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
+          fi
           flutter build apk --release \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
-            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG $CAPTCHA_FLAG
 
 
 
@@ -838,13 +843,17 @@ jobs:
           if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
             ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
           fi
+          CAPTCHA_FLAG=""
+          if [ -n "$TURNSTILE_SITE_KEY" ]; then
+            CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
+          fi
           flutter build appbundle --release \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
-            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG $CAPTCHA_FLAG
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
 
@@ -859,6 +868,7 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
 
           ADMOB_ANDROID_INTERSTITIAL_ID: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
 
           ANDROID_KEYSTORE_FILE: ${{ env.ANDROID_KEYSTORE_FILE }}
 
