@@ -932,7 +932,7 @@
   "authCaptchaTitle": "Just a moment, Witch",
   "authCaptchaSubtitle": "A quick check to tell people from bots — it usually passes on its own",
   "authCaptchaFailed": "The verification could not be completed. Try again",
-  "authErrCaptchaOutdated": "Update the app on the Play Store to continue — this version cannot pass the new security check",
+  "authErrCaptchaOutdated": "Update the app on the Play Store to continue",
   "authErrConnection": "Connection error: {error}",
   "authErrGoogleCredentials": "Could not get Google credentials",
   "authErrFacebookUnavailable": "Facebook sign-in is no longer available",
