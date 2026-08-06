@@ -5,6 +5,8 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import 'login_page.dart';
+import '../../../../core/config/captcha_config.dart';
+import '../widgets/captcha_gate.dart';
 
 /// Tela de recuperação de senha
 class ForgotPasswordPage extends StatefulWidget {
@@ -289,8 +291,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
       // Usar Supabase se configurado
       if (SupabaseConfig.isConfigured) {
+        final captchaToken = await CaptchaGate.resolve(context);
+        if (!mounted) return;
+        if (CaptchaConfig.isConfigured && captchaToken == null) {
+          throw Exception(AppLocalizations.of(context).authCaptchaFailed);
+        }
         final authRepo = SupabaseAuthRepository();
-        final result = await authRepo.sendPasswordResetEmail(email);
+        final result = await authRepo.sendPasswordResetEmail(
+          email,
+          captchaToken: captchaToken,
+        );
 
         if (!result.success) {
           throw Exception(result.errorMessage ?? AppLocalizations.of(context).forgotSendError);
@@ -327,8 +337,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
       // Usar Supabase se configurado
       if (SupabaseConfig.isConfigured) {
+        final captchaToken = await CaptchaGate.resolve(context);
+        if (!mounted) return;
+        if (CaptchaConfig.isConfigured && captchaToken == null) {
+          throw Exception(AppLocalizations.of(context).authCaptchaFailed);
+        }
         final authRepo = SupabaseAuthRepository();
-        final result = await authRepo.sendPasswordResetEmail(email);
+        final result = await authRepo.sendPasswordResetEmail(
+          email,
+          captchaToken: captchaToken,
+        );
 
         if (!result.success) {
           throw Exception(result.errorMessage ?? AppLocalizations.of(context).forgotResendError);

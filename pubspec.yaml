@@ -94,6 +94,9 @@ dependencies:
   # Anúncios (AdMob) — intersticiais para usuários free
   google_mobile_ads: ^5.2.0
 
+  # Captcha anti-robô no cadastro/login (Cloudflare Turnstile)
+  cloudflare_turnstile: ^3.8.1
+
   # App Info & Utils
   package_info_plus: ^8.0.0
   url_launcher: ^6.2.5

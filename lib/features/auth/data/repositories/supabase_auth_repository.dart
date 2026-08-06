@@ -54,11 +54,16 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> signInWithEmail(String email, String password) async {
+  Future<AuthResult> signInWithEmail(
+    String email,
+    String password, {
+    String? captchaToken,
+  }) async {
     try {
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
+        captchaToken: captchaToken,
       );
       if (response.user != null) {
         final user = await _userFromSupabaseUser(response.user!);
@@ -77,11 +82,13 @@ class SupabaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
     String? displayName,
+    String? captchaToken,
   }) async {
     try {
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
+        captchaToken: captchaToken,
         data: {'display_name': displayName},
         emailRedirectTo: kIsWeb
             ? '${SupabaseConfig.url}/auth/v1/verify'
@@ -119,7 +126,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
 
   @override
-  Future<AuthResult> signInWithGoogle() async {
+  Future<AuthResult> signInWithGoogle({String? captchaToken}) async {
     try {
       await debugLog('AUTH', 'Iniciando Google Sign-In...');
 
@@ -159,6 +166,7 @@ class SupabaseAuthRepository implements AuthRepository {
         provider: OAuthProvider.google,
         idToken: idToken,
         accessToken: accessToken,
+        captchaToken: captchaToken,
       );
 
       if (response.user != null) {
@@ -219,11 +227,15 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> sendPasswordResetEmail(String email) async {
+  Future<AuthResult> sendPasswordResetEmail(
+    String email, {
+    String? captchaToken,
+  }) async {
     try {
       // Adicionar redirect URL para funcionar corretamente no mobile/web
       await _supabase.auth.resetPasswordForEmail(
         email,
+        captchaToken: captchaToken,
         redirectTo: kIsWeb
             ? '${SupabaseConfig.url}/auth/v1/verify'
             : '${SupabaseConfig.deepLinkScheme}://reset-password',

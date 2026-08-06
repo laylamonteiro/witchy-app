@@ -45,17 +45,22 @@ abstract class AuthRepository {
   Future<UserModel?> getCurrentUser();
 
   /// Login com email e senha
-  Future<AuthResult> signInWithEmail(String email, String password);
+  Future<AuthResult> signInWithEmail(
+    String email,
+    String password, {
+    String? captchaToken,
+  });
 
   /// Cadastro com email e senha
   Future<AuthResult> signUpWithEmail({
     required String email,
     required String password,
     String? displayName,
+    String? captchaToken,
   });
 
   /// Login com Google
-  Future<AuthResult> signInWithGoogle();
+  Future<AuthResult> signInWithGoogle({String? captchaToken});
 
   /// Login com Facebook
   Future<AuthResult> signInWithFacebook();
@@ -67,7 +72,10 @@ abstract class AuthRepository {
   Future<void> signOut();
 
   /// Envia email de recuperação de senha
-  Future<AuthResult> sendPasswordResetEmail(String email);
+  Future<AuthResult> sendPasswordResetEmail(
+    String email, {
+    String? captchaToken,
+  });
 
   /// Verifica o email do usuário
   Future<AuthResult> verifyEmail();

@@ -10,6 +10,8 @@ import '../../data/models/user_model.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'login_page.dart';
+import '../../../../core/config/captcha_config.dart';
+import '../widgets/captcha_gate.dart';
 
 /// Tela de cadastro de novo usuário
 class SignupPage extends StatefulWidget {
@@ -475,6 +477,20 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
+    // Verificação anti-robô antes de gastar a chamada de rede (não faz
+    // nada enquanto a site key não estiver no build).
+    final captchaToken = await CaptchaGate.resolve(context);
+    if (!mounted) return;
+    if (CaptchaConfig.isConfigured && captchaToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).authCaptchaFailed),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -490,6 +506,7 @@ class _SignupPageState extends State<SignupPage> {
           email: email,
           password: password,
           displayName: displayName,
+          captchaToken: captchaToken,
         );
 
         if (!result.success) {

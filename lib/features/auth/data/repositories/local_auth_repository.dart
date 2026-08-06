@@ -41,7 +41,11 @@ class LocalAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> signInWithEmail(String email, String password) async {
+  Future<AuthResult> signInWithEmail(
+    String email,
+    String password, {
+    String? captchaToken,
+  }) async {
     // Simulação de login local
     // Em produção, isso seria validado contra o Supabase
     await Future.delayed(const Duration(milliseconds: 500));
@@ -129,7 +133,7 @@ class LocalAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> signInWithGoogle() async {
+  Future<AuthResult> signInWithGoogle({String? captchaToken}) async {
     await Future.delayed(const Duration(milliseconds: 500));
     return AuthResult.error(
       _l10n.authLocalNoGoogle,
@@ -165,7 +169,10 @@ class LocalAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> sendPasswordResetEmail(String email) async {
+  Future<AuthResult> sendPasswordResetEmail(
+    String email, {
+    String? captchaToken,
+  }) async {
     // Simulação local - sempre "sucesso"
     await Future.delayed(const Duration(seconds: 1));
     return AuthResult.success(_currentUser ?? UserModel.defaultUser());
