@@ -1440,6 +1440,19 @@
   "encyAddIdentifiedAs": "Found it! Confirm or correct the name:",
   "encyAddNotIdentified": "I could not identify it confidently. Type the name:",
   "encyAddConfidence": "Identification confidence: {level}",
+  "encyAddConfidenceHigh": "High",
+  "encyAddConfidenceMedium": "Medium",
+  "encyAddConfidenceLow": "Low",
+  "encyAddCandidatesTitle": "I found a few possibilities",
+  "encyAddCandidatesSubtitle": "You have the specimen in front of you — pick the right one",
+  "encyAddCandidatesNoneOfThese": "None of these, let me type it",
+  "encyAddCandidatesBack": "See the other possibilities",
+  "encyAddCandidateVotes": "Named in {votes} of the readings",
+  "@encyAddCandidateVotes": {
+    "placeholders": {
+      "votes": {}
+    }
+  },
   "encyAddNameLabel": "Name",
   "encyAddNameHint": "E.g.: Rosemary, Amethyst, Emerald green...",
   "encyAddGenerateCta": "Generate magical page",

@@ -1440,6 +1440,19 @@
   "encyAddIdentifiedAs": "Encontrei! Confirme ou corrija o nome:",
   "encyAddNotIdentified": "Não consegui identificar com certeza. Digite o nome:",
   "encyAddConfidence": "Confiança da identificação: {level}",
+  "encyAddConfidenceHigh": "Alta",
+  "encyAddConfidenceMedium": "Média",
+  "encyAddConfidenceLow": "Baixa",
+  "encyAddCandidatesTitle": "Encontrei algumas possibilidades",
+  "encyAddCandidatesSubtitle": "Você tem o exemplar na frente — escolha qual é",
+  "encyAddCandidatesNoneOfThese": "Nenhuma dessas, quero digitar",
+  "encyAddCandidatesBack": "Ver as outras possibilidades",
+  "encyAddCandidateVotes": "Apontado em {votes} das análises",
+  "@encyAddCandidateVotes": {
+    "placeholders": {
+      "votes": {}
+    }
+  },
   "encyAddNameLabel": "Nome",
   "encyAddNameHint": "Ex.: Alecrim, Ametista, Verde-esmeralda...",
   "encyAddGenerateCta": "Gerar página mágica",

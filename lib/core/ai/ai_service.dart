@@ -891,14 +891,16 @@ class AIService {
 
   /// Identifica um item da enciclopédia pessoal por foto (visão, Premium).
   /// [categoryKey]: `crystal` | `herb` | `color` (invariante).
-  /// Retorna `{"identified": bool, "name": String, "confidence": String}`.
+  /// Retorna `{"identified": bool, "candidates": [{name, scientific,
+  /// confidence, votes}]}`, do mais provável ao menos provável.
   /// A imagem é enviada em memória e não é armazenada pelo serviço.
   ///
   /// Auto-consistência: o modelo de visão disponível é fraco em espécies e
   /// alucina confiança (a mesma foto rendia nomes diferentes, sempre "high").
-  /// Pedimos até 3 opiniões independentes e só aceitamos um nome com
-  /// CONSENSO entre duas delas; sem consenso, respondemos honestamente que
-  /// não identificamos — a página já convida a digitar o nome.
+  /// Pedimos até 3 opiniões independentes; um candidato unânime e sozinho
+  /// vira certeza, e a DIVERGÊNCIA vira a lista de candidatos em vez de
+  /// virar um "não consegui identificar" — as opiniões descartadas eram
+  /// justamente as alternativas que ajudam quem tirou a foto a decidir.
   Future<Map<String, dynamic>> identifyEncyclopediaItem({
     required List<int> jpegBytes,
     required String categoryKey,
@@ -938,53 +940,126 @@ class AIService {
     }
     // Uma única opinião válida (as outras falharam): melhor entregá-la do
     // que errar por excesso de rigor.
-    if (votes.length == 1) return votes.single;
-    return {'identified': false, 'name': '', 'confidence': 'low'};
+    final candidates = _mergeIdentifyCandidates(votes);
+    return {'identified': candidates.isNotEmpty, 'candidates': candidates};
   }
 
-  /// Consenso entre os votos até agora: dois nomes equivalentes elegem o
-  /// vencedor; dois "não sei" encerram como não identificado. Null = ainda
-  /// sem decisão (peça mais um voto).
-  Map<String, dynamic>? _identifyConsensus(List<Map<String, dynamic>> votes) {
-    if (votes.length < 2) return null;
+  static String _normalizeIdentifyName(Object? name) {
+    return removeAccents('$name')
+        .toLowerCase()
+        .replaceAll(RegExp(r'[-_]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
 
-    String normalize(Object? name) {
-      final lower = removeAccents('$name').toLowerCase();
-      return lower
-          .replaceAll(RegExp(r'[-_]'), ' ')
-          .replaceAll(RegExp(r'\s+'), ' ')
-          .trim();
-    }
+  static bool _sameIdentifyName(String a, String b) {
+    if (a.isEmpty || b.isEmpty) return false;
+    if (a == b) return true;
+    // "flor de seda" vs "flor de seda comum": um contém o outro.
+    return a.length >= 4 && b.length >= 4 && (a.contains(b) || b.contains(a));
+  }
 
-    bool sameName(String a, String b) {
-      if (a.isEmpty || b.isEmpty) return false;
-      if (a == b) return true;
-      // "flor de seda" vs "flor de seda comum": um contém o outro.
-      return a.length >= 4 && b.length >= 4 && (a.contains(b) || b.contains(a));
-    }
+  /// Funde os candidatos de todos os votos numa lista única ordenada.
+  ///
+  /// A chave de identidade é o nome científico quando existe — é ele que
+  /// distingue duas espécies que dividem o mesmo nome popular. Cada
+  /// candidato acumula quantos votos o citaram (`votes`), e a ordem final é
+  /// por votos e depois pela confiança declarada: quem aparece em todas as
+  /// opiniões vem primeiro.
+  List<Map<String, dynamic>> _mergeIdentifyCandidates(
+    List<Map<String, dynamic>> votes,
+  ) {
+    const rank = {'high': 3, 'medium': 2, 'low': 1};
+    final merged = <Map<String, dynamic>>[];
 
-    final identified =
-        votes.where((v) => v['identified'] == true).toList(growable: false);
-    for (var i = 0; i < identified.length; i++) {
-      for (var j = i + 1; j < identified.length; j++) {
-        final a = identified[i];
-        final b = identified[j];
-        if (sameName(normalize(a['name']), normalize(b['name']))) {
-          return {
-            'identified': true,
-            'name': a['name'],
-            // Consenso de primeira mantém a confiança declarada; consenso
-            // que precisou de desempate fica em "medium" no máximo.
-            'confidence':
-                votes.length == 2 ? (a['confidence'] ?? 'medium') : 'medium',
-          };
+    for (final vote in votes) {
+      final raw = vote['candidates'];
+      if (raw is! List) continue;
+      for (final entry in raw) {
+        if (entry is! Map) continue;
+        final name = '${entry['name'] ?? ''}'.trim();
+        final scientific = '${entry['scientific'] ?? ''}'.trim();
+        if (name.isEmpty && scientific.isEmpty) continue;
+        final confidence = '${entry['confidence'] ?? 'medium'}';
+
+        final key = _normalizeIdentifyName(
+          scientific.isNotEmpty ? scientific : name,
+        );
+        final existing = merged.firstWhere(
+          (c) => _sameIdentifyName('${c['key']}', key),
+          orElse: () => <String, dynamic>{},
+        );
+
+        if (existing.isEmpty) {
+          merged.add({
+            'key': key,
+            'name': name,
+            'scientific': scientific,
+            'confidence': confidence,
+            'votes': 1,
+          });
+        } else {
+          existing['votes'] = (existing['votes'] as int) + 1;
+          // Entre opiniões sobre o mesmo item, fica a mais confiante — e o
+          // nome científico do voto que o trouxe, se o primeiro veio vazio.
+          if ((rank[confidence] ?? 0) > (rank['${existing['confidence']}'] ?? 0)) {
+            existing['confidence'] = confidence;
+          }
+          if ('${existing['scientific']}'.isEmpty && scientific.isNotEmpty) {
+            existing['scientific'] = scientific;
+          }
+          if ('${existing['name']}'.isEmpty && name.isNotEmpty) {
+            existing['name'] = name;
+          }
         }
       }
     }
 
-    final unsure = votes.length - identified.length;
-    if (unsure >= 2) {
-      return {'identified': false, 'name': '', 'confidence': 'low'};
+    merged.sort((a, b) {
+      final byVotes = (b['votes'] as int).compareTo(a['votes'] as int);
+      if (byVotes != 0) return byVotes;
+      return (rank['${b['confidence']}'] ?? 0)
+          .compareTo(rank['${a['confidence']}'] ?? 0);
+    });
+    for (final candidate in merged) {
+      candidate.remove('key');
+    }
+    return merged;
+  }
+
+  /// Decide se os votos até agora já bastam. Null = ainda sem decisão (peça
+  /// mais um voto).
+  ///
+  /// Um candidato citado por TODOS os votos com confiança alta é entregue
+  /// como certeza — é o caso fácil, em que a tela já pré-preenche o nome.
+  /// Havendo divergência, os candidatos são entregues juntos para a pessoa
+  /// escolher: quem tirou a foto reconhece melhor que o modelo.
+  Map<String, dynamic>? _identifyConsensus(List<Map<String, dynamic>> votes) {
+    if (votes.length < 2) return null;
+
+    final candidates = _mergeIdentifyCandidates(votes);
+    if (candidates.isEmpty) {
+      // Todos os votos disponíveis vieram sem nenhum palpite.
+      final unsure = votes.where((v) => v['identified'] != true).length;
+      if (unsure >= 2) {
+        return {'identified': false, 'candidates': <Map<String, dynamic>>[]};
+      }
+      return null;
+    }
+
+    final top = candidates.first;
+    final unanimous = (top['votes'] as int) >= votes.length;
+    final soleOpinion = candidates.length == 1;
+
+    // Unânime e sozinho na lista: ninguém levantou alternativa, então não há
+    // o que perguntar — e não vale gastar uma terceira chamada. Do
+    // contrário, ouvimos mais uma opinião antes de montar as opções.
+    if (unanimous && soleOpinion) {
+      return {'identified': true, 'candidates': candidates};
+    }
+    // Com três votos já ouvimos o suficiente: entregamos o que houver.
+    if (votes.length >= 3) {
+      return {'identified': true, 'candidates': candidates};
     }
     return null;
   }

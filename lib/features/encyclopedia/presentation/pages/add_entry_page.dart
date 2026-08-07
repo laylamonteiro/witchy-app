@@ -51,6 +51,14 @@ class _AddEntryPageState extends State<AddEntryPage> {
   bool _identifying = false;
   bool _identified = false;
   String? _confidence;
+
+  /// Candidatos devolvidos pela identificação, do mais provável ao menos.
+  /// Com mais de um, a tela pergunta em vez de escolher por conta própria.
+  List<Map<String, dynamic>> _candidates = const [];
+
+  /// Índice do candidato escolhido; null enquanto a lista ainda está aberta
+  /// e -1 depois de "nenhuma dessas", que libera o campo manual.
+  int? _chosen;
   bool _generating = false;
   Map<String, dynamic>? _generated;
   bool _saving = false;
@@ -116,6 +124,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
       _identified = false;
       _generated = null;
       _confidence = null;
+      _candidates = const [];
+      _chosen = null;
       _nameController.clear();
       _identifying = true;
     });
@@ -126,12 +136,22 @@ class _AddEntryPageState extends State<AddEntryPage> {
         categoryKey: widget.category.key,
       );
       if (!mounted) return;
-      final identified = result['identified'] == true;
+      final raw = result['candidates'];
+      final candidates = raw is List
+          ? raw.whereType<Map>().map(Map<String, dynamic>.from).toList()
+          : <Map<String, dynamic>>[];
+      final identified = result['identified'] == true && candidates.isNotEmpty;
       setState(() {
         _identifying = false;
         _identified = identified;
-        _confidence = result['confidence']?.toString();
-        _nameController.text = identified ? '${result['name'] ?? ''}' : '';
+        _candidates = candidates;
+        // Candidato único já vem escolhido; havendo mais de um, quem tirou a
+        // foto decide — o modelo não tem como saber qual espécie é.
+        _chosen = candidates.length == 1 ? 0 : null;
+        _confidence =
+            candidates.length == 1 ? '${candidates.first['confidence']}' : null;
+        _nameController.text =
+            candidates.length == 1 ? _candidateName(candidates.first) : '';
       });
       // Identificou de verdade: se a identificação na natureza é o rito de
       // hoje, está cumprida.
@@ -147,6 +167,33 @@ class _AddEntryPageState extends State<AddEntryPage> {
         _identified = false;
       });
     }
+  }
+
+  /// Título do candidato: o nome científico é o identificador principal, e o
+  /// popular entra como apoio quando não existe binômio (caso comum em
+  /// pedras, que nem sempre têm espécie mineral declarada).
+  String _candidateName(Map<String, dynamic> candidate) {
+    final scientific = '${candidate['scientific'] ?? ''}'.trim();
+    if (scientific.isNotEmpty) return scientific;
+    return '${candidate['name'] ?? ''}'.trim();
+  }
+
+  /// [index] negativo é "nenhuma dessas": abre o campo em branco.
+  void _chooseCandidate(int index) {
+    setState(() {
+      _chosen = index;
+      _error = null;
+      if (index < 0) {
+        _identified = false;
+        _confidence = null;
+        _nameController.clear();
+      } else {
+        final candidate = _candidates[index];
+        _identified = true;
+        _confidence = '${candidate['confidence']}';
+        _nameController.text = _candidateName(candidate);
+      }
+    });
   }
 
   Future<void> _generate() async {
@@ -351,45 +398,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 ),
               ),
             if (_jpegBytes != null && !_identifying) ...[
-              MagicalCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _identified
-                          ? l10n.encyAddIdentifiedAs
-                          : l10n.encyAddNotIdentified,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    if (_identified && _confidence != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.encyAddConfidence(_confidence!),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: context.gc.textSecondary,
-                            ),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: l10n.encyAddNameLabel,
-                        hintText: l10n.encyAddNameHint,
-                        border: const OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    MagicalButton(
-                      text: _generating
-                          ? l10n.encyAddGenerating
-                          : l10n.encyAddGenerateCta,
-                      icon: Icons.auto_awesome,
-                      onPressed: _generating ? () {} : _generate,
-                    ),
-                  ],
-                ),
-              ),
+              if (_candidates.length > 1 && _chosen == null)
+                _buildCandidates(context, l10n),
+              if (_candidates.length <= 1 || _chosen != null)
+                _buildNameCard(context, l10n),
             ],
             if (_generated != null) _buildPreview(context, l10n),
             if (_error != null)
@@ -403,6 +415,167 @@ class _AddEntryPageState extends State<AddEntryPage> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  String _confidenceLabel(AppLocalizations l10n) {
+    switch (_confidence) {
+      case 'high':
+        return l10n.encyAddConfidenceHigh;
+      case 'low':
+        return l10n.encyAddConfidenceLow;
+      default:
+        return l10n.encyAddConfidenceMedium;
+    }
+  }
+
+  /// Lista de possibilidades quando a identificação não é inequívoca.
+  ///
+  /// Perguntar é melhor que adivinhar: quem tirou a foto tem o exemplar na
+  /// frente e reconhece detalhes que não cabem numa imagem.
+  Widget _buildCandidates(BuildContext context, AppLocalizations l10n) {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.encyAddCandidatesTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.encyAddCandidatesSubtitle,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                ),
+          ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < _candidates.length; i++) ...[
+            _buildCandidateTile(context, l10n, i),
+            const SizedBox(height: 8),
+          ],
+          TextButton.icon(
+            onPressed: () => _chooseCandidate(-1),
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: Text(l10n.encyAddCandidatesNoneOfThese),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCandidateTile(
+    BuildContext context,
+    AppLocalizations l10n,
+    int index,
+  ) {
+    final candidate = _candidates[index];
+    final title = _candidateName(candidate);
+    final popular = '${candidate['name'] ?? ''}'.trim();
+    // O popular só vira subtítulo quando o título já é o científico: sem
+    // binômio, o próprio popular subiu para o título e repeti-lo é ruído.
+    final subtitle = title == popular ? '' : popular;
+    final votes = candidate['votes'] is int ? candidate['votes'] as int : 1;
+
+    return InkWell(
+      onTap: () => _chooseCandidate(index),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: context.gc.surfaceBorder),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: context.gc.lilac,
+                          // Itálico é convenção de binômio latino: sem
+                          // científico o título é popular e fica reto.
+                          fontStyle: subtitle.isEmpty
+                              ? FontStyle.normal
+                              : FontStyle.italic,
+                        ),
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
+                          ),
+                    ),
+                  ],
+                  if (votes > 1) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.encyAddCandidateVotes(votes),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: context.gc.textSecondary,
+                          ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.gc.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNameCard(BuildContext context, AppLocalizations l10n) {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _identified ? l10n.encyAddIdentifiedAs : l10n.encyAddNotIdentified,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          if (_identified && _confidence != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.encyAddConfidence(_confidenceLabel(l10n)),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.gc.textSecondary,
+                  ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              labelText: l10n.encyAddNameLabel,
+              hintText: l10n.encyAddNameHint,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          if (_candidates.length > 1) ...[
+            const SizedBox(height: 4),
+            TextButton.icon(
+              onPressed: () => setState(() => _chosen = null),
+              icon: const Icon(Icons.arrow_back, size: 18),
+              label: Text(l10n.encyAddCandidatesBack),
+            ),
+          ],
+          const SizedBox(height: 16),
+          MagicalButton(
+            text: _generating
+                ? l10n.encyAddGenerating
+                : l10n.encyAddGenerateCta,
+            icon: Icons.auto_awesome,
+            onPressed: _generating ? () {} : _generate,
+          ),
+        ],
       ),
     );
   }
