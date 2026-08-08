@@ -562,17 +562,32 @@ class SectionEmblemHeader extends StatelessWidget {
                 if (intro != null && intro!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 6, 24, 0),
-                    child: Text(
-                      intro!,
-                      textAlign: TextAlign.center,
-                      // Intros longas (Anjos, Demônios) não empurram a
-                      // lista: no máximo duas linhas sob o emblema.
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: gc.textSecondary,
+                    // A intro ocupa SEMPRE a altura de 2 linhas (um texto
+                    // invisível de 2 linhas dá a medida exata, no mesmo
+                    // estilo/escala): abas com frase curta e longa ficam
+                    // com o cabeçalho na mesma altura.
+                    child: Builder(builder: (context) {
+                      final style =
+                          Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: gc.textSecondary,
+                              );
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Opacity(
+                            opacity: 0,
+                            child: Text(' \n ', style: style),
                           ),
-                    ),
+                          Text(
+                            intro!,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: style,
+                          ),
+                        ],
+                      );
+                    }),
                   ),
                 _OrnamentDivider(color: gc.gold),
               ],

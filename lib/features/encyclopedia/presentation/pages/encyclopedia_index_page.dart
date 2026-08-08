@@ -469,8 +469,10 @@ class _CoverFront extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A arte real da capa (aprovada), de borda a borda. Fallback para o
-    // couro em gradiente + medalhão caso o asset não carregue.
+    // A arte real da capa (aprovada), INTEIRA: o couro em gradiente cobre a
+    // página por completo e a arte centraliza no seu próprio aspecto —
+    // BoxFit.cover cortava as bordas desenhadas da imagem (cantoneiras,
+    // fecho lateral). Fallback: medalhão ☾ sobre o couro.
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
@@ -484,23 +486,23 @@ class _CoverFront extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          'assets/premium/encyclopedia_cover.png',
-          fit: BoxFit.cover,
-          errorBuilder: (context, _, __) => Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF31234F), Color(0xFF1E1533)],
-              ),
-              border: Border.all(
-                color: const Color(0xFFC9A653).withValues(alpha: 0.8),
-                width: 1.4,
-              ),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF31234F), Color(0xFF1E1533)],
             ),
-            child: const Center(
-              child: Text(
+            border: Border.all(
+              color: const Color(0xFFC9A653).withValues(alpha: 0.8),
+              width: 1.4,
+            ),
+          ),
+          child: Center(
+            child: Image.asset(
+              'assets/premium/encyclopedia_cover.png',
+              fit: BoxFit.contain,
+              errorBuilder: (context, _, __) => const Text(
                 '☾',
                 style: TextStyle(fontSize: 54, color: Color(0xFFC9A653)),
               ),
