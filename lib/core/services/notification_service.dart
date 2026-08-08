@@ -1,3 +1,5 @@
+import 'dart:ui' show Color;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -103,7 +105,9 @@ class NotificationService {
             channelDescription: _l10n.notifChannelDebugDesc,
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_notification',
+            // Lilás da marca: o Android tinge a silhueta monocromática.
+            color: const Color(0xFFD98FE0),
           ),
           iOS: const DarwinNotificationDetails(
             presentAlert: true,
@@ -278,7 +282,8 @@ class NotificationService {
           channelDescription: _l10n.notifChannelMoonDesc,
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_notification',
+          color: const Color(0xFFD98FE0),
         ),
         iOS: const DarwinNotificationDetails(),
       );
@@ -299,7 +304,8 @@ class NotificationService {
           channelDescription: _l10n.notifChannelSabbatDesc,
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_notification',
+          color: const Color(0xFFD98FE0),
         ),
         iOS: const DarwinNotificationDetails(),
       );
