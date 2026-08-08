@@ -59,6 +59,7 @@ class _LivingEmblemState extends State<LivingEmblem>
     with TickerProviderStateMixin {
   late final AnimationController _breathe; // respiração/halo (3s)
   late final AnimationController _orbit; // órbitas lentas (40s)
+  late final AnimationController _orbitQuick; // órbita viva (astrologia, 7s)
   late final AnimationController _sweep; // brilho varrendo / escrita (3s)
   late final AnimationController _fast; // chama, joia, oscilação (1.8s)
 
@@ -73,6 +74,8 @@ class _LivingEmblemState extends State<LivingEmblem>
         AnimationController(vsync: this, duration: const Duration(seconds: 3));
     _orbit =
         AnimationController(vsync: this, duration: const Duration(seconds: 40));
+    _orbitQuick =
+        AnimationController(vsync: this, duration: const Duration(seconds: 7));
     _sweep = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 3200));
     _fast = AnimationController(
@@ -90,9 +93,11 @@ class _LivingEmblemState extends State<LivingEmblem>
         _sweep.value = 1.0;
         _fast.value = 0.5;
         _orbit.stop();
+        _orbitQuick.stop();
       } else {
         _breathe.repeat(reverse: true);
         _orbit.repeat();
+        _orbitQuick.repeat();
         _sweep.repeat();
         _fast.repeat(reverse: true);
       }
@@ -103,6 +108,7 @@ class _LivingEmblemState extends State<LivingEmblem>
   void dispose() {
     _breathe.dispose();
     _orbit.dispose();
+    _orbitQuick.dispose();
     _sweep.dispose();
     _fast.dispose();
     super.dispose();
@@ -173,7 +179,6 @@ class _LivingEmblemState extends State<LivingEmblem>
       // diferença de escala desalinha a composição desenhada.
       case SectionEmblem.elements:
       case SectionEmblem.sabbats:
-      case SectionEmblem.astrology:
       case SectionEmblem.symbols:
         return Stack(
           alignment: Alignment.center,
@@ -184,6 +189,22 @@ class _LivingEmblemState extends State<LivingEmblem>
                   height: _artH, fit: BoxFit.contain),
             ),
             _svg(_emblemSvg(widget.emblem!)),
+          ],
+        );
+
+      // Astrologia: a lua orbita RÁPIDO (controller próprio, 7s) e o
+      // planeta cintila com o brilho varrendo — mais vivo que as rodas
+      // informativas, que giram devagar.
+      case SectionEmblem.astrology:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            RotationTransition(
+              turns: _orbitQuick,
+              child: SvgPicture.string(_svgAstroMoon,
+                  height: _artH, fit: BoxFit.contain),
+            ),
+            _shimmer(_svg(_svgAstroBase), gc),
           ],
         );
 
@@ -219,12 +240,13 @@ class _LivingEmblemState extends State<LivingEmblem>
           ],
         );
 
-      // O caldeirão borbulha.
+      // O caldeirão borbulha — e a poção pulsa em menta.
       case SectionEmblem.tools:
         return Stack(
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
+            Positioned.fill(child: _brewGlow(gc)),
             _svg(_svgTools),
             ..._bubbles(gc),
           ],
@@ -367,30 +389,39 @@ class _LivingEmblemState extends State<LivingEmblem>
     );
   }
 
-  /// Bolhas subindo da boca do caldeirão. Positioned.fill prende cada
-  /// Align ao tamanho da arte (ver o selo dos Demônios).
+  /// Bolhas subindo da boca do caldeirão — muitas, rápidas e brilhando.
+  /// Positioned.fill prende cada Align ao tamanho da arte (ver o selo
+  /// dos Demônios).
   List<Widget> _bubbles(GrimoireColors gc) {
     return [
-      for (var i = 0; i < 3; i++)
+      for (var i = 0; i < 5; i++)
         Positioned.fill(
           child: AnimatedBuilder(
           animation: _sweep,
           builder: (context, _) {
-            final phase = (_sweep.value + i / 3) % 1.0;
-            final dy = -0.02 - phase * 0.34; // sobe
-            final op = phase < 0.15
-                ? phase / 0.15
-                : (1 - (phase - 0.15) / 0.85).clamp(0.0, 1.0);
+            // 2 voltas por ciclo do _sweep: cada bolha sobe em ~1,6s.
+            final phase = (_sweep.value * 2 + i * 0.37) % 1.0;
+            final dy = -0.02 - phase * 0.42; // sobe
+            final op = phase < 0.12
+                ? phase / 0.12
+                : (1 - (phase - 0.12) / 0.88).clamp(0.0, 1.0);
+            final size = (i.isEven ? 8.0 : 6.0) * (0.8 + 0.4 * phase);
             return Align(
-              alignment: Alignment(-0.18 + i * 0.18, dy),
+              alignment: Alignment(-0.28 + i * 0.14, dy),
               child: Opacity(
-                opacity: op * 0.9,
+                opacity: op,
                 child: Container(
-                  width: i.isEven ? 7 : 5,
-                  height: i.isEven ? 7 : 5,
+                  width: size,
+                  height: size,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: gc.mint,
+                    boxShadow: [
+                      BoxShadow(
+                        color: gc.mint.withValues(alpha: 0.7),
+                        blurRadius: 6,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -399,6 +430,34 @@ class _LivingEmblemState extends State<LivingEmblem>
           ),
         ),
     ];
+  }
+
+  /// O brilho da poção: um halo menta pulsando na boca do caldeirão.
+  Widget _brewGlow(GrimoireColors gc) {
+    return AnimatedBuilder(
+      animation: _fast,
+      builder: (context, _) {
+        final t = Curves.easeInOut.transform(_fast.value);
+        return Align(
+          // Boca do caldeirão no viewBox da arte (cy 60 de 132).
+          alignment: const Alignment(0, -0.09),
+          child: Container(
+            width: _artH * 0.48,
+            height: _artH * 0.13,
+            decoration: BoxDecoration(
+              borderRadius:
+                  const BorderRadius.all(Radius.elliptical(999, 999)),
+              boxShadow: [
+                BoxShadow(
+                  color: gc.mint.withValues(alpha: 0.30 + 0.40 * t),
+                  blurRadius: 12 + 12 * t,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// A joia do selo pulsa em rubi, com brilho.
@@ -800,7 +859,9 @@ const _svgAstroBase = '''
 </svg>''';
 const _svgAstroMoon = '''
 <svg $_ns viewBox="0 0 150 130">
-  <circle cx="75" cy="14" r="4.5" fill="#C4C3CE"/>
+  <circle cx="75" cy="14" r="10" fill="#E8E2F5" fill-opacity="0.25"/>
+  <circle cx="75" cy="14" r="6.5" fill="#E8E2F5"/>
+  <circle cx="72.5" cy="12" r="1.6" fill="#C4B8DE"/>
 </svg>''';
 
 const _svgTools = '''
