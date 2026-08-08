@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/i18n/gender.dart';
 import '../../../../core/providers/mascot_provider.dart';
@@ -1291,13 +1292,13 @@ class SettingsPage extends StatelessWidget {
               const SizedBox(height: 12),
               _buildSocialTile(
                 sheetContext,
-                icon: Icons.camera_alt_outlined,
+                iconAsset: 'assets/icons/instagram.svg',
                 network: 'Instagram',
                 url: 'https://instagram.com/grimoriodebolso',
               ),
               _buildSocialTile(
                 sheetContext,
-                icon: Icons.music_note_outlined,
+                iconAsset: 'assets/icons/tiktok.svg',
                 network: 'TikTok',
                 url: 'https://www.tiktok.com/@grimoriodebolso',
               ),
@@ -1310,7 +1311,7 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildSocialTile(
     BuildContext context, {
-    required IconData icon,
+    required String iconAsset,
     required String network,
     required String url,
   }) {
@@ -1322,7 +1323,14 @@ class SettingsPage extends StatelessWidget {
           color: context.gc.lilac.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: context.gc.lilac, size: 22),
+        // Glifos oficiais das marcas (Simple Icons), tingidos no lilás do
+        // tema — monocromáticos, como pedem os guias de marca.
+        child: SvgPicture.asset(
+          iconAsset,
+          width: 22,
+          height: 22,
+          colorFilter: ColorFilter.mode(context.gc.lilac, BlendMode.srcIn),
+        ),
       ),
       title: Text(
         network,
