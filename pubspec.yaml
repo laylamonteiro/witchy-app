@@ -139,6 +139,13 @@ flutter_launcher_icons:
   web:
     generate: true
   image_path: "assets/app_icon.png"
+  # Adaptativo (Android 8+): fundo escuro da própria arte preenchendo o
+  # squircle inteiro (sem o branco do launcher) + medalha centrada.
+  adaptive_icon_background: "#0B0A16"
+  adaptive_icon_foreground: "assets/app_icon_foreground.png"
+  # iOS não aceita transparência no ícone: compõe sobre o mesmo fundo.
+  remove_alpha_ios: true
+  background_color_ios: "#0B0A16"
   adaptive_icon_background: "#0B0A16"  # Cor de fundo do tema
   adaptive_icon_foreground: "assets/app_icon.png"
   remove_alpha_ios: true
