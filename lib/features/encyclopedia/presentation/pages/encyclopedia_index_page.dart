@@ -362,7 +362,13 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      child: Stack(
+      // O livro tem a PROPORÇÃO da arte da capa (3:4): capa, folha e índice
+      // com o MESMO tamanho, sem sobras de couro em volta da imagem — o que
+      // não couber no índice rola dentro da página.
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: 3 / 4,
+          child: Stack(
         children: [
           // Por baixo da folha: o fundo do PRÓPRIO tema (o que a Bruxa
           // escolheu nas Configurações) com um céu de estrelas — a virada
@@ -458,6 +464,8 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
             ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }
