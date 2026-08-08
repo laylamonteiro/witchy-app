@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/astrology_provider.dart';
@@ -49,8 +50,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: StaggeredEntrance(
             children: [
               // O emblema vivo substitui o antigo card de cabeçalho; o
               // título ("Astrologia Mística") mora na aba.

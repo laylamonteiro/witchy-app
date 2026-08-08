@@ -13,6 +13,7 @@ import '../widgets/entry_pager.dart';
 import '../widgets/user_entry_helpers.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import 'crystal_detail_page.dart';
 import '../../../../core/widgets/magical_search_field.dart';
 
@@ -123,14 +124,17 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
               ]..sort((a, b) => removeAccents(a.model.name.toUpperCase())
                   .compareTo(removeAccents(b.model.name.toUpperCase())));
 
-              return ListView.builder(
+              return CascadeScope(
+                child: ListView.builder(
                 padding: const EdgeInsets.only(bottom: 88),
                 itemCount: combined.length,
                 itemBuilder: (context, index) {
                   final item = combined[index];
                   final crystal = item.model;
                   final userEntry = item.userEntry;
-                  return MagicalCard(
+                  return CascadeIn(
+                    index: index,
+                    child: MagicalCard(
                     onTap: () {
                       Navigator.push(
                         context,
@@ -242,8 +246,10 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                         ),
                       ],
                     ),
+                  ),
                   );
                 },
+              ),
               );
             },
           ),

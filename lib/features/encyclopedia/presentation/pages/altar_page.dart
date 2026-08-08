@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../data/data_sources/altar_content.dart';
@@ -26,8 +27,7 @@ class AltarPage extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: StaggeredEntrance(
           children: [
             const LivingEmblem(emblem: SectionEmblem.altar),
             const SizedBox(height: 12),

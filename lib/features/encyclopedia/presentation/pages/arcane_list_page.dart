@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/accents.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../data/data_sources/arcane_categories.dart';
@@ -129,14 +130,17 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                     style: TextStyle(color: context.gc.textSecondary),
                   ),
                 )
-              : ListView.builder(
+              : CascadeScope(
+                child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 24),
                   itemCount: _filtered.length,
                   itemBuilder: (context, index) {
                     final entry = _filtered[index];
                     // Lista exibida no momento do toque, para o swipe lateral.
                     final entries = List<ArcaneEntry>.from(_filtered);
-                    return MagicalCard(
+                    return CascadeIn(
+                    index: index,
+                    child: MagicalCard(
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => EntryPager(
@@ -241,9 +245,11 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                               color: context.gc.textSecondary),
                         ],
                       ),
-                    );
+                    ),
+                  );
                   },
                 ),
+              ),
         ),
       ],
     );

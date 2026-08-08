@@ -14,6 +14,7 @@ import '../widgets/user_entry_helpers.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_search_field.dart';
 
 class HerbsListPage extends StatefulWidget {
@@ -112,14 +113,17 @@ class _HerbsListPageState extends State<HerbsListPage> {
           ),
         ),
         Expanded(
-          child: ListView.builder(
+          child: CascadeScope(
+                child: ListView.builder(
             padding: const EdgeInsets.only(bottom: 88),
             itemCount: combined.length,
             itemBuilder: (context, index) {
               final item = combined[index];
               final herb = item.model;
               final userEntry = item.userEntry;
-              return MagicalCard(
+              return CascadeIn(
+                    index: index,
+                    child: MagicalCard(
                 onTap: () {
                   Navigator.push(
                     context,
@@ -239,9 +243,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
                     ),
                   ],
                 ),
-              );
+              ),
+                  );
             },
           ),
+              ),
         ),
       ],
         ),

@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import 'mystic_advisor_page.dart';
 import '../../../astrology/presentation/pages/astrology_tab.dart';
@@ -218,8 +219,7 @@ class _ToolsTab extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: StaggeredEntrance(
         children: [
           // O emblema vivo substitui o antigo card de cabeçalho.
           SectionEmblemHeader(

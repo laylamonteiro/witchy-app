@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../data/models/spell_model.dart';
@@ -197,9 +198,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
     final recordCount =
         provider.userSpells.where((s) => s.isRecord).length;
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 90),
-      children: [
+    final cards = <Widget>[
         _buildHubCard(
           context,
           emoji: '✨',
@@ -253,7 +252,17 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
               ),
             ),
           ),
-      ],
+    ];
+
+    // Cascata na chegada, como nas outras seções do Grimório.
+    return CascadeScope(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 90),
+        children: [
+          for (final (i, card) in cards.indexed)
+            CascadeIn(index: i, child: card),
+        ],
+      ),
     );
   }
 

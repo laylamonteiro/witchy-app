@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../providers/wheel_of_year_provider.dart';
 import '../../data/models/sabbat_model.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -27,8 +28,7 @@ class WheelOfYearPage extends StatelessWidget {
         final dateFormat = DateFormat('dd/MM/yyyy');
 
         return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: StaggeredEntrance(
             children: [
               // Destaque do próximo sabbat no padrão das outras abas —
               // título, o SÍMBOLO da época como emblema vivo, nome, data e

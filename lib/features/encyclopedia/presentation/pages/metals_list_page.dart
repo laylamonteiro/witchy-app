@@ -11,6 +11,7 @@ import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import 'metal_detail_page.dart';
 import '../widgets/entry_pager.dart';
 import '../../../../core/widgets/magical_search_field.dart';
@@ -83,11 +84,14 @@ class _MetalsListPageState extends State<MetalsListPage> {
               // Ordena alfabeticamente
               final metals = _sortMetals(unsortedMetals);
 
-              return ListView.builder(
+              return CascadeScope(
+                child: ListView.builder(
                 itemCount: metals.length,
                 itemBuilder: (context, index) {
                   final metal = metals[index];
-                  return MagicalCard(
+                  return CascadeIn(
+                    index: index,
+                    child: MagicalCard(
                     onTap: () {
                       Navigator.push(
                         context,
@@ -202,8 +206,10 @@ class _MetalsListPageState extends State<MetalsListPage> {
                         ),
                       ],
                     ),
+                  ),
                   );
                 },
+              ),
               );
             },
           ),

@@ -4,6 +4,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/goddess_model.dart';
 import '../../../../core/utils/accents.dart';
@@ -76,12 +77,17 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
 
           // Goddesses list
           Expanded(
-            child: ListView.builder(
+            child: CascadeScope(
+              child: ListView.builder(
               itemCount: _filteredGoddesses.length,
               itemBuilder: (context, index) {
                 final goddess = _filteredGoddesses[index];
-                return _buildGoddessCard(goddess, index);
+                return CascadeIn(
+                  index: index,
+                  child: _buildGoddessCard(goddess, index),
+                );
               },
+            ),
             ),
           ),
         ],
