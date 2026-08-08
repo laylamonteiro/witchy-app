@@ -376,18 +376,11 @@ class _CoverFront extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A arte real da capa (aprovada), de borda a borda. Fallback para o
+    // couro em gradiente + medalhão caso o asset não carregue.
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF31234F), Color(0xFF1E1533)],
-        ),
-        border: Border.all(
-          color: const Color(0xFFC9A653).withValues(alpha: 0.8),
-          width: 1.4,
-        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.5),
@@ -396,18 +389,29 @@ class _CoverFront extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(26),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFC9A653).withValues(alpha: 0.65),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.asset(
+          'assets/premium/encyclopedia_cover.png',
+          fit: BoxFit.cover,
+          errorBuilder: (context, _, __) => Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF31234F), Color(0xFF1E1533)],
+              ),
+              border: Border.all(
+                color: const Color(0xFFC9A653).withValues(alpha: 0.8),
+                width: 1.4,
+              ),
             ),
-          ),
-          child: const Text(
-            '☾',
-            style: TextStyle(fontSize: 54, color: Color(0xFFC9A653)),
+            child: const Center(
+              child: Text(
+                '☾',
+                style: TextStyle(fontSize: 54, color: Color(0xFFC9A653)),
+              ),
+            ),
           ),
         ),
       ),
