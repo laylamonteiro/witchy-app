@@ -36,6 +36,9 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
 
   /// A busca com foco recolhe o emblema (cede o palco).
   bool _searchFocused = false;
+
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
   late List<ArcaneEntry> _filtered = _sorted(widget.entries);
 
   List<ArcaneEntry> _sorted(List<ArcaneEntry> list) {
@@ -83,14 +86,31 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
         ArcaneCategory.sacredSymbols => SectionEmblem.symbols,
       };
 
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Column(
       children: [
         SectionEmblemHeader(
           emblem: _emblemForCategory(widget.category),
           intro: widget.intro,
-          collapsed: _searchFocused || _searchController.text.isNotEmpty,
+          collapsed: _searchFocused ||
+              _scrolled || _searchController.text.isNotEmpty,
         ),
         Padding(
           padding: const EdgeInsets.all(16),
@@ -252,6 +272,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
               ),
         ),
       ],
+    ),
     );
   }
 }

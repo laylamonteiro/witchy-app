@@ -30,6 +30,9 @@ class _MetalsListPageState extends State<MetalsListPage> {
   /// A busca com foco recolhe o emblema (cede o palco).
   bool _searchFocused = false;
 
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -46,14 +49,31 @@ class _MetalsListPageState extends State<MetalsListPage> {
     return sorted;
   }
 
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Column(
       children: [
         SectionEmblemHeader(
           emblem: SectionEmblem.metals,
           intro: AppLocalizations.of(context).encyMetalsIntro,
-          collapsed: _searchFocused || _searchQuery.isNotEmpty,
+          collapsed: _searchFocused ||
+              _scrolled || _searchQuery.isNotEmpty,
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -215,6 +235,7 @@ class _MetalsListPageState extends State<MetalsListPage> {
           ),
         ),
       ],
+    ),
     );
   }
 

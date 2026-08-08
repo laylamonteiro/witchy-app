@@ -117,6 +117,9 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
   /// A busca com foco recolhe o emblema (cede o palco).
   bool _searchFocused = false;
 
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
+
   @override
   void initState() {
     super.initState();
@@ -131,16 +134,33 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
     super.dispose();
   }
 
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Stack(
       children: [
         Column(
           children: [
             SectionEmblemHeader(
               emblem: SectionEmblem.myGrimoire,
               intro: AppLocalizations.of(context).encyMyGrimoireIntro,
-              collapsed: _searchFocused || _searchQuery.trim().isNotEmpty,
+              collapsed: _searchFocused ||
+              _scrolled || _searchQuery.trim().isNotEmpty,
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -189,6 +209,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
           ),
         ),
       ],
+    ),
     );
   }
 

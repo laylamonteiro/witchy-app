@@ -31,6 +31,9 @@ class _HerbsListPageState extends State<HerbsListPage> {
   /// A busca com foco recolhe o emblema (cede o palco).
   bool _searchFocused = false;
 
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
+
   /// Filtro "Minhas": mostra só as entradas pessoais.
   bool _onlyMine = false;
 
@@ -48,6 +51,20 @@ class _HerbsListPageState extends State<HerbsListPage> {
       removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
     );
     return sorted;
+  }
+
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
   }
 
   @override
@@ -80,14 +97,17 @@ class _HerbsListPageState extends State<HerbsListPage> {
     final spotlightAdd =
         _onlyMine && provider.userEntries(UserEntryCategory.herb).isEmpty;
 
-    return Stack(
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Stack(
       children: [
         Column(
       children: [
         SectionEmblemHeader(
           emblem: SectionEmblem.herbs,
           intro: AppLocalizations.of(context).encyHerbsIntro,
-          collapsed: _searchFocused || _searchQuery.isNotEmpty,
+          collapsed: _searchFocused ||
+              _scrolled || _searchQuery.isNotEmpty,
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -257,6 +277,7 @@ class _HerbsListPageState extends State<HerbsListPage> {
           highlight: spotlightAdd,
         ),
       ],
+    ),
     );
   }
 }
