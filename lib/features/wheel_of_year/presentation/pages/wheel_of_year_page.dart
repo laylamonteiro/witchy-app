@@ -30,53 +30,49 @@ class WheelOfYearPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // O emblema vivo é o SÍMBOLO do próximo sabbat (cada época da
-              // roda com o seu), no mesmo padrão dos demais emblemas.
-              SectionEmblemHeader.custom(
-                customArt: Text(
-                  nextSabbat?.emoji ?? '🎡',
-                  style: const TextStyle(fontSize: 64),
+              // Destaque do próximo sabbat no padrão das outras abas —
+              // título, o SÍMBOLO da época como emblema vivo, nome, data e
+              // contagem, direto na página (sem card em volta).
+              if (nextSabbat != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context).wheelNextSabbat,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(height: 4),
-              // Próximo Sabbat em destaque — o símbolo vive no emblema
-              // acima; o card fica com nome, data e contagem.
-              if (nextSabbat != null)
-                SizedBox(
-                  height: 240,
-                  child: MagicalCard(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context).wheelNextSabbat,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          nextSabbat.name,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          nextSabbat.type.southernHemisphereDate,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: context.gc.textSecondary,
-                                  ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDaysUntilChip(
-                          context,
-                          nextSabbat.daysUntil(DateTime.now()),
-                        ),
-                      ],
-                    ),
+                LivingEmblem.custom(
+                  customArt: Text(
+                    nextSabbat.emoji,
+                    style: const TextStyle(fontSize: 64),
                   ),
+                ),
+                Text(
+                  nextSabbat.name,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  nextSabbat.type.southernHemisphereDate,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: context.gc.textSecondary,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: _buildDaysUntilChip(
+                    context,
+                    nextSabbat.daysUntil(DateTime.now()),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ] else
+                const SectionEmblemHeader.custom(
+                  customArt: Text('🎡', style: TextStyle(fontSize: 64)),
                 ),
 
               // Lista de todos os Sabbats

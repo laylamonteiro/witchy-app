@@ -26,6 +26,9 @@ class _MetalsListPageState extends State<MetalsListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -49,17 +52,20 @@ class _MetalsListPageState extends State<MetalsListPage> {
         SectionEmblemHeader(
           emblem: SectionEmblem.metals,
           intro: AppLocalizations.of(context).encyMetalsIntro,
-          collapsed: _searchQuery.isNotEmpty,
+          collapsed: _searchFocused || _searchQuery.isNotEmpty,
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
               Expanded(
-                child: MagicalSearchField(
-                  controller: _searchController,
-                  hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabMetals),
-                  onChanged: (value) => setState(() => _searchQuery = value),
+                child: Focus(
+                  onFocusChange: (f) => setState(() => _searchFocused = f),
+                  child: MagicalSearchField(
+                    controller: _searchController,
+                    hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabMetals),
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                  ),
                 ),
               ),
               // Sem filtro nesta aba: a caixa de busca ocupa a largura

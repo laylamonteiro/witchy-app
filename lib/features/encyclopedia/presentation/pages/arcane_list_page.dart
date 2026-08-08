@@ -32,6 +32,9 @@ class ArcaneListPage extends StatefulWidget {
 
 class _ArcaneListPageState extends State<ArcaneListPage> {
   final _searchController = TextEditingController();
+
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
   late List<ArcaneEntry> _filtered = _sorted(widget.entries);
 
   List<ArcaneEntry> _sorted(List<ArcaneEntry> list) {
@@ -86,11 +89,13 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
         SectionEmblemHeader(
           emblem: _emblemForCategory(widget.category),
           intro: widget.intro,
-          collapsed: _searchController.text.isNotEmpty,
+          collapsed: _searchFocused || _searchController.text.isNotEmpty,
         ),
         Padding(
           padding: const EdgeInsets.all(16),
-          child: TextField(
+          child: Focus(
+            onFocusChange: (f) => setState(() => _searchFocused = f),
+            child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context)
@@ -113,6 +118,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
               ),
             ),
             onChanged: _filter,
+            ),
           ),
         ),
         Expanded(

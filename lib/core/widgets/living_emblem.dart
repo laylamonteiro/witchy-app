@@ -61,7 +61,10 @@ class _LivingEmblemState extends State<LivingEmblem>
   late final AnimationController _orbit; // órbitas lentas (40s)
   late final AnimationController _sweep; // brilho varrendo / escrita (3s)
   late final AnimationController _fast; // chama, joia, oscilação (1.8s)
-  bool _reduced = false;
+
+  /// null = primeira dependência ainda não lida — garante que o primeiro
+  /// didChangeDependencies SEMPRE configure (e dispare) os controllers.
+  bool? _reduced;
 
   @override
   void initState() {
@@ -155,6 +158,8 @@ class _LivingEmblemState extends State<LivingEmblem>
       ),
     );
   }
+
+  bool get _isReduced => _reduced ?? false;
 
   /// A arte da seção, com seu movimento próprio.
   Widget _buildArt(GrimoireColors gc) {
@@ -434,7 +439,7 @@ class _LivingEmblemState extends State<LivingEmblem>
         Align(
           alignment: pos[i],
           child: _BlinkStar(
-            reduced: _reduced,
+            reduced: _isReduced,
             delay: Duration(milliseconds: i * 420),
             color: gc.starYellow,
           ),

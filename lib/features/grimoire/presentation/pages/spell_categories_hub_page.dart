@@ -113,6 +113,9 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
+
   @override
   void initState() {
     super.initState();
@@ -136,11 +139,13 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
             SectionEmblemHeader(
               emblem: SectionEmblem.myGrimoire,
               intro: AppLocalizations.of(context).encyMyGrimoireIntro,
-              collapsed: _searchQuery.trim().isNotEmpty,
+              collapsed: _searchFocused || _searchQuery.trim().isNotEmpty,
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: TextField(
+              child: Focus(
+                onFocusChange: (f) => setState(() => _searchFocused = f),
+                child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: AppLocalizations.of(context).grimoireSearchSpells,
@@ -156,6 +161,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
                         ),
                 ),
                 onChanged: (value) => setState(() => _searchQuery = value),
+                ),
               ),
             ),
             Expanded(

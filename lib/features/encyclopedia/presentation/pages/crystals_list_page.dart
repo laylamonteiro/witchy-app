@@ -27,6 +27,9 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
+
   /// Filtro "Minhas": mostra só as entradas pessoais.
   bool _onlyMine = false;
 
@@ -70,17 +73,20 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
         SectionEmblemHeader(
           emblem: SectionEmblem.crystals,
           intro: AppLocalizations.of(context).encyCrystalsIntro,
-          collapsed: _searchQuery.isNotEmpty,
+          collapsed: _searchFocused || _searchQuery.isNotEmpty,
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
               Expanded(
-                child: MagicalSearchField(
-                  controller: _searchController,
-                  hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabCrystals),
-                  onChanged: (value) => setState(() => _searchQuery = value),
+                child: Focus(
+                  onFocusChange: (f) => setState(() => _searchFocused = f),
+                  child: MagicalSearchField(
+                    controller: _searchController,
+                    hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabCrystals),
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

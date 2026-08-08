@@ -22,7 +22,8 @@ class GoddessesListPage extends StatefulWidget {
 class _GoddessesListPageState extends State<GoddessesListPage> {
   final TextEditingController _searchController = TextEditingController();
   List<GoddessModel> _filteredGoddesses = goddessesData;
-  GoddessOrigin? _selectedOrigin;
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
 
 
   @override
@@ -41,9 +42,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
             goddess.description.toLowerCase().contains(query.toLowerCase()) ||
             goddess.aspects.any((a) => a.displayName.toLowerCase().contains(query.toLowerCase()));
 
-        final matchesOrigin = _selectedOrigin == null || goddess.origin == _selectedOrigin;
-
-        return matchesSearch && matchesOrigin;
+        return matchesSearch;
       }).toList()
         ..sort((a, b) =>
           removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
@@ -60,63 +59,20 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
           SectionEmblemHeader(
             emblem: SectionEmblem.goddesses,
             intro: AppLocalizations.of(context).encyGoddessesIntro,
-            collapsed: _selectedOrigin != null ||
-                _searchController.text.isNotEmpty,
+            collapsed: _searchFocused || _searchController.text.isNotEmpty,
           ),
 
           Padding(
             padding: const EdgeInsets.all(16),
-            child: MagicalSearchField(
-              controller: _searchController,
-              hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabGoddesses),
-              onChanged: _filterGoddesses,
+            child: Focus(
+              onFocusChange: (f) => setState(() => _searchFocused = f),
+              child: MagicalSearchField(
+                controller: _searchController,
+                hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabGoddesses),
+                onChanged: _filterGoddesses,
+              ),
             ),
           ),
-
-          // Filtro por origem em CHIPS visíveis (o antigo menu popup
-          // escurecia a tela e escondia as opções).
-          SizedBox(
-            height: 40,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: const Text('🌍 Todas'),
-                    selected: _selectedOrigin == null,
-                    selectedColor: context.gc.lilac.withValues(alpha: 0.25),
-                    checkmarkColor: context.gc.lilac,
-                    onSelected: (_) {
-                      setState(() {
-                        _selectedOrigin = null;
-                        _filterGoddesses(_searchController.text);
-                      });
-                    },
-                  ),
-                ),
-                for (final origin in GoddessOrigin.values)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text('${origin.emoji} ${origin.displayName}'),
-                      selected: _selectedOrigin == origin,
-                      selectedColor: context.gc.lilac.withValues(alpha: 0.25),
-                      checkmarkColor: context.gc.lilac,
-                      onSelected: (_) {
-                        setState(() {
-                          _selectedOrigin =
-                              _selectedOrigin == origin ? null : origin;
-                          _filterGoddesses(_searchController.text);
-                        });
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
 
           // Goddesses list
           Expanded(
