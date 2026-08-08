@@ -80,7 +80,10 @@ List<EncyclopediaHit> searchEncyclopedia(
   }
 
   // Entradas pessoais primeiro: o que a Bruxa criou vale mais que o catálogo.
-  for (final entry in userEntries) {
+  // Cores ficam de fora: a seção virou catálogo oficial puro (roda + páginas
+  // completas), então entradas antigas de cor não aparecem mais.
+  for (final entry in userEntries
+      .where((e) => e.category != UserEntryCategory.color)) {
     final (emoji, section, WidgetBuilder open) = switch (entry.category) {
       UserEntryCategory.crystal => (
           '💎',
