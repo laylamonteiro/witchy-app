@@ -2412,7 +2412,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get astroMysticSubtitle =>
-      'Descubre tu carta astral y perfil mágico personalizado';
+      'Tu carta astral y perfil mágico personalizado';
 
   @override
   String get astroZodiacSigns => 'Signos del Zodíaco';

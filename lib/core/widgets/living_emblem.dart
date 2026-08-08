@@ -230,13 +230,15 @@ class _LivingEmblemState extends State<LivingEmblem>
           ],
         );
 
-      // A joia do selo pulsa em rubi.
+      // A joia do selo pulsa em rubi. Positioned.fill prende o Align ao
+      // tamanho da ARTE — solto, ele expandiria à largura da tela e a
+      // joia escaparia do selo.
       case SectionEmblem.demons:
         return Stack(
           alignment: Alignment.center,
           children: [
             _svg(_svgDemon),
-            _gem(),
+            Positioned.fill(child: _gem()),
           ],
         );
 
@@ -251,11 +253,25 @@ class _LivingEmblemState extends State<LivingEmblem>
           ],
         );
 
+      // Os traços rúnicos acendem e apagam, como brasas na pedra.
+      case SectionEmblem.runes:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            _svg(_svgRuneStone),
+            FadeTransition(
+              opacity: Tween<double>(begin: 0.25, end: 1.0).animate(
+                CurvedAnimation(parent: _fast, curve: Curves.easeInOut),
+              ),
+              child: _svg(_svgRuneMarks),
+            ),
+          ],
+        );
+
       // Só respiração + estrelas (já têm bastante vida).
       case SectionEmblem.moon:
       case SectionEmblem.sun:
       case SectionEmblem.goddesses:
-      case SectionEmblem.runes:
         return _svg(_emblemSvg(widget.emblem!));
     }
   }
@@ -339,8 +355,9 @@ class _LivingEmblemState extends State<LivingEmblem>
       animation: _fast,
       builder: (context, _) {
         final t = _fast.value * math.pi * 2;
-        final sx = 1 + 0.05 * math.sin(t * 1.3);
-        final sy = 1 + 0.09 * math.sin(t);
+        // Amplitude generosa: numa chama pequena, 5% passava despercebido.
+        final sx = 1 + 0.10 * math.sin(t * 1.3);
+        final sy = 1 + 0.18 * math.sin(t);
         return Transform(
           alignment: const Alignment(0, -0.28), // base da chama
           transform: Matrix4.diagonal3Values(sx, sy, 1),
@@ -350,11 +367,13 @@ class _LivingEmblemState extends State<LivingEmblem>
     );
   }
 
-  /// Bolhas subindo da boca do caldeirão.
+  /// Bolhas subindo da boca do caldeirão. Positioned.fill prende cada
+  /// Align ao tamanho da arte (ver o selo dos Demônios).
   List<Widget> _bubbles(GrimoireColors gc) {
     return [
       for (var i = 0; i < 3; i++)
-        AnimatedBuilder(
+        Positioned.fill(
+          child: AnimatedBuilder(
           animation: _sweep,
           builder: (context, _) {
             final phase = (_sweep.value + i / 3) % 1.0;
@@ -377,6 +396,7 @@ class _LivingEmblemState extends State<LivingEmblem>
               ),
             );
           },
+          ),
         ),
     ];
   }
@@ -602,7 +622,7 @@ String _emblemSvg(SectionEmblem e) => switch (e) {
       SectionEmblem.herbs => _svgHerb,
       SectionEmblem.goddesses => _svgGoddess,
       SectionEmblem.elements => _svgElementsBase,
-      SectionEmblem.runes => _svgRune,
+      SectionEmblem.runes => _svgRuneStone,
       SectionEmblem.altar => _svgAltarCandle,
       SectionEmblem.metals => _svgMetal,
       SectionEmblem.astrology => _svgAstroBase,
@@ -714,10 +734,19 @@ const _svgElementsRing = '''
   <path d="M17 70 L32 62 L32 78 Z M24 64.8 L24 75.2" fill="none" stroke="#A0785A" stroke-width="2"/>
 </svg>''';
 
-const _svgRune = '''
+// Runas — pedra (base) e traços (que acendem como brasas). Um eco fraco
+// dos traços fica gravado na pedra, para o mínimo da pulsação não "apagar"
+// a runa por completo.
+const _svgRuneStone = '''
 <svg $_ns viewBox="0 0 120 120">
   <ellipse cx="60" cy="64" rx="40" ry="46" fill="#3B3547"/>
   <ellipse cx="57" cy="60" rx="38" ry="44" fill="#4A4458"/>
+  <g fill="none" stroke="#5C4A38" stroke-width="5" stroke-linecap="round">
+    <path d="M48 36 L48 88"/><path d="M48 44 L72 32"/><path d="M48 62 L72 50"/>
+  </g>
+</svg>''';
+const _svgRuneMarks = '''
+<svg $_ns viewBox="0 0 120 120">
   <g fill="none" stroke="#FFB35C" stroke-width="5" stroke-linecap="round">
     <path d="M48 36 L48 88"/><path d="M48 44 L72 32"/><path d="M48 62 L72 50"/>
   </g>

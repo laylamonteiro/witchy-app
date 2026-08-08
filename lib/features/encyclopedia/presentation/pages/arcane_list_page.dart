@@ -205,10 +205,12 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                 const SizedBox(height: 4),
                                 // Linha de referência com emoji, como o
                                 // planeta nos Metais e a origem nas
-                                // Deusas: aqui, a origem cultural.
+                                // Deusas: aqui, o emoji do PRÓPRIO verbete
+                                // (a espada de Miguel, a trombeta de
+                                // Gabriel...) + a origem cultural.
                                 Row(
                                   children: [
-                                    const Text('📜'),
+                                    Text(entry.emoji),
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(

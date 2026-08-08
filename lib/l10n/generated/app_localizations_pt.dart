@@ -2408,7 +2408,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get astroMysticSubtitle =>
-      'Descubra seu mapa astral e perfil mágico personalizado';
+      'Seu mapa astral e perfil mágico personalizado';
 
   @override
   String get astroZodiacSigns => 'Signos do Zodíaco';
@@ -5051,7 +5051,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get astroMysticSubtitle =>
-      'Descubra seu mapa astral e perfil mágico personalizado';
+      'Seu mapa astral e perfil mágico personalizado';
 
   @override
   String get astroZodiacSigns => 'Signos do Zodíaco';

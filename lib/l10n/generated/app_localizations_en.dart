@@ -2400,7 +2400,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get astroMysticSubtitle =>
-      'Discover your birth chart and personalized magical profile';
+      'Your birth chart and personalized magical profile';
 
   @override
   String get astroZodiacSigns => 'Zodiac Signs';
