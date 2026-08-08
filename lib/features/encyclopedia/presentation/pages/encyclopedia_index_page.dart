@@ -486,29 +486,12 @@ class _CoverFront extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-<<<<<<< Updated upstream
         child: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [Color(0xFF31234F), Color(0xFF1E1533)],
-=======
-        child: Image.asset(
-          'assets/premium/grimoire_cover.png',
-          fit: BoxFit.cover,
-          errorBuilder: (context, _, __) => Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF31234F), Color(0xFF1E1533)],
-              ),
-              border: Border.all(
-                color: const Color(0xFFC9A653).withValues(alpha: 0.8),
-                width: 1.4,
-              ),
->>>>>>> Stashed changes
             ),
             border: Border.all(
               color: const Color(0xFFC9A653).withValues(alpha: 0.8),
@@ -517,7 +500,7 @@ class _CoverFront extends StatelessWidget {
           ),
           child: Center(
             child: Image.asset(
-              'assets/premium/encyclopedia_cover.png',
+              'assets/premium/grimoire_cover.png',
               fit: BoxFit.contain,
               errorBuilder: (context, _, __) => const Text(
                 '☾',
