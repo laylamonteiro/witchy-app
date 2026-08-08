@@ -494,23 +494,21 @@ class _CoverFront extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF31234F), Color(0xFF1E1533)],
+        // Só a arte: o livro já tem a proporção da imagem, e a moldura
+        // dourada desenhada NELA é a única borda.
+        child: Image.asset(
+          'assets/premium/grimoire_cover.png',
+          fit: BoxFit.cover,
+          errorBuilder: (context, _, __) => Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF31234F), Color(0xFF1E1533)],
+              ),
             ),
-            border: Border.all(
-              color: const Color(0xFFC9A653).withValues(alpha: 0.8),
-              width: 1.4,
-            ),
-          ),
-          child: Center(
-            child: Image.asset(
-              'assets/premium/grimoire_cover.png',
-              fit: BoxFit.contain,
-              errorBuilder: (context, _, __) => const Text(
+            child: const Center(
+              child: Text(
                 '☾',
                 style: TextStyle(fontSize: 54, color: Color(0xFFC9A653)),
               ),
