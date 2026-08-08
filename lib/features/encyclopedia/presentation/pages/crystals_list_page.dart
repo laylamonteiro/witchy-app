@@ -67,6 +67,11 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
       children: [
         Column(
       children: [
+        SectionEmblemHeader(
+          emblem: SectionEmblem.crystals,
+          intro: AppLocalizations.of(context).encyCrystalsIntro,
+          collapsed: _searchQuery.isNotEmpty,
+        ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -86,11 +91,6 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
               ),
             ],
           ),
-        ),
-        SectionEmblemHeader(
-          emblem: SectionEmblem.crystals,
-          intro: AppLocalizations.of(context).encyCrystalsIntro,
-          collapsed: _searchQuery.isNotEmpty,
         ),
         Expanded(
           child: Consumer<EncyclopediaProvider>(

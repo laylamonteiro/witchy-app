@@ -46,6 +46,11 @@ class _MetalsListPageState extends State<MetalsListPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        SectionEmblemHeader(
+          emblem: SectionEmblem.metals,
+          intro: AppLocalizations.of(context).encyMetalsIntro,
+          collapsed: _searchQuery.isNotEmpty,
+        ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -61,11 +66,6 @@ class _MetalsListPageState extends State<MetalsListPage> {
               // toda, como nas abas arcanas.
             ],
           ),
-        ),
-        SectionEmblemHeader(
-          emblem: SectionEmblem.metals,
-          intro: AppLocalizations.of(context).encyMetalsIntro,
-          collapsed: _searchQuery.isNotEmpty,
         ),
         Expanded(
           child: Consumer<EncyclopediaProvider>(

@@ -86,13 +86,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get grimoirePageTitle => 'Herramientas';
 
   @override
-  String get grimoireTabAstrology => 'Astrología';
+  String get grimoireTabAstrology => 'Astrología Mística';
 
   @override
   String get grimoireTabTools => 'Herramientas Mágicas';
 
   @override
   String get grimoireTabMyGrimoire => 'Mi Grimorio';
+
+  @override
+  String get encyMyGrimoireIntro => 'Tus hechizos, reunidos por intención — crea, guarda y revisita tu magia';
 
   @override
   String get diaryPageTitle => 'Diarios';

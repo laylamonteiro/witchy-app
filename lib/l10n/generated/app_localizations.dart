@@ -251,6 +251,12 @@ abstract class AppLocalizations {
   /// **'Meu Grimório'**
   String get grimoireTabMyGrimoire;
 
+  /// No description provided for @encyMyGrimoireIntro.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seus feitiços, reunidos por intenção — crie, guarde e revisite a sua magia'**
+  String get encyMyGrimoireIntro;
+
   /// No description provided for @diaryPageTitle.
   ///
   /// In pt, this message translates to:

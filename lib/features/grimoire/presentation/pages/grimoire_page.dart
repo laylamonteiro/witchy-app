@@ -17,7 +17,6 @@ import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../diary/presentation/pages/dream_tools_page.dart';
 import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
 import '../../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
-import '../widgets/grimoire_header_card.dart';
 import '../../../learning/presentation/pages/learning_home_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
@@ -217,12 +216,10 @@ class _ToolsTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const LivingEmblem(emblem: SectionEmblem.tools),
-          // Mesmo card-cabeçalho (cores e altura) da aba Astrologia.
-          GrimoireHeaderCard(
-            glyph: '‧ ⛦ ‧',
-            title: l10n.toolsHeaderTitle,
-            subtitle: l10n.toolsHeaderSubtitle,
+          // O emblema vivo substitui o antigo card de cabeçalho.
+          SectionEmblemHeader(
+            emblem: SectionEmblem.tools,
+            intro: l10n.toolsHeaderSubtitle,
           ),
           _buildGroup(context, l10n.toolsGroupPractice, practice),
           _buildGroup(context, l10n.toolsGroupDivination, divination),

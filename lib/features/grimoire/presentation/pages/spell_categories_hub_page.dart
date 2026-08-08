@@ -133,6 +133,11 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
       children: [
         Column(
           children: [
+            SectionEmblemHeader(
+              emblem: SectionEmblem.myGrimoire,
+              intro: AppLocalizations.of(context).encyMyGrimoireIntro,
+              collapsed: _searchQuery.trim().isNotEmpty,
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextField(
@@ -152,10 +157,6 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
                 ),
                 onChanged: (value) => setState(() => _searchQuery = value),
               ),
-            ),
-            SectionEmblemHeader(
-              emblem: SectionEmblem.myGrimoire,
-              collapsed: _searchQuery.trim().isNotEmpty,
             ),
             Expanded(
               child: Consumer<SpellProvider>(

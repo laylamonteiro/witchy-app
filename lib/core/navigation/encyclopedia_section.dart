@@ -23,12 +23,14 @@ enum EncyclopediaSection {
   crystals,
   herbs,
   goddesses,
-  elements,
-  runes,
-  altar,
   metals,
   archetypes,
   symbols,
   angels,
   demons,
+
+  // Páginas informativas (não-catálogo) fecham a Enciclopédia.
+  elements,
+  runes,
+  altar,
 }

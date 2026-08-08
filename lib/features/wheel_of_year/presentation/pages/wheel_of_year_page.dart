@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/wheel_of_year_provider.dart';
 import '../../data/models/sabbat_model.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -29,6 +30,8 @@ class WheelOfYearPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const LivingEmblem(emblem: SectionEmblem.sabbats),
+              const SizedBox(height: 12),
               // Próximo Sabbat em destaque - mesma altura do card lunar (300)
               if (nextSabbat != null)
                 SizedBox(

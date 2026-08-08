@@ -83,6 +83,11 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        SectionEmblemHeader(
+          emblem: _emblemForCategory(widget.category),
+          intro: widget.intro,
+          collapsed: _searchController.text.isNotEmpty,
+        ),
         Padding(
           padding: const EdgeInsets.all(16),
           child: TextField(
@@ -109,11 +114,6 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
             ),
             onChanged: _filter,
           ),
-        ),
-        SectionEmblemHeader(
-          emblem: _emblemForCategory(widget.category),
-          intro: widget.intro,
-          collapsed: _searchController.text.isNotEmpty,
         ),
         Expanded(
           child: _filtered.isEmpty

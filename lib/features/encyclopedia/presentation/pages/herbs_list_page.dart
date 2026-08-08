@@ -80,6 +80,11 @@ class _HerbsListPageState extends State<HerbsListPage> {
       children: [
         Column(
       children: [
+        SectionEmblemHeader(
+          emblem: SectionEmblem.herbs,
+          intro: AppLocalizations.of(context).encyHerbsIntro,
+          collapsed: _searchQuery.isNotEmpty,
+        ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -99,11 +104,6 @@ class _HerbsListPageState extends State<HerbsListPage> {
               ),
             ],
           ),
-        ),
-        SectionEmblemHeader(
-          emblem: SectionEmblem.herbs,
-          intro: AppLocalizations.of(context).encyHerbsIntro,
-          collapsed: _searchQuery.isNotEmpty,
         ),
         Expanded(
           child: ListView.builder(

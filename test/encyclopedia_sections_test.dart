@@ -23,14 +23,14 @@ void main() {
       EncyclopediaSection.crystals,
       EncyclopediaSection.herbs,
       EncyclopediaSection.goddesses,
-      EncyclopediaSection.elements,
-      EncyclopediaSection.runes,
-      EncyclopediaSection.altar,
       EncyclopediaSection.metals,
       EncyclopediaSection.archetypes,
       EncyclopediaSection.symbols,
       EncyclopediaSection.angels,
       EncyclopediaSection.demons,
+      EncyclopediaSection.elements,
+      EncyclopediaSection.runes,
+      EncyclopediaSection.altar,
     ]);
   });
 
