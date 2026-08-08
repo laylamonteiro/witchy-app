@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../grimoire/presentation/widgets/grimoire_header_card.dart';
@@ -52,6 +53,7 @@ class _AstrologyTabState extends State<AstrologyTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const LivingEmblem(emblem: SectionEmblem.astrology),
               // Header — mesmo card (cores e altura) da aba Ferramentas.
               GrimoireHeaderCard(
                 glyph: '‧ ☽◯☾ ‧',

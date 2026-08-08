@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/rune_model.dart';
 import 'rune_detail_page.dart';
@@ -25,6 +26,8 @@ class RunesListPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const LivingEmblem(emblem: SectionEmblem.runes),
+            const SizedBox(height: 12),
             // Introdução
             MagicalCard(
               margin: EdgeInsets.zero,

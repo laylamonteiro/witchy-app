@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/expansion_magical_card.dart';
 import '../../data/data_sources/elements_content.dart';
@@ -27,6 +28,8 @@ class ElementsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const LivingEmblem(emblem: SectionEmblem.elements),
+            const SizedBox(height: 12),
             // Introdução
             MagicalCard(
               margin: EdgeInsets.zero,
