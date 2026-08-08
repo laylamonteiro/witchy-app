@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../data/models/spell_model.dart';
@@ -151,6 +152,10 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
                 ),
                 onChanged: (value) => setState(() => _searchQuery = value),
               ),
+            ),
+            SectionEmblemHeader(
+              emblem: SectionEmblem.myGrimoire,
+              collapsed: _searchQuery.trim().isNotEmpty,
             ),
             Expanded(
               child: Consumer<SpellProvider>(

@@ -12,6 +12,7 @@ import '../widgets/encyclopedia_image.dart';
 import '../widgets/entry_pager.dart';
 import '../widgets/user_entry_helpers.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import 'crystal_detail_page.dart';
 import '../../../../core/widgets/magical_search_field.dart';
 
@@ -86,14 +87,10 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(
-            AppLocalizations.of(context).encyCrystalsIntro,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.textSecondary,
-                ),
-          ),
+        SectionEmblemHeader(
+          emblem: SectionEmblem.crystals,
+          intro: AppLocalizations.of(context).encyCrystalsIntro,
+          collapsed: _searchQuery.isNotEmpty,
         ),
         Expanded(
           child: Consumer<EncyclopediaProvider>(

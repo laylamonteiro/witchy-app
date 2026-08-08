@@ -13,6 +13,7 @@ import '../widgets/entry_pager.dart';
 import '../widgets/user_entry_helpers.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_search_field.dart';
 
 class HerbsListPage extends StatefulWidget {
@@ -99,14 +100,10 @@ class _HerbsListPageState extends State<HerbsListPage> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(
-            AppLocalizations.of(context).encyHerbsIntro,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.textSecondary,
-                ),
-          ),
+        SectionEmblemHeader(
+          emblem: SectionEmblem.herbs,
+          intro: AppLocalizations.of(context).encyHerbsIntro,
+          collapsed: _searchQuery.isNotEmpty,
         ),
         Expanded(
           child: ListView.builder(

@@ -10,6 +10,7 @@ import '../../data/models/crystal_model.dart'; // Para ElementExtension
 import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import 'metal_detail_page.dart';
 import '../widgets/entry_pager.dart';
 import '../../../../core/widgets/magical_search_field.dart';
@@ -61,14 +62,10 @@ class _MetalsListPageState extends State<MetalsListPage> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(
-            AppLocalizations.of(context).encyMetalsIntro,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.textSecondary,
-                ),
-          ),
+        SectionEmblemHeader(
+          emblem: SectionEmblem.metals,
+          intro: AppLocalizations.of(context).encyMetalsIntro,
+          collapsed: _searchQuery.isNotEmpty,
         ),
         Expanded(
           child: Consumer<EncyclopediaProvider>(

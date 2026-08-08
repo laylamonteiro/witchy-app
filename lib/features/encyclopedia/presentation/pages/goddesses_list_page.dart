@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/goddess_model.dart';
 import '../../../../core/utils/accents.dart';
@@ -129,14 +130,10 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
             ),
           ),
 
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(
-              AppLocalizations.of(context).encyGoddessesIntro,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-            ),
+          SectionEmblemHeader(
+            emblem: SectionEmblem.goddesses,
+            intro: AppLocalizations.of(context).encyGoddessesIntro,
+            collapsed: _selectedOrigin != null,
           ),
 
           // Indicador de filtro ativo

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/accents.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_card.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../data/data_sources/arcane_categories.dart';
@@ -70,6 +71,14 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
   String _imageAssetForEntry(ArcaneEntry entry) =>
       widget.category.imageAssetFor(entry);
 
+  static SectionEmblem _emblemForCategory(ArcaneCategory category) =>
+      switch (category) {
+        ArcaneCategory.archetypes => SectionEmblem.archetypes,
+        ArcaneCategory.angels => SectionEmblem.angels,
+        ArcaneCategory.demons => SectionEmblem.demons,
+        ArcaneCategory.sacredSymbols => SectionEmblem.symbols,
+      };
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -101,14 +110,10 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
             onChanged: _filter,
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(
-            widget.intro,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.textSecondary,
-                ),
-          ),
+        SectionEmblemHeader(
+          emblem: _emblemForCategory(widget.category),
+          intro: widget.intro,
+          collapsed: _searchController.text.isNotEmpty,
         ),
         Expanded(
           child: _filtered.isEmpty
