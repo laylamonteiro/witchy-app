@@ -1,11 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/grimoire_colors.dart';
 
-/// As seções que têm um "emblema vivo" no topo da lista. A arte de cada uma
-/// vem da mesma família de movimento (respiração ~3s, brilho suave, estrelas
-/// piscando) — o contrato da [LivingEmblem].
+/// As seções que têm um "emblema vivo" no topo da lista. Cada uma tem um
+/// movimento próprio (respiração ~3s + estrelas piscando é o denominador
+/// comum; algumas ganham brilho varrendo, oscilação, chama, bolhas...).
 enum SectionEmblem {
   myGrimoire,
   moon,
@@ -27,14 +29,11 @@ enum SectionEmblem {
 }
 
 /// Emblema vivo: a arte SVG da seção sob uma respiração suave, com halo
-/// pulsante e estrelas piscando — a mesma linguagem da BreathingMoon/Sun.
+/// pulsante e estrelas piscando — a mesma linguagem da BreathingMoon/Sun —
+/// mais o movimento característico de cada seção.
 ///
-/// Altura FIXA (para o deslizar entre abas nunca "pular") e movimento
-/// ambiente: congela num quadro bonito quando o sistema pede "reduzir
-/// movimento" (acessibilidade).
-///
-/// Emblemas de natureza orbital (Elementos, Sabbats, Astrologia, Símbolos)
-/// ganham uma camada que gira devagar por cima da base.
+/// Altura FIXA (para o deslizar entre abas nunca "pular"); congela num
+/// quadro bonito quando o sistema pede "reduzir movimento" (acessibilidade).
 class LivingEmblem extends StatefulWidget {
   final SectionEmblem emblem;
   final double height;
@@ -47,8 +46,10 @@ class LivingEmblem extends StatefulWidget {
 
 class _LivingEmblemState extends State<LivingEmblem>
     with TickerProviderStateMixin {
-  late final AnimationController _breathe;
-  late final AnimationController _orbit;
+  late final AnimationController _breathe; // respiração/halo (3s)
+  late final AnimationController _orbit; // órbitas lentas (40s)
+  late final AnimationController _sweep; // brilho varrendo / escrita (3s)
+  late final AnimationController _fast; // chama, joia, oscilação (1.8s)
   bool _reduced = false;
 
   @override
@@ -58,6 +59,10 @@ class _LivingEmblemState extends State<LivingEmblem>
         AnimationController(vsync: this, duration: const Duration(seconds: 3));
     _orbit =
         AnimationController(vsync: this, duration: const Duration(seconds: 40));
+    _sweep = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 3200));
+    _fast = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1800));
   }
 
   @override
@@ -68,10 +73,14 @@ class _LivingEmblemState extends State<LivingEmblem>
       _reduced = reduced;
       if (reduced) {
         _breathe.value = 0.5;
+        _sweep.value = 1.0;
+        _fast.value = 0.5;
         _orbit.stop();
       } else {
         _breathe.repeat(reverse: true);
         _orbit.repeat();
+        _sweep.repeat();
+        _fast.repeat(reverse: true);
       }
     }
   }
@@ -80,6 +89,8 @@ class _LivingEmblemState extends State<LivingEmblem>
   void dispose() {
     _breathe.dispose();
     _orbit.dispose();
+    _sweep.dispose();
+    _fast.dispose();
     super.dispose();
   }
 
@@ -89,15 +100,14 @@ class _LivingEmblemState extends State<LivingEmblem>
       widget.emblem == SectionEmblem.astrology ||
       widget.emblem == SectionEmblem.symbols;
 
+  double get _artH => widget.height * 0.72;
+
+  Widget _svg(String s) =>
+      SvgPicture.string(s, height: _artH, fit: BoxFit.contain);
+
   @override
   Widget build(BuildContext context) {
     final gc = context.gc;
-    final svg = _emblemSvg(widget.emblem);
-    final art = SvgPicture.string(
-      svg,
-      height: widget.height * 0.72,
-      fit: BoxFit.contain,
-    );
 
     return SizedBox(
       height: widget.height,
@@ -110,8 +120,7 @@ class _LivingEmblemState extends State<LivingEmblem>
             AnimatedBuilder(
               animation: _breathe,
               builder: (context, _) {
-                final t =
-                    Curves.easeInOut.transform(_breathe.value); // 0..1
+                final t = Curves.easeInOut.transform(_breathe.value);
                 return Container(
                   width: widget.height * 0.9,
                   height: widget.height * 0.9,
@@ -127,32 +136,276 @@ class _LivingEmblemState extends State<LivingEmblem>
                 );
               },
             ),
-            // Arte, respirando (com a camada orbital por baixo, se houver).
+            // Arte + movimento característico, respirando.
             ScaleTransition(
               scale: Tween<double>(begin: 1.0, end: 1.045).animate(
                 CurvedAnimation(parent: _breathe, curve: Curves.easeInOut),
               ),
-              child: _orbital
-                  ? Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        RotationTransition(
-                          turns: _orbit,
-                          child: SvgPicture.string(
-                            _orbitOverlaySvg(widget.emblem),
-                            height: widget.height * 0.9,
-                          ),
-                        ),
-                        art,
-                      ],
-                    )
-                  : art,
+              child: _buildArt(gc),
             ),
             // Estrelas piscando ao redor.
             ..._stars(gc),
           ],
         ),
       ),
+    );
+  }
+
+  /// A arte da seção, com seu movimento próprio.
+  Widget _buildArt(GrimoireColors gc) {
+    switch (widget.emblem) {
+      // Orbital: base + camada girando por cima.
+      case SectionEmblem.elements:
+      case SectionEmblem.sabbats:
+      case SectionEmblem.astrology:
+      case SectionEmblem.symbols:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            RotationTransition(
+              turns: _orbit,
+              child: SvgPicture.string(_orbitOverlaySvg(widget.emblem),
+                  height: widget.height * 0.9),
+            ),
+            _svg(_emblemSvg(widget.emblem)),
+          ],
+        );
+
+      // A pena escreve a linha de feitiço, e recomeça.
+      case SectionEmblem.myGrimoire:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            _svg(_svgMyGrimoireBase),
+            _writeReveal(_svg(_svgMyGrimoireLine)),
+          ],
+        );
+
+      // Brilho varre a superfície.
+      case SectionEmblem.crystals:
+        return _shimmer(_svg(_svgCrystal), gc);
+      case SectionEmblem.metals:
+        return _shimmer(_svg(_svgMetal), gc);
+      case SectionEmblem.archetypes:
+        return _shimmer(_svg(_svgArchetype), gc);
+
+      // O raminho balança ao vento.
+      case SectionEmblem.herbs:
+        return _sway(_svg(_svgHerb));
+
+      // A chama treme.
+      case SectionEmblem.altar:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            _svg(_svgAltarCandle),
+            _flame(_svg(_svgAltarFlame)),
+          ],
+        );
+
+      // O caldeirão borbulha.
+      case SectionEmblem.tools:
+        return Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            _svg(_svgTools),
+            ..._bubbles(gc),
+          ],
+        );
+
+      // A joia do selo pulsa em rubi.
+      case SectionEmblem.demons:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            _svg(_svgDemon),
+            _gem(),
+          ],
+        );
+
+      // Asas batem devagar.
+      case SectionEmblem.angels:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            _wing(_svg(_svgAngelWingL), left: true),
+            _wing(_svg(_svgAngelWingR), left: false),
+            _svg(_svgAngelBody),
+          ],
+        );
+
+      // Só respiração + estrelas (já têm bastante vida).
+      case SectionEmblem.moon:
+      case SectionEmblem.sun:
+      case SectionEmblem.goddesses:
+      case SectionEmblem.runes:
+        return _svg(_emblemSvg(widget.emblem));
+    }
+  }
+
+  // --- movimentos característicos ---------------------------------------
+
+  /// Brilho diagonal que varre a arte (cristal, metal, espelho).
+  Widget _shimmer(Widget child, GrimoireColors gc) {
+    return AnimatedBuilder(
+      animation: _sweep,
+      builder: (context, _) {
+        final x = -0.4 + 1.8 * _sweep.value; // atravessa a peça
+        return ShaderMask(
+          blendMode: BlendMode.srcATop,
+          shaderCallback: (rect) => LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0),
+              Colors.white.withValues(alpha: 0.55),
+              Colors.white.withValues(alpha: 0),
+            ],
+            stops: [
+              (x - 0.16).clamp(0.0, 1.0),
+              x.clamp(0.0, 1.0),
+              (x + 0.16).clamp(0.0, 1.0),
+            ],
+          ).createShader(rect),
+          child: child,
+        );
+      },
+    );
+  }
+
+  /// A linha do feitiço se revela da esquerda para a direita, segura, some e
+  /// recomeça — a sensação de "escrever".
+  Widget _writeReveal(Widget line) {
+    return AnimatedBuilder(
+      animation: _sweep,
+      builder: (context, _) {
+        final v = _sweep.value;
+        // 0–0.65 escreve · 0.65–0.85 segura · 0.85–1 some
+        final edge = Curves.easeInOut.transform((v / 0.65).clamp(0.0, 1.0));
+        final opacity =
+            v < 0.85 ? 1.0 : (1.0 - (v - 0.85) / 0.15).clamp(0.0, 1.0);
+        return Opacity(
+          opacity: opacity,
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (rect) => LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: const [Colors.white, Colors.white, Colors.transparent],
+              stops: [0.0, edge, edge],
+            ).createShader(rect),
+            child: line,
+          ),
+        );
+      },
+    );
+  }
+
+  /// Oscilação suave em torno da base (raminho ao vento).
+  Widget _sway(Widget child) {
+    return AnimatedBuilder(
+      animation: _fast,
+      builder: (context, _) {
+        final a = (math.sin(_fast.value * math.pi * 2) * 0.05);
+        return Transform.rotate(
+          angle: a,
+          alignment: Alignment.bottomCenter,
+          child: child,
+        );
+      },
+    );
+  }
+
+  /// Chama tremulando: escala irregular ancorada perto da base do fogo.
+  Widget _flame(Widget flame) {
+    return AnimatedBuilder(
+      animation: _fast,
+      builder: (context, _) {
+        final t = _fast.value * math.pi * 2;
+        final sx = 1 + 0.05 * math.sin(t * 1.3);
+        final sy = 1 + 0.09 * math.sin(t);
+        return Transform(
+          alignment: const Alignment(0, -0.28), // base da chama
+          transform: Matrix4.diagonal3Values(sx, sy, 1),
+          child: flame,
+        );
+      },
+    );
+  }
+
+  /// Bolhas subindo da boca do caldeirão.
+  List<Widget> _bubbles(GrimoireColors gc) {
+    return [
+      for (var i = 0; i < 3; i++)
+        AnimatedBuilder(
+          animation: _sweep,
+          builder: (context, _) {
+            final phase = (_sweep.value + i / 3) % 1.0;
+            final dy = -0.02 - phase * 0.34; // sobe
+            final op = phase < 0.15
+                ? phase / 0.15
+                : (1 - (phase - 0.15) / 0.85).clamp(0.0, 1.0);
+            return Align(
+              alignment: Alignment(-0.18 + i * 0.18, dy),
+              child: Opacity(
+                opacity: op * 0.9,
+                child: Container(
+                  width: i.isEven ? 7 : 5,
+                  height: i.isEven ? 7 : 5,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: gc.mint,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+    ];
+  }
+
+  /// A joia do selo pulsa em rubi, com brilho.
+  Widget _gem() {
+    return AnimatedBuilder(
+      animation: _fast,
+      builder: (context, _) {
+        final t = Curves.easeInOut.transform(_fast.value);
+        final size = _artH * 0.11;
+        return Align(
+          alignment: const Alignment(0.08, 0.0),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color.lerp(
+                  const Color(0xFF701226), const Color(0xFFE23A52), t),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFE23A52).withValues(alpha: 0.7 * t),
+                  blurRadius: 7 * t,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Asa batendo devagar em torno do corpo.
+  Widget _wing(Widget wing, {required bool left}) {
+    return AnimatedBuilder(
+      animation: _fast,
+      builder: (context, _) {
+        final a = math.sin(_fast.value * math.pi * 2) * 0.16 * (left ? -1 : 1);
+        return Transform.rotate(
+          angle: a,
+          alignment: const Alignment(0, 0.16), // altura do corpo
+          child: wing,
+        );
+      },
     );
   }
 
@@ -228,8 +481,7 @@ class _BlinkStarState extends State<_BlinkStar>
 }
 
 /// Cabeçalho de seção: o emblema vivo + a frase-intro, sob um divisor
-/// ornamentado. Recolhe-se suavemente quando a busca assume o palco — a
-/// resposta à poluição visual nas listas com busca.
+/// ornamentado. Recolhe-se suavemente quando a busca/filtro assume o palco.
 class SectionEmblemHeader extends StatelessWidget {
   final SectionEmblem emblem;
   final String? intro;
@@ -282,10 +534,7 @@ class _OrnamentDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final line = Expanded(
-      child: Container(
-        height: 1,
-        color: context.gc.surfaceBorder,
-      ),
+      child: Container(height: 1, color: context.gc.surfaceBorder),
     );
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 6),
@@ -294,8 +543,8 @@ class _OrnamentDivider extends StatelessWidget {
           line,
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text('✦ ✧ ✦',
-                style: TextStyle(color: color, fontSize: 11)),
+            child:
+                Text('✦ ✧ ✦', style: TextStyle(color: color, fontSize: 11)),
           ),
           line,
         ],
@@ -305,12 +554,13 @@ class _OrnamentDivider extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Arte de cada emblema (pose de repouso). O movimento vem da [LivingEmblem];
-// os tons acompanham o tema escuro do Grimório de Bolso.
+// Arte de cada emblema (pose de repouso). Tons no tema escuro do Grimório.
+// Emblemas com movimento próprio têm a parte que se move separada, no MESMO
+// viewBox da base — assim empilham alinhados no Stack.
 // ---------------------------------------------------------------------------
 
 String _emblemSvg(SectionEmblem e) => switch (e) {
-      SectionEmblem.myGrimoire => _svgMyGrimoire,
+      SectionEmblem.myGrimoire => _svgMyGrimoireBase,
       SectionEmblem.moon => _svgMoon,
       SectionEmblem.sun => _svgSun,
       SectionEmblem.sabbats => _svgSabbatsBase,
@@ -319,17 +569,16 @@ String _emblemSvg(SectionEmblem e) => switch (e) {
       SectionEmblem.goddesses => _svgGoddess,
       SectionEmblem.elements => _svgElementsBase,
       SectionEmblem.runes => _svgRune,
-      SectionEmblem.altar => _svgAltar,
+      SectionEmblem.altar => _svgAltarCandle,
       SectionEmblem.metals => _svgMetal,
       SectionEmblem.astrology => _svgAstroBase,
       SectionEmblem.tools => _svgTools,
       SectionEmblem.archetypes => _svgArchetype,
-      SectionEmblem.angels => _svgAngel,
+      SectionEmblem.angels => _svgAngelBody,
       SectionEmblem.demons => _svgDemon,
       SectionEmblem.symbols => _svgSymbolBase,
     };
 
-/// Camada que gira por cima da base, para os emblemas orbitais.
 String _orbitOverlaySvg(SectionEmblem e) => switch (e) {
       SectionEmblem.elements => _svgElementsRing,
       SectionEmblem.sabbats => _svgSabbatsRing,
@@ -340,17 +589,19 @@ String _orbitOverlaySvg(SectionEmblem e) => switch (e) {
 
 const _ns = 'xmlns="http://www.w3.org/2000/svg"';
 
-// Meu Grimório — a pena sobre a linha de feitiço.
-const _svgMyGrimoire = '''
+// Meu Grimório — pena + tinteiro (base) e a linha (que se escreve).
+const _svgMyGrimoireBase = '''
 <svg $_ns viewBox="0 0 140 130">
   <rect x="18" y="94" width="14" height="18" rx="3" fill="#3A2647" stroke="#C9A653" stroke-width="1.5"/>
   <ellipse cx="25" cy="94" rx="7" ry="3" fill="#1A1224" stroke="#C9A653" stroke-width="1"/>
-  <path d="M36 108 C50 100 54 112 68 104 C82 96 84 108 100 100 C110 95 114 98 120 94" fill="none" stroke="#D98FE0" stroke-width="2.2" stroke-linecap="round"/>
   <path d="M120 18 C102 26 82 48 70 76 L78 82 C94 62 110 40 126 26 C126 22 124 19 120 18 Z" fill="#F0E6FA" stroke="#C9A653" stroke-width="1.2"/>
   <path d="M70 76 L64 90 L78 82 Z" fill="#C9A653"/>
 </svg>''';
+const _svgMyGrimoireLine = '''
+<svg $_ns viewBox="0 0 140 130">
+  <path d="M36 108 C50 100 54 112 68 104 C82 96 84 108 100 100 C110 95 114 98 120 94" fill="none" stroke="#D98FE0" stroke-width="2.4" stroke-linecap="round"/>
+</svg>''';
 
-// Lua — crescente lilás.
 const _svgMoon = '''
 <svg $_ns viewBox="0 0 120 130">
   <path d="M60 20 A42 42 0 1 0 60 104 A33 42 0 1 1 60 20 Z" fill="#C9A0E9"/>
@@ -358,7 +609,6 @@ const _svgMoon = '''
   <circle cx="46" cy="72" r="1.8" fill="#FFE8A3"/>
 </svg>''';
 
-// Sol — disco com coroa de raios.
 const _svgSun = '''
 <svg $_ns viewBox="0 0 130 130">
   <g fill="#FFCF5C">
@@ -371,7 +621,6 @@ const _svgSun = '''
   <circle cx="65" cy="65" r="24" fill="url(#sg)"/>
 </svg>''';
 
-// Sabbats — base (miolo) + anel giratório.
 const _svgSabbatsBase = '''
 <svg $_ns viewBox="0 0 130 130">
   <circle cx="65" cy="65" r="8" fill="#C9A653"/>
@@ -390,7 +639,6 @@ const _svgSabbatsRing = '''
   <circle cx="97.5" cy="32.5" r="4" fill="#F2E36B"/><circle cx="32.5" cy="97.5" r="4" fill="#C86B6B"/>
 </svg>''';
 
-// Cristais — ponta facetada.
 const _svgCrystal = '''
 <svg $_ns viewBox="0 0 120 130">
   <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
@@ -401,7 +649,6 @@ const _svgCrystal = '''
   <polyline points="60,8 70,44 78,118" fill="none" stroke="#2B1040" stroke-opacity="0.35" stroke-width="1"/>
 </svg>''';
 
-// Ervas — raminho com folhas.
 const _svgHerb = '''
 <svg $_ns viewBox="0 0 120 130">
   <path d="M60 122 C60 96 58 66 60 26" fill="none" stroke="#5E8C4A" stroke-width="3" stroke-linecap="round"/>
@@ -411,7 +658,6 @@ const _svgHerb = '''
   <circle cx="60" cy="22" r="4" fill="#A7F0D8"/>
 </svg>''';
 
-// Deusas — lua tríplice.
 const _svgGoddess = '''
 <svg $_ns viewBox="0 0 150 120">
   <circle cx="75" cy="60" r="20" fill="#F6F4FF"/>
@@ -421,7 +667,6 @@ const _svgGoddess = '''
   </g>
 </svg>''';
 
-// Elementos — miolo + anel de símbolos giratório.
 const _svgElementsBase = '''
 <svg $_ns viewBox="0 0 140 140">
   <circle cx="70" cy="70" r="6" fill="#FFE8A3"/>
@@ -435,7 +680,6 @@ const _svgElementsRing = '''
   <path d="M17 70 L32 62 L32 78 Z M24 64.8 L24 75.2" fill="none" stroke="#A0785A" stroke-width="2"/>
 </svg>''';
 
-// Runas — Fehu na pedra.
 const _svgRune = '''
 <svg $_ns viewBox="0 0 120 120">
   <ellipse cx="60" cy="64" rx="40" ry="46" fill="#3B3547"/>
@@ -445,17 +689,19 @@ const _svgRune = '''
   </g>
 </svg>''';
 
-// Altar — vela.
-const _svgAltar = '''
+// Altar — vela (base) e chama (que treme).
+const _svgAltarCandle = '''
 <svg $_ns viewBox="0 0 120 130">
-  <path d="M60 14 C70 26 74 34 74 42 A14 14 0 0 1 46 42 C46 34 50 26 60 14Z" fill="#FFB35C"/>
-  <path d="M60 26 C65 33 67 38 67 43 A7 7 0 0 1 53 43 C53 38 55 33 60 26Z" fill="#FFE8A3"/>
   <rect x="47" y="56" width="26" height="58" rx="7" fill="#F0EDF6"/>
   <rect x="47" y="56" width="26" height="10" rx="5" fill="#DAD5E6"/>
   <path d="M60 48 L60 58" stroke="#57536B" stroke-width="2"/>
 </svg>''';
+const _svgAltarFlame = '''
+<svg $_ns viewBox="0 0 120 130">
+  <path d="M60 14 C70 26 74 34 74 42 A14 14 0 0 1 46 42 C46 34 50 26 60 14Z" fill="#FFB35C"/>
+  <path d="M60 26 C65 33 67 38 67 43 A7 7 0 0 1 53 43 C53 38 55 33 60 26Z" fill="#FFE8A3"/>
+</svg>''';
 
-// Metais — lingote.
 const _svgMetal = '''
 <svg $_ns viewBox="0 0 130 110">
   <defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
@@ -465,7 +711,6 @@ const _svgMetal = '''
   <rect x="20" y="34" width="90" height="44" rx="9" fill="url(#mg)" stroke="#F6F4FF" stroke-opacity="0.25"/>
 </svg>''';
 
-// Astrologia — planeta + anel (frente/trás) + luazinha giratória.
 const _svgAstroBase = '''
 <svg $_ns viewBox="0 0 150 130">
   <defs><radialGradient id="pg" cx="0.35" cy="0.3">
@@ -480,7 +725,6 @@ const _svgAstroMoon = '''
   <circle cx="75" cy="14" r="4.5" fill="#C4C3CE"/>
 </svg>''';
 
-// Ferramentas Mágicas — caldeirão borbulhante.
 const _svgTools = '''
 <svg $_ns viewBox="0 0 130 132">
   <defs><linearGradient id="ca" x1="0" y1="0" x2="0" y2="1">
@@ -489,12 +733,9 @@ const _svgTools = '''
   <path d="M31 60 C28 88 44 106 65 106 C86 106 102 88 99 60 Z" fill="url(#ca)" stroke="#4A3E5C" stroke-width="1.5"/>
   <ellipse cx="65" cy="60" rx="35" ry="10" fill="#241A32" stroke="#4A3E5C" stroke-width="1.5"/>
   <ellipse cx="65" cy="60" rx="28" ry="7" fill="#66D9B8"/>
-  <circle cx="54" cy="54" r="3.5" fill="#A7F0D8"/>
-  <circle cx="70" cy="55" r="2.5" fill="#A7F0D8"/>
   <path d="M44 104 L38 116 M86 104 L92 116" stroke="#4A3E5C" stroke-width="4" stroke-linecap="round"/>
 </svg>''';
 
-// Arquétipos — espelho de mão.
 const _svgArchetype = '''
 <svg $_ns viewBox="0 0 104 132">
   <defs><linearGradient id="mi" x1="0" y1="0" x2="1" y2="1">
@@ -504,20 +745,24 @@ const _svgArchetype = '''
   <circle cx="52" cy="124" r="6" fill="#E3C878"/>
   <ellipse cx="52" cy="50" rx="34" ry="42" fill="none" stroke="#C9A653" stroke-width="5"/>
   <ellipse cx="52" cy="50" rx="28" ry="36" fill="url(#mi)"/>
-  <circle cx="44" cy="38" r="3" fill="#F6F4FF" fill-opacity="0.7"/>
 </svg>''';
 
-// Anjos — asas + auréola.
-const _svgAngel = '''
+// Anjos — corpo (halo + orbe) e cada asa separada.
+const _svgAngelBody = '''
 <svg $_ns viewBox="0 0 150 120">
   <ellipse cx="75" cy="26" rx="21" ry="6.5" fill="none" stroke="#FFD700" stroke-width="3.5"/>
-  <path d="M68 66 C48 50 26 48 12 58 C22 62 24 68 20 74 C30 74 33 79 31 85 C42 86 46 90 46 95 C56 94 64 86 68 76 Z" fill="#F6F4FF" stroke="#D9D2EC" stroke-width="1"/>
-  <path d="M82 66 C102 50 124 48 138 58 C128 62 126 68 130 74 C120 74 117 79 119 85 C108 86 104 90 104 95 C94 94 86 86 82 76 Z" fill="#F6F4FF" stroke="#D9D2EC" stroke-width="1"/>
   <circle cx="75" cy="70" r="13" fill="#FFE8A3"/>
   <circle cx="75" cy="70" r="13" fill="none" stroke="#FFD700" stroke-opacity="0.7" stroke-width="1.5"/>
 </svg>''';
+const _svgAngelWingL = '''
+<svg $_ns viewBox="0 0 150 120">
+  <path d="M68 66 C48 50 26 48 12 58 C22 62 24 68 20 74 C30 74 33 79 31 85 C42 86 46 90 46 95 C56 94 64 86 68 76 Z" fill="#F6F4FF" stroke="#D9D2EC" stroke-width="1"/>
+</svg>''';
+const _svgAngelWingR = '''
+<svg $_ns viewBox="0 0 150 120">
+  <path d="M82 66 C102 50 124 48 138 58 C128 62 126 68 130 74 C120 74 117 79 119 85 C108 86 104 90 104 95 C94 94 86 86 82 76 Z" fill="#F6F4FF" stroke="#D9D2EC" stroke-width="1"/>
+</svg>''';
 
-// Demônios — grimório selado com joia.
 const _svgDemon = '''
 <svg $_ns viewBox="0 0 104 132">
   <defs><linearGradient id="db" x1="0" y1="0" x2="1" y2="1">
@@ -528,10 +773,8 @@ const _svgDemon = '''
   <path d="M16 23 L30 14 M16 109 L30 118 M88 23 L74 14 M88 109 L74 118" stroke="#C9A653" stroke-width="2.5"/>
   <circle cx="56" cy="66" r="20" fill="none" stroke="#C9A653" stroke-width="2"/>
   <rect x="42" y="88" width="28" height="9" rx="3" fill="#3E2F1E" stroke="#C9A653" stroke-width="1.4"/>
-  <circle cx="56" cy="66" r="7" fill="#E23A52"/>
 </svg>''';
 
-// Símbolos Sagrados — medalhão de pentagrama + anel de estrelas giratório.
 const _svgSymbolBase = '''
 <svg $_ns viewBox="0 0 134 134">
   <circle cx="67" cy="67" r="46" fill="#C9A653" fill-opacity="0.12" stroke="#FFD700" stroke-width="2.5"/>
