@@ -12,6 +12,10 @@ enum EncyclopediaSection {
   /// que colide com o getter nativo `Enum.index`).
   bookIndex,
 
+  /// "Meu Grimório": os feitiços da bruxa. Primeira seção depois do Índice —
+  /// migrou da antiga aba Grimório (hoje Ferramentas) para dentro do livro.
+  myGrimoire,
+
   moon,
   sun,
   sabbats,

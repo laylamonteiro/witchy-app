@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'crystals_list_page.dart';
 import 'colors_list_page.dart';
+import '../../../grimoire/presentation/pages/spell_categories_hub_page.dart';
 import 'herbs_list_page.dart';
 import 'metals_list_page.dart';
 import 'altar_page.dart';
@@ -182,6 +183,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   String _labelFor(EncyclopediaSection section, AppLocalizations l10n) =>
       switch (section) {
         EncyclopediaSection.bookIndex => l10n.encyTabIndex,
+        EncyclopediaSection.myGrimoire => l10n.grimoireTabMyGrimoire,
         EncyclopediaSection.moon => l10n.encyTabMoon,
         EncyclopediaSection.sun => l10n.encyTabSun,
         EncyclopediaSection.sabbats => l10n.encyTabSabbats,
@@ -204,6 +206,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
       switch (section) {
         EncyclopediaSection.bookIndex =>
           EncyclopediaIndexPage(onSectionSelected: _openSection),
+        EncyclopediaSection.myGrimoire => const SpellCategoriesHubPage(),
         EncyclopediaSection.moon => const LunarCalendarPage(embedded: true),
         EncyclopediaSection.sun => const SunPage(),
         EncyclopediaSection.sabbats => const WheelOfYearPage(embedded: true),

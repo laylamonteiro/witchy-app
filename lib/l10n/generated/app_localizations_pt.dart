@@ -74,22 +74,22 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get navEncyclopedia => 'Enciclopédia';
+  String get navEncyclopedia => 'Grimório';
 
   @override
-  String get navGrimoire => 'Grimório';
+  String get navGrimoire => 'Ferramentas';
 
   @override
   String get navDiaries => 'Diários';
 
   @override
-  String get grimoirePageTitle => 'Grimório Digital';
+  String get grimoirePageTitle => 'Ferramentas';
 
   @override
   String get grimoireTabAstrology => 'Astrologia';
 
   @override
-  String get grimoireTabTools => 'Ferramentas';
+  String get grimoireTabTools => 'Ferramentas Mágicas';
 
   @override
   String get grimoireTabMyGrimoire => 'Meu Grimório';
@@ -110,7 +110,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diaryTabDesires => 'Desejos';
 
   @override
-  String get encyclopediaPageTitle => 'Enciclopédia Mágica';
+  String get encyclopediaPageTitle => 'Grimório';
 
   @override
   String get encyTabMoon => 'Lua';
@@ -2714,22 +2714,22 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   }
 
   @override
-  String get navEncyclopedia => 'Enciclopédia';
+  String get navEncyclopedia => 'Grimório';
 
   @override
-  String get navGrimoire => 'Grimório';
+  String get navGrimoire => 'Ferramentas';
 
   @override
   String get navDiaries => 'Diários';
 
   @override
-  String get grimoirePageTitle => 'Grimório Digital';
+  String get grimoirePageTitle => 'Ferramentas';
 
   @override
   String get grimoireTabAstrology => 'Astrologia';
 
   @override
-  String get grimoireTabTools => 'Ferramentas';
+  String get grimoireTabTools => 'Ferramentas Mágicas';
 
   @override
   String get grimoireTabMyGrimoire => 'Meu Grimório';
@@ -2750,7 +2750,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get diaryTabDesires => 'Desejos';
 
   @override
-  String get encyclopediaPageTitle => 'Enciclopédia Mágica';
+  String get encyclopediaPageTitle => 'Grimório';
 
   @override
   String get encyTabMoon => 'Lua';

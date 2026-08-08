@@ -74,22 +74,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get navEncyclopedia => 'Encyclopedia';
+  String get navEncyclopedia => 'Grimoire';
 
   @override
-  String get navGrimoire => 'Grimoire';
+  String get navGrimoire => 'Tools';
 
   @override
   String get navDiaries => 'Diaries';
 
   @override
-  String get grimoirePageTitle => 'Digital Grimoire';
+  String get grimoirePageTitle => 'Tools';
 
   @override
   String get grimoireTabAstrology => 'Astrology';
 
   @override
-  String get grimoireTabTools => 'Tools';
+  String get grimoireTabTools => 'Magical Tools';
 
   @override
   String get grimoireTabMyGrimoire => 'My Grimoire';
@@ -110,7 +110,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryTabDesires => 'Desires';
 
   @override
-  String get encyclopediaPageTitle => 'Magical Encyclopedia';
+  String get encyclopediaPageTitle => 'Grimoire';
 
   @override
   String get encyTabMoon => 'Moon';

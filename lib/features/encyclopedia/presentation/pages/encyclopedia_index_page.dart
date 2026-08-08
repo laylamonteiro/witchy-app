@@ -142,6 +142,7 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
   /// as mesmas chaves l10n das abas).
   static String _emojiFor(EncyclopediaSection section) => switch (section) {
         EncyclopediaSection.bookIndex => '📖',
+        EncyclopediaSection.myGrimoire => '✒️',
         EncyclopediaSection.moon => '🌙',
         EncyclopediaSection.sun => '☀️',
         EncyclopediaSection.sabbats => '🔥',
@@ -163,6 +164,7 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
   static String _labelFor(EncyclopediaSection section, AppLocalizations l10n) =>
       switch (section) {
         EncyclopediaSection.bookIndex => l10n.encyTabIndex,
+        EncyclopediaSection.myGrimoire => l10n.grimoireTabMyGrimoire,
         EncyclopediaSection.moon => l10n.encyTabMoon,
         EncyclopediaSection.sun => l10n.encyTabSun,
         EncyclopediaSection.sabbats => l10n.encyTabSabbats,

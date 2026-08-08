@@ -15,12 +15,13 @@ void main() {
   test('a ordem canônica das seções está congelada', () {
     expect(EncyclopediaSection.values, const [
       EncyclopediaSection.bookIndex,
+      EncyclopediaSection.myGrimoire,
       EncyclopediaSection.moon,
       EncyclopediaSection.sun,
       EncyclopediaSection.sabbats,
+      EncyclopediaSection.colors,
       EncyclopediaSection.crystals,
       EncyclopediaSection.herbs,
-      EncyclopediaSection.colors,
       EncyclopediaSection.goddesses,
       EncyclopediaSection.elements,
       EncyclopediaSection.runes,
