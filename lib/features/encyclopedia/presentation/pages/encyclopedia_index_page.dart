@@ -218,11 +218,6 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
     _flip.forward();
   }
 
-  /// Toque durante a abertura pula direto para o livro aberto.
-  void _skipOpening() {
-    if (_open.isAnimating) _open.value = 1.0;
-  }
-
   /// Emoji de cada seção no sumário (apresentação do livro; os rótulos são
   /// as mesmas chaves l10n das abas).
   static String _emojiFor(EncyclopediaSection section) => switch (section) {
