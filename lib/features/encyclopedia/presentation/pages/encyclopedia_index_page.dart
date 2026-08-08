@@ -6,6 +6,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import '../../../../core/navigation/encyclopedia_section.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart' show BlinkStar;
 import '../../../../core/widgets/starfield_background.dart';
 import '../widgets/aged_paper.dart';
 import 'encyclopedia_search_page.dart';
@@ -262,6 +263,19 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
         EncyclopediaSection.demons => l10n.encyTabDemons,
       };
 
+  /// ✦ do céu em volta do livro — concentradas no respiro acima e abaixo
+  /// do 3:4 (alinhamento fracionário: acompanham qualquer tamanho de tela).
+  static const List<Alignment> _skySparks = [
+    Alignment(-0.85, -0.97),
+    Alignment(-0.3, -0.9),
+    Alignment(0.35, -0.96),
+    Alignment(0.88, -0.87),
+    Alignment(-0.9, 0.88),
+    Alignment(-0.25, 0.96),
+    Alignment(0.4, 0.9),
+    Alignment(0.9, 0.97),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -359,8 +373,24 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       // O livro tem a PROPORÇÃO da arte da capa (3:4): capa, folha e índice
       // com o MESMO tamanho, sem sobras de couro em volta da imagem — o que
-      // não couber no índice rola dentro da página.
-      child: Center(
+      // não couber no índice rola dentro da página. O respiro acima/abaixo
+      // vira céu: pontinhos + ✦ piscando (as que caem atrás do livro somem).
+      child: StarfieldBackground(
+        starCount: 30,
+        intensity: 0.9,
+        child: Stack(
+          children: [
+            for (final (i, a) in _skySparks.indexed)
+              Align(
+                alignment: a,
+                child: BlinkStar(
+                  reduced: MediaQuery.disableAnimationsOf(context),
+                  delay: Duration(milliseconds: i * 260),
+                  color: context.gc.starYellow,
+                  size: i.isEven ? 12 : 9,
+                ),
+              ),
+            Center(
         child: AspectRatio(
           aspectRatio: 3 / 4,
           child: Stack(
@@ -460,6 +490,9 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
           ),
         ],
           ),
+        ),
+      ),
+          ],
         ),
       ),
     );

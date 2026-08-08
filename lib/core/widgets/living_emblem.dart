@@ -517,7 +517,7 @@ class _LivingEmblemState extends State<LivingEmblem>
       for (var i = 0; i < pos.length; i++)
         Align(
           alignment: pos[i],
-          child: _BlinkStar(
+          child: BlinkStar(
             reduced: _isReduced,
             delay: Duration(milliseconds: i * 420),
             color: gc.starYellow,
@@ -527,19 +527,27 @@ class _LivingEmblemState extends State<LivingEmblem>
   }
 }
 
-class _BlinkStar extends StatefulWidget {
+/// Estrela ✦ piscando sozinha — a mesma dos emblemas, pública para compor
+/// céus (ex.: em volta do livro do Grimório).
+class BlinkStar extends StatefulWidget {
   final Duration delay;
   final Color color;
   final bool reduced;
+  final double size;
 
-  const _BlinkStar(
-      {required this.delay, required this.color, required this.reduced});
+  const BlinkStar({
+    super.key,
+    required this.delay,
+    required this.color,
+    required this.reduced,
+    this.size = 11,
+  });
 
   @override
-  State<_BlinkStar> createState() => _BlinkStarState();
+  State<BlinkStar> createState() => _BlinkStarState();
 }
 
-class _BlinkStarState extends State<_BlinkStar>
+class _BlinkStarState extends State<BlinkStar>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 1500));
@@ -570,7 +578,7 @@ class _BlinkStarState extends State<_BlinkStar>
       ),
       child: Text(
         '✦',
-        style: TextStyle(fontSize: 11, color: widget.color),
+        style: TextStyle(fontSize: widget.size, color: widget.color),
       ),
     );
   }
