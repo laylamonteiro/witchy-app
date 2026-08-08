@@ -15,21 +15,22 @@ void main() {
   test('a ordem canônica das seções está congelada', () {
     expect(EncyclopediaSection.values, const [
       EncyclopediaSection.bookIndex,
+      EncyclopediaSection.myGrimoire,
       EncyclopediaSection.moon,
       EncyclopediaSection.sun,
       EncyclopediaSection.sabbats,
+      EncyclopediaSection.colors,
       EncyclopediaSection.crystals,
       EncyclopediaSection.herbs,
-      EncyclopediaSection.colors,
       EncyclopediaSection.goddesses,
-      EncyclopediaSection.elements,
-      EncyclopediaSection.runes,
-      EncyclopediaSection.altar,
       EncyclopediaSection.metals,
       EncyclopediaSection.archetypes,
       EncyclopediaSection.symbols,
       EncyclopediaSection.angels,
       EncyclopediaSection.demons,
+      EncyclopediaSection.elements,
+      EncyclopediaSection.runes,
+      EncyclopediaSection.altar,
     ]);
   });
 
@@ -49,7 +50,12 @@ void main() {
       ),
     ));
 
-    // A capa abre sozinha; espera o livro assentar.
+    // A capa começa FECHADA — o Grimório é um livro em repouso.
+    await tester.pump();
+    expect(find.byKey(const ValueKey('grimoire-cover')), findsOneWidget);
+
+    // Um toque abre o livro.
+    await tester.tap(find.byKey(const ValueKey('grimoire-cover')));
     await tester.pumpAndSettle();
 
     // Todas as seções aparecem no sumário.

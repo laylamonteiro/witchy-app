@@ -10,6 +10,8 @@ import '../../data/models/crystal_model.dart'; // Para ElementExtension
 import '../../data/models/herb_model.dart'; // Para PlanetExtension
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import 'metal_detail_page.dart';
 import '../widgets/entry_pager.dart';
 import '../../../../core/widgets/magical_search_field.dart';
@@ -24,6 +26,12 @@ class MetalsListPage extends StatefulWidget {
 class _MetalsListPageState extends State<MetalsListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
+
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
 
   @override
   void dispose() {
@@ -41,33 +49,49 @@ class _MetalsListPageState extends State<MetalsListPage> {
     return sorted;
   }
 
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Column(
       children: [
+        SectionEmblemHeader(
+          emblem: SectionEmblem.metals,
+          intro: AppLocalizations.of(context).encyMetalsIntro,
+          collapsed: _searchFocused ||
+              _scrolled || _searchQuery.isNotEmpty,
+        ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
               Expanded(
-                child: MagicalSearchField(
-                  controller: _searchController,
-                  hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabMetals),
-                  onChanged: (value) => setState(() => _searchQuery = value),
+                child: Focus(
+                  onFocusChange: (f) => setState(() => _searchFocused = f),
+                  child: MagicalSearchField(
+                    controller: _searchController,
+                    hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabMetals),
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                  ),
                 ),
               ),
               // Sem filtro nesta aba: a caixa de busca ocupa a largura
               // toda, como nas abas arcanas.
             ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(
-            AppLocalizations.of(context).encyMetalsIntro,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.textSecondary,
-                ),
           ),
         ),
         Expanded(
@@ -80,11 +104,14 @@ class _MetalsListPageState extends State<MetalsListPage> {
               // Ordena alfabeticamente
               final metals = _sortMetals(unsortedMetals);
 
-              return ListView.builder(
+              return CascadeScope(
+                child: ListView.builder(
                 itemCount: metals.length,
                 itemBuilder: (context, index) {
                   final metal = metals[index];
-                  return MagicalCard(
+                  return CascadeIn(
+                    index: index,
+                    child: MagicalCard(
                     onTap: () {
                       Navigator.push(
                         context,
@@ -199,13 +226,16 @@ class _MetalsListPageState extends State<MetalsListPage> {
                         ),
                       ],
                     ),
+                  ),
                   );
                 },
+              ),
               );
             },
           ),
         ),
       ],
+    ),
     );
   }
 

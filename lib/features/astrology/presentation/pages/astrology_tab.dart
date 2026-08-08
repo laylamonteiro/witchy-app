@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../grimoire/presentation/widgets/grimoire_header_card.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_input_page.dart';
 import 'birth_chart_view_page.dart';
@@ -49,14 +50,13 @@ class _AstrologyTabState extends State<AstrologyTab> {
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: StaggeredEntrance(
             children: [
-              // Header — mesmo card (cores e altura) da aba Ferramentas.
-              GrimoireHeaderCard(
-                glyph: '‧ ☽◯☾ ‧',
-                title: AppLocalizations.of(context).astroMysticTitle,
-                subtitle: AppLocalizations.of(context).astroMysticSubtitle,
+              // O emblema vivo substitui o antigo card de cabeçalho; o
+              // título ("Astrologia Mística") mora na aba.
+              SectionEmblemHeader(
+                emblem: SectionEmblem.astrology,
+                intro: AppLocalizations.of(context).astroMysticSubtitle,
               ),
 
               // Signos do Zodíaco

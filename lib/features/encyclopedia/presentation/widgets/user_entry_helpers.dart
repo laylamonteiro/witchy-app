@@ -41,13 +41,15 @@ class MineFilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(
-        Icons.filter_list,
-        color: selected ? context.gc.lilac : context.gc.softWhite,
-      ),
-      tooltip: _label(AppLocalizations.of(context)),
-      onPressed: () => onChanged(!selected),
+    // Chip com rótulo em vez de ícone: o antigo filter_list não dizia o que
+    // fazia — e ativá-lo sem entradas escurecia a tela "do nada" (spotlight
+    // do Adicionar). Com o estado visível, o gesto vira óbvio.
+    return FilterChip(
+      label: Text(_label(AppLocalizations.of(context))),
+      selected: selected,
+      selectedColor: context.gc.lilac.withValues(alpha: 0.25),
+      checkmarkColor: context.gc.lilac,
+      onSelected: onChanged,
     );
   }
 }

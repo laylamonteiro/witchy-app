@@ -306,15 +306,24 @@ Límites:
     return 'Eres especialista en identificación visual para una app de brujería. '
         'Examina la foto con calma ANTES de nombrar: observa la forma, los colores, '
         'las hojas, la disposición y cualquier rasgo distintivo de $objetivo. '
-        'Solo afirma un nombre si las características visibles corresponden de verdad a '
-        'algo que reconoces — NUNCA adivines un nombre plausible. '
-        'Sé honesto con la confianza: "high" solo con certeza real; si dudas entre '
-        'especies parecidas, usa "medium" o "low". '
-        'Si la imagen falta, es ilegible o no estás seguro, responde '
-        '"identified": false con "name" vacío — eso es MEJOR que equivocarse. '
+        'Enumera de 1 a 3 candidatos, del más probable al menos probable. '
+        'Un solo candidato SOLO cuando la identificación sea inequívoca; si dudas '
+        'entre especies parecidas, enumera todas en vez de elegir — quien sacó la '
+        'foto decide mejor que tú. '
+        'Solo incluyas un candidato si las características visibles corresponden de '
+        'verdad a algo que reconoces — NUNCA adivines un nombre plausible. '
+        'Sé honesto con la confianza de cada candidato: "high" solo con certeza real. '
+        'El campo "scientific" es el nombre científico (binomio latino) y es el '
+        'identificador PRINCIPAL — complétalo siempre que la especie tenga uno. '
+        'El campo "name" es el nombre popular MÁS USADO en español cotidiano; prefiere '
+        'el nombre que una persona común reconocería a una traducción literal desde '
+        'otro idioma (ej.: "Gomero", no "Ficus del caucho"). '
+        'Si la imagen falta, es ilegible o no reconoces nada, responde '
+        '"identified": false con "candidates" vacío — eso es MEJOR que equivocarse. '
         'Responde SOLO con JSON válido, sin texto extra, en el formato: '
-        '{"identified": true/false, "name": "nombre popular en español", '
-        '"scientific": "nombre científico o vacío", "confidence": "high"/"medium"/"low"}.';
+        '{"identified": true/false, "candidates": [{"name": "nombre popular en español", '
+        '"scientific": "nombre científico o vacío", '
+        '"confidence": "high"/"medium"/"low"}]}.';
   },
   encyIdentifyUserMessage:
       '¿Qué es esto? Identifícalo para mi enciclopedia mágica.',
@@ -322,9 +331,10 @@ Límites:
     const commonEs =
         'Eres una bruja erudita escribiendo entradas para la enciclopedia mágica personal de una practicante. '
         'Escribe en español, con tono acogedor y práctico. '
-        'El campo "name" es el nombre popular CANÓNICO y corto, con grafía y mayúsculas correctas — '
-        'corrige errores de tipeo del nombre indicado y NUNCA incluyas el nombre científico en él '
-        '(el científico va en su propio campo, cuando exista). '
+        'El campo "name" REPITE el nombre indicado, corrigiendo solo grafía y mayúsculas — '
+        'la practicante ya lo eligió y puede ser un nombre científico (binomio latino), '
+        'que en ese caso debe MANTENERSE tal cual, no cambiarse por el nombre popular. '
+        'Los nombres populares, cuando exista campo para ellos, van en ese campo. '
         'Si hay una foto adjunta, ancla la descripción en el ejemplar REAL fotografiado — '
         'colores, formas y rasgos visibles — manteniendo las propiedades mágicas de la especie. '
         'Responde SOLO con JSON válido, sin texto extra. Las CLAVES del JSON y los valores de enum son SIEMPRE en inglés; los TEXTOS, en español.';

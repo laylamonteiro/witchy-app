@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../data/models/spell_model.dart';
@@ -112,6 +114,12 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
+
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
+
   @override
   void initState() {
     super.initState();
@@ -126,15 +134,39 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
     super.dispose();
   }
 
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Stack(
       children: [
         Column(
           children: [
+            SectionEmblemHeader(
+              emblem: SectionEmblem.myGrimoire,
+              intro: AppLocalizations.of(context).encyMyGrimoireIntro,
+              collapsed: _searchFocused ||
+              _scrolled || _searchQuery.trim().isNotEmpty,
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: TextField(
+              child: Focus(
+                onFocusChange: (f) => setState(() => _searchFocused = f),
+                child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: AppLocalizations.of(context).grimoireSearchSpells,
@@ -150,6 +182,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
                         ),
                 ),
                 onChanged: (value) => setState(() => _searchQuery = value),
+                ),
               ),
             ),
             Expanded(
@@ -176,6 +209,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
           ),
         ),
       ],
+    ),
     );
   }
 
@@ -185,9 +219,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
     final recordCount =
         provider.userSpells.where((s) => s.isRecord).length;
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 90),
-      children: [
+    final cards = <Widget>[
         _buildHubCard(
           context,
           emoji: '✨',
@@ -241,7 +273,17 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
               ),
             ),
           ),
-      ],
+    ];
+
+    // Cascata na chegada, como nas outras seções do Grimório.
+    return CascadeScope(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 90),
+        children: [
+          for (final (i, card) in cards.indexed)
+            CascadeIn(index: i, child: card),
+        ],
+      ),
     );
   }
 

@@ -12,6 +12,8 @@ import '../widgets/encyclopedia_image.dart';
 import '../widgets/entry_pager.dart';
 import '../widgets/user_entry_helpers.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import 'crystal_detail_page.dart';
 import '../../../../core/widgets/magical_search_field.dart';
 
@@ -25,6 +27,12 @@ class CrystalsListPage extends StatefulWidget {
 class _CrystalsListPageState extends State<CrystalsListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
+
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
 
   /// Filtro "Minhas": mostra só as entradas pessoais.
   bool _onlyMine = false;
@@ -52,6 +60,20 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
         crystal.intentions.any((i) => i.toLowerCase().contains(lowerQuery));
   }
 
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Filtro Meus ativo sem NENHUMA entrada pessoal: escurece a página e
@@ -62,19 +84,30 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
             .userEntries(UserEntryCategory.crystal)
             .isEmpty;
 
-    return Stack(
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Stack(
       children: [
         Column(
       children: [
+        SectionEmblemHeader(
+          emblem: SectionEmblem.crystals,
+          intro: AppLocalizations.of(context).encyCrystalsIntro,
+          collapsed: _searchFocused ||
+              _scrolled || _searchQuery.isNotEmpty,
+        ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
               Expanded(
-                child: MagicalSearchField(
-                  controller: _searchController,
-                  hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabCrystals),
-                  onChanged: (value) => setState(() => _searchQuery = value),
+                child: Focus(
+                  onFocusChange: (f) => setState(() => _searchFocused = f),
+                  child: MagicalSearchField(
+                    controller: _searchController,
+                    hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabCrystals),
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -84,15 +117,6 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                 onChanged: (v) => setState(() => _onlyMine = v),
               ),
             ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(
-            AppLocalizations.of(context).encyCrystalsIntro,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.textSecondary,
-                ),
           ),
         ),
         Expanded(
@@ -120,14 +144,17 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
               ]..sort((a, b) => removeAccents(a.model.name.toUpperCase())
                   .compareTo(removeAccents(b.model.name.toUpperCase())));
 
-              return ListView.builder(
+              return CascadeScope(
+                child: ListView.builder(
                 padding: const EdgeInsets.only(bottom: 88),
                 itemCount: combined.length,
                 itemBuilder: (context, index) {
                   final item = combined[index];
                   final crystal = item.model;
                   final userEntry = item.userEntry;
-                  return MagicalCard(
+                  return CascadeIn(
+                    index: index,
+                    child: MagicalCard(
                     onTap: () {
                       Navigator.push(
                         context,
@@ -239,8 +266,10 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
                         ),
                       ],
                     ),
+                  ),
                   );
                 },
+              ),
               );
             },
           ),
@@ -253,6 +282,7 @@ class _CrystalsListPageState extends State<CrystalsListPage> {
           highlight: spotlightAdd,
         ),
       ],
+    ),
     );
   }
 }

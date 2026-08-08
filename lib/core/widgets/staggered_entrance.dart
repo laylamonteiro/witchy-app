@@ -45,6 +45,72 @@ class StaggeredEntrance extends StatelessWidget {
   }
 }
 
+/// Entrada em cascata para LISTAS builder (ListView.builder): envolva cada
+/// item informando o [index] — os primeiros [maxAnimated] entram em cascata
+/// na primeira montagem da lista, o resto aparece direto.
+///
+/// Envolva a lista num [CascadeScope]: sem ele, rolar para longe e voltar
+/// remonta os primeiros itens e reanima a entrada.
+class CascadeIn extends StatelessWidget {
+  final int index;
+  final Widget child;
+
+  /// Atraso entre um item e o próximo.
+  final Duration step;
+
+  /// Duração da entrada de cada item.
+  final Duration duration;
+
+  /// Quantos itens animam (o que está abaixo da dobra não precisa).
+  final int maxAnimated;
+
+  const CascadeIn({
+    super.key,
+    required this.index,
+    required this.child,
+    this.step = const Duration(milliseconds: 70),
+    this.duration = const Duration(milliseconds: 420),
+    this.maxAnimated = 6,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (index >= maxAnimated ||
+        MediaQuery.disableAnimationsOf(context) ||
+        !CascadeScope.isFresh(context)) {
+      return child;
+    }
+    return _FadeSlideIn(delay: step * index, duration: duration, child: child);
+  }
+}
+
+/// Marca o nascimento de uma lista: os [CascadeIn] que montarem logo em
+/// seguida (janela de ~900ms) cascateiam; os que montarem depois — a
+/// rolagem voltando ao topo — entram parados, sem repetir o show.
+class CascadeScope extends StatefulWidget {
+  final Widget child;
+
+  const CascadeScope({super.key, required this.child});
+
+  /// true sem escopo por perto (uso avulso) ou com a lista recém-nascida.
+  static bool isFresh(BuildContext context) {
+    final state = context.findAncestorStateOfType<_CascadeScopeState>();
+    if (state == null) return true;
+    return DateTime.now().difference(state._born) <
+        const Duration(milliseconds: 900);
+  }
+
+  @override
+  State<CascadeScope> createState() => _CascadeScopeState();
+}
+
+class _CascadeScopeState extends State<CascadeScope> {
+  final DateTime _born = DateTime.now();
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class _FadeSlideIn extends StatefulWidget {
   final Widget child;
   final Duration delay;

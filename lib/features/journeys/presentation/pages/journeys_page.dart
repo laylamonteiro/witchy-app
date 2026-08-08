@@ -8,31 +8,32 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
 import '../../data/models/journey_model.dart';
 
-/// Página de Jornadas Mágicas Gamificadas
+/// Página de Jornadas Mágicas Gamificadas.
+///
+/// Sem abas: as antigas ("Todas", "Iniciante", "Diário", "Divinação")
+/// misturavam três eixos — filtro, nível de experiência e tema. A tela
+/// agora é uma lista única organizada por PROGRESSO (em andamento → para
+/// começar → concluídas), com o tema como etiqueta no card e a escada de
+/// níveis num sheet aberto pelo cabeçalho de XP.
 class JourneysPage extends StatefulWidget {
-  const JourneysPage({super.key});
+  /// Sem Scaffold/AppBar próprios: para viver como aba da Evolução Mágica
+  /// (página que une Jornadas e Estatísticas).
+  final bool embedded;
+
+  const JourneysPage({super.key, this.embedded = false});
 
   @override
   State<JourneysPage> createState() => _JourneysPageState();
 }
 
-class _JourneysPageState extends State<JourneysPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _JourneysPageState extends State<JourneysPage> {
   bool _isLoading = true;
   Map<String, int> _userStats = {};
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
     _loadUserStats();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadUserStats() async {
@@ -175,6 +176,20 @@ class _JourneysPageState extends State<JourneysPage>
 
   @override
   Widget build(BuildContext context) {
+    final body = _isLoading
+        ? Center(child: CircularProgressIndicator(color: context.gc.lilac))
+        : Column(
+            children: [
+              // XP Header
+              _buildXpHeader(),
+
+              // Jornadas por progresso
+              Expanded(child: _buildProgressList()),
+            ],
+          );
+
+    if (widget.embedded) return body;
+
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
@@ -191,55 +206,147 @@ class _JourneysPageState extends State<JourneysPage>
           icon: Icon(Icons.arrow_back, color: context.gc.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          indicatorColor: context.gc.lilac,
-          labelColor: context.gc.lilac,
-          unselectedLabelColor: context.gc.textSecondary,
-          tabs: [
-            Tab(text: AppLocalizations.of(context).diaryAllCategories),
-            Tab(text: AppLocalizations.of(context).journeysTabBeginner),
-            Tab(text: AppLocalizations.of(context).diaryTitle),
-            Tab(text: AppLocalizations.of(context).divinationTitle),
+      ),
+      body: body,
+    );
+  }
+
+  /// Progresso calculado de uma jornada (mesma lógica do card).
+  ({int completed, double fraction}) _journeyProgress(JourneyModel journey) {
+    var completed = 0;
+    for (final step in journey.steps) {
+      if (_getStepProgress(step) >= step.requiredCount) completed++;
+    }
+    final fraction =
+        journey.totalSteps > 0 ? completed / journey.totalSteps : 0.0;
+    return (completed: completed, fraction: fraction);
+  }
+
+  /// Lista única por progresso: "o que falta pouco" vem primeiro.
+  Widget _buildProgressList() {
+    final l10n = AppLocalizations.of(context);
+
+    final inProgress = <JourneyModel>[];
+    final toStart = <JourneyModel>[];
+    final done = <JourneyModel>[];
+    for (final journey in AvailableJourneys.all) {
+      final p = _journeyProgress(journey);
+      if (p.completed == 0) {
+        toStart.add(journey);
+      } else if (p.completed >= journey.totalSteps) {
+        done.add(journey);
+      } else {
+        inProgress.add(journey);
+      }
+    }
+    // Em andamento: a mais próxima de concluir primeiro.
+    inProgress.sort((a, b) => _journeyProgress(b)
+        .fraction
+        .compareTo(_journeyProgress(a).fraction));
+
+    return RefreshIndicator(
+      onRefresh: _loadUserStats,
+      color: context.gc.lilac,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (inProgress.isNotEmpty) ...[
+            _sectionLabel(l10n.journeysSectionInProgress,
+                hint: l10n.journeysSectionInProgressHint),
+            for (final (i, journey) in inProgress.indexed)
+              _buildJourneyCard(journey, highlight: i == 0),
           ],
+          if (toStart.isNotEmpty) ...[
+            _sectionLabel(l10n.journeysSectionToStart),
+            ...toStart.map(_buildJourneyCard),
+          ],
+          if (done.isNotEmpty) ...[
+            _sectionLabel(l10n.journeysSectionDone,
+                hint: '${done.length}'),
+            for (final journey in done)
+              Opacity(opacity: 0.75, child: _buildJourneyCard(journey)),
+          ],
+          if (inProgress.isEmpty && toStart.isEmpty && done.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 48),
+              child: Center(
+                child: Text(
+                  l10n.journeysEmpty,
+                  style: TextStyle(color: context.gc.textSecondary),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String label, {String? hint}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 10, 2, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(
+            '✦ ${label.toUpperCase()}',
+            style: TextStyle(
+              color: context.gc.starYellow,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 2,
+            ),
+          ),
+          if (hint != null) ...[
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '· $hint',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: context.gc.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Etiqueta de tema no card — o que antes eram abas.
+  (String, String) _themeLabel(JourneyCategory category) {
+    final l10n = AppLocalizations.of(context);
+    return switch (category) {
+      JourneyCategory.iniciante => ('🌱', l10n.journeysTabBeginner),
+      JourneyCategory.diario ||
+      JourneyCategory.grimorio =>
+        ('📖', l10n.diaryTitle),
+      JourneyCategory.divinacao ||
+      JourneyCategory.astrologia =>
+        ('🔮', l10n.divinationTitle),
+      JourneyCategory.comunidade => ('✨', ''),
+    };
+  }
+
+  Widget _buildThemeChip(JourneyCategory category) {
+    final (emoji, label) = _themeLabel(category);
+    if (label.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: context.gc.textPrimary10),
+      ),
+      child: Text(
+        '$emoji $label',
+        style: TextStyle(
+          color: context.gc.textSecondary,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w600,
         ),
       ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: context.gc.lilac))
-          : Column(
-              children: [
-                // XP Header
-                _buildXpHeader(),
-
-                // Jornadas
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      // A escada de níveis abre a aba "Todas": é a
-                      // explicação do que o número do topo significa.
-                      _buildJourneysList(AvailableJourneys.all,
-                          showLevels: true),
-                      _buildJourneysList(AvailableJourneys.byCategory(
-                          JourneyCategory.iniciante)),
-                      _buildJourneysList([
-                        ...AvailableJourneys.byCategory(JourneyCategory.diario),
-                        ...AvailableJourneys.byCategory(
-                            JourneyCategory.grimorio),
-                      ]),
-                      _buildJourneysList([
-                        ...AvailableJourneys.byCategory(
-                            JourneyCategory.divinacao),
-                        ...AvailableJourneys.byCategory(
-                            JourneyCategory.astrologia),
-                      ]),
-                    ],
-                  ),
-                ),
-              ],
-            ),
     );
   }
 
@@ -329,7 +436,66 @@ class _JourneysPageState extends State<JourneysPage>
               ],
             ),
           ),
+          const SizedBox(width: 8),
+          // A escada saiu do meio da lista: abre daqui, onde mora o número
+          // que ela explica.
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: _showLevelsSheet,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              child: Text(
+                '${l10n.journeysSeeLevels} ✦',
+                style: TextStyle(
+                  color: context.gc.starYellow,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _showLevelsSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: context.gc.surface,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: context.gc.textSecondary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(20),
+                  children: [_buildLevelsSection()],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -477,37 +643,7 @@ class _JourneysPageState extends State<JourneysPage>
     );
   }
 
-  Widget _buildJourneysList(
-    List<JourneyModel> journeys, {
-    bool showLevels = false,
-  }) {
-    if (journeys.isEmpty && !showLevels) {
-      return Center(
-        child: Text(
-          AppLocalizations.of(context).journeysEmpty,
-          style: TextStyle(color: context.gc.textSecondary),
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadUserStats,
-      color: context.gc.lilac,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: journeys.length + (showLevels ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (showLevels) {
-            if (index == 0) return _buildLevelsSection();
-            return _buildJourneyCard(journeys[index - 1]);
-          }
-          return _buildJourneyCard(journeys[index]);
-        },
-      ),
-    );
-  }
-
-  Widget _buildJourneyCard(JourneyModel journey) {
+  Widget _buildJourneyCard(JourneyModel journey, {bool highlight = false}) {
     int completedSteps = 0;
     int earnedXp = 0;
 
@@ -529,10 +665,14 @@ class _JourneysPageState extends State<JourneysPage>
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isCompleted
-              ? journey.color.withValues(alpha: 0.7)
-              : context.gc.textPrimary10,
-          width: isCompleted ? 2 : 1,
+          // Destaque dourado para a jornada mais próxima de concluir:
+          // é o "continue daqui" da tela.
+          color: highlight
+              ? context.gc.starYellow.withValues(alpha: 0.55)
+              : isCompleted
+                  ? journey.color.withValues(alpha: 0.7)
+                  : context.gc.textPrimary10,
+          width: isCompleted || highlight ? 2 : 1,
         ),
       ),
       child: Material(
@@ -562,12 +702,15 @@ class _JourneysPageState extends State<JourneysPage>
                         children: [
                           Row(
                             children: [
-                              Text(
-                                journey.localizedTitle,
-                                style: TextStyle(
-                                  color: context.gc.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              Flexible(
+                                child: Text(
+                                  journey.localizedTitle,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: context.gc.textPrimary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                               if (isCompleted) ...[
@@ -578,6 +721,8 @@ class _JourneysPageState extends State<JourneysPage>
                                   size: 18,
                                 ),
                               ],
+                              const SizedBox(width: 8),
+                              _buildThemeChip(journey.category),
                             ],
                           ),
                           const SizedBox(height: 4),

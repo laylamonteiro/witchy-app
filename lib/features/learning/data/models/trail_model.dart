@@ -82,10 +82,12 @@ enum LessonTool {
   palmistry,
 
   /// Fluxos "Adicionar em..." da enciclopédia pessoal: a prática pede para
-  /// identificar uma planta/pedra/cor por foto e criar o verbete próprio —
+  /// identificar uma planta/pedra por foto e criar o verbete próprio —
   /// assim cada lição também faz a enciclopédia da pessoa crescer.
   addHerb,
   addCrystal,
+
+  /// Sem identificação por foto: abre o catálogo oficial de Cores.
   addColor,
 }
 

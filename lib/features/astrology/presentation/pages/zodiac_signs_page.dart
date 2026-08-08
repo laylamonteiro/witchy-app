@@ -24,7 +24,9 @@ class ZodiacSignsPage extends StatelessWidget {
       ),
       backgroundColor: context.gc.darkBackground,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // Os MagicalCards trazem a margem padrão do app (8 vertical,
+        // 16 horizontal) — a página só dá um respiro vertical extra.
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -51,13 +53,9 @@ class ZodiacSignsPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Lista de signos
-            ...zodiacSignsData.map((signData) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildSignCard(context, signData),
-                )),
+            // Lista de signos — espaçamento entre cards vem só da margem
+            // padrão dos próprios MagicalCards.
+            ...zodiacSignsData.map((signData) => _buildSignCard(context, signData)),
           ],
         ),
       ),

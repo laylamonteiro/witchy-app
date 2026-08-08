@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/wheel_of_year_provider.dart';
 import '../../data/models/sabbat_model.dart';
+import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -26,51 +28,51 @@ class WheelOfYearPage extends StatelessWidget {
         final dateFormat = DateFormat('dd/MM/yyyy');
 
         return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: StaggeredEntrance(
             children: [
-              // Próximo Sabbat em destaque - mesma altura do card lunar (300)
-              if (nextSabbat != null)
-                SizedBox(
-                  height: 300,
-                  child: MagicalCard(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context).wheelNextSabbat,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          nextSabbat.emoji,
-                          style: const TextStyle(fontSize: 56),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          nextSabbat.name,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          nextSabbat.type.southernHemisphereDate,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: context.gc.textSecondary,
-                                  ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDaysUntilChip(
-                          context,
-                          nextSabbat.daysUntil(DateTime.now()),
-                        ),
-                      ],
-                    ),
+              // Destaque do próximo sabbat no padrão das outras abas —
+              // título, o SÍMBOLO da época como emblema vivo, nome, data e
+              // contagem, direto na página (sem card em volta).
+              if (nextSabbat != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context).wheelNextSabbat,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                LivingEmblem.custom(
+                  customArt: Text(
+                    nextSabbat.emoji,
+                    style: const TextStyle(fontSize: 64),
                   ),
+                ),
+                Text(
+                  nextSabbat.name,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  nextSabbat.type.southernHemisphereDate,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: context.gc.textSecondary,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: _buildDaysUntilChip(
+                    context,
+                    nextSabbat.daysUntil(DateTime.now()),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ] else
+                const SectionEmblemHeader.custom(
+                  customArt: Text('🎡', style: TextStyle(fontSize: 64)),
                 ),
 
               // Lista de todos os Sabbats

@@ -74,25 +74,28 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get navEncyclopedia => 'Enciclopedia';
+  String get navEncyclopedia => 'Grimorio';
 
   @override
-  String get navGrimoire => 'Grimorio';
+  String get navGrimoire => 'Herramientas';
 
   @override
   String get navDiaries => 'Diarios';
 
   @override
-  String get grimoirePageTitle => 'Grimorio Digital';
+  String get grimoirePageTitle => 'Herramientas';
 
   @override
-  String get grimoireTabAstrology => 'Astrología';
+  String get grimoireTabAstrology => 'Astrología Mística';
 
   @override
-  String get grimoireTabTools => 'Herramientas';
+  String get grimoireTabTools => 'Herramientas Mágicas';
 
   @override
   String get grimoireTabMyGrimoire => 'Mi Grimorio';
+
+  @override
+  String get encyMyGrimoireIntro => 'Tus hechizos, reunidos por intención — crea, guarda y revisita tu magia';
 
   @override
   String get diaryPageTitle => 'Diarios';
@@ -110,7 +113,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diaryTabDesires => 'Deseos';
 
   @override
-  String get encyclopediaPageTitle => 'Enciclopedia Mágica';
+  String get encyclopediaPageTitle => 'Grimorio';
 
   @override
   String get encyTabMoon => 'Luna';
@@ -2409,7 +2412,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get astroMysticSubtitle =>
-      'Descubre tu carta astral y perfil mágico personalizado';
+      'Tu carta astral y perfil mágico personalizado';
 
   @override
   String get astroZodiacSigns => 'Signos del Zodíaco';

@@ -5,10 +5,13 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../data/models/user_entry_model.dart';
 import '../pages/add_entry_page.dart';
 
-/// Guia da Natureza: pergunta O QUE identificar (erva/pedra/cor) e leva ao
+/// Guia da Natureza: pergunta O QUE identificar (erva/pedra) e leva ao
 /// fluxo de foto + IA da enciclopédia. Compartilhado pela ferramenta do
 /// Grimório e pelo atalho do Seu Dia. O gate Premium é da própria
 /// AddEntryPage — aqui não se duplica paywall.
+///
+/// Cores ficaram de fora de propósito: a seção de Cores é só o catálogo
+/// oficial (roda + páginas completas), sem identificação por foto.
 Future<void> openNatureGuide(BuildContext context) async {
   final l10n = AppLocalizations.of(context);
   final category = await showModalBottomSheet<UserEntryCategory>(
@@ -41,8 +44,6 @@ Future<void> openNatureGuide(BuildContext context) async {
                 sheetContext, '🌿', l10n.encyTabHerbs, UserEntryCategory.herb),
             _categoryTile(sheetContext, '💎', l10n.encyTabCrystals,
                 UserEntryCategory.crystal),
-            _categoryTile(sheetContext, '🎨', l10n.encyTabColors,
-                UserEntryCategory.color),
           ],
         ),
       ),

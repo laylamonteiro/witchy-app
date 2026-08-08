@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
-import 'spell_categories_hub_page.dart';
 import 'mystic_advisor_page.dart';
 import '../../../astrology/presentation/pages/astrology_tab.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
@@ -17,7 +18,6 @@ import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../diary/presentation/pages/dream_tools_page.dart';
 import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
 import '../../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
-import '../widgets/grimoire_header_card.dart';
 import '../../../learning/presentation/pages/learning_home_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
@@ -37,8 +37,9 @@ class _GrimoirePageState extends State<GrimoirePage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
 
-  /// Aba central "Ferramentas" — sempre a aba inicial e o alvo do reset
-  /// (duplo-toque em "Grimório" na bottom nav).
+  /// Aba central "Ferramentas Mágicas" — a aba inicial e o alvo do reset
+  /// (duplo-toque em "Ferramentas" na bottom nav). "Meu Grimório" saiu daqui
+  /// e virou a primeira seção do livro (Grimório).
   static const int _defaultTabIndex = 1;
 
   /// Trocado para recriar o TabBarView quando o re-toque na bottom bar pede
@@ -52,10 +53,10 @@ class _GrimoirePageState extends State<GrimoirePage>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 3,
+      length: 2,
       vsync: this,
       initialIndex: _defaultTabIndex,
-    );
+    )..addListener(_dismissKeyboard);
     widget.resetNotifier?.addListener(_onResetRequested);
   }
 
@@ -64,6 +65,11 @@ class _GrimoirePageState extends State<GrimoirePage>
     widget.resetNotifier?.removeListener(_onResetRequested);
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// Trocar de aba guarda o teclado — a busca da aba anterior já era.
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 
   void _onResetRequested() {
@@ -105,7 +111,6 @@ class _GrimoirePageState extends State<GrimoirePage>
           tabs: [
             Tab(text: AppLocalizations.of(context).grimoireTabAstrology),
             Tab(text: AppLocalizations.of(context).grimoireTabTools),
-            Tab(text: AppLocalizations.of(context).grimoireTabMyGrimoire),
           ],
         ),
       ),
@@ -115,7 +120,6 @@ class _GrimoirePageState extends State<GrimoirePage>
         children: const [
           AstrologyTab(),
           _ToolsTab(),
-          SpellCategoriesHubPage(),
         ],
       ),
     );
@@ -215,14 +219,12 @@ class _ToolsTab extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: StaggeredEntrance(
         children: [
-          // Mesmo card-cabeçalho (cores e altura) da aba Astrologia.
-          GrimoireHeaderCard(
-            glyph: '‧ ⛦ ‧',
-            title: l10n.toolsHeaderTitle,
-            subtitle: l10n.toolsHeaderSubtitle,
+          // O emblema vivo substitui o antigo card de cabeçalho.
+          SectionEmblemHeader(
+            emblem: SectionEmblem.tools,
+            intro: l10n.toolsHeaderSubtitle,
           ),
           _buildGroup(context, l10n.toolsGroupPractice, practice),
           _buildGroup(context, l10n.toolsGroupDivination, divination),

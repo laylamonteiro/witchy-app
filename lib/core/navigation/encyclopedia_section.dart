@@ -12,19 +12,25 @@ enum EncyclopediaSection {
   /// que colide com o getter nativo `Enum.index`).
   bookIndex,
 
+  /// "Meu Grimório": os feitiços da bruxa. Primeira seção depois do Índice —
+  /// migrou da antiga aba Grimório (hoje Ferramentas) para dentro do livro.
+  myGrimoire,
+
   moon,
   sun,
   sabbats,
+  colors,
   crystals,
   herbs,
-  colors,
   goddesses,
-  elements,
-  runes,
-  altar,
   metals,
   archetypes,
   symbols,
   angels,
   demons,
+
+  // Páginas informativas (não-catálogo) fecham a Enciclopédia.
+  elements,
+  runes,
+  altar,
 }

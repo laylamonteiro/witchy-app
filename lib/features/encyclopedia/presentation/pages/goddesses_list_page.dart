@@ -3,6 +3,8 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../data/models/goddess_model.dart';
 import '../../../../core/utils/accents.dart';
@@ -21,7 +23,11 @@ class GoddessesListPage extends StatefulWidget {
 class _GoddessesListPageState extends State<GoddessesListPage> {
   final TextEditingController _searchController = TextEditingController();
   List<GoddessModel> _filteredGoddesses = goddessesData;
-  GoddessOrigin? _selectedOrigin;
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
+
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
 
 
   @override
@@ -40,9 +46,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
             goddess.description.toLowerCase().contains(query.toLowerCase()) ||
             goddess.aspects.any((a) => a.displayName.toLowerCase().contains(query.toLowerCase()));
 
-        final matchesOrigin = _selectedOrigin == null || goddess.origin == _selectedOrigin;
-
-        return matchesSearch && matchesOrigin;
+        return matchesSearch;
       }).toList()
         ..sort((a, b) =>
           removeAccents(a.name.toUpperCase()).compareTo(removeAccents(b.name.toUpperCase()))
@@ -50,137 +54,65 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
     });
   }
 
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.gc.darkBackground,
-      body: Column(
+      body: NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Column(
         children: [
-          // Search bar com filtro ao lado (igual Grimório Ancestral)
+          SectionEmblemHeader(
+            emblem: SectionEmblem.goddesses,
+            intro: AppLocalizations.of(context).encyGoddessesIntro,
+            collapsed: _searchFocused ||
+              _scrolled || _searchController.text.isNotEmpty,
+          ),
+
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: MagicalSearchField(
-            controller: _searchController,
-            hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabGoddesses),
-            onChanged: _filterGoddesses,
-          ),
-                ),
-                const SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.filter_list,
-                    color: _selectedOrigin != null ? context.gc.lilac : context.gc.softWhite,
-                  ),
-                  tooltip: 'Filtrar por origem',
-                  onSelected: (value) {
-                    setState(() {
-                      if (value == 'all') {
-                        _selectedOrigin = null;
-                      } else {
-                        _selectedOrigin = GoddessOrigin.values.firstWhere((o) => o.name == value);
-                      }
-                      _filterGoddesses(_searchController.text);
-                    });
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'all',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.public,
-                            size: 20,
-                            color: _selectedOrigin == null ? context.gc.lilac : context.gc.softWhite,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Todas as Origens',
-                            style: TextStyle(
-                              color: _selectedOrigin == null ? context.gc.lilac : null,
-                              fontWeight: _selectedOrigin == null ? FontWeight.bold : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(),
-                    ...GoddessOrigin.values.map((origin) => PopupMenuItem(
-                          value: origin.name,
-                          child: Row(
-                            children: [
-                              Text(origin.emoji, style: const TextStyle(fontSize: 16)),
-                              const SizedBox(width: 8),
-                              Text(
-                                origin.displayName,
-                                style: TextStyle(
-                                  color: _selectedOrigin == origin ? context.gc.lilac : null,
-                                  fontWeight: _selectedOrigin == origin ? FontWeight.bold : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(
-              AppLocalizations.of(context).encyGoddessesIntro,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-            ),
-          ),
-
-          // Indicador de filtro ativo
-          if (_selectedOrigin != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Chip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_selectedOrigin!.emoji),
-                        const SizedBox(width: 4),
-                        Text(_selectedOrigin!.displayName),
-                      ],
-                    ),
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () {
-                      setState(() {
-                        _selectedOrigin = null;
-                        _filterGoddesses(_searchController.text);
-                      });
-                    },
-                    backgroundColor: context.gc.lilac.withOpacity(0.2),
-                    side: BorderSide(color: context.gc.lilac),
-                    labelStyle: TextStyle(color: context.gc.lilac, fontSize: 12),
-                  ),
-                ],
+            child: Focus(
+              onFocusChange: (f) => setState(() => _searchFocused = f),
+              child: MagicalSearchField(
+                controller: _searchController,
+                hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabGoddesses),
+                onChanged: _filterGoddesses,
               ),
             ),
+          ),
 
           // Goddesses list
           Expanded(
-            child: ListView.builder(
+            child: CascadeScope(
+              child: ListView.builder(
               itemCount: _filteredGoddesses.length,
               itemBuilder: (context, index) {
                 final goddess = _filteredGoddesses[index];
-                return _buildGoddessCard(goddess, index);
+                return CascadeIn(
+                  index: index,
+                  child: _buildGoddessCard(goddess, index),
+                );
               },
+            ),
             ),
           ),
         ],
       ),
+    ),
     );
   }
 

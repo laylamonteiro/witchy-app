@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/accents.dart';
+import '../../../../core/widgets/living_emblem.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/magical_card.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../data/data_sources/arcane_categories.dart';
@@ -31,6 +33,12 @@ class ArcaneListPage extends StatefulWidget {
 
 class _ArcaneListPageState extends State<ArcaneListPage> {
   final _searchController = TextEditingController();
+
+  /// A busca com foco recolhe o emblema (cede o palco).
+  bool _searchFocused = false;
+
+  /// A lista rolou? Então o emblema cede o palco (volta no topo).
+  bool _scrolled = false;
   late List<ArcaneEntry> _filtered = _sorted(widget.entries);
 
   List<ArcaneEntry> _sorted(List<ArcaneEntry> list) {
@@ -70,13 +78,45 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
   String _imageAssetForEntry(ArcaneEntry entry) =>
       widget.category.imageAssetFor(entry);
 
+  static SectionEmblem _emblemForCategory(ArcaneCategory category) =>
+      switch (category) {
+        ArcaneCategory.archetypes => SectionEmblem.archetypes,
+        ArcaneCategory.angels => SectionEmblem.angels,
+        ArcaneCategory.demons => SectionEmblem.demons,
+        ArcaneCategory.sacredSymbols => SectionEmblem.symbols,
+      };
+
+
+  /// Rolagem para baixo recolhe o emblema; de volta ao TOPO, reaparece.
+  /// Histerese (12px / 2px) para não tremer na beirada.
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final p = n.metrics.pixels;
+    if (!_scrolled && p > 12) {
+      setState(() => _scrolled = true);
+    } else if (_scrolled && p <= 2) {
+      setState(() => _scrolled = false);
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Column(
       children: [
+        SectionEmblemHeader(
+          emblem: _emblemForCategory(widget.category),
+          intro: widget.intro,
+          collapsed: _searchFocused ||
+              _scrolled || _searchController.text.isNotEmpty,
+        ),
         Padding(
           padding: const EdgeInsets.all(16),
-          child: TextField(
+          child: Focus(
+            onFocusChange: (f) => setState(() => _searchFocused = f),
+            child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context)
@@ -99,15 +139,7 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
               ),
             ),
             onChanged: _filter,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(
-            widget.intro,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.textSecondary,
-                ),
+            ),
           ),
         ),
         Expanded(
@@ -118,14 +150,17 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                     style: TextStyle(color: context.gc.textSecondary),
                   ),
                 )
-              : ListView.builder(
+              : CascadeScope(
+                child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 24),
                   itemCount: _filtered.length,
                   itemBuilder: (context, index) {
                     final entry = _filtered[index];
                     // Lista exibida no momento do toque, para o swipe lateral.
                     final entries = List<ArcaneEntry>.from(_filtered);
-                    return MagicalCard(
+                    return CascadeIn(
+                    index: index,
+                    child: MagicalCard(
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => EntryPager(
@@ -194,10 +229,12 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                                 const SizedBox(height: 4),
                                 // Linha de referência com emoji, como o
                                 // planeta nos Metais e a origem nas
-                                // Deusas: aqui, a origem cultural.
+                                // Deusas: aqui, o emoji do PRÓPRIO verbete
+                                // (a espada de Miguel, a trombeta de
+                                // Gabriel...) + a origem cultural.
                                 Row(
                                   children: [
-                                    const Text('📜'),
+                                    Text(entry.emoji),
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
@@ -228,11 +265,14 @@ class _ArcaneListPageState extends State<ArcaneListPage> {
                               color: context.gc.textSecondary),
                         ],
                       ),
-                    );
+                    ),
+                  );
                   },
                 ),
+              ),
         ),
       ],
+    ),
     );
   }
 }
