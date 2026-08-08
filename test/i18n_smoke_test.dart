@@ -35,7 +35,7 @@ void main() {
   testWidgets('pt-BR renderiza strings em português', (tester) async {
     await tester.pumpWidget(appIn(const Locale('pt', 'BR')));
     await tester.pumpAndSettle();
-    expect(find.text('Enciclopédia Mágica'), findsOneWidget);
+    expect(find.text('Grimório'), findsOneWidget);
     expect(find.text('Configurações'), findsOneWidget);
     expect(find.text('Em 3 dias'), findsOneWidget);
   });
@@ -43,7 +43,7 @@ void main() {
   testWidgets('en renderiza strings em inglês (sem PT)', (tester) async {
     await tester.pumpWidget(appIn(const Locale('en')));
     await tester.pumpAndSettle();
-    expect(find.text('Magical Encyclopedia'), findsOneWidget);
+    expect(find.text('Grimoire'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
     expect(find.text('In 3 days'), findsOneWidget);
     expect(find.text('Configurações'), findsNothing);
@@ -52,7 +52,7 @@ void main() {
   testWidgets('es renderiza strings em espanhol (sem PT)', (tester) async {
     await tester.pumpWidget(appIn(const Locale('es')));
     await tester.pumpAndSettle();
-    expect(find.text('Enciclopedia Mágica'), findsOneWidget);
+    expect(find.text('Grimorio'), findsOneWidget);
     expect(find.text('Configuración'), findsOneWidget);
     expect(find.text('En 3 días'), findsOneWidget);
   });
