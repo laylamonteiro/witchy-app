@@ -121,7 +121,7 @@ class SyncProvider extends ChangeNotifier {
 
     if (!result.success) {
       _lastError = result.error;
-      await debugLog('SYNC', 'Erro: ${result.error}');
+      await debugLog('SYNC', 'Erro: ${result.detailedError}');
     } else {
       await debugLog('SYNC',
           'Sucesso: ${result.uploaded} enviados, ${result.downloaded} recebidos');
