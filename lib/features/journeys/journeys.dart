@@ -8,3 +8,4 @@
 
 export 'data/models/journey_model.dart';
 export 'presentation/pages/journeys_page.dart';
+export 'presentation/pages/magical_progress_page.dart';

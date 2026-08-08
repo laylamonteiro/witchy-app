@@ -17,7 +17,6 @@ import '../../../../core/services/payment_service.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import '../../../auth/auth.dart';
-import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
@@ -601,23 +600,15 @@ class SettingsPage extends StatelessWidget {
             ),
           ],
           _buildDivider(context),
+          // Jornadas + Estatísticas moram juntas na Evolução Mágica:
+          // uma entrada só, com uma aba para cada.
           _buildOptionTile(
             context,
-            icon: Icons.analytics_outlined,
-            title: AppLocalizations.of(context).profileMagicalStats,
+            icon: Icons.auto_graph,
+            title: AppLocalizations.of(context).progressPageTitle,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
-            ),
-          ),
-          _buildDivider(context),
-          _buildOptionTile(
-            context,
-            icon: Icons.explore_outlined,
-            title: AppLocalizations.of(context).profileMagicalJourneys,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const JourneysPage()),
+              MaterialPageRoute(builder: (_) => const MagicalProgressPage()),
             ),
           ),
           _buildDivider(context),
@@ -660,6 +651,13 @@ class SettingsPage extends StatelessWidget {
             icon: Icons.help_outline,
             title: AppLocalizations.of(context).profileHelpSupport,
             onTap: () => _showHelpDialog(context),
+          ),
+          _buildDivider(context),
+          _buildOptionTile(
+            context,
+            icon: Icons.favorite_outline,
+            title: AppLocalizations.of(context).settingsFollowUs,
+            onTap: () => _showFollowSheet(context),
           ),
           _buildDivider(context),
           _buildOptionTile(
@@ -1250,6 +1248,94 @@ class SettingsPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Redes do Grimório: @grimoriodebolso no Instagram e no TikTok.
+  void _showFollowSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.gc.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.favorite, color: sheetContext.gc.pink),
+                  const SizedBox(width: 12),
+                  Text(
+                    AppLocalizations.of(context).settingsFollowUs,
+                    style: TextStyle(
+                      color: sheetContext.gc.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                AppLocalizations.of(context).settingsFollowUsSub,
+                style: TextStyle(
+                  color: sheetContext.gc.textSecondary,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildSocialTile(
+                sheetContext,
+                icon: Icons.camera_alt_outlined,
+                network: 'Instagram',
+                url: 'https://instagram.com/grimoriodebolso',
+              ),
+              _buildSocialTile(
+                sheetContext,
+                icon: Icons.music_note_outlined,
+                network: 'TikTok',
+                url: 'https://www.tiktok.com/@grimoriodebolso',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialTile(
+    BuildContext context, {
+    required IconData icon,
+    required String network,
+    required String url,
+  }) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: context.gc.lilac.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: context.gc.lilac, size: 22),
+      ),
+      title: Text(
+        network,
+        style: TextStyle(color: context.gc.textPrimary),
+      ),
+      subtitle: Text(
+        '@grimoriodebolso',
+        style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
+      ),
+      trailing:
+          Icon(Icons.open_in_new, size: 16, color: context.gc.textSecondary),
+      onTap: () =>
+          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
     );
   }
 

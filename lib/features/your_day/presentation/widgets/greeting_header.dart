@@ -7,9 +7,8 @@ import '../../../../core/i18n/gender.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_progress.dart';
 import '../../../../core/widgets/starfield_background.dart';
-import '../../../analytics/presentation/pages/magical_analytics_page.dart';
+import '../../../journeys/presentation/pages/magical_progress_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../journeys/presentation/pages/journeys_page.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
 import '../providers/daily_checkin_provider.dart';
 
@@ -81,15 +80,16 @@ class GreetingHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // Anel do nível — toque leva às Jornadas Mágicas, onde o nível
-            // e a escada completa de títulos vivem.
+            // Anel do nível — toque leva à Evolução Mágica, direto na aba
+            // de Jornadas, onde o nível e a escada de títulos vivem.
             Semantics(
               label: '${level.title} · ${learning.xp} XP',
               button: true,
               child: InkWell(
                 borderRadius: BorderRadius.circular(30),
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const JourneysPage()),
+                  MaterialPageRoute(
+                      builder: (_) => const MagicalProgressPage()),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
@@ -136,7 +136,8 @@ class _StreakPill extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
+            MaterialPageRoute(
+                builder: (_) => const MagicalProgressPage(initialTab: 1)),
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

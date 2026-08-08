@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../subscription/subscription.dart';
-import '../../../analytics/analytics.dart';
 import '../../../journeys/journeys.dart';
 import '../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
@@ -430,25 +429,15 @@ class ProfilePage extends StatelessWidget {
             onTap: () => _handleManageSubscription(context, paymentService),
           ),
           _buildDivider(context),
-          // Estatísticas mágicas
+          // Evolução Mágica: Jornadas + Estatísticas numa página só,
+          // uma aba para cada.
           _buildOptionTile(
             context,
-            icon: Icons.analytics_outlined,
-            title: AppLocalizations.of(context).profileMagicalStats,
+            icon: Icons.auto_graph,
+            title: AppLocalizations.of(context).progressPageTitle,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const MagicalAnalyticsPage()),
-            ),
-          ),
-          _buildDivider(context),
-          // Jornadas gamificadas
-          _buildOptionTile(
-            context,
-            icon: Icons.explore_outlined,
-            title: AppLocalizations.of(context).profileMagicalJourneys,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const JourneysPage()),
+              MaterialPageRoute(builder: (_) => const MagicalProgressPage()),
             ),
           ),
           _buildDivider(context),

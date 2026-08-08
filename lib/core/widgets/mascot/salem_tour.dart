@@ -106,9 +106,11 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
   static String _step8(AppLocalizations l10n) => l10n.salemTourStep8;
 
   /// Cantos do recorte, folga em volta da feature e tamanho do Salem-guia.
+  /// O guia é levemente MAIOR que o mascote do dia a dia (85): ele é o
+  /// protagonista do tour, mas sem virar gigante.
   static const double _holeRadius = 18;
   static const double _holePadding = 6;
-  static const double _salemSize = 76;
+  static const double _salemSize = 96;
 
   int _current = 0;
 
@@ -325,7 +327,7 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
                         'assets/icons/new_cat/cat_sit_happy.png',
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => const Center(
-                          child: Text('🐈‍⬛', style: TextStyle(fontSize: 44)),
+                          child: Text('🐈‍⬛', style: TextStyle(fontSize: 56)),
                         ),
                       ),
                     ),

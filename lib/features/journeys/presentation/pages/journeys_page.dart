@@ -16,7 +16,11 @@ import '../../data/models/journey_model.dart';
 /// começar → concluídas), com o tema como etiqueta no card e a escada de
 /// níveis num sheet aberto pelo cabeçalho de XP.
 class JourneysPage extends StatefulWidget {
-  const JourneysPage({super.key});
+  /// Sem Scaffold/AppBar próprios: para viver como aba da Evolução Mágica
+  /// (página que une Jornadas e Estatísticas).
+  final bool embedded;
+
+  const JourneysPage({super.key, this.embedded = false});
 
   @override
   State<JourneysPage> createState() => _JourneysPageState();
@@ -172,6 +176,20 @@ class _JourneysPageState extends State<JourneysPage> {
 
   @override
   Widget build(BuildContext context) {
+    final body = _isLoading
+        ? Center(child: CircularProgressIndicator(color: context.gc.lilac))
+        : Column(
+            children: [
+              // XP Header
+              _buildXpHeader(),
+
+              // Jornadas por progresso
+              Expanded(child: _buildProgressList()),
+            ],
+          );
+
+    if (widget.embedded) return body;
+
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
@@ -189,18 +207,7 @@ class _JourneysPageState extends State<JourneysPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: context.gc.lilac))
-          : Column(
-              children: [
-                // XP Header
-                _buildXpHeader(),
-
-                // Jornadas por progresso
-                Expanded(child: _buildProgressList()),
-              ],
-            ),
+      body: body,
     );
   }
 

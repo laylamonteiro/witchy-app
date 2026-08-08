@@ -27,7 +27,12 @@ import '../../../divination/presentation/pages/pendulum_page.dart';
 
 /// Página de Analytics Mágicos - Estatísticas de uso do app
 class MagicalAnalyticsPage extends StatefulWidget {
-  const MagicalAnalyticsPage({super.key});
+  /// Sem Scaffold/AppBar próprios: para viver como aba da Evolução Mágica
+  /// (página que une Jornadas e Estatísticas). No modo embutido o atalho
+  /// para as Jornadas some — elas são a aba vizinha.
+  final bool embedded;
+
+  const MagicalAnalyticsPage({super.key, this.embedded = false});
 
   @override
   State<MagicalAnalyticsPage> createState() => _MagicalAnalyticsPageState();
@@ -327,6 +332,59 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final body = _isLoading
+        ? Center(child: CircularProgressIndicator(color: context.gc.lilac))
+        : RefreshIndicator(
+            onRefresh: _loadStats,
+            color: context.gc.lilac,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Resumo geral
+                  _buildSummaryCard(),
+                  const SizedBox(height: 20),
+
+                  // Régua única de progresso: nível/XP unificado do
+                  // Grimório Vivo. O atalho para as Jornadas só aparece
+                  // fora do modo embutido — lá, elas são a aba vizinha.
+                  _buildLearningCard(),
+                  if (!widget.embedded) ...[
+                    const SizedBox(height: 12),
+                    _buildJourneysCard(),
+                  ],
+                  const SizedBox(height: 20),
+
+                  // Streaks e conquistas
+                  _buildStreaksCard(),
+                  const SizedBox(height: 20),
+
+                  // Calendário de dias com prática no mês
+                  _buildPracticeDaysCard(),
+                  const SizedBox(height: 20),
+
+                  // Práticas por categoria
+                  _buildCategoriesGrid(),
+                  const SizedBox(height: 20),
+
+                  // Desejos e manifestações
+                  _buildDesiresCard(),
+                  const SizedBox(height: 20),
+
+                  // Feitiços por tipo
+                  if ((_stats['spellsByType'] as Map?)?.isNotEmpty ?? false)
+                    _buildSpellTypesCard(),
+
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          );
+
+    if (widget.embedded) return body;
+
     return Scaffold(
       backgroundColor: context.gc.background,
       appBar: AppBar(
@@ -350,54 +408,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: context.gc.lilac))
-          : RefreshIndicator(
-              onRefresh: _loadStats,
-              color: context.gc.lilac,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Resumo geral
-                    _buildSummaryCard(),
-                    const SizedBox(height: 20),
-
-                    // Régua única de progresso: nível/XP unificado do
-                    // Grimório Vivo + atalho para as Jornadas Mágicas.
-                    _buildLearningCard(),
-                    const SizedBox(height: 12),
-                    _buildJourneysCard(),
-                    const SizedBox(height: 20),
-
-                    // Streaks e conquistas
-                    _buildStreaksCard(),
-                    const SizedBox(height: 20),
-
-                    // Calendário de dias com prática no mês
-                    _buildPracticeDaysCard(),
-                    const SizedBox(height: 20),
-
-                    // Práticas por categoria
-                    _buildCategoriesGrid(),
-                    const SizedBox(height: 20),
-
-                    // Desejos e manifestações
-                    _buildDesiresCard(),
-                    const SizedBox(height: 20),
-
-                    // Feitiços por tipo
-                    if ((_stats['spellsByType'] as Map?)?.isNotEmpty ?? false)
-                      _buildSpellTypesCard(),
-
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ),
+      body: body,
     );
   }
 

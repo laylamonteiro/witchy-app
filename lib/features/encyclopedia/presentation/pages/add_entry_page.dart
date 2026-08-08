@@ -128,6 +128,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
       _chosen = null;
       _nameController.clear();
       _identifying = true;
+      _error = null;
     });
 
     try {
@@ -165,6 +166,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
       setState(() {
         _identifying = false;
         _identified = false;
+        // Teto de requisições do provedor (compartilhado pelo app inteiro):
+        // sem isto, o 429 viraria um "não identificado" enganoso.
+        if (e is AiRateLimitException) {
+          _error = AppLocalizations.of(context).aiVisionRateLimit;
+        }
       });
     }
   }

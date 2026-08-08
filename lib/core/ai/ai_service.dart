@@ -711,7 +711,7 @@ class AIService {
         : AiProvider.groq;
 
     try {
-      return await _visionCall(
+      return await _visionCallWithRetry(
         primary,
         systemPrompt: systemPrompt,
         userText: userText,
@@ -733,8 +733,59 @@ class AIService {
           'AI', '$tag: ${primary.name} falhou ($e) — usando ${fallback.name}'));
     }
 
-    return _visionCall(
+    return _visionCallWithRetry(
       fallback,
+      systemPrompt: systemPrompt,
+      userText: userText,
+      base64Image: base64Image,
+      temperature: temperature,
+      maxTokens: maxTokens,
+      tag: tag,
+    );
+  }
+
+  /// Espera curta com backoff entre novas tentativas quando o provedor
+  /// devolve 429. O teto de RPM é por minuto e deslizante — segundos depois
+  /// a mesma chamada costuma passar, e quem fotografou nem percebe.
+  static const List<Duration> _quotaRetryDelays = [
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+  ];
+
+  /// [_visionCall] com novas tentativas APENAS para 429 (limite de
+  /// requisições, compartilhado por todas as usuárias do app). Qualquer
+  /// outro erro sobe na hora — a troca de provedor é papel do chamador.
+  Future<String> _visionCallWithRetry(
+    AiProvider provider, {
+    required String systemPrompt,
+    required String userText,
+    required String base64Image,
+    required double temperature,
+    required int maxTokens,
+    required String tag,
+  }) async {
+    for (final delay in _quotaRetryDelays) {
+      try {
+        return await _visionCall(
+          provider,
+          systemPrompt: systemPrompt,
+          userText: userText,
+          base64Image: base64Image,
+          temperature: temperature,
+          maxTokens: maxTokens,
+          tag: tag,
+        );
+      } on DioException catch (e) {
+        if (e.response?.statusCode != 429) rethrow;
+        unawaited(debugLog(
+            'AI',
+            '$tag: ${provider.name} 429 — nova tentativa '
+            'em ${delay.inSeconds}s'));
+        await Future.delayed(delay);
+      }
+    }
+    return _visionCall(
+      provider,
       systemPrompt: systemPrompt,
       userText: userText,
       base64Image: base64Image,
