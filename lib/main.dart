@@ -91,7 +91,7 @@ void main() async {
   // Initialize notifications (only for mobile platforms)
   if (!kIsWeb) {
     const initializationSettingsAndroid =
-        AndroidInitializationSettings('@drawable/ic_notification');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const initializationSettingsIOS = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
