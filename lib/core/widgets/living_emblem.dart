@@ -35,10 +35,21 @@ enum SectionEmblem {
 /// Altura FIXA (para o deslizar entre abas nunca "pular"); congela num
 /// quadro bonito quando o sistema pede "reduzir movimento" (acessibilidade).
 class LivingEmblem extends StatefulWidget {
-  final SectionEmblem emblem;
+  final SectionEmblem? emblem;
+
+  /// Arte própria no lugar do SVG da seção (ex.: o símbolo do PRÓXIMO
+  /// sabbat na Roda do Ano) — mesma respiração, halo e estrelas.
+  final Widget? customArt;
+
   final double height;
 
-  const LivingEmblem({super.key, required this.emblem, this.height = 132});
+  const LivingEmblem(
+      {super.key, required SectionEmblem this.emblem, this.height = 132})
+      : customArt = null;
+
+  const LivingEmblem.custom(
+      {super.key, required Widget this.customArt, this.height = 132})
+      : emblem = null;
 
   @override
   State<LivingEmblem> createState() => _LivingEmblemState();
@@ -94,12 +105,6 @@ class _LivingEmblemState extends State<LivingEmblem>
     super.dispose();
   }
 
-  bool get _orbital =>
-      widget.emblem == SectionEmblem.elements ||
-      widget.emblem == SectionEmblem.sabbats ||
-      widget.emblem == SectionEmblem.astrology ||
-      widget.emblem == SectionEmblem.symbols;
-
   double get _artH => widget.height * 0.72;
 
   Widget _svg(String s) =>
@@ -153,8 +158,14 @@ class _LivingEmblemState extends State<LivingEmblem>
 
   /// A arte da seção, com seu movimento próprio.
   Widget _buildArt(GrimoireColors gc) {
-    switch (widget.emblem) {
-      // Orbital: base + camada girando por cima.
+    final custom = widget.customArt;
+    if (custom != null) {
+      return SizedBox(height: _artH, child: Center(child: custom));
+    }
+    switch (widget.emblem!) {
+      // Orbital: base + camada girando por cima. A camada usa a MESMA
+      // altura da base — os dois compartilham o viewBox, então qualquer
+      // diferença de escala desalinha a composição desenhada.
       case SectionEmblem.elements:
       case SectionEmblem.sabbats:
       case SectionEmblem.astrology:
@@ -164,10 +175,10 @@ class _LivingEmblemState extends State<LivingEmblem>
           children: [
             RotationTransition(
               turns: _orbit,
-              child: SvgPicture.string(_orbitOverlaySvg(widget.emblem),
-                  height: widget.height * 0.9),
+              child: SvgPicture.string(_orbitOverlaySvg(widget.emblem!),
+                  height: _artH, fit: BoxFit.contain),
             ),
-            _svg(_emblemSvg(widget.emblem)),
+            _svg(_emblemSvg(widget.emblem!)),
           ],
         );
 
@@ -240,7 +251,7 @@ class _LivingEmblemState extends State<LivingEmblem>
       case SectionEmblem.sun:
       case SectionEmblem.goddesses:
       case SectionEmblem.runes:
-        return _svg(_emblemSvg(widget.emblem));
+        return _svg(_emblemSvg(widget.emblem!));
     }
   }
 
@@ -410,17 +421,18 @@ class _LivingEmblemState extends State<LivingEmblem>
   }
 
   List<Widget> _stars(GrimoireColors gc) {
+    // Alinhamento fracionário: sempre simétricas em volta do centro,
+    // independentemente do tamanho real do Stack.
     const pos = [
-      Offset(-46, -34),
-      Offset(48, -30),
-      Offset(-42, 38),
-      Offset(44, 40),
+      Alignment(-0.78, -0.55),
+      Alignment(0.8, -0.48),
+      Alignment(-0.7, 0.6),
+      Alignment(0.74, 0.64),
     ];
     return [
       for (var i = 0; i < pos.length; i++)
-        Positioned(
-          left: widget.height / 2 + pos[i].dx,
-          top: widget.height / 2 + pos[i].dy,
+        Align(
+          alignment: pos[i],
           child: _BlinkStar(
             reduced: _reduced,
             delay: Duration(milliseconds: i * 420),
@@ -483,7 +495,11 @@ class _BlinkStarState extends State<_BlinkStar>
 /// Cabeçalho de seção: o emblema vivo + a frase-intro, sob um divisor
 /// ornamentado. Recolhe-se suavemente quando a busca/filtro assume o palco.
 class SectionEmblemHeader extends StatelessWidget {
-  final SectionEmblem emblem;
+  final SectionEmblem? emblem;
+
+  /// Arte própria no lugar do SVG da seção (ver [LivingEmblem.custom]).
+  final Widget? customArt;
+
   final String? intro;
 
   /// Busca ativa? Então o emblema cede o lugar (recolhe).
@@ -491,10 +507,17 @@ class SectionEmblemHeader extends StatelessWidget {
 
   const SectionEmblemHeader({
     super.key,
-    required this.emblem,
+    required SectionEmblem this.emblem,
     this.intro,
     this.collapsed = false,
-  });
+  }) : customArt = null;
+
+  const SectionEmblemHeader.custom({
+    super.key,
+    required Widget this.customArt,
+    this.intro,
+    this.collapsed = false,
+  }) : emblem = null;
 
   @override
   Widget build(BuildContext context) {
@@ -508,13 +531,19 @@ class SectionEmblemHeader extends StatelessWidget {
           : Column(
               children: [
                 const SizedBox(height: 4),
-                LivingEmblem(emblem: emblem),
+                emblem != null
+                    ? LivingEmblem(emblem: emblem!)
+                    : LivingEmblem.custom(customArt: customArt!),
                 if (intro != null && intro!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 6, 24, 0),
                     child: Text(
                       intro!,
                       textAlign: TextAlign.center,
+                      // Intros longas (Anjos, Demônios) não empurram a
+                      // lista: no máximo duas linhas sob o emblema.
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: gc.textSecondary,
                           ),

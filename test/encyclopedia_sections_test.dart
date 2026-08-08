@@ -50,7 +50,12 @@ void main() {
       ),
     ));
 
-    // A capa abre sozinha; espera o livro assentar.
+    // A capa começa FECHADA — o Grimório é um livro em repouso.
+    await tester.pump();
+    expect(find.byKey(const ValueKey('grimoire-cover')), findsOneWidget);
+
+    // Um toque abre o livro.
+    await tester.tap(find.byKey(const ValueKey('grimoire-cover')));
     await tester.pumpAndSettle();
 
     // Todas as seções aparecem no sumário.

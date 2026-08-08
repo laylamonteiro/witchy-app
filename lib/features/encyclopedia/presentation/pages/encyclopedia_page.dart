@@ -59,7 +59,7 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
     _tabController = TabController(
       length: EncyclopediaSection.values.length,
       vsync: this,
-    );
+    )..addListener(_dismissKeyboard);
     widget.resetNotifier?.addListener(_onResetRequested);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
     // Notificação pode ter ABERTO o app: trata o link pendente ao montar.
@@ -74,6 +74,11 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
     super.dispose();
   }
 
+  /// Trocar de aba guarda o teclado — a busca da aba anterior já era.
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   /// Sumário do livro-índice → abre a aba da seção escolhida.
   void _openSection(EncyclopediaSection section) {
     if (!mounted) return;
@@ -83,12 +88,16 @@ class _EncyclopediaPageState extends State<EncyclopediaPage>
   void _onResetRequested() {
     if (!mounted) return;
     if (_tabController.index != 0) {
+      // Re-toque estando numa seção: volta ao índice FECHANDO o livro —
+      // a capa pousa (com a poeira no fim).
+      EncyclopediaIndexPage.scheduleCloseCover();
       _tabController.animateTo(0);
       return;
     }
-    // Já na primeira aba: recria a view para o conteúdo voltar ao topo
-    // (as sub-páginas não mantêm estado fora de cena, então trocar de aba
-    // já volta ao topo sozinho — este é o único caso que faltava).
+    // Já no índice: o re-toque alterna a capa (aberta fecha, fechada abre).
+    if (EncyclopediaIndexPage.toggleCover()) return;
+    // Índice sem State vivo (não deveria acontecer na aba 0): recria a
+    // view para o conteúdo voltar ao topo, como antes.
     setState(() => _viewEpoch++);
   }
 

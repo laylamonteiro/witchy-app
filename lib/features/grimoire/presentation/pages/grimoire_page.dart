@@ -55,7 +55,7 @@ class _GrimoirePageState extends State<GrimoirePage>
       length: 2,
       vsync: this,
       initialIndex: _defaultTabIndex,
-    );
+    )..addListener(_dismissKeyboard);
     widget.resetNotifier?.addListener(_onResetRequested);
   }
 
@@ -64,6 +64,11 @@ class _GrimoirePageState extends State<GrimoirePage>
     widget.resetNotifier?.removeListener(_onResetRequested);
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// Trocar de aba guarda o teclado — a busca da aba anterior já era.
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 
   void _onResetRequested() {

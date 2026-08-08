@@ -27,6 +27,31 @@ class EncyclopediaIndexPage extends StatefulWidget {
 
   const EncyclopediaIndexPage({super.key, required this.onSectionSelected});
 
+  /// Re-toque em "Grimório" na bottom bar estando numa SEÇÃO: volta ao
+  /// índice fechando o livro. Se o índice está vivo, fecha já; senão a
+  /// próxima montagem entra com a capa pousando (e a poeira no fim).
+  static void scheduleCloseCover() {
+    final live = _EncyclopediaIndexPageState._live;
+    if (live != null && live.mounted) {
+      live._closeCover();
+    } else {
+      _EncyclopediaIndexPageState._pendingCloseCover = true;
+    }
+  }
+
+  /// Re-toque já no índice: alterna a capa — aberta fecha (com poeira),
+  /// fechada abre. Devolve false se o índice não está montado.
+  static bool toggleCover() {
+    final live = _EncyclopediaIndexPageState._live;
+    if (live == null || !live.mounted) return false;
+    if (live._coverGone || live._open.value > 0) {
+      live._closeCover();
+    } else {
+      live._openCover();
+    }
+    return true;
+  }
+
   @override
   State<EncyclopediaIndexPage> createState() => _EncyclopediaIndexPageState();
 }
@@ -56,15 +81,35 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
   /// Seção escolhida, entregue quando a virada termina.
   EncyclopediaSection? _pendingSection;
 
+  /// Instância viva do índice (o TabBarView desmonta o State fora de cena);
+  /// via dela o re-toque na bottom bar fecha/abre a capa sem remontar.
+  static _EncyclopediaIndexPageState? _live;
+
+  /// O livro deve montar FECHANDO (re-toque na bottom bar vindo de uma
+  /// seção): a capa entra aberta e pousa no post-frame, com poeira.
+  static bool _pendingCloseCover = false;
+
+  /// Um respiro de poeira escapa quando a capa pousa (e só então).
+  int _dustTick = 0;
+
   @override
   void initState() {
     super.initState();
+    _live = this;
     _open = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     )..addStatusListener((status) {
-        if (status == AnimationStatus.completed && mounted) {
+        if (!mounted) return;
+        if (status == AnimationStatus.completed) {
+          _coverOpenedThisSession = true;
           setState(() => _coverGone = true);
+        } else if (status == AnimationStatus.dismissed) {
+          // A capa pousou: o livro repousa — e solta a poeira.
+          _coverOpenedThisSession = false;
+          if (!MediaQuery.disableAnimationsOf(context)) {
+            setState(() => _dustTick++);
+          }
         }
       });
     _flip = AnimationController(
@@ -74,28 +119,37 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
 
     _closingOnReturn = _leftViaSection;
     _leftViaSection = false;
-    if (_closingOnReturn || _coverOpenedThisSession) {
+    final closeNow = _pendingCloseCover;
+    _pendingCloseCover = false;
+
+    if (closeNow) {
+      // Re-toque na bottom bar estando numa seção: volta ao índice e a capa
+      // FECHA — entra aberta (folha assentada) e pousa no post-frame.
+      _closingOnReturn = false;
+      _open.value = 1.0;
+    } else if (_closingOnReturn || _coverOpenedThisSession) {
       // Livro já aberto nesta sessão: monta sem capa; se estamos voltando de
       // uma seção, a folha começa levantada e assenta no post-frame.
       _coverGone = true;
       if (_closingOnReturn) _flip.value = 1.0;
     }
+    // Senão: a capa monta FECHADA e espera o toque — o Grimório é um livro
+    // em repouso; ninguém o abre pela bruxa.
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final noAnimations = MediaQuery.disableAnimationsOf(context);
-      if (_closingOnReturn) {
+      if (closeNow) {
+        if (noAnimations) {
+          _open.value = 0.0;
+        } else {
+          _open.reverse();
+        }
+      } else if (_closingOnReturn) {
         if (noAnimations) {
           _flip.value = 0.0;
         } else {
           _flip.reverse();
-        }
-      } else if (!_coverGone) {
-        _coverOpenedThisSession = true;
-        if (noAnimations) {
-          _open.value = 1.0;
-        } else {
-          _open.forward();
         }
       }
     });
@@ -103,9 +157,40 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
 
   @override
   void dispose() {
+    if (identical(_live, this)) _live = null;
     _open.dispose();
     _flip.dispose();
     super.dispose();
+  }
+
+  /// Abre a capa (toque nela, ou re-toque na bottom bar com o livro fechado).
+  void _openCover() {
+    if (_coverGone) return;
+    if (_open.isAnimating) {
+      // Toque durante a animação pula direto para o livro aberto.
+      _open.value = 1.0;
+      return;
+    }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _open.value = 1.0;
+    } else {
+      _open.forward();
+    }
+  }
+
+  /// Fecha a capa (re-toque na bottom bar com o livro aberto no índice).
+  void _closeCover() {
+    if (!_coverGone && _open.value == 0) return; // já fechada
+    setState(() {
+      _coverGone = false;
+      _flip.value = 0.0;
+      if (_open.value == 0) _open.value = 1.0;
+    });
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _open.value = 0.0;
+    } else {
+      _open.reverse();
+    }
   }
 
   void _onFlipStatus(AnimationStatus status) {
@@ -336,12 +421,14 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
             ),
           ),
           // A capa: cobre a página e vira no eixo da lombada até sair de
-          // cena. Depois de aberta, sai da árvore (custo zero).
+          // cena. Depois de aberta, sai da árvore (custo zero). Um toque a
+          // abre; o re-toque em "Grimório" na bottom bar a fecha de volta.
           if (!_coverGone)
             Positioned.fill(
               child: GestureDetector(
+                key: const ValueKey('grimoire-cover'),
                 behavior: HitTestBehavior.opaque,
-                onTap: _skipOpening,
+                onTap: _openCover,
                 child: AnimatedBuilder(
                   animation: _open,
                   builder: (context, _) {
@@ -364,6 +451,12 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
                 ),
               ),
             ),
+          // A poeira do pousar da capa — só quando o livro fecha.
+          Positioned.fill(
+            child: IgnorePointer(
+              child: _DustBurst(tick: _dustTick),
+            ),
+          ),
         ],
       ),
     );
@@ -538,4 +631,99 @@ class _OrnamentDivider extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Rajada de poeira quando a capa POUSA: partículas cor de papel antigo
+/// escapam pelas bordas da frente e de baixo do livro, uma vez por [tick].
+/// Enquanto nada dispara, não pinta nada (custo zero).
+class _DustBurst extends StatefulWidget {
+  final int tick;
+
+  const _DustBurst({required this.tick});
+
+  @override
+  State<_DustBurst> createState() => _DustBurstState();
+}
+
+class _DustBurstState extends State<_DustBurst>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 750),
+  );
+
+  @override
+  void didUpdateWidget(covariant _DustBurst old) {
+    super.didUpdateWidget(old);
+    if (widget.tick != old.tick && widget.tick > 0) {
+      _c.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) => CustomPaint(
+        painter: _DustPainter(_c.isAnimating ? _c.value : 0),
+        size: Size.infinite,
+      ),
+    );
+  }
+}
+
+class _DustPainter extends CustomPainter {
+  final double t;
+
+  _DustPainter(this.t);
+
+  /// Partículas determinísticas (fração da borda, deriva, raio) — sem
+  /// aleatoriedade em tempo de pintura, o quadro é estável.
+  static const _rightEdge = [
+    (0.14, 22.0, -14.0, 3.4),
+    (0.30, 30.0, -8.0, 4.2),
+    (0.47, 18.0, -18.0, 2.8),
+    (0.64, 26.0, -10.0, 3.8),
+    (0.82, 20.0, -16.0, 3.0),
+  ];
+  static const _bottomEdge = [
+    (0.24, -6.0, 16.0, 3.6),
+    (0.46, 4.0, 20.0, 4.0),
+    (0.66, -2.0, 14.0, 3.0),
+    (0.86, 8.0, 18.0, 3.4),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (t <= 0 || t >= 1) return;
+    final ease = Curves.easeOut.transform(t);
+    final fade = (1 - t);
+    final paint = Paint()
+      ..color = const Color(0xFFD6C29C).withValues(alpha: 0.5 * fade)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+
+    for (final (fy, dx, dy, r) in _rightEdge) {
+      canvas.drawCircle(
+        Offset(size.width - 4 + dx * ease, size.height * fy + dy * ease),
+        r * (0.6 + 0.8 * ease),
+        paint,
+      );
+    }
+    for (final (fx, dx, dy, r) in _bottomEdge) {
+      canvas.drawCircle(
+        Offset(size.width * fx + dx * ease, size.height - 4 + dy * ease),
+        r * (0.6 + 0.8 * ease),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DustPainter old) => old.t != t;
 }

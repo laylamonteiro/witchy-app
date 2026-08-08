@@ -30,12 +30,20 @@ class WheelOfYearPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const LivingEmblem(emblem: SectionEmblem.sabbats),
-              const SizedBox(height: 12),
-              // Próximo Sabbat em destaque - mesma altura do card lunar (300)
+              // O emblema vivo é o SÍMBOLO do próximo sabbat (cada época da
+              // roda com o seu), no mesmo padrão dos demais emblemas.
+              SectionEmblemHeader.custom(
+                customArt: Text(
+                  nextSabbat?.emoji ?? '🎡',
+                  style: const TextStyle(fontSize: 64),
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Próximo Sabbat em destaque — o símbolo vive no emblema
+              // acima; o card fica com nome, data e contagem.
               if (nextSabbat != null)
                 SizedBox(
-                  height: 300,
+                  height: 240,
                   child: MagicalCard(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -44,11 +52,6 @@ class WheelOfYearPage extends StatelessWidget {
                           AppLocalizations.of(context).wheelNextSabbat,
                           style: Theme.of(context).textTheme.headlineSmall,
                           overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          nextSabbat.emoji,
-                          style: const TextStyle(fontSize: 56),
                         ),
                         const SizedBox(height: 8),
                         Text(

@@ -57,114 +57,66 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
       backgroundColor: context.gc.darkBackground,
       body: Column(
         children: [
-          // Search bar com filtro ao lado (igual Grimório Ancestral)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: MagicalSearchField(
-            controller: _searchController,
-            hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabGoddesses),
-            onChanged: _filterGoddesses,
-          ),
-                ),
-                const SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.filter_list,
-                    color: _selectedOrigin != null ? context.gc.lilac : context.gc.softWhite,
-                  ),
-                  tooltip: 'Filtrar por origem',
-                  onSelected: (value) {
-                    setState(() {
-                      if (value == 'all') {
-                        _selectedOrigin = null;
-                      } else {
-                        _selectedOrigin = GoddessOrigin.values.firstWhere((o) => o.name == value);
-                      }
-                      _filterGoddesses(_searchController.text);
-                    });
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'all',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.public,
-                            size: 20,
-                            color: _selectedOrigin == null ? context.gc.lilac : context.gc.softWhite,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Todas as Origens',
-                            style: TextStyle(
-                              color: _selectedOrigin == null ? context.gc.lilac : null,
-                              fontWeight: _selectedOrigin == null ? FontWeight.bold : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(),
-                    ...GoddessOrigin.values.map((origin) => PopupMenuItem(
-                          value: origin.name,
-                          child: Row(
-                            children: [
-                              Text(origin.emoji, style: const TextStyle(fontSize: 16)),
-                              const SizedBox(width: 8),
-                              Text(
-                                origin.displayName,
-                                style: TextStyle(
-                                  color: _selectedOrigin == origin ? context.gc.lilac : null,
-                                  fontWeight: _selectedOrigin == origin ? FontWeight.bold : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
           SectionEmblemHeader(
             emblem: SectionEmblem.goddesses,
             intro: AppLocalizations.of(context).encyGoddessesIntro,
-            collapsed: _selectedOrigin != null,
+            collapsed: _selectedOrigin != null ||
+                _searchController.text.isNotEmpty,
           ),
 
-          // Indicador de filtro ativo
-          if (_selectedOrigin != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Chip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_selectedOrigin!.emoji),
-                        const SizedBox(width: 4),
-                        Text(_selectedOrigin!.displayName),
-                      ],
-                    ),
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () {
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: MagicalSearchField(
+              controller: _searchController,
+              hint: AppLocalizations.of(context).encyArcaneSearchHint(AppLocalizations.of(context).encyTabGoddesses),
+              onChanged: _filterGoddesses,
+            ),
+          ),
+
+          // Filtro por origem em CHIPS visíveis (o antigo menu popup
+          // escurecia a tela e escondia as opções).
+          SizedBox(
+            height: 40,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: const Text('🌍 Todas'),
+                    selected: _selectedOrigin == null,
+                    selectedColor: context.gc.lilac.withValues(alpha: 0.25),
+                    checkmarkColor: context.gc.lilac,
+                    onSelected: (_) {
                       setState(() {
                         _selectedOrigin = null;
                         _filterGoddesses(_searchController.text);
                       });
                     },
-                    backgroundColor: context.gc.lilac.withOpacity(0.2),
-                    side: BorderSide(color: context.gc.lilac),
-                    labelStyle: TextStyle(color: context.gc.lilac, fontSize: 12),
                   ),
-                ],
-              ),
+                ),
+                for (final origin in GoddessOrigin.values)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text('${origin.emoji} ${origin.displayName}'),
+                      selected: _selectedOrigin == origin,
+                      selectedColor: context.gc.lilac.withValues(alpha: 0.25),
+                      checkmarkColor: context.gc.lilac,
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedOrigin =
+                              _selectedOrigin == origin ? null : origin;
+                          _filterGoddesses(_searchController.text);
+                        });
+                      },
+                    ),
+                  ),
+              ],
             ),
+          ),
+          const SizedBox(height: 8),
 
           // Goddesses list
           Expanded(
