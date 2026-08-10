@@ -9,13 +9,10 @@ import '../../../../core/legal/legal_document_page.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../../core/services/data_sync_service.dart';
-import '../../../../core/providers/sync_provider.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/repositories/supabase_auth_repository.dart';
-import '../../../subscription/presentation/pages/subscription_page.dart';
 
 /// Página de configurações de privacidade
 class PrivacySettingsPage extends StatefulWidget {
@@ -30,7 +27,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   bool _analyticsEnabled = true;
   bool _crashReportingEnabled = true;
   bool _personalizedContent = true;
-  bool _cloudSyncEnabled = true;
   bool _isLoading = true;
 
   @override
@@ -40,21 +36,12 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    final authProvider = context.read<AuthProvider>();
-    final syncProvider = context.read<SyncProvider>();
     final prefs = await SharedPreferences.getInstance();
-    final isPremium = authProvider.isPremiumEffective;
-    final cloudSyncEnabled = await DataSyncService.ensureCloudSyncPreference(
-      prefs,
-      isPremium: isPremium,
-    );
-    await syncProvider.refreshState();
     if (!mounted) return;
     setState(() {
       _analyticsEnabled = prefs.getBool('privacy_analytics') ?? true;
       _crashReportingEnabled = prefs.getBool('privacy_crash_reporting') ?? true;
       _personalizedContent = prefs.getBool('privacy_personalized') ?? true;
-      _cloudSyncEnabled = cloudSyncEnabled;
       _isLoading = false;
     });
   }
@@ -62,12 +49,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   Future<void> _saveSetting(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
-    if (key == DataSyncService.cloudSyncPreferenceKey) {
-      await prefs.setBool(
-        DataSyncService.cloudSyncUserConfiguredKey,
-        true,
-      );
-    }
   }
 
   @override
@@ -134,45 +115,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
                       },
                     ),
                   ]),
-
-                  const SizedBox(height: 24),
-
-                  // Seção: Sincronização e Backup
-                  _buildSectionHeader(l10n.editSyncBackup),
-                  Consumer<AuthProvider>(
-                    builder: (context, authProvider, _) {
-                      final isPremium = authProvider.isPremiumEffective;
-                      return _buildSettingsCard([
-                        _buildSwitchTile(
-                          icon: Icons.sync,
-                          title: l10n.editSyncBackupCloud,
-                          subtitle: isPremium
-                              ? l10n.editSyncBackupOn
-                              : l10n.editSyncPremiumOnly,
-                          value: isPremium && _cloudSyncEnabled,
-                          onChanged: (value) {
-                            // Free não altera o toggle: qualquer toque abre
-                            // o convite Premium.
-                            if (!isPremium) {
-                              _showUpgradeDialog();
-                              return;
-                            }
-                            setState(() => _cloudSyncEnabled = value);
-                            _saveSetting(
-                              DataSyncService.cloudSyncPreferenceKey,
-                              value,
-                            );
-                          },
-                        ),
-                      ]);
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Seção: Status de Sincronização
-                  _buildSectionHeader(l10n.privacySyncStatusSection),
-                  _buildSyncStatusCard(),
 
                   const SizedBox(height: 24),
 
@@ -328,249 +270,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       indent: 56,
       color: context.gc.textPrimary.withValues(alpha: 0.1),
     );
-  }
-
-  Widget _buildSyncStatusCard() {
-    return Consumer<SyncProvider>(
-      builder: (context, syncProvider, _) {
-        final l10n = AppLocalizations.of(context);
-        final isPremium = syncProvider.isPremium;
-        final isReady = syncProvider.isReady && _cloudSyncEnabled;
-        final status = syncProvider.status;
-        final isSyncing = syncProvider.isSyncing;
-
-        // Se não é premium, mostrar upsell
-        if (!isPremium) {
-          return Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  context.gc.lilac.withValues(alpha: 0.2),
-                  context.gc.gold.withValues(alpha: 0.1),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.gc.gold.withValues(alpha: 0.5)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: context.gc.gold.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.workspace_premium,
-                          color: context.gc.gold, size: 28),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.privacyCloudSyncUpsellTitle,
-                            style: TextStyle(
-                              color: context.gc.textPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            l10n.editSyncPremiumOnly,
-                            style: TextStyle(
-                              color: context.gc.gold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.privacyCloudSyncUpsellBody,
-                  style: TextStyle(color: context.gc.textSecondary, fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => openSubscriptionPage(context),
-                    icon: const Icon(Icons.star, size: 18),
-                    label: Text(l10n.premiumBePremium),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.gc.lilac,
-                      foregroundColor: context.gc.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: context.gc.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gc.textPrimary10),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _getSyncStatusColor(status).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      _getSyncStatusIcon(status),
-                      color: _getSyncStatusColor(status),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                !_cloudSyncEnabled
-                                    ? l10n.privacySyncOff
-                                    : isReady
-                                        ? syncProvider.statusText
-                                        : l10n.privacySyncNotConnected,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: context.gc.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: context.gc.gold.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                l10n.privacyPremiumBadge,
-                                style: TextStyle(
-                                  color: context.gc.gold,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          !_cloudSyncEnabled
-                              ? l10n.privacySyncEnablePrompt
-                              : isReady
-                                  ? syncProvider.lastSyncText
-                                  : l10n.privacySyncLoginPrompt,
-                          style: TextStyle(
-                            color: context.gc.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isReady && !isSyncing)
-                    IconButton(
-                      onPressed: () async {
-                        // Botão de atualizar executa uma sincronização completa
-                        final result = await syncProvider.sync();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                result.success
-                                    ? l10n.privacySyncSuccess
-                                    : result.error ?? l10n.syncError,
-                              ),
-                              backgroundColor: result.success
-                                  ? context.gc.success
-                                  : context.gc.alert,
-                            ),
-                          );
-                        }
-                      },
-                      icon: Icon(Icons.refresh, color: context.gc.lilac),
-                      tooltip: l10n.privacySyncNow,
-                    ),
-                  if (isSyncing)
-                    SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(context.gc.lilac),
-                      ),
-                    ),
-                ],
-              ),
-              // Botões "Enviar Tudo"/"Baixar Tudo" removidos — o botão de
-              // atualizar (refresh) acima já executa uma sincronização
-              // completa (upload + download).
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Color _getSyncStatusColor(SyncStatus status) {
-    switch (status) {
-      case SyncStatus.idle:
-        return context.gc.lilac;
-      case SyncStatus.syncing:
-        return context.gc.lilac;
-      case SyncStatus.success:
-        return context.gc.success;
-      case SyncStatus.error:
-        return context.gc.alert;
-      case SyncStatus.conflict:
-        return Colors.orange;
-    }
-  }
-
-  IconData _getSyncStatusIcon(SyncStatus status) {
-    switch (status) {
-      case SyncStatus.idle:
-        return Icons.cloud_queue_outlined;
-      case SyncStatus.syncing:
-        return Icons.sync;
-      case SyncStatus.success:
-        return Icons.cloud_done_outlined;
-      case SyncStatus.error:
-        return Icons.cloud_off_outlined;
-      case SyncStatus.conflict:
-        return Icons.warning_amber_outlined;
-    }
   }
 
   Widget _buildInfoCard() {
@@ -947,52 +646,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         );
       }
     }
-  }
-
-  void _showUpgradeDialog() {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.gc.surface,
-        title: Row(
-          children: [
-            const Icon(Icons.workspace_premium, color: Color(0xFFFFD700)),
-            const SizedBox(width: 8),
-            Text(
-              l10n.editPremiumFeature,
-              style: TextStyle(color: context.gc.textPrimary),
-            ),
-          ],
-        ),
-        content: Text(
-          l10n.editSyncPremiumPitch,
-          style: TextStyle(color: context.gc.textSecondary, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.editNotNow,
-              style: TextStyle(color: context.gc.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openSubscriptionPage(this.context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9C27B0),
-            ),
-            child: Text(
-              l10n.profileUpgrade,
-              style: TextStyle(color: context.gc.textPrimary),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showPrivacyPolicy() {
