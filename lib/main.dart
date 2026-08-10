@@ -73,7 +73,9 @@ void main() async {
   if (SupabaseConfig.isConfigured) {
     await Supabase.initialize(
       url: SupabaseConfig.url,
-      anonKey: SupabaseConfig.anonKey,
+      // anonKey foi deprecado (sai na próxima major do supabase_flutter);
+      // o parâmetro novo aceita a mesma chave.
+      publishableKey: SupabaseConfig.anonKey,
     );
     // Initialize DataSyncService after Supabase
     DataSyncService().initialize();

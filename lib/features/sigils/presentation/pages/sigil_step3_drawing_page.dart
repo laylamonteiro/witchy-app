@@ -97,17 +97,19 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       return;
     }
 
+    // l10n capturado antes dos awaits (use_build_context_synchronously).
+    final l10n = AppLocalizations.of(context);
     setState(() => _isExporting = true);
     try {
       final boundary = _drawingKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) {
-        throw Exception(AppLocalizations.of(context).sigilDrawingNotReady);
+        throw Exception(l10n.sigilDrawingNotReady);
       }
       final image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
-        throw Exception(AppLocalizations.of(context).sigilImageError);
+        throw Exception(l10n.sigilImageError);
       }
 
       final name =
@@ -167,6 +169,9 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
     }
 
     final l10n = AppLocalizations.of(context);
+    // Capturado antes dos awaits: o desejo deve ser salvo MESMO que a
+    // página morra no meio (use_build_context_synchronously).
+    final desireProvider = context.read<DesireProvider>();
     setState(() => _isSavingToDesires = true);
     try {
       final boundary = _drawingKey.currentContext?.findRenderObject()
@@ -194,7 +199,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
       );
       // Persiste na hora (insere no banco e sincroniza) — não depende de
       // tocar em "Finalizar".
-      await context.read<DesireProvider>().addDesire(desire);
+      await desireProvider.addDesire(desire);
       if (!mounted) return;
       setState(() {
         _isSavingToDesires = false;

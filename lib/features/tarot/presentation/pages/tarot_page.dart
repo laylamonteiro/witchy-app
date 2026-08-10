@@ -204,6 +204,7 @@ class _SpreadTabState extends State<_SpreadTab> {
         return;
       }
       await authProvider.incrementOracleReadings();
+      if (!mounted) return;
     }
 
     final positions = spread.positions(AppLocalizations.of(context));

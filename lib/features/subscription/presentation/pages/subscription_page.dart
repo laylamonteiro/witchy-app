@@ -624,11 +624,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     // Resgatar código
                     final result = await authProvider.redeemBetaCode(code);
 
-                    // Fechar loading
-                    if (context.mounted) Navigator.of(context).pop();
+                    // Fechar loading (mounted do State: este context É o
+                    // do State — use_build_context_synchronously)
+                    if (mounted) Navigator.of(context).pop();
 
                     // Mostrar resultado
-                    if (context.mounted) {
+                    if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(result['message']),

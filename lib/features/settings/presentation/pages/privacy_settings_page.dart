@@ -365,11 +365,15 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
   Future<void> _performExport() async {
     final l10n = AppLocalizations.of(context);
+    // Capturados ANTES dos awaits: usar o context depois deles é apostar
+    // que o widget continua vivo (use_build_context_synchronously).
+    final messenger = ScaffoldMessenger.of(context);
+    final gc = context.gc;
     try {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.editExporting),
-          backgroundColor: context.gc.lilac,
+          backgroundColor: gc.lilac,
         ),
       );
 
@@ -418,28 +422,29 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
-      if (mounted) {
-        await Share.shareXFiles(
-          [XFile(file.path)],
+      if (!mounted) return;
+      // API nova do share_plus (Share.shareXFiles é deprecado e sai na
+      // próxima major).
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
           subject: l10n.privacyBackupSubject,
-        );
+        ),
+      );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.editExportSuccess),
-            backgroundColor: context.gc.success,
-          ),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.editExportSuccess),
+          backgroundColor: gc.success,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.editExportError}: $e'),
-            backgroundColor: context.gc.alert,
-          ),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${l10n.editExportError}: $e'),
+          backgroundColor: gc.alert,
+        ),
+      );
     }
   }
 
@@ -573,6 +578,13 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     );
 
     if (confirmed == true && mounted) {
+      // Capturados antes dos awaits — e o loading precisa fechar mesmo que
+      // a página morra no meio (use_build_context_synchronously).
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      final gc = context.gc;
+      final authProvider = context.read<AuthProvider>();
+
       // Mostrar loading
       showDialog(
         context: context,
@@ -612,36 +624,30 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         await prefs.clear();
 
         // 4. Fazer logout do provider
-        final authProvider = context.read<AuthProvider>();
         await authProvider.clearAllData();
 
-        if (!mounted) return;
-
         // Fechar loading
-        Navigator.of(context).pop();
+        navigator.pop();
 
         // Mostrar mensagem de sucesso
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(l10n.editDeleteSuccess),
-            backgroundColor: context.gc.success,
+            backgroundColor: gc.success,
           ),
         );
 
         // Redirecionar para tela inicial
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/welcome', (route) => false);
+        navigator.pushNamedAndRemoveUntil('/welcome', (route) => false);
       } catch (e) {
-        if (!mounted) return;
-
         // Fechar loading
-        Navigator.of(context).pop();
+        navigator.pop();
 
         // Mostrar erro
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('${l10n.editDeleteErrorPrefix}: $e'),
-            backgroundColor: context.gc.alert,
+            backgroundColor: gc.alert,
           ),
         );
       }
