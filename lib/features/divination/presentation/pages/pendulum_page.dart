@@ -174,7 +174,7 @@ class _PendulumPageState extends State<PendulumPage>
                   Text(
                     AppLocalizations.of(context).pendulumIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.gc.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withValues(alpha: 0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -194,13 +194,13 @@ class _PendulumPageState extends State<PendulumPage>
                         ),
                         decoration: BoxDecoration(
                           color: hasRemaining
-                              ? context.gc.success.withOpacity(0.2)
-                              : context.gc.alert.withOpacity(0.2),
+                              ? context.gc.success.withValues(alpha: 0.2)
+                              : context.gc.alert.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: hasRemaining
-                                ? context.gc.success.withOpacity(0.5)
-                                : context.gc.alert.withOpacity(0.5),
+                                ? context.gc.success.withValues(alpha: 0.5)
+                                : context.gc.alert.withValues(alpha: 0.5),
                           ),
                         ),
                         child: Row(
@@ -282,14 +282,14 @@ class _PendulumPageState extends State<PendulumPage>
                 style: TextStyle(
                   color: (_answer == null && !_isSwinging)
                       ? context.gc.softWhite
-                      : context.gc.softWhite.withOpacity(0.5),
+                      : context.gc.softWhite.withValues(alpha: 0.5),
                 ),
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context).pendulumYourQuestion,
                   labelStyle: TextStyle(color: context.gc.lilac),
                   hintText: AppLocalizations.of(context).pendulumQuestionHint,
                   hintStyle: TextStyle(
-                    color: context.gc.softWhite.withOpacity(0.5),
+                    color: context.gc.softWhite.withValues(alpha: 0.5),
                   ),
                   prefixIcon: Icon(Icons.help, color: context.gc.lilac),
                   border: OutlineInputBorder(
@@ -299,13 +299,13 @@ class _PendulumPageState extends State<PendulumPage>
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: context.gc.lilac.withOpacity(0.3),
+                      color: context.gc.lilac.withValues(alpha: 0.3),
                     ),
                   ),
                   disabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: context.gc.lilac.withOpacity(0.1),
+                      color: context.gc.lilac.withValues(alpha: 0.1),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -347,7 +347,7 @@ class _PendulumPageState extends State<PendulumPage>
                     horizontal: 32,
                     vertical: 16,
                   ),
-                  disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
+                  disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
                 ),
               ),
 
@@ -512,7 +512,7 @@ class PendulumPainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: TextStyle(
-          color: isSelected ? color : color.withOpacity(0.4),
+          color: isSelected ? color : color.withValues(alpha: 0.4),
           fontSize: isSelected ? 16 : 12,
           fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
         ),

@@ -109,7 +109,7 @@ class _MagicalButtonState extends State<MagicalButton>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: particle.color.withOpacity(0.6),
+                              color: particle.color.withValues(alpha: 0.6),
                               blurRadius: 4,
                               spreadRadius: 1,
                             ),

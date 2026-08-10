@@ -109,7 +109,7 @@ class _MagicalFABState extends State<MagicalFAB>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: particle.color.withOpacity(0.7),
+                              color: particle.color.withValues(alpha: 0.7),
                               blurRadius: 6,
                               spreadRadius: 1,
                             ),

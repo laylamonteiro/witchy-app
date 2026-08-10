@@ -127,7 +127,7 @@ class _SigilStep1IntentionPageState extends State<SigilStep1IntentionPage> {
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(context).sigilTypeWord,
                       hintStyle: TextStyle(
-                        color: context.gc.textSecondary.withOpacity(0.5),
+                        color: context.gc.textSecondary.withValues(alpha: 0.5),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),

@@ -165,7 +165,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                   Text(
                     AppLocalizations.of(context).aiSpellIntentionHelp,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.gc.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withValues(alpha: 0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -182,7 +182,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                 decoration: InputDecoration(
                   hintText: AppLocalizations.of(context).aiSpellIntentionHint,
                   hintStyle: TextStyle(
-                    color: context.gc.softWhite.withOpacity(0.5),
+                    color: context.gc.softWhite.withValues(alpha: 0.5),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -191,7 +191,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: context.gc.lilac.withOpacity(0.3),
+                      color: context.gc.lilac.withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -232,7 +232,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                   horizontal: 32,
                   vertical: 16,
                 ),
-                disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
+                disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
               ),
             ),
 
@@ -248,7 +248,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                     AppLocalizations.of(context).advisorRemainingToday('$remaining/${UserModel.freeAiConsultationsLimit}'),
                     style: TextStyle(
                       color: remaining > 0
-                          ? context.gc.softWhite.withOpacity(0.6)
+                          ? context.gc.softWhite.withValues(alpha: 0.6)
                           : context.gc.alert,
                       fontSize: 12,
                     ),
@@ -289,7 +289,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: context.gc.lilac.withOpacity(0.2),
+                            color: context.gc.lilac.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
@@ -308,8 +308,8 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                           ),
                           decoration: BoxDecoration(
                             color: _generatedSpell!.type == SpellType.attraction
-                                ? context.gc.success.withOpacity(0.2)
-                                : context.gc.alert.withOpacity(0.2),
+                                ? context.gc.success.withValues(alpha: 0.2)
+                                : context.gc.alert.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
@@ -329,7 +329,7 @@ class _AISpellCreationPageState extends State<AISpellCreationPage> {
                     Text(
                       _generatedSpell!.purpose,
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.9),
+                        color: context.gc.softWhite.withValues(alpha: 0.9),
                         fontSize: 14,
                       ),
                     ),

@@ -195,7 +195,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                       border: InputBorder.none,
                       hintText: AppLocalizations.of(context).diaryFreeWritingHint,
                       hintStyle: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.4),
+                        color: context.gc.softWhite.withValues(alpha: 0.4),
                         fontSize: 17,
                         height: 1.5,
                       ),

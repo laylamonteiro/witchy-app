@@ -60,9 +60,9 @@ class ArcaneDetailPage extends StatelessWidget {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        color: context.gc.lilac.withOpacity(0.10),
+                        color: context.gc.lilac.withValues(alpha: 0.10),
                         border: Border.all(
-                          color: context.gc.lilac.withOpacity(0.35),
+                          color: context.gc.lilac.withValues(alpha: 0.35),
                         ),
                       ),
                       child: Text(entry.emoji,
@@ -264,9 +264,9 @@ class ArcaneDetailPage extends StatelessWidget {
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                color: context.gc.lilac.withOpacity(0.12),
+                color: context.gc.lilac.withValues(alpha: 0.12),
                 border: Border.all(
-                  color: context.gc.lilac.withOpacity(0.35),
+                  color: context.gc.lilac.withValues(alpha: 0.35),
                 ),
               ),
               child: Text(
@@ -343,9 +343,9 @@ class ArcaneDetailPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: context.gc.lilac.withOpacity(0.12),
+              color: context.gc.lilac.withValues(alpha: 0.12),
               border: Border.all(
-                color: context.gc.lilac.withOpacity(0.35),
+                color: context.gc.lilac.withValues(alpha: 0.35),
               ),
             ),
             child: Row(

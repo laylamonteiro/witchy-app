@@ -148,7 +148,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: context.gc.lilac.withOpacity(0.2),
+                            color: context.gc.lilac.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(
@@ -164,7 +164,7 @@ class _GoddessesListPageState extends State<GoddessesListPage> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: context.gc.lilac.withOpacity(0.2),
+                        color: context.gc.lilac.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(

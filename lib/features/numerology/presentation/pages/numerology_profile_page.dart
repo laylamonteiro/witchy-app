@@ -351,7 +351,7 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: context.gc.lilac.withOpacity(0.15),
+              color: context.gc.lilac.withValues(alpha: 0.15),
               border: Border.all(color: context.gc.lilac),
             ),
             child: Text(

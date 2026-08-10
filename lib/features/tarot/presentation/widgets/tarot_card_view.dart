@@ -4,7 +4,7 @@ import '../../data/models/tarot_card_model.dart';
 
 /// Renderiza uma carta: usa a imagem do baralho quando o asset existir e
 /// cai num placeholder estilizado no tema enquanto as imagens não forem
-/// adicionadas em assets/tarot/<deck>/.
+/// adicionadas em `assets/tarot/<deck>/`.
 class TarotCardView extends StatelessWidget {
   final TarotCard card;
   final TarotDeck deck;

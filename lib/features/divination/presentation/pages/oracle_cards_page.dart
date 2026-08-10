@@ -167,7 +167,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                     Text(
                       AppLocalizations.of(context).oracleSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: context.gc.softWhite.withOpacity(0.8),
+                            color: context.gc.softWhite.withValues(alpha: 0.8),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -207,7 +207,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                     horizontal: 32,
                     vertical: 16,
                   ),
-                  disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
+                  disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
                 ),
               ),
 
@@ -223,7 +223,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                       AppLocalizations.of(context).oracleRemainingToday('$remaining/${UserModel.freeOracleReadingsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
-                            ? context.gc.softWhite.withOpacity(0.6)
+                            ? context.gc.softWhite.withValues(alpha: 0.6)
                             : context.gc.alert,
                         fontSize: 12,
                       ),
@@ -272,7 +272,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? context.gc.lilac.withOpacity(0.2)
+              ? context.gc.lilac.withValues(alpha: 0.2)
               : context.gc.cardBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -304,7 +304,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                   Text(
                     spread.description,
                     style: TextStyle(
-                      color: context.gc.softWhite.withOpacity(0.7),
+                      color: context.gc.softWhite.withValues(alpha: 0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -374,7 +374,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                             gradient: LinearGradient(
                               colors: [
                                 context.gc.lilac,
-                                context.gc.lilac.withOpacity(0.5),
+                                context.gc.lilac.withValues(alpha: 0.5),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -396,7 +396,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                               Text(
                                 position.positionMeaning,
                                 style: TextStyle(
-                                  color: context.gc.softWhite.withOpacity(0.7),
+                                  color: context.gc.softWhite.withValues(alpha: 0.7),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -414,7 +414,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                               Text(
                                 position.card.message,
                                 style: TextStyle(
-                                  color: context.gc.softWhite.withOpacity(0.8),
+                                  color: context.gc.softWhite.withValues(alpha: 0.8),
                                   fontSize: 14,
                                   fontStyle: FontStyle.italic,
                                 ),
@@ -445,10 +445,10 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: context.gc.lilac.withOpacity(0.2),
+                            color: context.gc.lilac.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: context.gc.lilac.withOpacity(0.5),
+                              color: context.gc.lilac.withValues(alpha: 0.5),
                             ),
                           ),
                           child: Text(

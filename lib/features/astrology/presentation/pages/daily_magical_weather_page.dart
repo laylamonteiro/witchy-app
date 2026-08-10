@@ -173,7 +173,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                 es: 'El Consejero Místico está analizando los tránsitos de hoy',
               ),
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -270,7 +270,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               ContentLocale.instance.locale.toString(),
             ).format(DateTime.now()),
             style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.7),
+              color: context.gc.softWhite.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),
@@ -298,7 +298,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           Text(
             '${_sel(pt: 'Lua em', en: 'Moon in', es: 'Luna en')} ${weather.moonSign.displayName} ${weather.moonSign.symbol}',
             style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.9),
+              color: context.gc.softWhite.withValues(alpha: 0.9),
               fontSize: 16,
             ),
           ),
@@ -306,10 +306,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: weather.moonSign.element.color.withOpacity(0.2),
+              color: weather.moonSign.element.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: weather.moonSign.element.color.withOpacity(0.5),
+                color: weather.moonSign.element.color.withValues(alpha: 0.5),
               ),
             ),
             child: Text(
@@ -435,10 +435,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: context.gc.lilac.withOpacity(0.2),
+                  color: context.gc.lilac.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: context.gc.lilac.withOpacity(0.5),
+                    color: context.gc.lilac.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Text(
@@ -494,7 +494,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                   es: 'Creada por el Consejero Místico basada en los tránsitos astrológicos',
                 ),
                 style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.6),
+                  color: context.gc.softWhite.withValues(alpha: 0.6),
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),
@@ -611,7 +611,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         fontWeight: FontWeight.bold,
       ),
       em: TextStyle(
-        color: context.gc.softWhite.withOpacity(0.9),
+        color: context.gc.softWhite.withValues(alpha: 0.9),
         fontStyle: FontStyle.italic,
       ),
     );
@@ -740,7 +740,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                   Text(
                     aspect.interpretation,
                     style: TextStyle(
-                      color: context.gc.softWhite.withOpacity(0.8),
+                      color: context.gc.softWhite.withValues(alpha: 0.8),
                       fontSize: 12,
                       height: 1.4,
                     ),
@@ -781,7 +781,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                 es: 'El Clima Mágico se calcula a diario a partir de los tránsitos planetarios reales y lo interpreta el Consejero Místico para las prácticas mágicas.',
               ),
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.9),
+                color: context.gc.softWhite.withValues(alpha: 0.9),
                 height: 1.5,
               ),
             ),
@@ -793,7 +793,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                 es: 'La previsión se genera una vez al día a las 00h y permanece igual hasta la medianoche siguiente.',
               ),
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
               ),

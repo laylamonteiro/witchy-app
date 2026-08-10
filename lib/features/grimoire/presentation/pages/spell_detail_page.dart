@@ -370,7 +370,7 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
   Widget _buildChip(String label, Color color) {
     return Chip(
       label: Text(label),
-      backgroundColor: color.withOpacity(0.2),
+      backgroundColor: color.withValues(alpha: 0.2),
       side: BorderSide(color: color),
     );
   }

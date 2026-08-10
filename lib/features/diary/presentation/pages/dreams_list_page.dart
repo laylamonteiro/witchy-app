@@ -97,7 +97,7 @@ class _DreamsListPageState extends State<DreamsListPage> {
                             .map((tag) => Chip(
                                   label: Text(tag, style: const TextStyle(fontSize: 12)),
                                   backgroundColor:
-                                      context.gc.lilac.withOpacity(0.2),
+                                      context.gc.lilac.withValues(alpha: 0.2),
                                   side: BorderSide(color: context.gc.lilac),
                                 ))
                             .toList(),

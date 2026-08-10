@@ -58,7 +58,7 @@ class HerbDetailPage extends StatelessWidget {
                             width: 200,
                             height: 200,
                             decoration: BoxDecoration(
-                              color: context.gc.mint.withOpacity(0.2),
+                              color: context.gc.mint.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Center(
@@ -76,7 +76,7 @@ class HerbDetailPage extends StatelessWidget {
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                        color: context.gc.mint.withOpacity(0.2),
+                        color: context.gc.mint.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Center(
@@ -144,7 +144,7 @@ class HerbDetailPage extends StatelessWidget {
               MagicalCard(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: context.gc.alert.withOpacity(0.1),
+                    color: context.gc.alert.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: context.gc.alert, width: 2),
                   ),
@@ -179,7 +179,7 @@ class HerbDetailPage extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: context.gc.alert.withOpacity(0.2),
+                              color: context.gc.alert.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -249,7 +249,7 @@ class HerbDetailPage extends StatelessWidget {
                     children: herb.magicalProperties
                         .map((property) => Chip(
                               label: Text(property),
-                              backgroundColor: context.gc.mint.withOpacity(0.2),
+                              backgroundColor: context.gc.mint.withValues(alpha: 0.2),
                               side: BorderSide(color: context.gc.mint),
                             ))
                         .toList(),

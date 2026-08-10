@@ -313,7 +313,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     Text(
                       AppLocalizations.of(context).chartDateFormat,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: context.gc.softWhite.withOpacity(0.7),
+                            color: context.gc.softWhite.withValues(alpha: 0.7),
                           ),
                     ),
                     const SizedBox(height: 12),
@@ -329,7 +329,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context).chartDateHint,
                         hintStyle: TextStyle(
-                          color: context.gc.softWhite.withOpacity(0.4),
+                          color: context.gc.softWhite.withValues(alpha: 0.4),
                         ),
                         prefixIcon: Icon(
                           Icons.calendar_today,
@@ -378,7 +378,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     Text(
                       AppLocalizations.of(context).chartTimeImportant,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: context.gc.softWhite.withOpacity(0.7),
+                            color: context.gc.softWhite.withValues(alpha: 0.7),
                           ),
                     ),
                     const SizedBox(height: 12),
@@ -387,7 +387,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       enabled: !_unknownBirthTime,
                       style: TextStyle(
                         color: _unknownBirthTime
-                            ? context.gc.softWhite.withOpacity(0.3)
+                            ? context.gc.softWhite.withValues(alpha: 0.3)
                             : context.gc.softWhite,
                       ),
                       keyboardType: TextInputType.number,
@@ -399,12 +399,12 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       decoration: InputDecoration(
                         hintText: 'HH:MM',
                         hintStyle: TextStyle(
-                          color: context.gc.softWhite.withOpacity(0.4),
+                          color: context.gc.softWhite.withValues(alpha: 0.4),
                         ),
                         prefixIcon: Icon(
                           Icons.access_time,
                           color: _unknownBirthTime
-                              ? context.gc.lilac.withOpacity(0.3)
+                              ? context.gc.lilac.withValues(alpha: 0.3)
                               : context.gc.lilac,
                         ),
                         suffixIcon: _birthTime != null && !_unknownBirthTime
@@ -474,7 +474,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                     Text(
                       AppLocalizations.of(context).chartTypeToSearch,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: context.gc.softWhite.withOpacity(0.7),
+                            color: context.gc.softWhite.withValues(alpha: 0.7),
                           ),
                     ),
                     const SizedBox(height: 12),
@@ -485,7 +485,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context).chartPlaceHint,
                         hintStyle: TextStyle(
-                          color: context.gc.softWhite.withOpacity(0.5),
+                          color: context.gc.softWhite.withValues(alpha: 0.5),
                         ),
                         prefixIcon: Icon(
                           Icons.location_on,
@@ -535,7 +535,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           color: context.gc.cardBackground,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: context.gc.lilac.withOpacity(0.3),
+                            color: context.gc.lilac.withValues(alpha: 0.3),
                           ),
                         ),
                         child: ListView.separated(
@@ -543,7 +543,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _suggestions.length,
                           separatorBuilder: (context, index) => Divider(
-                            color: context.gc.lilac.withOpacity(0.2),
+                            color: context.gc.lilac.withValues(alpha: 0.2),
                             height: 1,
                           ),
                           itemBuilder: (context, index) {
@@ -567,7 +567,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                               subtitle: Text(
                                 coordsText,
                                 style: TextStyle(
-                                  color: context.gc.softWhite.withOpacity(0.6),
+                                  color: context.gc.softWhite.withValues(alpha: 0.6),
                                   fontSize: 11,
                                 ),
                               ),
@@ -586,10 +586,10 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: context.gc.alert.withOpacity(0.1),
+                          color: context.gc.alert.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: context.gc.alert.withOpacity(0.4),
+                            color: context.gc.alert.withValues(alpha: 0.4),
                           ),
                         ),
                         child: Row(
@@ -623,13 +623,13 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           color: context.gc.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: context.gc.lilac.withOpacity(0.3),
+                            color: context.gc.lilac.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(
                           AppLocalizations.of(context).birthChartNoCityFound,
                           style: TextStyle(
-                            color: context.gc.softWhite.withOpacity(0.8),
+                            color: context.gc.softWhite.withValues(alpha: 0.8),
                             fontSize: 13,
                           ),
                         ),
@@ -641,10 +641,10 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: context.gc.success.withOpacity(0.1),
+                          color: context.gc.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: context.gc.success.withOpacity(0.3),
+                            color: context.gc.success.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -684,7 +684,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                   backgroundColor: context.gc.lilac,
                   foregroundColor: context.gc.darkBackground,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
+                  disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
                 ),
                 child: _isCalculating
                     ? SizedBox(
@@ -721,7 +721,7 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
                           AppLocalizations.of(context).chartNoonNote,
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: context.gc.softWhite.withOpacity(0.8),
+                                    color: context.gc.softWhite.withValues(alpha: 0.8),
                                   ),
                         ),
                       ),

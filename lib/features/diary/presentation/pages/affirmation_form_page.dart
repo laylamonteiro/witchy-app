@@ -72,7 +72,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: context.gc.info.withOpacity(0.1),
+                  color: context.gc.info.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: context.gc.info),
                 ),
@@ -96,12 +96,12 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      context.gc.lilac.withOpacity(0.1),
-                      context.gc.lilac.withOpacity(0.05),
+                      context.gc.lilac.withValues(alpha: 0.1),
+                      context.gc.lilac.withValues(alpha: 0.05),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
+                  border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,7 +125,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                       AppLocalizations.of(context).diaryAdvisorAffirmationPitch,
                       style: TextStyle(
                         fontSize: 12,
-                        color: context.gc.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -173,7 +173,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                 AppLocalizations.of(context).diaryWriteOwnAffirmation,
                 style: TextStyle(
                   fontSize: 12,
-                  color: context.gc.softWhite.withOpacity(0.6),
+                  color: context.gc.softWhite.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 8),
@@ -239,7 +239,7 @@ class _AffirmationFormPageState extends State<AffirmationFormPage> {
                       AppLocalizations.of(context).diaryAffirmationsRemaining('$remaining/${UserModel.freeAffirmationsLimit}'),
                       style: TextStyle(
                         color: remaining > 0
-                            ? context.gc.softWhite.withOpacity(0.6)
+                            ? context.gc.softWhite.withValues(alpha: 0.6)
                             : context.gc.alert,
                         fontSize: 12,
                       ),

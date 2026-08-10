@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../data/models/sabbat_model.dart';
 
 class WheelOfYearProvider with ChangeNotifier {
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
   
   DateTime get selectedDate => _selectedDate;
 

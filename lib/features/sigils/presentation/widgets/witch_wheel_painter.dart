@@ -48,7 +48,7 @@ class WitchWheelPainter extends CustomPainter {
 
     // Círculo dourado externo único
     final goldOuterPaint = Paint()
-      ..color = starColor.withOpacity(0.6)
+      ..color = starColor.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
     canvas.drawCircle(center, radius + 4, goldOuterPaint);
@@ -102,7 +102,7 @@ class WitchWheelPainter extends CustomPainter {
     double radius,
   ) {
     final linePaint = Paint()
-      ..color = borderColor.withOpacity(0.5)
+      ..color = borderColor.withValues(alpha: 0.5)
       ..strokeWidth = 1.0;
 
     final angleStep = 360.0 / divisions;
@@ -167,7 +167,7 @@ class WitchWheelPainter extends CustomPainter {
     // Desenhar fundo circular se destacada
     if (isHighlighted) {
       final highlightPaint = Paint()
-        ..color = accentColor.withOpacity(0.3)
+        ..color = accentColor.withValues(alpha: 0.3)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(x, y), fontSize * 0.8, highlightPaint);
     }

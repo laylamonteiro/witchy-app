@@ -3,7 +3,6 @@ import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
 import 'package:grimorio_de_bolso/features/grimoire/data/repositories/spell_repository.dart';
 import 'package:grimorio_de_bolso/features/grimoire/presentation/providers/spell_provider.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {

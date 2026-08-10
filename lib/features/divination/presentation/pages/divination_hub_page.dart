@@ -40,7 +40,7 @@ class DivinationHubPage extends StatelessWidget {
                   Text(
                     AppLocalizations.of(context).divArtsSub,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.gc.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withValues(alpha: 0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -171,7 +171,7 @@ class DivinationHubPage extends StatelessWidget {
                       Text(
                         description,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: context.gc.softWhite.withOpacity(0.7),
+                              color: context.gc.softWhite.withValues(alpha: 0.7),
                             ),
                       ),
                     ],

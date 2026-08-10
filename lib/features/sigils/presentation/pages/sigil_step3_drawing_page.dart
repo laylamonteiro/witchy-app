@@ -355,7 +355,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                                 _showWheel = value;
                               });
                             },
-                            selectedColor: context.gc.lilac.withOpacity(0.2),
+                            selectedColor: context.gc.lilac.withValues(alpha: 0.2),
                             backgroundColor: context.gc.surface,
                             labelStyle: TextStyle(
                               color: _showWheel
@@ -398,7 +398,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                               });
                             },
                             selectedColor:
-                                context.gc.starYellow.withOpacity(0.2),
+                                context.gc.starYellow.withValues(alpha: 0.2),
                             backgroundColor: context.gc.surface,
                             labelStyle: TextStyle(
                               color: _showStartEnd
@@ -423,7 +423,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                             tooltip: AppLocalizations.of(context).sigilShuffle,
                             style: IconButton.styleFrom(
                               backgroundColor: _isShuffled
-                                  ? context.gc.mint.withOpacity(0.3)
+                                  ? context.gc.mint.withValues(alpha: 0.3)
                                   : context.gc.surface,
                               foregroundColor: _isShuffled
                                   ? context.gc.mint
@@ -504,10 +504,10 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.gc.surface.withOpacity(0.5),
+                      color: context.gc.surface.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: context.gc.starYellow.withOpacity(0.3),
+                        color: context.gc.starYellow.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -572,7 +572,7 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
                     color: (_savedToDesires
                             ? context.gc.success
                             : context.gc.lilac)
-                        .withOpacity(0.5),
+                        .withValues(alpha: 0.5),
                   ),
                   minimumSize: const Size.fromHeight(48),
                 ),

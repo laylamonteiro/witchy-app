@@ -307,9 +307,9 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                color: context.gc.lilac.withOpacity(0.12),
+                color: context.gc.lilac.withValues(alpha: 0.12),
                 border: Border.all(
-                  color: context.gc.lilac.withOpacity(0.35),
+                  color: context.gc.lilac.withValues(alpha: 0.35),
                 ),
               ),
               child: Text(emoji, style: const TextStyle(fontSize: 26)),

@@ -62,7 +62,7 @@ class GoddessDetailPage extends StatelessWidget {
                     Text(
                       goddess.alternateNames!,
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withValues(alpha: 0.7),
                         fontSize: 14,
                         fontStyle: FontStyle.italic,
                       ),
@@ -124,10 +124,10 @@ class GoddessDetailPage extends StatelessWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: context.gc.lilac.withOpacity(0.2),
+                          color: context.gc.lilac.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: context.gc.lilac.withOpacity(0.5),
+                            color: context.gc.lilac.withValues(alpha: 0.5),
                           ),
                         ),
                         child: Row(
@@ -311,7 +311,7 @@ class GoddessDetailPage extends StatelessWidget {
         Text(
           '$emoji $title',
           style: TextStyle(
-            color: context.gc.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withValues(alpha: 0.8),
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
@@ -349,7 +349,7 @@ class GoddessDetailPage extends StatelessWidget {
       width: 200,
       height: 200,
       decoration: BoxDecoration(
-        color: context.gc.lilac.withOpacity(0.2),
+        color: context.gc.lilac.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(

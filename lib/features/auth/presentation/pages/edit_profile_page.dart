@@ -164,7 +164,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 label: Text(_genderLabel(pref)),
                                 selected: selected,
                                 selectedColor:
-                                    context.gc.lilac.withOpacity(0.25),
+                                    context.gc.lilac.withValues(alpha: 0.25),
                                 labelStyle: TextStyle(
                                   color: selected
                                       ? context.gc.lilac

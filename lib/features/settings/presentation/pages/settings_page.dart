@@ -245,11 +245,11 @@ class SettingsPage extends StatelessWidget {
           style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context).authNameHint,
-            hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
+            hintStyle: TextStyle(color: context.gc.textPrimary.withValues(alpha: 0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide:
-                  BorderSide(color: context.gc.lilac.withOpacity(0.5)),
+                  BorderSide(color: context.gc.lilac.withValues(alpha: 0.5)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -912,10 +912,10 @@ class SettingsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2196F3).withOpacity(0.1),
+                  color: const Color(0xFF2196F3).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: const Color(0xFF2196F3).withOpacity(0.3)),
+                      color: const Color(0xFF2196F3).withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -1149,7 +1149,7 @@ class SettingsPage extends StatelessWidget {
               const SizedBox(height: 20),
               // Mesma largura e estilo do campo Nome.
               DropdownButtonFormField<Gender>(
-                value: selectedGender,
+                initialValue: selectedGender,
                 isExpanded: true,
                 dropdownColor: context.gc.surface,
                 style: TextStyle(color: context.gc.textPrimary),
@@ -1418,7 +1418,7 @@ class _NotificationTile extends StatelessWidget {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: context.gc.success,
+        activeThumbColor: context.gc.success,
       ),
     );
   }

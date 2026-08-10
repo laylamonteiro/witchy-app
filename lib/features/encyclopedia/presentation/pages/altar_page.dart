@@ -103,10 +103,10 @@ class AltarPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.gc.lilac.withOpacity(0.1),
+                      color: context.gc.lilac.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: context.gc.lilac.withOpacity(0.3)),
+                          Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       content.itemsNote,
@@ -134,10 +134,10 @@ class AltarPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.gc.alert.withOpacity(0.1),
+                      color: context.gc.alert.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: context.gc.alert.withOpacity(0.3)),
+                          Border.all(color: context.gc.alert.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,10 +184,10 @@ class AltarPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.gc.info.withOpacity(0.1),
+                      color: context.gc.info.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: context.gc.info.withOpacity(0.3)),
+                          Border.all(color: context.gc.info.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       content.purifyFrequency,
@@ -229,10 +229,10 @@ class AltarPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.gc.mint.withOpacity(0.1),
+                      color: context.gc.mint.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: context.gc.mint.withOpacity(0.3)),
+                          Border.all(color: context.gc.mint.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,9 +333,9 @@ class AltarPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: context.gc.lilac.withOpacity(0.1),
+              color: context.gc.lilac.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
+              border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
             ),
             child: Text(
               content.beginnerIntro,
@@ -364,9 +364,9 @@ class AltarPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: context.gc.mint.withOpacity(0.1),
+              color: context.gc.mint.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.gc.mint.withOpacity(0.3)),
+              border: Border.all(color: context.gc.mint.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,9 +392,9 @@ class AltarPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: context.gc.starYellow.withOpacity(0.1),
+              color: context.gc.starYellow.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.gc.starYellow.withOpacity(0.3)),
+              border: Border.all(color: context.gc.starYellow.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,9 +429,9 @@ class AltarPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: context.gc.pink.withOpacity(0.1),
+              color: context.gc.pink.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.gc.pink.withOpacity(0.3)),
+              border: Border.all(color: context.gc.pink.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,7 +466,7 @@ class AltarPage extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: context.gc.lilac.withOpacity(0.2),
+              color: context.gc.lilac.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(color: context.gc.lilac),
             ),

@@ -98,7 +98,7 @@ class DreamToolsPage extends StatelessWidget {
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.softWhite.withOpacity(0.7),
+                          color: context.gc.softWhite.withValues(alpha: 0.7),
                         ),
                   ),
                 ],

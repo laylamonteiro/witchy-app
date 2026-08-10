@@ -95,8 +95,8 @@ class _SplashScreenState extends State<SplashScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              context.gc.lilac.withOpacity(0.4),
-                              context.gc.mint.withOpacity(0.2),
+                              context.gc.lilac.withValues(alpha: 0.4),
+                              context.gc.mint.withValues(alpha: 0.2),
                               context.gc.background,
                             ],
                             stops: const [0.0, 0.5, 1.0],
@@ -111,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              context.gc.lilac.withOpacity(0.2),
+                              context.gc.lilac.withValues(alpha: 0.2),
                               Colors.transparent,
                             ],
                           ),
@@ -194,7 +194,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        context.gc.lilac.withOpacity(0.6),
+                        context.gc.lilac.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
@@ -221,7 +221,7 @@ class _SplashScreenState extends State<SplashScreen>
               fontSize: 16 + (4 * (index % 3)),
               shadows: [
                 Shadow(
-                  color: context.gc.starYellow.withOpacity(0.5),
+                  color: context.gc.starYellow.withValues(alpha: 0.5),
                   blurRadius: 10,
                 ),
               ],

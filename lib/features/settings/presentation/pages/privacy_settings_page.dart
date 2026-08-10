@@ -216,7 +216,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: context.gc.lilac,
+        activeThumbColor: context.gc.lilac,
       ),
     );
   }
