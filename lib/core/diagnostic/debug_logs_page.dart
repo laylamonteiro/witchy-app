@@ -83,7 +83,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
                       selected: isSelected,
                       onSelected: (_) => setState(() => _filterTag = tag),
                       backgroundColor: const Color(0xFF1A1A2E),
-                      selectedColor: context.gc.lilac.withOpacity(0.3),
+                      selectedColor: context.gc.lilac.withValues(alpha: 0.3),
                       labelStyle: TextStyle(
                         color: isSelected ? context.gc.lilac : context.gc.textSecondary,
                         fontSize: 12,
@@ -173,11 +173,11 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: isSessionStart
-            ? context.gc.lilac.withOpacity(0.1)
+            ? context.gc.lilac.withValues(alpha: 0.1)
             : const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(4),
         border: isSessionStart
-            ? Border.all(color: context.gc.lilac.withOpacity(0.3))
+            ? Border.all(color: context.gc.lilac.withValues(alpha: 0.3))
             : null,
       ),
       child: Row(
@@ -187,7 +187,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
           Text(
             time,
             style: TextStyle(
-              color: context.gc.textPrimary.withOpacity(0.4),
+              color: context.gc.textPrimary.withValues(alpha: 0.4),
               fontSize: 10,
               fontFamily: 'monospace',
             ),
@@ -197,7 +197,7 @@ class _DebugLogsPageState extends State<DebugLogsPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: tagColor.withOpacity(0.2),
+              color: tagColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(2),
             ),
             child: Text(

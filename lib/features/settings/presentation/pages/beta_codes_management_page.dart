@@ -291,7 +291,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                             labelText: _l10n.adminCodesCodeLabel,
                             hintText: _l10n.adminCodesCodeHint,
                             hintStyle: TextStyle(
-                              color: context.gc.softWhite.withOpacity(0.5),
+                              color: context.gc.softWhite.withValues(alpha: 0.5),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -301,7 +301,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: context.gc.lilac.withOpacity(0.3),
+                                color: context.gc.lilac.withValues(alpha: 0.3),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -328,7 +328,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                                   hintText: '1',
                                   suffixText: _l10n.adminCodesUsesSuffix,
                                   hintStyle: TextStyle(
-                                    color: context.gc.softWhite.withOpacity(0.5),
+                                    color: context.gc.softWhite.withValues(alpha: 0.5),
                                   ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -338,7 +338,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: context.gc.lilac.withOpacity(0.3),
+                                      color: context.gc.lilac.withValues(alpha: 0.3),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -432,7 +432,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                         child: Text(
                           _l10n.adminCodesEmpty,
                           style: TextStyle(
-                            color: context.gc.softWhite.withOpacity(0.5),
+                            color: context.gc.softWhite.withValues(alpha: 0.5),
                           ),
                         ),
                       ),
@@ -449,9 +449,9 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -468,7 +468,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: context.gc.softWhite.withOpacity(0.7),
+              color: context.gc.softWhite.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -506,8 +506,8 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: isUsed
-                      ? Colors.orange.withOpacity(0.2)
-                      : Colors.green.withOpacity(0.2),
+                      ? Colors.orange.withValues(alpha: 0.2)
+                      : Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isUsed ? Colors.orange : Colors.green,
@@ -559,7 +559,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
             _l10n.adminCodesCreatedAt(_formatDate(createdAt)),
             style: TextStyle(
               fontSize: 12,
-              color: context.gc.softWhite.withOpacity(0.6),
+              color: context.gc.softWhite.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 4),
@@ -569,7 +569,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               Icon(
                 Icons.people_outline,
                 size: 14,
-                color: context.gc.softWhite.withOpacity(0.6),
+                color: context.gc.softWhite.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 4),
               Text(
@@ -588,7 +588,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
                   _l10n.adminCodesRemaining(usesRemaining),
                   style: TextStyle(
                     fontSize: 12,
-                    color: context.gc.softWhite.withOpacity(0.5),
+                    color: context.gc.softWhite.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -600,7 +600,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               _l10n.adminCodesLastUsedAt(_formatDate(usedAt)),
               style: TextStyle(
                 fontSize: 12,
-                color: context.gc.softWhite.withOpacity(0.6),
+                color: context.gc.softWhite.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -610,7 +610,7 @@ class _BetaCodesManagementPageState extends State<BetaCodesManagementPage> {
               _l10n.adminCodesLastUser(usedBy),
               style: TextStyle(
                 fontSize: 12,
-                color: context.gc.softWhite.withOpacity(0.6),
+                color: context.gc.softWhite.withValues(alpha: 0.6),
               ),
             ),
           ],

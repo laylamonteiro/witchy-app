@@ -100,7 +100,7 @@ class _DesiresListPageState extends State<DesiresListPage> {
                             style: const TextStyle(fontSize: 12),
                           ),
                           backgroundColor:
-                              _getStatusColor(desire.status).withOpacity(0.2),
+                              _getStatusColor(desire.status).withValues(alpha: 0.2),
                           side: BorderSide(color: _getStatusColor(desire.status)),
                         ),
                       ],

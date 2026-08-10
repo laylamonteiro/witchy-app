@@ -269,7 +269,7 @@ class BirthChartViewPage extends StatelessWidget {
                                       '${content.ui['planetsInHousePrefix']} ${planetsInHouse.map((p) => p.planet.symbol).join(' ')}',
                                       style: TextStyle(
                                         color: context.gc.softWhite
-                                            .withOpacity(0.6),
+                                            .withValues(alpha: 0.6),
                                         fontSize: 12,
                                       ),
                                     ),
@@ -326,7 +326,7 @@ class BirthChartViewPage extends StatelessWidget {
                                   feature: AppFeature.astrologyBirthChart,
                                   maxLines: 3,
                                   style: TextStyle(
-                                    color: context.gc.softWhite.withOpacity(0.7),
+                                    color: context.gc.softWhite.withValues(alpha: 0.7),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -444,7 +444,7 @@ class BirthChartViewPage extends StatelessWidget {
                 Text(
                   '$houseWord ${planet.houseNumber}',
                   style: TextStyle(
-                    color: context.gc.softWhite.withOpacity(0.6),
+                    color: context.gc.softWhite.withValues(alpha: 0.6),
                     fontSize: 12,
                   ),
                 ),
@@ -480,7 +480,7 @@ class BirthChartViewPage extends StatelessWidget {
                 ),
                 Icon(
                   Icons.info_outline,
-                  color: context.gc.lilac.withOpacity(0.6),
+                  color: context.gc.lilac.withValues(alpha: 0.6),
                   size: 20,
                 ),
               ],
@@ -492,7 +492,7 @@ class BirthChartViewPage extends StatelessWidget {
               child: Text(
                 birthChartContent.ui['tapToLearnMore']!,
                 style: TextStyle(
-                  color: context.gc.lilac.withOpacity(0.5),
+                  color: context.gc.lilac.withValues(alpha: 0.5),
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
                 ),
@@ -529,7 +529,7 @@ class BirthChartViewPage extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: context.gc.lilac.withOpacity(0.3),
+                    color: context.gc.lilac.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -547,7 +547,7 @@ class BirthChartViewPage extends StatelessWidget {
               Text(
                 birthChartContent.ui['beginnersGuide']!,
                 style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.6),
+                  color: context.gc.softWhite.withValues(alpha: 0.6),
                   fontSize: 14,
                   fontStyle: FontStyle.italic,
                 ),
@@ -584,7 +584,7 @@ class BirthChartViewPage extends StatelessWidget {
                 Text(
                   meaning,
                   style: TextStyle(
-                    color: context.gc.softWhite.withOpacity(0.6),
+                    color: context.gc.softWhite.withValues(alpha: 0.6),
                     fontSize: 12,
                   ),
                 ),
@@ -622,9 +622,9 @@ class _TrioPrincipalExplanation extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: context.gc.lilac.withOpacity(0.1),
+            color: context.gc.lilac.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
+            border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,7 +640,7 @@ class _TrioPrincipalExplanation extends StatelessWidget {
               Text(
                 content.trioTip.body,
                 style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withValues(alpha: 0.8),
                   height: 1.5,
                 ),
               ),
@@ -662,7 +662,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
         Text(
           content.personalIntro,
           style: TextStyle(
-            color: context.gc.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withValues(alpha: 0.8),
             height: 1.5,
           ),
         ),
@@ -674,9 +674,9 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: context.gc.mint.withOpacity(0.1),
+            color: context.gc.mint.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: context.gc.mint.withOpacity(0.3)),
+            border: Border.all(color: context.gc.mint.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -692,7 +692,7 @@ class _PlanetasPessoaisExplanation extends StatelessWidget {
               Text(
                 content.personalTip.body,
                 style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withValues(alpha: 0.8),
                   height: 1.5,
                 ),
               ),
@@ -714,7 +714,7 @@ class _PlanetasSociaisExplanation extends StatelessWidget {
         Text(
           content.socialIntro,
           style: TextStyle(
-            color: context.gc.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withValues(alpha: 0.8),
             height: 1.5,
           ),
         ),
@@ -742,7 +742,7 @@ class _PlanetasTranspessoaisExplanation extends StatelessWidget {
         Text(
           content.transpersonalIntro,
           style: TextStyle(
-            color: context.gc.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withValues(alpha: 0.8),
             height: 1.5,
           ),
         ),
@@ -770,7 +770,7 @@ class _NodosExplanation extends StatelessWidget {
         Text(
           content.pointsIntro,
           style: TextStyle(
-            color: context.gc.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withValues(alpha: 0.8),
             height: 1.5,
           ),
         ),
@@ -799,7 +799,7 @@ class _CasasExplanation extends StatelessWidget {
         Text(
           content.housesIntro,
           style: TextStyle(
-            color: context.gc.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withValues(alpha: 0.8),
             height: 1.5,
           ),
         ),
@@ -814,9 +814,9 @@ class _CasasExplanation extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: context.gc.lilac.withOpacity(0.1),
+            color: context.gc.lilac.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
+            border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -832,7 +832,7 @@ class _CasasExplanation extends StatelessWidget {
               Text(
                 content.housesTip.body,
                 style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withValues(alpha: 0.8),
                   height: 1.5,
                 ),
               ),
@@ -864,7 +864,7 @@ class _CasasExplanation extends StatelessWidget {
             child: Text(
               meaning,
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.8),
+                color: context.gc.softWhite.withValues(alpha: 0.8),
                 fontSize: 13,
               ),
             ),
@@ -892,7 +892,7 @@ class _AspectosExplanation extends StatelessWidget {
         Text(
           content.aspectsIntro,
           style: TextStyle(
-            color: context.gc.softWhite.withOpacity(0.8),
+            color: context.gc.softWhite.withValues(alpha: 0.8),
             height: 1.5,
           ),
         ),
@@ -908,9 +908,9 @@ class _AspectosExplanation extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: context.gc.mint.withOpacity(0.1),
+            color: context.gc.mint.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: context.gc.mint.withOpacity(0.3)),
+            border: Border.all(color: context.gc.mint.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -926,7 +926,7 @@ class _AspectosExplanation extends StatelessWidget {
               Text(
                 content.aspectsTip.body,
                 style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withValues(alpha: 0.8),
                   height: 1.5,
                 ),
               ),
@@ -967,7 +967,7 @@ class _AspectosExplanation extends StatelessWidget {
                 Text(
                   meaning,
                   style: TextStyle(
-                    color: context.gc.softWhite.withOpacity(0.8),
+                    color: context.gc.softWhite.withValues(alpha: 0.8),
                     fontSize: 13,
                   ),
                 ),
@@ -996,7 +996,7 @@ Widget _buildSection(BuildContext context, String title, String content) {
       Text(
         content,
         style: TextStyle(
-          color: context.gc.softWhite.withOpacity(0.9),
+          color: context.gc.softWhite.withValues(alpha: 0.9),
           height: 1.6,
         ),
       ),

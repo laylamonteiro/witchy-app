@@ -287,7 +287,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
               decoration: BoxDecoration(
                 color: Colors.black87,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.gc.lilac.withOpacity(0.3)),
+                border: Border.all(color: context.gc.lilac.withValues(alpha: 0.3)),
               ),
               child: _isLoading
                   ? Center(

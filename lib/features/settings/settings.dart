@@ -2,5 +2,6 @@
 ///
 /// Este módulo contém:
 /// - PrivacySettingsPage: Configurações de privacidade e dados
+library;
 
 export 'presentation/pages/privacy_settings_page.dart';

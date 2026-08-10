@@ -565,7 +565,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             Text(
               _l10n.subsRedeemPitch,
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -578,7 +578,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     decoration: InputDecoration(
                       hintText: _l10n.subsCodeHint,
                       hintStyle: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.5),
+                        color: context.gc.softWhite.withValues(alpha: 0.5),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -587,7 +587,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: context.gc.lilac.withOpacity(0.3),
+                          color: context.gc.lilac.withValues(alpha: 0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -624,11 +624,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     // Resgatar código
                     final result = await authProvider.redeemBetaCode(code);
 
-                    // Fechar loading
-                    if (context.mounted) Navigator.of(context).pop();
+                    // Fechar loading (mounted do State: este context É o
+                    // do State — use_build_context_synchronously)
+                    if (mounted) Navigator.of(context).pop();
 
                     // Mostrar resultado
-                    if (context.mounted) {
+                    if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(result['message']),

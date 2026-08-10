@@ -66,7 +66,7 @@ class GrimoireColors extends ThemeExtension<GrimoireColors> {
 
   /// Equivalente temático de Colors.white10 (texto primário a 10% de opacidade),
   /// usado em divisores e bordas sutis.
-  Color get textPrimary10 => textPrimary.withOpacity(0.1);
+  Color get textPrimary10 => textPrimary.withValues(alpha: 0.1);
 
   bool get isDark => brightness == Brightness.dark;
 

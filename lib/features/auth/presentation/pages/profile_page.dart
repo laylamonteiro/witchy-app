@@ -147,11 +147,11 @@ class ProfilePage extends StatelessWidget {
           style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context).authNameHint,
-            hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
+            hintStyle: TextStyle(color: context.gc.textPrimary.withValues(alpha: 0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide:
-                  BorderSide(color: const Color(0xFF9C27B0).withOpacity(0.5)),
+                  BorderSide(color: const Color(0xFF9C27B0).withValues(alpha: 0.5)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

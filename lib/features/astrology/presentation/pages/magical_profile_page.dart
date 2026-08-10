@@ -105,7 +105,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                           es: 'Interpretación astrológica adaptada a la brujería',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: context.gc.softWhite.withOpacity(0.8),
+                              color: context.gc.softWhite.withValues(alpha: 0.8),
                             ),
                         textAlign: TextAlign.center,
                       ),
@@ -160,7 +160,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                           es: 'Distribución:',
                         ),
                         style: TextStyle(
-                          color: context.gc.softWhite.withOpacity(0.7),
+                          color: context.gc.softWhite.withValues(alpha: 0.7),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -179,7 +179,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                               Text(
                                 '${entry.value} ${_sel(pt: 'planeta(s)', en: 'planet(s)', es: 'planeta(s)')}',
                                 style: TextStyle(
-                                  color: context.gc.softWhite.withOpacity(0.6),
+                                  color: context.gc.softWhite.withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -267,10 +267,10 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: context.gc.lilac.withOpacity(0.2),
+                                color: context.gc.lilac.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: context.gc.lilac.withOpacity(0.5),
+                                  color: context.gc.lilac.withValues(alpha: 0.5),
                                 ),
                               ),
                               child: Text(
@@ -357,7 +357,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               es: 'Toca cada planeta para entender su significado en tu carta',
             ),
             style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.6),
+              color: context.gc.softWhite.withValues(alpha: 0.6),
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
@@ -428,7 +428,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: context.gc.alert.withOpacity(0.2),
+                  color: context.gc.alert.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -446,20 +446,20 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
         subtitle: Text(
           '${_sel(pt: 'Casa', en: 'House', es: 'Casa')} $houseNumber | ${sign.element.symbol} ${sign.element.displayName}',
           style: TextStyle(
-            color: context.gc.softWhite.withOpacity(0.6),
+            color: context.gc.softWhite.withValues(alpha: 0.6),
             fontSize: 12,
           ),
         ),
         iconColor: context.gc.lilac,
-        collapsedIconColor: context.gc.lilac.withOpacity(0.6),
+        collapsedIconColor: context.gc.lilac.withValues(alpha: 0.6),
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: context.gc.surface.withOpacity(0.3),
+              color: context.gc.surface.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: context.gc.lilac.withOpacity(0.2),
+                color: context.gc.lilac.withValues(alpha: 0.2),
               ),
             ),
             child: Text(
@@ -507,7 +507,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                 es: 'El Consejero Místico está analizando tu carta natal\ny creando una interpretación única para ti.',
               ),
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -556,7 +556,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                     es: 'Creada especialmente para ti a partir de tu carta natal',
                   ),
                   style: TextStyle(
-                    color: context.gc.softWhite.withOpacity(0.6),
+                    color: context.gc.softWhite.withValues(alpha: 0.6),
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
@@ -632,7 +632,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                 es: 'Verifica tu conexión e inténtalo de nuevo.',
               ),
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.7),
+                color: context.gc.softWhite.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -677,7 +677,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               es: 'Consulta al Consejero Místico para un\nanálisis único de tu perfil mágico.',
             ),
             style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.8),
+              color: context.gc.softWhite.withValues(alpha: 0.8),
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
@@ -740,7 +740,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
         fontWeight: FontWeight.bold,
       ),
       em: TextStyle(
-        color: context.gc.softWhite.withOpacity(0.9),
+        color: context.gc.softWhite.withValues(alpha: 0.9),
         fontStyle: FontStyle.italic,
       ),
     );

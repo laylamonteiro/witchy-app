@@ -130,10 +130,10 @@ class _DreamFormPageState extends State<DreamFormPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: context.gc.lilac.withOpacity(0.08),
+                  color: context.gc.lilac.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: context.gc.lilac.withOpacity(0.4),
+                    color: context.gc.lilac.withValues(alpha: 0.4),
                   ),
                 ),
                 child: Column(

@@ -8,7 +8,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
-import 'package:sqflite_common/sqflite.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,7 +18,6 @@ import 'core/providers/mascot_provider.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/sync_provider.dart';
 import 'core/providers/language_provider.dart';
-import 'core/config/supabase_config.dart';
 import 'core/services/ad_service.dart';
 import 'core/services/payment_service.dart';
 import 'core/services/premium_access.dart';
@@ -28,7 +27,6 @@ import 'core/navigation/app_deep_link.dart';
 import 'core/utils/app_session_policy.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
-import 'features/auth/presentation/pages/auth_wrapper.dart';
 import 'features/subscription/subscription.dart';
 import 'features/grimoire/presentation/providers/spell_provider.dart';
 import 'features/diary/presentation/providers/dream_provider.dart';
@@ -73,7 +71,9 @@ void main() async {
   if (SupabaseConfig.isConfigured) {
     await Supabase.initialize(
       url: SupabaseConfig.url,
-      anonKey: SupabaseConfig.anonKey,
+      // anonKey foi deprecado (sai na próxima major do supabase_flutter);
+      // o parâmetro novo aceita a mesma chave.
+      publishableKey: SupabaseConfig.anonKey,
     );
     // Initialize DataSyncService after Supabase
     DataSyncService().initialize();

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
@@ -324,7 +325,7 @@ class DataSyncService {
       if (entityErrors.isNotEmpty) {
         _setStatus(SyncStatus.error);
         return SyncResult.error(
-          'Falha ao sincronizar: ${entityErrors.keys.join(', ')}',
+          _l10n.syncEntitiesFailed(entityErrors.keys.join(', ')),
           uploaded: totalUploaded,
           downloaded: totalDownloaded,
           entityErrors: entityErrors,
@@ -421,7 +422,12 @@ class DataSyncService {
       final localIds = localData.map((e) => e['id']).toSet();
       for (final remote in remoteData) {
         if (!localIds.contains(remote['id'])) {
-          final exists = await _existsLocally(localTable, remote['id']);
+          // Nas tabelas de um-dia-só, o mesmo DIA pode existir localmente
+          // com outro uuid (instalação/aparelho diferente) — checar só o
+          // id derrubava o sync no UNIQUE(user_id, date) local.
+          final exists = _oneRowPerDayTables.contains(localTable)
+              ? await _existsLocallyForDay(localTable, remote)
+              : await _existsLocally(localTable, remote['id']);
           if (!exists) {
             await _insertLocally(localTable, remote);
             downloaded++;
@@ -651,13 +657,21 @@ class DataSyncService {
     }
   }
 
+  /// Tabelas com UMA linha por dia (UNIQUE(user_id, date) local e remoto):
+  /// cada aparelho/instalação gera um uuid próprio para o MESMO dia, então
+  /// a identidade de verdade é (user_id, date) — nunca só o id.
+  static const _oneRowPerDayTables = {
+    'daily_magical_weather',
+    'daily_checkins',
+  };
+
   /// Envia item para o Supabase
   Future<void> _uploadItem(String table, Map<String, dynamic> item) async {
     final remoteItem = _toRemote(table, item);
     // Tabelas com uma linha por DIA: cada aparelho gera um uuid próprio,
     // então o conflito de verdade é (user_id, date) — sem isto, dois
     // aparelhos criariam linhas duplicadas do mesmo dia.
-    if (table == 'daily_magical_weather' || table == 'daily_checkins') {
+    if (_oneRowPerDayTables.contains(table)) {
       await _supabase!
           .from(table)
           .upsert(remoteItem, onConflict: 'user_id,date');
@@ -838,13 +852,37 @@ class DataSyncService {
     return result.isNotEmpty;
   }
 
+  /// Existência nas tabelas de um-dia-só: pelo id OU pelo dia (user_id,
+  /// date) — a linha do dia pode ter nascido com outro uuid.
+  Future<bool> _existsLocallyForDay(
+    String table,
+    Map<String, dynamic> item,
+  ) async {
+    final db = await _db.database;
+    final result = await db.query(
+      table,
+      where: 'id = ? OR (user_id = ? AND date = ?)',
+      whereArgs: [item['id'], item['user_id'], item['date']],
+      limit: 1,
+    );
+    return result.isNotEmpty;
+  }
+
   /// Insere item localmente
   Future<void> _insertLocally(String table, Map<String, dynamic> item) async {
     final db = await _db.database;
     final data = Map<String, dynamic>.from(item);
     data['synced'] = 1;
 
-    await db.insert(table, data);
+    await db.insert(
+      table,
+      data,
+      // Um-dia-só: numa corrida rara o mesmo dia ainda pode chegar com
+      // outro id — ignorar a linha vale mais que derrubar o sync inteiro.
+      conflictAlgorithm: _oneRowPerDayTables.contains(table)
+          ? ConflictAlgorithm.ignore
+          : ConflictAlgorithm.abort,
+    );
   }
 
   /// Atualiza o status
@@ -948,7 +986,7 @@ class DataSyncService {
       if (entityErrors.isNotEmpty) {
         _setStatus(SyncStatus.error);
         return SyncResult.error(
-          'Falha ao baixar: ${entityErrors.keys.join(', ')}',
+          _l10n.syncDownloadFailed(entityErrors.keys.join(', ')),
           entityErrors: entityErrors,
         );
       }
@@ -973,7 +1011,7 @@ class DataSyncService {
       return SyncResult.success(downloaded: totalDownloaded);
     } catch (e) {
       _setStatus(SyncStatus.error);
-      return SyncResult.error('Erro no download: $e');
+      return SyncResult.error(_l10n.syncFailed('$e'));
     }
   }
 
@@ -1022,7 +1060,7 @@ class DataSyncService {
       if (entityErrors.isNotEmpty) {
         _setStatus(SyncStatus.error);
         return SyncResult.error(
-          'Falha ao enviar: ${entityErrors.keys.join(', ')}',
+          _l10n.syncUploadFailed(entityErrors.keys.join(', ')),
           uploaded: totalUploaded,
           entityErrors: entityErrors,
         );
@@ -1032,7 +1070,7 @@ class DataSyncService {
       return SyncResult.success(uploaded: totalUploaded);
     } catch (e) {
       _setStatus(SyncStatus.error);
-      return SyncResult.error('Erro no upload: $e');
+      return SyncResult.error(_l10n.syncFailed('$e'));
     }
   }
 

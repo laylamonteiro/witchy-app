@@ -88,7 +88,7 @@ class ColorDetailPage extends StatelessWidget {
                         .map((intention) => Chip(
                               label: Text(intention),
                               backgroundColor:
-                                  colorModel.color.withOpacity(0.3),
+                                  colorModel.color.withValues(alpha: 0.3),
                               side: BorderSide(color: colorModel.color),
                             ))
                         .toList(),

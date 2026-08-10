@@ -1,10 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/i18n/gender.dart';
@@ -21,11 +19,11 @@ import '../../../auth/auth.dart';
 import '../../../journeys/journeys.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
-import 'faq_page.dart';
+import 'about_help_page.dart';
 import 'privacy_settings_page.dart';
 import 'beta_codes_management_page.dart';
+import 'sync_settings_page.dart';
 import 'theme_picker_page.dart';
-import '../../../../core/legal/legal_document_page.dart';
 
 class SettingsPage extends StatelessWidget {
   /// Seletor de idioma (pt-BR / EN / ES). Reativado após a conclusão da
@@ -247,11 +245,11 @@ class SettingsPage extends StatelessWidget {
           style: TextStyle(color: context.gc.textPrimary),
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context).authNameHint,
-            hintStyle: TextStyle(color: context.gc.textPrimary.withOpacity(0.5)),
+            hintStyle: TextStyle(color: context.gc.textPrimary.withValues(alpha: 0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide:
-                  BorderSide(color: context.gc.lilac.withOpacity(0.5)),
+                  BorderSide(color: context.gc.lilac.withValues(alpha: 0.5)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -637,6 +635,18 @@ class SettingsPage extends StatelessWidget {
             onTap: () => _showSalemBottomSheet(context),
           ),
           _buildDivider(context),
+          // Sincronização com entrada própria: recurso Premium com status e
+          // ações, escondido dentro de Privacidade ninguém achava.
+          _buildOptionTile(
+            context,
+            icon: Icons.cloud_sync_outlined,
+            title: AppLocalizations.of(context).editSyncBackup,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SyncSettingsPage()),
+            ),
+          ),
+          _buildDivider(context),
           _buildOptionTile(
             context,
             icon: Icons.privacy_tip_outlined,
@@ -649,23 +659,20 @@ class SettingsPage extends StatelessWidget {
           _buildDivider(context),
           _buildOptionTile(
             context,
-            icon: Icons.help_outline,
-            title: AppLocalizations.of(context).profileHelpSupport,
-            onTap: () => _showHelpDialog(context),
-          ),
-          _buildDivider(context),
-          _buildOptionTile(
-            context,
             icon: Icons.favorite_outline,
             title: AppLocalizations.of(context).settingsFollowUs,
             onTap: () => _showFollowSheet(context),
           ),
           _buildDivider(context),
+          // "Sobre o App" + "Ajuda & Suporte" agora moram juntos.
           _buildOptionTile(
             context,
             icon: Icons.info_outline,
-            title: AppLocalizations.of(context).profileAboutApp,
-            onTap: () => _showAboutDialog(context),
+            title: AppLocalizations.of(context).settingsAboutHelp,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AboutHelpPage()),
+            ),
           ),
           _buildDivider(context),
           _buildOptionTile(
@@ -905,10 +912,10 @@ class SettingsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2196F3).withOpacity(0.1),
+                  color: const Color(0xFF2196F3).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: const Color(0xFF2196F3).withOpacity(0.3)),
+                      color: const Color(0xFF2196F3).withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -1142,7 +1149,7 @@ class SettingsPage extends StatelessWidget {
               const SizedBox(height: 20),
               // Mesma largura e estilo do campo Nome.
               DropdownButtonFormField<Gender>(
-                value: selectedGender,
+                initialValue: selectedGender,
                 isExpanded: true,
                 dropdownColor: context.gc.surface,
                 style: TextStyle(color: context.gc.textPrimary),
@@ -1347,205 +1354,6 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showHelpDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.gc.surface,
-        title: Row(
-          children: [
-            Icon(Icons.help_outline, color: context.gc.lilac),
-            SizedBox(width: 8),
-            Text(
-              AppLocalizations.of(context).profileHelpSupport,
-              style: TextStyle(color: context.gc.textPrimary),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHelpItem(
-              context,
-              icon: Icons.email_outlined,
-              title: AppLocalizations.of(context).profileSupportEmail,
-              subtitle: 'suporte.grimoriodebolso@gmail.com',
-              onTap: () => _launchEmail(context),
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
-              context,
-              icon: Icons.question_answer_outlined,
-              title: 'FAQ',
-              subtitle: AppLocalizations.of(context).profileFaq,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const FaqPage()),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
-              context,
-              icon: Icons.policy_outlined,
-              title: AppLocalizations.of(context).authPrivacyPolicy,
-              subtitle: AppLocalizations.of(context).profilePrivacySafe,
-              onTap: () => _openPrivacyPolicy(context),
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
-              context,
-              icon: Icons.gavel_outlined,
-              title: AppLocalizations.of(context).authTermsOfUse,
-              subtitle: AppLocalizations.of(context).settingsTermsSubtitle,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => LegalDocumentPage.terms),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context).commonClose,
-              style: TextStyle(color: context.gc.lilac),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHelpItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          children: [
-            Icon(icon, color: context.gc.lilac, size: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: context.gc.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: context.gc.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: context.gc.textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Abre o app de e-mail; sem app compatível, copia o endereço e avisa.
-  Future<void> _launchEmail(BuildContext context) async {
-    const supportEmail = 'suporte.grimoriodebolso@gmail.com';
-    final uri = Uri(scheme: 'mailto', path: supportEmail);
-    var opened = false;
-    try {
-      opened = await launchUrl(uri);
-    } catch (_) {
-      opened = false;
-    }
-    if (!opened && context.mounted) {
-      await Clipboard.setData(const ClipboardData(text: supportEmail));
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).supportEmailCopied(supportEmail),
-          ),
-        ),
-      );
-    }
-  }
-
-  void _openPrivacyPolicy(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => LegalDocumentPage.privacy),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) async {
-    final packageInfo = await PackageInfo.fromPlatform();
-
-    if (!context.mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.gc.surface,
-        title: Row(
-          children: [
-            Text('✨', style: TextStyle(fontSize: 24)),
-            SizedBox(width: 8),
-            Text(
-              'Grimório de Bolso',
-              style: TextStyle(color: context.gc.textPrimary),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppLocalizations.of(context).aboutVersion(packageInfo.version, packageInfo.buildNumber),
-              style: TextStyle(color: context.gc.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context).aboutDescription,
-              style: TextStyle(color: context.gc.textSecondary, height: 1.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context).aboutMadeWith,
-              style: TextStyle(color: context.gc.lilac),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '© 2024 Grimório de Bolso',
-              style: TextStyle(color: context.gc.textSecondary, fontSize: 12),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context).commonClose,
-              style: TextStyle(color: context.gc.lilac),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   List<Color> _getRoleColors(BuildContext context, UserRole role) {
     switch (role) {
       case UserRole.admin:
@@ -1610,7 +1418,7 @@ class _NotificationTile extends StatelessWidget {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: context.gc.success,
+        activeThumbColor: context.gc.success,
       ),
     );
   }

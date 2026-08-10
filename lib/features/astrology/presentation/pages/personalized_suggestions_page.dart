@@ -256,7 +256,7 @@ class _PersonalizedSuggestionsPageState
                       personalizedSuggestionsContent
                           .ui['premiumUnlockSubtitle']!,
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -315,7 +315,7 @@ class _PersonalizedSuggestionsPageState
               Text(
                 content.ui['chartNeededBody']!,
                 style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.8),
+                  color: context.gc.softWhite.withValues(alpha: 0.8),
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -369,7 +369,7 @@ class _PersonalizedSuggestionsPageState
               ContentLocale.instance.locale.toString(),
             ).format(DateTime.now()),
             style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.7),
+              color: context.gc.softWhite.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),
@@ -388,7 +388,7 @@ class _PersonalizedSuggestionsPageState
             child: Text(
               personalizedSuggestionsContent.ui['infoBanner']!,
               style: TextStyle(
-                color: context.gc.softWhite.withOpacity(0.8),
+                color: context.gc.softWhite.withValues(alpha: 0.8),
                 fontSize: 12,
               ),
             ),
@@ -439,7 +439,7 @@ class _PersonalizedSuggestionsPageState
                           .replaceAll(
                               '{count}', '${_retrogradePlanets!.length}'),
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -497,7 +497,7 @@ class _PersonalizedSuggestionsPageState
                   if (isFree)
                     _blurredPlaceholder(
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withValues(alpha: 0.8),
                         fontSize: 12,
                         height: 1.4,
                       ),
@@ -506,7 +506,7 @@ class _PersonalizedSuggestionsPageState
                     Text(
                       info.effects,
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withValues(alpha: 0.8),
                         fontSize: 12,
                         height: 1.4,
                       ),
@@ -525,7 +525,7 @@ class _PersonalizedSuggestionsPageState
                   if (isFree)
                     _blurredPlaceholder(
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.6),
+                        color: context.gc.softWhite.withValues(alpha: 0.6),
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                         height: 1.4,
@@ -535,7 +535,7 @@ class _PersonalizedSuggestionsPageState
                     Text(
                       info.tips,
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.6),
+                        color: context.gc.softWhite.withValues(alpha: 0.6),
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                         height: 1.4,
@@ -613,11 +613,11 @@ class _PersonalizedSuggestionsPageState
                       ),
                       decoration: BoxDecoration(
                         color: priorityColors[suggestion.priority]!
-                            .withOpacity(0.2),
+                            .withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: priorityColors[suggestion.priority]!
-                              .withOpacity(0.5),
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                       child: Text(
@@ -678,7 +678,7 @@ class _PersonalizedSuggestionsPageState
                       Text(
                         practice,
                         style: TextStyle(
-                          color: context.gc.softWhite.withOpacity(0.9),
+                          color: context.gc.softWhite.withValues(alpha: 0.9),
                           fontSize: 12,
                           height: 1.4,
                         ),
@@ -711,7 +711,7 @@ class _PersonalizedSuggestionsPageState
                   Text(
                     aspect.description,
                     style: TextStyle(
-                      color: context.gc.softWhite.withOpacity(0.7),
+                      color: context.gc.softWhite.withValues(alpha: 0.7),
                       fontSize: 11,
                     ),
                   ),
@@ -761,7 +761,7 @@ class _PersonalizedSuggestionsPageState
           Text(
             personalizedSuggestionsContent.ui['noSuggestionsBody']!,
             style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.8),
+              color: context.gc.softWhite.withValues(alpha: 0.8),
               fontSize: 14,
               height: 1.5,
             ),

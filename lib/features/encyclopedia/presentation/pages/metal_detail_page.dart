@@ -75,8 +75,8 @@ class MetalDetailPage extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: metal.conductsPower
-                          ? context.gc.success.withOpacity(0.2)
-                          : context.gc.info.withOpacity(0.2),
+                          ? context.gc.success.withValues(alpha: 0.2)
+                          : context.gc.info.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: metal.conductsPower
@@ -110,7 +110,7 @@ class MetalDetailPage extends StatelessWidget {
               MagicalCard(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: context.gc.alert.withOpacity(0.1),
+                    color: context.gc.alert.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: context.gc.alert, width: 2),
                   ),
@@ -184,7 +184,7 @@ class MetalDetailPage extends StatelessWidget {
                     children: metal.magicalProperties
                         .map((property) => Chip(
                               label: Text(property),
-                              backgroundColor: context.gc.mint.withOpacity(0.2),
+                              backgroundColor: context.gc.mint.withValues(alpha: 0.2),
                               side: BorderSide(color: context.gc.mint),
                             ))
                         .toList(),
@@ -305,7 +305,7 @@ class MetalDetailPage extends StatelessWidget {
       width: 200,
       height: 200,
       decoration: BoxDecoration(
-        color: context.gc.starYellow.withOpacity(0.2),
+        color: context.gc.starYellow.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: context.gc.starYellow,

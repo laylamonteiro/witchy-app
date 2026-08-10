@@ -84,8 +84,8 @@ class _BreathingMoonState extends State<BreathingMoon>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        context.gc.lilac.withOpacity(_glowAnimation.value),
-                        context.gc.background.withOpacity(0),
+                        context.gc.lilac.withValues(alpha: _glowAnimation.value),
+                        context.gc.background.withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -102,7 +102,7 @@ class _BreathingMoonState extends State<BreathingMoon>
                   fontSize: widget.size,
                   shadows: [
                     Shadow(
-                      color: context.gc.lilac.withOpacity(0.5),
+                      color: context.gc.lilac.withValues(alpha: 0.5),
                       blurRadius: 20,
                     ),
                   ],
@@ -218,7 +218,7 @@ class _BlinkingarState extends State<_BlinkingStar>
           fontSize: 16,
           shadows: [
             Shadow(
-              color: context.gc.starYellow.withOpacity(0.8),
+              color: context.gc.starYellow.withValues(alpha: 0.8),
               blurRadius: 8,
             ),
           ],

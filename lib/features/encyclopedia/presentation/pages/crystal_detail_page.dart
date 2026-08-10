@@ -92,7 +92,7 @@ class CrystalDetailPage extends StatelessWidget {
               MagicalCard(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: context.gc.alert.withOpacity(0.1),
+                    color: context.gc.alert.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: context.gc.alert, width: 2),
                   ),
@@ -167,7 +167,7 @@ class CrystalDetailPage extends StatelessWidget {
                     children: crystal.intentions
                         .map((intention) => Chip(
                               label: Text(intention),
-                              backgroundColor: context.gc.mint.withOpacity(0.2),
+                              backgroundColor: context.gc.mint.withValues(alpha: 0.2),
                               side: BorderSide(color: context.gc.mint),
                             ))
                         .toList(),
@@ -360,7 +360,7 @@ class CrystalDetailPage extends StatelessWidget {
       width: 200,
       height: 200,
       decoration: BoxDecoration(
-        color: context.gc.lilac.withOpacity(0.2),
+        color: context.gc.lilac.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Icon(

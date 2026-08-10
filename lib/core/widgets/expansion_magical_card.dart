@@ -40,7 +40,7 @@ class _ExpansionMagicalCardState extends State<ExpansionMagicalCard> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: context.gc.lilac.withOpacity(0.1),
+            color: context.gc.lilac.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -86,7 +86,7 @@ class _ExpansionMagicalCardState extends State<ExpansionMagicalCard> {
           trailing: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: context.gc.lilac.withOpacity(0.1),
+              color: context.gc.lilac.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

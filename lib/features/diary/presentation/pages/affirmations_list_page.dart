@@ -165,7 +165,7 @@ class _AffirmationsListPageState extends State<AffirmationsListPage> {
         context.read<AffirmationProvider>().setCategory(category);
       },
       backgroundColor: context.gc.surface,
-      selectedColor: context.gc.lilac.withOpacity(0.3),
+      selectedColor: context.gc.lilac.withValues(alpha: 0.3),
       checkmarkColor: context.gc.lilac,
       side: BorderSide(
         color: isSelected ? context.gc.lilac : context.gc.surfaceBorder,

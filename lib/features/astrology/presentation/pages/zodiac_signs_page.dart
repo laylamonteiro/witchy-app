@@ -46,7 +46,7 @@ class ZodiacSignsPage extends StatelessWidget {
                   Text(
                     AppLocalizations.of(context).zodiacIntro,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.gc.softWhite.withOpacity(0.8),
+                          color: context.gc.softWhite.withValues(alpha: 0.8),
                         ),
                     textAlign: TextAlign.center,
                   ),
@@ -89,7 +89,7 @@ class ZodiacSignsPage extends StatelessWidget {
               Text(
                 data.dateRange,
                 style: TextStyle(
-                  color: context.gc.softWhite.withOpacity(0.7),
+                  color: context.gc.softWhite.withValues(alpha: 0.7),
                   fontSize: 12,
                 ),
               ),
@@ -107,7 +107,7 @@ class ZodiacSignsPage extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.6),
+                        color: context.gc.softWhite.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -190,7 +190,7 @@ class ZodiacSignsPage extends StatelessWidget {
             style: TextStyle(
               color: isHighlight
                   ? context.gc.starYellow
-                  : context.gc.softWhite.withOpacity(0.9),
+                  : context.gc.softWhite.withValues(alpha: 0.9),
               fontSize: isHighlight ? 13 : 14,
               height: 1.5,
               fontStyle: isHighlight ? FontStyle.italic : FontStyle.normal,

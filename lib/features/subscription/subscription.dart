@@ -22,6 +22,7 @@
 ///   child: Text('Conteudo Pro'),
 /// )
 /// ```
+library;
 
 export 'presentation/pages/paywall_page.dart';
 export 'presentation/pages/subscription_page.dart';

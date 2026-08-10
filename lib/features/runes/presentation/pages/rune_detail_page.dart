@@ -86,10 +86,10 @@ class RuneDetailPage extends StatelessWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: context.gc.lilac.withOpacity(0.2),
+                          color: context.gc.lilac.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: context.gc.lilac.withOpacity(0.4),
+                            color: context.gc.lilac.withValues(alpha: 0.4),
                           ),
                         ),
                         child: Text(
@@ -141,10 +141,10 @@ class RuneDetailPage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: context.gc.surface.withOpacity(0.5),
+                  color: context.gc.surface.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: context.gc.starYellow.withOpacity(0.3),
+                    color: context.gc.starYellow.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(

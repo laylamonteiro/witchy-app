@@ -783,7 +783,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   'Envia uma foto ao modelo de visão do Groq e mostra a '
                   'resposta crua (modelo, status HTTP, tempo e corpo/erro).',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.gc.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withValues(alpha: 0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -886,7 +886,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     constraints: const BoxConstraints(maxHeight: 320),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.gc.softWhite.withOpacity(0.08),
+                      color: context.gc.softWhite.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: SingleChildScrollView(
@@ -950,7 +950,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 width: 150,
                 child: Text(label,
                     style: TextStyle(
-                        color: context.gc.softWhite.withOpacity(0.7),
+                        color: context.gc.softWhite.withValues(alpha: 0.7),
                         fontSize: 13)),
               ),
               Expanded(
@@ -986,7 +986,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
-                      ?.copyWith(color: context.gc.softWhite.withOpacity(0.8)),
+                      ?.copyWith(color: context.gc.softWhite.withValues(alpha: 0.8)),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -1070,17 +1070,17 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   'Este é o conteúdo exato enviado pelo botão de teste:',
                   style: TextStyle(
-                      color: context.gc.softWhite.withOpacity(0.7),
+                      color: context.gc.softWhite.withValues(alpha: 0.7),
                       fontSize: 12),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: context.gc.softWhite.withOpacity(0.1),
+                    color: context.gc.softWhite.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                     border:
-                        Border.all(color: context.gc.lilac.withOpacity(0.35)),
+                        Border.all(color: context.gc.lilac.withValues(alpha: 0.35)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1176,7 +1176,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   'A aparência final pode variar conforme Android/iOS e as configurações do aparelho.',
                   style: TextStyle(
-                      color: context.gc.softWhite.withOpacity(0.6),
+                      color: context.gc.softWhite.withValues(alpha: 0.6),
                       fontSize: 11),
                 ),
               ],
@@ -1214,7 +1214,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     if (items.isEmpty) {
                       return Text('Nenhuma notificação agendada.',
                           style: TextStyle(
-                              color: context.gc.softWhite.withOpacity(0.7)));
+                              color: context.gc.softWhite.withValues(alpha: 0.7)));
                     }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1233,7 +1233,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                                 Text(n.body!,
                                     style: TextStyle(
                                         color: context.gc.softWhite
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                         fontSize: 12)),
                             ],
                           ),
@@ -1305,7 +1305,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   'Informações do RevenueCat e status das compras',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.gc.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withValues(alpha: 0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -1470,10 +1470,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.gc.alert.withOpacity(0.1),
+                      color: context.gc.alert.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: context.gc.alert.withOpacity(0.3),
+                        color: context.gc.alert.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -1528,7 +1528,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                                 Text(
                                   '${product.identifier} • ${product.priceString}',
                                   style: TextStyle(
-                                    color: context.gc.softWhite.withOpacity(0.6),
+                                    color: context.gc.softWhite.withValues(alpha: 0.6),
                                     fontSize: 11,
                                   ),
                                 ),
@@ -1583,7 +1583,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
               color: context.gc.cardBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: context.gc.lilac.withOpacity(0.3),
+                color: context.gc.lilac.withValues(alpha: 0.3),
               ),
             ),
             child: Column(
@@ -1614,7 +1614,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   '3. Envie para análise do problema\n\n'
                   'Essas informações ajudam a identificar problemas de configuração.',
                   style: TextStyle(
-                    color: context.gc.softWhite.withOpacity(0.8),
+                    color: context.gc.softWhite.withValues(alpha: 0.8),
                     fontSize: 12,
                     height: 1.5,
                   ),
@@ -1636,7 +1636,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           Text(
             label,
             style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.8),
+              color: context.gc.softWhite.withValues(alpha: 0.8),
               fontSize: 14,
             ),
           ),
@@ -1761,7 +1761,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                     Text(
                       'Testa o fluxo de login com provedores sociais como Google.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: context.gc.softWhite.withOpacity(0.8),
+                            color: context.gc.softWhite.withValues(alpha: 0.8),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -1909,7 +1909,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: _getRoleColor(user.role).withOpacity(0.2),
+                            color: _getRoleColor(user.role).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -2082,7 +2082,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
         onPressed: () => authProvider.setUserRole(role),
         style: ElevatedButton.styleFrom(
           backgroundColor:
-              isSelected ? _getRoleColor(role) : context.gc.textPrimary.withOpacity(0.1),
+              isSelected ? _getRoleColor(role) : context.gc.textPrimary.withValues(alpha: 0.1),
           foregroundColor: context.gc.textPrimary,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
@@ -2109,7 +2109,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
           Text(
             label,
             style: TextStyle(
-              color: context.gc.softWhite.withOpacity(0.8),
+              color: context.gc.softWhite.withValues(alpha: 0.8),
               fontSize: 14,
             ),
           ),
@@ -2180,7 +2180,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   'Testa cálculos astronômicos locais',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.gc.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withValues(alpha: 0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -2259,7 +2259,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   decoration: InputDecoration(
                     hintText: 'Ex: Campinas, Bueno Brandão, São Paulo...',
                     hintStyle: TextStyle(
-                      color: context.gc.softWhite.withOpacity(0.5),
+                      color: context.gc.softWhite.withValues(alpha: 0.5),
                     ),
                     prefixIcon: Icon(
                       Icons.location_on,
@@ -2309,7 +2309,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                       color: context.gc.cardBackground,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: context.gc.lilac.withOpacity(0.3),
+                        color: context.gc.lilac.withValues(alpha: 0.3),
                       ),
                     ),
                     child: ListView.separated(
@@ -2317,7 +2317,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _locationSuggestions.length,
                       separatorBuilder: (context, index) => Divider(
-                        color: context.gc.lilac.withOpacity(0.2),
+                        color: context.gc.lilac.withValues(alpha: 0.2),
                         height: 1,
                       ),
                       itemBuilder: (context, index) {
@@ -2374,7 +2374,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                           subtitle: Text(
                             coordsText,
                             style: TextStyle(
-                              color: context.gc.softWhite.withOpacity(0.6),
+                              color: context.gc.softWhite.withValues(alpha: 0.6),
                               fontSize: 11,
                             ),
                           ),
@@ -2390,10 +2390,10 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.gc.success.withOpacity(0.1),
+                      color: context.gc.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: context.gc.success.withOpacity(0.3),
+                        color: context.gc.success.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -2456,8 +2456,8 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: _result!.contains('SUCESSO')
-                      ? context.gc.success.withOpacity(0.2)
-                      : context.gc.alert.withOpacity(0.2),
+                      ? context.gc.success.withValues(alpha: 0.2)
+                      : context.gc.alert.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -2539,7 +2539,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.gc.softWhite.withOpacity(0.8),
+                        color: context.gc.softWhite.withValues(alpha: 0.8),
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -2565,7 +2565,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
               backgroundColor: context.gc.lilac,
               foregroundColor: context.gc.darkBackground,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              disabledBackgroundColor: context.gc.lilac.withOpacity(0.3),
+              disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
             ),
           ),
           if (_result != null) ...[
