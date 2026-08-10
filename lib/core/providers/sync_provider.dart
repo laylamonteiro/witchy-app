@@ -81,22 +81,22 @@ class SyncProvider extends ChangeNotifier {
       case SyncStatus.idle:
         return _l10n.syncActive;
       case SyncStatus.syncing:
-        return 'Sincronizando...';
+        return _l10n.syncStatusSyncing;
       case SyncStatus.success:
-        return 'Sincronizado';
+        return _l10n.syncStatusSynced;
       case SyncStatus.error:
         return _l10n.syncError;
       case SyncStatus.conflict:
-        return '${_conflicts.length} conflito(s)';
+        return _l10n.syncStatusConflicts(_conflicts.length);
     }
   }
 
   /// Última sincronização formatada
   String get lastSyncText {
-    if (_lastSyncTime == null) return 'Nunca sincronizado';
+    if (_lastSyncTime == null) return _l10n.syncNever;
 
     final diff = DateTime.now().difference(_lastSyncTime!);
-    if (diff.inMinutes < 1) return 'Agora mesmo';
+    if (diff.inMinutes < 1) return _l10n.syncJustNow;
     if (diff.inMinutes < 60) return _l10n.syncAgoMinutes(diff.inMinutes);
     if (diff.inHours < 24) return _l10n.syncAgoHours(diff.inHours);
     return _l10n.syncAgoDays(diff.inDays);
