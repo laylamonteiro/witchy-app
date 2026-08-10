@@ -354,12 +354,14 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
 
   Widget _buildSearchResults(BuildContext context, SpellProvider provider) {
     final query = _searchQuery.toLowerCase();
+    // Parênteses obrigatórios: sem eles o && só se aplicava ao nome, e
+    // REGISTROS vazavam na busca quando propósito/categoria batiam.
     final results = provider.spells
         .where((s) =>
             !s.isRecord &&
-            s.name.toLowerCase().contains(query) ||
-            s.purpose.toLowerCase().contains(query) ||
-            s.category.displayName.toLowerCase().contains(query))
+            (s.name.toLowerCase().contains(query) ||
+                s.purpose.toLowerCase().contains(query) ||
+                s.category.displayName.toLowerCase().contains(query)))
         .toList();
 
     if (results.isEmpty) {
