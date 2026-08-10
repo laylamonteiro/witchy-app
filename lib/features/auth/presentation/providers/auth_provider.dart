@@ -590,7 +590,7 @@ class AuthProvider extends ChangeNotifier {
       await debugLog('SYNC', 'Auto-sync pós-login iniciado');
       final result = await sync.syncAll();
       await debugLog('SYNC',
-          'Auto-sync pós-login: ${result.success ? "ok" : "falha: ${result.error}"}');
+          'Auto-sync pós-login: ${result.success ? "ok" : "falha: ${result.detailedError}"}');
     } catch (error) {
       // Falha de nuvem não deve impedir o login nem o acesso aos dados locais.
       await debugLog('SYNC', 'Auto-sync pós-login falhou: $error');

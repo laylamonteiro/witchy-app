@@ -252,7 +252,7 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       if (result.success) {
         await debugLog('SYNC', 'Auto-sync concluído com sucesso');
       } else {
-        await debugLog('SYNC', 'Auto-sync falhou: ${result.error}');
+        await debugLog('SYNC', 'Auto-sync falhou: ${result.detailedError}');
       }
     }
   }

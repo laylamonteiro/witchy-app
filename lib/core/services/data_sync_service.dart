@@ -149,6 +149,15 @@ class SyncResult {
     );
   }
 
+  /// Erro com o motivo REAL por entidade, para os logs de diagnóstico —
+  /// "Falha ao sincronizar: dailyCheckins" sozinho não diz o porquê.
+  String get detailedError {
+    if (entityErrors.isEmpty) return error ?? 'Erro desconhecido';
+    final details =
+        entityErrors.entries.map((e) => '${e.key}: ${e.value}').join(' | ');
+    return '${error ?? 'Falha'} — $details';
+  }
+
   factory SyncResult.withConflicts(List<SyncConflict> conflicts) {
     return SyncResult(
       success: false,
