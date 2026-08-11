@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
-import '../../data/models/spell_model.dart';
-import '../providers/spell_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/presentation/providers/free_writing_provider.dart';
 
-/// Edição simples das páginas de registro do Grimório Vivo (Meus Registros):
-/// só título e texto — sem os campos de feitiço (ingredientes, lua, duração).
+/// Edição simples de uma entrada do acervo (Meus Registros): só título e
+/// texto — a origem (source) é preservada pelo copyWith do modelo.
 class RecordFormPage extends StatefulWidget {
-  final SpellModel record;
+  final FreeWritingModel entry;
 
-  const RecordFormPage({super.key, required this.record});
+  const RecordFormPage({super.key, required this.entry});
 
   @override
   State<RecordFormPage> createState() => _RecordFormPageState();
@@ -20,9 +20,9 @@ class RecordFormPage extends StatefulWidget {
 class _RecordFormPageState extends State<RecordFormPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController =
-      TextEditingController(text: widget.record.name);
+      TextEditingController(text: widget.entry.title ?? '');
   late final TextEditingController _contentController =
-      TextEditingController(text: widget.record.steps);
+      TextEditingController(text: widget.entry.content);
   bool _isSaving = false;
 
   @override
@@ -37,11 +37,11 @@ class _RecordFormPageState extends State<RecordFormPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _isSaving = true);
 
-    final updated = widget.record.copyWith(
-      name: _titleController.text.trim(),
-      steps: _contentController.text.trim(),
+    final updated = widget.entry.copyWith(
+      title: _titleController.text.trim(),
+      content: _contentController.text.trim(),
     );
-    await context.read<SpellProvider>().updateSpell(updated);
+    await context.read<FreeWritingProvider>().save(updated);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -50,7 +50,8 @@ class _RecordFormPageState extends State<RecordFormPage> {
         backgroundColor: context.gc.success,
       ),
     );
-    Navigator.pop(context);
+    // Devolve a versão editada para o detalhe atualizar sem recarregar.
+    Navigator.pop(context, updated);
   }
 
   @override

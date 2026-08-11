@@ -11,6 +11,12 @@ class FreeWritingProvider with ChangeNotifier {
   String _currentUserId = 'local_user';
 
   List<FreeWritingModel> get freeWritings => _freeWritings;
+
+  /// Só o que a Bruxa escreveu de fato (aba 💭 dos Diários) — as páginas
+  /// geradas (lições e leituras) moram em "Meus Registros".
+  List<FreeWritingModel> get reflections => _freeWritings
+      .where((w) => w.source == FreeWritingSource.free)
+      .toList();
   bool get isLoading => _isLoading;
   String? get error => _error;
 

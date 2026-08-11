@@ -4,11 +4,14 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_fab.dart';
 import '../../data/models/spell_model.dart';
 import '../providers/spell_provider.dart';
 import 'ai_spell_creation_page.dart';
+import 'records_archive_list_page.dart';
 import 'spell_detail_page.dart';
 import 'user_spells_list_page.dart';
 
@@ -125,6 +128,8 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SpellProvider>().loadSpells();
+      // Contagem do card "Meus Registros" (acervo unificado).
+      context.read<FreeWritingProvider>().loadFreeWritings();
     });
   }
 
@@ -214,10 +219,13 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
   }
 
   Widget _buildGroupCards(BuildContext context, SpellProvider provider) {
-    final userCount =
-        provider.userSpells.where((s) => !s.isRecord).length;
-    final recordCount =
-        provider.userSpells.where((s) => s.isRecord).length;
+    final userCount = provider.userSpells.length;
+    // Registros agora moram no acervo unificado (free_writings).
+    final recordCount = context
+        .watch<FreeWritingProvider>()
+        .freeWritings
+        .where((w) => w.source != FreeWritingSource.free)
+        .length;
 
     final cards = <Widget>[
         _buildHubCard(
@@ -245,11 +253,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => UserSpellsListPage(
-                title: AppLocalizations.of(context).grimoireMyRecords,
-                initialSource: SpellSource.mine,
-                recordsOnly: true,
-              ),
+              builder: (_) => const RecordsArchiveListPage(),
             ),
           ),
         ),
@@ -260,8 +264,7 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
             title: group.title,
             subtitle: group.subtitle,
             count: provider.spells
-                .where((s) =>
-                    !s.isRecord && group.categories.contains(s.category))
+                .where((s) => group.categories.contains(s.category))
                 .length,
             onTap: () => Navigator.push(
               context,
@@ -354,14 +357,11 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
 
   Widget _buildSearchResults(BuildContext context, SpellProvider provider) {
     final query = _searchQuery.toLowerCase();
-    // Parênteses obrigatórios: sem eles o && só se aplicava ao nome, e
-    // REGISTROS vazavam na busca quando propósito/categoria batiam.
     final results = provider.spells
         .where((s) =>
-            !s.isRecord &&
-            (s.name.toLowerCase().contains(query) ||
-                s.purpose.toLowerCase().contains(query) ||
-                s.category.displayName.toLowerCase().contains(query)))
+            s.name.toLowerCase().contains(query) ||
+            s.purpose.toLowerCase().contains(query) ||
+            s.category.displayName.toLowerCase().contains(query))
         .toList();
 
     if (results.isEmpty) {

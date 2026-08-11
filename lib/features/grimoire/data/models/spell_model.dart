@@ -83,7 +83,6 @@ class SpellModel {
 
   /// Páginas de registro do Grimório Vivo (aba "Meus Registros"):
   /// gravadas como feitiço, mas separadas dos feitiços de verdade.
-  bool get isRecord => id.startsWith('registro_');
 
   Map<String, dynamic> toMap() {
     return {

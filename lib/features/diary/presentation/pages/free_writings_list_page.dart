@@ -44,7 +44,7 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
             return LoadingWidget(message: AppLocalizations.of(context).diaryLoadingReflections);
           }
 
-          if (provider.freeWritings.isEmpty) {
+          if (provider.reflections.isEmpty) {
             return EmptyStateWidget(
               message:
                   AppLocalizations.of(context).diaryEmptyReflections,
@@ -53,9 +53,9 @@ class _FreeWritingsListPageState extends State<FreeWritingsListPage> {
           }
 
           return ListView.builder(
-            itemCount: provider.freeWritings.length,
+            itemCount: provider.reflections.length,
             itemBuilder: (context, index) {
-              final writing = provider.freeWritings[index];
+              final writing = provider.reflections[index];
               return MagicalCard(
                 onTap: () => Navigator.pop(context, writing),
                 child: Column(
