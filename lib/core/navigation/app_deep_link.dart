@@ -17,6 +17,10 @@ enum AppDeepLink {
   /// Aba "Seu Dia" da bottom bar (hub diário).
   yourDay('today'),
 
+  /// Grimório → Índice (a capa do livro; usado pelo tour do Salem).
+  grimoireIndex('encyclopedia/index',
+      homeTab: 1, encyclopediaSection: EncyclopediaSection.bookIndex),
+
   /// Enciclopédia Mágica → seção Lua (notificações de lua cheia/nova).
   moonEncyclopedia('encyclopedia/moon',
       homeTab: 1, encyclopediaSection: EncyclopediaSection.moon),
