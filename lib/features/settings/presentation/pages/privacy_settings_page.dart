@@ -399,6 +399,7 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         'learning_progress',
         'guided_ritual_logs',
         'user_encyclopedia_entries',
+        'free_writings',
         'daily_checkins'
       ];
 
