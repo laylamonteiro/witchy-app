@@ -124,10 +124,15 @@ CREATE TABLE IF NOT EXISTS affirmations (
 CREATE TABLE IF NOT EXISTS free_writings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title TEXT,
   content TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'free',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+-- Tabelas antigas: mesmas colunas do acervo unificado (idempotente).
+ALTER TABLE free_writings ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE free_writings ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'free';
 
 -- Progresso do Grimório Vivo (lições concluídas)
 CREATE TABLE IF NOT EXISTS learning_progress (

@@ -14,6 +14,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/theme_provider.dart';
 import 'core/database/database_helper.dart';
+import 'core/database/records_archive_migration.dart';
 import 'core/providers/mascot_provider.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/sync_provider.dart';
@@ -87,6 +88,10 @@ void main() async {
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
+
+  // Acervo único: move os registros do Grimório Vivo (antigos feitiços com
+  // id 'registro_*') para free_writings. Roda uma vez; falha não bloqueia.
+  await RecordsArchiveMigration().run(prefs);
 
   // Initialize notifications (only for mobile platforms)
   if (!kIsWeb) {

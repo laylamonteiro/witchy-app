@@ -27,14 +27,12 @@ class UserSpellsListPage extends StatefulWidget {
 
   /// Quando verdadeiro, lista apenas as páginas de registro do Grimório
   /// Vivo (Meus Registros), separadas dos feitiços.
-  final bool recordsOnly;
 
   const UserSpellsListPage({
     super.key,
     this.title,
     this.categoryGroup,
     this.initialSource = SpellSource.all,
-    this.recordsOnly = false,
   });
 
   @override
@@ -81,9 +79,8 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: widget.recordsOnly
-                            ? AppLocalizations.of(context).grimoireSearchRecords
-                            : AppLocalizations.of(context).grimoireSearchSpells,
+                        hintText:
+                            AppLocalizations.of(context).grimoireSearchSpells,
                         prefixIcon: Icon(Icons.search),
                       ),
                       onChanged: (value) {
@@ -93,9 +90,6 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                       },
                     ),
                   ),
-                  // Filtro por categoria de feitiço não faz sentido nos
-                  // registros do Grimório Vivo.
-                  if (!widget.recordsOnly) ...[
                   const SizedBox(width: 8),
                   PopupMenuButton<String>(
                     icon: Icon(
@@ -165,28 +159,24 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                           )),
                     ],
                   ),
-                  ],
                 ],
               ),
             ),
 
             // Filtro de origem: Todos / Meus / Ancestrais
-            // (sem sentido na aba de registros do Grimório Vivo)
-            if (!widget.recordsOnly) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    _buildSourceChip(AppLocalizations.of(context).spellSourceAll, SpellSource.all),
-                    const SizedBox(width: 8),
-                    _buildSourceChip(AppLocalizations.of(context).spellSourceMine, SpellSource.mine),
-                    const SizedBox(width: 8),
-                    _buildSourceChip(AppLocalizations.of(context).spellSourceAncestral, SpellSource.ancestral),
-                  ],
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _buildSourceChip(AppLocalizations.of(context).spellSourceAll, SpellSource.all),
+                  const SizedBox(width: 8),
+                  _buildSourceChip(AppLocalizations.of(context).spellSourceMine, SpellSource.mine),
+                  const SizedBox(width: 8),
+                  _buildSourceChip(AppLocalizations.of(context).spellSourceAncestral, SpellSource.ancestral),
+                ],
               ),
-              const SizedBox(height: 8),
-            ],
+            ),
+            const SizedBox(height: 8),
 
             // Lista de feitiços
             Expanded(
@@ -203,11 +193,6 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                       : _source == SpellSource.ancestral
                           ? provider.appSpells
                           : provider.spells;
-                  // Registros do Grimório Vivo ficam na aba própria.
-                  spells = spells
-                      .where((s) => s.isRecord == widget.recordsOnly)
-                      .toList();
-
                   // Aplicar filtros
                   if (_searchQuery.isNotEmpty) {
                     spells = spells
@@ -232,17 +217,13 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                     final hasActiveFilter =
                         _searchQuery.isNotEmpty || _filterCategory != null;
                     // Ação "Adicionar Feitiço" só faz sentido quando não há
-                    // filtro ativo e não estamos vendo apenas os ancestrais;
-                    // registros nascem das lições do Grimório Vivo.
-                    final showAddAction = !widget.recordsOnly &&
-                        !hasActiveFilter &&
-                        _source != SpellSource.ancestral;
+                    // filtro ativo e não estamos vendo apenas os ancestrais.
+                    final showAddAction =
+                        !hasActiveFilter && _source != SpellSource.ancestral;
                     return EmptyStateWidget(
                       message: hasActiveFilter
                           ? AppLocalizations.of(context).spellNoneFound
-                          : widget.recordsOnly
-                              ? AppLocalizations.of(context).grimoireNoRecords
-                              : _source == SpellSource.ancestral
+                          : _source == SpellSource.ancestral
                                   ? AppLocalizations.of(context).spellNoAncestral
                                   : AppLocalizations.of(context).spellEmptyGrimoire,
                       icon: Icons.auto_stories,
@@ -306,13 +287,12 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
                                   spell.category.displayName,
                                   context.gc.lilac,
                                 ),
-                                if (!spell.isRecord)
-                                  _buildChip(
-                                    spell.type.displayName,
-                                    spell.type == SpellType.attraction
-                                        ? context.gc.mint
-                                        : context.gc.pink,
-                                  ),
+                                _buildChip(
+                                  spell.type.displayName,
+                                  spell.type == SpellType.attraction
+                                      ? context.gc.mint
+                                      : context.gc.pink,
+                                ),
                               ],
                             ),
                             if (showMoon) ...[
@@ -332,9 +312,7 @@ class _UserSpellsListPageState extends State<UserSpellsListPage> {
             ),
           ],
         ),
-        // Registros nascem das lições do Grimório Vivo — sem botão de criar.
-        if (!widget.recordsOnly)
-          Positioned(
+        Positioned(
             right: 16,
             bottom: 16,
             child: MagicalFAB(

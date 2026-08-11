@@ -2898,11 +2898,11 @@ abstract class AppLocalizations {
   /// **'Leitura de Mãos'**
   String get palmReadingHeader;
 
-  /// No description provided for @palmSavedToReflections.
+  /// No description provided for @palmSavedToRecords.
   ///
   /// In pt, this message translates to:
   /// **'Leitura salva nas suas Reflexões! ✨'**
-  String get palmSavedToReflections;
+  String get palmSavedToRecords;
 
   /// No description provided for @palmistryTitle.
   ///

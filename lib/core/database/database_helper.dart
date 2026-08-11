@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 19,
+      version: 20,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -162,12 +162,15 @@ class DatabaseHelper {
       )
     ''');
 
-    // Tabela de Escrita Livre (reflexões da aba 💡 de Diários)
+    // Acervo de escrita: reflexões livres (source='free', sem título) e
+    // páginas geradas — lições do Grimório Vivo e leituras (com título).
     await db.execute('''
       CREATE TABLE free_writings (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL DEFAULT 'local_user',
+        title TEXT,
         content TEXT NOT NULL,
+        source TEXT NOT NULL DEFAULT 'free',
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         synced INTEGER NOT NULL DEFAULT 0
@@ -1054,6 +1057,20 @@ class DatabaseHelper {
       // ele alimenta a reconstrução das visitas ANTES de ser podado.
       await _backfillCheckinsFromHistory(db);
       await _keepLatestWeatherPerUser(db);
+    }
+
+    // v20: acervo único de escrita — free_writings ganha título (páginas
+    // geradas) e origem. Guarda por PRAGMA: idempotente mesmo se a versão
+    // gravada e o schema real divergirem.
+    if (oldVersion < 20) {
+      final cols = await db.rawQuery('PRAGMA table_info(free_writings)');
+      if (!cols.any((c) => c['name'] == 'title')) {
+        await db.execute('ALTER TABLE free_writings ADD COLUMN title TEXT');
+      }
+      if (!cols.any((c) => c['name'] == 'source')) {
+        await db.execute(
+            "ALTER TABLE free_writings ADD COLUMN source TEXT NOT NULL DEFAULT 'free'");
+      }
     }
   }
 

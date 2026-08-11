@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
+import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/data/repositories/free_writing_repository.dart';
+import '../../../diary/data/services/reading_archive_composer.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -135,6 +138,15 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       data,
     );
     await DataSyncService().syncItem(SyncEntity.oracleReadings, data);
+
+    // A tiragem também vira uma página em "Meus Registros".
+    final page = ReadingArchiveComposer.oracle(reading);
+    await FreeWritingRepository().insert(FreeWritingModel(
+      userId: data['user_id'] as String?,
+      title: page.title,
+      content: page.content,
+      source: FreeWritingSource.oracle,
+    ));
   }
 
   @override

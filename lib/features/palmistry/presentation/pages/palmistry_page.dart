@@ -13,7 +13,7 @@ import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../diary/data/models/free_writing_model.dart';
-import '../../../diary/presentation/pages/free_writing_tab.dart';
+import '../../../grimoire/presentation/pages/record_detail_page.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
@@ -139,9 +139,13 @@ class _PalmistryPageState extends State<PalmistryPage> {
         '${now.month.toString().padLeft(2, '0')}/${now.year}';
     // _saved marcado antes do await bloqueia toques repetidos no botão.
     setState(() => _saved = true);
+    // Leitura gerada: entra no acervo "Meus Registros" (não é uma
+    // reflexão escrita pela Bruxa). O título carrega a data que antes
+    // abria o texto.
     final writing = FreeWritingModel(
-      content:
-          '🖐️ ${AppLocalizations.of(context).palmReadingHeader} — $date\n\n$reading',
+      title: '${AppLocalizations.of(context).palmReadingHeader} — $date',
+      content: reading,
+      source: FreeWritingSource.palmistry,
     );
     final provider = context.read<FreeWritingProvider>();
     await provider.save(writing);
@@ -161,14 +165,14 @@ class _PalmistryPageState extends State<PalmistryPage> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context).palmSavedToReflections),
+        content: Text(AppLocalizations.of(context).palmSavedToRecords),
         backgroundColor: context.gc.success,
       ),
     );
-    // Leva direto à reflexão recém-criada (voltar dela cai na tela
-    // anterior, sem ter que procurar manualmente na Escrita Livre).
+    // Leva direto ao registro recém-criado (voltar dele cai na tela
+    // anterior, sem ter que procurar em Meus Registros).
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => FreeWritingTab(initial: writing)),
+      MaterialPageRoute(builder: (_) => RecordDetailPage(entry: writing)),
     );
   }
 

@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/data/repositories/free_writing_repository.dart';
+import '../../../diary/data/services/reading_archive_composer.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -141,6 +144,15 @@ class _PendulumPageState extends State<PendulumPage>
       data,
     );
     await DataSyncService().syncItem(SyncEntity.pendulumConsultations, data);
+
+    // A consulta também vira uma página em "Meus Registros".
+    final page = ReadingArchiveComposer.pendulum(consultation);
+    await FreeWritingRepository().insert(FreeWritingModel(
+      userId: data['user_id'] as String?,
+      title: page.title,
+      content: page.content,
+      source: FreeWritingSource.pendulum,
+    ));
 
     // Contador já foi incrementado em _askPendulum() antes da animação
     // para prevenir múltiplas consultas simultâneas

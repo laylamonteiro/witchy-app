@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -27,6 +26,9 @@ import '../../../encyclopedia/presentation/pages/add_entry_page.dart';
 import '../../../encyclopedia/presentation/pages/colors_list_page.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../grimoire/presentation/pages/spell_detail_page.dart';
+import '../../../grimoire/presentation/pages/record_detail_page.dart';
+import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../grimoire/presentation/providers/spell_provider.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../runes/presentation/pages/rune_reading_page.dart';
@@ -234,12 +236,8 @@ class _LessonPageState extends State<LessonPage> {
         await context.read<DesireProvider>().addDesire(desire);
         return (_) => DesireFormPage(desire: desire);
 
-      default:
-        // Feitiço de verdade ou página de registro (Meus Registros).
+      case LessonRecordKind.spell:
         final spell = SpellModel(
-          id: lesson.recordKind == LessonRecordKind.spell
-              ? null
-              : 'registro_${const Uuid().v4()}',
           name: _pageTitle,
           purpose: lesson.pagePurpose,
           type: lesson.pageType,
@@ -251,6 +249,20 @@ class _LessonPageState extends State<LessonPage> {
         );
         await context.read<SpellProvider>().addSpell(spell);
         return (_) => SpellDetailPage(spell: spell);
+
+      default:
+        // Página de estudo/reflexão: entra no acervo "Meus Registros"
+        // (free_writings), com a nota da trilha abrindo o conteúdo.
+        final note = AppLocalizations.of(context)
+            .learnPageNote(widget.trail.title, lesson.title);
+        final entry = FreeWritingModel(
+          userId: context.read<AuthProvider>().currentUser.id,
+          title: _pageTitle,
+          content: '$note\n\n$content',
+          source: FreeWritingSource.grimorioVivo,
+        );
+        await context.read<FreeWritingProvider>().save(entry);
+        return (_) => RecordDetailPage(entry: entry);
     }
   }
 
