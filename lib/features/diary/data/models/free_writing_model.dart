@@ -12,9 +12,10 @@ abstract final class FreeWritingSource {
   static const runes = 'runes';
   static const pendulum = 'pendulum';
   static const oracle = 'oracle';
+  static const tarot = 'tarot';
 
   /// Leituras de adivinhação (filtro "Leituras" do acervo).
-  static const readings = {palmistry, runes, pendulum, oracle};
+  static const readings = {palmistry, runes, pendulum, oracle, tarot};
 }
 
 /// Uma entrada do acervo de escrita: reflexão livre (sem título) ou página

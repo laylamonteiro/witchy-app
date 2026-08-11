@@ -696,6 +696,8 @@
   "recordsSourceRunes": "Runas",
   "recordsSourcePendulum": "Péndulo",
   "recordsSourceOracle": "Oráculo",
+  "recordsSourceTarot": "Tarot",
+  "saveToRecords": "Guardar en Registros",
   "recordsSourceReflection": "Reflexión",
   "readingQuestionLabel": "Pregunta",
   "readingAnswerLabel": "Respuesta",

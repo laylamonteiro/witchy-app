@@ -8,6 +8,9 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../data/models/rune_spread_model.dart';
+import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/data/services/reading_archive_composer.dart';
+import '../../../diary/presentation/widgets/save_to_records_button.dart';
 import '../../data/data_sources/runes_data.dart';
 import '../../data/repositories/rune_reading_repository.dart';
 import 'rune_detail_page.dart';
@@ -120,6 +123,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     }
   }
 
+  /// Última leitura salva — alimenta o botão "Salvar nos Registros".
+  RuneReading? _lastReading;
+
   Future<void> _saveReading(List<RunePosition> positions) async {
     final reading = RuneReading(
       id: const Uuid().v4(),
@@ -135,6 +141,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       reading,
       context.read<AuthProvider>().currentUser.id,
     );
+    if (mounted) setState(() => _lastReading = reading);
   }
 
   @override
@@ -308,6 +315,23 @@ class _RuneReadingPageState extends State<RuneReadingPage>
             // Resultado
             if (_drawnRunes != null) ...[
               _buildReadingResult(_drawnRunes!),
+              if (_lastReading != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: SaveToRecordsButton(
+                    key: ValueKey('save_${_lastReading!.id}'),
+                    buildEntry: () {
+                      final page =
+                          ReadingArchiveComposer.runes(_lastReading!);
+                      return FreeWritingModel(
+                        userId: context.read<AuthProvider>().currentUser.id,
+                        title: page.title,
+                        content: page.content,
+                        source: FreeWritingSource.runes,
+                      );
+                    },
+                  ),
+                ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () {

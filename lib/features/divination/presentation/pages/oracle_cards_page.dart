@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import '../../../diary/data/models/free_writing_model.dart';
-import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
+import '../../../diary/presentation/widgets/save_to_records_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -30,6 +30,9 @@ class _OracleCardsPageState extends State<OracleCardsPage>
     with SingleTickerProviderStateMixin {
   OracleSpreadType _selectedSpread = OracleSpreadType.daily;
   List<OracleCardPosition>? _drawnCards;
+
+  /// Última tiragem salva — alimenta o botão "Salvar nos Registros".
+  OracleReading? _lastReading;
   late AnimationController _animController;
   bool _isDrawing = false;
 
@@ -138,15 +141,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
       data,
     );
     await DataSyncService().syncItem(SyncEntity.oracleReadings, data);
-
-    // A tiragem também vira uma página em "Meus Registros".
-    final page = ReadingArchiveComposer.oracle(reading);
-    await FreeWritingRepository().insert(FreeWritingModel(
-      userId: data['user_id'] as String?,
-      title: page.title,
-      content: page.content,
-      source: FreeWritingSource.oracle,
-    ));
+    if (mounted) setState(() => _lastReading = reading);
   }
 
   @override
@@ -248,6 +243,22 @@ class _OracleCardsPageState extends State<OracleCardsPage>
             if (_drawnCards != null) ...[
               _buildReadingResult(_drawnCards!),
               const SizedBox(height: 16),
+              if (_lastReading != null) ...[
+                SaveToRecordsButton(
+                  key: ValueKey('save_${_lastReading!.id}'),
+                  buildEntry: () {
+                    final page =
+                        ReadingArchiveComposer.oracle(_lastReading!);
+                    return FreeWritingModel(
+                      userId: context.read<AuthProvider>().currentUser.id,
+                      title: page.title,
+                      content: page.content,
+                      source: FreeWritingSource.oracle,
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
               OutlinedButton.icon(
                 onPressed: () {
                   setState(() {
