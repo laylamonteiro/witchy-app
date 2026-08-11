@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
 import '../../../diary/presentation/widgets/save_to_records_button.dart';
+import '../../../../core/ai/ai_service.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -33,6 +34,10 @@ class _OracleCardsPageState extends State<OracleCardsPage>
 
   /// Última tiragem salva — alimenta o botão "Salvar nos Registros".
   OracleReading? _lastReading;
+
+  /// Interpretação do Conselheiro Místico (Premium), como no Tarot.
+  String? _aiReading;
+  bool _isReadingAI = false;
   late AnimationController _animController;
   bool _isDrawing = false;
 
@@ -102,6 +107,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
 
     setState(() {
       _drawnCards = drawn;
+      _aiReading = null;
       _isDrawing = false;
     });
 
@@ -244,11 +250,15 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               _buildReadingResult(_drawnCards!),
               const SizedBox(height: 16),
               if (_lastReading != null) ...[
+                _buildCounselorCard(),
+                const SizedBox(height: 8),
                 SaveToRecordsButton(
                   key: ValueKey('save_${_lastReading!.id}'),
                   buildEntry: () {
-                    final page =
-                        ReadingArchiveComposer.oracle(_lastReading!);
+                    final page = ReadingArchiveComposer.oracle(
+                      _lastReading!,
+                      interpretation: _aiReading,
+                    );
                     return FreeWritingModel(
                       userId: context.read<AuthProvider>().currentUser.id,
                       title: page.title,
@@ -263,6 +273,7 @@ class _OracleCardsPageState extends State<OracleCardsPage>
                 onPressed: () {
                   setState(() {
                     _drawnCards = null;
+                    _aiReading = null;
                     _animController.reset();
                   });
                 },
@@ -341,6 +352,90 @@ class _OracleCardsPageState extends State<OracleCardsPage>
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Interpretação do Conselheiro Místico (Premium): tece a leitura das
+  /// cartas já sorteadas — mesmo fluxo do Tarot.
+  Future<void> _askCounselor() async {
+    final reading = _lastReading;
+    if (reading == null || _isReadingAI) return;
+
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.isPremiumEffective) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
+      );
+      return;
+    }
+
+    setState(() => _isReadingAI = true);
+    try {
+      final page = ReadingArchiveComposer.oracle(reading);
+      final interpretation = await AIService.instance.interpretOracleSpread(
+        summary: '${page.title}\n${page.content}',
+      );
+      if (!mounted) return;
+      setState(() => _aiReading = interpretation);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$e'.replaceAll('Exception: ', '')),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isReadingAI = false);
+    }
+  }
+
+  /// Card do Conselheiro Místico: botão premium que vira o texto tecido —
+  /// idêntico ao da tiragem de Tarot.
+  Widget _buildCounselorCard() {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_aiReading == null)
+            ElevatedButton.icon(
+              onPressed: _isReadingAI ? null : _askCounselor,
+              icon: _isReadingAI
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.gc.onPrimary,
+                      ),
+                    )
+                  : const Icon(Icons.auto_awesome, size: 18),
+              label: Text(
+                _isReadingAI
+                    ? AppLocalizations.of(context).tarotConsultingCards
+                    : AppLocalizations.of(context).tarotAdvisorInterpretation,
+              ),
+            )
+          else ...[
+            Text(
+              AppLocalizations.of(context).tarotAdvisorInterpretation,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: context.gc.lilac,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _aiReading!,
+              style:
+                  Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6),
+            ),
+          ],
+        ],
       ),
     );
   }

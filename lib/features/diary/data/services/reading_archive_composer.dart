@@ -19,7 +19,7 @@ typedef ArchiveEntry = ({String title, String content});
 /// Formato compatível com o renderizador dos registros: linhas `✦ rótulo`
 /// viram destaque, o texto seguinte é o corpo.
 abstract final class ReadingArchiveComposer {
-  static ArchiveEntry runes(RuneReading reading) {
+  static ArchiveEntry runes(RuneReading reading, {String? interpretation}) {
     final l10n = _l10n;
     final parts = <String>[];
     if (reading.question.trim().isNotEmpty &&
@@ -34,6 +34,9 @@ abstract final class ReadingArchiveComposer {
         '✦ ${position.positionMeaning} — ${rune.symbol} ${rune.name}$reversed'
         '\n${rune.description}',
       );
+    }
+    if (interpretation != null && interpretation.trim().isNotEmpty) {
+      parts.add('✦ ${l10n.tarotAdvisorInterpretation}\n$interpretation');
     }
     return (
       title: '${l10n.runesReadingTitle} — ${reading.spreadType.displayName}',
@@ -77,13 +80,15 @@ abstract final class ReadingArchiveComposer {
     return (title: l10n.pendulumTitle, content: content);
   }
 
-  static ArchiveEntry oracle(OracleReading reading) {
+  static ArchiveEntry oracle(OracleReading reading, {String? interpretation}) {
     final l10n = _l10n;
     final parts = <String>[
       for (final position in reading.positions)
         '✦ ${position.positionMeaning} — '
             '${position.card.emoji} ${position.card.name}'
             '\n${position.card.message}\n${position.card.guidance}',
+      if (interpretation != null && interpretation.trim().isNotEmpty)
+        '✦ ${l10n.tarotAdvisorInterpretation}\n$interpretation',
     ];
     return (
       title: '${l10n.oracleTitle} — ${reading.spreadType.displayName}',
