@@ -7,6 +7,7 @@ void main() {
   group('AppDeepLink', () {
     test('payloads são estáveis e fazem round-trip', () {
       expect(AppDeepLink.yourDay.payload, 'today');
+      expect(AppDeepLink.grimoireIndex.payload, 'encyclopedia/index');
       expect(AppDeepLink.moonEncyclopedia.payload, 'encyclopedia/moon');
       expect(AppDeepLink.sunEncyclopedia.payload, 'encyclopedia/sun');
       expect(AppDeepLink.sabbatsEncyclopedia.payload, 'encyclopedia/sabbats');
@@ -27,9 +28,12 @@ void main() {
     });
 
     test('destinos apontam para a seção/aba certa', () {
-      // Bottom bar: 0 = Seu Dia, 1 = Enciclopédia, 2 = Grimório, 3 = Diários.
+      // Bottom bar: 0 = Seu Dia, 1 = Grimório, 2 = Ferramentas, 3 = Diários.
       expect(AppDeepLink.yourDay.homeTab, 0);
       expect(AppDeepLink.yourDay.encyclopediaSection, isNull);
+      expect(AppDeepLink.grimoireIndex.homeTab, 1);
+      expect(AppDeepLink.grimoireIndex.encyclopediaSection,
+          EncyclopediaSection.bookIndex);
       expect(AppDeepLink.moonEncyclopedia.homeTab, 1);
       expect(AppDeepLink.sunEncyclopedia.homeTab, 1);
       expect(AppDeepLink.sabbatsEncyclopedia.homeTab, 1);

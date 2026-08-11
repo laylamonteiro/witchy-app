@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
+import '../../../features/encyclopedia/presentation/pages/encyclopedia_index_page.dart';
 import '../../navigation/app_deep_link.dart';
 import '../../theme/grimoire_colors.dart';
 import 'tour_targets.dart';
@@ -50,15 +51,15 @@ class SalemTourOverlay extends StatefulWidget {
 
 class _SalemTourOverlayState extends State<SalemTourOverlay>
     with TickerProviderStateMixin {
-  /// Abas da bottom bar: 0 = Seu Dia, 1 = Enciclopédia, 2 = Grimório,
-  /// 3 = Diários.
+  /// Abas da bottom bar: 0 = Seu Dia, 1 = Grimório (o livro),
+  /// 2 = Ferramentas, 3 = Diários.
   static const int _navSlots = 4;
 
   static const _TourSpot _navYourDay =
       (id: TourTargetIds.bottomBar, slot: 0, slots: _navSlots);
-  static const _TourSpot _navEncyclopedia =
+  static const _TourSpot _navGrimoireBook =
       (id: TourTargetIds.bottomBar, slot: 1, slots: _navSlots);
-  static const _TourSpot _navGrimoire =
+  static const _TourSpot _navTools =
       (id: TourTargetIds.bottomBar, slot: 2, slots: _navSlots);
   static const _TourSpot _navDiaries =
       (id: TourTargetIds.bottomBar, slot: 3, slots: _navSlots);
@@ -72,11 +73,12 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
     (tab: 0, target: null, link: null, text: _step1),
     // Seu Dia
     (tab: 0, target: _navYourDay, link: null, text: _step2),
-    // Enciclopédia (abre na Lua, a primeira aba)
+    // Grimório — o livro: abre no Índice mostrando a CAPA fechada,
+    // enquanto o Salem convida a tocar nela.
     (
       tab: 1,
-      target: _navEncyclopedia,
-      link: AppDeepLink.moonEncyclopedia,
+      target: _navGrimoireBook,
+      link: AppDeepLink.grimoireIndex,
       text: _step3
     ),
     // Sabbats e rituais guiados (leva até a aba dos Sabbats)
@@ -86,8 +88,8 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
       link: AppDeepLink.sabbatsEncyclopedia,
       text: _step4
     ),
-    // Grimório
-    (tab: 2, target: _navGrimoire, link: null, text: _step5),
+    // Ferramentas
+    (tab: 2, target: _navTools, link: null, text: _step5),
     // Diários
     (tab: 3, target: _navDiaries, link: null, text: _step6),
     // Configurações
@@ -190,6 +192,11 @@ class _SalemTourOverlayState extends State<SalemTourOverlay>
     // A seção leva o conteúdo até onde a fala aponta (ex.: aba dos Sabbats).
     final link = step.link;
     if (link != null) DeepLinkService.instance.dispatch(link);
+    // O passo do Grimório apresenta a CAPA: se o livro ficou aberto de uma
+    // visita anterior ("Rever tour"), fecha para a fala bater com a cena.
+    if (link == AppDeepLink.grimoireIndex) {
+      EncyclopediaIndexPage.scheduleCloseCover();
+    }
     // A aba nova só existe no próximo frame; o pulso de sincronia cobre os
     // casos em que o layout demora mais que isso.
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncTarget());
