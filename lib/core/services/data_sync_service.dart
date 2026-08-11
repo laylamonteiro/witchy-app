@@ -819,10 +819,35 @@ class DataSyncService {
     }
   }
 
+  /// Colunas reais de cada tabela local (cache do PRAGMA por tabela).
+  final Map<String, Set<String>> _localColumnsCache = {};
+
+  /// Mantém no mapa apenas chaves que EXISTEM na tabela local. Quando o
+  /// servidor ganha coluna nova, um app com schema local antigo recebe a
+  /// chave desconhecida no download e o INSERT/UPDATE explodiria — este
+  /// filtro elimina essa classe de bug (a mesma do dailyCheckins).
+  Future<Map<String, dynamic>> _onlyLocalColumns(
+    String table,
+    Map<String, dynamic> item,
+  ) async {
+    var columns = _localColumnsCache[table];
+    if (columns == null) {
+      final db = await _db.database;
+      final info = await db.rawQuery('PRAGMA table_info($table)');
+      columns = info.map((c) => c['name'] as String).toSet();
+      _localColumnsCache[table] = columns;
+    }
+    final cols = columns;
+    return {
+      for (final e in item.entries)
+        if (cols.contains(e.key)) e.key: e.value,
+    };
+  }
+
   /// Atualiza item localmente
   Future<void> _updateLocally(String table, Map<String, dynamic> item) async {
     final db = await _db.database;
-    final data = Map<String, dynamic>.from(item);
+    final data = await _onlyLocalColumns(table, item);
     data['synced'] = 1;
 
     await db.update(
@@ -871,7 +896,7 @@ class DataSyncService {
   /// Insere item localmente
   Future<void> _insertLocally(String table, Map<String, dynamic> item) async {
     final db = await _db.database;
-    final data = Map<String, dynamic>.from(item);
+    final data = await _onlyLocalColumns(table, item);
     data['synced'] = 1;
 
     await db.insert(
