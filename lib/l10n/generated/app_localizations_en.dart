@@ -1511,7 +1511,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get palmReadingHeader => 'Palm Reading';
 
   @override
-  String get palmSavedToReflections => 'Reading saved to your Reflections! ✨';
+  String get palmSavedToRecords => 'Reading saved to your Records! ✨';
 
   @override
   String get palmistryTitle => 'Palmistry';

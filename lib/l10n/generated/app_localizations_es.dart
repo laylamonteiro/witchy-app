@@ -1522,8 +1522,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get palmReadingHeader => 'Lectura de Manos';
 
   @override
-  String get palmSavedToReflections =>
-      '¡Lectura guardada en tus Reflexiones! ✨';
+  String get palmSavedToRecords =>
+      '¡Lectura guardada en tus Registros! ✨';
 
   @override
   String get palmistryTitle => 'Quiromancia';

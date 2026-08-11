@@ -1519,7 +1519,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get palmReadingHeader => 'Leitura de Mãos';
 
   @override
-  String get palmSavedToReflections => 'Leitura salva nas suas Reflexões! ✨';
+  String get palmSavedToRecords => 'Leitura salva nos seus Registros! ✨';
 
   @override
   String get palmistryTitle => 'Quiromancia';
@@ -4162,7 +4162,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get palmReadingHeader => 'Leitura de Mãos';
 
   @override
-  String get palmSavedToReflections => 'Leitura salva nas suas Reflexões! ✨';
+  String get palmSavedToRecords => 'Leitura salva nos seus Registros! ✨';
 
   @override
   String get palmistryTitle => 'Quiromancia';

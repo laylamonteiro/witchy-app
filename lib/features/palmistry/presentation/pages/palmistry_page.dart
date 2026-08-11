@@ -161,7 +161,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context).palmSavedToReflections),
+        content: Text(AppLocalizations.of(context).palmSavedToRecords),
         backgroundColor: context.gc.success,
       ),
     );
