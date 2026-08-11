@@ -9,6 +9,8 @@ import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/data_sources/tarot_concept_questions.dart';
 import '../../data/models/tarot_card_model.dart';
 import '../widgets/tarot_card_view.dart';
+import '../../../learning/data/data_sources/trails_data.dart';
+import '../../../learning/presentation/pages/trail_page.dart';
 
 /// Tutor de Tarot: quiz de significados com combo e sequência de dias.
 class TarotLearnTab extends StatefulWidget {
@@ -83,6 +85,48 @@ class _TarotLearnTabState extends State<TarotLearnTab> {
                       ),
                 ),
               ],
+            ),
+          ),
+          // Lições de Tarot: a trilha do Grimório Vivo, a um toque do quiz.
+          MagicalCard(
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TrailPage(
+                    trail: learningTrails.firstWhere((t) => t.id == 'tarot'),
+                  ),
+                ),
+              ),
+              borderRadius: BorderRadius.circular(12),
+              child: Row(
+                children: [
+                  const Text('🕯️', style: TextStyle(fontSize: 32)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context).tarotLessonsTitle,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: context.gc.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        Text(
+                          AppLocalizations.of(context).tarotLessonsSub,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: context.gc.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: context.gc.textSecondary),
+                ],
+              ),
             ),
           ),
           MagicalCard(

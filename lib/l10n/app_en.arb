@@ -697,6 +697,8 @@
   "recordsSourcePendulum": "Pendulum",
   "recordsSourceOracle": "Oracle",
   "recordsSourceTarot": "Tarot",
+  "tarotLessonsTitle": "Tarot Lessons",
+  "tarotLessonsSub": "The full trail in the Living Grimoire, step by step",
   "saveToRecords": "Save to Records",
   "recordsSourceReflection": "Reflection",
   "readingQuestionLabel": "Question",
