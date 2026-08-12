@@ -31,6 +31,8 @@ class AiPrompts {
     required this.palmistrySystemPrompt,
     required this.tarotSpreadSystemPrompt,
     required this.tarotQuestionIntro,
+    required this.runeSpreadSystemPrompt,
+    required this.oracleSpreadSystemPrompt,
     required this.numerologySystemPrompt,
     required this.dreamInterpreterSystemPrompt,
     required this.palmUserMessage,
@@ -78,6 +80,12 @@ class AiPrompts {
 
   /// Taróloga da tradição Rider-Waite (tiragem já sorteada pelo app).
   final String Function(Gender gender) tarotSpreadSystemPrompt;
+
+  /// Interpretação de uma tiragem de runas já sorteada pelo app.
+  final String Function(Gender gender) runeSpreadSystemPrompt;
+
+  /// Interpretação de uma tiragem do Oráculo já sorteada pelo app.
+  final String Function(Gender gender) oracleSpreadSystemPrompt;
 
   /// Introdução da pergunta de quem consulta na mensagem de usuário do
   /// Tarot — o texto da pergunta em si é passado verbatim, nunca traduzido.

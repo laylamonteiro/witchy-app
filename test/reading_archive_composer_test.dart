@@ -7,6 +7,7 @@ import 'package:grimorio_de_bolso/features/divination/data/models/oracle_card_mo
 import 'package:grimorio_de_bolso/features/divination/data/models/pendulum_model.dart';
 import 'package:grimorio_de_bolso/features/runes/data/models/rune_model.dart';
 import 'package:grimorio_de_bolso/features/runes/data/models/rune_spread_model.dart';
+import 'package:grimorio_de_bolso/features/tarot/data/models/tarot_card_model.dart';
 
 /// O compositor transforma leituras em páginas de texto do acervo, no
 /// formato `✦ rótulo` que o renderizador dos registros destaca.
@@ -71,6 +72,48 @@ void main() {
     expect(page.content, contains('✦ Resposta\n'));
     expect(page.content, contains(PendulumAnswer.yes.displayName));
     expect(page.content, contains(PendulumAnswer.yes.message));
+  });
+
+  test('tarot: pergunta, cartas com posição/inversão e interpretação', () {
+    const card = TarotCard(
+      suit: TarotSuit.major,
+      number: 17,
+      name: 'A Estrela',
+      keywords: ['esperança'],
+      upright: 'Renovação e fé.',
+      reversed: 'Desânimo passageiro.',
+    );
+    final page = ReadingArchiveComposer.tarot(
+      spreadName: 'Carta do Dia',
+      question: 'O que preciso ver?',
+      drawn: const [
+        TarotDrawnCard(
+          card: card,
+          isReversed: true,
+          positionLabel: 'Carta do Dia',
+        ),
+      ],
+      interpretation: 'Confie no processo.',
+    );
+    expect(page.title, 'Tarot — Carta do Dia');
+    expect(page.content, contains('✦ Pergunta\nO que preciso ver?'));
+    expect(page.content,
+        contains('✦ Carta do Dia — A Estrela (invertida)\nDesânimo passageiro.'));
+    expect(page.content, contains('Confie no processo.'));
+
+    final noExtras = ReadingArchiveComposer.tarot(
+      spreadName: 'Carta do Dia',
+      question: '',
+      drawn: const [
+        TarotDrawnCard(
+          card: card,
+          isReversed: false,
+          positionLabel: 'Carta do Dia',
+        ),
+      ],
+    );
+    expect(noExtras.content, isNot(contains('✦ Pergunta')));
+    expect(noExtras.content, contains('Renovação e fé.'));
   });
 
   test('oráculo: uma seção por carta com mensagem e orientação', () {

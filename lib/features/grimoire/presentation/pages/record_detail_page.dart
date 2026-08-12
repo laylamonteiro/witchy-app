@@ -17,6 +17,7 @@ String archiveSourceLabel(AppLocalizations l10n, String source) =>
       FreeWritingSource.runes => l10n.recordsSourceRunes,
       FreeWritingSource.pendulum => l10n.recordsSourcePendulum,
       FreeWritingSource.oracle => l10n.recordsSourceOracle,
+      FreeWritingSource.tarot => l10n.recordsSourceTarot,
       _ => l10n.recordsSourceReflection,
     };
 

@@ -8,6 +8,9 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../data/models/rune_spread_model.dart';
+import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/data/services/reading_archive_composer.dart';
+import '../../../diary/presentation/widgets/save_to_records_button.dart';
 import '../../data/data_sources/runes_data.dart';
 import '../../data/repositories/rune_reading_repository.dart';
 import 'rune_detail_page.dart';
@@ -15,6 +18,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../../core/services/ad_service.dart';
+import '../../../../core/ai/ai_service.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 class RuneReadingPage extends StatefulWidget {
@@ -107,6 +111,7 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     setState(() {
       _drawnRunes = drawn;
       _isDrawing = false;
+      _aiReading = null;
     });
 
     _animController.forward(from: 0);
@@ -119,6 +124,13 @@ class _RuneReadingPageState extends State<RuneReadingPage>
           context.read<DailyCheckinProvider>().completeRite(DailyRites.runes));
     }
   }
+
+  /// Última leitura salva — alimenta o botão "Salvar nos Registros".
+  RuneReading? _lastReading;
+
+  /// Interpretação do Conselheiro Místico (Premium), como no Tarot.
+  String? _aiReading;
+  bool _isReadingAI = false;
 
   Future<void> _saveReading(List<RunePosition> positions) async {
     final reading = RuneReading(
@@ -135,6 +147,50 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       reading,
       context.read<AuthProvider>().currentUser.id,
     );
+    if (mounted) setState(() => _lastReading = reading);
+  }
+
+  /// Interpretação do Conselheiro Místico (Premium): tece a leitura das
+  /// runas já sorteadas — mesmo fluxo do Tarot.
+  Future<void> _askCounselor() async {
+    final reading = _lastReading;
+    if (reading == null || _isReadingAI) return;
+
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.isPremiumEffective) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const PremiumUpgradeSheet(),
+      );
+      return;
+    }
+
+    setState(() => _isReadingAI = true);
+    try {
+      // O compositor do acervo já produz o resumo limpo da tiragem.
+      final page = ReadingArchiveComposer.runes(reading);
+      final question = reading.question.trim();
+      final noQuestion =
+          question.isEmpty || question == AppLocalizations.of(context).runesNoQuestion;
+      final interpretation = await AIService.instance.interpretRuneSpread(
+        summary: '${page.title}\n${page.content}',
+        question: noQuestion ? null : question,
+      );
+      if (!mounted) return;
+      setState(() => _aiReading = interpretation);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$e'.replaceAll('Exception: ', '')),
+          backgroundColor: context.gc.alert,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isReadingAI = false);
+    }
   }
 
   @override
@@ -308,6 +364,27 @@ class _RuneReadingPageState extends State<RuneReadingPage>
             // Resultado
             if (_drawnRunes != null) ...[
               _buildReadingResult(_drawnRunes!),
+              if (_lastReading != null) ...[
+                _buildCounselorCard(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: SaveToRecordsButton(
+                    key: ValueKey('save_${_lastReading!.id}'),
+                    buildEntry: () {
+                      final page = ReadingArchiveComposer.runes(
+                        _lastReading!,
+                        interpretation: _aiReading,
+                      );
+                      return FreeWritingModel(
+                        userId: context.read<AuthProvider>().currentUser.id,
+                        title: page.title,
+                        content: page.content,
+                        source: FreeWritingSource.runes,
+                      );
+                    },
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () {
@@ -528,7 +605,21 @@ class _RuneReadingPageState extends State<RuneReadingPage>
                             ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
+                      // Palavras-chave, como nos cards da tiragem de Tarot.
+                      Wrap(
+                        spacing: 6,
+                        children: position.rune.keywords
+                            .map((k) => Text(
+                                  '· $k',
+                                  style: TextStyle(
+                                    color: context.gc.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 8),
                       Text(
                         position.isReversed &&
                                 position.rune.reversedMeaning != null
@@ -547,6 +638,52 @@ class _RuneReadingPageState extends State<RuneReadingPage>
           );
         }).toList(),
       ],
+    );
+  }
+
+  /// Card do Conselheiro Místico: botão premium que vira o texto tecido —
+  /// idêntico ao da tiragem de Tarot.
+  Widget _buildCounselorCard() {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_aiReading == null)
+            ElevatedButton.icon(
+              onPressed: _isReadingAI ? null : _askCounselor,
+              icon: _isReadingAI
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.gc.onPrimary,
+                      ),
+                    )
+                  : const Icon(Icons.auto_awesome, size: 18),
+              label: Text(
+                _isReadingAI
+                    ? AppLocalizations.of(context).tarotConsultingCards
+                    : AppLocalizations.of(context).tarotAdvisorInterpretation,
+              ),
+            )
+          else ...[
+            Text(
+              AppLocalizations.of(context).tarotAdvisorInterpretation,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: context.gc.lilac,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _aiReading!,
+              style:
+                  Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

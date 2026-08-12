@@ -1,9 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/services/data_sync_service.dart';
-import '../../../diary/data/models/free_writing_model.dart';
-import '../../../diary/data/repositories/free_writing_repository.dart';
-import '../../../diary/data/services/reading_archive_composer.dart';
 import '../models/rune_spread_model.dart';
 
 class RuneReadingRepository {
@@ -32,16 +29,6 @@ class RuneReadingRepository {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     await _syncService.syncItem(SyncEntity.runeReadings, data);
-
-    // A leitura também vira uma página em "Meus Registros" (acervo
-    // unificado) — antes ela era gravada e nunca mais vista.
-    final page = ReadingArchiveComposer.runes(reading);
-    await FreeWritingRepository().insert(FreeWritingModel(
-      userId: userId,
-      title: page.title,
-      content: page.content,
-      source: FreeWritingSource.runes,
-    ));
   }
 
   // Buscar todas as leituras

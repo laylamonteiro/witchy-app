@@ -4,6 +4,7 @@ import '../../../../core/content/content_locale.dart';
 import '../../../divination/data/models/oracle_card_model.dart';
 import '../../../divination/data/models/pendulum_model.dart';
 import '../../../runes/data/models/rune_spread_model.dart';
+import '../../../tarot/data/models/tarot_card_model.dart';
 
 /// Strings do idioma atual sem BuildContext (mesmo padrão dos modelos de
 /// adivinhação): o texto é "assado" no momento do salvamento.
@@ -18,7 +19,7 @@ typedef ArchiveEntry = ({String title, String content});
 /// Formato compatível com o renderizador dos registros: linhas `✦ rótulo`
 /// viram destaque, o texto seguinte é o corpo.
 abstract final class ReadingArchiveComposer {
-  static ArchiveEntry runes(RuneReading reading) {
+  static ArchiveEntry runes(RuneReading reading, {String? interpretation}) {
     final l10n = _l10n;
     final parts = <String>[];
     if (reading.question.trim().isNotEmpty &&
@@ -34,8 +35,38 @@ abstract final class ReadingArchiveComposer {
         '\n${rune.description}',
       );
     }
+    if (interpretation != null && interpretation.trim().isNotEmpty) {
+      parts.add('✦ ${l10n.tarotAdvisorInterpretation}\n$interpretation');
+    }
     return (
       title: '${l10n.runesReadingTitle} — ${reading.spreadType.displayName}',
+      content: parts.join('\n\n'),
+    );
+  }
+
+  static ArchiveEntry tarot({
+    required String spreadName,
+    required String question,
+    required List<TarotDrawnCard> drawn,
+    String? interpretation,
+  }) {
+    final l10n = _l10n;
+    final parts = <String>[];
+    if (question.trim().isNotEmpty) {
+      parts.add('✦ ${l10n.readingQuestionLabel}\n$question');
+    }
+    for (final card in drawn) {
+      final reversed = card.isReversed ? ' (${l10n.tarotReversed})' : '';
+      parts.add(
+        '✦ ${card.positionLabel} — ${card.card.name}$reversed'
+        '\n${card.meaning}',
+      );
+    }
+    if (interpretation != null && interpretation.trim().isNotEmpty) {
+      parts.add('✦ ${l10n.tarotAdvisorInterpretation}\n$interpretation');
+    }
+    return (
+      title: '${l10n.toolTarotTitle} — $spreadName',
       content: parts.join('\n\n'),
     );
   }
@@ -49,13 +80,15 @@ abstract final class ReadingArchiveComposer {
     return (title: l10n.pendulumTitle, content: content);
   }
 
-  static ArchiveEntry oracle(OracleReading reading) {
+  static ArchiveEntry oracle(OracleReading reading, {String? interpretation}) {
     final l10n = _l10n;
     final parts = <String>[
       for (final position in reading.positions)
         '✦ ${position.positionMeaning} — '
             '${position.card.emoji} ${position.card.name}'
             '\n${position.card.message}\n${position.card.guidance}',
+      if (interpretation != null && interpretation.trim().isNotEmpty)
+        '✦ ${l10n.tarotAdvisorInterpretation}\n$interpretation',
     ];
     return (
       title: '${l10n.oracleTitle} — ${reading.spreadType.displayName}',

@@ -4,8 +4,8 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../../diary/data/models/free_writing_model.dart';
-import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
+import '../../../diary/presentation/widgets/save_to_records_button.dart';
 import 'dart:math';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -30,6 +30,9 @@ class _PendulumPageState extends State<PendulumPage>
 
   late AnimationController _swingController;
   PendulumAnswer? _answer;
+
+  /// Última consulta salva — alimenta o botão "Salvar nos Registros".
+  PendulumConsultation? _lastConsultation;
   String _question = '';
   bool _isSwinging = false;
 
@@ -144,15 +147,7 @@ class _PendulumPageState extends State<PendulumPage>
       data,
     );
     await DataSyncService().syncItem(SyncEntity.pendulumConsultations, data);
-
-    // A consulta também vira uma página em "Meus Registros".
-    final page = ReadingArchiveComposer.pendulum(consultation);
-    await FreeWritingRepository().insert(FreeWritingModel(
-      userId: data['user_id'] as String?,
-      title: page.title,
-      content: page.content,
-      source: FreeWritingSource.pendulum,
-    ));
+    if (mounted) setState(() => _lastConsultation = consultation);
 
     // Contador já foi incrementado em _askPendulum() antes da animação
     // para prevenir múltiplas consultas simultâneas
@@ -392,6 +387,22 @@ class _PendulumPageState extends State<PendulumPage>
                 ),
               ),
               const SizedBox(height: 16),
+              if (_lastConsultation != null) ...[
+                SaveToRecordsButton(
+                  key: ValueKey('save_${_lastConsultation!.id}'),
+                  buildEntry: () {
+                    final page =
+                        ReadingArchiveComposer.pendulum(_lastConsultation!);
+                    return FreeWritingModel(
+                      userId: context.read<AuthProvider>().currentUser.id,
+                      title: page.title,
+                      content: page.content,
+                      source: FreeWritingSource.pendulum,
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
               OutlinedButton.icon(
                 onPressed: () {
                   setState(() {

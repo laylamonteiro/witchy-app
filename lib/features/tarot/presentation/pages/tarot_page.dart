@@ -14,6 +14,9 @@ import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
+import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/data/services/reading_archive_composer.dart';
+import '../../../diary/presentation/widgets/save_to_records_button.dart';
 import '../widgets/tarot_card_view.dart';
 import 'tarot_learn_tab.dart';
 import 'tarot_library_page.dart';
@@ -168,10 +171,17 @@ class _SpreadTabState extends State<_SpreadTab> {
 
   /// Carta do dia: determinística pela data E pelo usuário (mesma carta o dia
   /// todo, mas diferente para cada pessoa — não é a mesma para todo mundo).
+  ///
+  /// A PERGUNTA entra na semente: mudar a pergunta muda a carta (cada
+  /// pergunta merece a sua), mas repetir a MESMA pergunta no mesmo dia
+  /// devolve a mesma carta — continua sem dar para "fazendar" tiragens.
+  /// Sem pergunta, vale a carta do dia clássica.
   TarotDrawnCard _dailyCard() {
     final now = DateTime.now();
-    final seed =
+    final question = _questionController.text.trim().toLowerCase();
+    var seed =
         (now.year * 10000 + now.month * 100 + now.day) ^ _userId.hashCode;
+    if (question.isNotEmpty) seed = seed ^ question.hashCode;
     final random = Random(seed);
     final card = tarotCards[random.nextInt(tarotCards.length)];
     return TarotDrawnCard(
@@ -619,6 +629,29 @@ class _SpreadTabState extends State<_SpreadTab> {
                       ),
                     ],
                   ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: SaveToRecordsButton(
+                  // Uma chave por tiragem: o botão renasce a cada cartas
+                  // novas (a assinatura muda), mas não ao interpretar.
+                  key: ValueKey('save_${_signature(_activeSpread!, _drawn)}'),
+                  buildEntry: () {
+                    final page = ReadingArchiveComposer.tarot(
+                      spreadName: _activeSpread!
+                          .displayName(AppLocalizations.of(context)),
+                      question: _question,
+                      drawn: _drawn,
+                      interpretation: _aiReading,
+                    );
+                    return FreeWritingModel(
+                      userId: _userId,
+                      title: page.title,
+                      content: page.content,
+                      source: FreeWritingSource.tarot,
+                    );
+                  },
                 ),
               ),
             ],

@@ -1309,6 +1309,68 @@ class AIService {
     }
   }
 
+  /// Interpretar uma tiragem de runas já sorteada no app (Premium).
+  Future<String> interpretRuneSpread({
+    required String summary,
+    String? question,
+    Gender? gender,
+  }) =>
+      _interpretSpread(
+        systemPrompt: (g) => _prompts.runeSpreadSystemPrompt(g),
+        summary: summary,
+        question: question,
+        tag: 'runas',
+        gender: gender,
+      );
+
+  /// Interpretar uma tiragem do Oráculo já sorteada no app (Premium).
+  Future<String> interpretOracleSpread({
+    required String summary,
+    String? question,
+    Gender? gender,
+  }) =>
+      _interpretSpread(
+        systemPrompt: (g) => _prompts.oracleSpreadSystemPrompt(g),
+        summary: summary,
+        question: question,
+        tag: 'oraculo',
+        gender: gender,
+      );
+
+  /// Miolo comum das interpretações de tiragem (tarot/runas/oráculo): a
+  /// pergunta entra verbatim e ancora a leitura.
+  Future<String> _interpretSpread({
+    required String Function(Gender gender) systemPrompt,
+    required String summary,
+    required String tag,
+    String? question,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    final trimmedQuestion = question?.trim();
+    final userContent = trimmedQuestion == null || trimmedQuestion.isEmpty
+        ? summary
+        : '$summary\n${_prompts.tarotQuestionIntro}\n"$trimmedQuestion"';
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n${systemPrompt(gender)}',
+        userText: userContent,
+        tag: tag,
+        temperature: 0.7,
+        maxTokens: 1100,
+        receiveTimeout: const Duration(seconds: 40),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw Exception(_prompts.errorRateLimit);
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
   /// Explicar (nunca calcular) um perfil numerológico já computado no app.
   Future<String> explainNumerology({
     required String summary,
