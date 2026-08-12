@@ -113,9 +113,14 @@ class RitualOfMomentCard extends StatelessWidget {
 
     candidates.sort((a, b) => a.date.compareTo(b.date));
     final next = candidates.first;
-    // Dias de CALENDÁRIO (véspera = 1): o evento de hoje já foi tratado acima.
+    // Dias de CALENDÁRIO (véspera = 1, hoje = 0). Zero acontece de verdade:
+    // a lua nova pode cair mais tarde HOJE sem que a fase já tenha virado —
+    // aí o card conta as horas, no mesmo tom das Próximas Fases Lunares.
     final targetDay = DateTime(next.date.year, next.date.month, next.date.day);
-    final days = targetDay.difference(today).inDays.clamp(1, 9999);
+    final days =
+        (targetDay.difference(today).inHours / 24).round().clamp(0, 9999);
+    final hours = next.date.difference(now).inHours;
+    final event = '${next.emoji} ${next.name}';
 
     final accent = next.isMoon ? context.gc.lilac : context.gc.starYellow;
     void open() => Navigator.of(context).push(
@@ -132,15 +137,19 @@ class RitualOfMomentCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.yourDayRitualCountdown(
-                    days, '${next.emoji} ${next.name}'),
+                days == 0
+                    ? l10n.yourDayRitualTodayTitle(event)
+                    : l10n.yourDayRitualCountdown(days, event),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              // Véspera: o card convida a preparar em vez de só contar.
-              if (days == 1) ...[
+              // Hoje: as horas que faltam. Véspera: o card convida a
+              // preparar, em vez de só contar.
+              if (days <= 1) ...[
                 const SizedBox(height: 2),
                 Text(
-                  l10n.yourDayRitualEve,
+                  days == 0
+                      ? (hours >= 1 ? l10n.lunarInHours(hours) : l10n.lunarNow)
+                      : l10n.yourDayRitualEve,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: accent,
                         fontWeight: FontWeight.w600,

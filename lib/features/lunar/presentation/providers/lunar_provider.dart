@@ -16,19 +16,24 @@ class LunarProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Lua nova conhecida mais recente: 1 de novembro de 2024, 12:47 UTC
+  /// (09:47 no horário de Brasília). Uma referência recente aumenta a
+  /// precisão do cálculo.
+  static final DateTime _knownNewMoon = DateTime.utc(2024, 11, 1, 12, 47);
+
+  /// Ciclo lunar médio, em dias.
+  static const double _lunarCycle = 29.53059;
+
   // Calcula a fase da lua baseado no ciclo lunar (29.53 dias)
   MoonPhase getCurrentMoonPhase() {
-    // Lua nova conhecida mais recente: 1 de novembro de 2024, 12:47 UTC (09:47 horário de Brasília)
-    // Usar uma referência mais recente aumenta a precisão do cálculo
-    final knownNewMoon = DateTime.utc(2024, 11, 1, 12, 47);
+    // Diferença em dias com precisão de minutos: arredondar para a hora
+    // cheia deslocava as viradas de fase em até uma hora, e a virada é
+    // justamente o que as "Próximas Fases" anunciam.
+    final difference = _selectedDate.toUtc().difference(_knownNewMoon);
+    final daysSinceKnownNewMoon =
+        difference.inMinutes / Duration.minutesPerDay;
 
-    // Calcular diferença em dias com precisão de horas
-    final difference = _selectedDate.toUtc().difference(knownNewMoon);
-    final daysSinceKnownNewMoon = difference.inHours / 24.0;
-
-    // Ciclo lunar médio é de 29.53059 dias
-    const lunarCycle = 29.53059;
-    final phase = (daysSinceKnownNewMoon % lunarCycle) / lunarCycle;
+    final phase = (daysSinceKnownNewMoon % _lunarCycle) / _lunarCycle;
 
     // Determinar a fase baseado na posição no ciclo
     // Thresholds ajustados para maior precisão (~12h de janela para cada fase principal)
@@ -96,38 +101,50 @@ class LunarProvider with ChangeNotifier {
     return _getNextPhaseWithTime(MoonPhase.waningCrescent);
   }
 
-  // Método melhorado que calcula com precisão de horas
+  /// Ponto do ciclo que MARCA cada fase.
+  ///
+  /// As quatro principais têm instante exato — nova (0), quarto crescente
+  /// (¼), cheia (½) e quarto minguante (¾). As de transição são marcadas
+  /// pelo momento em que COMEÇAM, que é a mesma fronteira usada por
+  /// [getCurrentMoonPhase]: "quando a lua vira Crescente".
+  static const Map<MoonPhase, double> _phaseMoment = {
+    MoonPhase.newMoon: 0.0,
+    MoonPhase.waxingCrescent: 0.017,
+    MoonPhase.firstQuarter: 0.25,
+    MoonPhase.waxingGibbous: 0.3125,
+    MoonPhase.fullMoon: 0.5,
+    MoonPhase.waningGibbous: 0.5625,
+    MoonPhase.lastQuarter: 0.75,
+    MoonPhase.waningCrescent: 0.8125,
+  };
+
+  /// Quando a fase acontece de verdade.
+  ///
+  /// Antes isto varria dia a dia e depois hora a hora, e parava na primeira
+  /// hora DENTRO da janela da fase — ou seja, devolvia o começo da janela,
+  /// não o evento: a lua cheia chegava quase dois dias adiantada e a nova,
+  /// meio dia. Agora o instante sai direto da conta do ciclo.
   DateTime? _getNextPhaseWithTime(MoonPhase targetPhase) {
-    // Buscar o dia aproximado primeiro
-    DateTime? approximateDate;
-    for (int i = 1; i <= 30; i++) {
-      final nextDate = _selectedDate.add(Duration(days: i));
-      final tempProvider = LunarProvider();
-      tempProvider._selectedDate = nextDate;
-      if (tempProvider.getCurrentMoonPhase() == targetPhase) {
-        approximateDate = nextDate;
-        break;
-      }
+    final moment = _phaseMoment[targetPhase];
+    if (moment == null) return null;
+
+    final elapsedDays =
+        _selectedDate.toUtc().difference(_knownNewMoon).inMinutes /
+            Duration.minutesPerDay;
+    final currentCycle = (elapsedDays / _lunarCycle).floor();
+
+    // O ponto pode já ter passado neste ciclo: tenta o seguinte.
+    for (var cycle = currentCycle; cycle <= currentCycle + 1; cycle++) {
+      final days = (cycle + moment) * _lunarCycle;
+      // `ceil` (e não `round`) garante que o minuto devolvido já esteja
+      // DENTRO da fase: nas de transição o ponto é a própria fronteira, e
+      // arredondar para trás faria a lista anunciar a fase anterior.
+      final instant = _knownNewMoon
+          .add(Duration(minutes: (days * Duration.minutesPerDay).ceil()))
+          .toLocal();
+      if (instant.isAfter(_selectedDate)) return instant;
     }
-
-    if (approximateDate == null) return null;
-
-    // Refinar para encontrar a hora mais precisa dentro do dia
-    // Procurar desde o dia anterior até o dia seguinte, a cada hora
-    final startSearch = approximateDate.subtract(const Duration(days: 1));
-    for (int hour = 0; hour < 72; hour++) {
-      final candidateDate = startSearch.add(Duration(hours: hour));
-      final tempProvider = LunarProvider();
-      tempProvider._selectedDate = candidateDate;
-
-      // Se encontramos a fase alvo e está no futuro
-      if (tempProvider.getCurrentMoonPhase() == targetPhase &&
-          candidateDate.isAfter(_selectedDate)) {
-        return candidateDate;
-      }
-    }
-
-    return approximateDate;
+    return null;
   }
 
   // Retorna lista de todas as próximas fases em ordem cronológica
