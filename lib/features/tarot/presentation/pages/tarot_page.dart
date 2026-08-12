@@ -169,19 +169,43 @@ class _SpreadTabState extends State<_SpreadTab> {
     await prefs.setString('tarot_ai_$_userId', reading);
   }
 
+  /// Chave do dia de hoje, para lembrar a última pergunta da carta do dia.
+  String _todayKey() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month}-${now.day}';
+  }
+
+  /// Esta pergunta já rendeu a carta do dia HOJE?
+  ///
+  /// A carta é determinística: a mesma pergunta devolve a mesma carta. Então
+  /// repetir a pergunta não é uma tiragem nova — não gasta a cota do dia nem
+  /// esbarra no limite (senão a Bruxa ficaria sem poder rever a própria carta).
+  Future<bool> _isTodaysDailyQuestion(String question) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('tarot_daily_q_$_userId') ==
+        '${_todayKey()}|${question.toLowerCase()}';
+  }
+
+  Future<void> _rememberDailyQuestion(String question) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'tarot_daily_q_$_userId',
+      '${_todayKey()}|${question.toLowerCase()}',
+    );
+  }
+
   /// Carta do dia: determinística pela data E pelo usuário (mesma carta o dia
   /// todo, mas diferente para cada pessoa — não é a mesma para todo mundo).
   ///
   /// A PERGUNTA entra na semente: mudar a pergunta muda a carta (cada
   /// pergunta merece a sua), mas repetir a MESMA pergunta no mesmo dia
-  /// devolve a mesma carta — continua sem dar para "fazendar" tiragens.
-  /// Sem pergunta, vale a carta do dia clássica.
-  TarotDrawnCard _dailyCard() {
+  /// devolve a mesma carta. Sem pergunta, vale a carta do dia clássica.
+  TarotDrawnCard _dailyCard(String question) {
     final now = DateTime.now();
-    final question = _questionController.text.trim().toLowerCase();
+    final asked = question.trim().toLowerCase();
     var seed =
         (now.year * 10000 + now.month * 100 + now.day) ^ _userId.hashCode;
-    if (question.isNotEmpty) seed = seed ^ question.hashCode;
+    if (asked.isNotEmpty) seed = seed ^ asked.hashCode;
     final random = Random(seed);
     final card = tarotCards[random.nextInt(tarotCards.length)];
     return TarotDrawnCard(
@@ -192,9 +216,18 @@ class _SpreadTabState extends State<_SpreadTab> {
   }
 
   Future<void> _startSpread(TarotSpread spread) async {
-    // Carta do dia é determinística e sempre disponível; as demais tiragens
-    // seguem o limite diário do plano Free (mesmo contador do Oráculo).
-    if (spread != TarotSpread.daily) {
+    final question = _questionController.text.trim();
+    // A carta do dia SEM pergunta é sempre livre: é a mesma o dia inteiro.
+    // Com pergunta ela sorteia outra carta — aí é tiragem nova e, no plano
+    // Free, gasta a do dia (mesmo contador do Oráculo). Repetir a mesma
+    // pergunta devolve a mesma carta e não cobra de novo. As demais tiragens
+    // seguem o limite como sempre.
+    final isNewDailyQuestion = spread == TarotSpread.daily &&
+        question.isNotEmpty &&
+        !await _isTodaysDailyQuestion(question);
+    if (!mounted) return;
+
+    if (spread != TarotSpread.daily || isNewDailyQuestion) {
       final authProvider = context.read<AuthProvider>();
       if (!authProvider.canUseOracle) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -216,11 +249,13 @@ class _SpreadTabState extends State<_SpreadTab> {
       await authProvider.incrementOracleReadings();
       if (!mounted) return;
     }
+    if (isNewDailyQuestion) await _rememberDailyQuestion(question);
+    if (!mounted) return;
 
     final positions = spread.positions(AppLocalizations.of(context));
     List<TarotDrawnCard> drawn;
     if (spread == TarotSpread.daily) {
-      drawn = [_dailyCard()];
+      drawn = [_dailyCard(question)];
     } else {
       final random = Random();
       final deck = List<TarotCard>.from(tarotCards)..shuffle(random);
@@ -249,7 +284,7 @@ class _SpreadTabState extends State<_SpreadTab> {
         ));
     setState(() {
       _activeSpread = spread;
-      _question = _questionController.text.trim();
+      _question = question;
       _drawn = drawn;
       _revealed = false;
       _aiReading = null;
