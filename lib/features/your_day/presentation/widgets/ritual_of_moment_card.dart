@@ -62,7 +62,6 @@ class RitualOfMomentCard extends StatelessWidget {
         accent: context.gc.starYellow,
         emoji: sabbat.emoji,
         title: l10n.yourDayRitualTodayTitle(sabbat.name),
-        subtitle: ritual.timing,
         cta: l10n.yourDayRitualCta,
         ritualId: ritual.id,
       );
@@ -73,7 +72,6 @@ class RitualOfMomentCard extends StatelessWidget {
     if (phase == MoonPhase.fullMoon || phase == MoonPhase.newMoon) {
       if (mode != RitualCardMode.todayHero) return const SizedBox.shrink();
       final ritualId = phase == MoonPhase.fullMoon ? 'full_moon' : 'new_moon';
-      final ritual = AllGuidedRituals.byId(ritualId);
       // A fase JÁ está acontecendo: o ponto exato pode ter sido de
       // madrugada, então não serve olhar a "próxima" ocorrência.
       final exact = lunar.momentOfCurrentPhase();
@@ -83,7 +81,6 @@ class RitualOfMomentCard extends StatelessWidget {
         emoji: phase.emoji,
         breathingPhase: phase,
         title: l10n.yourDayRitualTodayTitle(phase.displayName),
-        subtitle: ritual?.timing ?? '',
         exactMoment: exact == null ? null : _exactMoment(l10n, exact),
         cta: l10n.yourDayRitualCta,
         ritualId: ritualId,
@@ -151,14 +148,9 @@ class RitualOfMomentCard extends StatelessWidget {
     String? urgency;
     if (days == 0) {
       urgency = hours >= 1 ? l10n.lunarInHours(hours) : l10n.lunarNow;
-      if (next.isMoon) {
-        urgency = '$urgency · ${DateFormat('HH:mm').format(next.date)}';
-      }
     } else if (days == 1) {
       urgency = l10n.yourDayRitualEve;
     }
-    final exactMoment =
-        next.isMoon && days >= 1 ? _exactMoment(l10n, next.date) : null;
 
     void open() => Navigator.of(context).push(
           MaterialPageRoute(
@@ -189,15 +181,6 @@ class RitualOfMomentCard extends StatelessWidget {
                       ),
                 ),
               ],
-              if (exactMoment != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  exactMoment,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.gc.textSecondary,
-                      ),
-                ),
-              ],
             ],
           ),
         ),
@@ -218,21 +201,21 @@ class _HeroRitual extends StatelessWidget {
   final Color accent;
   final String emoji;
   final String title;
-  final String subtitle;
   final String cta;
   final String ritualId;
 
   /// Quando presente, a lua respira no lugar do emoji estático.
   final MoonPhase? breathingPhase;
 
-  /// "Momento exato: 01:57" — só a lua tem hora marcada.
+  /// "Momento exato: 01:57" — só a lua tem hora marcada. O "quando fazer"
+  /// não entra aqui: já está dentro do ritual guiado, a um toque de
+  /// distância.
   final String? exactMoment;
 
   const _HeroRitual({
     required this.accent,
     required this.emoji,
     required this.title,
-    required this.subtitle,
     required this.cta,
     required this.ritualId,
     this.breathingPhase,
@@ -305,16 +288,6 @@ class _HeroRitual extends StatelessWidget {
                             ),
                           ),
                         ],
-                      ),
-                    ],
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: context.gc.textSecondary,
-                              height: 1.35,
-                            ),
                       ),
                     ],
                   ],
