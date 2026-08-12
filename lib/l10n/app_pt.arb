@@ -1796,29 +1796,18 @@
   "lunarRecommendations": "Recomendações",
   "lunarLoadError": "Erro ao carregar calendário lunar",
   "lunarNow": "Agora!",
+  "lunarDateAt": "{date} às {time}",
+  "@lunarDateAt": {"placeholders": {"date": {}, "time": {}}},
+  "lunarInDays": "Em {count, plural, one{1 dia} other{{count} dias}}",
+  "@lunarInDays": {"placeholders": {"count": {"type": "num"}}},
+  "lunarExactMoment": "Momento exato: {when}",
+  "@lunarExactMoment": {"placeholders": {"when": {}}},
   "lunarInHours": "Em {count, plural, one{1 hora} other{{count} horas}}",
   "@lunarInHours": {
     "placeholders": {
       "count": {
         "type": "num"
       }
-    }
-  },
-  "lunarInHoursAt": "{time} · Em {count, plural, one{1 hora} other{{count} horas}}",
-  "@lunarInHoursAt": {"placeholders": {"count": {"type": "num"}, "time": {}}},
-  "lunarTomorrowAt": "Amanhã às {time}",
-  "@lunarTomorrowAt": {
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "lunarInDaysAt": "Em {count, plural, one{1 dia} other{{count} dias}} às {time}",
-  "@lunarInDaysAt": {
-    "placeholders": {
-      "count": {
-        "type": "num"
-      },
-      "time": {}
     }
   },
   "divinationTitle": "Divinação",
