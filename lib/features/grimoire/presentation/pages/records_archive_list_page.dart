@@ -10,13 +10,23 @@ import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
 import 'record_detail_page.dart';
 
-/// Filtros do acervo: por padrão só o que foi GERADO (páginas de lição e
-/// leituras); "Todas" inclui também as reflexões livres, como consulta.
-enum ArchiveFilter { records, grimorioVivo, readings, all }
+/// Um filtro do acervo: `id` estável (guarda a seleção entre rebuilds),
+/// rótulo do chip e o teste de pertencimento.
+typedef ArchiveFilter = ({
+  String id,
+  String label,
+  bool Function(FreeWritingModel entry) matches,
+});
+
+/// Id do filtro padrão: tudo que foi GERADO (lições e leituras), sem as
+/// reflexões livres.
+const _defaultFilterId = 'records';
 
 /// "Meus Registros": a janela do acervo unificado dentro do Meu Grimório.
-/// As entradas nascem das lições do Grimório Vivo e das leituras
-/// (quiromancia, runas, pêndulo, oráculo) — por isso não há botão de criar.
+/// As entradas nascem das lições do Grimório Vivo e das leituras salvas
+/// (quiromancia, runas, pêndulo, oráculo, tarot) — por isso não há botão de
+/// criar. As reflexões livres têm chip próprio e continuam sendo escritas
+/// na aba 💭 dos Diários.
 class RecordsArchiveListPage extends StatefulWidget {
   const RecordsArchiveListPage({super.key});
 
@@ -26,7 +36,7 @@ class RecordsArchiveListPage extends StatefulWidget {
 }
 
 class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
-  ArchiveFilter _filter = ArchiveFilter.records;
+  String _filterId = _defaultFilterId;
 
   @override
   void initState() {
@@ -36,22 +46,58 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
     });
   }
 
-  bool _matches(FreeWritingModel entry) => switch (_filter) {
-        ArchiveFilter.records => entry.source != FreeWritingSource.free,
-        ArchiveFilter.grimorioVivo =>
-          entry.source == FreeWritingSource.grimorioVivo,
-        ArchiveFilter.readings =>
-          FreeWritingSource.readings.contains(entry.source),
-        ArchiveFilter.all => true,
-      };
+  /// Os chips nascem do que a Bruxa realmente tem no acervo: cada origem
+  /// com entradas vira um filtro, com o mesmo nome do selinho do card —
+  /// nada de chip que abre lista vazia, nem origem visível sem filtro.
+  List<ArchiveFilter> _buildFilters(
+    AppLocalizations l10n,
+    List<FreeWritingModel> entries,
+  ) {
+    final present = entries.map((e) => e.source).toSet();
+    final readings =
+        FreeWritingSource.readings.where(present.contains).toList();
 
-  String _filterLabel(AppLocalizations l10n, ArchiveFilter filter) =>
-      switch (filter) {
-        ArchiveFilter.records => l10n.recordsFilterRecords,
-        ArchiveFilter.grimorioVivo => l10n.recordsFilterGrimorioVivo,
-        ArchiveFilter.readings => l10n.recordsFilterReadings,
-        ArchiveFilter.all => l10n.recordsFilterAll,
-      };
+    return [
+      (
+        id: _defaultFilterId,
+        label: l10n.recordsFilterRecords,
+        matches: (FreeWritingModel e) => e.source != FreeWritingSource.free,
+      ),
+      if (present.contains(FreeWritingSource.grimorioVivo))
+        (
+          id: FreeWritingSource.grimorioVivo,
+          label: l10n.recordsFilterGrimorioVivo,
+          matches: (FreeWritingModel e) =>
+              e.source == FreeWritingSource.grimorioVivo,
+        ),
+      // "Leituras" só entra quando agrupa mais de um tipo: com um só, seria
+      // um chip repetindo o resultado do chip daquela leitura.
+      if (readings.length > 1)
+        (
+          id: 'readings',
+          label: l10n.recordsFilterReadings,
+          matches: (FreeWritingModel e) =>
+              FreeWritingSource.readings.contains(e.source),
+        ),
+      for (final source in readings)
+        (
+          id: source,
+          label: archiveSourceLabel(l10n, source),
+          matches: (FreeWritingModel e) => e.source == source,
+        ),
+      if (present.contains(FreeWritingSource.free))
+        (
+          id: FreeWritingSource.free,
+          label: l10n.recordsFilterReflections,
+          matches: (FreeWritingModel e) => e.source == FreeWritingSource.free,
+        ),
+      (
+        id: 'all',
+        label: l10n.recordsFilterAll,
+        matches: (FreeWritingModel _) => true,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,71 +107,81 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
       appBar: AppBar(
         title: ResponsiveAppBarTitle(l10n.grimoireMyRecords),
       ),
-      body: Column(
-        children: [
-          // Chips de filtro — dentro de UMA superfície, em vez de duas
-          // funcionalidades parecidas.
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                for (final filter in ArchiveFilter.values)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(_filterLabel(l10n, filter)),
-                      selected: _filter == filter,
-                      selectedColor:
-                          context.gc.lilac.withValues(alpha: 0.35),
-                      onSelected: (_) => setState(() => _filter = filter),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Consumer<FreeWritingProvider>(
-              builder: (context, provider, _) {
-                if (provider.isLoading) {
-                  return Center(
-                    child:
-                        CircularProgressIndicator(color: context.gc.lilac),
-                  );
-                }
-                final entries =
-                    provider.freeWritings.where(_matches).toList();
-                if (entries.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        l10n.grimoireNoRecords,
-                        textAlign: TextAlign.center,
-                        style:
-                            TextStyle(color: context.gc.textSecondary),
+      body: Consumer<FreeWritingProvider>(
+        builder: (context, provider, _) {
+          final filters = _buildFilters(l10n, provider.freeWritings);
+          // O chip escolhido pode sumir (última entrada daquela origem
+          // apagada): nesse caso o acervo volta ao filtro padrão.
+          final active = filters.firstWhere(
+            (filter) => filter.id == _filterId,
+            orElse: () => filters.first,
+          );
+          final entries =
+              provider.freeWritings.where(active.matches).toList();
+
+          return Column(
+            children: [
+              // Chips de filtro — dentro de UMA superfície, em vez de duas
+              // funcionalidades parecidas.
+              SizedBox(
+                height: 48,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    for (final filter in filters)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(filter.label),
+                          selected: active.id == filter.id,
+                          selectedColor:
+                              context.gc.lilac.withValues(alpha: 0.35),
+                          onSelected: (_) =>
+                              setState(() => _filterId = filter.id),
+                        ),
                       ),
-                    ),
-                  );
-                }
-                return CascadeScope(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    itemCount: entries.length,
-                    itemBuilder: (context, index) {
-                      final entry = entries[index];
-                      return CascadeIn(
-                        index: index,
-                        child: _buildEntryCard(context, l10n, entry),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+                  ],
+                ),
+              ),
+              Expanded(
+                child: provider.isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: context.gc.lilac,
+                        ),
+                      )
+                    : entries.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32),
+                              child: Text(
+                                l10n.grimoireNoRecords,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: context.gc.textSecondary,
+                                ),
+                              ),
+                            ),
+                          )
+                        : CascadeScope(
+                            child: ListView.builder(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              itemCount: entries.length,
+                              itemBuilder: (context, index) {
+                                final entry = entries[index];
+                                return CascadeIn(
+                                  index: index,
+                                  child:
+                                      _buildEntryCard(context, l10n, entry),
+                                );
+                              },
+                            ),
+                          ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
