@@ -689,8 +689,6 @@
   "spellDeleteConfirm": "Deseja realmente excluir o feitiço \"{name}\"?",
   "recordsFilterRecords": "Registros",
   "recordsFilterGrimorioVivo": "Grimório Vivo",
-  "recordsFilterReadings": "Leituras",
-  "recordsFilterAll": "Todos",
   "recordsFilterReflections": "Reflexões",
   "recordsSourceGrimorioVivo": "Grimório Vivo",
   "recordsSourcePalmistry": "Quiromancia",

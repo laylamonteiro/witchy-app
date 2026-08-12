@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
-import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/magical_fab.dart';
@@ -220,12 +219,10 @@ class _SpellCategoriesHubPageState extends State<SpellCategoriesHubPage> {
 
   Widget _buildGroupCards(BuildContext context, SpellProvider provider) {
     final userCount = provider.userSpells.length;
-    // Registros agora moram no acervo unificado (free_writings).
-    final recordCount = context
-        .watch<FreeWritingProvider>()
-        .freeWritings
-        .where((w) => w.source != FreeWritingSource.free)
-        .length;
+    // Registros agora moram no acervo unificado (free_writings) — e o card
+    // conta o acervo INTEIRO, que é o que a lista abre por padrão.
+    final recordCount =
+        context.watch<FreeWritingProvider>().freeWritings.length;
 
     final cards = <Widget>[
         _buildHubCard(
