@@ -1806,6 +1806,8 @@
       }
     }
   },
+  "lunarInHoursAt": "{time} · Em {count, plural, one{1 hora} other{{count} horas}}",
+  "@lunarInHoursAt": {"placeholders": {"count": {"type": "num"}, "time": {}}},
   "lunarTomorrowAt": "Amanhã às {time}",
   "@lunarTomorrowAt": {
     "placeholders": {

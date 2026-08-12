@@ -1289,6 +1289,7 @@
   "lunarLoadError": "Erro ao carregar calendário lunar",
   "lunarNow": "Agora!",
   "lunarInHours": "Em {count, plural, one{1 hora} other{{count} horas}}",
+  "lunarInHoursAt": "{time} · Em {count, plural, one{1 hora} other{{count} horas}}",
   "lunarTomorrowAt": "Amanhã às {time}",
   "lunarInDaysAt": "Em {count, plural, one{1 dia} other{{count} dias}} às {time}",
   "divinationTitle": "Divinação",

@@ -1289,6 +1289,7 @@
   "lunarLoadError": "Error loading lunar calendar",
   "lunarNow": "Now!",
   "lunarInHours": "In {count, plural, one{1 hour} other{{count} hours}}",
+  "lunarInHoursAt": "{time} · In {count, plural, one{1 hour} other{{count} hours}}",
   "lunarTomorrowAt": "Tomorrow at {time}",
   "lunarInDaysAt": "In {count, plural, one{1 day} other{{count} days}} at {time}",
   "divinationTitle": "Divination",
