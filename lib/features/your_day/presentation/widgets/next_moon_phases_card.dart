@@ -51,14 +51,12 @@ class NextMoonPhasesCard extends StatelessWidget {
       final phaseData = allPhases[i];
       final phase = phaseData['phase'] as MoonPhase;
       final date = phaseData['date'] as DateTime;
-      final daysUntil = phaseData['daysUntil'] as int;
       final hoursUntil = phaseData['hoursUntil'] as int;
 
       widgets.add(_buildPhaseItem(
         context,
         phase,
         date,
-        daysUntil,
         hoursUntil,
       ));
 
@@ -74,24 +72,32 @@ class NextMoonPhasesCard extends StatelessWidget {
     BuildContext context,
     MoonPhase phase,
     DateTime date,
-    int daysUntil,
     int hoursUntil,
   ) {
     final dateFormat = DateFormat('dd/MM/yyyy');
     final timeFormat = DateFormat('HH:mm');
     final l10n = AppLocalizations.of(context);
+    final time = timeFormat.format(date);
 
-    String timeText = '';
-    if (daysUntil == 0) {
-      if (hoursUntil == 0) {
-        timeText = l10n.lunarNow;
-      } else {
-        timeText = l10n.lunarInHours(hoursUntil);
-      }
-    } else if (daysUntil == 1) {
-      timeText = l10n.lunarTomorrowAt(timeFormat.format(date));
+    // Dias de CALENDÁRIO, não de duração: 22 horas podem cair amanhã, e
+    // 46 horas podem cair depois de amanhã. A hora exata aparece sempre —
+    // a fase tem hora marcada, não só dia.
+    final now = DateTime.now();
+    final days = (DateTime(date.year, date.month, date.day)
+                .difference(DateTime(now.year, now.month, now.day))
+                .inHours /
+            24)
+        .round();
+
+    final String timeText;
+    if (hoursUntil < 1) {
+      timeText = l10n.lunarNow;
+    } else if (hoursUntil < 24) {
+      timeText = l10n.lunarInHoursAt(hoursUntil, time);
+    } else if (days == 1) {
+      timeText = l10n.lunarTomorrowAt(time);
     } else {
-      timeText = l10n.lunarInDaysAt(daysUntil, timeFormat.format(date));
+      timeText = l10n.lunarInDaysAt(days, time);
     }
 
     return Container(
