@@ -689,8 +689,6 @@
   "spellDeleteConfirm": "¿Realmente quieres eliminar el hechizo \"{name}\"?",
   "recordsFilterRecords": "Registros",
   "recordsFilterGrimorioVivo": "Grimorio Vivo",
-  "recordsFilterReadings": "Lecturas",
-  "recordsFilterAll": "Todos",
   "recordsFilterReflections": "Reflexiones",
   "recordsSourceGrimorioVivo": "Grimorio Vivo",
   "recordsSourcePalmistry": "Quiromancia",

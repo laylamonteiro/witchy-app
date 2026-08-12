@@ -689,8 +689,6 @@
   "spellDeleteConfirm": "Do you really want to delete the spell \"{name}\"?",
   "recordsFilterRecords": "Records",
   "recordsFilterGrimorioVivo": "Living Grimoire",
-  "recordsFilterReadings": "Readings",
-  "recordsFilterAll": "All",
   "recordsFilterReflections": "Reflections",
   "recordsSourceGrimorioVivo": "Living Grimoire",
   "recordsSourcePalmistry": "Palmistry",

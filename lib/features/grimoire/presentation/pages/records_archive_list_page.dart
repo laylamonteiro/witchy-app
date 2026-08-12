@@ -18,15 +18,15 @@ typedef ArchiveFilter = ({
   bool Function(FreeWritingModel entry) matches,
 });
 
-/// Id do filtro padrão: tudo que foi GERADO (lições e leituras), sem as
-/// reflexões livres.
+/// Id do filtro padrão: o acervo inteiro. Os outros chips é que recortam —
+/// um por origem, sem agrupadores que repetem o resultado de outro chip.
 const _defaultFilterId = 'records';
 
 /// "Meus Registros": a janela do acervo unificado dentro do Meu Grimório.
-/// As entradas nascem das lições do Grimório Vivo e das leituras salvas
-/// (quiromancia, runas, pêndulo, oráculo, tarot) — por isso não há botão de
-/// criar. As reflexões livres têm chip próprio e continuam sendo escritas
-/// na aba 💭 dos Diários.
+/// Abre com tudo à vista — páginas do Grimório Vivo, leituras salvas
+/// (quiromancia, runas, pêndulo, oráculo, tarot) e reflexões — e os chips
+/// recortam por origem. Não há botão de criar: as entradas nascem das
+/// lições, das leituras e da aba 💭 dos Diários.
 class RecordsArchiveListPage extends StatefulWidget {
   const RecordsArchiveListPage({super.key});
 
@@ -61,7 +61,7 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
       (
         id: _defaultFilterId,
         label: l10n.recordsFilterRecords,
-        matches: (FreeWritingModel e) => e.source != FreeWritingSource.free,
+        matches: (FreeWritingModel _) => true,
       ),
       if (present.contains(FreeWritingSource.grimorioVivo))
         (
@@ -69,15 +69,6 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
           label: l10n.recordsFilterGrimorioVivo,
           matches: (FreeWritingModel e) =>
               e.source == FreeWritingSource.grimorioVivo,
-        ),
-      // "Leituras" só entra quando agrupa mais de um tipo: com um só, seria
-      // um chip repetindo o resultado do chip daquela leitura.
-      if (readings.length > 1)
-        (
-          id: 'readings',
-          label: l10n.recordsFilterReadings,
-          matches: (FreeWritingModel e) =>
-              FreeWritingSource.readings.contains(e.source),
         ),
       for (final source in readings)
         (
@@ -91,11 +82,6 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
           label: l10n.recordsFilterReflections,
           matches: (FreeWritingModel e) => e.source == FreeWritingSource.free,
         ),
-      (
-        id: 'all',
-        label: l10n.recordsFilterAll,
-        matches: (FreeWritingModel _) => true,
-      ),
     ];
   }
 
