@@ -128,24 +128,53 @@ class LunarProvider with ChangeNotifier {
     final moment = _phaseMoment[targetPhase];
     if (moment == null) return null;
 
-    final elapsedDays =
-        _selectedDate.toUtc().difference(_knownNewMoon).inMinutes /
-            Duration.minutesPerDay;
-    final currentCycle = (elapsedDays / _lunarCycle).floor();
-
     // O ponto pode já ter passado neste ciclo: tenta o seguinte.
-    for (var cycle = currentCycle; cycle <= currentCycle + 1; cycle++) {
-      final days = (cycle + moment) * _lunarCycle;
-      // `ceil` (e não `round`) garante que o minuto devolvido já esteja
-      // DENTRO da fase: nas de transição o ponto é a própria fronteira, e
-      // arredondar para trás faria a lista anunciar a fase anterior.
-      final instant = _knownNewMoon
-          .add(Duration(minutes: (days * Duration.minutesPerDay).ceil()))
-          .toLocal();
+    final current = _currentCycle();
+    for (var cycle = current; cycle <= current + 1; cycle++) {
+      final instant = _instantOf(cycle, moment);
       if (instant.isAfter(_selectedDate)) return instant;
     }
     return null;
   }
+
+  /// Instante da fase que está acontecendo AGORA — e que pode já ter
+  /// passado: a janela da lua nova abre meio dia antes do ponto exato e só
+  /// fecha meio dia depois, então às 7h da manhã o momento exato pode ter
+  /// sido às 1h.
+  DateTime? momentOfCurrentPhase() {
+    final moment = _phaseMoment[getCurrentMoonPhase()];
+    if (moment == null) return null;
+
+    final current = _currentCycle();
+    final candidates = [
+      for (var cycle = current - 1; cycle <= current + 1; cycle++)
+        _instantOf(cycle, moment),
+    ]..sort((a, b) => a
+        .difference(_selectedDate)
+        .abs()
+        .compareTo(b.difference(_selectedDate).abs()));
+    return candidates.first;
+  }
+
+  /// Quantos ciclos completos separam a referência do momento consultado.
+  int _currentCycle() {
+    final elapsedDays =
+        _selectedDate.toUtc().difference(_knownNewMoon).inMinutes /
+            Duration.minutesPerDay;
+    return (elapsedDays / _lunarCycle).floor();
+  }
+
+  /// O ponto `moment` do ciclo `cycle`, no fuso do aparelho.
+  ///
+  /// `ceil` (e não `round`) garante que o minuto devolvido já esteja DENTRO
+  /// da fase: nas de transição o ponto é a própria fronteira, e arredondar
+  /// para trás faria a lista anunciar a fase anterior.
+  DateTime _instantOf(int cycle, double moment) => _knownNewMoon
+      .add(Duration(
+        minutes:
+            ((cycle + moment) * _lunarCycle * Duration.minutesPerDay).ceil(),
+      ))
+      .toLocal();
 
   // Retorna lista de todas as próximas fases em ordem cronológica
   List<Map<String, dynamic>> getAllNextPhases() {

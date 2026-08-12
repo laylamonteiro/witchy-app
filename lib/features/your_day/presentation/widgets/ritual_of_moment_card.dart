@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
@@ -31,6 +32,21 @@ class RitualOfMomentCard extends StatelessWidget {
 
   const RitualOfMomentCard({super.key, required this.mode});
 
+  /// "Momento exato: 01:57" — com a data junto quando o ponto não cai hoje
+  /// ("Momento exato: 13/08 às 01:57"). A lua tem hora marcada; o sabbat,
+  /// que é um dia inteiro, não usa isso.
+  String _exactMoment(AppLocalizations l10n, DateTime instant) {
+    final now = DateTime.now();
+    final time = DateFormat('HH:mm').format(instant);
+    final isToday = instant.year == now.year &&
+        instant.month == now.month &&
+        instant.day == now.day;
+    final when = isToday
+        ? time
+        : l10n.lunarDateAt(DateFormat('dd/MM').format(instant), time);
+    return l10n.lunarExactMoment(when);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -46,7 +62,6 @@ class RitualOfMomentCard extends StatelessWidget {
         accent: context.gc.starYellow,
         emoji: sabbat.emoji,
         title: l10n.yourDayRitualTodayTitle(sabbat.name),
-        subtitle: ritual.timing,
         cta: l10n.yourDayRitualCta,
         ritualId: ritual.id,
       );
@@ -57,13 +72,16 @@ class RitualOfMomentCard extends StatelessWidget {
     if (phase == MoonPhase.fullMoon || phase == MoonPhase.newMoon) {
       if (mode != RitualCardMode.todayHero) return const SizedBox.shrink();
       final ritualId = phase == MoonPhase.fullMoon ? 'full_moon' : 'new_moon';
-      final ritual = AllGuidedRituals.byId(ritualId);
+      // A fase JÁ está acontecendo: o ponto exato pode ter sido de
+      // madrugada, então não serve olhar a "próxima" ocorrência.
+      final exact = lunar.momentOfCurrentPhase();
       return _HeroRitual(
-        accent: context.gc.lilac,
+        // Dourado como o dos sabbats: é o rito do dia, tem que chamar.
+        accent: context.gc.starYellow,
         emoji: phase.emoji,
         breathingPhase: phase,
         title: l10n.yourDayRitualTodayTitle(phase.displayName),
-        subtitle: ritual?.timing ?? '',
+        exactMoment: exact == null ? null : _exactMoment(l10n, exact),
         cta: l10n.yourDayRitualCta,
         ritualId: ritualId,
       );
@@ -123,6 +141,17 @@ class RitualOfMomentCard extends StatelessWidget {
     final event = '${next.emoji} ${next.name}';
 
     final accent = next.isMoon ? context.gc.lilac : context.gc.starYellow;
+
+    // Hoje: contagem em horas com a hora marcada ao lado (mesmo desenho das
+    // Próximas Fases). Véspera: o convite a preparar. A partir daí, só o
+    // ponto exato — a lua tem hora; o sabbat é o dia inteiro.
+    String? urgency;
+    if (days == 0) {
+      urgency = hours >= 1 ? l10n.lunarInHours(hours) : l10n.lunarNow;
+    } else if (days == 1) {
+      urgency = l10n.yourDayRitualEve;
+    }
+
     void open() => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => GuidedRitualPage(ritualId: next.ritualId),
@@ -142,14 +171,10 @@ class RitualOfMomentCard extends StatelessWidget {
                     : l10n.yourDayRitualCountdown(days, event),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              // Hoje: as horas que faltam. Véspera: o card convida a
-              // preparar, em vez de só contar.
-              if (days <= 1) ...[
+              if (urgency != null) ...[
                 const SizedBox(height: 2),
                 Text(
-                  days == 0
-                      ? (hours >= 1 ? l10n.lunarInHours(hours) : l10n.lunarNow)
-                      : l10n.yourDayRitualEve,
+                  urgency,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: accent,
                         fontWeight: FontWeight.w600,
@@ -176,21 +201,25 @@ class _HeroRitual extends StatelessWidget {
   final Color accent;
   final String emoji;
   final String title;
-  final String subtitle;
   final String cta;
   final String ritualId;
 
   /// Quando presente, a lua respira no lugar do emoji estático.
   final MoonPhase? breathingPhase;
 
+  /// "Momento exato: 01:57" — só a lua tem hora marcada. O "quando fazer"
+  /// não entra aqui: já está dentro do ritual guiado, a um toque de
+  /// distância.
+  final String? exactMoment;
+
   const _HeroRitual({
     required this.accent,
     required this.emoji,
     required this.title,
-    required this.subtitle,
     required this.cta,
     required this.ritualId,
     this.breathingPhase,
+    this.exactMoment,
   });
 
   @override
@@ -240,14 +269,25 @@ class _HeroRitual extends StatelessWidget {
                       title,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: context.gc.textSecondary,
-                              height: 1.35,
+                    if (exactMoment != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, size: 14, color: accent),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              exactMoment!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: accent,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                             ),
+                          ),
+                        ],
                       ),
                     ],
                   ],

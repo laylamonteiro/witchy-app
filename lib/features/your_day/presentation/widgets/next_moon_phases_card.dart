@@ -89,16 +89,15 @@ class NextMoonPhasesCard extends StatelessWidget {
             24)
         .round();
 
-    final String timeText;
-    if (hoursUntil < 1) {
-      timeText = l10n.lunarNow;
-    } else if (hoursUntil < 24) {
-      timeText = l10n.lunarInHoursAt(hoursUntil, time);
-    } else if (days == 1) {
-      timeText = l10n.lunarTomorrowAt(time);
-    } else {
-      timeText = l10n.lunarInDaysAt(days, time);
-    }
+    // Uma linha, sempre no mesmo desenho: contagem regressiva primeiro (é o
+    // que a Bruxa procura), data e hora marcada depois.
+    final countdown = hoursUntil < 1
+        ? l10n.lunarNow
+        : hoursUntil < 24
+            ? l10n.lunarInHours(hoursUntil)
+            : l10n.lunarInDays(days);
+    final timeText =
+        '$countdown · ${l10n.lunarDateAt(dateFormat.format(date), time)}';
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -129,7 +128,7 @@ class NextMoonPhasesCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${dateFormat.format(date)} · $timeText',
+                  timeText,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: context.gc.lilac,
                         fontWeight: FontWeight.w600,
