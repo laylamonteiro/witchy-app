@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -53,7 +54,7 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
   final GlobalKey _previewKey = GlobalKey();
   bool _isBusy = false;
 
-  Future<ByteData> _capturePng(String errorMessage) async {
+  Future<Uint8List> _capturePng(String errorMessage) async {
     final boundary = _previewKey.currentContext?.findRenderObject()
         as RenderRepaintBoundary?;
     if (boundary == null) {
@@ -64,7 +65,7 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
     if (byteData == null) {
       throw Exception(errorMessage);
     }
-    return byteData;
+    return byteData.buffer.asUint8List();
   }
 
   Future<void> _share() async {
@@ -80,7 +81,7 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
         '${directory.path}/${widget.fileName}_'
         '${DateTime.now().millisecondsSinceEpoch}.png',
       );
-      await file.writeAsBytes(bytes.buffer.asUint8List());
+      await file.writeAsBytes(bytes);
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path, mimeType: 'image/png')],
@@ -108,7 +109,7 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
     try {
       final bytes = await _capturePng(l10n.shareImageError);
       await Gal.putImageBytes(
-        bytes.buffer.asUint8List(),
+        bytes,
         name: '${widget.fileName}_${DateTime.now().millisecondsSinceEpoch}',
       );
       messenger.showSnackBar(
