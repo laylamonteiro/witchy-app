@@ -425,10 +425,45 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
               ),
             ),
           ),
+          // A pilha de folhas do livro aberto: bordas de papel espiando à
+          // ESQUERDA da página, o tempo todo — antes só apareciam num
+          // piscar durante a virada. A página de cima fica afastada da
+          // lombada (left: 12) para revelá-las.
+          Positioned(
+            left: 0,
+            top: 10,
+            bottom: 10,
+            right: 24,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color.alphaBlend(
+                  Colors.black.withValues(alpha: 0.12),
+                  BookInk.paperDark,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 5,
+            top: 5,
+            bottom: 5,
+            right: 24,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color.alphaBlend(
+                  Colors.black.withValues(alpha: 0.05),
+                  BookInk.paperDark,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
           // A folha do livro: em repouso é a página parada; ao escolher uma
           // seção, levanta no eixo da lombada (anti-horário, como quem
           // folheia) — e assenta de volta quando o índice é revisitado.
           Positioned.fill(
+            left: 12,
             child: AnimatedBuilder(
               animation: _flip,
               child: page,
