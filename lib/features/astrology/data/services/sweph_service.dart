@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:sweph/sweph.dart';
 
@@ -38,6 +39,17 @@ class SwephService {
   }
 
   Future<void> _init() async {
+    if (kIsWeb) {
+      // Na web não há path_provider nem filesystem gravável. O sweph roda via
+      // WASM e usamos Moshier (SEFLG_MOSEPH), que não depende dos arquivos
+      // .se1, então inicializa sem epheFilesPath.
+      // NOTA: depende do sweph.wasm ser servido (setup do sweph web). Se o
+      // asset não estiver presente, o cálculo do mapa astral falha aqui — mas
+      // de forma tratável pelo chamador, sem derrubar o resto do app.
+      await Sweph.init();
+      _ready = true;
+      return;
+    }
     // O sweph precisa de um diretório GRAVÁVEL para preparar os arquivos de
     // efemérides. O padrão ('ephe_files', relativo) falha no Android/iOS, onde
     // o diretório de trabalho é somente leitura. Usamos o suporte do app.
