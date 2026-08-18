@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Configuração do RevenueCat para In-App Purchases
 ///
@@ -19,20 +20,26 @@ class RevenueCatConfig {
     defaultValue: '',
   );
 
-  /// Obtém a API key correta para a plataforma atual
+  /// Obtém a API key correta para a plataforma atual.
+  ///
+  /// `!kIsWeb &&` vem primeiro para o short-circuit evitar tocar `Platform.*`
+  /// na web — `dart:io` Platform estoura UnsupportedError no navegador.
   static String get apiKey {
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       return iosApiKey;
-    } else if (Platform.isAndroid) {
+    } else if (!kIsWeb && Platform.isAndroid) {
       return androidApiKey;
     }
     throw UnsupportedError('Plataforma não suportada para pagamentos');
   }
 
-  /// Verifica se o RevenueCat está configurado
+  /// Verifica se o RevenueCat está configurado. Na web, RevenueCat mobile não
+  /// se aplica (o pagamento web usaria Web Billing/Stripe), então retorna false
+  /// sem tocar `Platform.*` — que estouraria no navegador.
   static bool get isConfigured =>
-      (Platform.isIOS && iosApiKey.isNotEmpty) ||
-      (Platform.isAndroid && androidApiKey.isNotEmpty);
+      !kIsWeb &&
+      ((Platform.isIOS && iosApiKey.isNotEmpty) ||
+          (Platform.isAndroid && androidApiKey.isNotEmpty));
 
   /// Entitlement ID principal (configurado no RevenueCat Dashboard)
   /// Este é o entitlement que dá acesso às funcionalidades Pro
