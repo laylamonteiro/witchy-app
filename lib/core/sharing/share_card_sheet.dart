@@ -167,13 +167,19 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
             ),
             // O FittedBox só ENCOLHE a moldura em telas estreitas; o
             // RepaintBoundary fica por dentro, no tamanho lógico cheio,
-            // então a captura não depende do tamanho da tela.
+            // então a captura não depende do tamanho da tela. O ClipRRect
+            // arredonda SÓ a pré-visualização: por estar acima do
+            // RepaintBoundary, não entra no PNG capturado — que sai
+            // retangular cheio, sem cantos transparentes.
             Flexible(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: RepaintBoundary(
-                  key: _previewKey,
-                  child: widget.card,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: RepaintBoundary(
+                    key: _previewKey,
+                    child: widget.card,
+                  ),
                 ),
               ),
             ),
