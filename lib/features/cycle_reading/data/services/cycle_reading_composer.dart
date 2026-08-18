@@ -8,7 +8,8 @@ import '../../../astrology/data/models/enums.dart';
 import '../../../astrology/data/repositories/astrology_repository.dart';
 import '../../../astrology/data/services/transit_calculator.dart';
 import '../../../diary/data/models/free_writing_model.dart';
-import '../../../grimoire/data/models/spell_model.dart' show MoonPhase;
+import '../../../grimoire/data/models/spell_model.dart'
+    show MoonPhase, MoonPhaseExtension;
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../your_day/data/daily_checkin_repository.dart';
 
