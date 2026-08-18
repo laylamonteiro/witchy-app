@@ -1260,8 +1260,6 @@
   "analyticsToday": "Hoy",
   "analyticsThisWeek": "Esta semana",
   "analyticsThisMonth": "Este mes",
-  "analyticsLegendPractice": "Día con práctica",
-  "analyticsLegendVisit": "Solo visita",
   "analyticsPracticeDays": "Días de práctica en {month}",
   "@analyticsPracticeDays": {
     "placeholders": {

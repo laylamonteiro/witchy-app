@@ -759,10 +759,9 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     );
   }
 
-  /// Mini-calendário do mês em DUAS camadas: dia visitado (check-in, tom
-  /// leve — a mesma fonte da sequência) e dia com prática criada (tom
-  /// forte). Assim o calendário nunca contradiz o streak ao lado: entrar
-  /// sem criar nada acende o dia de leve e mantém a corrente visível.
+  /// Mini-calendário do mês: o dia acende quando o app foi aberto (check-in
+  /// — a MESMA fonte da sequência) ou quando há prática criada. Um critério
+  /// só: entrou no app, o dia conta — o calendário nunca contradiz o streak.
   Widget _buildPracticeDaysCard() {
     final practiceDays = _stats['practiceDays'] as Set<int>? ?? const <int>{};
     final visitDays = _stats['visitDays'] as Set<int>? ?? const <int>{};
@@ -807,37 +806,31 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             crossAxisSpacing: 6,
             children: List.generate(daysInMonth, (i) {
               final day = i + 1;
-              final practiced = practiceDays.contains(day);
-              final visited = visitDays.contains(day);
+              final lit =
+                  visitDays.contains(day) || practiceDays.contains(day);
               final isToday = day == now.day;
               final isFuture = day > now.day;
               return Container(
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: practiced
+                  color: lit
                       ? context.gc.lilac.withValues(alpha: 0.35)
-                      : visited
-                          ? context.gc.lilac.withValues(alpha: 0.14)
-                          : context.gc.textPrimary10.withValues(alpha: 0.05),
+                      : context.gc.textPrimary10.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                   border: isToday
                       ? Border.all(color: context.gc.starYellow, width: 1.5)
-                      : practiced
+                      : lit
                           ? Border.all(
                               color: context.gc.lilac.withValues(alpha: 0.6))
-                          : visited
-                              ? Border.all(
-                                  color:
-                                      context.gc.lilac.withValues(alpha: 0.25))
-                              : null,
+                          : null,
                 ),
                 child: Text(
                   '$day',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight:
-                        practiced || isToday ? FontWeight.bold : FontWeight.normal,
-                    color: practiced
+                        lit || isToday ? FontWeight.bold : FontWeight.normal,
+                    color: lit
                         ? context.gc.textPrimary
                         : context.gc.textSecondary.withValues(
                             alpha: isFuture ? 0.35 : 0.7),
@@ -846,43 +839,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               );
             }),
           ),
-          const SizedBox(height: 12),
-          // Legenda das duas camadas.
-          Row(
-            children: [
-              _buildCalendarLegend(
-                context.gc.lilac.withValues(alpha: 0.35),
-                AppLocalizations.of(context).analyticsLegendPractice,
-              ),
-              const SizedBox(width: 16),
-              _buildCalendarLegend(
-                context.gc.lilac.withValues(alpha: 0.14),
-                AppLocalizations.of(context).analyticsLegendVisit,
-              ),
-            ],
-          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCalendarLegend(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, color: context.gc.textSecondary),
-        ),
-      ],
     );
   }
 
