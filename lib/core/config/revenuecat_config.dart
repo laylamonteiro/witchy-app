@@ -45,6 +45,12 @@ class RevenueCatConfig {
   static const String monthlyProductId = 'monthly';
   static const String yearlyProductId = 'yearly';
   static const String lifetimeProductId = 'lifetime';
+
+  /// Produto CONSUMÍVEL da Leitura do Ciclo (lunação/mês) — fora do
+  /// entitlement Pro: cada compra vale UMA leitura, registrada pelo app em
+  /// `cycle_readings` (consumível não gera entitlement no RevenueCat).
+  /// Criar nas lojas como consumable (App Store) / consumível (Play).
+  static const String cycleReadingMonthProductId = 'leitura_ciclo_mes';
 }
 
 /// IDs dos produtos para cada plataforma

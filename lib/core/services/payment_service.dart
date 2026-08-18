@@ -522,6 +522,86 @@ class PaymentService extends ChangeNotifier {
     }
   }
 
+  // ============================================================
+  // CONSUMÍVEIS (compra avulsa — ex.: Leitura do Ciclo)
+  // ============================================================
+
+  /// Cache dos produtos consumíveis buscados na loja (por id).
+  final Map<String, StoreProduct> _consumableProducts = {};
+
+  Future<PurchaseResult> Function(String productId)? _consumableOverride;
+
+  /// Busca (e cacheia) um produto consumível pelo id da loja. Retorna null
+  /// quando o RevenueCat não está configurado ou o produto não existe.
+  Future<StoreProduct?> getConsumableProduct(String productId) async {
+    if (!RevenueCatConfig.isConfigured) return null;
+    final cached = _consumableProducts[productId];
+    if (cached != null) return cached;
+    try {
+      final products = await Purchases.getProducts(
+        [productId],
+        productCategory: ProductCategory.nonSubscription,
+      );
+      if (products.isEmpty) {
+        debugPrint('⚠️ Produto consumível não encontrado: $productId');
+        return null;
+      }
+      return _consumableProducts[productId] = products.first;
+    } catch (e) {
+      debugPrint('❌ Erro ao buscar produto consumível $productId: $e');
+      return null;
+    }
+  }
+
+  /// Preço formatado de um consumível (null enquanto não carregado).
+  Future<String?> getConsumablePriceString(String productId) async =>
+      (await getConsumableProduct(productId))?.priceString;
+
+  /// Compra um produto consumível (`Purchases.purchaseStoreProduct`).
+  ///
+  /// Consumível NÃO gera entitlement: o "crédito" é registrado pelo app
+  /// (ex.: tabela `cycle_readings`) — quem chama grava o registro após o
+  /// sucesso e só o consome quando o produto for entregue de verdade.
+  Future<PurchaseResult> purchaseConsumable(String productId) async {
+    if (_consumableOverride != null) return _consumableOverride!(productId);
+
+    if (!RevenueCatConfig.isConfigured) {
+      return PurchaseResult.error(_l10n.paymentNotConfigured);
+    }
+
+    final product = await getConsumableProduct(productId);
+    if (product == null) {
+      return PurchaseResult.error(_l10n.paymentProductNotFound(productId));
+    }
+
+    _setStatus(PurchaseStatus.loading);
+    try {
+      final purchaseResult = await Purchases.purchaseStoreProduct(product);
+      final customerInfo = purchaseResult.customerInfo;
+      _onCustomerInfoUpdated(customerInfo);
+      _setStatus(PurchaseStatus.success);
+      return PurchaseResult.success(customerInfo);
+    } on PlatformException catch (e) {
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
+      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
+        _setStatus(PurchaseStatus.cancelled);
+        return PurchaseResult.cancelled();
+      }
+      _setStatus(PurchaseStatus.error);
+      return PurchaseResult.error(_getErrorMessage(errorCode));
+    } catch (e) {
+      _setStatus(PurchaseStatus.error);
+      return PurchaseResult.error('Erro inesperado: $e');
+    }
+  }
+
+  @visibleForTesting
+  void setConsumableOverride(
+    Future<PurchaseResult> Function(String productId)? onPurchase,
+  ) {
+    _consumableOverride = onPurchase;
+  }
+
   /// Restaura compras anteriores
   Future<PurchaseResult> restorePurchases() async {
     if (!RevenueCatConfig.isConfigured) {
