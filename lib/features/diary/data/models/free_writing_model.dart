@@ -14,10 +14,6 @@ abstract final class FreeWritingSource {
   static const oracle = 'oracle';
   static const tarot = 'tarot';
 
-  /// Leitura do Ciclo (relatório da compra avulsa): fica no acervo para
-  /// sempre — a análise gerada é o recibo permanente da compra.
-  static const cycleReading = 'cycle_reading';
-
   /// Leituras de adivinhação (filtro "Leituras" do acervo).
   static const readings = {palmistry, runes, pendulum, oracle, tarot};
 }
