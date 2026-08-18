@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/sharing/share_card.dart';
+import '../../../../core/sharing/share_card_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -306,6 +308,41 @@ class _LessonPageState extends State<LessonPage> {
     }
   }
 
+  /// Cartão compartilhável da conquista: a trilha encadernada leva o
+  /// destaque (com o novo título como linha extra, se veio junto);
+  /// só a subida de nível vira o destaque quando não houve encadernação.
+  void _shareAchievement(BuildContext context, LessonReward reward) {
+    final l10n = AppLocalizations.of(context);
+    final level = reward.leveledUpTo;
+
+    final Widget content;
+    if (reward.trailBound) {
+      content = AchievementShareContent(
+        emoji: widget.trail.emoji,
+        title: l10n.learnTrailBound,
+        highlight: widget.trail.title,
+        accent: ShareCard.colors.starYellow,
+        extraLine: level != null
+            ? '${level.emoji} ${l10n.learnNewTitle}: ${level.title}'
+            : null,
+      );
+    } else {
+      content = AchievementShareContent(
+        emoji: level!.emoji,
+        title: l10n.learnNewTitle,
+        highlight: level.title,
+        accent: ShareCard.colors.lilac,
+      );
+    }
+
+    showShareCardSheet(
+      context,
+      fileName: 'evolucao_magica',
+      shareText: l10n.shareAchievementText,
+      card: ShareCard(child: content),
+    );
+  }
+
   /// Selo de conclusão: XP ganho, subida de nível e encadernação da trilha.
   Future<void> _celebrate(LessonReward reward) {
     return showDialog(
@@ -404,6 +441,27 @@ class _LessonPageState extends State<LessonPage> {
                 onPressed: () => Navigator.pop(dialogContext),
                 child: Text(AppLocalizations.of(context).learnSoBeIt),
               ),
+              // Conquistas de verdade (trilha encadernada ou novo título)
+              // podem virar imagem: a evolução mágica vai para o mundo com
+              // o nome do app junto.
+              if (reward.trailBound || reward.leveledUpTo != null) ...[
+                const SizedBox(height: 4),
+                TextButton.icon(
+                  onPressed: () => _shareAchievement(dialogContext, reward),
+                  icon: Icon(
+                    Icons.share_outlined,
+                    size: 18,
+                    color: dialogContext.gc.lilac,
+                  ),
+                  label: Text(
+                    AppLocalizations.of(context).shareImageShare,
+                    style: TextStyle(
+                      color: dialogContext.gc.lilac,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

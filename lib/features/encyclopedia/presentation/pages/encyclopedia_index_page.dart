@@ -378,7 +378,10 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
       child: StarfieldBackground(
         starCount: 30,
         intensity: 0.9,
+        // Clip.none nos dois Stacks: a página esquerda do livro sangra para
+        // fora dos limites (até a borda da tela) e não pode ser cortada.
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             for (final (i, a) in _skySparks.indexed)
               Align(
@@ -394,6 +397,7 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
         child: AspectRatio(
           aspectRatio: 3 / 4,
           child: Stack(
+        clipBehavior: Clip.none,
         children: [
           // Por baixo da folha: o fundo do PRÓPRIO tema (o que a Bruxa
           // escolheu nas Configurações) com um céu de estrelas — a virada
@@ -425,6 +429,27 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
               ),
             ),
           ),
+          // A página ESQUERDA do livro aberto: entra pela borda da TELA e
+          // mostra só sua margem direita, ENCOSTADA na folha do índice —
+          // quem separa as duas é a sombra da própria folha, não um vão.
+          // Livro fechado não tem página à mostra, então só com a capa fora.
+          if (_coverGone)
+            Positioned(
+              left: -40,
+              width: 40,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                decoration: const BoxDecoration(
+                  // Cor sólida ÚNICA: gradiente fazia a faixa parecer ora
+                  // mais clara, ora mais escura conforme o trecho visível.
+                  color: BookInk.paperLight,
+                  borderRadius: BorderRadius.horizontal(
+                    right: Radius.circular(10),
+                  ),
+                ),
+              ),
+            ),
           // A folha do livro: em repouso é a página parada; ao escolher uma
           // seção, levanta no eixo da lombada (anti-horário, como quem
           // folheia) — e assenta de volta quando o índice é revisitado.

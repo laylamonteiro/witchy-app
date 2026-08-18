@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/sharing/share_card.dart';
+import '../../../../core/sharing/share_card_sheet.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../diary/data/models/affirmation_model.dart';
@@ -27,6 +29,21 @@ class _DailyAffirmationCardState extends State<DailyAffirmationCard> {
         provider.loadAffirmations();
       }
     });
+  }
+
+  void _shareAsImage(BuildContext context, AffirmationModel affirmation) {
+    final l10n = AppLocalizations.of(context);
+    showShareCardSheet(
+      context,
+      fileName: 'afirmacao_do_dia',
+      shareText: l10n.shareAffirmationText,
+      card: ShareCard(
+        child: AffirmationShareContent(
+          title: l10n.yourDayAffirmationTitle,
+          text: affirmation.text,
+        ),
+      ),
+    );
   }
 
   @override
@@ -88,23 +105,37 @@ class _DailyAffirmationCardState extends State<DailyAffirmationCard> {
                 ),
               ),
               const SizedBox(height: 4),
+              // Ações em ícones discretos (rótulos viram tooltip): botões
+              // com texto disputavam atenção com a frase, que é a
+              // protagonista do card.
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () => provider.toggleFavorite(affirmation),
-                  icon: Icon(
-                    affirmation.isFavorite
-                        ? Icons.favorite
-                        : Icons.favorite_border,
-                    size: 18,
-                    color: context.gc.pink,
-                  ),
-                  label: Text(
-                    affirmation.isFavorite
-                        ? l10n.yourDayAffirmationSaved
-                        : l10n.yourDayAffirmationSave,
-                    style: TextStyle(color: context.gc.pink, fontSize: 13),
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => _shareAsImage(context, affirmation),
+                      tooltip: l10n.shareImageShare,
+                      icon: Icon(
+                        Icons.share_outlined,
+                        size: 20,
+                        color: context.gc.lilac,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => provider.toggleFavorite(affirmation),
+                      tooltip: affirmation.isFavorite
+                          ? l10n.yourDayAffirmationSaved
+                          : l10n.yourDayAffirmationSave,
+                      icon: Icon(
+                        affirmation.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        size: 20,
+                        color: context.gc.pink,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
