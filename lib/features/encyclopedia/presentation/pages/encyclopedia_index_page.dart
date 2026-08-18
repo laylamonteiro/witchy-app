@@ -378,7 +378,10 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
       child: StarfieldBackground(
         starCount: 30,
         intensity: 0.9,
+        // Clip.none nos dois Stacks: a página esquerda do livro sangra para
+        // fora dos limites (até a borda da tela) e não pode ser cortada.
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             for (final (i, a) in _skySparks.indexed)
               Align(
@@ -394,6 +397,7 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
         child: AspectRatio(
           aspectRatio: 3 / 4,
           child: Stack(
+        clipBehavior: Clip.none,
         children: [
           // Por baixo da folha: o fundo do PRÓPRIO tema (o que a Bruxa
           // escolheu nas Configurações) com um céu de estrelas — a virada
@@ -425,45 +429,40 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
               ),
             ),
           ),
-          // A pilha de folhas do livro aberto: bordas de papel espiando à
-          // ESQUERDA da página, o tempo todo — antes só apareciam num
-          // piscar durante a virada. A página de cima fica afastada da
-          // lombada (left: 12) para revelá-las.
-          Positioned(
-            left: 0,
-            top: 10,
-            bottom: 10,
-            right: 24,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color.alphaBlend(
-                  Colors.black.withValues(alpha: 0.12),
-                  BookInk.paperDark,
+          // A página ESQUERDA do livro aberto: entra pela borda da TELA e
+          // mostra só sua margem direita, com um respiro escuro até a folha
+          // do índice — antes esse vislumbre só existia durante a virada.
+          // Livro fechado não tem página à mostra, então só com a capa fora.
+          if (_coverGone)
+            Positioned(
+              left: -40,
+              width: 34,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [BookInk.paperDark, BookInk.paperLight],
+                  ),
+                  borderRadius: const BorderRadius.horizontal(
+                    right: Radius.circular(10),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(2, 6),
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(10),
               ),
             ),
-          ),
-          Positioned(
-            left: 5,
-            top: 5,
-            bottom: 5,
-            right: 24,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color.alphaBlend(
-                  Colors.black.withValues(alpha: 0.05),
-                  BookInk.paperDark,
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
           // A folha do livro: em repouso é a página parada; ao escolher uma
           // seção, levanta no eixo da lombada (anti-horário, como quem
           // folheia) — e assenta de volta quando o índice é revisitado.
           Positioned.fill(
-            left: 12,
             child: AnimatedBuilder(
               animation: _flip,
               child: page,
