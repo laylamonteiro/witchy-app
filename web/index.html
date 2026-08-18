@@ -18,8 +18,28 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <!--
+    interactive-widget=resizes-content: quando o teclado do celular abre, o
+    navegador redimensiona o CONTEÚDO (e não só a área visível). Sem isso, ao
+    fechar o teclado o canvas do Flutter não voltava ao tamanho e sobrava uma
+    faixa no fim da página. viewport-fit=cover cobre o notch/barra do sistema.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="description" content="Grimório de Bolso: agenda mágica, diário de bruxaria, calendário lunar, astrologia e companheiro de jornada para bruxas e bruxos.">
   <meta name="theme-color" content="#0B0A16">
+
+  <style>
+    /* O fundo da página aparece em qualquer sobra (teclado abrindo/fechando,
+       barra do navegador entrando/saindo). Sem isto ele é branco e salta aos
+       olhos; com a cor do app, some. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0B0A16;
+    }
+  </style>
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
