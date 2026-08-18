@@ -430,13 +430,13 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
             ),
           ),
           // A página ESQUERDA do livro aberto: entra pela borda da TELA e
-          // mostra só sua margem direita, com um respiro escuro até a folha
-          // do índice — antes esse vislumbre só existia durante a virada.
+          // mostra só sua margem direita, ENCOSTADA na folha do índice —
+          // quem separa as duas é a sombra da própria folha, não um vão.
           // Livro fechado não tem página à mostra, então só com a capa fora.
           if (_coverGone)
             Positioned(
               left: -40,
-              width: 34,
+              width: 40,
               top: 0,
               bottom: 0,
               child: Container(
