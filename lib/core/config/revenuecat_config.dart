@@ -20,25 +20,37 @@ class RevenueCatConfig {
     defaultValue: '',
   );
 
+  /// API Key da web (RevenueCat Billing / Stripe) — começa com `rcb_`.
+  ///
+  /// É uma chave à parte das lojas: produtos e preços da web são cadastrados
+  /// separadamente no painel. Sem ela, o app na web simplesmente não oferece
+  /// assinatura (nada quebra).
+  static const String webApiKey = String.fromEnvironment(
+    'REVENUECAT_WEB_KEY',
+    defaultValue: '',
+  );
+
   /// Obtém a API key correta para a plataforma atual.
   ///
-  /// `!kIsWeb &&` vem primeiro para o short-circuit evitar tocar `Platform.*`
+  /// `kIsWeb` é testado primeiro para o short-circuit evitar tocar `Platform.*`
   /// na web — `dart:io` Platform estoura UnsupportedError no navegador.
   static String get apiKey {
-    if (!kIsWeb && Platform.isIOS) {
+    if (kIsWeb) {
+      return webApiKey;
+    } else if (Platform.isIOS) {
       return iosApiKey;
-    } else if (!kIsWeb && Platform.isAndroid) {
+    } else if (Platform.isAndroid) {
       return androidApiKey;
     }
     throw UnsupportedError('Plataforma não suportada para pagamentos');
   }
 
-  /// Verifica se o RevenueCat está configurado. Na web, RevenueCat mobile não
-  /// se aplica (o pagamento web usaria Web Billing/Stripe), então retorna false
-  /// sem tocar `Platform.*` — que estouraria no navegador.
-  static bool get isConfigured =>
-      !kIsWeb &&
-      ((Platform.isIOS && iosApiKey.isNotEmpty) ||
+  /// Verifica se há chave para a plataforma atual. Na web depende da chave do
+  /// RevenueCat Billing; sem ela o app não oferece assinatura no navegador
+  /// (e nada quebra).
+  static bool get isConfigured => kIsWeb
+      ? webApiKey.isNotEmpty
+      : ((Platform.isIOS && iosApiKey.isNotEmpty) ||
           (Platform.isAndroid && androidApiKey.isNotEmpty));
 
   /// Entitlement ID principal (configurado no RevenueCat Dashboard)
