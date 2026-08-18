@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_composer.dart';
@@ -18,9 +20,15 @@ void main() {
   final inPeriod = DateTime(2026, 8, 10).millisecondsSinceEpoch;
   final outOfPeriod = DateTime(2026, 7, 10).millisecondsSinceEpoch;
 
-  setUpAll(() {
+  setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    // Base exclusiva DESTE arquivo: a suíte roda os arquivos de teste em
+    // paralelo e o banco padrão compartilhado colide entre isolates
+    // ("database is locked").
+    await databaseFactory.setDatabasesPath(
+      Directory.systemTemp.createTempSync('cycle_reading_composer_test').path,
+    );
   });
 
   setUp(() async {
