@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
+import '../../../../core/services/data_sync_service.dart';
 import '../../data/daily_checkin_repository.dart';
 
 /// Os ritos do dia — micro-práticas de baixo atrito que fecham o dia da Bruxa.
@@ -56,6 +59,23 @@ class DailyCheckinProvider with ChangeNotifier, WidgetsBindingObserver {
     // vida, reabrir o app num dia novo não registrava a visita e o streak
     // congelava no valor do último load.
     WidgetsBinding.instance.addObserver(this);
+    // O sync pode mesclar ritos vindos da nuvem NA linha de hoje (ex.:
+    // reinstalação com backup descendo depois do primeiro load) — sem
+    // reler, o card "Ritos de Hoje" ficaria desatualizado até o dia virar.
+    _syncSub = DataSyncService().statusStream.listen((status) {
+      if (status == SyncStatus.success) _refreshFromDb();
+    });
+  }
+
+  StreamSubscription<SyncStatus>? _syncSub;
+
+  /// Relê sequência e ritos do banco sem registrar visita nova.
+  Future<void> _refreshFromDb() async {
+    if (!_loaded) return;
+    _streak = await _repository.currentStreak(_userId);
+    _bestStreak = await _repository.bestStreak(_userId);
+    _ritesToday = await _repository.ritesToday(_userId);
+    notifyListeners();
   }
 
   final DailyCheckinRepository _repository = DailyCheckinRepository();
@@ -71,6 +91,7 @@ class DailyCheckinProvider with ChangeNotifier, WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _syncSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
