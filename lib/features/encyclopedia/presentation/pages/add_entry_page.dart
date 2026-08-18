@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
@@ -10,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/ai/ai_service.dart';
+import '../../../../core/services/image_storage_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_button.dart';
@@ -46,8 +49,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _nameController = TextEditingController();
 
-  List<int>? _jpegBytes;
-  String? _tempImagePath;
+  Uint8List? _jpegBytes;
   bool _identifying = false;
   bool _identified = false;
   String? _confidence;
@@ -104,14 +106,22 @@ class _AddEntryPageState extends State<AddEntryPage> {
     if (picked == null || !mounted) return;
 
     // Compressão corrige EXIF e remove metadados (mesmo pipeline da
-    // quiromancia).
-    final compressed = await FlutterImageCompress.compressWithFile(
-      picked.path,
-      minWidth: 1024,
-      minHeight: 1024,
-      quality: 82,
-      format: CompressFormat.jpeg,
-    );
+    // quiromancia). Na web não há arquivo — só a versão por bytes funciona.
+    final compressed = kIsWeb
+        ? await FlutterImageCompress.compressWithList(
+            await picked.readAsBytes(),
+            minWidth: 1024,
+            minHeight: 1024,
+            quality: 82,
+            format: CompressFormat.jpeg,
+          )
+        : await FlutterImageCompress.compressWithFile(
+            picked.path,
+            minWidth: 1024,
+            minHeight: 1024,
+            quality: 82,
+            format: CompressFormat.jpeg,
+          );
     if (compressed == null || !mounted) return;
     if (compressed.length > _maxUploadBytes) {
       setState(() => _error = l10n.encyAddImageTooLarge);
@@ -120,7 +130,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     setState(() {
       _jpegBytes = compressed;
-      _tempImagePath = picked.path;
       _identified = false;
       _generated = null;
       _confidence = null;
@@ -242,15 +251,23 @@ class _AddEntryPageState extends State<AddEntryPage> {
     setState(() => _saving = true);
 
     try {
-      // Persistir a foto no diretório do app (padrão da foto de perfil).
+      // Persistir a foto. Na web não há filesystem: vai para o Supabase
+      // Storage e o banco guarda a referência (`supabase://...`).
       String? savedPath;
       final bytes = _jpegBytes;
       if (bytes != null) {
-        final dir = await getApplicationDocumentsDirectory();
-        final file =
-            File('${dir.path}/encyclopedia_${const Uuid().v4()}.jpg');
-        await file.writeAsBytes(bytes);
-        savedPath = file.path;
+        if (kIsWeb) {
+          savedPath = await ImageStorageService.instance.uploadJpeg(
+            bytes,
+            folder: 'encyclopedia',
+          );
+        } else {
+          final dir = await getApplicationDocumentsDirectory();
+          final file =
+              File('${dir.path}/encyclopedia_${const Uuid().v4()}.jpg');
+          await file.writeAsBytes(bytes);
+          savedPath = file.path;
+        }
       }
 
       if (!mounted) return;
@@ -349,12 +366,15 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
-                  if (_tempImagePath != null) ...[
+                  // Prévia a partir dos bytes já comprimidos: funciona no
+                  // celular e na web (onde o "caminho" é um blob do navegador,
+                  // que Image.file não sabe abrir).
+                  if (_jpegBytes != null) ...[
                     Center(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          File(_tempImagePath!),
+                        child: Image.memory(
+                          _jpegBytes!,
                           width: 180,
                           height: 180,
                           fit: BoxFit.cover,
