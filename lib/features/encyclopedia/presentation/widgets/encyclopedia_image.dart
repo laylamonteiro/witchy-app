@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// Imagem de verbete da enciclopédia: assets do app OU foto tirada pela
@@ -24,6 +25,13 @@ class EncyclopediaImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFile = path.startsWith('/') || path.startsWith('file:');
     if (isFile) {
+      // Fotos pessoais são guardadas como caminho de arquivo local (tiradas no
+      // mobile). Na web não há acesso ao filesystem e Image.file estoura no
+      // build — dados sincronizados do mobile podem trazer esses caminhos.
+      // Mostra o placeholder em vez de derrubar a tela inteira.
+      if (kIsWeb) {
+        return _buildFallback(context);
+      }
       return Image.file(
         File(path.replaceFirst('file://', '')),
         width: width,
@@ -38,6 +46,21 @@ class EncyclopediaImage extends StatelessWidget {
       height: height,
       fit: fit,
       errorBuilder: errorBuilder,
+    );
+  }
+
+  Widget _buildFallback(BuildContext context) {
+    if (errorBuilder != null) {
+      return errorBuilder!(
+        context,
+        UnsupportedError('Imagem de arquivo local indisponível na web'),
+        StackTrace.current,
+      );
+    }
+    return SizedBox(
+      width: width,
+      height: height,
+      child: const Icon(Icons.image_not_supported_outlined),
     );
   }
 }

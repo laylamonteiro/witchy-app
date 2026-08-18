@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -155,7 +156,9 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => _buildDefaultAvatar(),
         );
-      } else {
+      } else if (!kIsWeb) {
+        // Caminho de arquivo local: só existe no mobile. Na web, dart:io File
+        // (e existsSync) estoura — cai no avatar padrão.
         final file = File(_currentPhotoPath!);
         if (file.existsSync()) {
           return Image.file(
