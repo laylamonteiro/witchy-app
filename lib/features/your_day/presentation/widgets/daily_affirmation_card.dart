@@ -105,40 +105,38 @@ class _DailyAffirmationCardState extends State<DailyAffirmationCard> {
                 ),
               ),
               const SizedBox(height: 4),
-              Row(
-                children: [
-                  // Compartilhar a afirmação como imagem, com o nome do
-                  // app assinado no cartão.
-                  TextButton.icon(
-                    onPressed: () => _shareAsImage(context, affirmation),
-                    icon: Icon(
-                      Icons.share_outlined,
-                      size: 18,
-                      color: context.gc.lilac,
+              // Ações em ícones discretos (rótulos viram tooltip): botões
+              // com texto disputavam atenção com a frase, que é a
+              // protagonista do card.
+              Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => _shareAsImage(context, affirmation),
+                      tooltip: l10n.shareImageShare,
+                      icon: Icon(
+                        Icons.share_outlined,
+                        size: 20,
+                        color: context.gc.lilac,
+                      ),
                     ),
-                    label: Text(
-                      l10n.shareImageShare,
-                      style: TextStyle(color: context.gc.lilac, fontSize: 13),
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: () => provider.toggleFavorite(affirmation),
-                    icon: Icon(
-                      affirmation.isFavorite
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      size: 18,
-                      color: context.gc.pink,
-                    ),
-                    label: Text(
-                      affirmation.isFavorite
+                    IconButton(
+                      onPressed: () => provider.toggleFavorite(affirmation),
+                      tooltip: affirmation.isFavorite
                           ? l10n.yourDayAffirmationSaved
                           : l10n.yourDayAffirmationSave,
-                      style: TextStyle(color: context.gc.pink, fontSize: 13),
+                      icon: Icon(
+                        affirmation.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        size: 20,
+                        color: context.gc.pink,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

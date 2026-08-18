@@ -440,22 +440,13 @@ class _EncyclopediaIndexPageState extends State<EncyclopediaIndexPage>
               top: 0,
               bottom: 0,
               child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [BookInk.paperDark, BookInk.paperLight],
-                  ),
-                  borderRadius: const BorderRadius.horizontal(
+                decoration: const BoxDecoration(
+                  // Cor sólida ÚNICA: gradiente fazia a faixa parecer ora
+                  // mais clara, ora mais escura conforme o trecho visível.
+                  color: BookInk.paperLight,
+                  borderRadius: BorderRadius.horizontal(
                     right: Radius.circular(10),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: 10,
-                      offset: const Offset(2, 6),
-                    ),
-                  ],
                 ),
               ),
             ),
