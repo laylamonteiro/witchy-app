@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/theme_provider.dart';
+import 'core/widgets/boot_error_app.dart';
 import 'core/database/database_helper.dart';
 import 'core/database/records_archive_migration.dart';
 import 'core/providers/mascot_provider.dart';
@@ -45,9 +46,70 @@ import 'features/astrology/presentation/providers/astrology_provider.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  // Zona guardada: erros assíncronos não capturados (fora do ciclo de build)
+  // são logados em vez de derrubarem o app silenciosamente — na web eles
+  // viravam um "Uncaught Error" minificado no console e tela branca.
+  runZonedGuarded<void>(() async {
+    // Precisa rodar DENTRO da zona: binding e runApp na mesma zona, senão o
+    // Flutter emite aviso de "Zone mismatch" e os erros escapam da guarda.
+    WidgetsFlutterBinding.ensureInitialized();
 
+    // Erros do framework (build/layout) também vão para o log persistente,
+    // mantendo o comportamento padrão de apresentação.
+    FlutterError.onError = (details) {
+      unawaited(
+        debugLog('ERROR', 'FlutterError: ${details.exceptionAsString()}'),
+      );
+      FlutterError.presentError(details);
+    };
+
+    // Erros de build/render não passam pelo try/catch do _boot; em release o
+    // ErrorWidget padrão é um retângulo cinza mudo — troca por texto legível.
+    ErrorWidget.builder = (details) => Material(
+          color: const Color(0xFF0B0A16),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: SelectableText(
+              'Erro ao renderizar:\n${details.exceptionAsString()}'
+              '\n\n${details.stack ?? ''}',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        );
+
+    await _boot();
+  }, (error, stackTrace) {
+    debugPrint('Erro não capturado (zona): $error\n$stackTrace');
+    unawaited(debugLog('ERROR', 'Erro não capturado (zona): $error'));
+  });
+}
+
+/// Executa a inicialização e sobe o app; se qualquer passo do boot estourar,
+/// renderiza a tela de erro de diagnóstico no lugar da tela branca.
+/// Permanente (produção inclusive), não só debug.
+Future<void> _boot() async {
+  try {
+    final prefs = await _initializeApp();
+    runApp(GrimorioDeBolsoApp(prefs: prefs));
+  } catch (error, stackTrace) {
+    debugPrint('Boot falhou: $error\n$stackTrace');
+    unawaited(debugLog('ERROR', 'Boot falhou: $error'));
+    runApp(BootErrorApp(
+      error: error,
+      stackTrace: stackTrace,
+      onRetry: _boot,
+    ));
+  }
+}
+
+/// Todos os passos de inicialização que antecedem o runApp.
+/// Qualquer exceção aqui é capturada por [_boot] e exibida na [BootErrorApp].
+Future<SharedPreferences> _initializeApp() async {
   // Initialize debug log service FIRST
   await DebugLogService().initialize();
   await debugLog('SYSTEM', 'App iniciando...');
@@ -64,9 +126,11 @@ void main() async {
   await initializeDateFormatting('pt_BR', null);
   await initializeDateFormatting('en', null);
   await initializeDateFormatting('es', null);
+  await debugLog('SYSTEM', 'Timezones e formatos de data prontos');
 
   // Initialize database
   await DatabaseHelper.instance.database;
+  await debugLog('SYSTEM', 'Banco de dados aberto');
 
   // Initialize Supabase
   if (SupabaseConfig.isConfigured) {
@@ -84,6 +148,7 @@ void main() async {
   // Initialize RevenueCat (only for mobile platforms)
   if (!kIsWeb) {
     await PaymentService().initialize();
+    await debugLog('SYSTEM', 'PaymentService inicializado');
   }
 
   // Initialize SharedPreferences
@@ -128,7 +193,8 @@ void main() async {
     unawaited(AdService.instance.initialize());
   }
 
-  runApp(GrimorioDeBolsoApp(prefs: prefs));
+  await debugLog('SYSTEM', 'Boot concluído, subindo a UI');
+  return prefs;
 }
 
 class GrimorioDeBolsoApp extends StatefulWidget {
