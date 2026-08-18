@@ -105,6 +105,10 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
 
       // Dias do mês corrente com pelo menos uma prática (calendário).
       final practiceDays = await _practiceDaysThisMonth(db, userId);
+      // Dias com check-in (app aberto): a MESMA fonte da sequência — sem
+      // isso o calendário contradiz o streak quando a pessoa entra mas não
+      // cria nenhum registro no dia.
+      final visitDays = await _visitDaysThisMonth(db, userId);
 
       // Desejos por status
       final desiresPending = await _countDesiresByStatus(db, userId, 'open');
@@ -137,6 +141,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           'practicesThisWeek': practicesThisWeek,
           'practicesThisMonth': practicesThisMonth,
           'practiceDays': practiceDays,
+          'visitDays': visitDays,
           // Desejos
           'desiresPending': desiresPending,
           'desiresManifested': desiresManifested,
@@ -219,6 +224,31 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       } catch (e) {
         // Tabela indisponível: segue com as demais.
       }
+    }
+    return days;
+  }
+
+  /// Dias (1..31) do mês corrente com check-in registrado (a data é a
+  /// chave local YYYY-MM-DD da tabela `daily_checkins`).
+  Future<Set<int>> _visitDaysThisMonth(dynamic db, String userId) async {
+    final now = DateTime.now();
+    final prefix = '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-';
+    final days = <int>{};
+    try {
+      final result = await db.rawQuery(
+        'SELECT date FROM daily_checkins WHERE user_id = ? AND date LIKE ?',
+        [userId, '$prefix%'],
+      );
+      for (final row in result) {
+        final date = row['date'] as String?;
+        if (date == null || date.length <= prefix.length) continue;
+        final day = int.tryParse(date.substring(prefix.length));
+        if (day != null) days.add(day);
+      }
+    } catch (_) {
+      // Tabela indisponível numa base antiga: calendário segue só com as
+      // práticas.
     }
     return days;
   }
@@ -729,11 +759,12 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     );
   }
 
-  /// Mini-calendário do mês: cada dia vira um quadradinho, aceso quando
-  /// houve pelo menos uma prática — a constância fica visível de relance e
-  /// dá vontade de "pintar" o dia seguinte.
+  /// Mini-calendário do mês: o dia acende quando o app foi aberto (check-in
+  /// — a MESMA fonte da sequência) ou quando há prática criada. Um critério
+  /// só: entrou no app, o dia conta — o calendário nunca contradiz o streak.
   Widget _buildPracticeDaysCard() {
     final practiceDays = _stats['practiceDays'] as Set<int>? ?? const <int>{};
+    final visitDays = _stats['visitDays'] as Set<int>? ?? const <int>{};
     final now = DateTime.now();
     final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
     final locale = Localizations.localeOf(context).toString();
@@ -775,19 +806,20 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             crossAxisSpacing: 6,
             children: List.generate(daysInMonth, (i) {
               final day = i + 1;
-              final practiced = practiceDays.contains(day);
+              final lit =
+                  visitDays.contains(day) || practiceDays.contains(day);
               final isToday = day == now.day;
               final isFuture = day > now.day;
               return Container(
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: practiced
+                  color: lit
                       ? context.gc.lilac.withValues(alpha: 0.35)
                       : context.gc.textPrimary10.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                   border: isToday
                       ? Border.all(color: context.gc.starYellow, width: 1.5)
-                      : practiced
+                      : lit
                           ? Border.all(
                               color: context.gc.lilac.withValues(alpha: 0.6))
                           : null,
@@ -797,8 +829,8 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight:
-                        practiced || isToday ? FontWeight.bold : FontWeight.normal,
-                    color: practiced
+                        lit || isToday ? FontWeight.bold : FontWeight.normal,
+                    color: lit
                         ? context.gc.textPrimary
                         : context.gc.textSecondary.withValues(
                             alpha: isFuture ? 0.35 : 0.7),
