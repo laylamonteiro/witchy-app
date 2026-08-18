@@ -462,12 +462,16 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
               WebMobileFrame(child: navigator ?? const SizedBox.shrink()),
           home: child,
           routes: {
-            '/home': (context) => const HomePage(),
+            // Rotas de conteúdo exigem sessão: na web a URL é endereçável
+            // (o navegador guarda `#/home`) e abriria a Home sem passar pelo
+            // AuthWrapper. Sem login, RequireAuth devolve o fluxo de entrada.
+            '/home': (context) => const RequireAuth(child: HomePage()),
+            '/subscription': (context) =>
+                const RequireAuth(child: SubscriptionPage()),
             '/welcome': (context) => const WelcomePage(),
             '/login': (context) => const LoginPage(),
             '/signup': (context) => const SignupPage(),
             '/onboarding': (context) => const OnboardingPage(),
-            '/subscription': (context) => const SubscriptionPage(),
           },
           debugShowCheckedModeBanner: false,
         ),
