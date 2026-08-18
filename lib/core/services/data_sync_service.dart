@@ -33,7 +33,6 @@ enum SyncEntity {
   dailyCheckins,
   learningProgress,
   userEncyclopediaEntries,
-  cycleReadings,
 }
 
 /// Status de sincronização
@@ -597,8 +596,6 @@ class DataSyncService {
         return SupabaseTables.learningProgress;
       case SyncEntity.userEncyclopediaEntries:
         return SupabaseTables.userEncyclopediaEntries;
-      case SyncEntity.cycleReadings:
-        return SupabaseTables.cycleReadings;
     }
   }
 
@@ -641,8 +638,6 @@ class DataSyncService {
         return 'learning_progress';
       case SyncEntity.userEncyclopediaEntries:
         return 'user_encyclopedia_entries';
-      case SyncEntity.cycleReadings:
-        return 'cycle_readings';
     }
   }
 
@@ -761,12 +756,6 @@ class DataSyncService {
     'daily_checkins': {'created_at', 'updated_at'},
     'learning_progress': {'completed_at', 'updated_at'},
     'user_encyclopedia_entries': {'created_at', 'updated_at'},
-    'cycle_readings': {
-      'period_start',
-      'period_end',
-      'created_at',
-      'updated_at',
-    },
   };
 
   @visibleForTesting
