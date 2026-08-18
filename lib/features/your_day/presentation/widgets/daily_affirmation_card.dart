@@ -40,7 +40,6 @@ class _DailyAffirmationCardState extends State<DailyAffirmationCard> {
       card: ShareCard(
         child: AffirmationShareContent(
           title: l10n.yourDayAffirmationTitle,
-          categoryIcon: affirmation.category.icon,
           text: affirmation.text,
         ),
       ),

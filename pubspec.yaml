@@ -115,6 +115,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/app_icon.png
     - assets/images/
     - assets/images/crystals/
     - assets/images/herbs/

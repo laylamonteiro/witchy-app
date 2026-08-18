@@ -178,24 +178,33 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isBusy ? null : _saveToGallery,
-                    icon: const Icon(Icons.download_outlined, size: 18),
-                    label: Text(l10n.shareImageSave),
-                  ),
+            // Uma ação primária clara (compartilhar) e o salvar como ação
+            // secundária discreta — sem dois botões de pesos diferentes
+            // disputando a mesma linha.
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: _isBusy ? null : _share,
+                icon: const Icon(Icons.share_outlined, size: 18),
+                label: Text(l10n.shareImageShare),
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextButton.icon(
+              onPressed: _isBusy ? null : _saveToGallery,
+              icon: Icon(
+                Icons.download_outlined,
+                size: 18,
+                color: context.gc.textSecondary,
+              ),
+              label: Text(
+                l10n.shareImageSave,
+                style: TextStyle(
+                  color: context.gc.textSecondary,
+                  fontSize: 13,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isBusy ? null : _share,
-                    icon: const Icon(Icons.share_outlined, size: 18),
-                    label: Text(l10n.shareImageShare),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),

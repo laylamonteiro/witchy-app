@@ -27,56 +27,74 @@ class ShareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fundo SÓLIDO até as bordas do retângulo: o PNG capturado não pode
+    // ter cantos transparentes (viram "pontinhas pretas" ao postar).
+    // A moldura arredondada vive DENTRO desse fundo.
     return Container(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.alphaBlend(
-              colors.lilac.withValues(alpha: 0.10),
-              colors.background,
-            ),
-            colors.background,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colors.surfaceBorder, width: 1.5),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            const Positioned.fill(
-              child: CustomPaint(painter: _StarsPainter()),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-              child: Column(
-                children: [
-                  Expanded(child: Center(child: child)),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 1,
-                    margin: const EdgeInsets.symmetric(horizontal: 32),
-                    color: colors.lilac.withValues(alpha: 0.25),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    '🔮 Grimório de Bolso',
-                    style: GoogleFonts.cinzelDecorative(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: colors.lilac,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
+      color: colors.background,
+      padding: const EdgeInsets.all(10),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.alphaBlend(
+                colors.lilac.withValues(alpha: 0.10),
+                colors.background,
               ),
-            ),
-          ],
+              colors.background,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colors.surfaceBorder, width: 1.5),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              const Positioned.fill(
+                child: CustomPaint(painter: _StarsPainter()),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+                child: Column(
+                  children: [
+                    Expanded(child: Center(child: child)),
+                    const SizedBox(height: 12),
+                    Container(
+                      height: 1,
+                      margin: const EdgeInsets.symmetric(horizontal: 32),
+                      color: colors.lilac.withValues(alpha: 0.25),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/app_icon.png',
+                          width: 22,
+                          height: 22,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Grimório de Bolso',
+                          style: GoogleFonts.cinzelDecorative(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: colors.lilac,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -86,13 +104,11 @@ class ShareCard extends StatelessWidget {
 /// Conteúdo do cartão para a Afirmação do Dia.
 class AffirmationShareContent extends StatelessWidget {
   final String title;
-  final String categoryIcon;
   final String text;
 
   const AffirmationShareContent({
     super.key,
     required this.title,
-    required this.categoryIcon,
     required this.text,
   });
 
@@ -102,8 +118,6 @@ class AffirmationShareContent extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(categoryIcon, style: const TextStyle(fontSize: 30)),
-        const SizedBox(height: 10),
         Text(
           title,
           textAlign: TextAlign.center,
