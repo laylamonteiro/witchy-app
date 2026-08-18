@@ -141,7 +141,12 @@ class SupabaseAuthRepository implements AuthRepository {
       if (kIsWeb) {
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
-          redirectTo: SupabaseConfig.redirectUrl,
+          // Para onde a usuária volta DEPOIS do login — a origem do próprio
+          // app (grimoriodebolso.app em produção, localhost em dev), não o
+          // callback interno do Supabase (que era o valor anterior e deixava
+          // a usuária parada numa URL do Supabase em vez de voltar ao app).
+          // Precisa estar na allowlist de Redirect URLs do projeto Supabase.
+          redirectTo: Uri.base.origin,
         );
         return AuthResult.success(UserModel.defaultUser());
       }
