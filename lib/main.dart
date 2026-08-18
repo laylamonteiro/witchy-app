@@ -114,9 +114,17 @@ Future<SharedPreferences> _initializeApp() async {
   await DebugLogService().initialize();
   await debugLog('SYSTEM', 'App iniciando...');
 
-  // Initialize sqflite for web
+  // Initialize sqflite for web.
+  //
+  // Usa o modo SEM web worker: o SQLite (sqlite3.wasm) roda na própria
+  // thread principal, carregado diretamente. Evita o SharedWorker, que
+  // exige secure context e é fonte de falhas silenciosas ("unsupported
+  // result null" no boot) quando não sobe. Para um grimório pessoal de
+  // uma aba só, não há necessidade de compartilhar o banco entre abas,
+  // então o worker não traz benefício e só adiciona um ponto de falha.
   if (kIsWeb) {
-    databaseFactory = databaseFactoryFfiWeb;
+    databaseFactory = databaseFactoryFfiWebNoWebWorker;
+    await debugLog('SYSTEM', 'sqflite web (no web worker) configurado');
   }
 
   // Necessário para os agendamentos locais de Lua e Sabbats.
