@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
-import 'package:sweph/sweph.dart';
+// sweph reexporta kIsWeb; escondemos aqui para usar o de foundation (a fonte
+// canônica) sem conflito de nomes.
+import 'package:sweph/sweph.dart' hide kIsWeb;
 
 import '../models/enums.dart';
 
