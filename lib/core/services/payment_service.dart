@@ -111,6 +111,15 @@ class PaymentService extends ChangeNotifier {
       return;
     }
 
+    if (kIsWeb) {
+      // RevenueCat mobile (SDK nativo, dart:io Platform) não roda na web —
+      // Platform.operatingSystem estoura no navegador. O pagamento web usaria
+      // Web Billing/Stripe, configurado à parte. No-op idempotente aqui, para
+      // que qualquer chamador (subscription_page, telas de debug) não quebre.
+      _isInitialized = true;
+      return;
+    }
+
     debugPrint('🔄 Iniciando RevenueCat...');
     debugPrint('📋 Plataforma: ${Platform.operatingSystem}');
 
