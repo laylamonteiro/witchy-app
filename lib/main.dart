@@ -14,6 +14,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/theme_provider.dart';
 import 'core/widgets/boot_error_app.dart';
+import 'core/widgets/web_mobile_frame.dart';
 import 'core/database/database_helper.dart';
 import 'core/database/records_archive_migration.dart';
 import 'core/providers/mascot_provider.dart';
@@ -456,6 +457,9 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           supportedLocales: LanguageProvider.supportedLocales,
           localeResolutionCallback: LanguageProvider.resolve,
           theme: themeProvider.themeData,
+          // Na web em desktop, enquadra o app numa largura de celular.
+          builder: (context, navigator) =>
+              WebMobileFrame(child: navigator ?? const SizedBox.shrink()),
           home: child,
           routes: {
             '/home': (context) => const HomePage(),
