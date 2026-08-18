@@ -12,6 +12,7 @@ import '../../../lunar/presentation/widgets/moon_day_carousel.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../providers/daily_checkin_provider.dart';
 import '../widgets/continue_trail_card.dart';
+import '../widgets/cycle_reading_offer_card.dart';
 import '../widgets/daily_affirmation_card.dart';
 import '../widgets/daily_rites_card.dart';
 import '../widgets/greeting_header.dart';
@@ -120,6 +121,9 @@ class _YourDayPageState extends State<YourDayPage>
               const NextMoonPhasesCard(),
               const SpellRecommendationsCard(),
               const DailyRitesCard(),
+              // Convite da Leitura do Ciclo (Motor de Ofertas): só aparece
+              // com engajamento real na lunação e dentro dos guardrails.
+              const CycleReadingOfferCard(),
               const MagicalMomentCard(),
               const MagicalWeatherCard(),
               const DailyAffirmationCard(),
