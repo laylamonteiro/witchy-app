@@ -105,6 +105,10 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
 
       // Dias do mês corrente com pelo menos uma prática (calendário).
       final practiceDays = await _practiceDaysThisMonth(db, userId);
+      // Dias com check-in (app aberto): a MESMA fonte da sequência — sem
+      // isso o calendário contradiz o streak quando a pessoa entra mas não
+      // cria nenhum registro no dia.
+      final visitDays = await _visitDaysThisMonth(db, userId);
 
       // Desejos por status
       final desiresPending = await _countDesiresByStatus(db, userId, 'open');
@@ -137,6 +141,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
           'practicesThisWeek': practicesThisWeek,
           'practicesThisMonth': practicesThisMonth,
           'practiceDays': practiceDays,
+          'visitDays': visitDays,
           // Desejos
           'desiresPending': desiresPending,
           'desiresManifested': desiresManifested,
@@ -219,6 +224,31 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
       } catch (e) {
         // Tabela indisponível: segue com as demais.
       }
+    }
+    return days;
+  }
+
+  /// Dias (1..31) do mês corrente com check-in registrado (a data é a
+  /// chave local YYYY-MM-DD da tabela `daily_checkins`).
+  Future<Set<int>> _visitDaysThisMonth(dynamic db, String userId) async {
+    final now = DateTime.now();
+    final prefix = '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-';
+    final days = <int>{};
+    try {
+      final result = await db.rawQuery(
+        'SELECT date FROM daily_checkins WHERE user_id = ? AND date LIKE ?',
+        [userId, '$prefix%'],
+      );
+      for (final row in result) {
+        final date = row['date'] as String?;
+        if (date == null || date.length <= prefix.length) continue;
+        final day = int.tryParse(date.substring(prefix.length));
+        if (day != null) days.add(day);
+      }
+    } catch (_) {
+      // Tabela indisponível numa base antiga: calendário segue só com as
+      // práticas.
     }
     return days;
   }
@@ -729,11 +759,13 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
     );
   }
 
-  /// Mini-calendário do mês: cada dia vira um quadradinho, aceso quando
-  /// houve pelo menos uma prática — a constância fica visível de relance e
-  /// dá vontade de "pintar" o dia seguinte.
+  /// Mini-calendário do mês em DUAS camadas: dia visitado (check-in, tom
+  /// leve — a mesma fonte da sequência) e dia com prática criada (tom
+  /// forte). Assim o calendário nunca contradiz o streak ao lado: entrar
+  /// sem criar nada acende o dia de leve e mantém a corrente visível.
   Widget _buildPracticeDaysCard() {
     final practiceDays = _stats['practiceDays'] as Set<int>? ?? const <int>{};
+    final visitDays = _stats['visitDays'] as Set<int>? ?? const <int>{};
     final now = DateTime.now();
     final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
     final locale = Localizations.localeOf(context).toString();
@@ -776,6 +808,7 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             children: List.generate(daysInMonth, (i) {
               final day = i + 1;
               final practiced = practiceDays.contains(day);
+              final visited = visitDays.contains(day);
               final isToday = day == now.day;
               final isFuture = day > now.day;
               return Container(
@@ -783,14 +816,20 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                 decoration: BoxDecoration(
                   color: practiced
                       ? context.gc.lilac.withValues(alpha: 0.35)
-                      : context.gc.textPrimary10.withValues(alpha: 0.05),
+                      : visited
+                          ? context.gc.lilac.withValues(alpha: 0.14)
+                          : context.gc.textPrimary10.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                   border: isToday
                       ? Border.all(color: context.gc.starYellow, width: 1.5)
                       : practiced
                           ? Border.all(
                               color: context.gc.lilac.withValues(alpha: 0.6))
-                          : null,
+                          : visited
+                              ? Border.all(
+                                  color:
+                                      context.gc.lilac.withValues(alpha: 0.25))
+                              : null,
                 ),
                 child: Text(
                   '$day',
@@ -807,8 +846,43 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
               );
             }),
           ),
+          const SizedBox(height: 12),
+          // Legenda das duas camadas.
+          Row(
+            children: [
+              _buildCalendarLegend(
+                context.gc.lilac.withValues(alpha: 0.35),
+                AppLocalizations.of(context).analyticsLegendPractice,
+              ),
+              const SizedBox(width: 16),
+              _buildCalendarLegend(
+                context.gc.lilac.withValues(alpha: 0.14),
+                AppLocalizations.of(context).analyticsLegendVisit,
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCalendarLegend(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: context.gc.textSecondary),
+        ),
+      ],
     );
   }
 
