@@ -431,6 +431,11 @@ class DataSyncService {
           if (!exists) {
             await _insertLocally(localTable, remote);
             downloaded++;
+          } else if (localTable == 'daily_checkins') {
+            // O dia já existe localmente (ex.: registerVisit da
+            // reinstalação criou a linha vazia antes do backup descer):
+            // mescla os ritos remotos em vez de descartá-los.
+            if (await _mergeRitesLocally(remote)) downloaded++;
           }
         }
       }
@@ -672,6 +677,27 @@ class DataSyncService {
     // então o conflito de verdade é (user_id, date) — sem isto, dois
     // aparelhos criariam linhas duplicadas do mesmo dia.
     if (_oneRowPerDayTables.contains(table)) {
+      if (table == 'daily_checkins') {
+        // O upload NUNCA apaga ritos remotos: na reinstalação, o
+        // registerVisit sobe o dia com rites vazio ANTES de o backup
+        // descer — sem a união, ele apagava na nuvem os ritos já feitos
+        // (e o "Ritos de Hoje" esquecia a tiragem salva).
+        try {
+          final existing = await _supabase!
+              .from(table)
+              .select('rites')
+              .eq('user_id', remoteItem['user_id'])
+              .eq('date', remoteItem['date'])
+              .maybeSingle();
+          final merged = {
+            ..._splitRites(existing?['rites'] as String?),
+            ..._splitRites(remoteItem['rites'] as String?),
+          };
+          remoteItem['rites'] = merged.join(',');
+        } catch (_) {
+          // Sem linha remota ou leitura indisponível: segue com o local.
+        }
+      }
       await _supabase!
           .from(table)
           .upsert(remoteItem, onConflict: 'user_id,date');
@@ -679,6 +705,10 @@ class DataSyncService {
     }
     await _supabase!.from(table).upsert(remoteItem);
   }
+
+  static Set<String> _splitRites(String? raw) => raw == null || raw.isEmpty
+      ? {}
+      : raw.split(',').where((e) => e.isNotEmpty).toSet();
 
   bool _isSyncableItem(String table, Map<String, dynamic> item) {
     if ((table == 'spells' || table == 'affirmations') &&
@@ -875,6 +905,36 @@ class DataSyncService {
       whereArgs: [id],
     );
     return result.isNotEmpty;
+  }
+
+  /// União dos ritos remotos na linha local do MESMO dia. Devolve true se
+  /// a linha local ganhou ritos novos (fica synced=0: a união volta para a
+  /// nuvem no próximo upload, que também é uma união — converge).
+  Future<bool> _mergeRitesLocally(Map<String, dynamic> remote) async {
+    final db = await _db.database;
+    final rows = await db.query(
+      'daily_checkins',
+      where: 'user_id = ? AND date = ?',
+      whereArgs: [remote['user_id'], remote['date']],
+      limit: 1,
+    );
+    if (rows.isEmpty) return false;
+
+    final localRites = _splitRites(rows.first['rites'] as String?);
+    final remoteRites = _splitRites(remote['rites'] as String?);
+    if (remoteRites.difference(localRites).isEmpty) return false;
+
+    await db.update(
+      'daily_checkins',
+      {
+        'rites': {...localRites, ...remoteRites}.join(','),
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+        'synced': 0,
+      },
+      where: 'user_id = ? AND date = ?',
+      whereArgs: [remote['user_id'], remote['date']],
+    );
+    return true;
   }
 
   /// Existência nas tabelas de um-dia-só: pelo id OU pelo dia (user_id,
