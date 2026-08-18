@@ -1,5 +1,6 @@
 import '../../../../core/content/content_locale.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,6 +50,11 @@ class AuthProvider extends ChangeNotifier {
   bool _isOriginalAdmin =
       false; // Mantém acesso ao painel admin ao simular outros roles
   bool _isSigningOut = false;
+
+  /// Sessão do servidor (Supabase): usada para adotar um login concluído fora
+  /// da tela de login — na web o OAuth volta por redirect, com a página recarregada.
+  StreamSubscription<UserModel?>? _serverSessionSubscription;
+  bool _restoringServerSession = false;
 
   UserModel get currentUser => _currentUser;
   bool get isInitialized => _isInitialized;
@@ -154,8 +160,59 @@ class AuthProvider extends ChangeNotifier {
     // Verificar se assinatura expirou (exceto para Códigos Premium lifetime e admin)
     await _checkSubscriptionExpiration();
 
+    // Adota uma sessão que já exista no servidor (retorno do OAuth na web).
+    await _watchServerSession();
+
     _isInitialized = true;
     notifyListeners();
+  }
+
+  /// Adota no estado local uma sessão autenticada vinda do servidor.
+  ///
+  /// Na web, o login social termina em redirect: a página recarrega e o
+  /// resultado NÃO volta pela tela de login (que já não existe mais). A sessão
+  /// fica válida no Supabase, mas o estado local continua anônimo — sem isto,
+  /// a pessoa autentica no Google e cai de volta na tela de login.
+  Future<void> _adoptServerSession(UserModel user) async {
+    if (_restoringServerSession || _isSigningOut) return;
+    if (_currentUser.isAuthenticated && _currentUser.id == user.id) return;
+
+    _restoringServerSession = true;
+    try {
+      await debugLog('AUTH', 'Sessão do servidor adotada: id=${user.id}');
+      await syncAuthenticatedUser(user);
+    } catch (e) {
+      await debugLog('AUTH', 'Falha ao adotar sessão do servidor: $e');
+    } finally {
+      _restoringServerSession = false;
+    }
+  }
+
+  /// Verifica se já há sessão no servidor e continua acompanhando — a troca do
+  /// código PKCE pode concluir pouco depois do boot.
+  Future<void> _watchServerSession() async {
+    if (!SupabaseConfig.isConfigured) return;
+
+    final repository = SupabaseAuthRepository();
+    try {
+      // Sem sessão, isto retorna na hora (não vai à rede).
+      final existing = await repository
+          .getCurrentUser()
+          .timeout(const Duration(seconds: 10));
+      if (existing != null) await _adoptServerSession(existing);
+    } catch (e) {
+      await debugLog('AUTH', 'Falha ao ler sessão do servidor: $e');
+    }
+
+    _serverSessionSubscription ??= repository.authStateChanges.listen((user) {
+      if (user != null) unawaited(_adoptServerSession(user));
+    });
+  }
+
+  @override
+  void dispose() {
+    _serverSessionSubscription?.cancel();
+    super.dispose();
   }
 
   /// Registra callback com PaymentService para sincronizar UserRole com status de assinatura
