@@ -33,13 +33,14 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!--
+    NÃO registrar o sqflite_sw.js como service worker aqui. O pacote
+    sqflite_common_ffi_web instancia esse arquivo como SharedWorker por
+    conta própria (dentro de databaseFactoryFfiWeb) — registrá-lo como
+    service worker fazia o SW interceptar o fetch do sqlite3.wasm e
+    devolver vazio, estourando "unsupported result null" no boot a partir
+    do segundo load, além de sobrescrever o flutter_service_worker.js do PWA.
+  -->
   <script src="flutter_bootstrap.js" async></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sqflite_sw.js');
-      });
-    }
-  </script>
 </body>
 </html>
