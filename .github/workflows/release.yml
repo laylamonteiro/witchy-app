@@ -4,8 +4,8 @@ name: 🚀 Release
 #
 # Este workflow só roda quando uma tag vX.Y.Z nasce (via
 # `bash scripts/release.sh X.Y.Z`) ou pelo botão Run workflow — e mesmo
-# assim nada chega a usuários sem a aprovação do environment `producao`
-# (Settings → Environments → producao → Required reviewers).
+# assim nada chega a usuários sem a aprovação do environment `production`
+# (Settings → Environments → production → Required reviewers).
 #
 # O que UM release publica, sempre do MESMO commit:
 #   1. o site grimoriodebolso.app (Cloudflare Pages, --branch=main)
@@ -385,7 +385,7 @@ jobs:
           retention-days: 7
 
   # ────────────────────────────────────────────────────────────────────
-  # O ÚNICO job que toca usuários — atrás do environment `producao`
+  # O ÚNICO job que toca usuários — atrás do environment `production`
   # (aprovação humana). Ordem: tag → site → Play → GitHub Release, para a
   # Release ser o registro do que DE FATO foi publicado.
   # ────────────────────────────────────────────────────────────────────
@@ -397,7 +397,7 @@ jobs:
     permissions:
       contents: write
     environment:
-      name: producao
+      name: production
       url: https://grimoriodebolso.app
 
     steps:

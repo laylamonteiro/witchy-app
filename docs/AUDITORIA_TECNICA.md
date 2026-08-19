@@ -36,7 +36,7 @@ histórico o preserva.
 ### 1.3 ✅ RESOLVIDO — Testes non-blocking no release
 `release-parallel.yml` rodava `flutter test … || echo` — falhas de teste não
 bloqueavam o release. **Aplicado**: o workflow foi substituído por
-`release.yml` (gatilho por tag, publicação atrás do environment `producao`),
+`release.yml` (gatilho por tag, publicação atrás do environment `production`),
 cujo job `validar` roda `flutter test` completo SEM escape, além de analyze,
 paridade de ARBs e scanner de PT — no commit exato da tag.
 

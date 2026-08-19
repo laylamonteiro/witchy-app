@@ -237,7 +237,7 @@ Dois workflows, ambos em `.github/workflows/`:
 `flutter analyze` → testes de i18n e conteúdo → suíte completa → paridade dos ARBs → scanner de português hardcoded (tudo bloqueante). Toda branch ganha prévia do site; `main` publica em **staging** (`staging.grimorio-de-bolso.pages.dev`) e gera um **APK candidato assinado** como artifact para instalar e testar. **Nunca toca produção.**
 
 **🚀 `release.yml`** — tag `vX.Y.Z` (via `bash scripts/release.sh 2.1.0`)
-Guardas de versão → gate bloqueante → APK+AAB assinados + site, tudo do commit da tag → **aprovação humana** (environment `producao`) → site em produção + AAB na faixa interna da Play + GitHub Release. A promoção interna→produção é manual na Play Console. Detalhes: `.github/workflows/README.md`
+Guardas de versão → gate bloqueante → APK+AAB assinados + site, tudo do commit da tag → **aprovação humana** (environment `production`) → site em produção + AAB na faixa interna da Play + GitHub Release. A promoção interna→produção é manual na Play Console. Detalhes: `.github/workflows/README.md`
 
 **Scripts de apoio:**
 

@@ -25,7 +25,7 @@ bash scripts/release.sh 2.1.0
         ▼
    release.yml: guardas → gate bloqueante → APK+AAB+web do commit da tag
         │
-        ▼ aprovação humana (environment `producao`)
+        ▼ aprovação humana (environment `production`)
    site em produção + AAB na faixa INTERNA da Play + GitHub Release
         │
         ▼ testa pela faixa interna e, quando aprovar,
@@ -59,7 +59,7 @@ bash scripts/release.sh 2.1.0
 - **Builds do mesmo SHA**: APK+AAB assinados (assinatura conferida contra o
   SHA-1 registrado — divergência é erro fatal, nos dois artefatos) e o site.
   Nada publica sem Android **e** web verdes juntos.
-- **Publicação** (job único, atrás do environment `producao`):
+- **Publicação** (job único, atrás do environment `production`):
   tag (se veio do botão) → site (`--branch=main`) → AAB na faixa `internal`
   da Play → GitHub Release com `target_commitish` no SHA buildado.
 - **Dry-run**: Run workflow com `somente_validar: true` exercita tudo até os
@@ -70,7 +70,7 @@ bash scripts/release.sh 2.1.0
 ```bash
 git checkout main && git pull
 bash scripts/release.sh 2.1.0
-# → acompanhe em Actions, aprove o environment "producao",
+# → acompanhe em Actions, aprove o environment "production",
 # → teste pela faixa interna da Play e promova na Play Console.
 ```
 
@@ -81,7 +81,7 @@ bash scripts/release.sh 2.1.0
    PROKERALA`, `SUPABASE_*`, `REVENUECAT_*`, `ADMIN_*`, `TURNSTILE_SITE_KEY`,
    `CLOUDFLARE_*`) mais **`PLAY_SERVICE_ACCOUNT_JSON`** — ver
    `docs/PLAY_SERVICE_ACCOUNT.md`.
-2. **Environment `producao`** (Settings → Environments): criar com
+2. **Environment `production`** (Settings → Environments): criar com
    *Required reviewers* = você. É o clique que separa "buildou" de
    "usuários viram".
 3. **Cloudflare Pages**: Production branch do projeto `grimorio-de-bolso`

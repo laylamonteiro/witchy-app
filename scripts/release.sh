@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Publica uma versão: cria e envia a tag vX.Y.Z, que dispara o workflow
 # release.yml (gate bloqueante → builds assinados → aprovação humana no
-# environment `producao` → site + Play interna + GitHub Release).
+# environment `production` → site + Play interna + GitHub Release).
 #
 # Uso:  bash scripts/release.sh 2.1.0
 #
@@ -59,5 +59,5 @@ echo
 echo "✅ Tag v$VERSAO enviada. O workflow 'Release' está rodando:"
 echo "   https://github.com/$(git remote get-url origin | sed -E 's#.*github.com[:/]##; s#\.git$##')/actions/workflows/release.yml"
 echo
-echo "Depois dos builds, aprove a publicação no environment 'producao'."
+echo "Depois dos builds, aprove a publicação no environment 'production'."
 echo "Nada chega a usuários antes desse clique."
