@@ -80,6 +80,16 @@ class RevenueCatConfig {
   /// a web, como produto do RevenueCat Billing com o MESMO identificador.
   static const String cycleReadingMonthProductId = 'leitura_ciclo_mes';
   static const String cycleReadingWeekProductId = 'leitura_ciclo_semana';
+
+  /// Os avulsos da Leitura do Ciclo.
+  ///
+  /// Eles NÃO devem estar ligados a nenhum entitlement no painel: o crédito
+  /// vive na tabela `cycle_readings`, não no RevenueCat. Um consumível ligado
+  /// a um entitlement o concede SEM data de expiração — ou seja, para sempre.
+  static const Set<String> cycleReadingProductIds = {
+    cycleReadingMonthProductId,
+    cycleReadingWeekProductId,
+  };
 }
 
 /// IDs dos produtos para cada plataforma

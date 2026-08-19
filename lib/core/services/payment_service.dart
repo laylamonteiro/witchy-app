@@ -807,13 +807,30 @@ class PaymentService extends ChangeNotifier {
     return DateTime.tryParse(expirationDate);
   }
 
-  /// Verifica se a assinatura é vitalícia
+  /// Verifica se a assinatura é vitalícia.
+  ///
+  /// Vale dinheiro: é este getter que libera a Leitura da Lunação sem
+  /// cobrança. Por isso ele não confia só na ausência de data de expiração —
+  /// um CONSUMÍVEL ligado a um entitlement por engano no painel também
+  /// concederia o Pro sem expirar, e uma leitura de R$ 4,90 viraria Premium
+  /// vitalício mais leituras de graça para sempre. Se quem concedeu o
+  /// entitlement foi um avulso da Leitura do Ciclo, não é vitalício.
   bool get isLifetime {
     if (_customerInfo == null) return false;
 
     final pro = _customerInfo!.entitlements.active[
         RevenueCatConfig.proEntitlementId];
     if (pro == null) return false;
+
+    if (RevenueCatConfig.cycleReadingProductIds
+        .contains(pro.productIdentifier)) {
+      debugPrint(
+        '⚠️ Entitlement Pro concedido por ${pro.productIdentifier}: um '
+        'consumível da Leitura do Ciclo NÃO deveria ter entitlement no '
+        'painel do RevenueCat. Ignorando como vitalício.',
+      );
+      return false;
+    }
 
     // Lifetime não tem data de expiração
     return pro.expirationDate == null;
