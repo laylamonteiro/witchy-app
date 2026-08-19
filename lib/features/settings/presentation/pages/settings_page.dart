@@ -570,16 +570,12 @@ class SettingsPage extends StatelessWidget {
     // colorido no meio escondia esses efeitos (o Flutter alerta sobre isso).
     return Material(
       color: context.gc.surface,
-      borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: context.gc.textPrimary.withValues(alpha: 0.1),
-          ),
-        ),
-        child: Column(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.1)),
+      ),
+      child: Column(
         children: [
           if (_showLanguageOption) ...[
             _buildLanguageOptionTile(context),
@@ -694,8 +690,7 @@ class SettingsPage extends StatelessWidget {
             textColor: context.gc.alert,
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
-          ],
-        ),
+        ],
       ),
     );
   }
