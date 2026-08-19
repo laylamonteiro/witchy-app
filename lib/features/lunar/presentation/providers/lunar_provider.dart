@@ -25,11 +25,16 @@ class LunarProvider with ChangeNotifier {
   static const double _lunarCycle = 29.53059;
 
   // Calcula a fase da lua baseado no ciclo lunar (29.53 dias)
-  MoonPhase getCurrentMoonPhase() {
+  MoonPhase getCurrentMoonPhase() => phaseOn(_selectedDate);
+
+  /// Fase da lua em [date] — a MESMA conta do calendário lunar, exposta
+  /// como estática para quem precisa da fase de datas arbitrárias (ex.: a
+  /// Leitura do Ciclo mapeia as fases da lunação inteira).
+  static MoonPhase phaseOn(DateTime date) {
     // Diferença em dias com precisão de minutos: arredondar para a hora
     // cheia deslocava as viradas de fase em até uma hora, e a virada é
     // justamente o que as "Próximas Fases" anunciam.
-    final difference = _selectedDate.toUtc().difference(_knownNewMoon);
+    final difference = date.toUtc().difference(_knownNewMoon);
     final daysSinceKnownNewMoon =
         difference.inMinutes / Duration.minutesPerDay;
 
@@ -55,6 +60,31 @@ class LunarProvider with ChangeNotifier {
     } else {
       return MoonPhase.waningCrescent; // Minguante: de 81.25% até 98.3%
     }
+  }
+
+  /// Início da lunação que contém [date]: o instante da lua nova (ponto 0
+  /// do ciclo) imediatamente anterior, no fuso do aparelho.
+  static DateTime lunationStartOf(DateTime date) {
+    final elapsedDays = date.toUtc().difference(_knownNewMoon).inMinutes /
+        Duration.minutesPerDay;
+    final cycle = (elapsedDays / _lunarCycle).floor();
+    return _knownNewMoon
+        .add(Duration(
+          minutes: (cycle * _lunarCycle * Duration.minutesPerDay).ceil(),
+        ))
+        .toLocal();
+  }
+
+  /// Fim da lunação que contém [date]: a próxima lua nova.
+  static DateTime lunationEndOf(DateTime date) {
+    final elapsedDays = date.toUtc().difference(_knownNewMoon).inMinutes /
+        Duration.minutesPerDay;
+    final cycle = (elapsedDays / _lunarCycle).floor() + 1;
+    return _knownNewMoon
+        .add(Duration(
+          minutes: (cycle * _lunarCycle * Duration.minutesPerDay).ceil(),
+        ))
+        .toLocal();
   }
 
   String getMoonPhaseName() {

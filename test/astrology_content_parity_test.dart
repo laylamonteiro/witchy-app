@@ -387,6 +387,8 @@ void main() {
       final aspect =
           aspectOf(Planet.jupiter, Planet.saturn, AspectType.trine);
 
+      // Os textos de aspecto não levam ponto final (padrão do mapa em
+      // aspect_model.dart, igual nas três línguas).
       ContentLocale.instance.setLocale(const Locale('en', 'US'));
       expect(aspect.interpretation,
           'Harmonious connection between Jupiter and Saturn');

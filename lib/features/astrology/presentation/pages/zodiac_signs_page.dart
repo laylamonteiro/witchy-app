@@ -37,7 +37,7 @@ class ZodiacSignsPage extends StatelessWidget {
                   const Text('', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 16),
                   Text(
-                    'Os 12 Signos',
+                    AppLocalizations.of(context).zodiacTwelveSigns,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: context.gc.lilac,
                         ),
@@ -126,7 +126,8 @@ class ZodiacSignsPage extends StatelessWidget {
             _buildSection(
               context,
               '',
-              'Planeta Regente: ${data.rulingPlanet}',
+              AppLocalizations.of(context)
+                  .zodiacRulingPlanet(data.rulingPlanet),
               isHighlight: true,
             ),
 
@@ -136,7 +137,11 @@ class ZodiacSignsPage extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Personalidade
-            _buildSection(context, 'Personalidade', data.personality),
+            _buildSection(
+              context,
+              AppLocalizations.of(context).zodiacPersonality,
+              data.personality,
+            ),
 
             // Dons Mágicos
             _buildSection(context, AppLocalizations.of(context).zodiacGifts, data.magicalGifts),
@@ -145,13 +150,25 @@ class ZodiacSignsPage extends StatelessWidget {
             _buildSection(context, AppLocalizations.of(context).zodiacPractices, data.bestPractices),
 
             // Cristais
-            _buildSection(context, 'Cristais', data.crystals),
+            _buildSection(
+              context,
+              AppLocalizations.of(context).encyTabCrystals,
+              data.crystals,
+            ),
 
             // Ervas
-            _buildSection(context, 'Ervas', data.herbs),
+            _buildSection(
+              context,
+              AppLocalizations.of(context).encyTabHerbs,
+              data.herbs,
+            ),
 
             // Cores
-            _buildSection(context, 'Cores', data.colors),
+            _buildSection(
+              context,
+              AppLocalizations.of(context).encyTabColors,
+              data.colors,
+            ),
 
             const SizedBox(height: 8),
           ],

@@ -6,6 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/content/content_locale.dart';
+import '../../../../core/offers/offer_engine.dart';
+import '../../../../core/offers/teaser_cache.dart';
+import '../../../../core/offers/teaser_reveal.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -52,11 +55,18 @@ class DailyMagicalWeatherPage extends StatefulWidget {
 }
 
 class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
+  static const _teaserSlot = OfferSlot.dailyWeatherTeaser;
+
   final DailyWeatherRepository _repository = DailyWeatherRepository();
   DateTime _selectedDate = DateTime.now();
   DailyWeatherCache? _weatherCache;
   bool _isLoading = false;
   String? _error;
+
+  /// Degustação de quem não tem acesso: 2 frases reais no lugar da previsão.
+  String? _teaser;
+  bool _isTeasing = false;
+  OfferEngine? _engine;
 
   @override
   void initState() {
@@ -64,18 +74,28 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     _loadWeather();
   }
 
+  /// Chave da amostra no cache: um dia, uma geração (o custo de IA é real).
+  String get _teaserKey =>
+      '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}';
+
   Future<void> _loadWeather() async {
     print('🌙 DailyMagicalWeatherPage: Iniciando carregamento...');
     setState(() {
       _isLoading = true;
       _error = null;
+      _teaser = null;
     });
 
     try {
+      // O gate do pago é conferido ANTES de gerar: sem acesso, a previsão
+      // escrita nem chega a ser pedida à IA (fail-closed de verdade — o
+      // blur da tela nunca foi proteção).
+      final hasAccess = context.read<AuthProvider>().isPremiumEffective;
       print('📡 DailyMagicalWeatherPage: Chamando getDailyWeather...');
       final cache = await _repository.getDailyWeather(
         _selectedDate,
         userId: context.read<AuthProvider>().currentUser.id,
+        withAiText: hasAccess,
         natalChart: context.read<AstrologyProvider>().birthChart,
       );
       print('✅ DailyMagicalWeatherPage: Recebeu weather cache');
@@ -91,6 +111,10 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         _isLoading = false;
       });
       print('✅ DailyMagicalWeatherPage: Estado atualizado!');
+
+      if (!hasAccess) {
+        await _prepareTeaser();
+      }
     } catch (e, stackTrace) {
       print('❌ DailyMagicalWeatherPage: ERRO ao calcular clima mágico: $e');
       print('📋 Stack trace: $stackTrace');
@@ -117,6 +141,46 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
         ),
       );
     }
+  }
+
+  /// Recupera a amostra já gerada para este dia, se houver. A geração em si
+  /// só acontece no toque — degustação não gasta IA de quem só passou.
+  Future<void> _prepareTeaser() async {
+    final engine = await OfferEngine.load();
+    final cached = await TeaserAiCache.get(_teaserSlot.name, _teaserKey);
+    if (!mounted) return;
+    setState(() {
+      _engine = engine;
+      _teaser = cached;
+    });
+    engine.recordWallExposure(_teaserSlot);
+  }
+
+  Future<void> _generateTeaser() async {
+    final data = _weatherCache?.weatherData;
+    if (_isTeasing || data == null) return;
+    setState(() => _isTeasing = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final alertColor = context.gc.alert;
+    try {
+      final sample = await _repository.generateTeaser(data);
+      await TeaserAiCache.put(_teaserSlot.name, _teaserKey, sample);
+      if (!mounted) return;
+      setState(() => _teaser = sample);
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text('$e'.replaceAll('Exception: ', '')),
+        backgroundColor: alertColor,
+      ));
+    } finally {
+      if (mounted) setState(() => _isTeasing = false);
+    }
+  }
+
+  void _onTeaserCta() {
+    _engine?.recordClick(_teaserSlot);
+    showPremiumUpgradePaywall(context);
   }
 
   @override
@@ -502,34 +566,13 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               const SizedBox(height: 8),
               Divider(color: context.gc.lilac),
               const SizedBox(height: 12),
-              // FAIL-CLOSED: para free, o texto premium real NUNCA é
-              // renderizado (nem com blur) — mostra placeholder desfocado.
+              // Sem acesso: a previsão completa nem foi gerada (o gate está
+              // no repositório). O que aparece aqui é degustação — os
+              // assuntos do dia e duas frases REAIS sobre o céu de hoje.
               if (isFree) ...[
                 _buildFreeForecastPreview(),
                 const SizedBox(height: 16),
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => const PremiumUpgradeSheet(),
-                      );
-                    },
-                    icon: const Icon(Icons.star, size: 18),
-                    label: Text(AppLocalizations.of(context).premiumBePremium),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.gc.lilac,
-                      foregroundColor: context.gc.onPrimary,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                  ),
-                ),
+                _buildForecastTeaser(),
               ] else ...[
                 MarkdownBody(
                   data: _weatherCache!.aiGeneratedText,
@@ -540,6 +583,56 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
           ),
         );
       },
+    );
+  }
+
+  /// Degustação no lugar do paywall frio: duas frases verdadeiras sobre o
+  /// céu de hoje e o convite para ler a previsão inteira.
+  Widget _buildForecastTeaser() {
+    final l10n = AppLocalizations.of(context);
+    final sample = _teaser;
+    if (sample == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.weatherTeaserIntro,
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: _isTeasing ? null : _generateTeaser,
+              icon: _isTeasing
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.gc.lilac,
+                      ),
+                    )
+                  : const Icon(Icons.auto_awesome, size: 18),
+              label: Text(l10n.weatherTeaserPeek),
+            ),
+          ),
+        ],
+      );
+    }
+    return TeaserReveal(
+      sample: Text(
+        sample,
+        style: TextStyle(
+          color: context.gc.softWhite,
+          fontSize: 15,
+          height: 1.55,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+      onCta: _onTeaserCta,
     );
   }
 

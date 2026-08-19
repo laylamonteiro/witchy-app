@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/offers/offer_engine.dart';
+import '../../../../core/offers/teaser_reveal.dart';
 import '../../../../core/sharing/share_card.dart';
 import '../../../../core/sharing/share_card_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -62,23 +64,41 @@ class _LessonPageState extends State<LessonPage> {
   bool _practiceDone = false;
   bool _isSaving = false;
 
+  static const _teaserSlot = OfferSlot.lessonTeaser;
+
+  OfferEngine? _engine;
+  bool _wallLogged = false;
+
   @override
   void initState() {
     super.initState();
-    // Gate central: só a 1ª lição de cada trilha é gratuita. Qualquer
-    // caminho que chegue aqui (trilha, card do Seu Dia, futuros atalhos)
-    // passa pela mesma porta — free vê o paywall e a página se fecha.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
+    OfferEngine.load().then((engine) {
+      if (mounted) setState(() => _engine = engine);
+    });
   }
 
-  Future<void> _ensureAccess() async {
-    if (!mounted) return;
+  /// Gate central: só a 1ª lição de cada trilha é gratuita. Qualquer caminho
+  /// que chegue aqui (trilha, card do Seu Dia, futuros atalhos) passa por
+  /// esta mesma porta.
+  bool get _isLocked {
     final index =
         widget.trail.lessons.indexWhere((l) => l.id == widget.lesson.id);
-    final isPremium = context.read<AuthProvider>().isPremiumEffective;
-    if (index > 0 && !isPremium) {
-      await showPaywallThenPop(context);
-    }
+    return index > 0 && !context.watch<AuthProvider>().isPremiumEffective;
+  }
+
+  /// Primeiro parágrafo do ensino — a amostra da degustação. O conteúdo é
+  /// estático, então a prova sai daqui mesmo: sem IA e sem custo.
+  String get _teachingSample {
+    final paragraphs = widget.lesson.teaching
+        .split('\n\n')
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty);
+    return paragraphs.isEmpty ? widget.lesson.teaching.trim() : paragraphs.first;
+  }
+
+  void _onTeaserCta() {
+    _engine?.recordClick(_teaserSlot);
+    showPremiumUpgradePaywall(context);
   }
 
   late final _titleController =
@@ -471,6 +491,11 @@ class _LessonPageState extends State<LessonPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Lição travada: em vez de fechar a página na cara da pessoa, ela lê o
+    // começo de verdade e decide se quer o resto. Como o gate é reativo,
+    // assinar dentro do paywall destrava a lição sem sair da tela.
+    if (_isLocked) return _buildLockedLesson(context);
+
     // O gesto de voltar percorre os passos antes de sair da lição.
     return PopScope(
       canPop: _step == 0,
@@ -497,6 +522,63 @@ class _LessonPageState extends State<LessonPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Degustação da lição travada: o primeiro parágrafo REAL do ensino, o
+  /// resto sob véu e o convite.
+  Widget _buildLockedLesson(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (!_wallLogged && _engine != null) {
+      _wallLogged = true;
+      _engine!.recordWallExposure(_teaserSlot);
+    }
+    return Scaffold(
+      appBar: AppBar(
+        title: ResponsiveAppBarTitle(widget.lesson.title),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildLessonHeader(context),
+          const SizedBox(height: 16),
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.lessonTeaserTitle,
+                  style: TextStyle(
+                    color: context.gc.lilac,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.lessonTeaserIntro,
+                  style: TextStyle(
+                    color: context.gc.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TeaserReveal(
+                  sample: Text(
+                    _teachingSample,
+                    style: TextStyle(
+                      color: context.gc.softWhite,
+                      height: 1.55,
+                      fontSize: 15,
+                    ),
+                  ),
+                  onCta: _onTeaserCta,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

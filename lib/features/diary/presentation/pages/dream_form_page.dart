@@ -7,6 +7,7 @@ import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../widgets/dream_interpretation_text.dart';
+import '../widgets/dream_teaser_card.dart';
 
 class DreamFormPage extends StatefulWidget {
   final DreamModel? dream;
@@ -152,6 +153,11 @@ class _DreamFormPageState extends State<DreamFormPage> {
                 ),
               ),
             ],
+            // Degustação da interpretação por IA (Motor de Ofertas): só ao
+            // RELER um sonho salvo sem interpretação — o OfferEngine decide
+            // se aparece (frequency cap, cooldown, Premium nunca vê).
+            if (widget.dream != null && widget.dream!.interpretation == null)
+              DreamTeaserCard(dream: widget.dream!),
             const SizedBox(height: 32),
             MagicalButton(
               text: widget.dream == null ? AppLocalizations.of(context).diarySaveDream : AppLocalizations.of(context).commonUpdate,

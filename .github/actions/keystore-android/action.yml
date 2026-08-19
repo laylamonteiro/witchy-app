@@ -1,0 +1,74 @@
+name: Keystore Android
+description: >-
+  Decodifica o keystore do secret, escreve android/key.properties e VALIDA o
+  acesso com keytool. Por padrão o keystore é OBRIGATÓRIO e a ausência é
+  erro: um build "release" assinado em debug quebra o login Google
+  (ApiException 10) e, pior, um AAB debug-signed já chegou a virar release no
+  GitHub sem ninguém notar. Assinatura errada não deve ser um aviso.
+
+inputs:
+  keystore-base64:
+    required: true
+  key-alias:
+    required: true
+  key-password:
+    required: true
+  store-password:
+    required: true
+  keystore-type:
+    required: false
+    default: 'JKS'
+  obrigatorio:
+    description: Falhar (true) ou apenas avisar (false) quando o keystore faltar.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: 🔑 Preparar e validar o keystore
+      shell: bash
+      env:
+        KEYSTORE_BASE64: ${{ inputs.keystore-base64 }}
+        KEY_ALIAS: ${{ inputs.key-alias }}
+        KEY_PASSWORD: ${{ inputs.key-password }}
+        STORE_PASSWORD: ${{ inputs.store-password }}
+        KEYSTORE_TYPE: ${{ inputs.keystore-type }}
+        OBRIGATORIO: ${{ inputs.obrigatorio }}
+      run: |
+        if [ -z "$KEYSTORE_BASE64" ]; then
+          if [ "$OBRIGATORIO" = "true" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 ausente — build de release SEM assinatura de release não serve para publicar nem para testar login Google. Configure os secrets ANDROID_KEYSTORE_*."
+            exit 1
+          fi
+          echo "::warning::ANDROID_KEYSTORE_BASE64 ausente — o build sairá assinado em DEBUG."
+          exit 0
+        fi
+
+        KEYSTORE_PATH="$RUNNER_TEMP/release.keystore"
+        if echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH" 2>/dev/null; then
+          echo "✅ Keystore decodificado do base64"
+        else
+          echo "⚠️ Base64 inválido, gravando o secret como veio"
+          printf "%s" "$KEYSTORE_BASE64" > "$KEYSTORE_PATH"
+        fi
+        echo "ANDROID_KEYSTORE_FILE=$KEYSTORE_PATH" >> "$GITHUB_ENV"
+
+        {
+          echo "storeFile=${KEYSTORE_PATH}"
+          echo "storePassword=${STORE_PASSWORD}"
+          echo "keyAlias=${KEY_ALIAS}"
+          echo "keyPassword=${KEY_PASSWORD}"
+          echo "storeType=${KEYSTORE_TYPE}"
+        } > android/key.properties
+
+        if keytool -list \
+          -keystore "$KEYSTORE_PATH" \
+          -storepass "$STORE_PASSWORD" \
+          -alias "$KEY_ALIAS" \
+          > /dev/null 2>&1; then
+          echo "✅ Keystore validado"
+        else
+          echo "::error::Keystore presente mas inacessível (senha/alias errados?)"
+          exit 1
+        fi

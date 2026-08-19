@@ -1,0 +1,46 @@
+name: Setup Flutter do projeto
+description: >-
+  Java + Flutter PINADO + pub get + gen-l10n, num lugar só. O pin existe de
+  propósito: "channel: stable" muda sob os pés (um release buildado com uma
+  versão nunca testada é risco silencioso). Para atualizar o Flutter do CI,
+  mude o default abaixo — um arquivo, todos os jobs.
+
+inputs:
+  flutter-version:
+    description: Versão exata do Flutter (a que o stable resolvia em 08/2026).
+    required: false
+    default: '3.47.0'
+  com-java:
+    description: Instalar o Java 17 (necessário para builds Android).
+    required: false
+    default: 'true'
+  gerar-l10n:
+    description: Rodar flutter gen-l10n após o pub get.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: ☕ Setup Java
+      if: inputs.com-java == 'true'
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: 🐦 Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ inputs.flutter-version }}
+        channel: stable
+        cache: true
+
+    - name: 📦 Install dependencies
+      shell: bash
+      run: flutter pub get
+
+    - name: 🌐 Generate localizations
+      if: inputs.gerar-l10n == 'true'
+      shell: bash
+      run: flutter gen-l10n

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -552,13 +553,19 @@ class _BlinkStarState extends State<BlinkStar>
   late final AnimationController _c = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 1500));
 
+  /// A espera até a estrela começar a piscar. Guardada para ser CANCELADA
+  /// no dispose: um `Future.delayed` solto sobrevive à saída da tela (o
+  /// `mounted` evita o crash, mas o timer segue pendente) — e timer
+  /// pendente trava qualquer teste de widget da página.
+  Timer? _inicio;
+
   @override
   void initState() {
     super.initState();
     if (widget.reduced) {
       _c.value = 0.6;
     } else {
-      Future.delayed(widget.delay, () {
+      _inicio = Timer(widget.delay, () {
         if (mounted) _c.repeat(reverse: true);
       });
     }
@@ -566,6 +573,7 @@ class _BlinkStarState extends State<BlinkStar>
 
   @override
   void dispose() {
+    _inicio?.cancel();
     _c.dispose();
     super.dispose();
   }

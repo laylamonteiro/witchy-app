@@ -10,7 +10,9 @@ import 'free_writings_list_page.dart';
 /// Aba 💡 de Diários: canvas de escrita livre.
 ///
 /// Superfície fluida e sem pressão — a pessoa simplesmente escreve. O texto é
-/// salvo apenas por ação explícita, guardado no histórico e sincronizado.
+/// salvo AUTOMATICAMENTE ao sair da tela, ao abrir o histórico e ao começar
+/// uma reflexão nova, guardado no histórico e sincronizado: ninguém perde o
+/// que escreveu por ter esquecido de apertar um botão.
 class FreeWritingTab extends StatefulWidget {
   /// Reflexão a abrir já carregada no canvas (ex.: leitura de quiromancia
   /// recém-salva). Null = canvas em branco, comportamento da aba do Diário.
@@ -157,6 +159,7 @@ class _FreeWritingTabState extends State<FreeWritingTab> {
                     const Spacer(),
                     if (Navigator.of(context).canPop())
                       IconButton(
+                        key: const ValueKey('free_writing_back'),
                         icon: Icon(
                           Icons.arrow_back,
                           color: context.gc.lilac,

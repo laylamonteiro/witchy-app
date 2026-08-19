@@ -233,15 +233,16 @@ Em builds de debug, `admin`/`admin` funciona automaticamente. Sem o id do AdMob,
 
 Dois workflows, ambos em `.github/workflows/`:
 
-**✅ `branch-validate.yml`** — gate de qualidade nas branches `claude/**`
-`flutter analyze` (bloqueante em erros e warnings) → testes de i18n e conteúdo (bloqueantes) → suíte completa (informativa) → paridade dos ARBs → scanner de português hardcoded. O build de APK debug só roda quando `android/` ou `pubspec` mudam, e pushes em sequência cancelam o run anterior — economia de minutos
+**✅ `branch-validate.yml`** — gate de qualidade em `main` e `claude/**`
+`flutter analyze` → testes de i18n e conteúdo → suíte completa → paridade dos ARBs → scanner de português hardcoded (tudo bloqueante). Toda branch ganha prévia do site; `main` publica em **staging** (`staging.grimorio-de-bolso.pages.dev`) e gera um **APK candidato assinado** como artifact para instalar e testar. **Nunca toca produção.**
 
-**🚀 `release-parallel.yml`** — push na `main`
-Incrementa a versão (patch + build: `2.0.1+102`, `2.0.2+103`...), valida, builda **APK e AAB em paralelo**, gera debug symbols e publica a GitHub Release. Major e minor sobem manualmente no `pubspec.yaml`
+**🚀 `release.yml`** — tag `vX.Y.Z` (via `bash scripts/release.sh 2.1.0`)
+Guardas de versão → gate bloqueante → APK+AAB assinados + site, tudo do commit da tag → **aprovação humana** (environment `production`) → site em produção + AAB na faixa de teste da Play (variável `PLAY_TRACK`) + GitHub Release. A promoção para produção é manual na Play Console. Detalhes: `.github/workflows/README.md`
 
 **Scripts de apoio:**
 
 ```bash
+bash scripts/release.sh 2.1.0        # publica uma versão (cria a tag)
 bash scripts/check_arb_sync.sh       # paridade das chaves nos 4 ARBs
 bash scripts/check_hardcoded_pt.sh   # nenhum texto PT fora da camada de i18n
 ```

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// Entrada em cascata: cada filho aparece com um leve atraso, subindo e
@@ -133,21 +135,31 @@ class _FadeSlideInState extends State<_FadeSlideIn>
     duration: widget.duration,
   );
 
-  late final Animation<double> _curve = CurvedAnimation(
+  // Tipado como CurvedAnimation (e não Animation) porque ele também precisa
+  // ser liberado no dispose.
+  late final CurvedAnimation _curve = CurvedAnimation(
     parent: _controller,
     curve: Curves.easeOutCubic,
   );
 
+  /// A espera até a entrada começar. Fica guardada para ser CANCELADA no
+  /// dispose: um `Future.delayed` solto continua vivo depois que a tela sai
+  /// (o `mounted` evita o crash, mas o timer segue pendente até disparar) —
+  /// e um timer pendente é justamente o que trava um teste de widget.
+  Timer? _entrada;
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(widget.delay, () {
+    _entrada = Timer(widget.delay, () {
       if (mounted) _controller.forward();
     });
   }
 
   @override
   void dispose() {
+    _entrada?.cancel();
+    _curve.dispose();
     _controller.dispose();
     super.dispose();
   }
