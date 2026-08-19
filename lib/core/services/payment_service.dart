@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/revenuecat_config.dart';
 
 AppLocalizations get _l10n =>
@@ -392,24 +393,37 @@ class PaymentService extends ChangeNotifier {
   /// - Cancelar assinatura
   /// - Solicitar reembolso
   /// - Acessar suporte
-  Future<void> presentCustomerCenter() async {
-    // Customer Center também é nativo; na web a gestão da assinatura fica no
-    // portal do provedor (RevenueCat Billing/Stripe).
-    if (kIsWeb) {
-      debugPrint('ℹ️  Customer Center indisponível na web');
-      return;
-    }
-
+  /// Abre a gestão da assinatura (ver detalhes, cancelar, pedir reembolso).
+  ///
+  /// No celular usa o Customer Center nativo do RevenueCat. Na web ele não
+  /// existe — abrimos o portal do provedor, cujo endereço o próprio RevenueCat
+  /// devolve em `managementURL`, numa aba nova. Sem esse endereço não há para
+  /// onde mandar a pessoa; devolve false para a tela poder avisar, em vez de o
+  /// botão piscar sem efeito.
+  Future<bool> presentCustomerCenter() async {
     if (!_isInitialized || !RevenueCatConfig.isConfigured) {
       debugPrint('RevenueCat não inicializado');
-      return;
+      return false;
+    }
+
+    if (kIsWeb) {
+      final endereco = _customerInfo?.managementURL;
+      if (endereco == null || endereco.isEmpty) {
+        debugPrint('ℹ️  Sem managementURL para gerenciar a assinatura');
+        return false;
+      }
+      final uri = Uri.tryParse(endereco);
+      if (uri == null) return false;
+      return launchUrl(uri, mode: LaunchMode.externalApplication);
     }
 
     try {
       await RevenueCatUI.presentCustomerCenter();
       await _loadCustomerInfo();
+      return true;
     } catch (e) {
       debugPrint('Erro ao apresentar Customer Center: $e');
+      return false;
     }
   }
 

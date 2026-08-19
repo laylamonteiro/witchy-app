@@ -1059,6 +1059,7 @@
   "subsSimNote": "Modo de simulación: en producción este sería un plan activo vía Play Store con renovación automática",
   "subsManageDialogAdmin": "En producción, este botón te llevaría a Google Play para gestionar la suscripción\n\nEstás en modo de simulación como admin",
   "subsManageDialogUser": "Para gestionar tu suscripción, accede a la configuración de Google Play Store o App Store",
+  "subsManageUnavailable": "No se pudo abrir la gestión de la suscripción ahora. Inténtalo de nuevo en breve.",
   "subsHaveCode": "¿Tienes un Código Premium?",
   "subsRedeemPitch": "¡Canjea tu código para obtener acceso Premium vitalicio!",
   "subsCodeHint": "Escribe tu código",

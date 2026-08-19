@@ -695,7 +695,18 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Future<void> _openCustomerCenter() async {
-    await _paymentService.presentCustomerCenter();
+    final messenger = ScaffoldMessenger.of(context);
+    final gc = context.gc;
+    final aberto = await _paymentService.presentCustomerCenter();
+    if (!mounted || aberto) return;
+    // Na web, sem endereço de portal não há para onde mandar a pessoa — avisa
+    // em vez de deixar o botão parecer quebrado.
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(_l10n.subsManageUnavailable),
+        backgroundColor: gc.alert,
+      ),
+    );
   }
 
   Future<void> _restorePurchases() async {
