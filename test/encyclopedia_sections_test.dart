@@ -64,7 +64,10 @@ void main() {
 
     // Um toque abre o livro.
     await tester.tap(find.byKey(const ValueKey('grimoire-cover')));
-    await tester.pumpAndSettle();
+    // A capa abre em 700ms. pumpAndSettle não serve: as estrelas piscam em
+    // laço e a página nunca chega ao repouso.
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pump();
 
     // Todas as seções aparecem no sumário.
     expect(find.text('Cristais'), findsOneWidget);
@@ -72,7 +75,9 @@ void main() {
 
     // Tocar numa entrada vira a folha e então entrega a seção.
     await tester.tap(find.text('Cristais'));
-    await tester.pumpAndSettle();
+    // A folha vira em 380ms.
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump();
     expect(selected, EncyclopediaSection.crystals);
   });
 }

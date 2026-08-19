@@ -175,15 +175,12 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     // cima o respingo ficava invisível (o Flutter reclama disso em debug).
     return Material(
       color: context.gc.surface,
-      borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.gc.textPrimary10),
-        ),
-        child: Column(children: children),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: context.gc.textPrimary10),
       ),
+      child: Column(children: children),
     );
   }
 

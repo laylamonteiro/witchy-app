@@ -22,7 +22,7 @@ import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_prov
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/widgets/premium_blur_widget.dart';
 import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
-import 'package:grimorio_de_bolso/features/settings/presentation/pages/privacy_settings_page.dart';
+import 'package:grimorio_de_bolso/features/settings/presentation/pages/sync_settings_page.dart';
 import 'package:grimorio_de_bolso/features/settings/presentation/pages/settings_page.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/pages/subscription_page.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/widgets/pro_feature_gate.dart';
@@ -334,7 +334,13 @@ void main() {
       );
     });
 
-    testWidgets('paywall único cabe inteiro em celular sem exigir rolagem',
+    // Este teste já exigiu que o paywall coubesse numa tela só. Aquele layout
+    // saiu — a chave `premium_paywall_fitted_content` não existe mais no app,
+    // e o painel passou a viver num SingleChildScrollView de segurança, para
+    // não estourar em tela pequena ou com fonte ampliada. O que se guarda
+    // agora é o conteúdo: benefícios certos, sem promessa obsoleta, e nada
+    // de overflow. (Medido em 390x844, o painel pede ~444px de rolagem.)
+    testWidgets('paywall único renderiza inteiro em celular, com rolagem',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -354,18 +360,19 @@ void main() {
       expect(find.textContaining('O QUE VOCÊ DESBLOQUEIA'), findsNothing);
       expect(find.text('Cancele a qualquer momento'), findsOneWidget);
       expect(find.text('Cancele quando quiser'), findsNothing);
-      // O painel é embrulhado num SingleChildScrollView de segurança, para
-      // não estourar em tela pequena ou com fonte ampliada. A garantia que
-      // importa não é a ausência de rolagem, e sim que em 390x844 não sobre
-      // nada para rolar: maxScrollExtent zero = conteúdo coube inteiro.
+      // A rolagem de segurança existe e o fim do painel é alcançável sem
+      // estourar layout — é isso que não pode regredir.
       final rolagem = tester
           .state<ScrollableState>(find.descendant(
             of: find.byType(SingleChildScrollView),
             matching: find.byType(Scrollable),
           ))
           .position;
-      expect(rolagem.maxScrollExtent, 0,
-          reason: 'o paywall deve caber inteiro em 390x844, sem rolagem');
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        Offset(0, -rolagem.maxScrollExtent),
+      );
+      await tester.pump();
       expect(tester.takeException(), isNull);
     });
   });
@@ -407,7 +414,11 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('navegação Premium da Privacidade continua funcionando',
+    // O item "Seja Premium" morava na tela de Privacidade e migrou para a de
+    // Sincronização (commit 0054d28). O que este teste guarda é a navegação
+    // para a assinatura a partir das configurações — então ele acompanha o
+    // item, em vez de cobrar uma tela que não o tem mais.
+    testWidgets('navegação Premium da Sincronização continua funcionando',
         (tester) async {
       SharedPreferences.setMockInitialValues({});
       final authProvider = AuthProvider();
@@ -423,7 +434,7 @@ void main() {
           child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
-                builder: (_) => const PrivacySettingsPage(),
+                builder: (_) => const SyncSettingsPage(),
               ),
             ),
           ),
