@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Páginas públicas (HTML estático). O app em si não entra: é uma tela só,
-     desenhada em canvas, sem conteúdo indexável. -->
+<!-- Páginas públicas (HTML estático). A raiz é o app: uma tela só, desenhada
+     em canvas, sem conteúdo indexável — a apresentação legível fica em
+     /sobre/. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://grimoriodebolso.app/</loc>
+    <loc>https://grimoriodebolso.app/sobre/</loc>
     <priority>1.0</priority>
   </url>
   <url>

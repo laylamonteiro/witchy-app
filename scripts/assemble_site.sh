@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
-# Monta o diretório de publicação: site estático na raiz, app em /app/.
+# Monta o diretório de publicação: o app na raiz, as páginas estáticas ao lado.
 #
-# A verificação de marca do Google busca a página inicial do domínio. Com o
-# app em Flutter na raiz, ela encontrava uma tela desenhada em canvas, sem
-# texto legível — daí as recusas por "não explica o propósito" e "o nome não
-# confere". Agora a raiz é HTML estático, público e sem JavaScript, e o app
-# vive em /app/.
+#   /             → aplicativo (Flutter Web)
+#   /sobre/       → apresentação: o que é o app, o que faz, links legais
+#   /privacidade/ → política de privacidade
+#   /termos/      → termos de uso
 #
-# Pré-requisito: `flutter build web ... --base-href /app/` já executado.
+# As páginas estáticas existem porque o app é desenhado em canvas: um
+# rastreador (prévia de link, verificação de marca do Google) não lê nada
+# dentro dele. Elas são HTML puro, sem JavaScript, e ficam no mesmo domínio.
+#
+# Pré-requisito: `flutter build web` já executado (base href na raiz).
 # Uso: scripts/assemble_site.sh [diretorio_de_saida]   (padrão: public)
 
 set -euo pipefail
@@ -17,25 +20,26 @@ SAIDA="${1:-$RAIZ/public}"
 
 if [ ! -f "$RAIZ/build/web/index.html" ]; then
   echo "ERRO: build/web não encontrado. Rode antes:" >&2
-  echo "  flutter build web --release --no-wasm-dry-run --base-href /app/ ..." >&2
+  echo "  flutter build web --release --no-wasm-dry-run ..." >&2
   exit 1
 fi
 
-# O --base-href precisa bater com o caminho onde o app é servido; sem isso o
-# app carrega no endereço errado e fica em tela branca.
-if ! grep -q '<base href="/app/">' "$RAIZ/build/web/index.html"; then
-  echo "ERRO: o build não usou --base-href /app/." >&2
-  echo "Rebuilde com --base-href /app/ antes de montar." >&2
+# O app é servido na raiz; um base href diferente deixaria a tela branca,
+# porque o Flutter buscaria os próprios arquivos no caminho errado.
+if ! grep -qE '<base href="/"' "$RAIZ/build/web/index.html"; then
+  echo "ERRO: o build não está com base href na raiz." >&2
+  echo "Rebuilde sem --base-href (ou com --base-href /)." >&2
   exit 1
 fi
 
 rm -rf "$SAIDA"
 mkdir -p "$SAIDA"
 
+# O app primeiro: ele traz index.html, favicon e ícones para a raiz.
+cp -R "$RAIZ/build/web/." "$SAIDA/"
+# Depois as páginas estáticas, que ocupam caminhos próprios e não colidem.
 cp -R "$RAIZ/site/." "$SAIDA/"
-mkdir -p "$SAIDA/app"
-cp -R "$RAIZ/build/web/." "$SAIDA/app/"
 
 echo "Publicação montada em $SAIDA"
-echo "  raiz  → apresentação, privacidade, termos ($(find "$SAIDA" -maxdepth 1 -name '*.html' | wc -l) página(s) na raiz)"
-echo "  /app/ → aplicativo ($(du -sh "$SAIDA/app" | cut -f1))"
+echo "  /       → aplicativo ($(du -sh "$SAIDA" | cut -f1) no total)"
+echo "  /sobre/ → apresentação, privacidade, termos"

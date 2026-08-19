@@ -1,5 +1,5 @@
 # Rastreamento liberado. Explícito de propósito: a verificação de marca do
-# Google busca a página inicial informada na tela de consentimento, e a
+# Google busca a página informada na tela de consentimento (/sobre/), e a
 # ausência de regras já permitiria — mas deixar declarado elimina a dúvida.
 User-agent: *
 Allow: /
