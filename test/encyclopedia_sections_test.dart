@@ -43,6 +43,14 @@ void main() {
       locale: const Locale('pt', 'BR'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      // As estrelas da capa (BlinkStar) piscam em loop infinito, então
+      // pumpAndSettle nunca terminava. O próprio widget respeita
+      // disableAnimations — é o mesmo caminho de quem pede menos movimento
+      // no sistema —, então o teste pede isso em vez de mexer no app.
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child!,
+      ),
       home: Scaffold(
         body: EncyclopediaIndexPage(
           onSectionSelected: (section) => selected = section,

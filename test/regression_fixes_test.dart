@@ -10,6 +10,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:grimorio_de_bolso/core/services/payment_service.dart';
 import 'package:grimorio_de_bolso/core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/core/services/notification_service.dart';
+import 'package:grimorio_de_bolso/core/providers/language_provider.dart';
 import 'package:grimorio_de_bolso/core/providers/sync_provider.dart';
 import 'package:grimorio_de_bolso/core/widgets/mascot/cat_chat_bubble.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/enums.dart';
@@ -353,11 +354,18 @@ void main() {
       expect(find.textContaining('O QUE VOCÊ DESBLOQUEIA'), findsNothing);
       expect(find.text('Cancele a qualquer momento'), findsOneWidget);
       expect(find.text('Cancele quando quiser'), findsNothing);
-      expect(find.byType(SingleChildScrollView), findsNothing);
-      expect(
-        find.byKey(const ValueKey('premium_paywall_fitted_content')),
-        findsOneWidget,
-      );
+      // O painel é embrulhado num SingleChildScrollView de segurança, para
+      // não estourar em tela pequena ou com fonte ampliada. A garantia que
+      // importa não é a ausência de rolagem, e sim que em 390x844 não sobre
+      // nada para rolar: maxScrollExtent zero = conteúdo coube inteiro.
+      final rolagem = tester
+          .state<ScrollableState>(find.descendant(
+            of: find.byType(SingleChildScrollView),
+            matching: find.byType(Scrollable),
+          ))
+          .position;
+      expect(rolagem.maxScrollExtent, 0,
+          reason: 'o paywall deve caber inteiro em 390x844, sem rolagem');
       expect(tester.takeException(), isNull);
     });
   });
@@ -365,11 +373,20 @@ void main() {
   group('Nova oferta de assinatura', () {
     testWidgets('Fazer Upgrade de Configurações abre SubscriptionPage',
         (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
       final authProvider = AuthProvider();
 
       await tester.pumpWidget(
-        ChangeNotifierProvider<AuthProvider>.value(
-          value: authProvider,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            // SettingsPage lê o LanguageProvider; sem ele o Consumer estoura
+            // ProviderNotFoundException antes de qualquer asserção.
+            ChangeNotifierProvider<LanguageProvider>(
+              create: (_) => LanguageProvider(prefs),
+            ),
+          ],
           child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
@@ -801,7 +818,7 @@ void main() {
       expect(find.text('Acesso Vitalício (Código Premium)'), findsOneWidget);
       expect(
         find.text(
-          'Seu acesso Premium foi resgatado via Código Premium e não expira.',
+          'Seu acesso Premium foi resgatado via Código Premium e não expira',
         ),
         findsOneWidget,
       );

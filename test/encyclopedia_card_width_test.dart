@@ -12,7 +12,10 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: page));
-    await tester.pump();
+    // A entrada em cascata agenda um Future.delayed por item. Sem avançar o
+    // relógio até o fim, o teste termina com timers pendentes e o harness
+    // reprova antes de chegar nas asserções.
+    await tester.pumpAndSettle();
   }
 
   testWidgets('Elementos mantém introdução e expansões com a mesma largura',

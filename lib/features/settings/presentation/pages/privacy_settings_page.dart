@@ -170,13 +170,20 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gc.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gc.textPrimary10),
+    // A cor vive no Material, não num Container por fora: os ListTile pintam
+    // o respingo do toque no Material mais próximo, e com o fundo opaco por
+    // cima o respingo ficava invisível (o Flutter reclama disso em debug).
+    return Material(
+      color: context.gc.surface,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.gc.textPrimary10),
+        ),
+        child: Column(children: children),
       ),
-      child: Column(children: children),
     );
   }
 
