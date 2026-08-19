@@ -69,9 +69,13 @@
     }
 
     /* Tela de carregamento: aparece para TODA visitante enquanto o app (que é
-       grande) baixa, e sai quando ele sobe. Não é conteúdo escondido — é o
-       que a pessoa vê primeiro. De quebra, dá à raiz do domínio um HTML com
-       nome e propósito legíveis, que antes só existiam desenhados no canvas. */
+       grande) baixa, e sai quando ele sobe. Também reaparece na volta do
+       login social, que recarrega a página inteira — por isso ela precisa
+       LER COMO CARREGAMENTO (daí o indicador girando), e não como uma página
+       de destino: sem isso, a pessoa acha que saiu do app no meio do login.
+
+       O texto continua no HTML porque é o que a verificação de marca do
+       Google lê na home page; ele apenas fica visualmente secundário. */
     #boot-splash {
       position: fixed;
       inset: 0;
@@ -80,25 +84,46 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 14px;
+      gap: 18px;
       padding: 32px 24px;
       text-align: center;
       background: #0B0A16;
-      color: #d8d2e0;
+      color: #8d84a0;
       font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
       transition: opacity .35s ease;
     }
     #boot-splash.done { opacity: 0; pointer-events: none; }
-    #boot-splash img { width: 96px; height: 96px; }
+    #boot-splash img { width: 72px; height: 72px; opacity: .95; }
     #boot-splash h1 {
-      font-size: 1.7rem;
-      font-weight: 700;
-      color: #e5d4ff;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: .3px;
+      color: #c9a7f0;
       margin: 0;
     }
-    #boot-splash p { max-width: 34rem; line-height: 1.6; margin: 0; }
-    #boot-splash .links { margin-top: 6px; font-size: .9rem; }
-    #boot-splash a { color: #c9a7f0; margin: 0 8px; }
+    #boot-splash p {
+      max-width: 26rem;
+      font-size: .82rem;
+      line-height: 1.5;
+      margin: 0;
+      opacity: .75;
+    }
+    #boot-splash .spinner {
+      width: 26px;
+      height: 26px;
+      border: 2px solid rgba(201, 167, 240, .25);
+      border-top-color: #c9a7f0;
+      border-radius: 50%;
+      animation: boot-spin .8s linear infinite;
+    }
+    @keyframes boot-spin { to { transform: rotate(360deg); } }
+    #boot-splash .links {
+      position: absolute;
+      bottom: 24px;
+      font-size: .78rem;
+      opacity: .6;
+    }
+    #boot-splash a { color: #8d84a0; margin: 0 8px; }
   </style>
 
   <script>
@@ -139,6 +164,7 @@
   <div id="boot-splash">
     <img src="/icons/Icon-192.png" alt="Ícone do Grimório de Bolso">
     <h1>Grimório de Bolso</h1>
+    <div class="spinner" role="status" aria-label="Carregando"></div>
     <p>
       Agenda mágica, diário de bruxaria, calendário lunar, astrologia e
       enciclopédia — a sua prática no bolso, no celular ou no navegador.

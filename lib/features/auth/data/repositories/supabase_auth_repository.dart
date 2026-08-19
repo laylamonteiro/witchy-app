@@ -148,7 +148,10 @@ class SupabaseAuthRepository implements AuthRepository {
           // Precisa estar na allowlist de Redirect URLs do projeto Supabase.
           redirectTo: Uri.base.origin,
         );
-        return AuthResult.success(UserModel.defaultUser());
+        // O navegador já está saindo para o Google. Devolver "sucesso" com um
+        // usuário anônimo (como antes) fazia a tela sincronizar essa conta
+        // falsa e navegar, piscando a tela de boas-vindas antes do redirect.
+        return AuthResult.redirecting();
       }
 
 
