@@ -127,13 +127,13 @@ jobs:
             test/numerology_calculator_test.dart \
             test/i18n_smoke_test.dart
 
-      - name: 🧪 Suíte completa (informativo)
-        # Não-bloqueante: 11 falhas legadas rastreadas na auditoria técnica
-        # (gender fallback = decisão de produto; FeatureAccess ×2; paywall/
-        # navegação ×3; free_writing ×4; layout de signos ×1) — promover a
-        # bloqueante quando a dívida for zerada.
+      - name: 🧪 Suíte completa (bloqueante)
+        # Era informativo enquanto havia falhas legadas (gender fallback,
+        # FeatureAccess ×2, paywall/navegação ×3, free_writing ×4, layout de
+        # signos ×1, enciclopédia ×4, aspecto ×1). A dívida foi zerada, então
+        # a suíte inteira volta a valer como gate: uma regressão nova falha o
+        # job em vez de virar dívida.
         run: flutter test
-        continue-on-error: true
 
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh

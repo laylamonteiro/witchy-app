@@ -565,15 +565,21 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildAccountOptions(BuildContext context, AuthProvider authProvider) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gc.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.gc.textPrimary.withValues(alpha: 0.1),
+    // A cor vem de um Material, não de um Container: os ListTile pintam
+    // fundo e ondulação de toque no Material mais próximo, e um Container
+    // colorido no meio escondia esses efeitos (o Flutter alerta sobre isso).
+    return Material(
+      color: context.gc.surface,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: context.gc.textPrimary.withValues(alpha: 0.1),
+          ),
         ),
-      ),
-      child: Column(
+        child: Column(
         children: [
           if (_showLanguageOption) ...[
             _buildLanguageOptionTile(context),
@@ -688,7 +694,8 @@ class SettingsPage extends StatelessWidget {
             textColor: context.gc.alert,
             onTap: () => _showLogoutConfirmation(context, authProvider),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
