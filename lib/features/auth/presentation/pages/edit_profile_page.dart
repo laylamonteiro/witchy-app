@@ -1,10 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../../../core/sharing/image_download_stub.dart'
+    if (dart.library.js_interop) '../../../../core/sharing/image_download_web.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/i18n/gender.dart';
@@ -798,17 +802,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
 
-      final directory = await getApplicationDocumentsDirectory();
       final fileName =
           'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-      final file = File('${directory.path}/$fileName');
-      await file.writeAsString(jsonString);
 
-      if (mounted) {
+      // Na web não há pasta do app: o backup vai direto para os downloads.
+      if (kIsWeb) {
+        await downloadBytes(
+          Uint8List.fromList(utf8.encode(jsonString)),
+          fileName,
+          mimeType: 'application/json',
+        );
+      } else {
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/$fileName');
+        await file.writeAsString(jsonString);
+        if (!mounted) return;
         await Share.shareXFiles(
           [XFile(file.path)],
           subject: 'Backup Grimório de Bolso',
         );
+      }
+
+      if (mounted) {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

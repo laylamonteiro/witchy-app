@@ -127,7 +127,7 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
 
       // O Gal fala com a galeria do sistema, que não existe no navegador.
       if (kIsWeb) {
-        await downloadImageBytes(bytes, '$nome.png');
+        await downloadBytes(bytes, '$nome.png', mimeType: 'image/png');
       } else {
         await Gal.putImageBytes(bytes, name: nome);
       }

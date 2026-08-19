@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../../../core/sharing/image_download_stub.dart'
+    if (dart.library.js_interop) '../../../../core/sharing/image_download_web.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/legal/legal_document_page.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -417,21 +421,33 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
 
       final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
 
-      final directory = await getApplicationDocumentsDirectory();
       final fileName =
           'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-      final file = File('${directory.path}/$fileName');
-      await file.writeAsString(jsonString);
 
-      if (!mounted) return;
-      // API nova do share_plus (Share.shareXFiles é deprecado e sai na
-      // próxima major).
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          subject: l10n.privacyBackupSubject,
-        ),
-      );
+      // Na web não há pasta do app: o backup vai direto para os downloads,
+      // que é onde a pessoa espera encontrar um arquivo baixado.
+      if (kIsWeb) {
+        await downloadBytes(
+          Uint8List.fromList(utf8.encode(jsonString)),
+          fileName,
+          mimeType: 'application/json',
+        );
+        if (!mounted) return;
+      } else {
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/$fileName');
+        await file.writeAsString(jsonString);
+
+        if (!mounted) return;
+        // API nova do share_plus (Share.shareXFiles é deprecado e sai na
+        // próxima major).
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path)],
+            subject: l10n.privacyBackupSubject,
+          ),
+        );
+      }
 
       messenger.showSnackBar(
         SnackBar(

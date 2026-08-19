@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/services/image_storage_service.dart';
+import '../../../../core/utils/image_compression.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_button.dart';
@@ -31,8 +31,10 @@ import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 /// erva/pedra/cor, a IA identifica, ela confirma ou corrige o nome, a IA
 /// monta a página no formato da categoria e tudo é salvo com a foto dela.
 ///
-/// Privacidade: a foto é enviada à IA em memória apenas para identificação;
-/// só a cópia local comprimida é persistida (no aparelho).
+/// Privacidade: a foto é enviada à IA em memória apenas para identificação.
+/// A cópia comprimida é persistida no aparelho (celular) ou no armazenamento
+/// privado da conta (web, onde não há filesystem) — ver política de
+/// privacidade, seção "Onde seus dados vivem".
 class AddEntryPage extends StatefulWidget {
   final UserEntryCategory category;
 
@@ -106,22 +108,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
     if (picked == null || !mounted) return;
 
     // Compressão corrige EXIF e remove metadados (mesmo pipeline da
-    // quiromancia). Na web não há arquivo — só a versão por bytes funciona.
-    final compressed = kIsWeb
-        ? await FlutterImageCompress.compressWithList(
-            await picked.readAsBytes(),
-            minWidth: 1024,
-            minHeight: 1024,
-            quality: 82,
-            format: CompressFormat.jpeg,
-          )
-        : await FlutterImageCompress.compressWithFile(
-            picked.path,
-            minWidth: 1024,
-            minHeight: 1024,
-            quality: 82,
-            format: CompressFormat.jpeg,
-          );
+    // quiromancia).
+    final compressed = await compressPickedImage(picked);
     if (compressed == null || !mounted) return;
     if (compressed.length > _maxUploadBytes) {
       setState(() => _error = l10n.encyAddImageTooLarge);
