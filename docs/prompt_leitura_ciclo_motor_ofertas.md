@@ -171,11 +171,56 @@ Implementado na branch `claude/cycle-reading-offers-engine-vme4yp`:
   crédito `pending` → `generated` (falha nunca consome a compra), Pro com 1
   leitura/mês inclusa, regeneração 2×/janela.
 
+### Leitura da Semana (o segundo período)
+- `CycleReadingPeriodType` (`week` | `lunation`) atravessa modelo, crédito,
+  composer e prompts. A janela da semana são os últimos 7 dias, hoje
+  incluído (`CycleReadingService.currentWeek`).
+- A semana entrega **4 seções** (retrato, fios, céu, afirmação);
+  prática, rituais e selo continuam exclusivos da lunação — é essa
+  diferença visível que sustenta a diferença de preço (brainstorm §4).
+- O crédito é por (janela, tipo): comprar a semana não entrega a lunação.
+  Mínimo de registros próprio (3, contra 5 da lunação) no aviso de leitura
+  rasa. A tela de compra tem seletor com os dois preços à vista.
+- Produto `leitura_ciclo_semana`
+  (`RevenueCatConfig.cycleReadingWeekProductId`).
+
+### Adequação à web (port do PR #218)
+- A compra avulsa passa por **offering/pacote**, não por produto solto: no
+  navegador o SDK do RevenueCat implementa `getOfferings`/`purchasePackage`,
+  mas `getProducts` e `purchaseStoreProduct` lançam
+  `UnsupportedPlatformException`. `PaymentService.getConsumablePackage`
+  procura na offering `cycle_readings` e casa pelo id do produto.
+- O paywall nativo não existe na web; a compra da leitura já acontece em
+  tela própria do app (`CycleReadingIntroPage`), que funciona nas três
+  plataformas.
+- Nada em `lib/core/offers/` e `lib/features/cycle_reading/` usa `dart:io`;
+  o céu do período cai no cálculo aproximado quando o sweph não responde.
+- Os `ShareCard` da leitura herdam o download do navegador que o port
+  adicionou ao `showShareCardSheet`.
+
+### Dívidas legadas zeradas nesta passagem
+Correções de produção (bugs reais que os testes acusavam):
+- `StaggeredEntrance` e `LivingEmblem`: a espera das animações era um
+  `Future.delayed` solto, que sobrevivia à saída da tela. Virou `Timer`
+  cancelado no `dispose`.
+- `StarfieldBackground`: cintilava em ciclo infinito ligado no campo —
+  gastava bateria inclusive para quem pediu "reduzir movimento" e deixava
+  qualquer `pumpAndSettle` da página preso. Agora começa no primeiro frame
+  e respeita a preferência do sistema.
+- Privacidade: `ListTile` dentro de `Container` colorido escondia a
+  ondulação de toque; a cor passou para um `Material`.
+- Signos: seis rótulos em português fixo (sem acento, por isso escapavam do
+  scanner) foram para os 4 ARBs.
+- Escrita livre: a documentação da classe dizia "salvo apenas por ação
+  explícita" enquanto o app salva sozinho — era o comentário que estava
+  errado, e é ele que fazia os testes parecerem certos.
+
 ### Pendências operacionais (fora do código)
-- Criar o produto `leitura_ciclo_mes` como consumível na App Store Connect e
-  no Google Play Console (e importar no RevenueCat).
+- Criar `leitura_ciclo_mes` e `leitura_ciclo_semana` como consumíveis na
+  App Store Connect e no Google Play Console, importar no RevenueCat e
+  agrupá-los na offering `cycle_readings`.
+- Para a web, cadastrar os mesmos dois produtos no RevenueCat Billing (com
+  os mesmos identificadores) e incluí-los na mesma offering.
 - Rodar `supabase/cycle_readings_migration.sql` no projeto Supabase.
 - Testar o fluxo de compra no sandbox do RevenueCat (critério de aceite que
   exige loja real).
-- Semanal (`leitura_ciclo_semana`) fica para depois, como porta de entrada
-  barata (decisão do brainstorm §6).
