@@ -128,10 +128,10 @@ jobs:
             test/i18n_smoke_test.dart
 
       - name: 🧪 Suíte completa (informativo)
-        # Não-bloqueante: 11 falhas legadas rastreadas na auditoria técnica
-        # (gender fallback = decisão de produto; FeatureAccess ×2; paywall/
-        # navegação ×3; free_writing ×4; layout de signos ×1) — promover a
-        # bloqueante quando a dívida for zerada.
+        # Não-bloqueante: sobram 3 falhas, todas esperando decisão de produto
+        # (fallback de gênero; aiPalmistry e numerologyReadings no plano Free).
+        # Ver docs/AUDITORIA_TECNICA.md. Promover a bloqueante quando a
+        # dívida for zerada — falta pouco.
         run: flutter test
         continue-on-error: true
 

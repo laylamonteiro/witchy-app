@@ -105,16 +105,25 @@ isso vai para dentro do APK.
 
 ## 5. Dívida de testes (pré-existente, fora do gate bloqueante)
 
-Estado atual (run verde de 31/Jul/2026): **205 passam, 11 falham** —
-todas falhas legadas, nenhuma introduzida pela revisão.
+Estado atual: **260 passam, 3 falham**. As 14 falhas restantes do
+levantamento anterior foram resolvidas — quase todas eram testes cobrando
+contratos que o app já tinha mudado de propósito, e duas viraram correção de
+código (o respingo de toque dos `ListTile` nas telas de Privacidade e
+Configurações, que era pintado atrás do fundo opaco do cartão).
 
-| Teste | Casos | Causa | Ação proposta |
+As 3 que sobram dependem de **decisão de produto**, não de engenharia:
+
+| Teste | Casos | O teste espera | O app faz hoje |
 | --- | --- | --- | --- |
-| `core/i18n/gender_test.dart` (fallback neutro) | 1 | Código usa `Gender.feminine` como padrão; teste espera `neutral` | **Decisão de produto** — precisa de definição da mantenedora |
-| `widget_test.dart` FeatureAccess (limites Free) | 2 | Divergência teste × lógica igual à main | Alinhar teste ou lógica após decisão dos limites |
-| `regression_fixes_test.dart` (paywall sem rolagem + 2 navegações) | 3 | Sensível a comprimento de texto localizado | Reavaliar layout do paywall nos 3 idiomas |
-| `free_writing_tab_test.dart` (fluxos de edição) | 4 | Asserções de interação falham no harness | Depurar com Flutter local |
-| `zodiac_signs_layout_test.dart` (margem esquerda) | 1 | Asserção de layout sensível a texto localizado | Reavaliar com Flutter local |
+| `core/i18n/gender_test.dart` | 1 | `Gender.neutral` sem preferência salva | `Gender.feminine` |
+| `widget_test.dart` — `aiPalmistry` | 1 | Free com limite diário | Premium puro (preview → paywall) |
+| `widget_test.dart` — `numerologyReadings` | 1 | Free com limite diário | Premium puro (preview → paywall) |
+
+Nos dois últimos, o comportamento atual está documentado em comentário no
+próprio `feature_access.dart` ("exclusivas Premium: fora do mapa de limites,
+o plano Free recebe preview -> paywall"), o que sugere que o código está
+certo e os testes é que envelheceram. Como mexe no que o plano Free entrega,
+a confirmação é da mantenedora.
 
 A suíte completa roda como **informativa** no CI de branch; o núcleo de
 i18n/conteúdo (16+ arquivos de teste) é bloqueante.
