@@ -128,15 +128,41 @@ jobs:
             test/i18n_smoke_test.dart
 
       - name: 🧪 Suíte completa (informativo)
-        # Não-bloqueante: 11 falhas legadas rastreadas na auditoria técnica
-        # (gender fallback = decisão de produto; FeatureAccess ×2; paywall/
-        # navegação ×3; free_writing ×4; layout de signos ×1) — promover a
-        # bloqueante quando a dívida for zerada.
+        # A dívida foi zerada: a suíte está verde (263/263). O passo segue
+        # informativo por enquanto — promover a bloqueante é decisão de quem
+        # mantém, porque a partir daí um teste instável passa a barrar a
+        # publicação do site. Ver docs/AUDITORIA_TECNICA.md.
         run: flutter test
         continue-on-error: true
 
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
+
+      - name: 🔧 Garantir ripgrep (o scanner de i18n depende dele)
+        # Sem o rg, o scanner buscava vazio e o gate passava sem verificar
+        # nada. Agora o script falha alto se ele faltar — então o runner
+        # precisa tê-lo.
+        #
+        # Vem do release, e não do apt: `apt-get update` roda a cada execução
+        # e o custo oscilava de 10s a mais de 10min conforme o espelho, sem
+        # nada que a gente controle. Baixar o binário é constante e o retry
+        # do curl cobre falha de rede. Instala só quando ausente.
+        env:
+          RIPGREP_VERSAO: 14.1.1
+        run: |
+          if command -v rg >/dev/null; then
+            echo "ripgrep já presente: $(rg --version | head -1)"
+            exit 0
+          fi
+          destino="$RUNNER_TEMP/ripgrep"
+          mkdir -p "$destino"
+          url="https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSAO}/ripgrep-${RIPGREP_VERSAO}-x86_64-unknown-linux-musl.tar.gz"
+          curl -sSfL --retry 3 --retry-delay 2 "$url" \
+            | tar xz --strip-components=1 -C "$destino"
+          # Confere aqui mesmo: sem isto, quem quebraria seria o passo
+          # seguinte, com uma mensagem que não aponta para a causa.
+          "$destino/rg" --version
+          echo "$destino" >> "$GITHUB_PATH"
 
       - name: 🔎 Hardcoded PT scan (bloqueante — gate final da i18n)
         run: bash scripts/check_hardcoded_pt.sh
@@ -158,3 +184,171 @@ jobs:
       - name: 📱 Build debug APK (só quando android/pubspec mudam)
         if: steps.native.outputs.changed == 'true'
         run: flutter build apk --debug
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Publicação do site (grimoriodebolso.app) no Cloudflare Pages.
+  #
+  # Roda só DEPOIS do gate acima passar: código que não compila, não analisa
+  # ou quebra os testes de i18n nunca chega ao ar — coisa que o build manual
+  # na máquina não garantia.
+  #
+  # Produção x prévia, pelo nome do branch:
+  #   main            → grimoriodebolso.app
+  #   qualquer outro  → URL de prévia própria, sem tocar no site publicado
+  #
+  # Quem decide isso é o campo "Production branch" do projeto no Cloudflare
+  # (Workers & Pages → grimorio-de-bolso → Settings → Builds & deployments),
+  # que precisa estar em `main`. O workflow só informa o branch de origem; se
+  # aquele campo apontar para outro branch, a publicação de main vira prévia
+  # e o domínio congela SEM dar erro. O passo final imprime o endereço de
+  # cada publicação justamente para que isso não passe despercebido.
+  #
+  # Secrets necessários (Settings → Secrets and variables → Actions):
+  #   CLOUDFLARE_API_TOKEN   token com permissão "Cloudflare Pages: Edit"
+  #   CLOUDFLARE_ACCOUNT_ID  id da conta (aparece na barra lateral do painel)
+  #   REVENUECAT_WEB_KEY     chave rcb_ do RevenueCat Billing
+  #   (SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY, GROQ_API_KEY,
+  #    GEMINI_API_KEY e PROKERALA_* já são usados pelo workflow de release)
+  #
+  # ADMIN_EMAIL/ADMIN_PASSWORD NÃO entram aqui de propósito: o bundle web é
+  # público e qualquer visitante conseguiria lê-los no main.dart.js.
+  # ──────────────────────────────────────────────────────────────────────
+  deploy-web:
+    name: 🌐 Publicar site (Cloudflare Pages)
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔑 Conferir secrets do Cloudflare
+        # Falha cedo e com mensagem clara: sem isto o erro só apareceria lá
+        # na frente, como uma recusa opaca do wrangler.
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          faltando=""
+          [ -z "$TOKEN" ] && faltando="$faltando CLOUDFLARE_API_TOKEN"
+          [ -z "$ACCOUNT" ] && faltando="$faltando CLOUDFLARE_ACCOUNT_ID"
+          if [ -n "$faltando" ]; then
+            echo "::error::Secrets ausentes:$faltando — cadastre em Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          echo "Secrets do Cloudflare presentes."
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 🔐 Create AI credentials file
+        run: |
+          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Groq API.
+          ///
+          class GroqCredentials {
+            static const apiKey = '${{ secrets.GROQ_API_KEY }}';
+          }
+          CREDENTIALS
+          cat > lib/core/ai/gemini_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Google Gemini API.
+          ///
+          class GeminiCredentials {
+            static const String apiKey = '${{ secrets.GEMINI_API_KEY }}';
+          }
+          CREDENTIALS
+
+      - name: 🔐 Create Prokerala credentials file
+        run: |
+          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
+          /// Credentials for the Prokerala API.
+          ///
+          class ProkeralaCredentials {
+            static const String clientId = '${{ secrets.PROKERALA_CLIENT_ID }}';
+            static const String clientSecret = '${{ secrets.PROKERALA_CLIENT_SECRET }}';
+          }
+          CREDENTIALS
+
+      - name: 📦 Install dependencies
+        run: flutter pub get
+
+      - name: 🌐 Generate localizations
+        run: flutter gen-l10n
+
+      - name: 🏗️ Build web (release)
+        # --no-wasm-dry-run: wasm_ffi e purchases_flutter não são compatíveis
+        # com wasm, e o aviso do dry run não diz respeito a este build.
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+          REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY }}
+        run: |
+          flutter build web --release --no-wasm-dry-run \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
+            --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY"
+
+      - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
+        run: bash scripts/assemble_site.sh public
+
+      - name: 🛡️ Garantir que nenhum admin foi embutido
+        # Rede de segurança: se algum dia ADMIN_* entrar no build por engano,
+        # o site publicado daria acesso de admin a qualquer visitante.
+        run: |
+          if grep -rqE "ADMIN_(EMAIL|PASSWORD)=" public/main.dart.js 2>/dev/null; then
+            echo "::error::Credenciais de admin encontradas no bundle — publicação abortada"
+            exit 1
+          fi
+          echo "Bundle sem credenciais de admin."
+
+      - name: 🚀 Deploy para o Cloudflare Pages
+        id: deploy
+        # --commit-dirty: o runner escreve arquivos de credencial e as
+        # localizacoes geradas antes do build, entao a arvore fica 'suja'
+        # por construcao — o aviso do wrangler aqui e ruido.
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy public
+            --project-name=grimorio-de-bolso
+            --branch=${{ github.ref_name }}
+            --commit-dirty=true
+
+      - name: 🔗 Endereço publicado
+        # O wrangler devolve a URL no meio do log, onde ninguém acha. Aqui ela
+        # sobe para o resumo da execução, que é a primeira coisa que aparece
+        # ao abrir o resultado no GitHub.
+        env:
+          URL: ${{ steps.deploy.outputs.deployment-url }}
+          ALIAS: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+        run: |
+          {
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              echo "## 🌐 Publicado em produção"
+              echo
+              echo "<https://grimoriodebolso.app>"
+            else
+              echo "## 🔍 Prévia do branch \`${{ github.ref_name }}\`"
+              echo
+              echo "Não toca no site publicado."
+            fi
+            echo
+            # `if` e não `[ ... ] && echo`: o runner roda com `bash -e`, e uma
+            # lista && que falha derruba o passo inteiro — bastaria uma das
+            # duas URLs vir vazia para o deploy aparecer como quebrado.
+            if [ -n "$ALIAS" ]; then
+              echo "- Endereço do branch: <$ALIAS>"
+            fi
+            if [ -n "$URL" ]; then
+              echo "- Endereço desta publicação: <$URL>"
+            fi
+            echo
+            echo "Commit \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:gal/gal.dart';
@@ -10,6 +11,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../theme/grimoire_colors.dart';
+// Na web não há galeria do sistema: o equivalente é o download do navegador.
+import 'image_download_stub.dart'
+    if (dart.library.js_interop) 'image_download_web.dart';
 
 /// Abre o sheet de compartilhamento como imagem: pré-visualização do
 /// [card] (um [ShareCard]) com ações de compartilhar e salvar na galeria.
@@ -76,17 +80,27 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
     final l10n = AppLocalizations.of(context);
     try {
       final bytes = await _capturePng(l10n.shareImageError);
-      final directory = await getTemporaryDirectory();
-      final file = File(
-        '${directory.path}/${widget.fileName}_'
-        '${DateTime.now().millisecondsSinceEpoch}.png',
-      );
-      await file.writeAsBytes(bytes);
+      final nome = '${widget.fileName}_'
+          '${DateTime.now().millisecondsSinceEpoch}.png';
+
+      // Na web não existe diretório temporário (path_provider não tem
+      // implementação): compartilha direto dos bytes.
+      final XFile arquivo;
+      if (kIsWeb) {
+        arquivo = XFile.fromData(
+          bytes,
+          name: nome,
+          mimeType: 'image/png',
+        );
+      } else {
+        final directory = await getTemporaryDirectory();
+        final file = File('${directory.path}/$nome');
+        await file.writeAsBytes(bytes);
+        arquivo = XFile(file.path, mimeType: 'image/png');
+      }
+
       await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path, mimeType: 'image/png')],
-          text: widget.shareText,
-        ),
+        ShareParams(files: [arquivo], text: widget.shareText),
       );
     } catch (_) {
       messenger.showSnackBar(
@@ -108,13 +122,21 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
     final l10n = AppLocalizations.of(context);
     try {
       final bytes = await _capturePng(l10n.shareImageError);
-      await Gal.putImageBytes(
-        bytes,
-        name: '${widget.fileName}_${DateTime.now().millisecondsSinceEpoch}',
-      );
+      final nome = '${widget.fileName}_'
+          '${DateTime.now().millisecondsSinceEpoch}';
+
+      // O Gal fala com a galeria do sistema, que não existe no navegador.
+      if (kIsWeb) {
+        await downloadBytes(bytes, '$nome.png', mimeType: 'image/png');
+      } else {
+        await Gal.putImageBytes(bytes, name: nome);
+      }
+
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l10n.shareImageSaved),
+          content: Text(
+            kIsWeb ? l10n.shareImageDownloaded : l10n.shareImageSaved,
+          ),
           backgroundColor: gc.success,
         ),
       );
@@ -205,7 +227,7 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
                 color: context.gc.textSecondary,
               ),
               label: Text(
-                l10n.shareImageSave,
+                kIsWeb ? l10n.shareImageDownload : l10n.shareImageSave,
                 style: TextStyle(
                   color: context.gc.textSecondary,
                   fontSize: 13,

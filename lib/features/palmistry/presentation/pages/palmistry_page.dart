@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/ai/ai_service.dart';
+import '../../../../core/utils/image_compression.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -83,13 +83,7 @@ class _PalmistryPageState extends State<PalmistryPage> {
 
       // Redimensiona/comprime em memória: corrige rotação EXIF, remove
       // metadados e limita o tamanho do envio.
-      final compressed = await FlutterImageCompress.compressWithFile(
-        picked.path,
-        minWidth: 1024,
-        minHeight: 1024,
-        quality: 82,
-        format: CompressFormat.jpeg,
-      );
+      final compressed = await compressPickedImage(picked);
       final bytes = compressed ?? await picked.readAsBytes();
 
       if (bytes.length > _maxUploadBytes) {

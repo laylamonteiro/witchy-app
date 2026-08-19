@@ -169,7 +169,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             Text(
               _sel(
                 pt: 'O Conselheiro Místico está analisando os trânsitos de hoje',
-                en: "The Mystic Advisor is analyzing today's transits",
+                en: "The Mystic Counselor is analyzing today's transits",
                 es: 'El Consejero Místico está analizando los tránsitos de hoy',
               ),
               style: TextStyle(
@@ -490,7 +490,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               Text(
                 _sel(
                   pt: 'Criada pelo Conselheiro Místico baseada nos trânsitos astrológicos',
-                  en: 'Created by the Mystic Advisor based on the astrological transits',
+                  en: 'Created by the Mystic Counselor based on the astrological transits',
                   es: 'Creada por el Consejero Místico basada en los tránsitos astrológicos',
                 ),
                 style: TextStyle(
@@ -777,7 +777,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             Text(
               _sel(
                 pt: 'O Clima Mágico é calculado diariamente com base nos trânsitos planetários reais e interpretado pelo Conselheiro Místico para práticas mágicas.',
-                en: 'The Magical Weather is calculated daily based on the real planetary transits and interpreted by the Mystic Advisor for magical practices.',
+                en: 'The Magical Weather is calculated daily based on the real planetary transits and interpreted by the Mystic Counselor for magical practices.',
                 es: 'El Clima Mágico se calcula a diario a partir de los tránsitos planetarios reales y lo interpreta el Consejero Místico para las prácticas mágicas.',
               ),
               style: TextStyle(

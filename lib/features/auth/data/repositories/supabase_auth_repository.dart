@@ -19,15 +19,21 @@ class SupabaseAuthRepository implements AuthRepository {
   late final SupabaseClient _supabase;
   final _authStateController = StreamController<UserModel?>.broadcast();
   StreamSubscription<AuthState>? _authSubscription;
-  late final GoogleSignIn _googleSignIn; // Variável de instância para GoogleSignIn
+  /// GoogleSignIn nativo só existe no mobile. Na web, o login com Google é
+  /// feito via OAuth do Supabase (signInWithOAuth) — e o plugin google_sign_in
+  /// web sequer aceita `serverClientId`, então instanciá-lo aqui estouraria no
+  /// boot da tela de login. Fica null na web.
+  final GoogleSignIn? _googleSignIn = kIsWeb
+      ? null
+      : GoogleSignIn(
+          // Web Client ID (client_type: 3) do google-services.json, exigido
+          // pelo Supabase para validar o idToken do Google no mobile.
+          serverClientId:
+              '625869809120-vekqjnltlccc7llalu6adgl1js8tngob.apps.googleusercontent.com',
+        );
 
   SupabaseAuthRepository() {
     _supabase = Supabase.instance.client;
-    // Inicializa GoogleSignIn com o Web Client ID (client_type: 3) do google-services.json
-    // Este ID é necessário para autenticação com Supabase
-    _googleSignIn = GoogleSignIn(
-      serverClientId: '625869809120-vekqjnltlccc7llalu6adgl1js8tngob.apps.googleusercontent.com',
-    );
     _setupAuthListener();
   }
 
@@ -135,14 +141,23 @@ class SupabaseAuthRepository implements AuthRepository {
       if (kIsWeb) {
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
-          redirectTo: SupabaseConfig.redirectUrl,
+          // Para onde a usuária volta DEPOIS do login — a origem do próprio
+          // app (grimoriodebolso.app em produção, localhost em dev), não o
+          // callback interno do Supabase (que era o valor anterior e deixava
+          // a usuária parada numa URL do Supabase em vez de voltar ao app).
+          // Precisa estar na allowlist de Redirect URLs do projeto Supabase.
+          redirectTo: Uri.base.origin,
         );
-        return AuthResult.success(UserModel.defaultUser());
+        // O navegador já está saindo para o Google. Devolver "sucesso" com um
+        // usuário anônimo (como antes) fazia a tela sincronizar essa conta
+        // falsa e navegar, piscando a tela de boas-vindas antes do redirect.
+        return AuthResult.redirecting();
       }
 
 
-      // Para mobile, usar Google Sign-In nativo (versão 7.x usa singleton)
-      final googleUser = await _googleSignIn.signIn(); // Usa a variável de instância
+      // Para mobile, usar Google Sign-In nativo (versão 7.x usa singleton).
+      // Não-nulo aqui: o caminho web já retornou acima no if (kIsWeb).
+      final googleUser = await _googleSignIn!.signIn();
       if (googleUser == null) {
         await debugLog('AUTH', 'Google Sign-In cancelado pelo usuário');
         return AuthResult.error('Login cancelado');
@@ -213,9 +228,10 @@ class SupabaseAuthRepository implements AuthRepository {
     }
 
     try {
-      if (await _googleSignIn.isSignedIn()) {
+      final googleSignIn = _googleSignIn;
+      if (googleSignIn != null && await googleSignIn.isSignedIn()) {
         await debugLog('AUTH', 'Encerrando sessão do Google');
-        await _googleSignIn.signOut();
+        await googleSignIn.signOut();
       }
     } catch (e) {
       await debugLog('AUTH', 'Erro ao encerrar sessão do Google: $e');
@@ -404,6 +420,27 @@ class SupabaseAuthRepository implements AuthRepository {
       profileData = response;
     } catch (e) {
       // Perfil pode não existir ainda
+    }
+
+    // Sem linha em `profiles`, cria agora. Acontece no login social DA WEB:
+    // ele termina em redirect, então o app volta por outro caminho e o
+    // _createProfile do fluxo nativo nunca roda. Sem essa linha, papel (role),
+    // plano e contadores da conta não teriam onde ficar.
+    if (profileData == null) {
+      final metadata = supabaseUser.userMetadata ?? {};
+      await _createProfile(
+        supabaseUser,
+        metadata['display_name'] ?? metadata['full_name'] ?? metadata['name'],
+      );
+      try {
+        profileData = await _supabase
+            .from(SupabaseTables.profiles)
+            .select()
+            .eq('id', supabaseUser.id)
+            .maybeSingle();
+      } catch (e) {
+        // Segue com os dados do próprio usuário do Supabase.
+      }
     }
 
     // Detectar método de autenticação

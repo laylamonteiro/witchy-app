@@ -13,6 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/theme_provider.dart';
+import 'core/widgets/boot_error_app.dart';
+import 'core/widgets/web_mobile_frame.dart';
 import 'core/database/database_helper.dart';
 import 'core/database/records_archive_migration.dart';
 import 'core/providers/mascot_provider.dart';
@@ -45,16 +47,72 @@ import 'features/astrology/presentation/providers/astrology_provider.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  // Zona guardada: erros assíncronos não capturados (fora do ciclo de build)
+  // são logados em vez de derrubarem o app silenciosamente — na web eles
+  // viravam um "Uncaught Error" minificado no console e tela branca.
+  runZonedGuarded<void>(() async {
+    // Precisa rodar DENTRO da zona: binding e runApp na mesma zona, senão o
+    // Flutter emite aviso de "Zone mismatch" e os erros escapam da guarda.
+    WidgetsFlutterBinding.ensureInitialized();
 
+    // Erros do framework (build/layout) também vão para o log persistente,
+    // mantendo o comportamento padrão de apresentação.
+    FlutterError.onError = (details) {
+      unawaited(
+        debugLog('ERROR', 'FlutterError: ${details.exceptionAsString()}'),
+      );
+      FlutterError.presentError(details);
+    };
+
+    // Erros de build/render não passam pelo try/catch do _boot; em release o
+    // ErrorWidget padrão é um retângulo cinza mudo. Detalhe técnico só onde
+    // ele serve (web e debug) — ver buildRenderErrorWidget.
+    ErrorWidget.builder = buildRenderErrorWidget;
+
+    await _boot();
+  }, (error, stackTrace) {
+    debugPrint('Erro não capturado (zona): $error\n$stackTrace');
+    unawaited(debugLog('ERROR', 'Erro não capturado (zona): $error'));
+  });
+}
+
+/// Executa a inicialização e sobe o app; se qualquer passo do boot estourar,
+/// renderiza a tela de erro de diagnóstico no lugar da tela branca.
+/// Permanente (produção inclusive), não só debug.
+Future<void> _boot() async {
+  try {
+    final prefs = await _initializeApp();
+    runApp(GrimorioDeBolsoApp(prefs: prefs));
+  } catch (error, stackTrace) {
+    debugPrint('Boot falhou: $error\n$stackTrace');
+    unawaited(debugLog('ERROR', 'Boot falhou: $error'));
+    runApp(BootErrorApp(
+      error: error,
+      stackTrace: stackTrace,
+      onRetry: _boot,
+    ));
+  }
+}
+
+/// Todos os passos de inicialização que antecedem o runApp.
+/// Qualquer exceção aqui é capturada por [_boot] e exibida na [BootErrorApp].
+Future<SharedPreferences> _initializeApp() async {
   // Initialize debug log service FIRST
   await DebugLogService().initialize();
   await debugLog('SYSTEM', 'App iniciando...');
 
-  // Initialize sqflite for web
+  // Initialize sqflite for web.
+  //
+  // Usa o modo SEM web worker: o SQLite (sqlite3.wasm) roda na própria
+  // thread principal, carregado diretamente. Evita o SharedWorker, que
+  // exige secure context e é fonte de falhas silenciosas ("unsupported
+  // result null" no boot) quando não sobe. Para um grimório pessoal de
+  // uma aba só, não há necessidade de compartilhar o banco entre abas,
+  // então o worker não traz benefício e só adiciona um ponto de falha.
   if (kIsWeb) {
-    databaseFactory = databaseFactoryFfiWeb;
+    databaseFactory = databaseFactoryFfiWebNoWebWorker;
+    await debugLog('SYSTEM', 'sqflite web (no web worker) configurado');
   }
 
   // Necessário para os agendamentos locais de Lua e Sabbats.
@@ -64,9 +122,11 @@ void main() async {
   await initializeDateFormatting('pt_BR', null);
   await initializeDateFormatting('en', null);
   await initializeDateFormatting('es', null);
+  await debugLog('SYSTEM', 'Timezones e formatos de data prontos');
 
   // Initialize database
   await DatabaseHelper.instance.database;
+  await debugLog('SYSTEM', 'Banco de dados aberto');
 
   // Initialize Supabase
   if (SupabaseConfig.isConfigured) {
@@ -84,6 +144,7 @@ void main() async {
   // Initialize RevenueCat (only for mobile platforms)
   if (!kIsWeb) {
     await PaymentService().initialize();
+    await debugLog('SYSTEM', 'PaymentService inicializado');
   }
 
   // Initialize SharedPreferences
@@ -128,7 +189,8 @@ void main() async {
     unawaited(AdService.instance.initialize());
   }
 
-  runApp(GrimorioDeBolsoApp(prefs: prefs));
+  await debugLog('SYSTEM', 'Boot concluído, subindo a UI');
+  return prefs;
 }
 
 class GrimorioDeBolsoApp extends StatefulWidget {
@@ -382,14 +444,21 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
           supportedLocales: LanguageProvider.supportedLocales,
           localeResolutionCallback: LanguageProvider.resolve,
           theme: themeProvider.themeData,
+          // Na web em desktop, enquadra o app numa largura de celular.
+          builder: (context, navigator) =>
+              WebMobileFrame(child: navigator ?? const SizedBox.shrink()),
           home: child,
           routes: {
-            '/home': (context) => const HomePage(),
+            // Rotas de conteúdo exigem sessão: na web a URL é endereçável
+            // (o navegador guarda `#/home`) e abriria a Home sem passar pelo
+            // AuthWrapper. Sem login, RequireAuth devolve o fluxo de entrada.
+            '/home': (context) => const RequireAuth(child: HomePage()),
+            '/subscription': (context) =>
+                const RequireAuth(child: SubscriptionPage()),
             '/welcome': (context) => const WelcomePage(),
             '/login': (context) => const LoginPage(),
             '/signup': (context) => const SignupPage(),
             '/onboarding': (context) => const OnboardingPage(),
-            '/subscription': (context) => const SubscriptionPage(),
           },
           debugShowCheckedModeBanner: false,
         ),

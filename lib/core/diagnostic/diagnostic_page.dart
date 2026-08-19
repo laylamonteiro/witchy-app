@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../theme/grimoire_colors.dart';
 import '../widgets/magical_card.dart';
 import '../ai/ai_service.dart';
+import '../utils/image_compression.dart';
 import '../ai/groq_credentials.dart';
 import '../../features/astrology/data/services/chart_calculator.dart';
 import '../../features/astrology/data/services/transit_interpreter.dart';
@@ -729,13 +729,7 @@ class _DiagnosticPageState extends State<DiagnosticPage>
 
       // Mesmo pipeline da Quiromancia real: comprime, corrige EXIF, remove
       // metadados.
-      final compressed = await FlutterImageCompress.compressWithFile(
-        picked.path,
-        minWidth: 1024,
-        minHeight: 1024,
-        quality: 82,
-        format: CompressFormat.jpeg,
-      );
+      final compressed = await compressPickedImage(picked);
       final bytes = compressed ?? await picked.readAsBytes();
 
       final result =
@@ -1777,6 +1771,13 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   _addLog('Iniciando teste de login com Google...');
                   final authRepo = SupabaseAuthRepository();
                   final result = await authRepo.signInWithGoogle();
+
+                  // Na web o login sai do app por redirect: nao ha resultado
+                  // para julgar aqui, a pagina inteira sera recarregada.
+                  if (result.redirecting) {
+                    _addLog('Redirecionando para o Google...');
+                    return;
+                  }
 
                   if (result.success) {
                     _addLog(

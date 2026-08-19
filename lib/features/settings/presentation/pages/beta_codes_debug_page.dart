@@ -29,6 +29,9 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
   }
 
   void _addLog(String message) {
+    // O diagnóstico roda async a partir do initState; se a página for fechada
+    // antes de terminar, setState após dispose estoura. Ignora se desmontado.
+    if (!mounted) return;
     setState(() {
       _logs.add(
           '[${DateTime.now().toIso8601String().substring(11, 19)}] $message');
@@ -164,7 +167,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
       _addLog('');
       _addLog('=== DIAGNÓSTICO COMPLETO ===');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -224,7 +227,7 @@ class _BetaCodesDebugPageState extends State<BetaCodesDebugPage> {
       _addLog('');
       _addLog('=== TESTE COMPLETO ===');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

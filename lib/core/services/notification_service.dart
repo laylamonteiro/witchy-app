@@ -304,10 +304,18 @@ class NotificationService {
         iOS: const DarwinNotificationDetails(),
       );
 
-  Future<void> cancelAllNotifications() => _notifications.cancelAll();
+  Future<void> cancelAllNotifications() async {
+    if (kIsWeb) return;
+    await _notifications.cancelAll();
+  }
 
-  Future<List<PendingNotificationRequest>> pendingNotifications() =>
-      _notifications.pendingNotificationRequests();
+  Future<List<PendingNotificationRequest>> pendingNotifications() async {
+    // Na web o flutter_local_notifications não registra implementação, então
+    // tocar o plugin estoura LateInitializationError (FlutterLocalNotifications
+    // Platform.instance não inicializado). Sem notificações agendadas na web.
+    if (kIsWeb) return const [];
+    return _notifications.pendingNotificationRequests();
+  }
 
   Future<bool?> areNotificationsEnabled() async {
     if (kIsWeb) return false;

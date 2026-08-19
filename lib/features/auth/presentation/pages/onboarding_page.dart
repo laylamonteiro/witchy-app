@@ -337,7 +337,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
       if (createAccount) {
         Navigator.of(context).pushReplacementNamed('/signup');
       } else {
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Sem conta não se entra: o app exige sessão. (Hoje nenhum botão
+        // chega aqui — o onboarding só oferece criar conta ou entrar.)
+        Navigator.of(context).pushReplacementNamed('/login');
       }
     }
   }

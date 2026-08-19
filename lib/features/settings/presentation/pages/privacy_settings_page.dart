@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../core/legal/legal_document_page.dart';
+import '../../../../core/services/data_export_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -173,11 +170,15 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gc.surface,
+    // A cor vive no Material, não num Container por fora: os ListTile pintam
+    // o respingo do toque no Material mais próximo, e com o fundo opaco por
+    // cima o respingo ficava invisível (o Flutter reclama disso em debug).
+    return Material(
+      color: context.gc.surface,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gc.textPrimary10),
+        side: BorderSide(color: context.gc.textPrimary10),
       ),
       child: Column(children: children),
     );
@@ -377,61 +378,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       );
 
-      final db = await DatabaseHelper.instance.database;
-      final exportData = <String, dynamic>{};
-
-      // Tabelas para exportar
-      final tables = [
-        'spells',
-        'dreams',
-        'desires',
-        'gratitudes',
-        'affirmations',
-        'daily_rituals',
-        'ritual_logs',
-        'sigils',
-        'birth_charts',
-        'magical_profiles',
-        'rune_readings',
-        'pendulum_consultations',
-        'oracle_readings',
-        'daily_magical_weather',
-        'learning_progress',
-        'guided_ritual_logs',
-        'user_encyclopedia_entries',
-        'free_writings',
-        'daily_checkins'
-      ];
-
-      for (final table in tables) {
-        try {
-          final data = await db.query(table);
-          exportData[table] = data;
-        } catch (e) {
-          exportData[table] = [];
-        }
-      }
-
-      exportData['export_date'] = DateTime.now().toIso8601String();
-      exportData['app_version'] = '1.0.0';
-
-      final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
-
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName =
-          'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-      final file = File('${directory.path}/$fileName');
-      await file.writeAsString(jsonString);
-
-      if (!mounted) return;
-      // API nova do share_plus (Share.shareXFiles é deprecado e sai na
-      // próxima major).
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          subject: l10n.privacyBackupSubject,
-        ),
-      );
+      await DataExportService.instance
+          .exportAndDeliver(subject: l10n.privacyBackupSubject);
 
       messenger.showSnackBar(
         SnackBar(
@@ -448,7 +396,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       );
     }
   }
-
   Future<void> _clearLocalData() async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(

@@ -1,9 +1,12 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/stored_image.dart';
+
 /// Imagem de verbete da enciclopédia: assets do app OU foto tirada pela
-/// usuária (entradas pessoais guardam caminho absoluto de arquivo).
+/// usuária (Supabase Storage, ou caminho local nas entradas antigas).
+///
+/// A resolução de cada origem fica em [StoredImage]; aqui ficam só o formato
+/// esperado pelas telas da enciclopédia.
 class EncyclopediaImage extends StatelessWidget {
   final String path;
   final double width;
@@ -22,22 +25,18 @@ class EncyclopediaImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFile = path.startsWith('/') || path.startsWith('file:');
-    if (isFile) {
-      return Image.file(
-        File(path.replaceFirst('file://', '')),
-        width: width,
-        height: height,
-        fit: fit,
-        errorBuilder: errorBuilder,
-      );
-    }
-    return Image.asset(
-      path,
+    return StoredImage(
+      reference: path,
       width: width,
       height: height,
       fit: fit,
-      errorBuilder: errorBuilder,
+      placeholderBuilder: errorBuilder == null
+          ? null
+          : (context) => errorBuilder!(
+                context,
+                Exception('EncyclopediaImage: $path'),
+                StackTrace.current,
+              ),
     );
   }
 }

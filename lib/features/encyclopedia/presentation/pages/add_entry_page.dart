@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,6 +11,8 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/ai/ai_service.dart';
+import '../../../../core/services/image_storage_service.dart';
+import '../../../../core/utils/image_compression.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_button.dart';
@@ -28,8 +31,10 @@ import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 /// erva/pedra/cor, a IA identifica, ela confirma ou corrige o nome, a IA
 /// monta a página no formato da categoria e tudo é salvo com a foto dela.
 ///
-/// Privacidade: a foto é enviada à IA em memória apenas para identificação;
-/// só a cópia local comprimida é persistida (no aparelho).
+/// Privacidade: a foto é enviada à IA em memória apenas para identificação.
+/// A cópia comprimida é persistida no aparelho (celular) ou no armazenamento
+/// privado da conta (web, onde não há filesystem) — ver política de
+/// privacidade, seção "Onde seus dados vivem".
 class AddEntryPage extends StatefulWidget {
   final UserEntryCategory category;
 
@@ -46,8 +51,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _nameController = TextEditingController();
 
-  List<int>? _jpegBytes;
-  String? _tempImagePath;
+  Uint8List? _jpegBytes;
   bool _identifying = false;
   bool _identified = false;
   String? _confidence;
@@ -105,13 +109,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     // Compressão corrige EXIF e remove metadados (mesmo pipeline da
     // quiromancia).
-    final compressed = await FlutterImageCompress.compressWithFile(
-      picked.path,
-      minWidth: 1024,
-      minHeight: 1024,
-      quality: 82,
-      format: CompressFormat.jpeg,
-    );
+    final compressed = await compressPickedImage(picked);
     if (compressed == null || !mounted) return;
     if (compressed.length > _maxUploadBytes) {
       setState(() => _error = l10n.encyAddImageTooLarge);
@@ -120,7 +118,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     setState(() {
       _jpegBytes = compressed;
-      _tempImagePath = picked.path;
       _identified = false;
       _generated = null;
       _confidence = null;
@@ -175,13 +172,18 @@ class _AddEntryPageState extends State<AddEntryPage> {
     }
   }
 
-  /// Título do candidato: o nome científico é o identificador principal, e o
-  /// popular entra como apoio quando não existe binômio (caso comum em
-  /// pedras, que nem sempre têm espécie mineral declarada).
+  /// Título do candidato — e, por consequência, nome do verbete.
+  ///
+  /// O nome POPULAR lidera: é o que a praticante reconhece na hora de escolher
+  /// e o que ela vai procurar depois na enciclopédia ("Morango", não "Fragaria
+  /// x ananassa"). O binômio latino continua visível como apoio (subtítulo no
+  /// card, campo próprio no verbete), preservando a precisão entre espécies
+  /// parecidas. Sem nome popular — comum em pedras sem espécie mineral
+  /// declarada — o científico assume o título.
   String _candidateName(Map<String, dynamic> candidate) {
-    final scientific = '${candidate['scientific'] ?? ''}'.trim();
-    if (scientific.isNotEmpty) return scientific;
-    return '${candidate['name'] ?? ''}'.trim();
+    final popular = '${candidate['name'] ?? ''}'.trim();
+    if (popular.isNotEmpty) return popular;
+    return '${candidate['scientific'] ?? ''}'.trim();
   }
 
   /// [index] negativo é "nenhuma dessas": abre o campo em branco.
@@ -242,15 +244,23 @@ class _AddEntryPageState extends State<AddEntryPage> {
     setState(() => _saving = true);
 
     try {
-      // Persistir a foto no diretório do app (padrão da foto de perfil).
+      // Persistir a foto. Na web não há filesystem: vai para o Supabase
+      // Storage e o banco guarda a referência (`supabase://...`).
       String? savedPath;
       final bytes = _jpegBytes;
       if (bytes != null) {
-        final dir = await getApplicationDocumentsDirectory();
-        final file =
-            File('${dir.path}/encyclopedia_${const Uuid().v4()}.jpg');
-        await file.writeAsBytes(bytes);
-        savedPath = file.path;
+        if (kIsWeb) {
+          savedPath = await ImageStorageService.instance.uploadJpeg(
+            bytes,
+            folder: 'encyclopedia',
+          );
+        } else {
+          final dir = await getApplicationDocumentsDirectory();
+          final file =
+              File('${dir.path}/encyclopedia_${const Uuid().v4()}.jpg');
+          await file.writeAsBytes(bytes);
+          savedPath = file.path;
+        }
       }
 
       if (!mounted) return;
@@ -349,12 +359,15 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
-                  if (_tempImagePath != null) ...[
+                  // Prévia a partir dos bytes já comprimidos: funciona no
+                  // celular e na web (onde o "caminho" é um blob do navegador,
+                  // que Image.file não sabe abrir).
+                  if (_jpegBytes != null) ...[
                     Center(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          File(_tempImagePath!),
+                        child: Image.memory(
+                          _jpegBytes!,
                           width: 180,
                           height: 180,
                           fit: BoxFit.cover,
@@ -478,10 +491,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
   ) {
     final candidate = _candidates[index];
     final title = _candidateName(candidate);
-    final popular = '${candidate['name'] ?? ''}'.trim();
-    // O popular só vira subtítulo quando o título já é o científico: sem
-    // binômio, o próprio popular subiu para o título e repeti-lo é ruído.
-    final subtitle = title == popular ? '' : popular;
+    final scientific = '${candidate['scientific'] ?? ''}'.trim();
+    // O científico só vira subtítulo quando NÃO é o próprio título: sem nome
+    // popular ele já subiu para cima, e repeti-lo seria ruído.
+    final subtitle = title == scientific ? '' : scientific;
     final votes = candidate['votes'] is int ? candidate['votes'] as int : 1;
 
     return InkWell(
@@ -503,11 +516,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: context.gc.lilac,
-                          // Itálico é convenção de binômio latino: sem
-                          // científico o título é popular e fica reto.
-                          fontStyle: subtitle.isEmpty
-                              ? FontStyle.normal
-                              : FontStyle.italic,
+                          // Itálico é convenção de binômio latino: o título só
+                          // é científico quando não há nome popular (aí não há
+                          // subtítulo), e nesse caso ele vai em itálico.
+                          fontStyle: subtitle.isEmpty && scientific.isNotEmpty
+                              ? FontStyle.italic
+                              : FontStyle.normal,
                         ),
                   ),
                   if (subtitle.isNotEmpty) ...[
@@ -516,6 +530,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.textSecondary,
+                            // O subtítulo agora é o binômio latino.
+                            fontStyle: FontStyle.italic,
                           ),
                     ),
                   ],

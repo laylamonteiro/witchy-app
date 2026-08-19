@@ -7,12 +7,22 @@ class AuthResult {
   final String? errorMessage;
   final AuthErrorCode? errorCode;
 
+  /// A autenticação SAIU do app: o navegador foi para o provedor e voltará por
+  /// redirect, recarregando a página. Não é sucesso nem erro — não há usuário
+  /// para entregar, e quem chamou não deve navegar nem mostrar mensagem, sob
+  /// pena de piscar uma tela intermediária antes de o navegador sair.
+  final bool redirecting;
+
   const AuthResult({
     required this.success,
     this.user,
     this.errorMessage,
     this.errorCode,
+    this.redirecting = false,
   });
+
+  factory AuthResult.redirecting() =>
+      const AuthResult(success: false, redirecting: true);
 
   factory AuthResult.success(UserModel user) => AuthResult(
         success: true,

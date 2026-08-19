@@ -389,15 +389,15 @@ void main() {
 
       ContentLocale.instance.setLocale(const Locale('en', 'US'));
       expect(aspect.interpretation,
-          'Harmonious connection between Jupiter and Saturn.');
+          'Harmonious connection between Jupiter and Saturn');
 
       ContentLocale.instance.setLocale(const Locale('es', 'ES'));
       expect(aspect.interpretation,
-          'Conexión armoniosa entre Júpiter y Saturno.');
+          'Conexión armoniosa entre Júpiter y Saturno');
 
       ContentLocale.instance.setLocale(const Locale('pt', 'BR'));
       expect(aspect.interpretation,
-          'Conexão harmoniosa entre Júpiter e Saturno.');
+          'Conexão harmoniosa entre Júpiter e Saturno');
     });
   });
 }

@@ -32,8 +32,35 @@ class CaptchaGate {
   }
 }
 
-class _CaptchaSheet extends StatelessWidget {
+class _CaptchaSheet extends StatefulWidget {
   const _CaptchaSheet();
+
+  @override
+  State<_CaptchaSheet> createState() => _CaptchaSheetState();
+}
+
+class _CaptchaSheetState extends State<_CaptchaSheet> {
+  /// Quantas vezes recriar o widget antes de desistir.
+  static const int _maxAttempts = 3;
+
+  int _attempt = 0;
+
+  /// O Turnstile roda numa WebView; quando ela está "fria" (app recém
+  /// instalado, dados limpos, rede lenta) o primeiro carregamento costuma
+  /// falhar. Antes, esse erro fechava a folha devolvendo null, e a tela de
+  /// login mostrava "não deu para concluir a verificação" sem nem abrir o
+  /// Google — quebrando a PRIMEIRA tentativa de quem acabou de instalar.
+  /// Agora recria o widget algumas vezes antes de desistir.
+  Future<void> _onError() async {
+    if (!mounted) return;
+    if (_attempt + 1 >= _maxAttempts) {
+      Navigator.of(context).pop();
+      return;
+    }
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
+    setState(() => _attempt++);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,17 +101,18 @@ class _CaptchaSheet extends StatelessWidget {
           SizedBox(
             height: 90,
             child: CloudflareTurnstile(
+              // A key muda a cada tentativa para forçar a recriação do widget
+              // (e uma nova carga da WebView) em vez de reusar a que falhou.
+              key: ValueKey(_attempt),
               siteKey: CaptchaConfig.siteKey,
               options: TurnstileOptions(
                 theme: TurnstileTheme.dark,
                 refreshExpired: TurnstileRefreshExpired.auto,
               ),
               onTokenReceived: (token) {
-                if (context.mounted) Navigator.of(context).pop(token);
+                if (mounted) Navigator.of(context).pop(token);
               },
-              onError: (_) {
-                if (context.mounted) Navigator.of(context).pop();
-              },
+              onError: (_) => _onError(),
             ),
           ),
         ],

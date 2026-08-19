@@ -1,11 +1,11 @@
 {
-    "name": "grimorio_de_bolso",
-    "short_name": "grimorio_de_bolso",
+    "name": "Grimório de Bolso",
+    "short_name": "Grimório",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0B0A16",
+    "theme_color": "#0B0A16",
+    "description": "Agenda mágica, diário de bruxaria, calendário lunar, astrologia e companheiro de jornada para bruxas e bruxos.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

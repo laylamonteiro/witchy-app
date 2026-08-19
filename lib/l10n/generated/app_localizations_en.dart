@@ -298,7 +298,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumCatSemantic => 'Pocket Grimoire magic cat';
 
   @override
-  String get premiumBenefitAdvisor => 'Unlimited Mystic Advisor';
+  String get premiumBenefitAdvisor => 'Unlimited Mystic Counselor';
 
   @override
   String get premiumBenefitEncyclopedia => 'Encyclopedia with full content';
@@ -666,7 +666,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileThisMonth => 'this month';
 
   @override
-  String get profileMysticAdvisor => 'Mystic Advisor';
+  String get profileMysticAdvisor => 'Mystic Counselor';
 
   @override
   String get profileToday => 'today';
@@ -738,7 +738,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editGenderHelp =>
-      'How should the app address you? We use this choice in personalized texts and in the Mystic Advisor\'s replies.';
+      'How should the app address you? We use this choice in personalized texts and in the Mystic Counselor\'s replies.';
 
   @override
   String get editSecurity => 'Security';
@@ -1134,7 +1134,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diaryAdvisorAffirmationPitch =>
-      'Let the Mystic Advisor create a powerful affirmation for you';
+      'Let the Mystic Counselor create a powerful affirmation for you';
 
   @override
   String get diaryContextOptional => 'Context (optional)';
@@ -1179,7 +1179,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diaryAffirmationCreated =>
-      'Affirmation created by the Mystic Advisor!';
+      'Affirmation created by the Mystic Counselor!';
 
   @override
   String get diaryAffirmationError => 'Error generating affirmation';
@@ -1223,14 +1223,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dreamToolsIntro =>
-      'Dreams speak in symbols. Interpret yours with the Mystic Advisor or explore the meanings of the most common themes.';
+      'Dreams speak in symbols. Interpret yours with the Mystic Counselor or explore the meanings of the most common themes.';
 
   @override
   String get dreamInterpretMyDream => 'Interpret my Dream';
 
   @override
   String get dreamInterpretMyDreamDesc =>
-      'Tell your dream and receive a reading from the Mystic Advisor';
+      'Tell your dream and receive a reading from the Mystic Counselor';
 
   @override
   String get dreamMeaningsTitle => 'Dream Meanings';
@@ -1436,7 +1436,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tarotConsultingCards => 'Consulting the cards…';
 
   @override
-  String get tarotAdvisorInterpretation => 'Mystic Advisor\'s Interpretation';
+  String get tarotAdvisorInterpretation => 'Mystic Counselor\'s Interpretation';
 
   @override
   String get tarotBestCombo => 'Best combo';
@@ -1671,7 +1671,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get numWeavingSynthesis => 'Weaving the synthesis…';
 
   @override
-  String get numAdvisorExplanation => 'Mystic Advisor\'s Explanation';
+  String get numAdvisorExplanation => 'Mystic Counselor\'s Explanation';
 
   @override
   String get sigilCreateTitle => 'Create Sigil';

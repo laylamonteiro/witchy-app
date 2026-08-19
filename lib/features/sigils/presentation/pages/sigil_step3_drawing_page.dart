@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/rendering.dart';
 import 'package:gal/gal.dart';
+import '../../../../core/sharing/image_download_stub.dart'
+    if (dart.library.js_interop) '../../../../core/sharing/image_download_web.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/database/database_helper.dart';
@@ -114,15 +117,24 @@ class _SigilStep3DrawingPageState extends State<SigilStep3DrawingPage> {
 
       final name =
           'sigilo_${DateTime.now().millisecondsSinceEpoch}';
-      await Gal.putImageBytes(
-        byteData.buffer.asUint8List(),
-        name: name,
-      );
+
+      // O Gal fala com a galeria do sistema, que não existe no navegador:
+      // ali o equivalente é o arquivo cair na pasta de downloads.
+      if (kIsWeb) {
+        await downloadBytes(byteData.buffer.asUint8List(), '$name.png',
+            mimeType: 'image/png');
+      } else {
+        await Gal.putImageBytes(byteData.buffer.asUint8List(), name: name);
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).sigilSavedToGallery),
+          content: Text(
+            kIsWeb
+                ? AppLocalizations.of(context).shareImageDownloaded
+                : AppLocalizations.of(context).sigilSavedToGallery,
+          ),
           backgroundColor: context.gc.success,
         ),
       );

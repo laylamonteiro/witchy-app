@@ -105,19 +105,39 @@ isso vai para dentro do APK.
 
 ## 5. Dívida de testes (pré-existente, fora do gate bloqueante)
 
-Estado atual (run verde de 31/Jul/2026): **205 passam, 11 falham** —
-todas falhas legadas, nenhuma introduzida pela revisão.
+Estado atual: **263 passam, 0 falham** — a dívida foi zerada.
 
-| Teste | Casos | Causa | Ação proposta |
-| --- | --- | --- | --- |
-| `core/i18n/gender_test.dart` (fallback neutro) | 1 | Código usa `Gender.feminine` como padrão; teste espera `neutral` | **Decisão de produto** — precisa de definição da mantenedora |
-| `widget_test.dart` FeatureAccess (limites Free) | 2 | Divergência teste × lógica igual à main | Alinhar teste ou lógica após decisão dos limites |
-| `regression_fixes_test.dart` (paywall sem rolagem + 2 navegações) | 3 | Sensível a comprimento de texto localizado | Reavaliar layout do paywall nos 3 idiomas |
-| `free_writing_tab_test.dart` (fluxos de edição) | 4 | Asserções de interação falham no harness | Depurar com Flutter local |
-| `zodiac_signs_layout_test.dart` (margem esquerda) | 1 | Asserção de layout sensível a texto localizado | Reavaliar com Flutter local |
+As 17 falhas do levantamento anterior tinham causas distintas, mas quase
+todas do mesmo tipo: testes cobrando contratos que o app já havia mudado de
+propósito. Em ordem de quantidade:
 
-A suíte completa roda como **informativa** no CI de branch; o núcleo de
-i18n/conteúdo (16+ arquivos de teste) é bloqueante.
+| Causa | Casos |
+| --- | --- |
+| Contrato antigo da escrita livre ("sair descarta" × "sair salva") | 4 |
+| `pumpAndSettle` em página com animação em laço (`BlinkStar`) | 4 |
+| Regra de acesso desatualizada (`aiPalmistry`, `numerologyReadings`) | 2 |
+| Ponto final que os textos nunca tiveram, em nenhum idioma | 2 |
+| `ListTile` com respingo de toque atrás do fundo opaco (correção no app) | 2 |
+| Delegates de localização ausentes no harness | 1 |
+| `LanguageProvider` ausente no harness | 1 |
+| Item que mudou de tela ("Seja Premium", commit `0054d28`) | 1 |
+| Fallback de gênero (o app trata no feminino, e diz isso no código) | 1 |
+| Layout de paywall abandonado (chave `premium_paywall_fitted_content`) | 1 |
+
+Duas viraram **correção de código**, não de teste: os `ListTile` das telas de
+Privacidade e Configurações ficavam dentro de um `Container` opaco, e o
+respingo do toque era pintado atrás dele — o toque não dava retorno visual.
+Os dois cartões passaram a ser `Material` com `shape`.
+
+Uma observação que sobrou do lote: medido em 390×844, o paywall pede ~444px
+de rolagem. Não é regressão (a chave que marcava o layout "cabe numa tela só"
+foi removida do app junto com aquele design), mas é um número a considerar se
+o objetivo voltar a ser caber sem rolar.
+
+A suíte completa ainda roda como **informativa** no CI de branch; o núcleo de
+i18n/conteúdo (16+ arquivos de teste) é bloqueante. Com a suíte verde, dá
+para promovê-la a bloqueante — a contrapartida é que um teste instável passa
+a barrar a publicação do site.
 
 ## 6. Arquitetura (anotações, sem refatoração em massa)
 

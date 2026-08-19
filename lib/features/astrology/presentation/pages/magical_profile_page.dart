@@ -503,7 +503,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
             Text(
               _sel(
                 pt: 'O Conselheiro Místico está analisando seu mapa astral\ne criando uma interpretação única para você.',
-                en: 'The Mystic Advisor is analyzing your birth chart\nand creating a unique interpretation for you.',
+                en: 'The Mystic Counselor is analyzing your birth chart\nand creating a unique interpretation for you.',
                 es: 'El Consejero Místico está analizando tu carta natal\ny creando una interpretación única para ti.',
               ),
               style: TextStyle(
@@ -673,7 +673,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           Text(
             _sel(
               pt: 'Consulte o Conselheiro Místico para uma\nanálise única do seu perfil mágico.',
-              en: 'Consult the Mystic Advisor for a\nunique analysis of your magical profile.',
+              en: 'Consult the Mystic Counselor for a\nunique analysis of your magical profile.',
               es: 'Consulta al Consejero Místico para un\nanálisis único de tu perfil mágico.',
             ),
             style: TextStyle(

@@ -550,7 +550,7 @@ class _CoverFront extends StatelessWidget {
         // Só a arte: o livro já tem a proporção da imagem, e a moldura
         // dourada desenhada NELA é a única borda.
         child: Image.asset(
-          'assets/premium/grimoire_cover.png',
+          'assets/premium/grimoire_cover.webp',
           fit: BoxFit.cover,
           errorBuilder: (context, _, __) => Container(
             decoration: const BoxDecoration(

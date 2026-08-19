@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -564,13 +565,16 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildAccountOptions(BuildContext context, AuthProvider authProvider) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gc.surface,
+    // Material, e não Container: os ListTile pintam o respingo do toque no
+    // Material mais próximo, então um fundo opaco por fora escondia o efeito
+    // (o Flutter reclama disso em debug). O shape dá cor, cantos e borda de
+    // uma vez só, sem widget extra.
+    return Material(
+      color: context.gc.surface,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.gc.textPrimary.withValues(alpha: 0.1),
-        ),
+        side: BorderSide(color: context.gc.textPrimary.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -620,13 +624,18 @@ class SettingsPage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const ThemePickerPage()),
             ),
           ),
-          _buildDivider(context),
-          _buildOptionTile(
-            context,
-            icon: Icons.notifications_outlined,
-            title: AppLocalizations.of(context).profileNotifications,
-            onTap: () => _showNotificationsBottomSheet(context),
-          ),
+          // Notificações são agendadas localmente pelo sistema operacional
+          // (flutter_local_notifications), que não existe na web. Esconder a
+          // opção evita prometer lembretes que nunca chegariam no navegador.
+          if (!kIsWeb) ...[
+            _buildDivider(context),
+            _buildOptionTile(
+              context,
+              icon: Icons.notifications_outlined,
+              title: AppLocalizations.of(context).profileNotifications,
+              onTap: () => _showNotificationsBottomSheet(context),
+            ),
+          ],
           _buildDivider(context),
           _buildOptionTile(
             context,

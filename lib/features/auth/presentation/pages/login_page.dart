@@ -540,6 +540,11 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
+      // Login social na web sai do app: o navegador vai para o provedor e
+      // volta recarregando a página. Não há o que navegar nem avisar aqui —
+      // seguir adiante piscava uma tela intermediária antes da saída.
+      if (result.redirecting) return;
+
       if (result.success && result.user != null) {
         final authProvider = context.read<AuthProvider>();
         await authProvider.syncAuthenticatedUser(result.user!);

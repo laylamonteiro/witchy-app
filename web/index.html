@@ -18,28 +18,147 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Grimório de Bolso: agenda mágica, diário de bruxaria, calendário lunar, astrologia e companheiro de jornada para bruxas e bruxos.">
+  <meta name="theme-color" content="#0B0A16">
+
+  <!-- Prévia ao compartilhar o link (WhatsApp, Instagram, Facebook, X...).
+       A imagem precisa de URL ABSOLUTA: os apps de mensagem buscam o arquivo
+       do lado deles, sem contexto da página. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Grimório de Bolso">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Grimório de Bolso">
+  <meta property="og:description" content="Agenda mágica, diário de bruxaria, calendário lunar, astrologia e enciclopédia — a sua prática no bolso, no celular ou no navegador.">
+  <meta property="og:url" content="https://grimoriodebolso.app/">
+  <meta property="og:image" content="https://grimoriodebolso.app/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1129">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Grimório de Bolso — agenda mágica, calendário lunar, grimório digital e astrologia">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Grimório de Bolso">
+  <meta name="twitter:description" content="Agenda mágica, diário de bruxaria, calendário lunar, astrologia e enciclopédia — a sua prática no bolso, no celular ou no navegador.">
+  <meta name="twitter:image" content="https://grimoriodebolso.app/og-image.png">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="grimorio_de_bolso">
+  <meta name="apple-mobile-web-app-title" content="Grimório de Bolso">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>grimorio_de_bolso</title>
+  <title>Grimório de Bolso</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* O fundo da página aparece em qualquer sobra; com a cor do app, some. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0B0A16;
+    }
+    /* A view do Flutter acompanha a altura da página (que o script abaixo
+       mantém igual à área realmente visível do navegador). */
+    flutter-view, flt-glass-pane {
+      height: 100%;
+    }
+
+    /* Tela de carregamento: só o logo, sem texto. Aparece enquanto o app (que
+       é grande) baixa e some quando ele sobe — inclusive na volta do login
+       social, que recarrega a página inteira. A pulsação suave evita a
+       sensação de tela travada durante o download.
+
+       NOTA: este arquivo é o APP, servido na raiz. A apresentação em HTML
+       estático — com nome, propósito e links legais, que um rastreador
+       consegue ler — fica em /sobre/ (site/sobre/index.html). Por isso aqui
+       pode ser só o logo. */
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0B0A16;
+      transition: opacity .35s ease;
+    }
+    #boot-splash.done { opacity: 0; pointer-events: none; }
+    #boot-splash img {
+      width: 128px;
+      height: 128px;
+      animation: boot-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes boot-pulse {
+      0%, 100% { opacity: .55; transform: scale(.97); }
+      50%      { opacity: 1;   transform: scale(1); }
+    }
+    /* Quem prefere menos movimento vê o logo estático. */
+    @media (prefers-reduced-motion: reduce) {
+      #boot-splash img { animation: none; opacity: 1; }
+    }
+  </style>
+
+  <script>
+    // TECLADO DO CELULAR: o canvas do Flutter não volta ao tamanho quando o
+    // teclado fecha, deixando uma faixa vazia no fim da página. A meta tag
+    // `interactive-widget` sozinha não resolveu, então aqui a altura da página
+    // passa a acompanhar a área visível de fato (visualViewport), que encolhe
+    // quando o teclado abre e volta quando ele fecha. O Flutter observa o
+    // tamanho do host e refaz o layout junto.
+    (function () {
+      var viewport = window.visualViewport;
+      if (!viewport) return;
+
+      var applyHeight = function () {
+        var height = Math.round(viewport.height) + 'px';
+        document.documentElement.style.height = height;
+        document.body.style.height = height;
+      };
+
+      viewport.addEventListener('resize', applyHeight);
+      window.addEventListener('orientationchange', function () {
+        // A rotação só reporta o tamanho novo no quadro seguinte.
+        setTimeout(applyHeight, 150);
+      });
+      applyHeight();
+    })();
+  </script>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <!--
+    NÃO registrar o sqflite_sw.js como service worker aqui. O pacote
+    sqflite_common_ffi_web instancia esse arquivo como SharedWorker por
+    conta própria (dentro de databaseFactoryFfiWeb) — registrá-lo como
+    service worker fazia o SW interceptar o fetch do sqlite3.wasm e
+    devolver vazio, estourando "unsupported result null" no boot a partir
+    do segundo load, além de sobrescrever o flutter_service_worker.js do PWA.
+  -->
+  <div id="boot-splash">
+    <img src="/icons/Icon-512.png" alt="Grimório de Bolso">
+  </div>
+
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sqflite_sw.js');
+    // Tira a tela de carregamento assim que o Flutter monta a própria view.
+    // Sem tempo-limite de propósito: se o app não subir, é melhor a pessoa
+    // continuar vendo o nome e os links do que uma tela vazia.
+    (function () {
+      var splash = document.getElementById('boot-splash');
+      if (!splash) return;
+      var observador = new MutationObserver(function () {
+        if (!document.querySelector('flutter-view, flt-glass-pane')) return;
+        observador.disconnect();
+        splash.classList.add('done');
+        setTimeout(function () { splash.remove(); }, 400);
       });
-    }
+      observador.observe(document.body, { childList: true, subtree: true });
+    })();
   </script>
+
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

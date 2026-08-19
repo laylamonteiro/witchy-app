@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/revenuecat_config.dart';
 
 AppLocalizations get _l10n =>
@@ -112,7 +113,10 @@ class PaymentService extends ChangeNotifier {
     }
 
     debugPrint('🔄 Iniciando RevenueCat...');
-    debugPrint('📋 Plataforma: ${Platform.operatingSystem}');
+    // Platform.* (dart:io) estoura no navegador — só loga fora da web.
+    if (!kIsWeb) {
+      debugPrint('📋 Plataforma: ${Platform.operatingSystem}');
+    }
 
     if (!RevenueCatConfig.isConfigured) {
       debugPrint('⚠️  RevenueCat não configurado - chaves de API ausentes');
@@ -126,8 +130,9 @@ class PaymentService extends ChangeNotifier {
     }
 
     try {
-      // Verificar se plataforma é suportada
-      if (!Platform.isIOS && !Platform.isAndroid) {
+      // Verificar se plataforma é suportada. Na web, quem decide é a presença
+      // da chave do RevenueCat Billing (já checada em isConfigured acima).
+      if (!kIsWeb && !Platform.isIOS && !Platform.isAndroid) {
         debugPrint('⚠️  Plataforma ${Platform.operatingSystem} não suportada para pagamentos');
         _isInitialized = true;
         return;
@@ -310,6 +315,13 @@ class PaymentService extends ChangeNotifier {
     Offering? offering,
     bool displayCloseButton = true,
   }) async {
+    if (kIsWeb) {
+      // Os Paywalls do RevenueCat (purchases_ui_flutter) são nativos e não
+      // existem na web — a compra no navegador precisa de tela própria.
+      debugPrint('ℹ️  Paywall nativo indisponível na web');
+      return PaywallResult.cancelled;
+    }
+
     if (!_isInitialized) {
       debugPrint('❌ RevenueCat não inicializado');
       return PaywallResult.cancelled;
@@ -349,6 +361,9 @@ class PaymentService extends ChangeNotifier {
   Future<PaywallResult> presentPaywallIfNeeded({
     String? requiredEntitlementIdentifier,
   }) async {
+    // Paywall nativo não existe na web (ver presentPaywall).
+    if (kIsWeb) return PaywallResult.cancelled;
+
     if (!_isInitialized || !RevenueCatConfig.isConfigured) {
       return PaywallResult.cancelled;
     }
@@ -378,17 +393,37 @@ class PaymentService extends ChangeNotifier {
   /// - Cancelar assinatura
   /// - Solicitar reembolso
   /// - Acessar suporte
-  Future<void> presentCustomerCenter() async {
+  /// Abre a gestão da assinatura (ver detalhes, cancelar, pedir reembolso).
+  ///
+  /// No celular usa o Customer Center nativo do RevenueCat. Na web ele não
+  /// existe — abrimos o portal do provedor, cujo endereço o próprio RevenueCat
+  /// devolve em `managementURL`, numa aba nova. Sem esse endereço não há para
+  /// onde mandar a pessoa; devolve false para a tela poder avisar, em vez de o
+  /// botão piscar sem efeito.
+  Future<bool> presentCustomerCenter() async {
     if (!_isInitialized || !RevenueCatConfig.isConfigured) {
       debugPrint('RevenueCat não inicializado');
-      return;
+      return false;
+    }
+
+    if (kIsWeb) {
+      final endereco = _customerInfo?.managementURL;
+      if (endereco == null || endereco.isEmpty) {
+        debugPrint('ℹ️  Sem managementURL para gerenciar a assinatura');
+        return false;
+      }
+      final uri = Uri.tryParse(endereco);
+      if (uri == null) return false;
+      return launchUrl(uri, mode: LaunchMode.externalApplication);
     }
 
     try {
       await RevenueCatUI.presentCustomerCenter();
       await _loadCustomerInfo();
+      return true;
     } catch (e) {
       debugPrint('Erro ao apresentar Customer Center: $e');
+      return false;
     }
   }
 

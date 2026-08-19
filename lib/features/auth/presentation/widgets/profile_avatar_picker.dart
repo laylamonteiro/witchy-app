@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import '../../../../core/services/image_storage_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/stored_image.dart';
 
 /// Widget para selecionar e exibir foto de perfil
 class ProfileAvatarPicker extends StatefulWidget {
@@ -57,11 +60,17 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
   Future<void> _loadSavedPhoto() async {
     final prefs = await SharedPreferences.getInstance();
     final savedPath = prefs.getString('profile_photo_path');
-    if (savedPath != null && File(savedPath).existsSync()) {
-      setState(() {
-        _currentPhotoPath = savedPath;
-      });
-    }
+    if (savedPath == null || savedPath.isEmpty) return;
+
+    // Referência do Storage ou URL: vale em qualquer plataforma. Caminho de
+    // arquivo só existe no celular — e checar existência na web estoura.
+    final isFilePath = !ImageStorageService.isRemote(savedPath) &&
+        !savedPath.startsWith('http');
+    if (isFilePath && (kIsWeb || !File(savedPath).existsSync())) return;
+
+    setState(() {
+      _currentPhotoPath = savedPath;
+    });
   }
 
   @override
@@ -147,26 +156,16 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
   }
 
   Widget _buildAvatarContent() {
-    if (_currentPhotoPath != null) {
-      // Verificar se é arquivo local ou URL
-      if (_currentPhotoPath!.startsWith('http')) {
-        return Image.network(
-          _currentPhotoPath!,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildDefaultAvatar(),
-        );
-      } else {
-        final file = File(_currentPhotoPath!);
-        if (file.existsSync()) {
-          return Image.file(
-            file,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildDefaultAvatar(),
-          );
-        }
-      }
-    }
-    return _buildDefaultAvatar();
+    final photo = _currentPhotoPath;
+    if (photo == null || photo.isEmpty) return _buildDefaultAvatar();
+
+    // Storage, URL do login social ou arquivo local antigo — o StoredImage
+    // resolve cada origem e cai no avatar padrão quando não dá para exibir.
+    return StoredImage(
+      reference: photo,
+      fit: BoxFit.cover,
+      placeholderBuilder: (_) => _buildDefaultAvatar(),
+    );
   }
 
   Widget _buildDefaultAvatar() {
@@ -281,6 +280,13 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
         return;
       }
 
+      // Na web não há arquivo: o recorte (image_cropper) e a compressão por
+      // caminho não se aplicam. Trabalha com os bytes e envia ao Storage.
+      if (kIsWeb) {
+        await _uploadPickedImage(pickedFile);
+        return;
+      }
+
       // Fazer crop da imagem
       final croppedFile = await _cropImage(pickedFile.path);
 
@@ -315,6 +321,48 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
           ),
         );
       }
+    }
+  }
+
+  /// Caminho da web: bytes → compressão (API de bytes, a única que funciona no
+  /// navegador) → Supabase Storage. O banco guarda a referência do Storage.
+  Future<void> _uploadPickedImage(XFile pickedFile) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final original = await pickedFile.readAsBytes();
+      final compressed = await FlutterImageCompress.compressWithList(
+        original,
+        minWidth: 800,
+        minHeight: 800,
+        quality: 75,
+        format: CompressFormat.jpeg,
+      );
+
+      final reference = await ImageStorageService.instance.uploadJpeg(
+        compressed,
+        folder: 'avatar',
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _currentPhotoPath = reference;
+        _isLoading = false;
+      });
+
+      widget.onPhotoChanged?.call(reference);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profile_photo_path', reference);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Erro ao enviar foto: $e'),
+          backgroundColor: context.gc.alert,
+        ),
+      );
     }
   }
 
@@ -387,10 +435,14 @@ class _ProfileAvatarPickerState extends State<ProfileAvatarPicker> {
   }
 
   Future<void> _removePhoto() async {
-    // Remover arquivo se existir
-    if (_currentPhotoPath != null && !_currentPhotoPath!.startsWith('http')) {
+    final photo = _currentPhotoPath;
+
+    if (photo != null && ImageStorageService.isRemote(photo)) {
+      await ImageStorageService.instance.delete(photo);
+    } else if (photo != null && !kIsWeb && !photo.startsWith('http')) {
+      // Arquivo local (celular): apaga junto para não deixar lixo no aparelho.
       try {
-        final file = File(_currentPhotoPath!);
+        final file = File(photo);
         if (await file.exists()) {
           await file.delete();
         }

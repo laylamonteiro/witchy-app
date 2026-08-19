@@ -252,7 +252,11 @@ void main() {
       );
     }
 
-    test('free usa limites centralizados para quiromancia IA e tarot', () {
+    // Duas regras diferentes, de propósito: tarot é Free com teto diário,
+    // quiromancia IA fica fora do mapa de limites e vira preview -> paywall.
+    // Está dito em comentário no feature_access.dart.
+    test('free: tarot tem teto diário e quiromancia IA é exclusiva Premium',
+        () {
       final user = makeAccessUser();
 
       final palmistry = FeatureAccess.checkAccess(
@@ -266,9 +270,13 @@ void main() {
         isPremiumEffective: false,
       );
 
-      expect(palmistry.hasFullAccess, isTrue);
-      expect(palmistry.limitWindow, LimitWindow.daily);
+      // Premium puro: sem uso limitado, sem janela — só a prévia.
+      expect(palmistry.type, AccessType.preview);
+      expect(palmistry.limit, isNull);
+      expect(palmistry.limitWindow, isNull);
+
       expect(tarot.hasFullAccess, isTrue);
+      expect(tarot.limit, UserModel.freeOracleReadingsLimit);
       expect(tarot.limitWindow, LimitWindow.daily);
     });
 
@@ -317,11 +325,16 @@ void main() {
       );
     });
 
+    // O que se garante aqui: estar offline não afrouxa o teto do plano Free —
+    // o contador local continua mandando. Precisa de uma feature que esteja
+    // no mapa de limites; a numerologia (explicação do Conselheiro Místico)
+    // saiu de lá e hoje é Premium puro, então a análise de sonhos, que usa o
+    // mesmo contador de consultas de IA, ocupa esse lugar.
     test('offline free permanece limitado pelos dados locais', () {
       final user = makeAccessUser(aiToday: UserModel.freeAiConsultationsLimit);
 
       final access = FeatureAccess.checkAccess(
-        AppFeature.numerologyReadings,
+        AppFeature.aiDreamAnalysis,
         user,
         isPremiumEffective: false,
         isOffline: true,

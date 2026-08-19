@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exclusão de Dados — Grimório de Bolso</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Quicksand', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.7;
+            color: #d8d2e0;
+            background:
+                radial-gradient(ellipse at 20% -10%, rgba(155, 109, 198, 0.22) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 15%, rgba(240, 199, 94, 0.07) 0%, transparent 45%),
+                linear-gradient(160deg, #17111f 0%, #0d0a14 60%, #0a0810 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 28px 16px 48px;
+        }
+
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            background: rgba(30, 22, 40, 0.92);
+            border: 1px solid rgba(201, 162, 232, 0.22);
+            padding: 44px 36px;
+            border-radius: 22px;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+        }
+
+        .brand { text-align: center; font-size: 2.2em; margin-bottom: 4px; }
+
+        h1 {
+            font-family: 'Cinzel Decorative', serif;
+            color: #c9a2e8;
+            text-align: center;
+            font-size: 1.7em;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #8d84a0;
+            font-size: 0.95em;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Cinzel Decorative', serif;
+            color: #c9a2e8;
+            font-size: 1.12em;
+            margin: 34px 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(201, 162, 232, 0.25);
+        }
+
+        h3 { color: #efe9f6; margin-bottom: 10px; font-size: 1.02em; }
+        p { margin-bottom: 12px; }
+        ul, ol { margin: 0 0 14px 22px; }
+        li { margin-bottom: 7px; }
+        strong { color: #efe9f6; }
+
+        a { color: #c9a2e8; text-decoration: none; border-bottom: 1px dotted rgba(201,162,232,.5); }
+        a:hover { color: #f0c75e; border-bottom-color: #f0c75e; }
+
+        .warning-box {
+            background: rgba(220, 120, 70, 0.10);
+            border: 1px solid rgba(230, 150, 90, 0.45);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin: 22px 0;
+        }
+        .warning-box strong { color: #f0b27a; }
+
+        .method-box {
+            background: rgba(155, 109, 198, 0.10);
+            border: 1px solid rgba(201, 162, 232, 0.3);
+            border-radius: 14px;
+            padding: 20px 22px;
+            margin: 18px 0;
+        }
+
+        .info-box {
+            background: rgba(240, 199, 94, 0.08);
+            border: 1px solid rgba(240, 199, 94, 0.3);
+            border-radius: 14px;
+            padding: 20px 22px;
+            margin: 22px 0;
+        }
+
+        .email-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #9b6dc6, #7e4fae);
+            color: #fff;
+            padding: 12px 26px;
+            border-radius: 999px;
+            text-decoration: none;
+            border: none;
+            margin: 10px 0;
+            font-weight: 700;
+        }
+        .email-link:hover { filter: brightness(1.15); color: #fff; }
+
+        .step-number {
+            display: inline-block;
+            background: rgba(155, 109, 198, 0.5);
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 26px;
+            margin-right: 8px;
+            font-weight: 700;
+            font-size: 0.85em;
+        }
+
+        ol { list-style: none; margin-left: 0; }
+        ol li { margin-bottom: 10px; }
+
+        .footer {
+            text-align: center;
+            margin-top: 38px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(201, 162, 232, 0.18);
+            color: #8d84a0;
+            font-size: 0.88em;
+        }
+
+        @media (max-width: 520px) {
+            .container { padding: 30px 20px; }
+            body { padding: 14px 8px 32px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="brand">🗑️</div>
+        <h1>Exclusão de Dados e Conta</h1>
+        <p class="subtitle">Grimório de Bolso &bull; Solicitação de exclusão de dados pessoais</p>
+
+        <p>Respeitamos seu direito à privacidade e ao controle sobre seus dados. Esta página explica como excluir permanentemente sua conta e todos os dados associados ao <strong>Grimório de Bolso</strong>.</p>
+
+        <div class="warning-box">
+            <strong>⚠️ ATENÇÃO: esta ação é irreversível!</strong>
+            <p>Ao excluir sua conta, os seguintes dados serão <strong>permanentemente apagados</strong> e não poderão ser recuperados:</p>
+            <ul>
+                <li>Feitiços e rituais salvos</li>
+                <li>Diário (sonhos, desejos, gratidões, afirmações)</li>
+                <li>Mapa astral e perfil mágico</li>
+                <li>Histórico de leituras de tarot, runas, oráculo e pêndulo</li>
+                <li>Sigilos criados</li>
+                <li>Configurações e preferências</li>
+                <li>Todos os dados sincronizados na nuvem</li>
+            </ul>
+        </div>
+
+        <h2>Como excluir sua conta</h2>
+
+        <div class="method-box">
+            <h3>🎯 Método 1 — Pelo aplicativo (recomendado)</h3>
+            <ol>
+                <li><span class="step-number">1</span>Abra o <strong>Grimório de Bolso</strong></li>
+                <li><span class="step-number">2</span>Vá em <strong>Configurações</strong></li>
+                <li><span class="step-number">3</span>Toque em <strong>Privacidade</strong></li>
+                <li><span class="step-number">4</span>Em "Gerenciar Seus Dados", toque em <strong>Excluir Minha Conta</strong></li>
+                <li><span class="step-number">5</span>Confirme a exclusão na tela de aviso</li>
+            </ol>
+            <p><strong>Tempo de processamento:</strong> imediato.</p>
+        </div>
+
+        <div class="method-box">
+            <h3>📧 Método 2 — Por e-mail</h3>
+            <p>Se você não consegue acessar o aplicativo ou já o desinstalou, solicite a exclusão por e-mail:</p>
+            <a href="mailto:suporte.grimoriodebolso@gmail.com?subject=Solicitação de Exclusão de Conta&body=Olá,%0D%0A%0D%0ASolicito a exclusão completa da minha conta e de todos os dados associados ao Grimório de Bolso.%0D%0A%0D%0AEmail da conta: [SEU_EMAIL_AQUI]%0D%0A%0D%0AConfirmo que entendo que esta ação é irreversível e que todos os meus dados serão permanentemente apagados.%0D%0A%0D%0AAtenciosamente" class="email-link">
+                ✉️ suporte.grimoriodebolso@gmail.com
+            </a>
+            <p><strong>Inclua no e-mail:</strong></p>
+            <ul>
+                <li><strong>Assunto:</strong> "Solicitação de Exclusão de Conta"</li>
+                <li><strong>E-mail da conta:</strong> o mesmo usado para criar a conta no app</li>
+                <li><strong>Confirmação</strong> de que entende que a exclusão é permanente</li>
+            </ul>
+            <p><strong>Tempo de processamento:</strong> até 30 dias (geralmente 3–5 dias úteis).</p>
+        </div>
+
+        <div class="info-box">
+            <h3>📋 O que é excluído</h3>
+            <ul>
+                <li>✅ Dados de autenticação (e-mail, senha)</li>
+                <li>✅ Perfil (nome, foto, dados de nascimento)</li>
+                <li>✅ Todo o conteúdo criado no app</li>
+                <li>✅ Dados sincronizados na nuvem (Supabase)</li>
+                <li>✅ Preferências e configurações locais</li>
+            </ul>
+            <h3>📦 O que pode ser retido temporariamente</h3>
+            <ul>
+                <li>Registros de transações de assinatura, mantidos pelas lojas (Google Play) e pelo RevenueCat conforme suas próprias políticas e obrigações fiscais</li>
+                <li>Registros mínimos exigidos por lei, pelo prazo legal aplicável</li>
+            </ul>
+        </div>
+
+        <h2>Quer só limpar os dados, sem excluir a conta?</h2>
+        <p>No app, em <strong>Configurações &gt; Privacidade</strong>, você também pode <strong>exportar seus dados</strong> (JSON) ou <strong>limpar apenas os dados locais</strong> do dispositivo, mantendo a conta.</p>
+
+        <div class="footer">
+            <p>Grimório de Bolso © 2026 &bull; <a href="privacy-policy.html">Política de Privacidade</a> &bull; Feito com magia e código 🌙✨</p>
+        </div>
+    </div>
+</body>
+</html>

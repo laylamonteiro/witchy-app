@@ -59,14 +59,18 @@ void main() {
       );
     });
 
-    test('usa fallback neutro quando preferência não existe', () {
+    // O app trata a pessoa no feminino quando não há preferência salva —
+    // decisão de produto, escrita no próprio UserModel ("Default do app é
+    // tratamento feminino quando nao ha valor salvo"). Vale para contas
+    // antigas, criadas antes do campo existir.
+    test('usa tratamento feminino quando preferência não existe', () {
       final user = UserModel.fromJson({
         'id': 'legacy',
         'role': 'free',
         'plan': 'free',
       });
 
-      expect(user.gender, Gender.neutral);
+      expect(user.gender, Gender.feminine);
     });
   });
 }

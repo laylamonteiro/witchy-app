@@ -73,3 +73,33 @@ class AuthGate extends StatelessWidget {
     return const AuthWrapper(showSplash: false);
   }
 }
+
+/// Exige login para entregar [child]; sem sessão, devolve o fluxo de entrada.
+///
+/// Rotas nomeadas são endereços de verdade na web: a URL fica `#/home` depois
+/// do login e o navegador a guarda, então a visita seguinte abria a HomePage
+/// direto, sem passar pelo [AuthWrapper]. Toda rota de conteúdo precisa desta
+/// verificação — não basta o gate da tela inicial.
+class RequireAuth extends StatelessWidget {
+  final Widget child;
+
+  const RequireAuth({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
+    if (!authProvider.isInitialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!authProvider.currentUser.isAuthenticated) {
+      debugLog('NAV', 'RequireAuth: sem sessão → fluxo de entrada');
+      return const AuthGate();
+    }
+
+    return child;
+  }
+}
