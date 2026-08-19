@@ -266,11 +266,14 @@ jobs:
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
             --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY"
 
+      - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
+        run: bash scripts/assemble_site.sh public
+
       - name: 🛡️ Garantir que nenhum admin foi embutido
         # Rede de segurança: se algum dia ADMIN_* entrar no build por engano,
         # o site publicado daria acesso de admin a qualquer visitante.
         run: |
-          if grep -rqE "ADMIN_(EMAIL|PASSWORD)=" build/web/main.dart.js 2>/dev/null; then
+          if grep -rqE "ADMIN_(EMAIL|PASSWORD)=" public/main.dart.js 2>/dev/null; then
             echo "::error::Credenciais de admin encontradas no bundle — publicação abortada"
             exit 1
           fi
@@ -285,7 +288,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: >-
-            pages deploy build/web
+            pages deploy public
             --project-name=grimorio-de-bolso
             --branch=${{ github.ref_name }}
             --commit-dirty=true

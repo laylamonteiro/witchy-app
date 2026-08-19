@@ -68,62 +68,39 @@
       height: 100%;
     }
 
-    /* Tela de carregamento: aparece para TODA visitante enquanto o app (que é
-       grande) baixa, e sai quando ele sobe. Também reaparece na volta do
-       login social, que recarrega a página inteira — por isso ela precisa
-       LER COMO CARREGAMENTO (daí o indicador girando), e não como uma página
-       de destino: sem isso, a pessoa acha que saiu do app no meio do login.
+    /* Tela de carregamento: só o logo, sem texto. Aparece enquanto o app (que
+       é grande) baixa e some quando ele sobe — inclusive na volta do login
+       social, que recarrega a página inteira. A pulsação suave evita a
+       sensação de tela travada durante o download.
 
-       O texto continua no HTML porque é o que a verificação de marca do
-       Google lê na home page; ele apenas fica visualmente secundário. */
+       NOTA: este arquivo é o APP, servido na raiz. A apresentação em HTML
+       estático — com nome, propósito e links legais, que um rastreador
+       consegue ler — fica em /sobre/ (site/sobre/index.html). Por isso aqui
+       pode ser só o logo. */
     #boot-splash {
       position: fixed;
       inset: 0;
       z-index: 9999;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 18px;
-      padding: 32px 24px;
-      text-align: center;
       background: #0B0A16;
-      color: #8d84a0;
-      font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
       transition: opacity .35s ease;
     }
     #boot-splash.done { opacity: 0; pointer-events: none; }
-    #boot-splash img { width: 72px; height: 72px; opacity: .95; }
-    #boot-splash h1 {
-      font-size: 1.15rem;
-      font-weight: 600;
-      letter-spacing: .3px;
-      color: #c9a7f0;
-      margin: 0;
+    #boot-splash img {
+      width: 128px;
+      height: 128px;
+      animation: boot-pulse 1.8s ease-in-out infinite;
     }
-    #boot-splash p {
-      max-width: 26rem;
-      font-size: .82rem;
-      line-height: 1.5;
-      margin: 0;
-      opacity: .75;
+    @keyframes boot-pulse {
+      0%, 100% { opacity: .55; transform: scale(.97); }
+      50%      { opacity: 1;   transform: scale(1); }
     }
-    #boot-splash .spinner {
-      width: 26px;
-      height: 26px;
-      border: 2px solid rgba(201, 167, 240, .25);
-      border-top-color: #c9a7f0;
-      border-radius: 50%;
-      animation: boot-spin .8s linear infinite;
+    /* Quem prefere menos movimento vê o logo estático. */
+    @media (prefers-reduced-motion: reduce) {
+      #boot-splash img { animation: none; opacity: 1; }
     }
-    @keyframes boot-spin { to { transform: rotate(360deg); } }
-    #boot-splash .links {
-      position: absolute;
-      bottom: 24px;
-      font-size: .78rem;
-      opacity: .6;
-    }
-    #boot-splash a { color: #8d84a0; margin: 0 8px; }
   </style>
 
   <script>
@@ -162,18 +139,7 @@
     do segundo load, além de sobrescrever o flutter_service_worker.js do PWA.
   -->
   <div id="boot-splash">
-    <img src="/icons/Icon-192.png" alt="Ícone do Grimório de Bolso">
-    <h1>Grimório de Bolso</h1>
-    <div class="spinner" role="status" aria-label="Carregando"></div>
-    <p>
-      Agenda mágica, diário de bruxaria, calendário lunar, astrologia e
-      enciclopédia — a sua prática no bolso, no celular ou no navegador.
-    </p>
-    <p class="links">
-      <a href="/sobre/">Sobre o app</a>
-      <a href="/privacidade/">Privacidade</a>
-      <a href="/termos/">Termos de uso</a>
-    </p>
+    <img src="/icons/Icon-512.png" alt="Grimório de Bolso">
   </div>
 
   <script>
