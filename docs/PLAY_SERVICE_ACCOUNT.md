@@ -1,6 +1,6 @@
 # Service account da Play (upload automático do AAB)
 
-O `release.yml` envia o AAB à faixa de **teste interno** da Play sem passo
+O `release.yml` envia o AAB a uma **faixa de teste** da Play sem passo
 manual. Para isso ele precisa de uma service account do Google com permissão
 de publicar **só em faixas de teste** — a promoção para produção continua
 exclusivamente humana, na Play Console, de propósito.
@@ -36,6 +36,38 @@ Settings → Secrets and variables → Actions → **New repository secret**:
 
 - Nome: `PLAY_SERVICE_ACCOUNT_JSON`
 - Valor: o **conteúdo bruto** do JSON baixado (sem base64).
+
+## 4. Escolher a faixa: variável `PLAY_TRACK`
+
+Mesma tela, aba **Variables** → *New repository variable*:
+
+- Nome: `PLAY_TRACK`
+- Valor: o **identificador** da faixa (não o nome que aparece na tela).
+
+A API da Play usa identificadores, não rótulos. Os fixos:
+
+| Na Play Console | Identificador |
+|---|---|
+| Internal testing | `internal` |
+| Closed testing — Alpha | `alpha` |
+| Open testing | `beta` |
+| Produção | `production` — **recusado pelo workflow de propósito** |
+
+Uma faixa fechada que **você criou** (ex.: "Closed testing — Pré-produção")
+tem um identificador próprio, gerado pela Play. Para descobrir:
+
+*Test and release → Testing → Closed testing → **Manage track*** na faixa
+desejada, e leia o fim da URL:
+
+```
+https://play.google.com/console/u/0/developers/<id>/app/<id>/tracks/AQUI
+```
+
+Esse `AQUI` é o valor de `PLAY_TRACK`.
+
+> Errar o identificador não estraga nada: o upload falha com
+> `Track not found`, nenhum artefato sai, e você corrige a variável e roda
+> de novo — sem commit, sem versão queimada.
 
 ## Avisos
 

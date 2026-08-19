@@ -9,8 +9,9 @@ name: 🚀 Release
 #
 # O que UM release publica, sempre do MESMO commit:
 #   1. o site grimoriodebolso.app (Cloudflare Pages, --branch=main)
-#   2. o AAB na faixa de TESTE INTERNO da Play (a promoção para produção
-#      continua manual, na Play Console)
+#   2. o AAB numa faixa de TESTE da Play — qual delas vem da variável
+#      PLAY_TRACK do repositório (a promoção para produção continua
+#      manual, na Play Console)
 #   3. a GitHub Release com APK, AAB e símbolos anexados
 #
 # Versionamento — a tag é a única fonte de verdade:
@@ -37,6 +38,11 @@ on:
         required: false
         type: boolean
         default: false
+      faixa:
+        description: 'Faixa da Play só para esta execução (vazio = a variável PLAY_TRACK do repositório)'
+        required: false
+        type: string
+        default: ''
 
 # Um release por vez, e nunca cancelar um no meio: interromper depois do
 # site e antes da Play deixaria produção pela metade.
@@ -65,6 +71,7 @@ jobs:
       version_name: ${{ steps.versao.outputs.nome }}
       version_code: ${{ steps.versao.outputs.codigo }}
       sha: ${{ steps.versao.outputs.sha }}
+      faixa: ${{ steps.faixa.outputs.nome }}
 
     steps:
       - name: 📥 Checkout repository
@@ -125,6 +132,37 @@ jobs:
             echo "sha=${GITHUB_SHA}"
           } >> "$GITHUB_OUTPUT"
           echo "✅ Release $NOME (versionCode $CODIGO) a partir de ${GITHUB_SHA}"
+
+      - name: 🎯 Resolver a faixa da Play
+        id: faixa
+        # A faixa vive FORA do YAML (Settings → Secrets and variables →
+        # Actions → Variables → PLAY_TRACK), porque mudar de faixa é
+        # decisão de produto e não deve exigir commit. Nomes da Play:
+        # `internal`, `alpha` (o Closed testing original), `beta` (Open
+        # testing) ou o identificador de uma faixa fechada criada por você
+        # — é o que aparece na URL da Play Console em .../tracks/<nome>.
+        env:
+          INPUT_FAIXA: ${{ inputs.faixa }}
+          VAR_FAIXA: ${{ vars.PLAY_TRACK }}
+        run: |
+          FAIXA="${INPUT_FAIXA:-$VAR_FAIXA}"
+          FAIXA="${FAIXA:-internal}"
+
+          if ! echo "$FAIXA" | grep -qE '^[a-zA-Z0-9][a-zA-Z0-9._:-]*$'; then
+            echo "::error::Faixa inválida: '$FAIXA'."
+            exit 1
+          fi
+
+          # A service account não tem permissão de produção (ver
+          # docs/PLAY_SERVICE_ACCOUNT.md); esta guarda existe para o erro
+          # falhar aqui, com mensagem clara, e não depois de 20 min de build.
+          if [ "$FAIXA" = "production" ]; then
+            echo "::error::Publicar direto em produção não passa por aqui — a promoção é manual, na Play Console."
+            exit 1
+          fi
+
+          echo "nome=$FAIXA" >> "$GITHUB_OUTPUT"
+          echo "✅ AAB irá para a faixa '$FAIXA'."
 
       - name: 🔑 Conferir secrets obrigatórios
         env:
@@ -466,16 +504,17 @@ jobs:
             --branch=main
             --commit-dirty=true
 
-      - name: 🤖 AAB para a faixa interna da Play
-        # A promoção interna→produção é manual, na Play Console — e a
-        # service account nem TEM permissão de produção (defesa em
-        # profundidade; ver docs/PLAY_SERVICE_ACCOUNT.md).
+      - name: 🤖 AAB para a faixa de teste da Play
+        # A faixa vem da variável PLAY_TRACK (ou do input do botão) — ver o
+        # job `preparar`. A promoção faixa-de-teste→produção segue manual,
+        # na Play Console, e a service account nem TEM permissão de
+        # produção (defesa em profundidade; docs/PLAY_SERVICE_ACCOUNT.md).
         uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.grimoriodebolso.app
           releaseFiles: release-files/*.aab
-          track: internal
+          track: ${{ needs.preparar.outputs.faixa }}
           status: completed
 
       - name: 🎉 GitHub Release
@@ -495,8 +534,8 @@ jobs:
             ## v${{ needs.preparar.outputs.version_name }} (versionCode ${{ needs.preparar.outputs.version_code }})
 
             - 🌐 Site publicado: <https://grimoriodebolso.app>
-            - 🤖 AAB já enviado à **faixa interna** da Play — teste pelo link
-              de opt-in e promova na Play Console quando aprovar.
+            - 🤖 AAB já enviado à faixa **`${{ needs.preparar.outputs.faixa }}`** da Play —
+              teste pelo link de opt-in e promova na Play Console quando aprovar.
             - 📦 Commit: `${{ needs.preparar.outputs.sha }}`
 
   resumo:

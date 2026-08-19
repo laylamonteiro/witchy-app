@@ -26,9 +26,9 @@ bash scripts/release.sh 2.1.0
    release.yml: guardas → gate bloqueante → APK+AAB+web do commit da tag
         │
         ▼ aprovação humana (environment `production`)
-   site em produção + AAB na faixa INTERNA da Play + GitHub Release
+   site em produção + AAB na faixa de teste da Play + GitHub Release
         │
-        ▼ testa pela faixa interna e, quando aprovar,
+        ▼ testa pela faixa de teste e, quando aprovar,
    promove para produção NA PLAY CONSOLE (manual, de propósito)
 ```
 
@@ -65,8 +65,12 @@ bash scripts/release.sh 2.1.0
   SHA-1 registrado — divergência é erro fatal, nos dois artefatos) e o site.
   Nada publica sem Android **e** web verdes juntos.
 - **Publicação** (job único, atrás do environment `production`):
-  tag (se veio do botão) → site (`--branch=main`) → AAB na faixa `internal`
+  tag (se veio do botão) → site (`--branch=main`) → AAB na faixa de teste
   da Play → GitHub Release com `target_commitish` no SHA buildado.
+- **Qual faixa da Play**: a variável de repositório `PLAY_TRACK` (Settings →
+  Secrets and variables → Actions → *Variables*). Sem ela, `internal`.
+  Trocar de faixa é mudar a variável — não exige commit. `production` é
+  recusado de propósito: promover é decisão manual na Play Console.
 - **Dry-run**: Run workflow com `somente_validar: true` exercita tudo até os
   builds sem criar tag nem publicar nada.
 
@@ -76,7 +80,7 @@ bash scripts/release.sh 2.1.0
 git checkout main && git pull
 bash scripts/release.sh 2.1.0
 # → acompanhe em Actions, aprove o environment "production",
-# → teste pela faixa interna da Play e promova na Play Console.
+# → teste pela faixa de teste da Play e promova na Play Console.
 ```
 
 ## Setup que vive fora do repositório
@@ -85,6 +89,9 @@ bash scripts/release.sh 2.1.0
    existentes (`ANDROID_KEYSTORE_*`, `GOOGLE_SERVICES_JSON`, `GROQ/GEMINI/
    PROKERALA`, `SUPABASE_*`, `REVENUECAT_*`, `ADMIN_*`, `TURNSTILE_SITE_KEY`,
    `CLOUDFLARE_*`) mais **`PLAY_SERVICE_ACCOUNT_JSON`** — ver
+   `docs/PLAY_SERVICE_ACCOUNT.md`.
+1b. **Variável `PLAY_TRACK`** (mesma tela, aba *Variables*): o identificador
+   da faixa da Play que recebe o AAB. Como descobrir o seu está em
    `docs/PLAY_SERVICE_ACCOUNT.md`.
 2. **Environment `production`** (Settings → Environments): criar com
    *Required reviewers* = você. É o clique que separa "buildou" de
