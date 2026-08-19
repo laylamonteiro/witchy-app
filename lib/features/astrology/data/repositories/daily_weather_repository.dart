@@ -213,9 +213,16 @@ class DailyWeatherRepository {
   /// Gera e retorna clima mágico diário
   /// Se já existe para hoje, retorna do cache
   /// Se não existe, gera com IA e salva
+  ///
+  /// [withAiText] é o gate do produto pago: a previsão escrita é Premium, e
+  /// texto Premium não é gerado nem devolvido para quem não tem acesso
+  /// (fail-closed — não adianta esconder na tela o que já está no aparelho).
+  /// Sem acesso, volta só o [DailyMagicalWeather] calculado localmente, que
+  /// é a matéria-prima da degustação; a chamada de IA cara nem acontece.
   Future<DailyWeatherCache> getDailyWeather(
     DateTime date, {
     required String userId,
+    required bool withAiText,
     BirthChartModel? natalChart,
   }) async {
     final contextKey = contextKeyFor(natalChart);
@@ -223,7 +230,8 @@ class DailyWeatherRepository {
     // menos seções, salvo quando a IA estava indisponível) é tratado como
     // obsoleto e regerado.
     final cached = await getCachedWeather(date, userId, contextKey);
-    if (cached != null &&
+    if (withAiText &&
+        cached != null &&
         DailyWeatherContent.looksComplete(cached.aiGeneratedText)) {
       return cached;
     }
@@ -234,20 +242,19 @@ class DailyWeatherRepository {
       natalChart: natalChart,
     );
 
-    // Preparar dados para IA
-    final transitsForAI = weatherData.transits
-        .map((t) => {
-              'planet': t.planet.displayName,
-              'position': t.formattedPosition,
-              'retrograde': t.isRetrograde.toString(),
-            })
-        .toList();
-
-    final aspectsForAI = weatherData.aspects
-        .map((a) => {
-              'description': a.description,
-            })
-        .toList();
+    // Sem acesso: devolve os fatos do céu e para por aqui. Um texto salvo de
+    // uma assinatura antiga também não volta — o acesso é conferido agora.
+    if (!withAiText) {
+      return DailyWeatherCache(
+        id: const Uuid().v4(),
+        date: _formatDate(date),
+        aiGeneratedText: '',
+        weatherData: weatherData,
+        createdAt: DateTime.now(),
+        userId: userId,
+        contextKey: contextKey,
+      );
+    }
 
     // Gerar texto com IA
     String aiText;
@@ -258,8 +265,8 @@ class DailyWeatherRepository {
         moonSign: weatherData.moonSign,
         overallEnergy: weatherData.overallEnergy,
         energyKeywords: weatherData.energyKeywords,
-        transits: transitsForAI.cast<Map<String, String>>(),
-        aspects: aspectsForAI.cast<Map<String, String>>(),
+        transits: _transitsForAI(weatherData),
+        aspects: _aspectsForAI(weatherData),
       );
     } catch (e) {
       // Usar interpretação padrão se IA falhar
@@ -287,5 +294,31 @@ class DailyWeatherRepository {
 
     return cache;
   }
+
+  /// Degustação da previsão para quem não tem acesso: 2 frases REAIS tiradas
+  /// dos mesmos fatos do céu. Chamada curta — a previsão completa continua
+  /// sem existir no aparelho. Cabe a quem chama cachear por dia.
+  Future<String> generateTeaser(DailyMagicalWeather weatherData) {
+    return _aiService.generateDailyWeatherTeaser(
+      moonPhase: weatherData.moonPhase,
+      moonSign: weatherData.moonSign,
+      overallEnergy: weatherData.overallEnergy,
+      energyKeywords: weatherData.energyKeywords,
+      transits: _transitsForAI(weatherData),
+      aspects: _aspectsForAI(weatherData),
+    );
+  }
+
+  List<Map<String, String>> _transitsForAI(DailyMagicalWeather weatherData) =>
+      weatherData.transits
+          .map((t) => {
+                'planet': t.planet.displayName,
+                'position': t.formattedPosition,
+                'retrograde': t.isRetrograde.toString(),
+              })
+          .toList();
+
+  List<Map<String, String>> _aspectsForAI(DailyMagicalWeather weatherData) =>
+      weatherData.aspects.map((a) => {'description': a.description}).toList();
 
 }

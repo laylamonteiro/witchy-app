@@ -47,6 +47,9 @@ class AiPrompts {
     required this.cycleReadingSectionInstruction,
     required this.cycleReadingTeaserSystemPrompt,
     required this.dreamTeaserSystemPrompt,
+    required this.dailyWeatherTeaserSystemPrompt,
+    required this.magicalProfileTeaserSystemPrompt,
+    required this.counselorTeaserSystemPrompt,
     required this.defaultSpellName,
     required this.errorInvalidRequest,
     required this.errorBadRequest,
@@ -153,6 +156,19 @@ class AiPrompts {
   /// Degustação da interpretação de sonhos: responde APENAS 2 frases — o
   /// conteúdo completo nem chega a existir no aparelho (fail-closed).
   final String Function(Gender gender) dreamTeaserSystemPrompt;
+
+  /// Degustação da Previsão Mágica do Dia: 2 frases REAIS a partir dos
+  /// mesmos fatos do céu que a previsão Premium usaria. Quem não tem acesso
+  /// nunca chega a gerar a previsão inteira (fail-closed).
+  final String Function(Gender gender) dailyWeatherTeaserSystemPrompt;
+
+  /// Degustação da análise personalizada do Perfil Mágico: 2 frases REAIS
+  /// sobre o mapa, sem gerar a análise completa.
+  final String Function(Gender gender) magicalProfileTeaserSystemPrompt;
+
+  /// Degustação do Conselheiro Místico sobre uma tiragem recém-feita: 2
+  /// frases REAIS, parando onde o conselho completo continuaria.
+  final String Function(Gender gender) counselorTeaserSystemPrompt;
 
   /// Nome padrão quando o JSON do feitiço vem sem `name`.
   final String defaultSpellName;

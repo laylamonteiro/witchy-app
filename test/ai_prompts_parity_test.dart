@@ -78,6 +78,11 @@ void main() {
       'cycleReadingTeaserSystemPrompt': (p, g) =>
           p.cycleReadingTeaserSystemPrompt(g),
       'dreamTeaserSystemPrompt': (p, g) => p.dreamTeaserSystemPrompt(g),
+      'dailyWeatherTeaserSystemPrompt': (p, g) =>
+          p.dailyWeatherTeaserSystemPrompt(g),
+      'magicalProfileTeaserSystemPrompt': (p, g) =>
+          p.magicalProfileTeaserSystemPrompt(g),
+      'counselorTeaserSystemPrompt': (p, g) => p.counselorTeaserSystemPrompt(g),
       'defaultSpellName': (p, g) => p.defaultSpellName,
       'encyIdentifySystemPrompt (crystal)': (p, g) =>
           p.encyIdentifySystemPrompt('crystal'),
@@ -244,6 +249,28 @@ void main() {
           expect(prompt, contains('2'), reason: 'duas frases [$lang]');
           expect(prompt, contains('JSON'), reason: 'material [$lang]');
         }
+      });
+    });
+
+    test('toda degustação pede duas frases e proíbe inventar fato', () {
+      // A degustação é a prova do produto pago: ela precisa ser curta (senão
+      // entrega o que é pago) e presa aos fatos recebidos (senão a amostra
+      // vira ficção sobre a vida de quem lê).
+      final teasers = <String, String Function(AiPrompts, Gender)>{
+        'clima do dia': (p, g) => p.dailyWeatherTeaserSystemPrompt(g),
+        'perfil mágico': (p, g) => p.magicalProfileTeaserSystemPrompt(g),
+        'conselheiro': (p, g) => p.counselorTeaserSystemPrompt(g),
+        'sonho': (p, g) => p.dreamTeaserSystemPrompt(g),
+        'leitura do ciclo': (p, g) => p.cycleReadingTeaserSystemPrompt(g),
+      };
+      promptsByLang.forEach((lang, prompts) {
+        teasers.forEach((name, probe) {
+          for (final gender in Gender.values) {
+            final prompt = probe(prompts, gender);
+            expect(prompt, contains('2'),
+                reason: 'duas frases: $name [$lang/${gender.name}]');
+          }
+        });
       });
     });
 

@@ -185,6 +185,28 @@ Implementado na branch `claude/cycle-reading-offers-engine-vme4yp`:
   relatório completo nem é gerado para quem não comprou) e fica cacheada
   por janela em `TeaserAiCache` — cada geração custa uma chamada de IA.
 
+### Todo muro pago dá um gostinho (a regra vale no app inteiro)
+A regra acima não é só da Leitura do Ciclo: **onde havia paywall frio, agora
+há amostra REAL**. Onde o conteúdo pago é gerado por IA, o gate saiu da tela
+e foi para a origem — sem acesso, o texto completo **nem chega a ser
+gerado**, e no lugar dele roda uma chamada curta de degustação.
+
+| Muro | Antes | Agora |
+| --- | --- | --- |
+| Previsão Mágica do Dia | títulos + placeholder borrado + botão; **o texto Premium inteiro era gerado e salvo no aparelho do free** | `getDailyWeather(withAiText:)` não gera nem devolve texto sem acesso; a tela mostra 2 frases reais sobre o céu de hoje (`generateDailyWeatherTeaser`) |
+| Perfil Mágico | só `kPremiumPlaceholderText` borrado + botão; **a análise inteira era gerada em background para o free** | `generateAIMagicalProfile(hasFullAccess:)` só gera para quem tem acesso; a tela mostra 2 frases reais do mapa (`generateMagicalProfileTeaser`) |
+| Lição da trilha (2ª em diante) | `showPaywallThenPop` — a página **fechava na cara** | primeiro parágrafo REAL do ensino sob `TeaserReveal` (conteúdo estático: sem IA, sem custo); o gate é reativo, então assinar destrava sem sair da tela |
+| Conselheiro nas tiragens (runas, oráculo, tarô) | botão que só abria o paywall | `CounselorTeaserCard`: 2 frases reais sobre a tiragem que acabou de sair (`generateCounselorTeaser`), cacheadas por tiragem |
+
+- `OfferSlot.drawLimitTeaser` fica **reservado, sem tela, de propósito**: no
+  limite diário o que a assinatura vende é quantidade, não conteúdo —
+  sortear uma carta extra só para escondê-la seria provocação, não
+  degustação. O gostinho daquela tela é o do Conselheiro.
+- `OfferEngine.recordWallExposure` registra a exposição de um **muro** sem
+  ocupar a vaga de oferta do dia: o cap de 1/dia existe para conter oferta
+  que aparece sozinha, e um muro é a própria tela que a pessoa abriu —
+  silenciá-lo mostraria menos do que o paywall que ele substituiu.
+
 ### Leitura da Semana (o segundo período)
 - `CycleReadingPeriodType` (`week` | `lunation`) atravessa modelo, crédito,
   composer e prompts. A janela da semana são os últimos 7 dias, hoje

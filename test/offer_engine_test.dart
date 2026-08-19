@@ -136,4 +136,33 @@ void main() {
       expect(engine.eventCount(OfferSlot.dreamTeaser, OfferEvent.exposure), 2);
     });
   });
+
+  group('muro (degustação no lugar do paywall de uma tela pedida)', () {
+    test('conta como exposição', () async {
+      await engine.recordWallExposure(OfferSlot.dailyWeatherTeaser);
+      expect(
+        engine.eventCount(OfferSlot.dailyWeatherTeaser, OfferEvent.exposure),
+        1,
+      );
+    });
+
+    test('não ocupa a vaga do dia de outra oferta', () async {
+      // Abrir a previsão do dia (um muro) não pode calar o convite da
+      // Leitura do Ciclo — o cap existe para oferta que aparece sozinha.
+      await engine.recordWallExposure(OfferSlot.dailyWeatherTeaser);
+      expect(engine.shouldShow(OfferSlot.cycleReading), isTrue);
+    });
+
+    test('o muro não é silenciado pelo cap de outra oferta', () async {
+      // O caminho inverso: o muro não passa por shouldShow, então uma oferta
+      // já exibida hoje não pode apagar a degustação da tela que a pessoa
+      // abriu de propósito.
+      await engine.recordExposure(OfferSlot.dreamTeaser);
+      await engine.recordWallExposure(OfferSlot.lessonTeaser);
+      expect(
+        engine.eventCount(OfferSlot.lessonTeaser, OfferEvent.exposure),
+        1,
+      );
+    });
+  });
 }

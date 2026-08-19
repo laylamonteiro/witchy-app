@@ -6,6 +6,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
+import '../../../../core/offers/counselor_teaser_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -303,33 +304,33 @@ class _SpreadTabState extends State<_SpreadTab> {
     });
   }
 
+  /// Resumo das cartas na mesa — o material que o Conselheiro lê, seja para
+  /// o conselho completo ou para a degustação.
+  String _spreadSummary() {
+    final l10n = AppLocalizations.of(context);
+    final summary = StringBuffer()
+      ..writeln('${l10n.tarotSpreadLabel}: '
+          '${_activeSpread!.displayName(l10n)}');
+    for (final drawn in _drawn) {
+      summary.writeln(
+        '- ${drawn.positionLabel}: ${drawn.card.name}'
+        '${drawn.isReversed ? ' (${l10n.tarotReversed})' : ''} — ${drawn.meaning}',
+      );
+    }
+    return summary.toString();
+  }
+
   Future<void> _askCounselor() async {
     if (_drawn.isEmpty || _isReadingAI) return;
 
-    final authProvider = context.read<AuthProvider>();
-    // Interpretação do Conselheiro Místico: exclusiva Premium.
-    if (!authProvider.isPremiumEffective) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => const PremiumUpgradeSheet(),
-      );
-      return;
-    }
+    // Interpretação do Conselheiro Místico: exclusiva Premium. Sem acesso o
+    // botão nem aparece — o card mostra a degustação no lugar.
+    if (!context.read<AuthProvider>().isPremiumEffective) return;
 
     setState(() => _isReadingAI = true);
     try {
-      final summary = StringBuffer()
-        ..writeln('${AppLocalizations.of(context).tarotSpreadLabel}: ${_activeSpread!.displayName(AppLocalizations.of(context))}');
-      for (final drawn in _drawn) {
-        summary.writeln(
-          '- ${drawn.positionLabel}: ${drawn.card.name}'
-          '${drawn.isReversed ? ' (${AppLocalizations.of(context).tarotReversed})' : ''} — ${drawn.meaning}',
-        );
-      }
       final reading = await AIService.instance.interpretTarotSpread(
-        summary: summary.toString(),
+        summary: _spreadSummary(),
         question: _question.isEmpty ? null : _question,
       );
       if (!mounted) return;
@@ -622,7 +623,14 @@ class _SpreadTabState extends State<_SpreadTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (_aiReading == null)
+                    if (!context.watch<AuthProvider>().isPremiumEffective)
+                      // Sem acesso: no lugar do botão, a degustação sobre as
+                      // cartas que já estão na mesa.
+                      CounselorTeaserCard(
+                        readingId: _signature(_activeSpread!, _drawn),
+                        summary: _spreadSummary(),
+                      )
+                    else if (_aiReading == null)
                       // Sem interpretação para estas cartas: mostra o botão.
                       ElevatedButton.icon(
                         onPressed: _isReadingAI ? null : _askCounselor,

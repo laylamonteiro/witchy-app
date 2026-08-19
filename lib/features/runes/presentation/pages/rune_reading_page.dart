@@ -4,6 +4,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
+import '../../../../core/offers/counselor_teaser_card.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -150,32 +151,30 @@ class _RuneReadingPageState extends State<RuneReadingPage>
     if (mounted) setState(() => _lastReading = reading);
   }
 
+  /// Resumo da tiragem — o material que o Conselheiro lê, seja para o
+  /// conselho completo ou para a degustação. O compositor do acervo já
+  /// produz o texto limpo.
+  String _readingSummary(RuneReading reading) {
+    final page = ReadingArchiveComposer.runes(reading);
+    return '${page.title}\n${page.content}';
+  }
+
   /// Interpretação do Conselheiro Místico (Premium): tece a leitura das
   /// runas já sorteadas — mesmo fluxo do Tarot.
   Future<void> _askCounselor() async {
     final reading = _lastReading;
     if (reading == null || _isReadingAI) return;
 
-    final authProvider = context.read<AuthProvider>();
-    if (!authProvider.isPremiumEffective) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => const PremiumUpgradeSheet(),
-      );
-      return;
-    }
+    // Sem acesso o botão nem aparece: o card mostra a degustação no lugar.
+    if (!context.read<AuthProvider>().isPremiumEffective) return;
 
     setState(() => _isReadingAI = true);
     try {
-      // O compositor do acervo já produz o resumo limpo da tiragem.
-      final page = ReadingArchiveComposer.runes(reading);
       final question = reading.question.trim();
       final noQuestion =
           question.isEmpty || question == AppLocalizations.of(context).runesNoQuestion;
       final interpretation = await AIService.instance.interpretRuneSpread(
-        summary: '${page.title}\n${page.content}',
+        summary: _readingSummary(reading),
         question: noQuestion ? null : question,
       );
       if (!mounted) return;
@@ -648,7 +647,15 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_aiReading == null)
+          if (_lastReading != null &&
+              !context.watch<AuthProvider>().isPremiumEffective)
+            // Sem acesso: no lugar do botão, a degustação sobre as runas que
+            // já estão na mesa.
+            CounselorTeaserCard(
+              readingId: _lastReading!.id,
+              summary: _readingSummary(_lastReading!),
+            )
+          else if (_aiReading == null)
             ElevatedButton.icon(
               onPressed: _isReadingAI ? null : _askCounselor,
               icon: _isReadingAI

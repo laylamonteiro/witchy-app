@@ -18,6 +18,12 @@ enum OfferSlot {
   magicalProfileTeaser,
 
   /// Convite pós-tiragem grátis do dia (runas/oráculo/pêndulo).
+  ///
+  /// RESERVADO, sem tela por decisão de produto: aqui o que a assinatura
+  /// vende é QUANTIDADE, não conteúdo — a pessoa já leu as tiragens do dia.
+  /// Sortear uma carta extra só para escondê-la seria provocação, não
+  /// degustação. O gostinho desta tela é o do Conselheiro
+  /// ([counselorTeaser]), sobre a tiragem que ela acabou de fazer.
   drawLimitTeaser,
 
   /// Degustação da lição seguinte de uma trilha.
@@ -162,6 +168,17 @@ class OfferEngine {
     }
     await _bumpEvent(slot, OfferEvent.dismissal);
   }
+
+  /// Registra a exposição de um MURO: a degustação que substitui o paywall
+  /// de uma tela que a pessoa abriu de propósito (a previsão do dia, o perfil
+  /// mágico, a lição da trilha).
+  ///
+  /// Conta como evento, mas NÃO ocupa a vaga do dia nem passa por
+  /// [shouldShow]: o cap existe para conter oferta que aparece sem ser
+  /// chamada, e um muro é a própria tela pedida — silenciá-lo mostraria
+  /// MENOS do que o paywall que ele substituiu.
+  Future<void> recordWallExposure(OfferSlot slot) =>
+      _bumpEvent(slot, OfferEvent.exposure);
 
   /// Registra o toque no convite (a pessoa quis ver).
   Future<void> recordClick(OfferSlot slot) => _bumpEvent(slot, OfferEvent.click);

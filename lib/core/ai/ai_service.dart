@@ -1553,6 +1553,107 @@ class AIService {
     }
   }
 
+  /// Degustação da Previsão Mágica do Dia: 2 frases REAIS tiradas dos mesmos
+  /// fatos do céu que a previsão Premium usaria.
+  ///
+  /// Quem não tem acesso nunca gera a previsão inteira — é esta chamada
+  /// curta que roda no lugar dela (fail-closed e barata). Cabe a quem chama
+  /// cachear a amostra por dia.
+  Future<String> generateDailyWeatherTeaser({
+    required String moonPhase,
+    required ZodiacSign moonSign,
+    required EnergyLevel overallEnergy,
+    required List<String> energyKeywords,
+    required List<Map<String, String>> transits,
+    required List<Map<String, String>> aspects,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.dailyWeatherTeaserSystemPrompt(gender)}',
+        userText: _buildWeatherSummary(
+          moonPhase: moonPhase,
+          moonSign: moonSign,
+          overallEnergy: overallEnergy,
+          energyKeywords: energyKeywords,
+          transits: transits,
+          aspects: aspects,
+        ),
+        tag: 'teaser clima do dia',
+        temperature: 0.7,
+        maxTokens: 200,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
+  /// Degustação da análise personalizada do Perfil Mágico: 2 frases REAIS do
+  /// mapa, no lugar da análise completa (que nem chega a ser gerada).
+  Future<String> generateMagicalProfileTeaser({
+    required BirthChartModel birthChart,
+    required MagicalProfile profile,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.magicalProfileTeaserSystemPrompt(gender)}',
+        userText: _buildChartSummary(birthChart, profile),
+        tag: 'teaser perfil mágico',
+        temperature: 0.7,
+        maxTokens: 200,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
+  /// Degustação do Conselheiro Místico sobre uma tiragem recém-feita: 2
+  /// frases REAIS, no lugar do conselho completo.
+  Future<String> generateCounselorTeaser({
+    required String readingSummary,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.counselorTeaserSystemPrompt(gender)}',
+        userText: readingSummary,
+        tag: 'teaser conselheiro',
+        temperature: 0.7,
+        maxTokens: 200,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
   String _buildMysticAdvisorSystemPrompt(
     Gender gender,
   ) {
