@@ -271,6 +271,9 @@ jobs:
           echo "Bundle sem credenciais de admin."
 
       - name: 🚀 Deploy para o Cloudflare Pages
+        # --commit-dirty: o runner escreve arquivos de credencial e as
+        # localizacoes geradas antes do build, entao a arvore fica 'suja'
+        # por construcao — o aviso do wrangler aqui e ruido.
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -279,3 +282,4 @@ jobs:
             pages deploy build/web
             --project-name=grimorio-de-bolso
             --branch=${{ github.ref_name }}
+            --commit-dirty=true
