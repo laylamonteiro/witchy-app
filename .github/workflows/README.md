@@ -35,8 +35,13 @@ bash scripts/release.sh 2.1.0
 ## branch-validate.yml
 
 - **Gate** (bloqueante): `flutter analyze`, suíte completa de testes,
-  paridade dos 4 ARBs, scanner de PT hardcoded. Build de APK debug só
-  quando `android/` ou `pubspec` mudam.
+  paridade dos 4 ARBs, scanner de PT hardcoded. ~2 min — o build Android
+  saiu daqui de propósito (ver abaixo).
+- **Build de fumaça Android**: job separado, só quando `android/` ou
+  `pubspec` mudam **e** o `apk-candidato` não vai rodar. Fora do gate para
+  não atrasar o site em ~8 min.
+- **Ordem em `main`**: gate → site → APK candidato. O site leva ~2 min e o
+  APK ~10; publicar primeiro é ver o resultado antes de o build terminar.
 - **Site**: toda branch ganha prévia própria; `main` publica no alias fixo
   `staging` — **grimoriodebolso.app não muda nunca por este workflow** (ele
   jamais passa `--branch=main` ao wrangler, e um passo confere via API que
@@ -90,6 +95,13 @@ bash scripts/release.sh 2.1.0
    run verde dos workflows novos): require status check
    `🔍 Analyze, Test & Build`, require branch up to date, block force
    pushes, restrict deletions, sem bypass — nenhum bot commita mais na main.
+
+## Endereços e allowlists
+
+Turnstile, Supabase e RevenueCat autorizam por domínio: um endereço novo
+falha só ali, com o app correto. O que cadastrar em cada um está em
+`docs/AMBIENTES_WEB.md` — leia antes de testar login ou compra num
+endereço que você nunca usou.
 
 ## Versões
 

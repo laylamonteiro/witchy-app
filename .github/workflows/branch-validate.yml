@@ -33,6 +33,8 @@ jobs:
   validate:
     name: 🔍 Analyze, Test & Build
     runs-on: ubuntu-latest
+    outputs:
+      native_changed: ${{ steps.native.outputs.changed }}
 
     steps:
       - name: 📥 Checkout repository
@@ -42,9 +44,9 @@ jobs:
           fetch-depth: 2
 
       - name: 🔎 Mudou código nativo? (android/ ou pubspec)
-        # O build debug do APK é o passo mais caro (~10 min) e só detecta
-        # problemas de Gradle/NDK/manifest — roda apenas quando essa camada
-        # muda (ou em execução manual). Analyze + testes cobrem o Dart.
+        # Decide se o build de fumaça Android (job à parte, ~8 min) precisa
+        # rodar: ele só detecta problemas de Gradle/NDK/manifest, e analyze +
+        # testes já cobrem o Dart. O resultado sai como output do job.
         id: native
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -134,22 +136,47 @@ jobs:
       - name: 🔎 Hardcoded PT scan (bloqueante — gate final da i18n)
         run: bash scripts/check_hardcoded_pt.sh
 
-      - name: 🧹 Free runner disk space (só antes do build)
-        if: steps.native.outputs.changed == 'true'
-        # O build debug do APK esgota o disco do runner (Gradle/NDK/SDK).
-        # NÃO apagar $AGENT_TOOLSDIRECTORY aqui: este passo roda DEPOIS do
-        # setup do Flutter, que instala em hostedtoolcache — apagar deixava
-        # o build com "flutter: command not found" (runs 170-171).
-        run: |
-          df -h
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-          sudo apt-get clean
-          df -h
+  # ──────────────────────────────────────────────────────────────────────
+  # Build de fumaça do Android, FORA do gate.
+  #
+  # Ele vivia dentro do `validate` e segurava a publicação do site por ~8
+  # minutos — um build Android atrasando o webapp, que não tem nada a ver
+  # com ele. Agora corre em paralelo: o site sobe assim que os testes
+  # passam.
+  #
+  # Não roda quando o `apk-candidato` vai rodar (main/dispatch): lá sai um
+  # APK de RELEASE assinado, que prova a mesma camada nativa com mais rigor
+  # — construir os dois seria pagar 8 minutos por uma informação que já
+  # temos.
+  # ──────────────────────────────────────────────────────────────────────
+  build-android-debug:
+    name: 🤖 Build Android (fumaça)
+    needs: validate
+    if: >-
+      needs.validate.outputs.native_changed == 'true' &&
+      github.ref != 'refs/heads/main' &&
+      github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
 
-      - name: 📱 Build debug APK (só quando android/pubspec mudam)
-        if: steps.native.outputs.changed == 'true'
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧹 Free runner disk space
+        # O build Android esgota o disco do runner (Gradle/NDK/SDK). NÃO
+        # apagar $AGENT_TOOLSDIRECTORY: o Flutter é instalado em
+        # hostedtoolcache e apagá-lo deixava o build sem o comando.
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          sudo apt-get clean
+
+      - name: 🔐 Create credential stubs
+        uses: ./.github/actions/credenciais-app
+
+      - name: 🛠️ Setup Flutter (pinado)
+        uses: ./.github/actions/setup-flutter
+
+      - name: 📱 Build debug APK
         run: flutter build apk --debug
 
   # ──────────────────────────────────────────────────────────────────────
@@ -350,7 +377,10 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────
   apk-candidato:
     name: 📱 APK candidato (assinado)
-    needs: validate
+    # Depende do site de propósito, e não só do gate: o site leva ~2 min e o
+    # APK ~10, então publicar primeiro é ver o resultado antes. De quebra, se
+    # a publicação falhar, não se gastam 10 minutos de build para descobrir.
+    needs: [validate, deploy-web]
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
