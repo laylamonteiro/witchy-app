@@ -122,6 +122,7 @@
             <li><strong>Dados de Perfil:</strong> nome de exibição, foto e preferência de tratamento (opcionais)</li>
             <li><strong>Dados Astrológicos:</strong> data, hora e local de nascimento (para cálculo do mapa astral)</li>
             <li><strong>Conteúdo Criado:</strong> feitiços, rituais, entradas de diário, sigilos e outros conteúdos criados por você no app</li>
+            <li><strong>Fotos Anexadas:</strong> imagem de perfil e fotos dos verbetes que você cria na enciclopédia (a foto da leitura de mãos NÃO é armazenada)</li>
             <li><strong>Dados de Assinatura:</strong> status da compra Premium, processado pelas lojas (Google Play) e pelo RevenueCat — não temos acesso aos dados do seu cartão</li>
             <li><strong>Dados de Uso:</strong> informações anônimas sobre como você usa o app (apenas se você optar por compartilhar analytics)</li>
         </ul>
@@ -150,6 +151,7 @@
         <h2>4. Armazenamento e Segurança</h2>
         <ul>
             <li><strong>Local primeiro:</strong> seus dados vivem no seu dispositivo; a nuvem só é usada com a sincronização Premium ativada</li>
+            <li><strong>Fotos anexadas:</strong> a imagem de perfil e as fotos dos verbetes da enciclopédia ficam no próprio aparelho no aplicativo de celular. No navegador não existe essa pasta local, então são enviadas para um armazenamento privado da sua conta (Supabase Storage), isolado por conta e não público: para exibir, o app gera um endereço temporário de cerca de uma hora. Ao remover a foto, o arquivo é apagado.</li>
             <li><strong>Criptografia:</strong> senhas protegidas via Supabase Auth (bcrypt)</li>
             <li><strong>Transmissão Segura:</strong> todos os dados trafegam via HTTPS/TLS</li>
             <li><strong>Acesso Restrito:</strong> apenas serviços autorizados acessam os dados</li>

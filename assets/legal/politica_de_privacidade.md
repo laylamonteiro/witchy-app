@@ -1,6 +1,6 @@
 # Política de Privacidade — Grimório de Bolso
 
-Última atualização: 19 de julho 2026
+Última atualização: 19 de agosto 2026
 
 Sua intimidade espiritual é sagrada — e seus dados também. Esta política explica, em linguagem direta, o que coletamos, por quê, e o que NUNCA fazemos.
 
@@ -11,6 +11,7 @@ Sua intimidade espiritual é sagrada — e seus dados também. Esta política ex
 - Não vendemos seus dados. Nunca.
 - Textos enviados ao Conselheiro Místico são processados para gerar a resposta e não são usados para outros fins pelo aplicativo.
 - A foto da leitura de mãos é processada na hora e descartada — não é armazenada.
+- As fotos que você anexa (perfil e verbetes da enciclopédia) ficam no seu aparelho no aplicativo de celular; no navegador, são guardadas em um espaço privado da sua conta, acessível só por você.
 
 ## 2. O que coletamos e por quê
 
@@ -19,6 +20,8 @@ Nome de exibição, e-mail e credenciais — para autenticação e recuperação
 
 ### Conteúdo que você cria
 Feitiços, diários (sonhos, desejos, gratidão, afirmações, reflexões), sigilos, leituras salvas, perfil mágico e preferências (tema, idioma, gênero de tratamento). Armazenados localmente no aparelho; sincronizados com a nuvem apenas se você for Premium E ativar a sincronização.
+
+Também entram aqui as **fotos que você anexa**: a imagem de perfil e as fotos dos verbetes que você cria na enciclopédia. No aplicativo de celular elas ficam no próprio aparelho. No navegador não existe essa pasta local, então são enviadas para um armazenamento privado da sua conta (Supabase Storage) — veja a seção 4.
 
 ### Dados de nascimento (opcionais)
 Data, hora e local — usados exclusivamente para cálculos de astrologia e numerologia.
@@ -41,6 +44,7 @@ Para gerar respostas (feitiços, interpretações de sonhos e tiragens, explica�
 
 - **No aparelho**: banco local (SQLite) e preferências. Desinstalar o app sem backup apaga esses dados.
 - **Na nuvem (opcional, Premium)**: Supabase, com Row Level Security — cada conta só enxerga os próprios registros.
+- **Fotos anexadas, quando usadas pelo navegador**: armazenamento privado no Supabase Storage. Os arquivos ficam em uma pasta identificada pela sua conta, e as regras do servidor impedem que uma pessoa acesse a pasta de outra. O armazenamento não é público: para exibir a imagem, o aplicativo gera um endereço temporário, válido por cerca de uma hora. Ao remover a foto no aplicativo, o arquivo é apagado do armazenamento.
 
 ## 5. Compartilhamento
 
@@ -60,7 +64,7 @@ A exclusão da conta remove seus dados da nuvem; dados locais são de controle d
 
 ## 7. Permissões do aparelho
 
-- **Câmera/Galeria**: apenas para a leitura de mãos (Premium) e foto de perfil, sempre por ação sua.
+- **Câmera/Galeria**: para a leitura de mãos (Premium), a foto de perfil e as fotos dos verbetes que você cria na enciclopédia, sempre por ação sua.
 - **Notificações**: lembretes de lua e sabás, se você permitir.
 - **Galeria (salvar)**: exportação de sigilos, por ação sua.
 
