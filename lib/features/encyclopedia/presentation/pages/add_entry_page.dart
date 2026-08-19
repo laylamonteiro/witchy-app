@@ -184,13 +184,18 @@ class _AddEntryPageState extends State<AddEntryPage> {
     }
   }
 
-  /// Título do candidato: o nome científico é o identificador principal, e o
-  /// popular entra como apoio quando não existe binômio (caso comum em
-  /// pedras, que nem sempre têm espécie mineral declarada).
+  /// Título do candidato — e, por consequência, nome do verbete.
+  ///
+  /// O nome POPULAR lidera: é o que a praticante reconhece na hora de escolher
+  /// e o que ela vai procurar depois na enciclopédia ("Morango", não "Fragaria
+  /// x ananassa"). O binômio latino continua visível como apoio (subtítulo no
+  /// card, campo próprio no verbete), preservando a precisão entre espécies
+  /// parecidas. Sem nome popular — comum em pedras sem espécie mineral
+  /// declarada — o científico assume o título.
   String _candidateName(Map<String, dynamic> candidate) {
-    final scientific = '${candidate['scientific'] ?? ''}'.trim();
-    if (scientific.isNotEmpty) return scientific;
-    return '${candidate['name'] ?? ''}'.trim();
+    final popular = '${candidate['name'] ?? ''}'.trim();
+    if (popular.isNotEmpty) return popular;
+    return '${candidate['scientific'] ?? ''}'.trim();
   }
 
   /// [index] negativo é "nenhuma dessas": abre o campo em branco.
@@ -498,10 +503,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
   ) {
     final candidate = _candidates[index];
     final title = _candidateName(candidate);
-    final popular = '${candidate['name'] ?? ''}'.trim();
-    // O popular só vira subtítulo quando o título já é o científico: sem
-    // binômio, o próprio popular subiu para o título e repeti-lo é ruído.
-    final subtitle = title == popular ? '' : popular;
+    final scientific = '${candidate['scientific'] ?? ''}'.trim();
+    // O científico só vira subtítulo quando NÃO é o próprio título: sem nome
+    // popular ele já subiu para cima, e repeti-lo seria ruído.
+    final subtitle = title == scientific ? '' : scientific;
     final votes = candidate['votes'] is int ? candidate['votes'] as int : 1;
 
     return InkWell(
@@ -523,11 +528,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: context.gc.lilac,
-                          // Itálico é convenção de binômio latino: sem
-                          // científico o título é popular e fica reto.
-                          fontStyle: subtitle.isEmpty
-                              ? FontStyle.normal
-                              : FontStyle.italic,
+                          // Itálico é convenção de binômio latino: o título só
+                          // é científico quando não há nome popular (aí não há
+                          // subtítulo), e nesse caso ele vai em itálico.
+                          fontStyle: subtitle.isEmpty && scientific.isNotEmpty
+                              ? FontStyle.italic
+                              : FontStyle.normal,
                         ),
                   ),
                   if (subtitle.isNotEmpty) ...[
@@ -536,6 +542,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.textSecondary,
+                            // O subtítulo agora é o binômio latino.
+                            fontStyle: FontStyle.italic,
                           ),
                     ),
                   ],

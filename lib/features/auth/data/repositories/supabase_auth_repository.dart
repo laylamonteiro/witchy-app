@@ -419,6 +419,27 @@ class SupabaseAuthRepository implements AuthRepository {
       // Perfil pode não existir ainda
     }
 
+    // Sem linha em `profiles`, cria agora. Acontece no login social DA WEB:
+    // ele termina em redirect, então o app volta por outro caminho e o
+    // _createProfile do fluxo nativo nunca roda. Sem essa linha, papel (role),
+    // plano e contadores da conta não teriam onde ficar.
+    if (profileData == null) {
+      final metadata = supabaseUser.userMetadata ?? {};
+      await _createProfile(
+        supabaseUser,
+        metadata['display_name'] ?? metadata['full_name'] ?? metadata['name'],
+      );
+      try {
+        profileData = await _supabase
+            .from(SupabaseTables.profiles)
+            .select()
+            .eq('id', supabaseUser.id)
+            .maybeSingle();
+      } catch (e) {
+        // Segue com os dados do próprio usuário do Supabase.
+      }
+    }
+
     // Detectar método de autenticação
     AuthMethod authMethod = AuthMethod.emailPassword; // Padrão
     final appMetadata = supabaseUser.appMetadata;
