@@ -1,0 +1,7 @@
+# Rastreamento liberado. Explícito de propósito: a verificação de marca do
+# Google busca a página inicial informada na tela de consentimento, e a
+# ausência de regras já permitiria — mas deixar declarado elimina a dúvida.
+User-agent: *
+Allow: /
+
+Sitemap: https://grimoriodebolso.app/sitemap.xml
