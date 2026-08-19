@@ -128,10 +128,10 @@ jobs:
             test/i18n_smoke_test.dart
 
       - name: 🧪 Suíte completa (informativo)
-        # Não-bloqueante: sobram 3 falhas, todas esperando decisão de produto
-        # (fallback de gênero; aiPalmistry e numerologyReadings no plano Free).
-        # Ver docs/AUDITORIA_TECNICA.md. Promover a bloqueante quando a
-        # dívida for zerada — falta pouco.
+        # A dívida foi zerada: a suíte está verde (263/263). O passo segue
+        # informativo por enquanto — promover a bloqueante é decisão de quem
+        # mantém, porque a partir daí um teste instável passa a barrar a
+        # publicação do site. Ver docs/AUDITORIA_TECNICA.md.
         run: flutter test
         continue-on-error: true
 

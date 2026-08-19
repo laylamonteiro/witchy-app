@@ -105,28 +105,39 @@ isso vai para dentro do APK.
 
 ## 5. Dívida de testes (pré-existente, fora do gate bloqueante)
 
-Estado atual: **260 passam, 3 falham**. As 14 falhas restantes do
-levantamento anterior foram resolvidas — quase todas eram testes cobrando
-contratos que o app já tinha mudado de propósito, e duas viraram correção de
-código (o respingo de toque dos `ListTile` nas telas de Privacidade e
-Configurações, que era pintado atrás do fundo opaco do cartão).
+Estado atual: **263 passam, 0 falham** — a dívida foi zerada.
 
-As 3 que sobram dependem de **decisão de produto**, não de engenharia:
+As 17 falhas do levantamento anterior tinham causas distintas, mas quase
+todas do mesmo tipo: testes cobrando contratos que o app já havia mudado de
+propósito. Em ordem de quantidade:
 
-| Teste | Casos | O teste espera | O app faz hoje |
-| --- | --- | --- | --- |
-| `core/i18n/gender_test.dart` | 1 | `Gender.neutral` sem preferência salva | `Gender.feminine` |
-| `widget_test.dart` — `aiPalmistry` | 1 | Free com limite diário | Premium puro (preview → paywall) |
-| `widget_test.dart` — `numerologyReadings` | 1 | Free com limite diário | Premium puro (preview → paywall) |
+| Causa | Casos |
+| --- | --- |
+| Contrato antigo da escrita livre ("sair descarta" × "sair salva") | 4 |
+| `pumpAndSettle` em página com animação em laço (`BlinkStar`) | 4 |
+| Regra de acesso desatualizada (`aiPalmistry`, `numerologyReadings`) | 2 |
+| Ponto final que os textos nunca tiveram, em nenhum idioma | 2 |
+| `ListTile` com respingo de toque atrás do fundo opaco (correção no app) | 2 |
+| Delegates de localização ausentes no harness | 1 |
+| `LanguageProvider` ausente no harness | 1 |
+| Item que mudou de tela ("Seja Premium", commit `0054d28`) | 1 |
+| Fallback de gênero (o app trata no feminino, e diz isso no código) | 1 |
+| Layout de paywall abandonado (chave `premium_paywall_fitted_content`) | 1 |
 
-Nos dois últimos, o comportamento atual está documentado em comentário no
-próprio `feature_access.dart` ("exclusivas Premium: fora do mapa de limites,
-o plano Free recebe preview -> paywall"), o que sugere que o código está
-certo e os testes é que envelheceram. Como mexe no que o plano Free entrega,
-a confirmação é da mantenedora.
+Duas viraram **correção de código**, não de teste: os `ListTile` das telas de
+Privacidade e Configurações ficavam dentro de um `Container` opaco, e o
+respingo do toque era pintado atrás dele — o toque não dava retorno visual.
+Os dois cartões passaram a ser `Material` com `shape`.
 
-A suíte completa roda como **informativa** no CI de branch; o núcleo de
-i18n/conteúdo (16+ arquivos de teste) é bloqueante.
+Uma observação que sobrou do lote: medido em 390×844, o paywall pede ~444px
+de rolagem. Não é regressão (a chave que marcava o layout "cabe numa tela só"
+foi removida do app junto com aquele design), mas é um número a considerar se
+o objetivo voltar a ser caber sem rolar.
+
+A suíte completa ainda roda como **informativa** no CI de branch; o núcleo de
+i18n/conteúdo (16+ arquivos de teste) é bloqueante. Com a suíte verde, dá
+para promovê-la a bloqueante — a contrapartida é que um teste instável passa
+a barrar a publicação do site.
 
 ## 6. Arquitetura (anotações, sem refatoração em massa)
 
