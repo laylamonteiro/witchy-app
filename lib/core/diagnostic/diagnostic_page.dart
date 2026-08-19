@@ -1772,6 +1772,13 @@ class _DiagnosticPageState extends State<DiagnosticPage>
                   final authRepo = SupabaseAuthRepository();
                   final result = await authRepo.signInWithGoogle();
 
+                  // Na web o login sai do app por redirect: nao ha resultado
+                  // para julgar aqui, a pagina inteira sera recarregada.
+                  if (result.redirecting) {
+                    _addLog('Redirecionando para o Google...');
+                    return;
+                  }
+
                   if (result.success) {
                     _addLog(
                         'Login com Google SUCESSO! Usuário: ${result.user?.email}');
