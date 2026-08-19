@@ -67,6 +67,38 @@
     flutter-view, flt-glass-pane {
       height: 100%;
     }
+
+    /* Tela de carregamento: aparece para TODA visitante enquanto o app (que é
+       grande) baixa, e sai quando ele sobe. Não é conteúdo escondido — é o
+       que a pessoa vê primeiro. De quebra, dá à raiz do domínio um HTML com
+       nome e propósito legíveis, que antes só existiam desenhados no canvas. */
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 32px 24px;
+      text-align: center;
+      background: #0B0A16;
+      color: #d8d2e0;
+      font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      transition: opacity .35s ease;
+    }
+    #boot-splash.done { opacity: 0; pointer-events: none; }
+    #boot-splash img { width: 96px; height: 96px; }
+    #boot-splash h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #e5d4ff;
+      margin: 0;
+    }
+    #boot-splash p { max-width: 34rem; line-height: 1.6; margin: 0; }
+    #boot-splash .links { margin-top: 6px; font-size: .9rem; }
+    #boot-splash a { color: #c9a7f0; margin: 0 8px; }
   </style>
 
   <script>
@@ -104,6 +136,37 @@
     devolver vazio, estourando "unsupported result null" no boot a partir
     do segundo load, além de sobrescrever o flutter_service_worker.js do PWA.
   -->
+  <div id="boot-splash">
+    <img src="/icons/Icon-192.png" alt="Ícone do Grimório de Bolso">
+    <h1>Grimório de Bolso</h1>
+    <p>
+      Agenda mágica, diário de bruxaria, calendário lunar, astrologia e
+      enciclopédia — a sua prática no bolso, no celular ou no navegador.
+    </p>
+    <p class="links">
+      <a href="/sobre/">Sobre o app</a>
+      <a href="/privacidade/">Privacidade</a>
+      <a href="/termos/">Termos de uso</a>
+    </p>
+  </div>
+
+  <script>
+    // Tira a tela de carregamento assim que o Flutter monta a própria view.
+    // Sem tempo-limite de propósito: se o app não subir, é melhor a pessoa
+    // continuar vendo o nome e os links do que uma tela vazia.
+    (function () {
+      var splash = document.getElementById('boot-splash');
+      if (!splash) return;
+      var observador = new MutationObserver(function () {
+        if (!document.querySelector('flutter-view, flt-glass-pane')) return;
+        observador.disconnect();
+        splash.classList.add('done');
+        setTimeout(function () { splash.remove(); }, 400);
+      });
+      observador.observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
