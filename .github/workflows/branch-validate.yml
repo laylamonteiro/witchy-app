@@ -192,9 +192,16 @@ jobs:
   # ou quebra os testes de i18n nunca chega ao ar — coisa que o build manual
   # na máquina não garantia.
   #
-  # O Cloudflare decide produção x prévia pelo nome do branch: o branch de
-  # produção do projeto vai para grimoriodebolso.app, e qualquer outro ganha
-  # uma URL de prévia própria, sem tocar no site publicado.
+  # Produção x prévia, pelo nome do branch:
+  #   main            → grimoriodebolso.app
+  #   qualquer outro  → URL de prévia própria, sem tocar no site publicado
+  #
+  # Quem decide isso é o campo "Production branch" do projeto no Cloudflare
+  # (Workers & Pages → grimorio-de-bolso → Settings → Builds & deployments),
+  # que precisa estar em `main`. O workflow só informa o branch de origem; se
+  # aquele campo apontar para outro branch, a publicação de main vira prévia
+  # e o domínio congela SEM dar erro. O passo final imprime o endereço de
+  # cada publicação justamente para que isso não passe despercebido.
   #
   # Secrets necessários (Settings → Secrets and variables → Actions):
   #   CLOUDFLARE_API_TOKEN   token com permissão "Cloudflare Pages: Edit"
@@ -300,6 +307,7 @@ jobs:
           echo "Bundle sem credenciais de admin."
 
       - name: 🚀 Deploy para o Cloudflare Pages
+        id: deploy
         # --commit-dirty: o runner escreve arquivos de credencial e as
         # localizacoes geradas antes do build, entao a arvore fica 'suja'
         # por construcao — o aviso do wrangler aqui e ruido.
@@ -312,3 +320,35 @@ jobs:
             --project-name=grimorio-de-bolso
             --branch=${{ github.ref_name }}
             --commit-dirty=true
+
+      - name: 🔗 Endereço publicado
+        # O wrangler devolve a URL no meio do log, onde ninguém acha. Aqui ela
+        # sobe para o resumo da execução, que é a primeira coisa que aparece
+        # ao abrir o resultado no GitHub.
+        env:
+          URL: ${{ steps.deploy.outputs.deployment-url }}
+          ALIAS: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+        run: |
+          {
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              echo "## 🌐 Publicado em produção"
+              echo
+              echo "<https://grimoriodebolso.app>"
+            else
+              echo "## 🔍 Prévia do branch \`${{ github.ref_name }}\`"
+              echo
+              echo "Não toca no site publicado."
+            fi
+            echo
+            # `if` e não `[ ... ] && echo`: o runner roda com `bash -e`, e uma
+            # lista && que falha derruba o passo inteiro — bastaria uma das
+            # duas URLs vir vazia para o deploy aparecer como quebrado.
+            if [ -n "$ALIAS" ]; then
+              echo "- Endereço do branch: <$ALIAS>"
+            fi
+            if [ -n "$URL" ]; then
+              echo "- Endereço desta publicação: <$URL>"
+            fi
+            echo
+            echo "Commit \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
