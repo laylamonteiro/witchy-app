@@ -6,6 +6,9 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../cycle_reading/data/models/cycle_reading_model.dart';
+import '../../../cycle_reading/data/repositories/cycle_reading_repository.dart';
+import '../../../cycle_reading/presentation/pages/cycle_reading_report_page.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
 import 'record_detail_page.dart';
@@ -179,6 +182,34 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
     );
   }
 
+  /// Abre a entrada na moldura certa: a Leitura do Ciclo é Markdown e tem
+  /// cartões para compartilhar, então volta pela própria página do
+  /// relatório — na página genérica ela apareceria com a marcação crua.
+  Future<void> _openEntry(BuildContext context, FreeWritingModel entry) async {
+    if (entry.source == FreeWritingSource.cycleReading) {
+      final reading = await CycleReadingRepository().findByWritingId(entry.id);
+      if (!context.mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CycleReadingReportPage(
+            writing: entry,
+            periodStart: reading?.periodStart,
+            periodEnd: reading?.periodEnd,
+            periodType:
+                reading?.periodType ?? CycleReadingPeriodType.lunation,
+          ),
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => RecordDetailPage(entry: entry)),
+    );
+  }
+
   Widget _buildEntryCard(
     BuildContext context,
     AppLocalizations l10n,
@@ -193,12 +224,7 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
             );
 
     return MagicalCard(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RecordDetailPage(entry: entry),
-        ),
-      ),
+      onTap: () => _openEntry(context, entry),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

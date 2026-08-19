@@ -61,6 +61,20 @@ class CycleReadingRepository {
     return CycleReadingModel.fromMap(rows.first);
   }
 
+  /// A leitura que gerou uma entrada do acervo — o caminho de volta quando
+  /// a pessoa reabre o relatório por "Meus Registros".
+  Future<CycleReadingModel?> findByWritingId(String writingId) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'writing_id = ?',
+      whereArgs: [writingId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CycleReadingModel.fromMap(rows.first);
+  }
+
   Future<List<CycleReadingModel>> getAll(String userId) async {
     final db = await _db;
     final rows = await db.query(
