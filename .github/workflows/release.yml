@@ -185,6 +185,23 @@ jobs:
           fi
           echo "Secrets presentes."
 
+      - name: 🔎 A faixa existe mesmo na Play?
+        # O identificador de uma faixa fechada criada à mão não é o rótulo
+        # da tela — errar é fácil. Sem esta conferência o erro só apareceria
+        # no upload, que roda DEPOIS do deploy do site: produção teria
+        # mudado e o app não. Aqui morre antes de qualquer build.
+        #
+        # Roda também no dry-run (é o que faz o dry-run realmente provar a
+        # faixa); só é pulada se o secret da Play ainda não existir.
+        if: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_TRACK: ${{ steps.faixa.outputs.nome }}
+          PLAY_PACKAGE: com.grimoriodebolso.app
+        run: |
+          pip install --quiet --disable-pip-version-check google-auth
+          python3 scripts/ci/conferir_faixa_play.py
+
   # ────────────────────────────────────────────────────────────────────
   # O mesmo gate do branch-validate, BLOQUEANTE, no commit exato da tag.
   # Redundante quando a tag aponta para uma main verde — e é essa

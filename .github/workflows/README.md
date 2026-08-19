@@ -70,9 +70,13 @@ bash scripts/release.sh 2.1.0
 - **Qual faixa da Play**: a variável de repositório `PLAY_TRACK` (Settings →
   Secrets and variables → Actions → *Variables*). Sem ela, `internal`.
   Trocar de faixa é mudar a variável — não exige commit. `production` é
-  recusado de propósito: promover é decisão manual na Play Console.
+  recusado de propósito: promover é decisão manual na Play Console. O job
+  `preparar` ainda **pergunta à Play se a faixa existe** antes de qualquer
+  build (`scripts/ci/conferir_faixa_play.py`) — o identificador errado morre
+  em ~20s, e não no upload, que é depois do site já ter ido ao ar.
 - **Dry-run**: Run workflow com `somente_validar: true` exercita tudo até os
-  builds sem criar tag nem publicar nada.
+  builds sem criar tag nem publicar nada — incluindo a conferência da faixa
+  da Play, que é justamente o que não dá para adivinhar no papel.
 
 ## Como publicar uma versão
 

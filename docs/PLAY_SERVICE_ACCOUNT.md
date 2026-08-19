@@ -65,9 +65,13 @@ https://play.google.com/console/u/0/developers/<id>/app/<id>/tracks/AQUI
 
 Esse `AQUI` é o valor de `PLAY_TRACK`.
 
-> Errar o identificador não estraga nada: o upload falha com
-> `Track not found`, nenhum artefato sai, e você corrige a variável e roda
-> de novo — sem commit, sem versão queimada.
+> Errar o identificador não estraga nada: antes de qualquer build, o job
+> `preparar` pergunta à Play quais faixas o app tem e falha listando todas
+> elas se a sua não estiver lá. Você corrige a variável e roda de novo —
+> sem commit, sem versão queimada, sem nada publicado pela metade.
+>
+> Essa checagem também roda no **dry-run** (`somente_validar: true`), que é
+> a forma de confirmar o valor da variável sem publicar nada.
 
 ## Avisos
 
