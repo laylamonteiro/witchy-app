@@ -19,7 +19,7 @@ Todo o conteúdo do aplicativo — leituras, interpretações, previsões, suges
 ## 3. Sua conta
 
 - Você é responsável por manter suas credenciais em segurança.
-- É possível usar o app sem conta (modo local); alguns recursos exigem cadastro.
+- O uso do aplicativo exige uma conta: é ela que guarda o seu grimório e permite que ele acompanhe você entre o celular e o navegador.
 - Você pode excluir sua conta a qualquer momento em Perfil → Gerenciar Seus Dados.
 
 ## 4. Plano gratuito e Premium
