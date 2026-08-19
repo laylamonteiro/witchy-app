@@ -65,11 +65,21 @@ class RevenueCatConfig {
   static const String yearlyProductId = 'yearly';
   static const String lifetimeProductId = 'lifetime';
 
-  /// Produto CONSUMÍVEL da Leitura do Ciclo (lunação/mês) — fora do
-  /// entitlement Pro: cada compra vale UMA leitura, registrada pelo app em
-  /// `cycle_readings` (consumível não gera entitlement no RevenueCat).
-  /// Criar nas lojas como consumable (App Store) / consumível (Play).
+  /// Offering que agrupa os produtos avulsos da Leitura do Ciclo.
+  ///
+  /// A compra avulsa passa por offering/pacote (e não por produto solto)
+  /// porque é o único caminho que existe nas três plataformas: no navegador
+  /// o SDK do RevenueCat implementa `getOfferings`/`purchasePackage`, mas
+  /// não `getProducts`/`purchaseStoreProduct`.
+  static const String cycleReadingsOfferingId = 'cycle_readings';
+
+  /// Produtos CONSUMÍVEIS da Leitura do Ciclo — fora do entitlement Pro:
+  /// cada compra vale UMA leitura, registrada pelo app em `cycle_readings`
+  /// (consumível não gera entitlement no RevenueCat).
+  /// Criar nas lojas como consumable (App Store) / consumível (Play) e, para
+  /// a web, como produto do RevenueCat Billing com o MESMO identificador.
   static const String cycleReadingMonthProductId = 'leitura_ciclo_mes';
+  static const String cycleReadingWeekProductId = 'leitura_ciclo_semana';
 }
 
 /// IDs dos produtos para cada plataforma

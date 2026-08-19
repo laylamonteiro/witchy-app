@@ -147,6 +147,72 @@ void main() {
     expect((await db.query('free_writings')).length, 1);
   });
 
+  test('leitura da SEMANA sai com 4 seções, sem prática/rituais/selo',
+      () async {
+    final week = CycleReadingService.currentWeek();
+    final credit = CycleReadingModel(
+      userId: userId,
+      periodType: CycleReadingPeriodType.week,
+      periodStart: week.start,
+      periodEnd: week.end,
+      productId: 'leitura_ciclo_semana',
+    );
+    await CycleReadingRepository().insert(credit);
+
+    final asked = <String>[];
+    final service = CycleReadingService(
+      generateSection: (key, json) async {
+        asked.add(key);
+        return fakeSection(key, json);
+      },
+    );
+    final result =
+        await service.generateForCredit(credit: credit, userId: userId);
+
+    expect(asked, CycleReadingSections.weekly);
+    expect(asked, isNot(contains(CycleReadingSections.practice)));
+    expect(asked, isNot(contains(CycleReadingSections.rituals)));
+    expect(asked, isNot(contains(CycleReadingSections.seal)));
+
+    final markdown = result.writing.content;
+    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 4);
+    // A afirmação (o cartão compartilhável) continua nas duas janelas.
+    expect(result.affirmation, 'Eu confio no meu ciclo.');
+    expect(result.sealKeywords, isEmpty);
+    expect(result.reading.isWeekly, isTrue);
+  });
+
+  test('semana e lunação são créditos distintos da mesma pessoa', () async {
+    final week = CycleReadingService.currentWeek();
+    await CycleReadingRepository().insert(CycleReadingModel(
+      userId: userId,
+      periodType: CycleReadingPeriodType.week,
+      periodStart: week.start,
+      periodEnd: week.end,
+    ));
+
+    final repo = CycleReadingRepository();
+    expect(
+      await repo.findForPeriod(userId, week.start,
+          periodType: CycleReadingPeriodType.week),
+      isNotNull,
+    );
+    // Comprar a semana não entrega a lunação (nem o contrário).
+    expect(
+      await repo.findForPeriod(userId, week.start,
+          periodType: CycleReadingPeriodType.lunation),
+      isNull,
+    );
+  });
+
+  test('semana corrente cobre 7 dias e inclui hoje', () {
+    final now = DateTime(2026, 8, 19, 15);
+    final week = CycleReadingService.currentWeek(now: now);
+    expect(week.start, DateTime(2026, 8, 13));
+    expect(week.end, DateTime(2026, 8, 20));
+    expect(week.end.difference(week.start).inDays, 7);
+  });
+
   test('lunação corrente cobre a data de agora', () {
     final period = CycleReadingService.currentLunation();
     final now = DateTime.now();

@@ -27,6 +27,7 @@ abstract final class CycleReadingSections {
   static const affirmation = 'affirmation';
   static const seal = 'seal';
 
+  /// A Leitura da Lunação: o produto completo, as 7 seções.
   static const ordered = [
     portrait,
     threads,
@@ -36,6 +37,16 @@ abstract final class CycleReadingSections {
     affirmation,
     seal,
   ];
+
+  /// A Leitura da Semana: mais direta (4 seções). O que fica de fora é o que
+  /// só a lunação inteira sustenta — o balanço da prática, os rituais do
+  /// próximo ciclo e o selo — e é essa diferença visível que justifica a
+  /// diferença de preço.
+  static const weekly = [portrait, threads, sky, affirmation];
+
+  /// As seções de um [CycleReadingPeriodType].
+  static List<String> forPeriod(String periodType) =>
+      periodType == CycleReadingPeriodType.week ? weekly : ordered;
 }
 
 /// Gera o texto de UMA seção (injetável nos testes; produção usa a IA).
@@ -82,7 +93,7 @@ class CycleReadingService {
   CycleReadingComposer get composer => _composer;
   CycleReadingRepository get repository => _repository;
 
-  /// A lunação corrente: da última lua nova à próxima (MVP: único período).
+  /// A lunação corrente: da última lua nova à próxima.
   static ({DateTime start, DateTime end}) currentLunation({DateTime? now}) {
     final reference = now ?? DateTime.now();
     return (
@@ -90,6 +101,27 @@ class CycleReadingService {
       end: LunarProvider.lunationEndOf(reference),
     );
   }
+
+  /// A semana corrente: os últimos 7 dias, hoje incluído. O fim é a meia-
+  /// noite de amanhã para o dia de hoje entrar inteiro (as consultas usam
+  /// `>= start AND < end`).
+  static ({DateTime start, DateTime end}) currentWeek({DateTime? now}) {
+    final reference = now ?? DateTime.now();
+    final today = DateTime(reference.year, reference.month, reference.day);
+    return (
+      start: today.subtract(const Duration(days: 6)),
+      end: today.add(const Duration(days: 1)),
+    );
+  }
+
+  /// A janela de um [CycleReadingPeriodType].
+  static ({DateTime start, DateTime end}) periodFor(
+    String periodType, {
+    DateTime? now,
+  }) =>
+      periodType == CycleReadingPeriodType.week
+          ? currentWeek(now: now)
+          : currentLunation(now: now);
 
   /// Identidade do ciclo para o Motor de Ofertas (1 convite por lunação).
   static String lunationKey({DateTime? now}) {
@@ -125,13 +157,14 @@ class CycleReadingService {
       userId: userId,
       start: credit.periodStart,
       end: credit.periodEnd,
+      periodType: credit.periodType,
       options: options,
     );
     final materialJson = material.compactJson;
     final generate = _generateSection ?? _defaultGenerate;
 
     final sections = <String, String>{};
-    for (final key in CycleReadingSections.ordered) {
+    for (final key in CycleReadingSections.forPeriod(credit.periodType)) {
       sections[key] = (await generate(key, materialJson)).trim();
     }
 
@@ -148,7 +181,11 @@ class CycleReadingService {
       affirmation: affirmation,
       sealKeywords: sealKeywords,
     );
-    final title = reportTitle(credit.periodStart, credit.periodEnd);
+    final title = reportTitle(
+      credit.periodStart,
+      credit.periodEnd,
+      periodType: credit.periodType,
+    );
 
     FreeWritingModel writing;
     if (regenerate && credit.writingId != null) {
@@ -190,12 +227,23 @@ class CycleReadingService {
     );
   }
 
-  /// Título do relatório no acervo (e da página).
-  static String reportTitle(DateTime start, DateTime end) {
+  /// Título do relatório no acervo (e da página). O nome diz qual janela foi
+  /// lida — o acervo guarda as duas lado a lado.
+  static String reportTitle(
+    DateTime start,
+    DateTime end, {
+    String periodType = CycleReadingPeriodType.lunation,
+  }) {
     final format = DateFormat('dd/MM');
-    return '${_l10n.cycleReadingTitle} — '
+    return '${periodTitle(periodType)} — '
         '${format.format(start)}–${format.format(end)}';
   }
+
+  /// Nome do produto conforme a janela ("Leitura da Semana"/"da Lunação").
+  static String periodTitle(String periodType) =>
+      periodType == CycleReadingPeriodType.week
+          ? _l10n.cycleReadingWeekTitle
+          : _l10n.cycleReadingLunationTitle;
 
   String _assembleMarkdown({
     required CycleReadingModel credit,
@@ -205,13 +253,19 @@ class CycleReadingService {
   }) {
     final l10n = _l10n;
     final format = DateFormat('dd/MM/yyyy');
+    final periodLine = credit.isWeekly
+        ? l10n.cycleReadingWeekPeriodLine(
+            format.format(credit.periodStart),
+            format.format(credit.periodEnd),
+          )
+        : l10n.cycleReadingPeriodLine(
+            format.format(credit.periodStart),
+            format.format(credit.periodEnd),
+          );
     final buffer = StringBuffer()
-      ..writeln('# ${l10n.cycleReadingTitle}')
+      ..writeln('# ${periodTitle(credit.periodType)}')
       ..writeln()
-      ..writeln('_${l10n.cycleReadingPeriodLine(
-        format.format(credit.periodStart),
-        format.format(credit.periodEnd),
-      )}_')
+      ..writeln('_${periodLine}_')
       ..writeln();
 
     void section(String heading, String body) {

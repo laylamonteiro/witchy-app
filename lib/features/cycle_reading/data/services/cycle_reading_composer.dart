@@ -12,6 +12,7 @@ import '../../../grimoire/data/models/spell_model.dart'
     show MoonPhase, MoonPhaseExtension;
 import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../your_day/data/daily_checkin_repository.dart';
+import '../models/cycle_reading_model.dart';
 
 /// Fontes que a pessoa pode EXCLUIR da análise (intimidade em primeiro
 /// lugar: a tela de compra oferece estes desligamentos antes de enviar
@@ -68,9 +69,19 @@ class CycleReadingComposer {
   final AstrologyRepository _astrology;
   final TransitCalculator _transits;
 
-  /// Abaixo disto a leitura sai rasa — a tela de compra avisa antes de
-  /// cobrar (confiança vale mais que uma venda).
+  /// Abaixo disto a leitura da lunação sai rasa — a tela de compra avisa
+  /// antes de cobrar (confiança vale mais que uma venda).
   static const int minRecordsForDepth = 5;
+
+  /// O mesmo aviso para a semana: sete dias rendem menos que uma lunação, e
+  /// exigir o mesmo volume acusaria de rasa quase toda semana honesta.
+  static const int minRecordsForWeek = 3;
+
+  /// Mínimo de registros do período para a leitura não sair rasa.
+  static int minRecordsFor(String periodType) =>
+      periodType == CycleReadingPeriodType.week
+          ? minRecordsForWeek
+          : minRecordsForDepth;
 
   /// Teto de itens citados por fonte (tokens + intimidade).
   static const int _maxItemsPerSource = 6;
@@ -138,6 +149,7 @@ class CycleReadingComposer {
     required String userId,
     required DateTime start,
     required DateTime end,
+    String periodType = CycleReadingPeriodType.lunation,
     CycleReadingSourceOptions options = const CycleReadingSourceOptions(),
   }) async {
     final db = await _db;
@@ -145,7 +157,7 @@ class CycleReadingComposer {
       'period': {
         'start': _dayKey(start),
         'end': _dayKey(end),
-        'type': 'lunation',
+        'type': periodType,
       },
     };
     var recordCount = 0;

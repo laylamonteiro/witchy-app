@@ -37,16 +37,23 @@ class CycleReadingRepository {
   }
 
   /// A leitura desta janela, se existir (crédito pendente OU já gerada).
-  /// A janela é identificada pelo instante de início do período.
+  ///
+  /// A janela é identificada pelo início do período E pelo tipo: semana e
+  /// lunação são produtos distintos, e comprar uma nunca satisfaz a outra.
   Future<CycleReadingModel?> findForPeriod(
     String userId,
-    DateTime periodStart,
-  ) async {
+    DateTime periodStart, {
+    String periodType = CycleReadingPeriodType.lunation,
+  }) async {
     final db = await _db;
     final rows = await db.query(
       'cycle_readings',
-      where: 'user_id = ? AND period_start = ?',
-      whereArgs: [userId, periodStart.millisecondsSinceEpoch],
+      where: 'user_id = ? AND period_start = ? AND period_type = ?',
+      whereArgs: [
+        userId,
+        periodStart.millisecondsSinceEpoch,
+        periodType,
+      ],
       orderBy: 'created_at DESC',
       limit: 1,
     );

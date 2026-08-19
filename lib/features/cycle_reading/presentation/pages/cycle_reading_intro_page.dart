@@ -16,17 +16,24 @@ import '../../data/services/cycle_reading_composer.dart';
 import '../../data/services/cycle_reading_service.dart';
 import 'cycle_reading_report_page.dart';
 
-/// Tela de compra/geração da Leitura do Ciclo.
+/// Tela de compra/geração da Leitura do Ciclo (semana ou lunação).
 ///
 /// Regras de produto (inegociáveis):
 /// - Diz o QUE é enviado para análise e deixa excluir fontes íntimas.
 /// - Avisa ANTES da compra quando o período tem poucos registros.
 /// - A compra só é consumida quando o relatório foi gerado e salvo — falha
 ///   de geração mantém o crédito e oferece tentar de novo sem nova cobrança.
-/// - Assinante Pro tem 1 leitura inclusa por mês.
+/// - Assinante Pro tem 1 leitura inclusa por mês (de qualquer janela).
 /// - Regeneração da MESMA janela limitada a 2×.
 class CycleReadingIntroPage extends StatefulWidget {
-  const CycleReadingIntroPage({super.key});
+  /// Janela pré-selecionada ao abrir (o convite do Seu Dia chega pela
+  /// lunação; a porta de entrada barata é a semana).
+  final String initialPeriodType;
+
+  const CycleReadingIntroPage({
+    super.key,
+    this.initialPeriodType = CycleReadingPeriodType.lunation,
+  });
 
   @override
   State<CycleReadingIntroPage> createState() => _CycleReadingIntroPageState();
@@ -36,15 +43,22 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   final CycleReadingService _service = CycleReadingService();
   final PaymentService _payment = PaymentService();
 
-  late final ({DateTime start, DateTime end}) _period =
-      CycleReadingService.currentLunation();
+  late String _periodType = widget.initialPeriodType;
+  ({DateTime start, DateTime end}) get _period =>
+      CycleReadingService.periodFor(_periodType);
+
+  String get _productId => _periodType == CycleReadingPeriodType.week
+      ? RevenueCatConfig.cycleReadingWeekProductId
+      : RevenueCatConfig.cycleReadingMonthProductId;
 
   bool _isLoading = true;
   bool _isWorking = false;
   int _recordCount = 0;
   CycleReadingModel? _existing;
   bool _proGrantUsed = false;
-  String? _price;
+
+  /// Preço por janela (null = produto indisponível nesta plataforma/loja).
+  final Map<String, String?> _prices = {};
 
   bool _includeDreams = true;
   bool _includeFreeWriting = true;
@@ -54,30 +68,54 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   void initState() {
     super.initState();
     _load();
+    _loadPrices();
   }
 
+  /// Preços das duas janelas — carregados juntos para o seletor já nascer
+  /// com os dois valores à vista (a escolha é de preço, não só de janela).
+  Future<void> _loadPrices() async {
+    for (final id in [
+      RevenueCatConfig.cycleReadingWeekProductId,
+      RevenueCatConfig.cycleReadingMonthProductId,
+    ]) {
+      final price = await _payment.getConsumablePriceString(id);
+      if (!mounted) return;
+      setState(() => _prices[id] = price);
+    }
+  }
+
+  /// Recarrega o que depende da janela escolhida.
   Future<void> _load() async {
     final userId = context.read<AuthProvider>().currentUser.id;
+    final period = _period;
     final recordCount = await _service.composer.countPeriodRecords(
       userId: userId,
-      start: _period.start,
-      end: _period.end,
+      start: period.start,
+      end: period.end,
     );
-    final existing =
-        await _service.repository.findForPeriod(userId, _period.start);
+    final existing = await _service.repository.findForPeriod(
+      userId,
+      period.start,
+      periodType: _periodType,
+    );
     final proGrantUsed =
         await _service.repository.proGrantUsedThisMonth(userId);
-    final price = await _payment.getConsumablePriceString(
-      RevenueCatConfig.cycleReadingMonthProductId,
-    );
     if (!mounted) return;
     setState(() {
       _recordCount = recordCount;
       _existing = existing;
       _proGrantUsed = proGrantUsed;
-      _price = price;
       _isLoading = false;
     });
+  }
+
+  Future<void> _selectPeriod(String periodType) async {
+    if (periodType == _periodType || _isWorking) return;
+    setState(() {
+      _periodType = periodType;
+      _isLoading = true;
+    });
+    await _load();
   }
 
   CycleReadingSourceOptions get _options => CycleReadingSourceOptions(
@@ -91,10 +129,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     setState(() => _isWorking = true);
     final messenger = ScaffoldMessenger.of(context);
     final userId = context.read<AuthProvider>().currentUser.id;
+    final period = _period;
     try {
-      final result = await _payment.purchaseConsumable(
-        RevenueCatConfig.cycleReadingMonthProductId,
-      );
+      final result = await _payment.purchaseConsumable(_productId);
       if (!result.success) {
         if (result.errorMessage != null &&
             result.errorMessage != 'Compra cancelada' &&
@@ -111,9 +148,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       // falhar, o crédito sobrevive e a pessoa tenta de novo sem pagar.
       final credit = CycleReadingModel(
         userId: userId,
-        periodStart: _period.start,
-        periodEnd: _period.end,
-        productId: RevenueCatConfig.cycleReadingMonthProductId,
+        periodType: _periodType,
+        periodStart: period.start,
+        periodEnd: period.end,
+        productId: _productId,
       );
       await _service.repository.insert(credit);
       final engine = await OfferEngine.load();
@@ -130,11 +168,13 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     if (_isWorking) return;
     setState(() => _isWorking = true);
     final userId = context.read<AuthProvider>().currentUser.id;
+    final period = _period;
     try {
       final credit = CycleReadingModel(
         userId: userId,
-        periodStart: _period.start,
-        periodEnd: _period.end,
+        periodType: _periodType,
+        periodStart: period.start,
+        periodEnd: period.end,
         origin: CycleReadingOrigin.pro,
       );
       await _service.repository.insert(credit);
@@ -172,6 +212,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             sealKeywords: result.sealKeywords,
             periodStart: credit.periodStart,
             periodEnd: credit.periodEnd,
+            periodType: credit.periodType,
           ),
         ),
       );
@@ -199,6 +240,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           writing: writing,
           periodStart: _existing?.periodStart,
           periodEnd: _existing?.periodEnd,
+          periodType: _existing?.periodType ??
+              CycleReadingPeriodType.lunation,
         ),
       ),
     );
@@ -208,147 +251,227 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final format = DateFormat('dd/MM/yyyy');
+    final period = _period;
+    final isWeek = _periodType == CycleReadingPeriodType.week;
 
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(l10n.cycleReadingTitle),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: context.gc.lilac))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 32),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MagicalCard(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('🌙✨', style: const TextStyle(fontSize: 32)),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.cycleReadingIntroTagline,
-                          style: Theme.of(context).textTheme.bodyLarge,
+                  const Text('🌙✨', style: TextStyle(fontSize: 32)),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.cycleReadingIntroTagline,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPeriodSelector(l10n),
+                  const SizedBox(height: 12),
+                  if (_isLoading)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: CircularProgressIndicator(
+                          color: context.gc.lilac,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          l10n.cycleReadingPeriodLine(
-                            format.format(_period.start),
-                            format.format(_period.end),
-                          ),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: context.gc.textSecondary,
-                                  ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.cycleReadingRecordCount(_recordCount),
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: context.gc.lilac,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        if (_recordCount <
-                            CycleReadingComposer.minRecordsForDepth) ...[
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color:
-                                  context.gc.warning.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(10),
+                      ),
+                    )
+                  else ...[
+                    Text(
+                      isWeek
+                          ? l10n.cycleReadingWeekPeriodLine(
+                              format.format(period.start),
+                              format.format(period.end),
+                            )
+                          : l10n.cycleReadingPeriodLine(
+                              format.format(period.start),
+                              format.format(period.end),
                             ),
-                            child: Text(
-                              l10n.cycleReadingShallowWarning,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: context.gc.warning),
-                            ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
                           ),
-                        ],
-                      ],
                     ),
-                  ),
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.cycleReadingIntroWhatTitle,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: context.gc.lilac,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.cycleReadingIntroWhatBody,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.cycleReadingDisclaimer,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: context.gc.textSecondary,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                        ),
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      isWeek
+                          ? l10n.cycleReadingWeekRecordCount(_recordCount)
+                          : l10n.cycleReadingRecordCount(_recordCount),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: context.gc.lilac,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
+                    if (_recordCount <
+                        CycleReadingComposer.minRecordsFor(_periodType)) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.gc.warning.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          l10n.cycleReadingShallowWarning,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: context.gc.warning),
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
+              ),
+            ),
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.cycleReadingIntroWhatTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: context.gc.lilac,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                  MagicalCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.cycleReadingPrivacyTitle,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: context.gc.lilac,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.cycleReadingPrivacyBody,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.cycleReadingIncludeDreams),
-                          value: _includeDreams,
-                          onChanged: (v) => setState(() => _includeDreams = v),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.cycleReadingIncludeFreeWriting),
-                          value: _includeFreeWriting,
-                          onChanged: (v) =>
-                              setState(() => _includeFreeWriting = v),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.cycleReadingIncludeQuestions),
-                          value: _includeQuestions,
-                          onChanged: (v) =>
-                              setState(() => _includeQuestions = v),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isWeek
+                        ? l10n.cycleReadingWeekWhatBody
+                        : l10n.cycleReadingIntroWhatBody,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    child: _buildActions(l10n),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.cycleReadingDisclaimer,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        ),
                   ),
                 ],
               ),
             ),
+            MagicalCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.cycleReadingPrivacyTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: context.gc.lilac,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.cycleReadingPrivacyBody,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.cycleReadingIncludeDreams),
+                    value: _includeDreams,
+                    onChanged: (v) => setState(() => _includeDreams = v),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.cycleReadingIncludeFreeWriting),
+                    value: _includeFreeWriting,
+                    onChanged: (v) => setState(() => _includeFreeWriting = v),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.cycleReadingIncludeQuestions),
+                    value: _includeQuestions,
+                    onChanged: (v) => setState(() => _includeQuestions = v),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _buildActions(l10n),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Seletor das duas janelas, cada uma com o próprio preço à vista.
+  Widget _buildPeriodSelector(AppLocalizations l10n) {
+    Widget option(String type, String label, String productId) {
+      final selected = _periodType == type;
+      final price = _prices[productId];
+      return Expanded(
+        child: InkWell(
+          onTap: _isWorking ? null : () => _selectPeriod(type),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: selected
+                  ? context.gc.lilac.withValues(alpha: 0.18)
+                  : Colors.transparent,
+              border: Border.all(
+                color: selected
+                    ? context.gc.lilac
+                    : context.gc.surfaceBorder,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: selected
+                            ? context.gc.lilac
+                            : context.gc.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  price ?? '—',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        option(
+          CycleReadingPeriodType.week,
+          l10n.cycleReadingWeekTitle,
+          RevenueCatConfig.cycleReadingWeekProductId,
+        ),
+        const SizedBox(width: 10),
+        option(
+          CycleReadingPeriodType.lunation,
+          l10n.cycleReadingLunationTitle,
+          RevenueCatConfig.cycleReadingMonthProductId,
+        ),
+      ],
     );
   }
 
@@ -422,7 +545,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
 
     // Sem leitura nesta janela ainda: comprar — ou usar a inclusa do Pro.
     final isPro = context.watch<AuthProvider>().isPremiumEffective;
-    final storeAvailable = _price != null;
+    final price = _prices[_productId];
+    final storeAvailable = price != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -448,12 +572,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
               ? OutlinedButton.icon(
                   onPressed: _buy,
                   icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-                  label: Text(l10n.cycleReadingBuyFor(_price!)),
+                  label: Text(l10n.cycleReadingBuyFor(price)),
                 )
               : ElevatedButton.icon(
                   onPressed: _buy,
                   icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-                  label: Text(l10n.cycleReadingBuyFor(_price!)),
+                  label: Text(l10n.cycleReadingBuyFor(price)),
                 )
         else if (!isPro || _proGrantUsed)
           Text(

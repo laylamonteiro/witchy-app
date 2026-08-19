@@ -11,6 +11,20 @@ abstract final class CycleReadingStatus {
   static const generated = 'generated';
 }
 
+/// Janela coberta por uma leitura (persistida em
+/// `cycle_readings.period_type`).
+///
+/// A semana é a porta de entrada barata (leitura mais direta); a lunação é o
+/// produto completo. O tipo decide preço, seções geradas e o mínimo de
+/// registros para a leitura não sair rasa.
+abstract final class CycleReadingPeriodType {
+  /// Últimos 7 dias.
+  static const week = 'week';
+
+  /// Lunação corrente (de lua nova a lua nova).
+  static const lunation = 'lunation';
+}
+
 /// Como o crédito nasceu (persistido em `cycle_readings.origin`).
 abstract final class CycleReadingOrigin {
   /// Produto consumível comprado na loja.
@@ -26,7 +40,7 @@ class CycleReadingModel {
   final String id;
   final String? userId;
 
-  /// Tipo do período — MVP: só 'lunation' (a lunação corrente).
+  /// Uma das constantes de [CycleReadingPeriodType].
   final String periodType;
 
   final DateTime periodStart;
@@ -57,7 +71,7 @@ class CycleReadingModel {
   CycleReadingModel({
     String? id,
     this.userId,
-    this.periodType = 'lunation',
+    this.periodType = CycleReadingPeriodType.lunation,
     required this.periodStart,
     required this.periodEnd,
     this.status = CycleReadingStatus.pending,
@@ -74,6 +88,7 @@ class CycleReadingModel {
 
   bool get isPending => status == CycleReadingStatus.pending;
   bool get isGenerated => status == CycleReadingStatus.generated;
+  bool get isWeekly => periodType == CycleReadingPeriodType.week;
   bool get canRegenerate =>
       isGenerated && regenerationsUsed < maxRegenerations;
 
@@ -99,7 +114,7 @@ class CycleReadingModel {
     return CycleReadingModel(
       id: map['id'],
       userId: map['user_id'],
-      periodType: map['period_type'] ?? 'lunation',
+      periodType: map['period_type'] ?? CycleReadingPeriodType.lunation,
       periodStart: DateTime.fromMillisecondsSinceEpoch(map['period_start']),
       periodEnd: DateTime.fromMillisecondsSinceEpoch(map['period_end']),
       status: map['status'] ?? CycleReadingStatus.pending,

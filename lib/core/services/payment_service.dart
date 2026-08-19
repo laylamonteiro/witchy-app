@@ -561,38 +561,66 @@ class PaymentService extends ChangeNotifier {
   // CONSUMÍVEIS (compra avulsa — ex.: Leitura do Ciclo)
   // ============================================================
 
-  /// Cache dos produtos consumíveis buscados na loja (por id).
-  final Map<String, StoreProduct> _consumableProducts = {};
+  /// Cache dos pacotes avulsos já resolvidos (por id do produto).
+  final Map<String, Package> _consumablePackages = {};
 
   Future<PurchaseResult> Function(String productId)? _consumableOverride;
 
-  /// Busca (e cacheia) um produto consumível pelo id da loja. Retorna null
-  /// quando o RevenueCat não está configurado ou o produto não existe.
-  Future<StoreProduct?> getConsumableProduct(String productId) async {
+  /// Encontra (e cacheia) o pacote de um produto avulso.
+  ///
+  /// O caminho é SEMPRE por offering/pacote, e não por produto solto, porque
+  /// é o único que existe nas três plataformas: no navegador o SDK só
+  /// implementa `getOfferings`/`purchasePackage` — `getProducts` e
+  /// `purchaseStoreProduct` lançam `UnsupportedPlatformException`.
+  ///
+  /// Procura primeiro na offering dedicada
+  /// ([RevenueCatConfig.cycleReadingsOfferingId]) e depois em qualquer
+  /// offering disponível, casando pelo id do produto da loja — assim o app
+  /// não depende de como os pacotes foram nomeados no painel.
+  Future<Package?> getConsumablePackage(String productId) async {
     if (!RevenueCatConfig.isConfigured) return null;
-    final cached = _consumableProducts[productId];
+    final cached = _consumablePackages[productId];
     if (cached != null) return cached;
+
     try {
-      final products = await Purchases.getProducts(
-        [productId],
-        productCategory: ProductCategory.nonSubscription,
-      );
-      if (products.isEmpty) {
-        debugPrint('⚠️ Produto consumível não encontrado: $productId');
+      final offerings = _offerings ?? await Purchases.getOfferings();
+      _offerings ??= offerings;
+
+      Package? matches(Offering? offering) {
+        if (offering == null) return null;
+        for (final package in offering.availablePackages) {
+          if (package.storeProduct.identifier == productId ||
+              package.storeProduct.identifier.startsWith('$productId:') ||
+              package.identifier == productId) {
+            return package;
+          }
+        }
         return null;
       }
-      return _consumableProducts[productId] = products.first;
+
+      final package =
+          matches(offerings.all[RevenueCatConfig.cycleReadingsOfferingId]) ??
+              matches(offerings.current) ??
+              offerings.all.values
+                  .map(matches)
+                  .firstWhere((p) => p != null, orElse: () => null);
+
+      if (package == null) {
+        debugPrint('⚠️ Pacote avulso não encontrado: $productId');
+        return null;
+      }
+      return _consumablePackages[productId] = package;
     } catch (e) {
-      debugPrint('❌ Erro ao buscar produto consumível $productId: $e');
+      debugPrint('❌ Erro ao buscar pacote avulso $productId: $e');
       return null;
     }
   }
 
-  /// Preço formatado de um consumível (null enquanto não carregado).
+  /// Preço formatado de um produto avulso (null quando indisponível).
   Future<String?> getConsumablePriceString(String productId) async =>
-      (await getConsumableProduct(productId))?.priceString;
+      (await getConsumablePackage(productId))?.storeProduct.priceString;
 
-  /// Compra um produto consumível (`Purchases.purchaseStoreProduct`).
+  /// Compra um produto avulso (consumível) pelo id do produto na loja.
   ///
   /// Consumível NÃO gera entitlement: o "crédito" é registrado pelo app
   /// (ex.: tabela `cycle_readings`) — quem chama grava o registro após o
@@ -604,30 +632,13 @@ class PaymentService extends ChangeNotifier {
       return PurchaseResult.error(_l10n.paymentNotConfigured);
     }
 
-    final product = await getConsumableProduct(productId);
-    if (product == null) {
+    final package = await getConsumablePackage(productId);
+    if (package == null) {
       return PurchaseResult.error(_l10n.paymentProductNotFound(productId));
     }
 
-    _setStatus(PurchaseStatus.loading);
-    try {
-      final purchaseResult = await Purchases.purchaseStoreProduct(product);
-      final customerInfo = purchaseResult.customerInfo;
-      _onCustomerInfoUpdated(customerInfo);
-      _setStatus(PurchaseStatus.success);
-      return PurchaseResult.success(customerInfo);
-    } on PlatformException catch (e) {
-      final errorCode = PurchasesErrorHelper.getErrorCode(e);
-      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
-        _setStatus(PurchaseStatus.cancelled);
-        return PurchaseResult.cancelled();
-      }
-      _setStatus(PurchaseStatus.error);
-      return PurchaseResult.error(_getErrorMessage(errorCode));
-    } catch (e) {
-      _setStatus(PurchaseStatus.error);
-      return PurchaseResult.error('Erro inesperado: $e');
-    }
+    // purchasePackage já trata plataforma, cancelamento e erros de loja.
+    return purchasePackage(package);
   }
 
   @visibleForTesting

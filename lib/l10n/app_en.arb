@@ -1635,6 +1635,11 @@
   "cycleReadingOfferTitle": "{count, plural, one{Your lunation yielded 1 record} other{Your lunation yielded {count} records}}",
   "cycleReadingOfferBody": "Want its reading? The oracle weaves your records and the sky of the period into an analysis that is only yours.",
   "cycleReadingOfferCta": "Discover the Cycle Reading",
+  "cycleReadingWeekTitle": "Week Reading",
+  "cycleReadingLunationTitle": "Lunation Reading",
+  "cycleReadingWeekPeriodLine": "Last 7 days, from {start} to {end}",
+  "cycleReadingWeekRecordCount": "{count, plural, =0{No records this week yet} one{1 record this week} other{{count} records this week}}",
+  "cycleReadingWeekWhatBody": "Four direct sections about your last seven days: portrait of the moment, the threads that repeat, the sky above you and a tailored affirmation — saved forever in My Records. The practice review, the rituals for the next cycle and the seal belong to the Lunation Reading.",
   "dreamTeaserTitle": "What does this dream mean?",
   "dreamTeaserIntro": "The full interpretation is Premium — but the first thread is yours.",
   "dreamTeaserPeek": "Peek at the interpretation"

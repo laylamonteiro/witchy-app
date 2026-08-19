@@ -8,6 +8,7 @@ import '../../../../core/sharing/share_card_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../diary/data/models/free_writing_model.dart';
+import '../../data/models/cycle_reading_model.dart';
 import '../../data/services/cycle_reading_service.dart';
 
 /// O relatório da Leitura do Ciclo: Markdown das 7 seções + os dois
@@ -28,6 +29,9 @@ class CycleReadingReportPage extends StatelessWidget {
   final DateTime? periodStart;
   final DateTime? periodEnd;
 
+  /// Janela lida — decide o nome do produto no título e no cartão.
+  final String periodType;
+
   const CycleReadingReportPage({
     super.key,
     required this.writing,
@@ -35,6 +39,7 @@ class CycleReadingReportPage extends StatelessWidget {
     this.sealKeywords,
     this.periodStart,
     this.periodEnd,
+    this.periodType = CycleReadingPeriodType.lunation,
   });
 
   @override
@@ -47,7 +52,9 @@ class CycleReadingReportPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: ResponsiveAppBarTitle(l10n.cycleReadingTitle),
+        title: ResponsiveAppBarTitle(
+          CycleReadingService.periodTitle(periodType),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -117,7 +124,7 @@ class CycleReadingReportPage extends StatelessWidget {
       context,
       card: ShareCard(
         child: AffirmationShareContent(
-          title: l10n.cycleReadingTitle,
+          title: CycleReadingService.periodTitle(periodType),
           text: text,
         ),
       ),

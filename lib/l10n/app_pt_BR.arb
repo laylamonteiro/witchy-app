@@ -1635,6 +1635,11 @@
   "cycleReadingOfferTitle": "{count, plural, one{Sua lunação rendeu 1 registro} other{Sua lunação rendeu {count} registros}}",
   "cycleReadingOfferBody": "Quer a leitura dela? O oráculo costura seus registros e o céu do período numa análise só sua.",
   "cycleReadingOfferCta": "Conhecer a Leitura do Ciclo",
+  "cycleReadingWeekTitle": "Leitura da Semana",
+  "cycleReadingLunationTitle": "Leitura da Lunação",
+  "cycleReadingWeekPeriodLine": "Últimos 7 dias, de {start} a {end}",
+  "cycleReadingWeekRecordCount": "{count, plural, =0{Nenhum registro nesta semana ainda} one{1 registro nesta semana} other{{count} registros nesta semana}}",
+  "cycleReadingWeekWhatBody": "Quatro seções diretas sobre os seus últimos sete dias: retrato do momento, os fios que se repetem, o céu sobre você e uma afirmação sob medida — salvas para sempre em Meus Registros. O balanço da prática, os rituais do próximo ciclo e o selo são da Leitura da Lunação.",
   "dreamTeaserTitle": "O que este sonho quer dizer?",
   "dreamTeaserIntro": "A interpretação completa é do Premium — mas o primeiro fio é seu.",
   "dreamTeaserPeek": "Espiar a interpretação"

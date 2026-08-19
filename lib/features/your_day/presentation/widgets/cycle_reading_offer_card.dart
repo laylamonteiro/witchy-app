@@ -6,6 +6,7 @@ import '../../../../core/offers/offer_engine.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../cycle_reading/data/models/cycle_reading_model.dart';
 import '../../../cycle_reading/data/services/cycle_reading_composer.dart';
 import '../../../cycle_reading/data/services/cycle_reading_service.dart';
 import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
@@ -49,8 +50,11 @@ class _CycleReadingOfferCardState extends State<CycleReadingOfferCard> {
     // O convite não aparece para quem já garantiu a leitura desta janela.
     final service = CycleReadingService();
     final period = CycleReadingService.currentLunation();
-    final existing =
-        await service.repository.findForPeriod(userId, period.start);
+    final existing = await service.repository.findForPeriod(
+      userId,
+      period.start,
+      periodType: CycleReadingPeriodType.lunation,
+    );
     if (existing != null) return;
 
     if (!engine.shouldShow(_slot, periodKey: _periodKey)) return;
@@ -82,7 +86,13 @@ class _CycleReadingOfferCardState extends State<CycleReadingOfferCard> {
   void _open() {
     _engine?.recordClick(_slot);
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CycleReadingIntroPage()),
+      MaterialPageRoute(
+        // O gancho falou da lunação: a tela abre nessa janela (a semana
+        // continua a um toque, no seletor).
+        builder: (_) => const CycleReadingIntroPage(
+          initialPeriodType: CycleReadingPeriodType.lunation,
+        ),
+      ),
     );
   }
 
