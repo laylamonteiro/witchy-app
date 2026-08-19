@@ -54,9 +54,12 @@ void main() {
     await tester.pump();
     expect(find.byKey(const ValueKey('grimoire-cover')), findsOneWidget);
 
-    // Um toque abre o livro.
+    // Um toque abre o livro. Sem pumpAndSettle: o céu estrelado do índice
+    // cintila em ciclo contínuo, então "assentar" nunca acontece — o relógio
+    // avança pelo tempo exato de cada animação.
     await tester.tap(find.byKey(const ValueKey('grimoire-cover')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
 
     // Todas as seções aparecem no sumário.
     expect(find.text('Cristais'), findsOneWidget);
@@ -64,7 +67,8 @@ void main() {
 
     // Tocar numa entrada vira a folha e então entrega a seção.
     await tester.tap(find.text('Cristais'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
     expect(selected, EncyclopediaSection.crystals);
   });
 }

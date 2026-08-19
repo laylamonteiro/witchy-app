@@ -1642,5 +1642,8 @@
   "cycleReadingWeekWhatBody": "Cuatro secciones directas sobre tus últimos siete días: retrato del momento, los hilos que se repiten, el cielo sobre ti y una afirmación a tu medida — guardadas para siempre en Mis Registros. El balance de la práctica, los rituales del próximo ciclo y el sello son de la Lectura de la Lunación.",
   "dreamTeaserTitle": "¿Qué quiere decir este sueño?",
   "dreamTeaserIntro": "La interpretación completa es Premium — pero el primer hilo es tuyo.",
-  "dreamTeaserPeek": "Espiar la interpretación"
+  "dreamTeaserPeek": "Espiar la interpretación",
+  "zodiacTwelveSigns": "Los 12 Signos",
+  "zodiacPersonality": "Personalidad",
+  "zodiacRulingPlanet": "Planeta Regente: {planet}"
 }

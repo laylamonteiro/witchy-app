@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:grimorio_de_bolso/features/astrology/presentation/pages/zodiac_signs_page.dart';
 
 void main() {
@@ -7,8 +8,14 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
+    // A página lê AppLocalizations: sem os delegates ela nem constrói.
     await tester.pumpWidget(
-      const MaterialApp(home: ZodiacSignsPage()),
+      MaterialApp(
+        locale: const Locale('pt', 'BR'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const ZodiacSignsPage(),
+      ),
     );
 
     await tester.tap(find.text('Áries'));

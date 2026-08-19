@@ -2355,5 +2355,13 @@
   "cycleReadingWeekWhatBody": "Quatro seções diretas sobre os seus últimos sete dias: retrato do momento, os fios que se repetem, o céu sobre você e uma afirmação sob medida — salvas para sempre em Meus Registros. O balanço da prática, os rituais do próximo ciclo e o selo são da Leitura da Lunação.",
   "dreamTeaserTitle": "O que este sonho quer dizer?",
   "dreamTeaserIntro": "A interpretação completa é do Premium — mas o primeiro fio é seu.",
-  "dreamTeaserPeek": "Espiar a interpretação"
+  "dreamTeaserPeek": "Espiar a interpretação",
+  "zodiacTwelveSigns": "Os 12 Signos",
+  "zodiacPersonality": "Personalidade",
+  "zodiacRulingPlanet": "Planeta Regente: {planet}",
+  "@zodiacRulingPlanet": {
+    "placeholders": {
+      "planet": {"type": "String"}
+    }
+  }
 }

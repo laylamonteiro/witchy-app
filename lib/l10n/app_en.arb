@@ -1642,5 +1642,8 @@
   "cycleReadingWeekWhatBody": "Four direct sections about your last seven days: portrait of the moment, the threads that repeat, the sky above you and a tailored affirmation — saved forever in My Records. The practice review, the rituals for the next cycle and the seal belong to the Lunation Reading.",
   "dreamTeaserTitle": "What does this dream mean?",
   "dreamTeaserIntro": "The full interpretation is Premium — but the first thread is yours.",
-  "dreamTeaserPeek": "Peek at the interpretation"
+  "dreamTeaserPeek": "Peek at the interpretation",
+  "zodiacTwelveSigns": "The 12 Signs",
+  "zodiacPersonality": "Personality",
+  "zodiacRulingPlanet": "Ruling Planet: {planet}"
 }
