@@ -141,8 +141,28 @@ jobs:
       - name: 🔧 Garantir ripgrep (o scanner de i18n depende dele)
         # Sem o rg, o scanner buscava vazio e o gate passava sem verificar
         # nada. Agora o script falha alto se ele faltar — então o runner
-        # precisa tê-lo. Instala só quando ausente, para não custar tempo.
-        run: command -v rg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
+        # precisa tê-lo.
+        #
+        # Vem do release, e não do apt: `apt-get update` roda a cada execução
+        # e o custo oscilava de 10s a mais de 10min conforme o espelho, sem
+        # nada que a gente controle. Baixar o binário é constante e o retry
+        # do curl cobre falha de rede. Instala só quando ausente.
+        env:
+          RIPGREP_VERSAO: 14.1.1
+        run: |
+          if command -v rg >/dev/null; then
+            echo "ripgrep já presente: $(rg --version | head -1)"
+            exit 0
+          fi
+          destino="$RUNNER_TEMP/ripgrep"
+          mkdir -p "$destino"
+          url="https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSAO}/ripgrep-${RIPGREP_VERSAO}-x86_64-unknown-linux-musl.tar.gz"
+          curl -sSfL --retry 3 --retry-delay 2 "$url" \
+            | tar xz --strip-components=1 -C "$destino"
+          # Confere aqui mesmo: sem isto, quem quebraria seria o passo
+          # seguinte, com uma mensagem que não aponta para a causa.
+          "$destino/rg" --version
+          echo "$destino" >> "$GITHUB_PATH"
 
       - name: 🔎 Hardcoded PT scan (bloqueante — gate final da i18n)
         run: bash scripts/check_hardcoded_pt.sh
