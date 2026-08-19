@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -207,4 +208,48 @@ class _DiagnosticSection extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Substitui o retângulo cinza mudo que o Flutter mostra quando um widget
+/// falha ao construir.
+///
+/// O detalhe técnico só aparece onde ele SERVE: na web (onde é a única forma
+/// de diagnosticar um build minificado em produção) e em debug. No aplicativo
+/// de celular publicado, uma pessoa que abriu o app para consultar a lua não
+/// tem o que fazer com um stack trace — ali vale uma mensagem curta.
+Widget buildRenderErrorWidget(FlutterErrorDetails details) {
+  const fundo = Color(0xFF0B0A16);
+
+  if (kIsWeb || kDebugMode) {
+    return Material(
+      color: fundo,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: SelectableText(
+          'Erro ao renderizar:\n${details.exceptionAsString()}'
+          '\n\n${details.stack ?? ''}',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+            fontFamily: 'monospace',
+          ),
+        ),
+      ),
+    );
+  }
+
+  return const Material(
+    color: fundo,
+    child: Padding(
+      padding: EdgeInsets.all(24),
+      child: Center(
+        child: Text(
+          'Algo não carregou como deveria aqui.\n'
+          'Volte e tente de novo.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+        ),
+      ),
+    ),
+  );
 }

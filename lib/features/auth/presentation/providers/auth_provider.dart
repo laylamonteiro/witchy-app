@@ -194,14 +194,21 @@ class AuthProvider extends ChangeNotifier {
     if (!SupabaseConfig.isConfigured) return;
 
     final repository = SupabaseAuthRepository();
-    try {
-      // Sem sessão, isto retorna na hora (não vai à rede).
-      final existing = await repository
-          .getCurrentUser()
-          .timeout(const Duration(seconds: 10));
-      if (existing != null) await _adoptServerSession(existing);
-    } catch (e) {
-      await debugLog('AUTH', 'Falha ao ler sessão do servidor: $e');
+
+    // Só vale procurar sessão no servidor quando o estado local está anônimo —
+    // que é o caso do retorno do login social na web. Com usuário já
+    // autenticado localmente (situação normal no celular), pular evita uma
+    // consulta de rede no caminho de ABERTURA do app, que atrasaria a tela
+    // inicial sem mudar nada.
+    if (!_currentUser.isAuthenticated) {
+      try {
+        final existing = await repository
+            .getCurrentUser()
+            .timeout(const Duration(seconds: 10));
+        if (existing != null) await _adoptServerSession(existing);
+      } catch (e) {
+        await debugLog('AUTH', 'Falha ao ler sessão do servidor: $e');
+      }
     }
 
     _serverSessionSubscription ??= repository.authStateChanges.listen((user) {

@@ -66,22 +66,9 @@ void main() {
     };
 
     // Erros de build/render não passam pelo try/catch do _boot; em release o
-    // ErrorWidget padrão é um retângulo cinza mudo — troca por texto legível.
-    ErrorWidget.builder = (details) => Material(
-          color: const Color(0xFF0B0A16),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: SelectableText(
-              'Erro ao renderizar:\n${details.exceptionAsString()}'
-              '\n\n${details.stack ?? ''}',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ),
-        );
+    // ErrorWidget padrão é um retângulo cinza mudo. Detalhe técnico só onde
+    // ele serve (web e debug) — ver buildRenderErrorWidget.
+    ErrorWidget.builder = buildRenderErrorWidget;
 
     await _boot();
   }, (error, stackTrace) {
