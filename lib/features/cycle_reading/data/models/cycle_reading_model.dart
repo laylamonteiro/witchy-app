@@ -27,17 +27,25 @@ abstract final class CycleReadingPeriodType {
 
 /// Como o crédito nasceu (persistido em `cycle_readings.origin`).
 ///
-/// Hoje só existe a compra: a Leitura do Ciclo é produto avulso e fica FORA
-/// do Premium — assinar não dá leitura de graça. A coluna existe para
-/// distinguir origens futuras (cortesia do suporte, código promocional) sem
-/// nova migração.
+/// A Leitura do Ciclo é produto avulso e fica FORA do Premium: assinar não
+/// dá leitura de graça. A única exceção é o Vitalício, que inclui a Leitura
+/// da Lunação. A coluna guarda qual dos dois caminhos gerou o crédito.
 abstract final class CycleReadingOrigin {
   /// Produto consumível comprado na loja.
   static const purchase = 'purchase';
+
+  /// Incluída no Vitalício: quem comprou o lifetime recebe a Leitura da
+  /// Lunação a cada lunação, sem nova cobrança. Só a lunação — a Leitura da
+  /// Semana segue avulsa para todo mundo.
+  ///
+  /// Vale só para compra REAL do lifetime (entitlement do RevenueCat sem
+  /// data de expiração), nunca para `SubscriptionPlan.lifetime`, que também
+  /// é concedido por Código Premium e pelo admin.
+  static const lifetime = 'lifetime';
 }
 
-/// O registro de UMA Leitura do Ciclo: a compra (ou concessão Pro), o
-/// período coberto e o vínculo com o relatório salvo no acervo.
+/// O registro de UMA Leitura do Ciclo: a origem do crédito (compra avulsa
+/// ou Vitalício), o período coberto e o vínculo com o relatório no acervo.
 class CycleReadingModel {
   final String id;
   final String? userId;
@@ -54,7 +62,7 @@ class CycleReadingModel {
   /// Uma das constantes de [CycleReadingOrigin].
   final String origin;
 
-  /// Id do produto consumível comprado (null para concessão Pro).
+  /// Id do produto consumível comprado (null quando veio do Vitalício).
   final String? productId;
 
   /// Id da entrada em `free_writings` com o relatório (após gerado).

@@ -185,6 +185,27 @@ Implementado na branch `claude/cycle-reading-offers-engine-vme4yp`:
   relatório completo nem é gerado para quem não comprou) e fica cacheada
   por janela em `TeaserAiCache` — cada geração custa uma chamada de IA.
 
+### O Vitalício inclui a Leitura da Lunação (e só ela)
+- Quem compra o **lifetime** recebe a Leitura da Lunação a cada lunação, sem
+  nova cobrança (`CycleReadingOrigin.lifetime`, crédito sem `product_id`). A
+  **Leitura da Semana continua avulsa para todo mundo**, inclusive para o
+  vitalício: é ela que mantém uma linha de receita viva depois da compra
+  única, e a lunação (7 seções + selo) é que faz o Vitalício valer.
+- A regra mora em `CycleReadingService.lifetimeCovers(periodType)` — uma
+  fonte só, coberta por teste.
+- **O gate é `PaymentService.isLifetime`** (entitlement do RevenueCat sem
+  data de expiração), NUNCA `SubscriptionPlan.lifetime`: esse último também
+  é concedido por Código Premium e vem embutido em `UserModel.admin()`, e
+  gatear por ele daria leitura infinita a quem nunca pagou.
+- Efeito colateral desejado: quem comprou o lifetime antes das leituras
+  existirem passa a ter direito automaticamente, sem trabalho extra.
+- Custo a acompanhar: ~87 chamadas de IA por pessoa por ano (7 seções ×
+  ~12,4 lunações), perpétuo contra um pagamento único — e até 3× isso se a
+  pessoa usar as 2 regerações. Incluir também a semanal levaria a ~295/ano,
+  motivo pelo qual ela ficou de fora.
+- Preço: com a lunação a R$ 9,90, o Vitalício entrega ~R$ 123/ano de valor.
+  Ele precisa estar bem acima da anual (R$ 89,90) para fechar.
+
 ### Todo muro pago dá um gostinho (a regra vale no app inteiro)
 A regra acima não é só da Leitura do Ciclo: **onde havia paywall frio, agora
 há amostra REAL**. Onde o conteúdo pago é gerado por IA, o gate saiu da tela

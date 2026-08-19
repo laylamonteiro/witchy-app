@@ -213,6 +213,47 @@ void main() {
     expect(week.end.difference(week.start).inDays, 7);
   });
 
+  group('o Vitalício cobre a lunação, e só ela', () {
+    test('a lunação entra na compra vitalícia', () {
+      expect(
+        CycleReadingService.lifetimeCovers(CycleReadingPeriodType.lunation),
+        isTrue,
+      );
+    });
+
+    test('a semana continua avulsa mesmo para quem tem o Vitalício', () {
+      // Se isto virar true sem decisão de produto, o Vitalício passa a
+      // custear 208 chamadas de IA por ano por pessoa, para sempre.
+      expect(
+        CycleReadingService.lifetimeCovers(CycleReadingPeriodType.week),
+        isFalse,
+      );
+    });
+
+    test('o crédito do Vitalício nasce sem produto e com origem própria',
+        () async {
+      final repo = CycleReadingRepository();
+      final period = CycleReadingService.currentLunation();
+      final credit = CycleReadingModel(
+        userId: userId,
+        periodType: CycleReadingPeriodType.lunation,
+        periodStart: period.start,
+        periodEnd: period.end,
+        origin: CycleReadingOrigin.lifetime,
+      );
+      await repo.insert(credit);
+
+      final saved = await repo.findForPeriod(userId, period.start,
+          periodType: CycleReadingPeriodType.lunation);
+      expect(saved, isNotNull);
+      expect(saved!.origin, CycleReadingOrigin.lifetime);
+      expect(saved.productId, isNull);
+      // Nasce pendente como qualquer crédito: só vira 'gerada' quando o
+      // relatório foi salvo.
+      expect(saved.isPending, isTrue);
+    });
+  });
+
   test('lunação corrente cobre a data de agora', () {
     final period = CycleReadingService.currentLunation();
     final now = DateTime.now();

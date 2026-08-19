@@ -26,7 +26,8 @@ import 'cycle_reading_report_page.dart';
 /// - Avisa ANTES da compra quando o período tem poucos registros.
 /// - A compra só é consumida quando o relatório foi gerado e salvo — falha
 ///   de geração mantém o crédito e oferece tentar de novo sem nova cobrança.
-/// - Assinante Pro tem 1 leitura inclusa por mês (de qualquer janela).
+/// - Fora do Premium: assinar não dá leitura. A única exceção é o Vitalício,
+///   que inclui a Leitura da Lunação (a da Semana segue avulsa).
 /// - Regeneração da MESMA janela limitada a 2×.
 class CycleReadingIntroPage extends StatefulWidget {
   /// Janela pré-selecionada ao abrir (o convite do Seu Dia chega pela
@@ -49,6 +50,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   late String _periodType = widget.initialPeriodType;
   ({DateTime start, DateTime end}) get _period =>
       CycleReadingService.periodFor(_periodType);
+
+  /// Esta janela sai de graça pelo Vitalício? Exige compra REAL do lifetime
+  /// (entitlement sem expiração) — `SubscriptionPlan.lifetime` não serve,
+  /// porque também vem de Código Premium e do admin.
+  bool get _lifetimeCoversThisWindow =>
+      _payment.isLifetime && CycleReadingService.lifetimeCovers(_periodType);
 
   String get _productId => _periodType == CycleReadingPeriodType.week
       ? RevenueCatConfig.cycleReadingWeekProductId
@@ -219,6 +226,31 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     }
   }
 
+  /// Crédito incluído no Vitalício: sem loja, sem cobrança. O gate é a
+  /// compra REAL do lifetime, conferida no RevenueCat na hora.
+  Future<void> _claimLifetime() async {
+    if (_isWorking) return;
+    if (!_lifetimeCoversThisWindow) return;
+    setState(() => _isWorking = true);
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final period = _period;
+    try {
+      final credit = CycleReadingModel(
+        userId: userId,
+        periodType: _periodType,
+        periodStart: period.start,
+        periodEnd: period.end,
+        origin: CycleReadingOrigin.lifetime,
+      );
+      await _service.repository.insert(credit);
+      if (!mounted) return;
+      setState(() => _existing = credit);
+      await _generate(credit);
+    } finally {
+      if (mounted) setState(() => _isWorking = false);
+    }
+  }
+
   Future<void> _generate(CycleReadingModel credit,
       {bool regenerate = false}) async {
     final l10n = AppLocalizations.of(context);
@@ -364,7 +396,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             ),
             // A degustação vem ANTES do "o que vem na leitura": o gostinho
             // real convence mais que a lista de seções.
-            if (!_isLoading && _existing == null) _buildTeaserCard(l10n),
+            // Quem já tem a janela incluída no Vitalício não degusta o
+            // que já é dele.
+            if (!_isLoading && _existing == null && !_lifetimeCoversThisWindow)
+              _buildTeaserCard(l10n),
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,7 +548,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   Widget _buildPeriodSelector(AppLocalizations l10n) {
     Widget option(String type, String label, String productId) {
       final selected = _periodType == type;
-      final price = _prices[productId];
+      final included =
+          _payment.isLifetime && CycleReadingService.lifetimeCovers(type);
+      final price =
+          included ? l10n.cycleReadingLifetimeTag : _prices[productId];
       return Expanded(
         child: InkWell(
           onTap: _isWorking ? null : () => _selectPeriod(type),
@@ -643,9 +681,30 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
     }
 
+    // Vitalício: a Leitura da Lunação está incluída. Gera direto, sem loja.
+    if (_lifetimeCoversThisWindow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.cycleReadingLifetimeIncluded,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.gc.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: _claimLifetime,
+            icon: const Icon(Icons.auto_awesome, size: 18),
+            label: Text(l10n.cycleReadingGenerate),
+          ),
+        ],
+      );
+    }
+
     // Sem leitura nesta janela: a compra é o único caminho — a Leitura do
     // Ciclo é produto avulso e não entra no Premium (assinar não dá leitura
-    // de graça; o que a assinatura desbloqueia são as features do app).
+    // de graça; o que a assinatura desbloqueia são as features do app). A
+    // única exceção é a lunação do Vitalício, tratada logo acima.
     final price = _prices[_productId];
     if (price == null) {
       return Text(
