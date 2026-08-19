@@ -1,0 +1,532 @@
+name: 🚀 Release
+
+# Publicar é DECISÃO, nunca efeito colateral de merge.
+#
+# Este workflow só roda quando uma tag vX.Y.Z nasce (via
+# `bash scripts/release.sh X.Y.Z`) ou pelo botão Run workflow — e mesmo
+# assim nada chega a usuários sem a aprovação do environment `producao`
+# (Settings → Environments → producao → Required reviewers).
+#
+# O que UM release publica, sempre do MESMO commit:
+#   1. o site grimoriodebolso.app (Cloudflare Pages, --branch=main)
+#   2. o AAB na faixa de TESTE INTERNO da Play (a promoção para produção
+#      continua manual, na Play Console)
+#   3. a GitHub Release com APK, AAB e símbolos anexados
+#
+# Versionamento — a tag é a única fonte de verdade:
+#   versionName = tag sem o "v"        (v2.1.0 → 2.1.0)
+#   versionCode = M*100000 + m*1000 + p*10   (2.1.0 → 201000)
+# Determinístico (o mesmo release produz sempre o mesmo par, APK e AAB
+# idênticos por construção), monotônico enquanto o nome só crescer (e isso
+# é VERIFICADO, não assumido), e sem estado: nenhum commit de bot, nenhum
+# [skip ci], nenhum pubspec regravado. O dígito final fica livre para um
+# eventual hotfix fora do esquema. Piso legado: 126 (v2.0.25+126).
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: 'Versão a publicar (ex.: 2.1.0 — a tag v2.1.0 nasce só na publicação)'
+        required: true
+        type: string
+      somente_validar:
+        description: 'Dry-run: valida e builda tudo, não publica nada nem cria tag'
+        required: false
+        type: boolean
+        default: false
+
+# Um release por vez, e nunca cancelar um no meio: interromper depois do
+# site e antes da Play deixaria produção pela metade.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # Fingerprint SHA-1 do keystore de release (registrado no Google Cloud
+  # para o login Google). Build assinado com OUTRA chave é erro fatal.
+  SHA1_ESPERADO: '54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60'
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────
+  # Resolve a versão, aplica as guardas e falha ANTES de gastar 20 min de
+  # build: semver estrito, maior que toda tag existente, versionCode acima
+  # do legado, secrets presentes.
+  # ────────────────────────────────────────────────────────────────────
+  preparar:
+    name: 🔢 Versão e guardas
+    runs-on: ubuntu-latest
+    outputs:
+      version_name: ${{ steps.versao.outputs.nome }}
+      version_code: ${{ steps.versao.outputs.codigo }}
+      sha: ${{ steps.versao.outputs.sha }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔢 Resolver e validar a versão
+        id: versao
+        env:
+          INPUT_VERSAO: ${{ inputs.versao }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            NOME="${INPUT_VERSAO#v}"
+          else
+            NOME="${GITHUB_REF_NAME#v}"
+          fi
+
+          if ! echo "$NOME" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Versão inválida: '$NOME'. Use o formato X.Y.Z (ex.: 2.1.0)."
+            exit 1
+          fi
+
+          MAJOR=$(echo "$NOME" | cut -d. -f1)
+          MINOR=$(echo "$NOME" | cut -d. -f2)
+          PATCH=$(echo "$NOME" | cut -d. -f3)
+          CODIGO=$((MAJOR * 100000 + MINOR * 1000 + PATCH * 10))
+
+          # A nova versão precisa ser MAIOR que toda tag existente (as
+          # legadas v2.0.25+126 contam pelo nome, ignorando o +N). No push
+          # de tag a própria tag já existe — sai da comparação.
+          git fetch --tags --quiet
+          MAIOR_EXISTENTE=$(git tag -l 'v*' \
+            | grep -v "^v${NOME}\$" \
+            | sed -e 's/^v//' -e 's/+.*//' \
+            | sort -V | tail -1)
+          if [ -n "$MAIOR_EXISTENTE" ]; then
+            TOPO=$(printf '%s\n%s\n' "$MAIOR_EXISTENTE" "$NOME" | sort -V | tail -1)
+            if [ "$TOPO" != "$NOME" ] || [ "$MAIOR_EXISTENTE" = "$NOME" ]; then
+              echo "::error::A versão $NOME não é maior que a última publicada ($MAIOR_EXISTENTE)."
+              exit 1
+            fi
+          fi
+
+          # versionCode precisa superar o legado (+N das tags antigas; piso
+          # conhecido: 126). O esquema garante isso por construção, mas
+          # dinheiro não se protege com suposição.
+          MAIOR_CODIGO_LEGADO=$(git tag -l 'v*+*' | sed 's/.*+//' | sort -n | tail -1)
+          MAIOR_CODIGO_LEGADO=${MAIOR_CODIGO_LEGADO:-126}
+          if [ "$CODIGO" -le "$MAIOR_CODIGO_LEGADO" ]; then
+            echo "::error::versionCode $CODIGO não supera o legado ($MAIOR_CODIGO_LEGADO)."
+            exit 1
+          fi
+
+          {
+            echo "nome=$NOME"
+            echo "codigo=$CODIGO"
+            echo "sha=${GITHUB_SHA}"
+          } >> "$GITHUB_OUTPUT"
+          echo "✅ Release $NOME (versionCode $CODIGO) a partir de ${GITHUB_SHA}"
+
+      - name: 🔑 Conferir secrets obrigatórios
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PLAY_SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          DRY_RUN: ${{ inputs.somente_validar }}
+        run: |
+          faltando=""
+          [ -z "$KEYSTORE" ] && faltando="$faltando ANDROID_KEYSTORE_BASE64"
+          if [ "$DRY_RUN" != "true" ]; then
+            [ -z "$CF_TOKEN" ] && faltando="$faltando CLOUDFLARE_API_TOKEN"
+            [ -z "$CF_ACCOUNT" ] && faltando="$faltando CLOUDFLARE_ACCOUNT_ID"
+            [ -z "$PLAY_SA" ] && faltando="$faltando PLAY_SERVICE_ACCOUNT_JSON"
+          fi
+          if [ -n "$faltando" ]; then
+            echo "::error::Secrets ausentes:$faltando — configure antes de publicar (docs/PLAY_SERVICE_ACCOUNT.md para o da Play)."
+            exit 1
+          fi
+          echo "Secrets presentes."
+
+  # ────────────────────────────────────────────────────────────────────
+  # O mesmo gate do branch-validate, BLOQUEANTE, no commit exato da tag.
+  # Redundante quando a tag aponta para uma main verde — e é essa
+  # redundância que protege contra tag criada num commit antigo ou nunca
+  # validado.
+  # ────────────────────────────────────────────────────────────────────
+  validar:
+    name: 🧪 Gate de qualidade (bloqueante)
+    needs: preparar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preparar.outputs.sha }}
+
+      - name: 🔐 Credential stubs (analyze/teste não usam APIs reais)
+        uses: ./.github/actions/credenciais-app
+
+      - name: 🛠️ Setup Flutter (pinado)
+        uses: ./.github/actions/setup-flutter
+
+      - name: 🧭 Analyze (bloqueante em erros/warnings)
+        run: flutter analyze --no-fatal-infos
+
+      - name: 🧪 Suíte completa (bloqueante — sem || echo)
+        run: flutter test
+
+      - name: 🔤 ARB key parity
+        run: bash scripts/check_arb_sync.sh
+
+      - name: 🔧 Garantir ripgrep (o scanner de i18n depende dele)
+        env:
+          RIPGREP_VERSAO: 14.1.1
+        run: |
+          if command -v rg >/dev/null; then
+            echo "ripgrep já presente: $(rg --version | head -1)"
+            exit 0
+          fi
+          destino="$RUNNER_TEMP/ripgrep"
+          mkdir -p "$destino"
+          url="https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSAO}/ripgrep-${RIPGREP_VERSAO}-x86_64-unknown-linux-musl.tar.gz"
+          curl -sSfL --retry 3 --retry-delay 2 "$url" \
+            | tar xz --strip-components=1 -C "$destino"
+          "$destino/rg" --version
+          echo "$destino" >> "$GITHUB_PATH"
+
+      - name: 🔎 Hardcoded PT scan (bloqueante)
+        run: bash scripts/check_hardcoded_pt.sh
+
+  # ────────────────────────────────────────────────────────────────────
+  # APK + AAB no MESMO job: ambiente idêntico por construção, mesmo
+  # versionCode nos dois, e o appbundle reaproveita o cache Gradle do apk.
+  # ────────────────────────────────────────────────────────────────────
+  build-android:
+    name: 🤖 Build Android (APK + AAB assinados)
+    needs: [preparar, validar]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preparar.outputs.sha }}
+
+      - name: 🧹 Free runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          sudo apt-get clean
+
+      - name: 🔐 Credenciais reais do app
+        uses: ./.github/actions/credenciais-app
+        with:
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
+          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: 🛠️ Setup Flutter (pinado)
+        uses: ./.github/actions/setup-flutter
+
+      - name: 🔑 Keystore de release (obrigatório)
+        uses: ./.github/actions/keystore-android
+        with:
+          keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          store-password: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          keystore-type: ${{ secrets.ANDROID_KEYSTORE_TYPE || 'JKS' }}
+
+      - name: 🏗️ Build APK e AAB
+        # Secrets entram via env e expandem entre aspas: valores com
+        # caracteres especiais de shell não quebram o script nem vazam.
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+          REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ADMOB_ANDROID_INTERSTITIAL_ID: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+          NOME: ${{ needs.preparar.outputs.version_name }}
+          CODIGO: ${{ needs.preparar.outputs.version_code }}
+        run: |
+          # Sem o secret do AdMob, NÃO passa o define — o app usa o id de
+          # teste do Google (um define vazio derrubaria os anúncios).
+          ADMOB_FLAG=""
+          if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
+            ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
+          fi
+          CAPTCHA_FLAG=""
+          if [ -n "$TURNSTILE_SITE_KEY" ]; then
+            CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
+          fi
+          DEFINES=(
+            --build-name="$NOME"
+            --build-number="$CODIGO"
+            --dart-define=SUPABASE_URL="$SUPABASE_URL"
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+            --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY"
+            --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY"
+            --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL"
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD"
+          )
+          flutter build apk --release "${DEFINES[@]}" $ADMOB_FLAG $CAPTCHA_FLAG
+          flutter build appbundle --release "${DEFINES[@]}" $ADMOB_FLAG $CAPTCHA_FLAG
+
+      - name: 🔏 Conferir a assinatura dos DOIS artefatos
+        # Assinatura diferente da registrada no Google Cloud quebra o login
+        # Google em produção — e um AAB assinado errado não pode nem chegar
+        # perto da Play. Erro fatal, não aviso de log.
+        run: |
+          conferir() {
+            local arquivo="$1"
+            local sha1
+            sha1=$(keytool -printcert -jarfile "$arquivo" 2>/dev/null \
+              | grep -m1 'SHA1:' | sed 's/.*SHA1: *//' | tr -d ' ' | tr 'a-f' 'A-F')
+            esperado=$(echo "$SHA1_ESPERADO" | tr -d ' ')
+            if [ -z "$sha1" ]; then
+              echo "::error::Não foi possível ler a assinatura de $arquivo."
+              exit 1
+            fi
+            if [ "$sha1" != "$esperado" ]; then
+              echo "::error::$arquivo assinado com SHA-1 $sha1, esperado $esperado."
+              exit 1
+            fi
+            echo "✅ $arquivo assinado com o keystore esperado."
+          }
+          conferir build/app/outputs/flutter-apk/app-release.apk
+          conferir build/app/outputs/bundle/release/app-release.aab
+
+      - name: 📦 Empacotar artefatos
+        env:
+          NOME: ${{ needs.preparar.outputs.version_name }}
+          CODIGO: ${{ needs.preparar.outputs.version_code }}
+        run: |
+          mkdir -p release-files
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             "release-files/grimorio-de-bolso-${NOME}+${CODIGO}.apk"
+          cp build/app/outputs/bundle/release/app-release.aab \
+             "release-files/grimorio-de-bolso-${NOME}+${CODIGO}.aab"
+          if [ -d build/app/outputs/symbols ]; then
+            (cd build/app/outputs/symbols && zip -qr - .) \
+              > "release-files/grimorio-de-bolso-${NOME}-symbols.zip"
+          fi
+          ls -la release-files/
+
+      - name: 📤 Upload dos artefatos Android
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: release-files/*
+          retention-days: 30
+
+  # ────────────────────────────────────────────────────────────────────
+  # O site do MESMO commit — nada publica sem Android E web verdes juntos:
+  # uma correção de APK que quebrasse o webapp morre aqui, não em produção.
+  # ────────────────────────────────────────────────────────────────────
+  build-web:
+    name: 🌐 Build web (release)
+    needs: [preparar, validar]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preparar.outputs.sha }}
+
+      - name: 🔐 Credenciais reais do app
+        uses: ./.github/actions/credenciais-app
+        with:
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
+          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
+
+      - name: 🛠️ Setup Flutter (pinado)
+        uses: ./.github/actions/setup-flutter
+        with:
+          com-java: 'false'
+
+      - name: 🏗️ Build web (release)
+        # ADMIN_* NÃO entra: o bundle web é público.
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+          REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY }}
+        run: |
+          flutter build web --release --no-wasm-dry-run \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
+            --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY"
+
+      - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
+        run: bash scripts/assemble_site.sh public
+
+      - name: 🛡️ Garantir que nenhum admin foi embutido
+        run: |
+          if grep -rqE "ADMIN_(EMAIL|PASSWORD)=" public/main.dart.js 2>/dev/null; then
+            echo "::error::Credenciais de admin encontradas no bundle web — publicação abortada."
+            exit 1
+          fi
+          echo "Bundle sem credenciais de admin."
+
+      - name: 📤 Upload do site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-release
+          path: public/
+          retention-days: 7
+
+  # ────────────────────────────────────────────────────────────────────
+  # O ÚNICO job que toca usuários — atrás do environment `producao`
+  # (aprovação humana). Ordem: tag → site → Play → GitHub Release, para a
+  # Release ser o registro do que DE FATO foi publicado.
+  # ────────────────────────────────────────────────────────────────────
+  publicar:
+    name: 📣 Publicar (site + Play + Release)
+    needs: [preparar, build-android, build-web]
+    if: inputs.somente_validar != true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment:
+      name: producao
+      url: https://grimoriodebolso.app
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preparar.outputs.sha }}
+
+      - name: 🏷️ Criar a tag (só no dispatch)
+        # No push de tag ela já existe. No dispatch ela nasce AQUI, depois
+        # da aprovação — um dry-run ou uma rejeição não queimam a versão.
+        # O push de tag pelo GITHUB_TOKEN não redispara este workflow.
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          NOME: ${{ needs.preparar.outputs.version_name }}
+          SHA: ${{ needs.preparar.outputs.sha }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/v$NOME" >/dev/null; then
+            echo "Tag v$NOME já existe (re-execução) — seguindo."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v$NOME" "$SHA"
+          git push origin "v$NOME"
+
+      - name: 📥 Baixar o site
+        uses: actions/download-artifact@v4
+        with:
+          name: site-release
+          path: public
+
+      - name: 📥 Baixar os artefatos Android
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release
+          path: release-files
+
+      - name: 🔎 Conferir a branch de produção do projeto Cloudflare
+        # Aqui o --branch=main PRECISA significar produção. Divergência é
+        # erro: publicar produção como prévia é exatamente o silêncio que
+        # este desenho existe para matar.
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          resposta=$(curl -sS --retry 2 \
+            -H "Authorization: Bearer $TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/pages/projects/grimorio-de-bolso" \
+            || true)
+          atual=$(printf '%s' "$resposta" | jq -r '.result.production_branch // empty')
+          if [ "$atual" != "main" ]; then
+            echo "::error::Production branch do projeto é '${atual:-ilegível}', não 'main' — este deploy NÃO iria para grimoriodebolso.app. Corrija no painel e re-execute."
+            exit 1
+          fi
+          echo "Production branch = main ✓"
+
+      - name: 🚀 Site em produção (grimoriodebolso.app)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy public
+            --project-name=grimorio-de-bolso
+            --branch=main
+            --commit-dirty=true
+
+      - name: 🤖 AAB para a faixa interna da Play
+        # A promoção interna→produção é manual, na Play Console — e a
+        # service account nem TEM permissão de produção (defesa em
+        # profundidade; ver docs/PLAY_SERVICE_ACCOUNT.md).
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.grimoriodebolso.app
+          releaseFiles: release-files/*.aab
+          track: internal
+          status: completed
+
+      - name: 🎉 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.preparar.outputs.version_name }}
+          # target_commitish trava a tag no commit BUILDADO — sem isso a
+          # tag nasceria no HEAD da main do momento, que pode já ter andado
+          # (foi o bug das tags v2.0.22/v2.0.23 no mesmo commit).
+          target_commitish: ${{ needs.preparar.outputs.sha }}
+          name: 'Grimório de Bolso v${{ needs.preparar.outputs.version_name }}'
+          generate_release_notes: true
+          files: release-files/*
+          draft: false
+          prerelease: false
+          body: |
+            ## v${{ needs.preparar.outputs.version_name }} (versionCode ${{ needs.preparar.outputs.version_code }})
+
+            - 🌐 Site publicado: <https://grimoriodebolso.app>
+            - 🤖 AAB já enviado à **faixa interna** da Play — teste pelo link
+              de opt-in e promova na Play Console quando aprovar.
+            - 📦 Commit: `${{ needs.preparar.outputs.sha }}`
+
+  resumo:
+    name: 📋 Resumo
+    needs: [preparar, validar, build-android, build-web, publicar]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Escrever resumo
+        env:
+          NOME: ${{ needs.preparar.outputs.version_name }}
+          CODIGO: ${{ needs.preparar.outputs.version_code }}
+          SHA: ${{ needs.preparar.outputs.sha }}
+        run: |
+          {
+            echo "## 🚀 Release v${NOME}"
+            echo
+            echo "| Etapa | Status |"
+            echo "|---|---|"
+            echo "| Versão e guardas | ${{ needs.preparar.result }} |"
+            echo "| Gate de qualidade | ${{ needs.validar.result }} |"
+            echo "| Build Android | ${{ needs.build-android.result }} |"
+            echo "| Build web | ${{ needs.build-web.result }} |"
+            echo "| Publicação | ${{ needs.publicar.result }} |"
+            echo
+            echo "versionCode: \`${CODIGO}\` · commit: \`${SHA}\`"
+            if [ "${{ needs.publicar.result }}" = "success" ]; then
+              echo
+              echo "- Site: <https://grimoriodebolso.app>"
+              echo "- Play: faixa **interna** — promover na Play Console"
+              echo "- Release: <https://github.com/${{ github.repository }}/releases/tag/v${NOME}>"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

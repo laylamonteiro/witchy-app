@@ -26,9 +26,8 @@ concurrency:
   group: branch-validate-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  FLUTTER_VERSION: '3.24.5'
-  JAVA_VERSION: '17'
+# Versões de Flutter/Java vivem em .github/actions/setup-flutter (um lugar
+# só, usado por todos os jobs e também pelo release.yml).
 
 jobs:
   validate:
@@ -58,48 +57,11 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: ☕ Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-
-      - name: 🐦 Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
       - name: 🔐 Create credential stubs (analyze/test não usam APIs reais)
-        run: |
-          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
-          /// Credentials for the Groq API.
-          ///
-          class GroqCredentials {
-            static const apiKey = '';
-          }
-          CREDENTIALS
-          cat > lib/core/ai/gemini_credentials.dart << 'CREDENTIALS'
-          /// Credentials for the Google Gemini API.
-          ///
-          class GeminiCredentials {
-            static const String apiKey = '';
-          }
-          CREDENTIALS
-          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
-          /// Credentials for the Prokerala API.
-          ///
-          class ProkeralaCredentials {
-            static const String clientId = '';
-            static const String clientSecret = '';
-          }
-          CREDENTIALS
+        uses: ./.github/actions/credenciais-app
 
-      - name: 📦 Install dependencies
-        run: flutter pub get
-
-      - name: 🌐 Generate localizations
-        run: flutter gen-l10n
+      - name: 🛠️ Setup Flutter (pinado)
+        uses: ./.github/actions/setup-flutter
 
       - name: 🔍 Check formatting
         run: dart format --output=none --set-exit-if-changed lib test
@@ -191,22 +153,22 @@ jobs:
         run: flutter build apk --debug
 
   # ──────────────────────────────────────────────────────────────────────
-  # Publicação do site (grimoriodebolso.app) no Cloudflare Pages.
+  # Publicação do site no Cloudflare Pages — NUNCA em produção.
   #
   # Roda só DEPOIS do gate acima passar: código que não compila, não analisa
   # ou quebra os testes de i18n nunca chega ao ar — coisa que o build manual
   # na máquina não garantia.
   #
-  # Produção x prévia, pelo nome do branch:
-  #   main            → grimoriodebolso.app
+  # Destinos por branch (todos prévias/staging; produção é só do release.yml):
+  #   main            → staging.grimorio-de-bolso.pages.dev (espelho de
+  #                     integração; grimoriodebolso.app NÃO muda)
   #   qualquer outro  → URL de prévia própria, sem tocar no site publicado
   #
-  # Quem decide isso é o campo "Production branch" do projeto no Cloudflare
-  # (Workers & Pages → grimorio-de-bolso → Settings → Builds & deployments),
-  # que precisa estar em `main`. O workflow só informa o branch de origem; se
-  # aquele campo apontar para outro branch, a publicação de main vira prévia
-  # e o domínio congela SEM dar erro. O passo final imprime o endereço de
-  # cada publicação justamente para que isso não passe despercebido.
+  # O Cloudflare decide produção comparando o --branch com o campo
+  # "Production branch" do projeto (painel), que precisa estar em `main`.
+  # Como este workflow nunca passa `main`, produção é inalcançável daqui —
+  # e um passo confere via API que o painel continua em `main` (divergência
+  # é ERRO, porque tornaria o alias de staging produção por acidente).
   #
   # Secrets necessários (Settings → Secrets and variables → Actions):
   #   CLOUDFLARE_API_TOKEN   token com permissão "Cloudflare Pages: Edit"
@@ -243,45 +205,18 @@ jobs:
           fi
           echo "Secrets do Cloudflare presentes."
 
-      - name: 🐦 Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: 🔐 Credenciais reais do app
+        uses: ./.github/actions/credenciais-app
         with:
-          channel: stable
-          cache: true
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
+          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
 
-      - name: 🔐 Create AI credentials file
-        run: |
-          cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
-          /// Credentials for the Groq API.
-          ///
-          class GroqCredentials {
-            static const apiKey = '${{ secrets.GROQ_API_KEY }}';
-          }
-          CREDENTIALS
-          cat > lib/core/ai/gemini_credentials.dart << 'CREDENTIALS'
-          /// Credentials for the Google Gemini API.
-          ///
-          class GeminiCredentials {
-            static const String apiKey = '${{ secrets.GEMINI_API_KEY }}';
-          }
-          CREDENTIALS
-
-      - name: 🔐 Create Prokerala credentials file
-        run: |
-          cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
-          /// Credentials for the Prokerala API.
-          ///
-          class ProkeralaCredentials {
-            static const String clientId = '${{ secrets.PROKERALA_CLIENT_ID }}';
-            static const String clientSecret = '${{ secrets.PROKERALA_CLIENT_SECRET }}';
-          }
-          CREDENTIALS
-
-      - name: 📦 Install dependencies
-        run: flutter pub get
-
-      - name: 🌐 Generate localizations
-        run: flutter gen-l10n
+      - name: 🛠️ Setup Flutter (pinado)
+        uses: ./.github/actions/setup-flutter
+        with:
+          com-java: 'false'
 
       - name: 🏗️ Build web (release)
         # --no-wasm-dry-run: wasm_ffi e purchases_flutter não são compatíveis
@@ -311,13 +246,28 @@ jobs:
           fi
           echo "Bundle sem credenciais de admin."
 
+      - name: 🎯 Alias de publicação (produção é inalcançável daqui)
+        # ESTE workflow nunca publica produção. Push em main vai para o alias
+        # fixo `staging` (staging.grimorio-de-bolso.pages.dev — o espelho de
+        # integração); qualquer outra branch ganha a prévia com o próprio
+        # nome. grimoriodebolso.app só muda pelo release.yml, que é o único a
+        # passar --branch=main ao wrangler — publicar é decisão, não efeito
+        # colateral de merge.
+        id: alias
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "branch=staging" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: 🔎 Conferir a branch de produção do projeto
-        # A escolha entre produção e prévia é feita comparando o branch
-        # informado com o campo "Production branch" DO PROJETO, que mora no
-        # painel do Cloudflare — não no repositório. Se ele não estiver em
-        # `main`, a publicação de main vira prévia e grimoriodebolso.app
-        # congela sem dar erro nenhum. Aqui a configuração real é lida e
-        # mostrada, para que esse silêncio não seja possível.
+        # O Cloudflare decide produção vs prévia comparando o --branch com o
+        # campo "Production branch" DO PROJETO (painel, não repositório).
+        # Este workflow depende de a produção ser `main`: se alguém mudar o
+        # painel para `staging`, cada push em main passaria a publicar o
+        # domínio — exatamente o acidente que este desenho elimina. Por isso
+        # a divergência aqui é ERRO, não aviso.
         id: prod_branch
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -330,11 +280,12 @@ jobs:
           atual=$(printf '%s' "$resposta" | jq -r '.result.production_branch // empty')
           if [ -z "$atual" ]; then
             # Só um aviso: não conseguir ler a configuração não é motivo para
-            # impedir a publicação.
+            # impedir uma publicação de prévia/staging.
             echo "::warning::Não foi possível ler a branch de produção do projeto."
             atual="(não foi possível ler)"
           elif [ "$atual" != "main" ]; then
-            echo "::warning::A branch de produção do projeto é '$atual', não 'main'. Enquanto for assim, publicações de main viram prévia e grimoriodebolso.app não atualiza. Ajuste em Workers & Pages -> grimorio-de-bolso -> Settings -> Builds & deployments."
+            echo "::error::A branch de produção do projeto Cloudflare é '$atual', não 'main'. Com este valor, o alias '$atual' publicaria o domínio em todo push — ajuste em Workers & Pages -> grimorio-de-bolso -> Settings -> Builds & deployments antes de qualquer deploy."
+            exit 1
           fi
           echo "atual=$atual" >> "$GITHUB_OUTPUT"
 
@@ -350,15 +301,13 @@ jobs:
           command: >-
             pages deploy public
             --project-name=grimorio-de-bolso
-            --branch=${{ github.ref_name }}
+            --branch=${{ steps.alias.outputs.branch }}
             --commit-dirty=true
 
       - name: 🔗 Endereço publicado
         # O wrangler devolve a URL no meio do log, onde ninguém acha. Aqui ela
         # sobe para o resumo da execução — a primeira coisa que aparece ao
-        # abrir o resultado no GitHub — junto do que de fato aconteceu: ir
-        # para produção depende do branch E da configuração do projeto, então
-        # o título é decidido pelos dois, e não pela intenção.
+        # abrir o resultado no GitHub.
         env:
           URL: ${{ steps.deploy.outputs.deployment-url }}
           ALIAS: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
@@ -366,18 +315,13 @@ jobs:
           BRANCH_PRODUCAO: ${{ steps.prod_branch.outputs.atual }}
         run: |
           {
-            if [ "$BRANCH" = "main" ] && [ "$BRANCH_PRODUCAO" = "main" ]; then
-              echo "## 🌐 Publicado em produção"
+            if [ "$BRANCH" = "main" ]; then
+              echo "## 🧪 Staging atualizado — o site de produção NÃO mudou"
               echo
-              echo "<https://grimoriodebolso.app>"
-            elif [ "$BRANCH" = "main" ]; then
-              echo "## ⚠️ Publicado como prévia — o site NÃO mudou"
+              echo "<https://staging.grimorio-de-bolso.pages.dev>"
               echo
-              echo "A branch de produção do projeto é \`$BRANCH_PRODUCAO\`, e não"
-              echo "\`main\`, então esta publicação não foi para o domínio."
-              echo
-              echo "Ajuste em Workers & Pages → grimorio-de-bolso → Settings →"
-              echo "Builds & deployments → Production branch."
+              echo "grimoriodebolso.app só muda por um release aprovado"
+              echo "(workflow release.yml)."
             else
               echo "## 🔍 Prévia do branch \`$BRANCH\`"
               echo
@@ -388,11 +332,122 @@ jobs:
             # lista && que falha derrubaria o passo — bastaria uma das URLs
             # vir vazia para a publicação aparecer como quebrada.
             if [ -n "$ALIAS" ]; then
-              echo "- Endereço do branch: <$ALIAS>"
+              echo "- Endereço do alias: <$ALIAS>"
             fi
             if [ -n "$URL" ]; then
               echo "- Endereço desta publicação: <$URL>"
             fi
             echo
             echo "Branch de produção do projeto: \`$BRANCH_PRODUCAO\` · commit \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ──────────────────────────────────────────────────────────────────────
+  # APK candidato: todo push em main gera um APK de RELEASE assinado, como
+  # artifact, para instalar no aparelho e testar ANTES de existir qualquer
+  # release. É o "instalo localmente e testo" do fluxo — sem tag, sem loja,
+  # sem tocar em usuários. O versionName ganha sufixo -rc.<sha> para o
+  # aparelho mostrar de qual commit veio.
+  # ──────────────────────────────────────────────────────────────────────
+  apk-candidato:
+    name: 📱 APK candidato (assinado)
+    needs: validate
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧹 Free runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          sudo apt-get clean
+
+      - name: 🔐 Credenciais reais do app
+        uses: ./.github/actions/credenciais-app
+        with:
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
+          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: 🛠️ Setup Flutter (pinado)
+        uses: ./.github/actions/setup-flutter
+
+      - name: 🔑 Keystore de release (obrigatório)
+        # Candidato assinado em debug não serve: o login Google falharia
+        # (ApiException 10) e o teste local não provaria nada.
+        uses: ./.github/actions/keystore-android
+        with:
+          keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          store-password: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          keystore-type: ${{ secrets.ANDROID_KEYSTORE_TYPE || 'JKS' }}
+
+      - name: 🔢 Versão do candidato
+        # Nome: o do pubspec + -rc.<sha curto>. Código: mesmo esquema do
+        # release (major*100000 + minor*1000 + patch*10) — determinístico e
+        # sempre acima do legado (piso 126).
+        id: versao
+        run: |
+          NOME=$(grep '^version:' pubspec.yaml | sed 's/version: *//' | cut -d+ -f1)
+          SHA_CURTO=$(git rev-parse --short HEAD)
+          MAJOR=$(echo "$NOME" | cut -d. -f1)
+          MINOR=$(echo "$NOME" | cut -d. -f2)
+          PATCH=$(echo "$NOME" | cut -d. -f3)
+          CODIGO=$((MAJOR * 100000 + MINOR * 1000 + PATCH * 10))
+          echo "nome=${NOME}-rc.${SHA_CURTO}" >> "$GITHUB_OUTPUT"
+          echo "codigo=$CODIGO" >> "$GITHUB_OUTPUT"
+
+      - name: 📱 Build APK candidato (release assinado)
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+          REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ADMOB_ANDROID_INTERSTITIAL_ID: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL_ID }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+        run: |
+          # Sem o secret do AdMob, NÃO passa o define — o app usa o id de
+          # teste do Google (um define vazio derrubaria os anúncios).
+          ADMOB_FLAG=""
+          if [ -n "$ADMOB_ANDROID_INTERSTITIAL_ID" ]; then
+            ADMOB_FLAG="--dart-define=ADMOB_ANDROID_INTERSTITIAL_ID=$ADMOB_ANDROID_INTERSTITIAL_ID"
+          fi
+          CAPTCHA_FLAG=""
+          if [ -n "$TURNSTILE_SITE_KEY" ]; then
+            CAPTCHA_FLAG="--dart-define=TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY"
+          fi
+          flutter build apk --release \
+            --build-name="${{ steps.versao.outputs.nome }}" \
+            --build-number="${{ steps.versao.outputs.codigo }}" \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
+            --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
+            --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG $CAPTCHA_FLAG
+          mkdir -p candidato
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             "candidato/grimorio-de-bolso-${{ steps.versao.outputs.nome }}.apk"
+
+      - name: 📤 Upload do candidato
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-candidato-${{ steps.versao.outputs.nome }}
+          path: candidato/*.apk
+          retention-days: 14
+
+      - name: 📝 Onde baixar
+        run: |
+          {
+            echo "## 📱 APK candidato \`${{ steps.versao.outputs.nome }}\`"
+            echo
+            echo "Baixe no fim desta página (seção **Artifacts**), instale no"
+            echo "aparelho e teste. Quando estiver satisfeita, publique este"
+            echo "commit com \`bash scripts/release.sh <versão>\`."
           } >> "$GITHUB_STEP_SUMMARY"

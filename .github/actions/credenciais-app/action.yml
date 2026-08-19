@@ -1,0 +1,66 @@
+name: Credenciais do app
+description: >-
+  Escreve os arquivos de credencial que o código importa (Groq, Gemini,
+  Prokerala) e, quando pedido, o google-services.json. Inputs vazios geram
+  stubs válidos — o mesmo passo serve para analyze/teste (sem chaves) e para
+  builds reais (com chaves). Composite não lê secrets sozinha: tudo entra
+  explícito por input, então o que cada job expõe fica visível no workflow.
+
+inputs:
+  groq-api-key:
+    required: false
+    default: ''
+  gemini-api-key:
+    required: false
+    default: ''
+  prokerala-client-id:
+    required: false
+    default: ''
+  prokerala-client-secret:
+    required: false
+    default: ''
+  google-services-json:
+    description: Conteúdo base64 do google-services.json (só builds Android).
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: 🔐 Credenciais de IA (Groq/Gemini)
+      shell: bash
+      run: |
+        cat > lib/core/ai/groq_credentials.dart << 'CREDENTIALS'
+        /// Credentials for the Groq API.
+        ///
+        class GroqCredentials {
+          static const apiKey = '${{ inputs.groq-api-key }}';
+        }
+        CREDENTIALS
+        cat > lib/core/ai/gemini_credentials.dart << 'CREDENTIALS'
+        /// Credentials for the Google Gemini API.
+        ///
+        class GeminiCredentials {
+          static const String apiKey = '${{ inputs.gemini-api-key }}';
+        }
+        CREDENTIALS
+
+    - name: 🔐 Credenciais Prokerala
+      shell: bash
+      run: |
+        cat > lib/features/astrology/data/services/prokerala_credentials.dart << 'CREDENTIALS'
+        /// Credentials for the Prokerala API.
+        ///
+        class ProkeralaCredentials {
+          static const String clientId = '${{ inputs.prokerala-client-id }}';
+          static const String clientSecret = '${{ inputs.prokerala-client-secret }}';
+        }
+        CREDENTIALS
+
+    - name: 🔐 google-services.json
+      if: inputs.google-services-json != ''
+      shell: bash
+      env:
+        GOOGLE_SERVICES_JSON: ${{ inputs.google-services-json }}
+      run: |
+        printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
