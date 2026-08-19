@@ -1,12 +1,18 @@
 name: ✅ Branch Validation
 
-# Validação bloqueante para branches de trabalho (analyze + test + build debug).
-# Diferente do release (push em main), aqui análise e testes FALHAM o job —
-# é o gate de qualidade usado durante o desenvolvimento.
+# Validação bloqueante (analyze + test + build debug) e publicação do site.
+# Análise e testes FALHAM o job aqui — é o gate de qualidade, e nada passa
+# dele para o ar.
+#
+# Roda também em main, e não só nas branches de trabalho, porque o job de
+# publicação vive aqui: o release-parallel.yml cuida do APK/AAB e não toca no
+# site. Sem main nesta lista, o merge simplesmente parava de publicar — em
+# silêncio, com todo o CI verde.
 
 on:
   push:
     branches:
+      - main
       - 'claude/**'
     paths-ignore:
       - '**.md'
@@ -306,6 +312,33 @@ jobs:
           fi
           echo "Bundle sem credenciais de admin."
 
+      - name: 🔎 Conferir a branch de produção do projeto
+        # A escolha entre produção e prévia é feita comparando o branch
+        # informado com o campo "Production branch" DO PROJETO, que mora no
+        # painel do Cloudflare — não no repositório. Se ele não estiver em
+        # `main`, a publicação de main vira prévia e grimoriodebolso.app
+        # congela sem dar erro nenhum. Aqui a configuração real é lida e
+        # mostrada, para que esse silêncio não seja possível.
+        id: prod_branch
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          resposta=$(curl -sS --retry 2 \
+            -H "Authorization: Bearer $TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/pages/projects/grimorio-de-bolso" \
+            || true)
+          atual=$(printf '%s' "$resposta" | jq -r '.result.production_branch // empty')
+          if [ -z "$atual" ]; then
+            # Só um aviso: não conseguir ler a configuração não é motivo para
+            # impedir a publicação.
+            echo "::warning::Não foi possível ler a branch de produção do projeto."
+            atual="(não foi possível ler)"
+          elif [ "$atual" != "main" ]; then
+            echo "::warning::A branch de produção do projeto é '$atual', não 'main'. Enquanto for assim, publicações de main viram prévia e grimoriodebolso.app não atualiza. Ajuste em Workers & Pages -> grimorio-de-bolso -> Settings -> Builds & deployments."
+          fi
+          echo "atual=$atual" >> "$GITHUB_OUTPUT"
+
       - name: 🚀 Deploy para o Cloudflare Pages
         id: deploy
         # --commit-dirty: o runner escreve arquivos de credencial e as
@@ -323,26 +356,38 @@ jobs:
 
       - name: 🔗 Endereço publicado
         # O wrangler devolve a URL no meio do log, onde ninguém acha. Aqui ela
-        # sobe para o resumo da execução, que é a primeira coisa que aparece
-        # ao abrir o resultado no GitHub.
+        # sobe para o resumo da execução — a primeira coisa que aparece ao
+        # abrir o resultado no GitHub — junto do que de fato aconteceu: ir
+        # para produção depende do branch E da configuração do projeto, então
+        # o título é decidido pelos dois, e não pela intenção.
         env:
           URL: ${{ steps.deploy.outputs.deployment-url }}
           ALIAS: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+          BRANCH: ${{ github.ref_name }}
+          BRANCH_PRODUCAO: ${{ steps.prod_branch.outputs.atual }}
         run: |
           {
-            if [ "${{ github.ref_name }}" = "main" ]; then
+            if [ "$BRANCH" = "main" ] && [ "$BRANCH_PRODUCAO" = "main" ]; then
               echo "## 🌐 Publicado em produção"
               echo
               echo "<https://grimoriodebolso.app>"
+            elif [ "$BRANCH" = "main" ]; then
+              echo "## ⚠️ Publicado como prévia — o site NÃO mudou"
+              echo
+              echo "A branch de produção do projeto é \`$BRANCH_PRODUCAO\`, e não"
+              echo "\`main\`, então esta publicação não foi para o domínio."
+              echo
+              echo "Ajuste em Workers & Pages → grimorio-de-bolso → Settings →"
+              echo "Builds & deployments → Production branch."
             else
-              echo "## 🔍 Prévia do branch \`${{ github.ref_name }}\`"
+              echo "## 🔍 Prévia do branch \`$BRANCH\`"
               echo
               echo "Não toca no site publicado."
             fi
             echo
             # `if` e não `[ ... ] && echo`: o runner roda com `bash -e`, e uma
-            # lista && que falha derruba o passo inteiro — bastaria uma das
-            # duas URLs vir vazia para o deploy aparecer como quebrado.
+            # lista && que falha derrubaria o passo — bastaria uma das URLs
+            # vir vazia para a publicação aparecer como quebrada.
             if [ -n "$ALIAS" ]; then
               echo "- Endereço do branch: <$ALIAS>"
             fi
@@ -350,5 +395,5 @@ jobs:
               echo "- Endereço desta publicação: <$URL>"
             fi
             echo
-            echo "Commit \`${{ github.sha }}\`"
+            echo "Branch de produção do projeto: \`$BRANCH_PRODUCAO\` · commit \`${{ github.sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
