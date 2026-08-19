@@ -34,7 +34,7 @@ class EncyclopediaImage extends StatelessWidget {
           ? null
           : (context) => errorBuilder!(
                 context,
-                Exception('Imagem indisponível: $path'),
+                Exception('EncyclopediaImage: $path'),
                 StackTrace.current,
               ),
     );

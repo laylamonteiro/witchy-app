@@ -57,3 +57,9 @@ lib/core/utils/accents\.dart:
 # Seeds/campos PT canônicos com overlay ou mapa EN/ES ao lado (paridade testada).
 lib/features/diary/data/models/affirmation_model\.dart:
 lib/features/journeys/data/models/journey_model\.dart:
+
+# Tela de erro de inicialização: aparece justamente quando o boot falhou —
+# possivelmente ANTES de o sistema de idiomas carregar. Depender de
+# AppLocalizations aqui a quebraria no exato momento em que ela é necessária,
+# então os textos são intencionalmente fixos em PT.
+lib/core/widgets/boot_error_app\.dart:

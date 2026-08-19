@@ -138,6 +138,12 @@ jobs:
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
 
+      - name: 🔧 Garantir ripgrep (o scanner de i18n depende dele)
+        # Sem o rg, o scanner buscava vazio e o gate passava sem verificar
+        # nada. Agora o script falha alto se ele faltar — então o runner
+        # precisa tê-lo. Instala só quando ausente, para não custar tempo.
+        run: command -v rg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
+
       - name: 🔎 Hardcoded PT scan (bloqueante — gate final da i18n)
         run: bash scripts/check_hardcoded_pt.sh
 

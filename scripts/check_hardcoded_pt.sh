@@ -20,6 +20,15 @@ ALLOWLIST="$ROOT/scripts/i18n_allowlist.txt"
 LIMIT=200
 [ "${1:-}" = "--all" ] && LIMIT=0
 
+# O scanner depende do ripgrep. Sem esta checagem, um ambiente sem `rg`
+# produzia busca VAZIA e o script concluía "OK" — o gate passava sem ter
+# verificado nada, que é pior do que não existir.
+if ! command -v rg >/dev/null 2>&1; then
+  echo "ERRO: ripgrep (rg) não encontrado — o scanner não tem como rodar." >&2
+  echo "Instale (apt-get install ripgrep / brew install ripgrep) e repita." >&2
+  exit 2
+fi
+
 PATTERN='[ãõáéíóúâêôçÃÕÁÉÍÓÚÂÊÔÇ]'
 
 matches=$(rg -n "$PATTERN" "$ROOT/lib" \
@@ -30,7 +39,7 @@ matches=$(rg -n "$PATTERN" "$ROOT/lib" \
   | python3 -c "
 import linecache, re, sys
 accent = re.compile(r'$PATTERN')
-logcall = re.compile(r'(await\s+)?(print|debugPrint|debugLog|_log|_addLog)\s*\(')
+logcall = re.compile(r'(unawaited\s*\(\s*)?(await\s+)?(print|debugPrint|debugLog|_log|_addLog)\s*\(')
 assertopen = re.compile(r'.*\bassert\s*\(')
 
 def in_log_continuation(path, lineno):
