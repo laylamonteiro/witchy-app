@@ -252,7 +252,10 @@ void main() {
       );
     }
 
-    test('free usa limites centralizados para quiromancia IA e tarot', () {
+    // Quiromancia por IA saiu do mapa de limites e virou exclusiva Premium
+    // (ver o comentário em FeatureAccessService.limits): para o plano Free
+    // ela é preview -> paywall, sem cota diária. O tarot continua com cota.
+    test('free: quiromancia é preview Premium e tarot usa cota diária', () {
       final user = makeAccessUser();
 
       final palmistry = FeatureAccess.checkAccess(
@@ -266,8 +269,9 @@ void main() {
         isPremiumEffective: false,
       );
 
-      expect(palmistry.hasFullAccess, isTrue);
-      expect(palmistry.limitWindow, LimitWindow.daily);
+      expect(palmistry.hasFullAccess, isFalse);
+      expect(palmistry.isPreview, isTrue);
+      expect(palmistry.limitWindow, isNull);
       expect(tarot.hasFullAccess, isTrue);
       expect(tarot.limitWindow, LimitWindow.daily);
     });
@@ -320,8 +324,10 @@ void main() {
     test('offline free permanece limitado pelos dados locais', () {
       final user = makeAccessUser(aiToday: UserModel.freeAiConsultationsLimit);
 
+      // Cota estourada continua valendo sem rede: o limite é apurado no
+      // aparelho, então ficar offline não afrouxa nada.
       final access = FeatureAccess.checkAccess(
-        AppFeature.numerologyReadings,
+        AppFeature.aiDreamAnalysis,
         user,
         isPremiumEffective: false,
         isOffline: true,
@@ -330,6 +336,17 @@ void main() {
       expect(access.hasFullAccess, isFalse);
       expect(access.limit, UserModel.freeAiConsultationsLimit);
       expect(access.limitWindow, LimitWindow.daily);
+
+      // A numerologia é exclusiva Premium (fora do mapa de limites): offline
+      // ou não, o plano Free vê preview -> paywall, nunca uma cota.
+      final numerology = FeatureAccess.checkAccess(
+        AppFeature.numerologyReadings,
+        user,
+        isPremiumEffective: false,
+        isOffline: true,
+      );
+      expect(numerology.isPreview, isTrue);
+      expect(numerology.limit, isNull);
     });
 
     test('analytics de bloqueio não carrega dados pessoais', () {

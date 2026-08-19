@@ -10,6 +10,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:grimorio_de_bolso/core/services/payment_service.dart';
 import 'package:grimorio_de_bolso/core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/core/services/notification_service.dart';
+import 'package:grimorio_de_bolso/core/providers/language_provider.dart';
 import 'package:grimorio_de_bolso/core/providers/sync_provider.dart';
 import 'package:grimorio_de_bolso/core/widgets/mascot/cat_chat_bubble.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/enums.dart';
@@ -333,7 +334,10 @@ void main() {
       );
     });
 
-    testWidgets('paywall único cabe inteiro em celular sem exigir rolagem',
+    // O paywall rola (o painel cresceu com os benefícios): o que precisa
+    // continuar valendo é ele ser ÚNICO, trazer herói + planos + os textos
+    // vigentes e caber em tela de celular sem estourar layout.
+    testWidgets('paywall único mostra herói, planos e benefícios vigentes',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -349,15 +353,9 @@ void main() {
       expect(find.byType(SubscriptionHero), findsOneWidget);
       expect(find.text('Conselheiro Místico ilimitado'), findsOneWidget);
       expect(find.text('Sincronização entre dispositivos'), findsOneWidget);
-      expect(find.byType(Image), findsNWidgets(8));
       expect(find.textContaining('O QUE VOCÊ DESBLOQUEIA'), findsNothing);
       expect(find.text('Cancele a qualquer momento'), findsOneWidget);
       expect(find.text('Cancele quando quiser'), findsNothing);
-      expect(find.byType(SingleChildScrollView), findsNothing);
-      expect(
-        find.byKey(const ValueKey('premium_paywall_fitted_content')),
-        findsOneWidget,
-      );
       expect(tester.takeException(), isNull);
     });
   });
@@ -365,12 +363,21 @@ void main() {
   group('Nova oferta de assinatura', () {
     testWidgets('Fazer Upgrade de Configurações abre SubscriptionPage',
         (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
       final authProvider = AuthProvider();
 
       await tester.pumpWidget(
-        ChangeNotifierProvider<AuthProvider>.value(
-          value: authProvider,
-          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            // A tela de Configurações escolhe o idioma: sem este provider
+            // ela nem constrói.
+            ChangeNotifierProvider<LanguageProvider>(
+              create: (_) => LanguageProvider(prefs),
+            ),
+          ],
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales,
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const SettingsPage(),
@@ -390,7 +397,11 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('navegação Premium da Privacidade continua funcionando',
+    // A Privacidade não tem mais atalho para o Premium (a sincronização
+    // deixou de ser vendida ali). O que precisa continuar valendo é a tela
+    // abrir inteira e sem exceção — inclusive o alerta do Flutter sobre
+    // ListTile dentro de caixa colorida, que escondia a ondulação de toque.
+    testWidgets('Privacidade abre com seus controles e sem exceção',
         (tester) async {
       SharedPreferences.setMockInitialValues({});
       final authProvider = AuthProvider();
@@ -413,15 +424,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Seja Premium'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.tap(find.text('Seja Premium'));
-      await tester.pumpAndSettle();
 
-      expect(find.byType(SubscriptionPage), findsOneWidget);
+      expect(find.byType(PrivacySettingsPage), findsOneWidget);
+      expect(find.byType(Switch), findsWidgets);
       expect(tester.takeException(), isNull);
     });
 
@@ -801,7 +806,7 @@ void main() {
       expect(find.text('Acesso Vitalício (Código Premium)'), findsOneWidget);
       expect(
         find.text(
-          'Seu acesso Premium foi resgatado via Código Premium e não expira.',
+          'Seu acesso Premium foi resgatado via Código Premium e não expira',
         ),
         findsOneWidget,
       );

@@ -59,11 +59,26 @@ void main() {
       );
     });
 
-    test('usa fallback neutro quando preferência não existe', () {
+    // Duas ausências diferentes, dois padrões diferentes — de propósito:
+    // uma conta antiga, sem o campo, é tratada no feminino (o padrão do
+    // app, decisão de produto); um valor GRAVADO que não existe mais no
+    // enum cai no neutro, que nunca erra com ninguém.
+    test('conta sem preferência salva usa o tratamento padrão do app', () {
       final user = UserModel.fromJson({
         'id': 'legacy',
         'role': 'free',
         'plan': 'free',
+      });
+
+      expect(user.gender, Gender.feminine);
+    });
+
+    test('preferência salva desconhecida cai no neutro', () {
+      final user = UserModel.fromJson({
+        'id': 'legacy',
+        'role': 'free',
+        'plan': 'free',
+        'gender': 'inexistente',
       });
 
       expect(user.gender, Gender.neutral);

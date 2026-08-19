@@ -170,13 +170,21 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gc.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gc.textPrimary10),
+    // A cor do cartão vem de um Material, não de um Container: os ListTile
+    // pintam fundo e ondulação de toque no Material mais próximo, e um
+    // Container colorido no meio do caminho escondia esses efeitos (o
+    // próprio Flutter alerta sobre isso). O Container fica só com a borda.
+    return Material(
+      color: context.gc.surface,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.gc.textPrimary10),
+        ),
+        child: Column(children: children),
       ),
-      child: Column(children: children),
     );
   }
 
