@@ -1,17 +1,10 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:path_provider/path_provider.dart';
-import '../../../../core/sharing/image_download_stub.dart'
-    if (dart.library.js_interop) '../../../../core/sharing/image_download_web.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/i18n/gender.dart';
+import '../../../../core/services/data_export_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/services/data_sync_service.dart';
@@ -755,92 +748,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _performExport() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final gc = context.gc;
     try {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).editExporting),
-          backgroundColor: context.gc.lilac,
+          content: Text(l10n.editExporting),
+          backgroundColor: gc.lilac,
         ),
       );
 
-      final db = await DatabaseHelper.instance.database;
-      final exportData = <String, dynamic>{};
+      // Mesma exportação da tela de Privacidade — antes eram duas cópias, e a
+      // desta tela tinha ficado sem a tabela free_writings.
+      await DataExportService.instance
+          .exportAndDeliver(subject: l10n.privacyBackupSubject);
 
-      // Tabelas para exportar
-      final tables = [
-        'spells',
-        'dreams',
-        'desires',
-        'gratitudes',
-        'affirmations',
-        'daily_rituals',
-        'ritual_logs',
-        'sigils',
-        'birth_charts',
-        'magical_profiles',
-        'rune_readings',
-        'pendulum_consultations',
-        'oracle_readings',
-        'daily_magical_weather',
-        'learning_progress',
-        'guided_ritual_logs',
-        'user_encyclopedia_entries',
-        'daily_checkins'
-      ];
-
-      for (final table in tables) {
-        try {
-          final data = await db.query(table);
-          exportData[table] = data;
-        } catch (e) {
-          exportData[table] = [];
-        }
-      }
-
-      exportData['export_date'] = DateTime.now().toIso8601String();
-      exportData['app_version'] = '1.0.0';
-
-      final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
-
-      final fileName =
-          'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-
-      // Na web não há pasta do app: o backup vai direto para os downloads.
-      if (kIsWeb) {
-        await downloadBytes(
-          Uint8List.fromList(utf8.encode(jsonString)),
-          fileName,
-          mimeType: 'application/json',
-        );
-      } else {
-        final directory = await getApplicationDocumentsDirectory();
-        final file = File('${directory.path}/$fileName');
-        await file.writeAsString(jsonString);
-        if (!mounted) return;
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: 'Backup Grimório de Bolso',
-        );
-      }
-
-      if (mounted) {
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).editExportSuccess),
-            backgroundColor: context.gc.success,
-          ),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.editExportSuccess),
+          backgroundColor: gc.success,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppLocalizations.of(context).editExportError}: $e'),
-            backgroundColor: context.gc.alert,
-          ),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${l10n.editExportError}: $e'),
+          backgroundColor: gc.alert,
+        ),
+      );
     }
   }
 

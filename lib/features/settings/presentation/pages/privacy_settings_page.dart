@@ -1,15 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:path_provider/path_provider.dart';
-import '../../../../core/sharing/image_download_stub.dart'
-    if (dart.library.js_interop) '../../../../core/sharing/image_download_web.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../core/legal/legal_document_page.dart';
+import '../../../../core/services/data_export_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -381,73 +374,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
         ),
       );
 
-      final db = await DatabaseHelper.instance.database;
-      final exportData = <String, dynamic>{};
-
-      // Tabelas para exportar
-      final tables = [
-        'spells',
-        'dreams',
-        'desires',
-        'gratitudes',
-        'affirmations',
-        'daily_rituals',
-        'ritual_logs',
-        'sigils',
-        'birth_charts',
-        'magical_profiles',
-        'rune_readings',
-        'pendulum_consultations',
-        'oracle_readings',
-        'daily_magical_weather',
-        'learning_progress',
-        'guided_ritual_logs',
-        'user_encyclopedia_entries',
-        'free_writings',
-        'daily_checkins'
-      ];
-
-      for (final table in tables) {
-        try {
-          final data = await db.query(table);
-          exportData[table] = data;
-        } catch (e) {
-          exportData[table] = [];
-        }
-      }
-
-      exportData['export_date'] = DateTime.now().toIso8601String();
-      exportData['app_version'] = '1.0.0';
-
-      final jsonString = const JsonEncoder.withIndent('  ').convert(exportData);
-
-      final fileName =
-          'grimorio_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-
-      // Na web não há pasta do app: o backup vai direto para os downloads,
-      // que é onde a pessoa espera encontrar um arquivo baixado.
-      if (kIsWeb) {
-        await downloadBytes(
-          Uint8List.fromList(utf8.encode(jsonString)),
-          fileName,
-          mimeType: 'application/json',
-        );
-        if (!mounted) return;
-      } else {
-        final directory = await getApplicationDocumentsDirectory();
-        final file = File('${directory.path}/$fileName');
-        await file.writeAsString(jsonString);
-
-        if (!mounted) return;
-        // API nova do share_plus (Share.shareXFiles é deprecado e sai na
-        // próxima major).
-        await SharePlus.instance.share(
-          ShareParams(
-            files: [XFile(file.path)],
-            subject: l10n.privacyBackupSubject,
-          ),
-        );
-      }
+      await DataExportService.instance
+          .exportAndDeliver(subject: l10n.privacyBackupSubject);
 
       messenger.showSnackBar(
         SnackBar(
@@ -464,7 +392,6 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       );
     }
   }
-
   Future<void> _clearLocalData() async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
