@@ -233,6 +233,9 @@ class PaymentService extends ChangeNotifier {
     try {
       debugPrint('📦 Buscando ofertas no RevenueCat...');
       _offerings = await Purchases.getOfferings();
+      // Os pacotes avulsos resolvidos vieram das ofertas ANTIGAS (com os
+      // preços antigos): recarregar as ofertas invalida esse cache.
+      _consumablePackages.clear();
 
       if (_offerings?.current == null) {
         debugPrint('⚠️  Nenhuma oferta disponível no RevenueCat');
@@ -702,6 +705,9 @@ class PaymentService extends ChangeNotifier {
     // (isPremiumEffective/PremiumAccess) depende de isPro=false após logout.
     _customerInfo = null;
     _isPro = false;
+    // A próxima conta pode estar em outra loja/moeda: os pacotes avulsos
+    // resolvidos para esta sessão não valem para ela.
+    _consumablePackages.clear();
     notifyListeners();
 
     if (!RevenueCatConfig.isConfigured) return;
