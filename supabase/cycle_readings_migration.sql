@@ -2,13 +2,15 @@
 -- Rode este script no SQL Editor do Supabase (uma vez).
 --
 -- Observações:
--- - Cada linha é o registro de UMA compra (ou concessão Pro mensal) e o
---   período coberto por ela. O relatório em si vive em `free_writings`
+-- - Cada linha é o registro de UM crédito de leitura e o período coberto por
+--   ele. O relatório em si vive em `free_writings`
 --   (source = 'cycle_reading'), referenciado por `writing_id`.
 -- - `status` = 'pending' enquanto a compra ainda não virou relatório salvo:
 --   falha de geração NÃO consome a compra (o app tenta de novo sem cobrar).
--- - `origin` = 'purchase' (consumível da loja) ou 'pro' (leitura mensal
---   inclusa da assinatura Premium).
+-- - `origin` = 'purchase' (consumível comprado na loja) ou 'lifetime' (a
+--   Leitura da Lunação inclusa na compra vitalícia; nesse caso
+--   `product_id` fica nulo). Assinar Premium NÃO dá leitura — só o
+--   Vitalício, e só a lunação.
 
 CREATE TABLE IF NOT EXISTS cycle_readings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
