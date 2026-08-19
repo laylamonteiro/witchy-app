@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grimório de Bolso — agenda mágica, diário de bruxaria e astrologia</title>
+  <meta name="description" content="Grimório de Bolso é um aplicativo de bruxaria e astrologia: calendário lunar, grimório digital, diários mágicos, mapa astral e enciclopédia de ervas, cristais e cores.">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Quicksand', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      line-height: 1.7;
+      color: #d8d2e0;
+      background:
+        radial-gradient(ellipse at 20% -10%, rgba(155, 109, 198, 0.22) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(240, 199, 94, 0.07) 0%, transparent 45%),
+        linear-gradient(160deg, #17111f 0%, #0d0a14 60%, #0a0810 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 32px 16px 56px;
+    }
+
+    .wrap { max-width: 760px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 44px; }
+
+    .logo { width: 104px; height: 104px; margin-bottom: 18px; }
+
+    h1 {
+      font-family: 'Cinzel Decorative', Georgia, serif;
+      font-size: clamp(2rem, 6vw, 2.9rem);
+      color: #e5d4ff;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .tagline { color: #b9aecb; font-size: 1.08rem; }
+
+    section {
+      background: rgba(28, 20, 40, 0.62);
+      border: 1px solid rgba(155, 109, 198, 0.24);
+      border-radius: 16px;
+      padding: 26px 24px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      font-family: 'Cinzel Decorative', Georgia, serif;
+      font-size: 1.32rem;
+      color: #c9a7f0;
+      margin-bottom: 14px;
+    }
+
+    p + p { margin-top: 12px; }
+
+    ul { list-style: none; margin-top: 8px; }
+
+    li {
+      padding: 9px 0 9px 30px;
+      position: relative;
+      border-bottom: 1px solid rgba(155, 109, 198, 0.12);
+    }
+
+    li:last-child { border-bottom: none; }
+
+    li::before {
+      content: "✦";
+      position: absolute;
+      left: 4px;
+      color: #f0c75e;
+    }
+
+    li strong { color: #e5d4ff; }
+
+    .cta { text-align: center; margin: 34px 0 10px; }
+
+    .button {
+      display: inline-block;
+      background: linear-gradient(135deg, #9b6dc6, #7a4fa8);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 15px 38px;
+      border-radius: 30px;
+      font-size: 1.05rem;
+    }
+
+    .button:hover { filter: brightness(1.1); }
+
+    footer {
+      text-align: center;
+      margin-top: 38px;
+      color: #8d84a0;
+      font-size: 0.93rem;
+    }
+
+    footer a { color: #c9a7f0; }
+
+    footer nav { margin-bottom: 12px; }
+
+    footer nav a { margin: 0 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img class="logo" src="/icons/Icon-192.png" alt="Ícone do Grimório de Bolso">
+      <h1>Grimório de Bolso</h1>
+      <p class="tagline">Sua jornada mágica começa aqui.</p>
+    </header>
+
+    <section>
+      <h2>O que é o Grimório de Bolso</h2>
+      <p>
+        O Grimório de Bolso é um aplicativo de bruxaria e astrologia para quem
+        pratica — ou está começando a praticar. Ele reúne, num só lugar, o
+        calendário lunar, o registro dos seus feitiços e rituais, os diários da
+        sua jornada e o seu mapa astral, para que a prática do dia a dia caiba
+        no bolso.
+      </p>
+      <p>
+        Está disponível na Google Play e também aqui na web, no navegador do
+        computador ou do celular, sem precisar instalar nada.
+      </p>
+    </section>
+
+    <section>
+      <h2>O que você encontra</h2>
+      <ul>
+        <li><strong>Calendário lunar:</strong> fases da lua, próximos eventos e a Roda do Ano com os sabbats.</li>
+        <li><strong>Grimório digital:</strong> seus feitiços, rituais e receitas organizados e sempre à mão.</li>
+        <li><strong>Diários mágicos:</strong> sonhos, gratidões, desejos, afirmações e escrita livre.</li>
+        <li><strong>Astrologia:</strong> mapa astral completo, trânsitos e leituras personalizadas.</li>
+        <li><strong>Enciclopédia:</strong> ervas, cristais e cores — com verbetes seus, criados a partir das suas fotos.</li>
+        <li><strong>Ferramentas de adivinhação:</strong> tarô, runas, oráculo, pêndulo e sigilos.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Sua privacidade</h2>
+      <p>
+        Os seus registros são seus. O aplicativo guarda os dados no seu próprio
+        aparelho e, se você ativar a sincronização, também na sua conta — para
+        que o seu grimório acompanhe você entre o celular e o navegador.
+        Os detalhes de quais dados são coletados, como são usados e quais são os
+        seus direitos estão na
+        <a href="/privacidade/">Política de Privacidade</a>.
+      </p>
+    </section>
+
+    <div class="cta">
+      <a class="button" href="/">Abrir o Grimório de Bolso</a>
+    </div>
+
+    <footer>
+      <nav>
+        <a href="/privacidade/">Política de Privacidade</a>
+        <a href="mailto:suporte.grimoriodebolso@gmail.com">Contato</a>
+      </nav>
+      <p>© 2026 Grimório de Bolso</p>
+    </footer>
+  </div>
+</body>
+</html>
