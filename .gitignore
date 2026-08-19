@@ -134,3 +134,6 @@ visual-inspo/
 # Firebase credentials (injected via CI/CD)
 **/google-services.json
 **/GoogleService-Info.plist
+
+# Diretório de publicação montado por scripts/assemble_site.sh
+public/
