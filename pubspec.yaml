@@ -49,9 +49,11 @@ dependencies:
   # GitHub Actions runner (Dart 3.4.0).
   sweph: ^3.2.1+2.10.3
 
-  # Location & Geocoding
+  # Geocoding
+  # Sem geolocator: o app nunca pediu a posicao do aparelho — a busca de
+  # cidade do mapa astral usa o Nominatim (via dio). Manter o plugin so
+  # injetava permissoes de localizacao no manifest, sem nenhum uso.
   geocoding: ^4.0.0
-  geolocator: ^14.0.2
 
   # HTTP client for AI API calls
   dio: ^5.4.0
@@ -81,7 +83,10 @@ dependencies:
   # purchases_ui_flutter: ^9.9.10 # Removido para re-adicionar
 
   # Login social
-  firebase_auth: ^6.1.2
+  # Sem firebase_auth: a autenticacao e 100% Supabase (ver
+  # SupabaseAuthRepository). O pacote sobrou da migracao e nao era importado
+  # em lugar nenhum. O plugin google-services do Gradle continua aplicado,
+  # independente disto.
   google_sign_in: ^6.1.0
 
   # In-App Purchases (RevenueCat)
