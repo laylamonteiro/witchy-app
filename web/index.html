@@ -18,28 +18,9 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <!--
-    interactive-widget=resizes-content: quando o teclado do celular abre, o
-    navegador redimensiona o CONTEÚDO (e não só a área visível). Sem isso, ao
-    fechar o teclado o canvas do Flutter não voltava ao tamanho e sobrava uma
-    faixa no fim da página. viewport-fit=cover cobre o notch/barra do sistema.
-  -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Grimório de Bolso: agenda mágica, diário de bruxaria, calendário lunar, astrologia e companheiro de jornada para bruxas e bruxos.">
   <meta name="theme-color" content="#0B0A16">
-
-  <style>
-    /* O fundo da página aparece em qualquer sobra (teclado abrindo/fechando,
-       barra do navegador entrando/saindo). Sem isto ele é branco e salta aos
-       olhos; com a cor do app, some. */
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-      background-color: #0B0A16;
-    }
-  </style>
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -52,6 +33,48 @@
 
   <title>Grimório de Bolso</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* O fundo da página aparece em qualquer sobra; com a cor do app, some. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0B0A16;
+    }
+    /* A view do Flutter acompanha a altura da página (que o script abaixo
+       mantém igual à área realmente visível do navegador). */
+    flutter-view, flt-glass-pane {
+      height: 100%;
+    }
+  </style>
+
+  <script>
+    // TECLADO DO CELULAR: o canvas do Flutter não volta ao tamanho quando o
+    // teclado fecha, deixando uma faixa vazia no fim da página. A meta tag
+    // `interactive-widget` sozinha não resolveu, então aqui a altura da página
+    // passa a acompanhar a área visível de fato (visualViewport), que encolhe
+    // quando o teclado abre e volta quando ele fecha. O Flutter observa o
+    // tamanho do host e refaz o layout junto.
+    (function () {
+      var viewport = window.visualViewport;
+      if (!viewport) return;
+
+      var applyHeight = function () {
+        var height = Math.round(viewport.height) + 'px';
+        document.documentElement.style.height = height;
+        document.body.style.height = height;
+      };
+
+      viewport.addEventListener('resize', applyHeight);
+      window.addEventListener('orientationchange', function () {
+        // A rotação só reporta o tamanho novo no quadro seguinte.
+        setTimeout(applyHeight, 150);
+      });
+      applyHeight();
+    })();
+  </script>
 </head>
 <body>
   <!--
