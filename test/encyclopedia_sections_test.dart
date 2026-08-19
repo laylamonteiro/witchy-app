@@ -43,6 +43,14 @@ void main() {
       locale: const Locale('pt', 'BR'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      // As estrelas da capa (BlinkStar) piscam em loop infinito, então
+      // pumpAndSettle nunca terminava. O próprio widget respeita
+      // disableAnimations — é o mesmo caminho de quem pede menos movimento
+      // no sistema —, então o teste pede isso em vez de mexer no app.
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child!,
+      ),
       home: Scaffold(
         body: EncyclopediaIndexPage(
           onSectionSelected: (section) => selected = section,
@@ -54,12 +62,12 @@ void main() {
     await tester.pump();
     expect(find.byKey(const ValueKey('grimoire-cover')), findsOneWidget);
 
-    // Um toque abre o livro. Sem pumpAndSettle: o céu estrelado do índice
-    // cintila em ciclo contínuo, então "assentar" nunca acontece — o relógio
-    // avança pelo tempo exato de cada animação.
+    // Um toque abre o livro.
     await tester.tap(find.byKey(const ValueKey('grimoire-cover')));
+    // A capa abre em 700ms. pumpAndSettle não serve: as estrelas piscam em
+    // laço e a página nunca chega ao repouso.
+    await tester.pump(const Duration(milliseconds: 900));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
 
     // Todas as seções aparecem no sumário.
     expect(find.text('Cristais'), findsOneWidget);
@@ -67,8 +75,9 @@ void main() {
 
     // Tocar numa entrada vira a folha e então entrega a seção.
     await tester.tap(find.text('Cristais'));
-    await tester.pump();
+    // A folha vira em 380ms.
     await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump();
     expect(selected, EncyclopediaSection.crystals);
   });
 }

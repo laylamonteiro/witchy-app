@@ -565,9 +565,10 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildAccountOptions(BuildContext context, AuthProvider authProvider) {
-    // A cor vem de um Material, não de um Container: os ListTile pintam
-    // fundo e ondulação de toque no Material mais próximo, e um Container
-    // colorido no meio escondia esses efeitos (o Flutter alerta sobre isso).
+    // Material, e não Container: os ListTile pintam o respingo do toque no
+    // Material mais próximo, então um fundo opaco por fora escondia o efeito
+    // (o Flutter reclama disso em debug). O shape dá cor, cantos e borda de
+    // uma vez só, sem widget extra.
     return Material(
       color: context.gc.surface,
       clipBehavior: Clip.antiAlias,

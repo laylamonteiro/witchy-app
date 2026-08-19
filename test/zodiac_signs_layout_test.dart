@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:grimorio_de_bolso/features/astrology/presentation/pages/zodiac_signs_page.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('campos do signo usam a mesma margem esquerda', (tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    // A página lê AppLocalizations: sem os delegates ela nem constrói.
+    // Sem os delegates a página quebra em AppLocalizations.of(context),
+    // que faz null check no Localizations ausente.
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('pt', 'BR'),

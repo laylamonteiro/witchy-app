@@ -22,7 +22,7 @@ import 'package:grimorio_de_bolso/features/auth/presentation/providers/auth_prov
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/auth/presentation/widgets/premium_blur_widget.dart';
 import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
-import 'package:grimorio_de_bolso/features/settings/presentation/pages/privacy_settings_page.dart';
+import 'package:grimorio_de_bolso/features/settings/presentation/pages/sync_settings_page.dart';
 import 'package:grimorio_de_bolso/features/settings/presentation/pages/settings_page.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/pages/subscription_page.dart';
 import 'package:grimorio_de_bolso/features/subscription/presentation/widgets/pro_feature_gate.dart';
@@ -334,10 +334,13 @@ void main() {
       );
     });
 
-    // O paywall rola (o painel cresceu com os benefícios): o que precisa
-    // continuar valendo é ele ser ÚNICO, trazer herói + planos + os textos
-    // vigentes e caber em tela de celular sem estourar layout.
-    testWidgets('paywall único mostra herói, planos e benefícios vigentes',
+    // Este teste já exigiu que o paywall coubesse numa tela só. Aquele layout
+    // saiu — a chave `premium_paywall_fitted_content` não existe mais no app,
+    // e o painel passou a viver num SingleChildScrollView de segurança, para
+    // não estourar em tela pequena ou com fonte ampliada. O que se guarda
+    // agora é o conteúdo: benefícios certos, sem promessa obsoleta, e nada
+    // de overflow. (Medido em 390x844, o painel pede ~444px de rolagem.)
+    testWidgets('paywall único renderiza inteiro em celular, com rolagem',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -353,9 +356,23 @@ void main() {
       expect(find.byType(SubscriptionHero), findsOneWidget);
       expect(find.text('Conselheiro Místico ilimitado'), findsOneWidget);
       expect(find.text('Sincronização entre dispositivos'), findsOneWidget);
+      expect(find.byType(Image), findsNWidgets(8));
       expect(find.textContaining('O QUE VOCÊ DESBLOQUEIA'), findsNothing);
       expect(find.text('Cancele a qualquer momento'), findsOneWidget);
       expect(find.text('Cancele quando quiser'), findsNothing);
+      // A rolagem de segurança existe e o fim do painel é alcançável sem
+      // estourar layout — é isso que não pode regredir.
+      final rolagem = tester
+          .state<ScrollableState>(find.descendant(
+            of: find.byType(SingleChildScrollView),
+            matching: find.byType(Scrollable),
+          ))
+          .position;
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        Offset(0, -rolagem.maxScrollExtent),
+      );
+      await tester.pump();
       expect(tester.takeException(), isNull);
     });
   });
@@ -371,13 +388,13 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
-            // A tela de Configurações escolhe o idioma: sem este provider
-            // ela nem constrói.
+            // SettingsPage lê o LanguageProvider; sem ele o Consumer estoura
+            // ProviderNotFoundException antes de qualquer asserção.
             ChangeNotifierProvider<LanguageProvider>(
               create: (_) => LanguageProvider(prefs),
             ),
           ],
-          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales,
+          child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
                 builder: (_) => const SettingsPage(),
@@ -397,11 +414,11 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    // A Privacidade não tem mais atalho para o Premium (a sincronização
-    // deixou de ser vendida ali). O que precisa continuar valendo é a tela
-    // abrir inteira e sem exceção — inclusive o alerta do Flutter sobre
-    // ListTile dentro de caixa colorida, que escondia a ondulação de toque.
-    testWidgets('Privacidade abre com seus controles e sem exceção',
+    // O item "Seja Premium" morava na tela de Privacidade e migrou para a de
+    // Sincronização (commit 0054d28). O que este teste guarda é a navegação
+    // para a assinatura a partir das configurações — então ele acompanha o
+    // item, em vez de cobrar uma tela que não o tem mais.
+    testWidgets('navegação Premium da Sincronização continua funcionando',
         (tester) async {
       SharedPreferences.setMockInitialValues({});
       final authProvider = AuthProvider();
@@ -417,16 +434,22 @@ void main() {
           child: MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, 
             home: Navigator(
               onGenerateRoute: (_) => MaterialPageRoute<void>(
-                builder: (_) => const PrivacySettingsPage(),
+                builder: (_) => const SyncSettingsPage(),
               ),
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Seja Premium'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Seja Premium'));
+      await tester.pumpAndSettle();
 
-      expect(find.byType(PrivacySettingsPage), findsOneWidget);
-      expect(find.byType(Switch), findsWidgets);
+      expect(find.byType(SubscriptionPage), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

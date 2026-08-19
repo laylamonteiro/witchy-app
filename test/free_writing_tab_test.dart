@@ -18,12 +18,12 @@ class FakeFreeWritingProvider extends FreeWritingProvider {
   @override
   List<FreeWritingModel> get freeWritings => List.unmodifiable(_writings);
 
-  /// Espelha o getter real: o histórico do canvas lista só as reflexões
-  /// livres (o acervo unificado guarda também lições e leituras).
+  /// A tela de histórico lê `reflections`, e no provider real esse getter
+  /// filtra a lista PRIVADA — que este dublê nunca preenche. Sem sobrescrever
+  /// aqui, o histórico abria vazio e os testes falhavam antes das asserções.
   @override
-  List<FreeWritingModel> get reflections => _writings
-      .where((w) => w.source == FreeWritingSource.free)
-      .toList();
+  List<FreeWritingModel> get reflections =>
+      _writings.where((w) => w.source == FreeWritingSource.free).toList();
 
   @override
   bool get isLoading => false;
@@ -81,74 +81,27 @@ Future<void> openExistingReflection(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-/// O botão de voltar do canvas. `tester.pageBack()` não serve aqui: ele
-/// procura o tooltip 'Back' em inglês, e a suíte roda em pt_BR.
-Future<void> tapBack(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('free_writing_back')));
-  await tester.pumpAndSettle();
-}
-
-/// A escrita livre salva SOZINHA ao sair (README: "salvamento automático").
-/// É promessa de produto — ninguém perde o que escreveu — e é isso que estes
-/// testes fixam.
 void main() {
-  testWidgets('sai de reflexão nova salvando o rascunho', (tester) async {
+  // CONTRATO DESTA TELA: sair SALVA. Vale para o botão de voltar e para o
+  // gesto/pop — `_save()` é chamado no `_handleBack` e no `PopScope`, e o
+  // próprio código diz por quê: "assim a pessoa nunca perde o que escreveu".
+  // Estes testes existem para que essa garantia não se perca sem querer.
+
+  testWidgets('reflexão nova é salva ao tocar em voltar', (tester) async {
     final provider = FakeFreeWritingProvider();
     await pumpFreeWritingTab(tester, provider);
 
     await tester.enterText(find.byType(TextField), 'rascunho novo');
     await tester.pump();
-    await tapBack(tester);
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Home'), findsOneWidget);
     expect(provider.saved.single.content, 'rascunho novo');
     expect(provider.freeWritings.single.content, 'rascunho novo');
   });
 
-  testWidgets('edita reflexão existente e volta guardando o texto novo',
-      (tester) async {
-    final existing = FreeWritingModel(
-      id: 'existing-id',
-      content: 'Conteúdo antigo',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
-    final provider = FakeFreeWritingProvider([existing]);
-    await pumpFreeWritingTab(tester, provider);
-    await openExistingReflection(tester);
-
-    await tester.enterText(find.byType(TextField), 'Conteúdo alterado');
-    await tester.pump();
-    await tapBack(tester);
-
-    expect(find.text('Home'), findsOneWidget);
-    expect(provider.saved.single.id, 'existing-id');
-    expect(provider.freeWritings.single.content, 'Conteúdo alterado');
-  });
-
-  testWidgets('editar e voltar grava UMA vez só', (tester) async {
-    final existing = FreeWritingModel(
-      id: 'existing-id',
-      content: 'Conteúdo antigo',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
-    final provider = FakeFreeWritingProvider([existing]);
-    await pumpFreeWritingTab(tester, provider);
-    await openExistingReflection(tester);
-
-    await tester.enterText(find.byType(TextField), 'Conteúdo alterado');
-    await tester.pump();
-    await tapBack(tester);
-
-    expect(find.text('Home'), findsOneWidget);
-    // O botão salva e o PopScope roda em seguida: a guarda de conteúdo
-    // inalterado evita a segunda gravação.
-    expect(provider.saved, hasLength(1));
-    expect(provider.freeWritings.single.content, 'Conteúdo alterado');
-  });
-
-  testWidgets('gesto/pop também salva o rascunho', (tester) async {
+  testWidgets('reflexão nova é salva ao sair pelo gesto/pop', (tester) async {
     final provider = FakeFreeWritingProvider();
     await pumpFreeWritingTab(tester, provider);
 
@@ -162,15 +115,73 @@ void main() {
     expect(provider.freeWritings.single.content, 'rascunho do pop');
   });
 
+  testWidgets('edição de reflexão existente é salva ao tocar em voltar',
+      (tester) async {
+    final provider = FakeFreeWritingProvider([_reflexaoAntiga()]);
+    await pumpFreeWritingTab(tester, provider);
+    await openExistingReflection(tester);
+
+    await tester.enterText(find.byType(TextField), 'Conteúdo alterado');
+    await tester.pump();
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home'), findsOneWidget);
+    expect(provider.saved.last.content, 'Conteúdo alterado');
+    // Mesma reflexão, atualizada: não pode virar uma segunda entrada.
+    expect(provider.freeWritings.single.id, 'existing-id');
+    expect(provider.freeWritings.single.content, 'Conteúdo alterado');
+  });
+
+  testWidgets('edição de reflexão existente é salva ao sair pelo gesto/pop',
+      (tester) async {
+    final provider = FakeFreeWritingProvider([_reflexaoAntiga()]);
+    await pumpFreeWritingTab(tester, provider);
+    await openExistingReflection(tester);
+
+    await tester.enterText(find.byType(TextField), 'Conteúdo alterado');
+    await tester.pump();
+    Navigator.of(tester.element(find.byType(TextField))).pop();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home'), findsOneWidget);
+    expect(provider.saved.last.content, 'Conteúdo alterado');
+    expect(provider.freeWritings.single.id, 'existing-id');
+    expect(provider.freeWritings.single.content, 'Conteúdo alterado');
+  });
+
+  testWidgets('editar e voltar grava UMA vez só', (tester) async {
+    final provider = FakeFreeWritingProvider([_reflexaoAntiga()]);
+    await pumpFreeWritingTab(tester, provider);
+    await openExistingReflection(tester);
+
+    await tester.enterText(find.byType(TextField), 'Conteúdo alterado');
+    await tester.pump();
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    // O botão salva e o PopScope roda em seguida: a guarda de conteúdo
+    // inalterado evita a segunda gravação.
+    expect(provider.saved, hasLength(1));
+  });
+
   testWidgets('sair sem escrever nada não cria reflexão vazia',
       (tester) async {
     final provider = FakeFreeWritingProvider();
     await pumpFreeWritingTab(tester, provider);
 
-    await tapBack(tester);
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Home'), findsOneWidget);
     expect(provider.saved, isEmpty);
     expect(provider.freeWritings, isEmpty);
   });
 }
+
+FreeWritingModel _reflexaoAntiga() => FreeWritingModel(
+      id: 'existing-id',
+      content: 'Conteúdo antigo',
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );

@@ -12,6 +12,12 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(locale: const Locale('pt', 'BR'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: page));
+    // Duas armadilhas aqui, e por isso nem pump() puro nem pumpAndSettle()
+    // servem: a entrada em cascata agenda um Future.delayed por item (se o
+    // relógio não anda, o teste morre com timers pendentes), e a página tem
+    // animação em laço (então nunca "assenta"). Avançar o relógio de uma vez
+    // dispara os timers sem esperar por um repouso que não vem.
+    await tester.pump(const Duration(seconds: 2));
     await tester.pump();
   }
 

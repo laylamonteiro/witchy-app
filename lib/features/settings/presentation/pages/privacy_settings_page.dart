@@ -170,10 +170,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
-    // A cor do cartão vem de um Material, não de um Container: os ListTile
-    // pintam fundo e ondulação de toque no Material mais próximo, e um
-    // Container colorido no meio do caminho escondia esses efeitos (o
-    // próprio Flutter alerta sobre isso). O Container fica só com a borda.
+    // A cor vive no Material, não num Container por fora: os ListTile pintam
+    // o respingo do toque no Material mais próximo, e com o fundo opaco por
+    // cima o respingo ficava invisível (o Flutter reclama disso em debug).
     return Material(
       color: context.gc.surface,
       clipBehavior: Clip.antiAlias,
