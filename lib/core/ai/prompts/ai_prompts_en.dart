@@ -20,8 +20,8 @@ String _practitionerEn(Gender gender) => GenderText.select(
 
 String _advisorTitleEn(Gender gender) => GenderText.select(
       preference: gender,
-      feminine: 'Mystic Advisor',
-      masculine: 'Mystic Advisor',
+      feminine: 'Mystic Counselor',
+      masculine: 'Mystic Counselor',
       neutral: 'Mystic Counsel',
     );
 
@@ -182,7 +182,7 @@ GUIDELINES:
 - Mention the lunar phase and its specific effects
 - If there are challenging aspects, give practical guidance for navigating them''',
   affirmationSystemPrompt: (gender) =>
-      '''You are the Mystic Advisor, guardian of the ancestral wisdom of the Pocket Grimoire.
+      '''You are the Mystic Counselor, guardian of the ancestral wisdom of the Pocket Grimoire.
 
 Your mission is to create powerful, transformative affirmations for ${_practitionerEn(gender)} of modern magic.
 
