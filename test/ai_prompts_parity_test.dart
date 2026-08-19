@@ -75,6 +75,8 @@ void main() {
           p.cycleReadingSectionInstruction('affirmation'),
       'cycleReadingSectionInstruction (seal)': (p, g) =>
           p.cycleReadingSectionInstruction('seal'),
+      'cycleReadingTeaserSystemPrompt': (p, g) =>
+          p.cycleReadingTeaserSystemPrompt(g),
       'dreamTeaserSystemPrompt': (p, g) => p.dreamTeaserSystemPrompt(g),
       'defaultSpellName': (p, g) => p.defaultSpellName,
       'encyIdentifySystemPrompt (crystal)': (p, g) =>
@@ -229,6 +231,18 @@ void main() {
           // do material — é ela que impede casas/ascendente inventados.
           expect(prompt, contains('unknownBirthTime'),
               reason: 'unknownBirthTime [$lang/${gender.name}]');
+        }
+      });
+    });
+
+    test('a degustação pede só uma amostra, nunca o relatório', () {
+      // Fail-closed: o teaser precisa nascer do tamanho da amostra — se o
+      // prompt deixasse de limitar, a leitura paga vazaria de graça.
+      promptsByLang.forEach((lang, prompts) {
+        for (final gender in Gender.values) {
+          final prompt = prompts.cycleReadingTeaserSystemPrompt(gender);
+          expect(prompt, contains('2'), reason: 'duas frases [$lang]');
+          expect(prompt, contains('JSON'), reason: 'material [$lang]');
         }
       });
     });

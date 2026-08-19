@@ -26,12 +26,14 @@ abstract final class CycleReadingPeriodType {
 }
 
 /// Como o crédito nasceu (persistido em `cycle_readings.origin`).
+///
+/// Hoje só existe a compra: a Leitura do Ciclo é produto avulso e fica FORA
+/// do Premium — assinar não dá leitura de graça. A coluna existe para
+/// distinguir origens futuras (cortesia do suporte, código promocional) sem
+/// nova migração.
 abstract final class CycleReadingOrigin {
   /// Produto consumível comprado na loja.
   static const purchase = 'purchase';
-
-  /// Leitura mensal inclusa da assinatura Premium.
-  static const pro = 'pro';
 }
 
 /// O registro de UMA Leitura do Ciclo: a compra (ou concessão Pro), o

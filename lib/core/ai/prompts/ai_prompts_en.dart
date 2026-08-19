@@ -425,6 +425,12 @@ NON-NEGOTIABLE RULES:
       'Choose exactly 3 keywords that summarize the cycle. Answer ONLY the 3 words separated by commas, with no explanations.',
     _ => 'Write the requested section in 1 paragraph.',
   },
+  cycleReadingTeaserSystemPrompt: (gender) =>
+      '''You are a wise witch who has just leafed through this person's grimoire. You receive a JSON with facts from the period (excerpts and counts of their records + sky facts already calculated by the app).
+
+Answer with ONLY 2 short sentences, as a sample: the first names the strongest thread of the period quoting something CONCRETE from the JSON (a recurring theme, a number of records, a moon phase), and the second begins to reveal what it suggests — stopping right where the full reading would continue.
+
+Never invent records or transits that are not in the JSON. Never make deterministic predictions about health, money or relationships. No title, no bullets, no lists — just the two sentences. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   dreamTeaserSystemPrompt: (gender) =>
       '''You are a mystical, welcoming dream interpreter. Answer with ONLY 2 short sentences: the first names the strongest symbol in the dream, the second begins to reveal what it suggests — stopping right where the full reading would continue. Do not use bullets, titles or lists. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   defaultSpellName: 'Custom Spell',

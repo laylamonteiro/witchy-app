@@ -168,8 +168,22 @@ Implementado na branch `claude/cycle-reading-offers-engine-vme4yp`:
   (`RevenueCatConfig.cycleReadingMonthProductId`,
   `PaymentService.purchaseConsumable`); `CycleReadingIntroPage` com aviso de
   poucos registros, transparência do que é enviado + toggles de exclusão,
-  crédito `pending` → `generated` (falha nunca consome a compra), Pro com 1
-  leitura/mês inclusa, regeneração 2×/janela.
+  crédito `pending` → `generated` (falha nunca consome a compra),
+  regeneração 2×/janela.
+
+### Quem paga, lê (decisão de produto que substitui o §5 do brainstorm)
+- A leitura é **sempre** comprada. **Nem assinante Premium** recebe leitura
+  de graça: a assinatura desbloqueia as features do app, não o produto
+  avulso. Não há cortesia mensal, nem origem `pro` no crédito.
+- Em compensação, **todo mundo prova um pedaço**: a tela de compra traz uma
+  degustação de 2 frases REAIS sobre o período — geradas do mesmo material
+  que a leitura paga usaria (`cycleReadingTeaserSystemPrompt`,
+  `AIService.generateCycleReadingTeaser`) — com o resto sob véu e o convite
+  de compra. Mesmo princípio das degustações da Frente B: valor real no
+  momento em que ele existe.
+- Fail-closed como as demais: a amostra já nasce do tamanho da amostra (o
+  relatório completo nem é gerado para quem não comprou) e fica cacheada
+  por janela em `TeaserAiCache` — cada geração custa uma chamada de IA.
 
 ### Leitura da Semana (o segundo período)
 - `CycleReadingPeriodType` (`week` | `lunation`) atravessa modelo, crédito,

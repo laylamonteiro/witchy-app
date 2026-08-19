@@ -86,20 +86,4 @@ class CycleReadingRepository {
     return rows.map(CycleReadingModel.fromMap).toList();
   }
 
-  /// A pessoa Pro já usou a leitura inclusa deste mês-calendário?
-  Future<bool> proGrantUsedThisMonth(String userId, {DateTime? now}) async {
-    final reference = now ?? DateTime.now();
-    final startOfMonth = DateTime(reference.year, reference.month, 1);
-    final db = await _db;
-    final rows = await db.rawQuery(
-      'SELECT COUNT(*) AS total FROM cycle_readings '
-      'WHERE user_id = ? AND origin = ? AND created_at >= ?',
-      [
-        userId,
-        CycleReadingOrigin.pro,
-        startOfMonth.millisecondsSinceEpoch,
-      ],
-    );
-    return ((rows.first['total'] as int?) ?? 0) > 0;
-  }
 }

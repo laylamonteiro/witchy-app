@@ -1491,6 +1491,38 @@ class AIService {
     throw const AiRateLimitException();
   }
 
+  /// Degustação da Leitura do Ciclo: 2 frases REAIS sobre o período, do
+  /// mesmo material que a leitura paga usaria.
+  ///
+  /// Chamada curta e barata de propósito — quem não comprou vê o gostinho,
+  /// e o relatório inteiro nem chega a ser gerado. Cabe a quem chama cachear
+  /// a amostra por janela (o custo de IA é real).
+  Future<String> generateCycleReadingTeaser({
+    required String materialJson,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.cycleReadingTeaserSystemPrompt(gender)}',
+        userText: materialJson,
+        tag: 'teaser leitura do ciclo',
+        temperature: 0.7,
+        maxTokens: 220,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
   /// Degustação da interpretação de sonhos (Motor de Ofertas): APENAS 2
   /// frases — o conteúdo completo nem chega a existir no aparelho, então a
   /// amostra pode ser exibida sem vazar o produto Premium.

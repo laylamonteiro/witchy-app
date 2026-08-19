@@ -2311,8 +2311,11 @@
       "price": {"type": "String"}
     }
   },
-  "cycleReadingProIncluded": "Assinante Pro: 1 leitura inclusa por mês ✨",
-  "cycleReadingUseProReading": "Usar minha leitura do mês",
+  "cycleReadingTeaserTitle": "Espie o começo da sua leitura",
+  "cycleReadingTeaserIntro": "Duas frases de verdade sobre o seu período — tiradas dos seus próprios registros. O resto vem na leitura completa.",
+  "cycleReadingTeaserPeek": "Ver o começo",
+  "cycleReadingTeaserCta": "Quero a leitura completa",
+  "cycleReadingTeaserFailed": "Não foi possível espiar agora. Tente de novo em instantes.",
   "cycleReadingPendingCredit": "Sua compra está garantida — falta só gerar o relatório.",
   "cycleReadingGenerate": "Gerar minha leitura",
   "cycleReadingGenerating": "Tecendo sua leitura… o oráculo está relendo o seu grimório.",

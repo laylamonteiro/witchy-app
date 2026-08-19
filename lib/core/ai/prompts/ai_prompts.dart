@@ -45,6 +45,7 @@ class AiPrompts {
     required this.dreamUserPrompt,
     required this.cycleReadingSystemPrompt,
     required this.cycleReadingSectionInstruction,
+    required this.cycleReadingTeaserSystemPrompt,
     required this.dreamTeaserSystemPrompt,
     required this.defaultSpellName,
     required this.errorInvalidRequest,
@@ -142,6 +143,12 @@ class AiPrompts {
   /// (`CycleReadingSections`): `portrait`, `threads`, `sky`, `practice`,
   /// `rituals`, `affirmation`, `seal`.
   final String Function(String sectionKey) cycleReadingSectionInstruction;
+
+  /// Degustação da Leitura do Ciclo: 2 frases REAIS sobre o período, a
+  /// partir do mesmo material que a leitura paga usaria. Como no sonho, a
+  /// amostra já nasce do tamanho da degustação — o relatório completo nem
+  /// chega a existir no aparelho de quem não comprou (fail-closed).
+  final String Function(Gender gender) cycleReadingTeaserSystemPrompt;
 
   /// Degustação da interpretação de sonhos: responde APENAS 2 frases — o
   /// conteúdo completo nem chega a existir no aparelho (fail-closed).

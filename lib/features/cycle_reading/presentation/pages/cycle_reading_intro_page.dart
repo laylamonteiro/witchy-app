@@ -3,8 +3,11 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/ai/ai_service.dart';
 import '../../../../core/config/revenuecat_config.dart';
 import '../../../../core/offers/offer_engine.dart';
+import '../../../../core/offers/teaser_cache.dart';
+import '../../../../core/offers/teaser_reveal.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -55,7 +58,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   bool _isWorking = false;
   int _recordCount = 0;
   CycleReadingModel? _existing;
-  bool _proGrantUsed = false;
+
+  /// A amostra desta janela (null = ainda não pedida).
+  String? _teaser;
+  bool _isTeasing = false;
 
   /// Preço por janela (null = produto indisponível nesta plataforma/loja).
   final Map<String, String?> _prices = {};
@@ -69,6 +75,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     super.initState();
     _load();
     _loadPrices();
+    _restoreCachedTeaser();
   }
 
   /// Preços das duas janelas — carregados juntos para o seletor já nascer
@@ -98,13 +105,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       period.start,
       periodType: _periodType,
     );
-    final proGrantUsed =
-        await _service.repository.proGrantUsedThisMonth(userId);
     if (!mounted) return;
     setState(() {
       _recordCount = recordCount;
       _existing = existing;
-      _proGrantUsed = proGrantUsed;
       _isLoading = false;
     });
   }
@@ -114,8 +118,59 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     setState(() {
       _periodType = periodType;
       _isLoading = true;
+      // A amostra é de UMA janela: trocar de janela zera o que está à vista
+      // (a da outra janela continua guardada no cache).
+      _teaser = null;
     });
     await _load();
+    await _restoreCachedTeaser();
+  }
+
+  /// Chave da amostra: uma por janela (tipo + início do período).
+  String get _teaserKey {
+    final start = _period.start;
+    return '${_periodType}_${start.year}-${start.month}-${start.day}';
+  }
+
+  /// Reexibe a amostra já paga em IA, sem gastar outra chamada.
+  Future<void> _restoreCachedTeaser() async {
+    final cached = await TeaserAiCache.get('cycle_reading', _teaserKey);
+    if (!mounted || cached == null) return;
+    setState(() => _teaser = cached);
+  }
+
+  /// Gera a amostra desta janela (uma única vez — depois vem do cache).
+  Future<void> _loadTeaser() async {
+    if (_isTeasing) return;
+    setState(() => _isTeasing = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final alertColor = context.gc.alert;
+    final l10n = AppLocalizations.of(context);
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final period = _period;
+    try {
+      final material = await _service.composer.compose(
+        userId: userId,
+        start: period.start,
+        end: period.end,
+        periodType: _periodType,
+        options: _options,
+      );
+      final sample = await AIService.instance.generateCycleReadingTeaser(
+        materialJson: material.compactJson,
+      );
+      await TeaserAiCache.put('cycle_reading', _teaserKey, sample);
+      if (!mounted) return;
+      setState(() => _teaser = sample);
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text(l10n.cycleReadingTeaserFailed),
+        backgroundColor: alertColor,
+      ));
+    } finally {
+      if (mounted) setState(() => _isTeasing = false);
+    }
   }
 
   CycleReadingSourceOptions get _options => CycleReadingSourceOptions(
@@ -158,31 +213,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       await engine.recordConversion(OfferSlot.cycleReading);
       if (!mounted) return;
       setState(() => _existing = credit);
-      await _generate(credit);
-    } finally {
-      if (mounted) setState(() => _isWorking = false);
-    }
-  }
-
-  Future<void> _useProGrant() async {
-    if (_isWorking) return;
-    setState(() => _isWorking = true);
-    final userId = context.read<AuthProvider>().currentUser.id;
-    final period = _period;
-    try {
-      final credit = CycleReadingModel(
-        userId: userId,
-        periodType: _periodType,
-        periodStart: period.start,
-        periodEnd: period.end,
-        origin: CycleReadingOrigin.pro,
-      );
-      await _service.repository.insert(credit);
-      if (!mounted) return;
-      setState(() {
-        _existing = credit;
-        _proGrantUsed = true;
-      });
       await _generate(credit);
     } finally {
       if (mounted) setState(() => _isWorking = false);
@@ -332,6 +362,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 ],
               ),
             ),
+            // A degustação vem ANTES do "o que vem na leitura": o gostinho
+            // real convence mais que a lista de seções.
+            if (!_isLoading && _existing == null) _buildTeaserCard(l10n),
             MagicalCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,6 +438,73 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// A degustação: duas frases REAIS sobre o período, o resto sob véu.
+  ///
+  /// É o mesmo princípio das outras degustações do app — mostrar valor real
+  /// no momento em que ele existe. A amostra nasce já do tamanho certo (o
+  /// relatório completo nem é gerado) e fica cacheada por janela, porque
+  /// cada geração custa uma chamada de IA de verdade.
+  Widget _buildTeaserCard(AppLocalizations l10n) {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('✨ ', style: TextStyle(color: context.gc.starYellow)),
+              Expanded(
+                child: Text(
+                  l10n.cycleReadingTeaserTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.lilac,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (_teaser == null) ...[
+            Text(
+              l10n.cycleReadingTeaserIntro,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.gc.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: OutlinedButton.icon(
+                onPressed: _isTeasing ? null : _loadTeaser,
+                icon: _isTeasing
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: context.gc.lilac,
+                        ),
+                      )
+                    : const Icon(Icons.auto_awesome, size: 18),
+                label: Text(l10n.cycleReadingTeaserPeek),
+              ),
+            ),
+          ] else
+            TeaserReveal(
+              sample: Text(
+                _teaser!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      height: 1.5,
+                    ),
+              ),
+              ctaLabel: l10n.cycleReadingTeaserCta,
+              onCta: _buy,
+            ),
+        ],
       ),
     );
   }
@@ -543,51 +643,23 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
     }
 
-    // Sem leitura nesta janela ainda: comprar — ou usar a inclusa do Pro.
-    final isPro = context.watch<AuthProvider>().isPremiumEffective;
+    // Sem leitura nesta janela: a compra é o único caminho — a Leitura do
+    // Ciclo é produto avulso e não entra no Premium (assinar não dá leitura
+    // de graça; o que a assinatura desbloqueia são as features do app).
     final price = _prices[_productId];
-    final storeAvailable = price != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (isPro && !_proGrantUsed) ...[
-          Text(
-            l10n.cycleReadingProIncluded,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: context.gc.lilac,
-              fontWeight: FontWeight.bold,
+    if (price == null) {
+      return Text(
+        l10n.cycleReadingUnavailable,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: context.gc.warning,
             ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: _useProGrant,
-            icon: const Icon(Icons.auto_awesome, size: 18),
-            label: Text(l10n.cycleReadingUseProReading),
-          ),
-          const SizedBox(height: 8),
-        ],
-        if (storeAvailable)
-          (isPro && !_proGrantUsed)
-              ? OutlinedButton.icon(
-                  onPressed: _buy,
-                  icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-                  label: Text(l10n.cycleReadingBuyFor(price)),
-                )
-              : ElevatedButton.icon(
-                  onPressed: _buy,
-                  icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-                  label: Text(l10n.cycleReadingBuyFor(price)),
-                )
-        else if (!isPro || _proGrantUsed)
-          Text(
-            l10n.cycleReadingUnavailable,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.warning,
-                ),
-          ),
-      ],
+      );
+    }
+    return ElevatedButton.icon(
+      onPressed: _buy,
+      icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+      label: Text(l10n.cycleReadingBuyFor(price)),
     );
   }
 }

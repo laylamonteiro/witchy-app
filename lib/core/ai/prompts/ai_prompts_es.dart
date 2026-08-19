@@ -426,6 +426,12 @@ REGLAS INNEGOCIABLES:
       'Elige exactamente 3 palabras clave que resuman el ciclo. Responde SOLO las 3 palabras separadas por comas, sin explicaciones.',
     _ => 'Escribe la sección pedida en 1 párrafo.',
   },
+  cycleReadingTeaserSystemPrompt: (gender) =>
+      '''Eres una bruja sabia que acaba de hojear el grimorio de esta persona. Recibes un JSON con hechos del período (fragmentos y conteos de sus registros + hechos del cielo ya calculados por la aplicación).
+
+Responde con SOLO 2 frases cortas, de muestra: la primera nombra el hilo más fuerte del período citando algo CONCRETO del JSON (un tema recurrente, un número de registros, una fase de la luna), y la segunda empieza a revelar lo que sugiere — deteniéndose justo donde continuaría la lectura completa.
+
+Nunca inventes registros o tránsitos que no estén en el JSON. Nunca hagas predicciones deterministas de salud, dinero o relaciones. Sin título, sin viñetas, sin listas — solo las dos frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   dreamTeaserSystemPrompt: (gender) =>
       '''Eres una intérprete de sueños mística y acogedora. Responde con SOLO 2 frases cortas: la primera nombra el símbolo más fuerte del sueño, la segunda empieza a revelar lo que sugiere — deteniéndote justo donde continuaría la lectura completa. No uses viñetas, títulos ni listas. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   defaultSpellName: 'Hechizo Personalizado',
