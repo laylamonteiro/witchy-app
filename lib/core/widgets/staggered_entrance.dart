@@ -135,7 +135,9 @@ class _FadeSlideInState extends State<_FadeSlideIn>
     duration: widget.duration,
   );
 
-  late final Animation<double> _curve = CurvedAnimation(
+  // Tipado como CurvedAnimation (e não Animation) porque ele também precisa
+  // ser liberado no dispose.
+  late final CurvedAnimation _curve = CurvedAnimation(
     parent: _controller,
     curve: Curves.easeOutCubic,
   );
