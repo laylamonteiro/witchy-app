@@ -1115,6 +1115,24 @@ abstract class AppLocalizations {
   /// **'Erro ao reenviar'**
   String get forgotResendErrorPrefix;
 
+  /// No description provided for @authShowPassword.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar senha'**
+  String get authShowPassword;
+
+  /// No description provided for @authHidePassword.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ocultar senha'**
+  String get authHidePassword;
+
+  /// No description provided for @forgotResendIn.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reenviar em {seconds}s'**
+  String forgotResendIn(int seconds);
+
   /// No description provided for @changePasswordTitle.
   ///
   /// In pt, this message translates to:

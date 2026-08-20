@@ -210,6 +210,16 @@
   "forgotResendError": "Erro ao reenviar email",
   "forgotResendSuccess": "Email reenviado com sucesso!",
   "forgotResendErrorPrefix": "Erro ao reenviar",
+  "authShowPassword": "Mostrar senha",
+  "authHidePassword": "Ocultar senha",
+  "forgotResendIn": "Reenviar em {seconds}s",
+  "@forgotResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "@forgotEmailSentTo": {
     "placeholders": {
       "email": {
@@ -1801,11 +1811,26 @@
   "lunarLoadError": "Erro ao carregar calendário lunar",
   "lunarNow": "Agora!",
   "lunarDateAt": "{date} às {time}",
-  "@lunarDateAt": {"placeholders": {"date": {}, "time": {}}},
+  "@lunarDateAt": {
+    "placeholders": {
+      "date": {},
+      "time": {}
+    }
+  },
   "lunarInDays": "Em {count, plural, one{1 dia} other{{count} dias}}",
-  "@lunarInDays": {"placeholders": {"count": {"type": "num"}}},
+  "@lunarInDays": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "lunarExactMoment": "Momento exato: {when}",
-  "@lunarExactMoment": {"placeholders": {"when": {}}},
+  "@lunarExactMoment": {
+    "placeholders": {
+      "when": {}
+    }
+  },
   "lunarInHours": "Em {count, plural, one{1 hora} other{{count} horas}}",
   "@lunarInHours": {
     "placeholders": {
@@ -2281,8 +2306,12 @@
   "cycleReadingPeriodLine": "Lunação de {start} a {end}",
   "@cycleReadingPeriodLine": {
     "placeholders": {
-      "start": {"type": "String"},
-      "end": {"type": "String"}
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
     }
   },
   "cycleReadingSectionPortrait": "🕯️ Retrato do momento",
@@ -2299,7 +2328,9 @@
   "cycleReadingRecordCount": "{count, plural, =0{Nenhum registro nesta lunação ainda} one{1 registro nesta lunação} other{{count} registros nesta lunação}}",
   "@cycleReadingRecordCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "cycleReadingShallowWarning": "Poucos registros neste período: a leitura pode sair rasa. Que tal registrar mais alguns dias antes de comprar?",
@@ -2311,7 +2342,9 @@
   "cycleReadingBuyFor": "Comprar leitura — {price}",
   "@cycleReadingBuyFor": {
     "placeholders": {
-      "price": {"type": "String"}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "cycleReadingTeaserTitle": "Espie o começo da sua leitura",
@@ -2326,7 +2359,9 @@
   "cycleReadingRegenerate": "Gerar de novo ({remaining} restante(s))",
   "@cycleReadingRegenerate": {
     "placeholders": {
-      "remaining": {"type": "int"}
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "cycleReadingRegenerateLimit": "Limite de regenerações desta janela atingido.",
@@ -2338,7 +2373,9 @@
   "cycleReadingOfferTitle": "{count, plural, one{Sua lunação rendeu 1 registro} other{Sua lunação rendeu {count} registros}}",
   "@cycleReadingOfferTitle": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "cycleReadingOfferBody": "Quer a leitura dela? O oráculo costura seus registros e o céu do período numa análise só sua.",
@@ -2348,14 +2385,20 @@
   "cycleReadingWeekPeriodLine": "Últimos 7 dias, de {start} a {end}",
   "@cycleReadingWeekPeriodLine": {
     "placeholders": {
-      "start": {"type": "String"},
-      "end": {"type": "String"}
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
     }
   },
   "cycleReadingWeekRecordCount": "{count, plural, =0{Nenhum registro nesta semana ainda} one{1 registro nesta semana} other{{count} registros nesta semana}}",
   "@cycleReadingWeekRecordCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "cycleReadingWeekWhatBody": "Quatro seções diretas sobre os seus últimos sete dias: retrato do momento, os fios que se repetem, o céu sobre você e uma afirmação sob medida — salvas para sempre em Meus Registros. O balanço da prática, os rituais do próximo ciclo e o selo são da Leitura da Lunação.",
@@ -2379,7 +2422,9 @@
   "zodiacRulingPlanet": "Planeta Regente: {planet}",
   "@zodiacRulingPlanet": {
     "placeholders": {
-      "planet": {"type": "String"}
+      "planet": {
+        "type": "String"
+      }
     }
   }
 }

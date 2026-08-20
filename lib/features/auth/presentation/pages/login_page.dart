@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
+import '../widgets/breathing_badge.dart';
+import '../widgets/auth_motion.dart';
+import '../widgets/auth_feedback.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/config/admin_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -24,8 +30,10 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
+  final _shakeKey = GlobalKey<ShakerState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocus = FocusNode();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -33,82 +41,117 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordFocus.dispose();
     super.dispose();
+  }
+
+  /// Voltar seguro: vindo do onboarding esta tela pode ser a ÚNICA rota da
+  /// pilha — um pop cego a esvaziaria e deixaria a tela preta. Sem nada
+  /// abaixo, volta-se para a porta de entrada (Welcome).
+  void _handleBack() {
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+    } else {
+      nav.pushReplacementNamed('/welcome');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: context.gc.lilac),
-          onPressed: () => Navigator.pop(context),
+    // PopScope intercepta o gesto/botão de voltar do sistema, que sofre do
+    // mesmo esvaziamento de pilha que o botão da AppBar. Com rota abaixo,
+    // canPop=true preserva o pop nativo (e o swipe-back do iOS); só a rota
+    // solitária — deep link/web — é interceptada e redirecionada.
+    return PopScope(
+      canPop: Navigator.canPop(context),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleBack();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: context.gc.lilac),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: _handleBack,
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          // Teto de largura para a web desktop: sem ele o formulário estica
-          // pela janela toda (o app é feito para o celular). Centralizado
-          // em ~480 mantém a mesma leitura em qualquer tela.
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Form(
-                  key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                // Header
-                _buildHeader(),
-                const SizedBox(height: 48),
-                // Campos de formulário
-                _buildEmailField(),
-                const SizedBox(height: 16),
-                _buildPasswordField(),
-                const SizedBox(height: 12),
-                // Link de esqueci a senha
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context).authForgotPassword,
-                      style: GoogleFonts.nunito(
-                        fontSize: 14,
-                        color: context.gc.lilac,
-                      ),
+        body: StarfieldBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              // Teto de largura para a web desktop: sem ele o formulário
+              // estica pela janela toda. Centralizado em ~480, mantém a
+              // leitura de app de celular (o starfield fica fora e segue
+              // preenchendo o fundo).
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Form(
+                key: _formKey,
+                child: AutofillGroup(
+                  child: Shaker(
+                    key: _shakeKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 20),
+                        // Header
+                        CascadeIn(index: 0, child: _buildHeader()),
+                        const SizedBox(height: 40),
+                        // Campos de formulário
+                        CascadeIn(index: 1, child: _buildEmailField()),
+                        const SizedBox(height: 16),
+                        CascadeIn(index: 2, child: _buildPasswordField()),
+                        const SizedBox(height: 12),
+                        // Link de esqueci a senha
+                        CascadeIn(
+                          index: 3,
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const ForgotPasswordPage()),
+                              ),
+                              child: Text(
+                                AppLocalizations.of(context).authForgotPassword,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 14,
+                                  color: context.gc.lilac,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Botão de login
+                        CascadeIn(index: 4, child: _buildLoginButton()),
+                        const SizedBox(height: 32),
+                        // Divisor
+                        CascadeIn(index: 5, child: _buildDivider()),
+                        const SizedBox(height: 32),
+                        // Login social
+                        _buildSocialLogin(),
+                        const SizedBox(height: 32),
+                        // Link para cadastro
+                        _buildSignupLink(),
+                        const SizedBox(height: 32),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                // Botão de login
-                _buildLoginButton(),
-                const SizedBox(height: 32),
-                // Divisor
-                _buildDivider(),
-                const SizedBox(height: 32),
-                // Login social
-                _buildSocialLogin(),
-                const SizedBox(height: 32),
-                // Link para cadastro
-                _buildSignupLink(),
-                const SizedBox(height: 32),
-                  ],
+                ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -196,20 +239,24 @@ class _LoginPageState extends State<LoginPage> {
         // precisar logar): revela se as credenciais foram embutidas no build.
         GestureDetector(
           onLongPress: _showConfigDiagnostic,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: context.gc.lilac.withValues(alpha: 0.2),
-            ),
-            child: Icon(
-              Icons.lock_outline,
-              size: 40,
-              color: context.gc.lilac,
+          child: BreathingBadge(
+            glowColor: context.gc.lilac,
+            haloSize: 96,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.gc.lilac.withValues(alpha: 0.2),
+              ),
+              child: Icon(
+                Icons.lock_outline,
+                size: 40,
+                color: context.gc.lilac,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context).authWelcomeBack,
           style: GoogleFonts.cinzelDecorative(
@@ -233,7 +280,12 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
+      enabled: !_isLoading,
       keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.next,
+      autofillHints: const [AutofillHints.email],
+      autocorrect: false,
+      onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).authEmailLabel,
@@ -257,18 +309,33 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildPasswordField() {
     return TextFormField(
       controller: _passwordController,
+      focusNode: _passwordFocus,
+      enabled: !_isLoading,
       obscureText: _obscurePassword,
+      textInputAction: TextInputAction.done,
+      autofillHints: const [AutofillHints.password],
+      onFieldSubmitted: (_) => _handleLogin(),
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).authPasswordLabel,
         hintText: '••••••',
         prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: context.gc.textSecondary,
+          tooltip: _obscurePassword
+              ? AppLocalizations.of(context).authShowPassword
+              : AppLocalizations.of(context).authHidePassword,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (child, anim) =>
+                ScaleTransition(scale: anim, child: child),
+            child: Icon(
+              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              key: ValueKey(_obscurePassword),
+              color: context.gc.textSecondary,
+            ),
           ),
           onPressed: () {
+            HapticFeedback.selectionClick();
             setState(() {
               _obscurePassword = !_obscurePassword;
             });
@@ -295,33 +362,47 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildLoginButton() {
-    return ElevatedButton(
-      onPressed: _isLoading ? null : _handleLogin,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: context.gc.lilac,
-        foregroundColor: const Color(0xFF2B2143),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
-      ),
-      child: _isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2B2143)),
+    return PressableScale(
+      child: BreathingGlow(
+        color: context.gc.lilac,
+        child: SheenSweep(
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _handleLogin,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.gc.lilac,
+              foregroundColor: const Color(0xFF2B2143),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-            )
-          : Text(
-              AppLocalizations.of(context).authLogin,
-              style: GoogleFonts.nunito(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
             ),
+            // Rótulo e spinner se trocam num fade — nada de "pulo" seco.
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: _isLoading
+                  ? const SizedBox(
+                      key: ValueKey('loading'),
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFF2B2143)),
+                      ),
+                    )
+                  : Text(
+                      AppLocalizations.of(context).authLogin,
+                      key: const ValueKey('label'),
+                      style: GoogleFonts.nunito(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -374,39 +455,41 @@ class _LoginPageState extends State<LoginPage> {
     required String label,
     required VoidCallback onPressed,
   }) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: context.gc.textPrimary,
-        side: BorderSide(color: context.gc.surfaceBorder),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    return PressableScale(
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: context.gc.textPrimary,
+          side: BorderSide(color: context.gc.surfaceBorder),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (iconWidget != null)
-            iconWidget
-          else
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (iconWidget != null)
+              iconWidget
+            else
+              Text(
+                icon ?? '',
+                style: GoogleFonts.nunito(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: context.gc.textPrimary,
+                ),
+              ),
+            const SizedBox(width: 8),
             Text(
-              icon ?? '',
+              label,
               style: GoogleFonts.nunito(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: context.gc.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: GoogleFonts.nunito(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -446,7 +529,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isLoading) return;
+    if (!_formKey.currentState!.validate()) {
+      _shakeKey.currentState?.shake();
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -504,11 +591,11 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$e'.replaceAll('Exception: ', '')),
-            backgroundColor: context.gc.alert,
-          ),
+        _shakeKey.currentState?.shake();
+        showAuthSnack(
+          context,
+          '$e'.replaceAll('Exception: ', ''),
+          type: AuthSnackType.error,
         );
       }
     } finally {
@@ -520,11 +607,9 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _handleGoogleLogin() async {
     if (!SupabaseConfig.isConfigured) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).authSocialUnavailable),
-          backgroundColor: context.gc.info,
-        ),
+      showAuthSnack(
+        context,
+        AppLocalizations.of(context).authSocialUnavailable,
       );
       return;
     }
@@ -532,11 +617,10 @@ class _LoginPageState extends State<LoginPage> {
     final captchaToken = await CaptchaGate.resolve(context);
     if (!mounted) return;
     if (CaptchaConfig.isConfigured && captchaToken == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).authCaptchaFailed),
-          backgroundColor: context.gc.alert,
-        ),
+      showAuthSnack(
+        context,
+        AppLocalizations.of(context).authCaptchaFailed,
+        type: AuthSnackType.error,
       );
       return;
     }
@@ -564,20 +648,18 @@ class _LoginPageState extends State<LoginPage> {
         // Navegar para home
         Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.errorMessage ?? AppLocalizations.of(context).authGoogleError),
-            backgroundColor: context.gc.alert,
-          ),
+        showAuthSnack(
+          context,
+          result.errorMessage ?? AppLocalizations.of(context).authGoogleError,
+          type: AuthSnackType.error,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppLocalizations.of(context).authGoogleError}: $e'),
-            backgroundColor: context.gc.alert,
-          ),
+        showAuthSnack(
+          context,
+          '${AppLocalizations.of(context).authGoogleError}: $e',
+          type: AuthSnackType.error,
         );
       }
     } finally {
