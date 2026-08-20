@@ -1645,6 +1645,19 @@
   "cycleReadingCustomPeriodButton": "Choose another period",
   "cycleReadingCustomPeriodTitle": "Which stretch of your life?",
   "cycleReadingCustomPeriodHint": "Up to 7 days becomes a Week Reading; 8 to 31 days, a Lunation Reading.",
+  "cycleReadingHeatLegend": "Marked days are the ones you recorded something — the stronger the mark, the more alive your practice was.",
+  "cycleReadingCustomPeriodConfirm": "Use this period",
+  "cycleReadingSelectionSummary": "{days, plural, one{1 day} other{{days} days}} · {records, plural, =0{no records} one{1 record} other{{records} records}}",
+  "@cycleReadingSelectionSummary": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "cycleReadingCustomPeriodClear": "Back to the current period",
   "cycleReadingCustomPeriodLine": "From {start} to {end} · {days, plural, one{1 day} other{{days} days}}",
   "@cycleReadingCustomPeriodLine": {

@@ -102,6 +102,83 @@ class CycleReadingComposer {
   Future<Database> get _db async =>
       _dbOverride ?? await DatabaseHelper.instance.database;
 
+  /// As tabelas que contam como "registro da pessoa" no período.
+  ///
+  /// Uma lista só, usada pela contagem total e pelo mapa de calor: se as
+  /// duas divergissem, o calendário mostraria um dia quente que a contagem
+  /// não enxerga (ou o contrário).
+  static const List<String> _recordTables = [
+    'dreams',
+    'gratitudes',
+    'desires',
+    'free_writings',
+    'rune_readings',
+    'oracle_readings',
+    'pendulum_consultations',
+    'tarot_readings',
+    'ritual_logs',
+    'guided_ritual_logs',
+    'spells',
+    'sigils',
+  ];
+
+  /// A coluna de tempo de cada tabela: rito concluído marca `completed_at`;
+  /// o resto, `created_at`.
+  static String _timeColumnOf(String table) =>
+      table.endsWith('_logs') ? 'completed_at' : 'created_at';
+
+  /// Filtro do que NÃO é registro da pessoa: feitiço que já veio no app e
+  /// o relatório da própria Leitura do Ciclo — sem isso, uma leitura
+  /// inflaria o ciclo seguinte.
+  static String _ownRecordsFilter(String table) => switch (table) {
+        'spells' => ' AND is_preloaded = 0',
+        'free_writings' =>
+          " AND source != '${FreeWritingSource.cycleReading}'",
+        _ => '',
+      };
+
+  /// Quantos registros a pessoa fez em CADA dia da janela — o mapa de calor
+  /// do seletor de período.
+  ///
+  /// A chave é `yyyy-MM-dd` no fuso do aparelho. O agrupamento é feito em
+  /// Dart, e não com `date()` no SQL, de propósito: o SQLite converteria os
+  /// millis em UTC e um registro das 22h cairia no dia seguinte para quem
+  /// vive a leste — o calendário mostraria calor no dia errado.
+  ///
+  /// Dias sem registro simplesmente não aparecem no mapa.
+  Future<Map<String, int>> dailyRecordCounts({
+    required String userId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final db = await _db;
+    final counts = <String, int>{};
+    for (final table in _recordTables) {
+      final timeColumn = _timeColumnOf(table);
+      try {
+        final rows = await db.rawQuery(
+          'SELECT $timeColumn AS t FROM $table '
+          'WHERE user_id = ? AND $timeColumn >= ? AND $timeColumn < ?'
+          '${_ownRecordsFilter(table)}',
+          [
+            userId,
+            start.millisecondsSinceEpoch,
+            end.millisecondsSinceEpoch,
+          ],
+        );
+        for (final row in rows) {
+          final millis = row['t'];
+          if (millis is! int) continue;
+          final dia = _dayKey(DateTime.fromMillisecondsSinceEpoch(millis));
+          counts[dia] = (counts[dia] ?? 0) + 1;
+        }
+      } catch (_) {
+        // Tabela ausente numa base antiga: segue com as demais.
+      }
+    }
+    return counts;
+  }
+
   /// Contagem barata dos registros do período — usada pelo card de oferta
   /// no Seu Dia ("Sua lunação rendeu {N} registros") e pelo aviso de
   /// leitura rasa, sem montar o material inteiro.
@@ -111,32 +188,10 @@ class CycleReadingComposer {
     required DateTime end,
   }) async {
     final db = await _db;
-    const tables = [
-      'dreams',
-      'gratitudes',
-      'desires',
-      'free_writings',
-      'rune_readings',
-      'oracle_readings',
-      'pendulum_consultations',
-      'tarot_readings',
-      'ritual_logs',
-      'guided_ritual_logs',
-      'spells',
-      'sigils',
-    ];
     var total = 0;
-    for (final table in tables) {
-      final timeColumn =
-          table.endsWith('_logs') ? 'completed_at' : 'created_at';
-      // Relatórios de leituras anteriores não são "registros da pessoa" —
-      // sem o filtro, a própria leitura inflaria o ciclo seguinte.
-      final preloadedFilter = switch (table) {
-        'spells' => ' AND is_preloaded = 0',
-        'free_writings' =>
-          " AND source != '${FreeWritingSource.cycleReading}'",
-        _ => '',
-      };
+    for (final table in _recordTables) {
+      final timeColumn = _timeColumnOf(table);
+      final preloadedFilter = _ownRecordsFilter(table);
       try {
         final rows = await db.rawQuery(
           'SELECT COUNT(*) AS total FROM $table '

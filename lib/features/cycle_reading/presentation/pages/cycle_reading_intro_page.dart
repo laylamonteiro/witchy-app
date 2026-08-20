@@ -19,6 +19,7 @@ import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../data/models/cycle_reading_model.dart';
 import '../../data/services/cycle_reading_composer.dart';
 import '../../data/services/cycle_reading_service.dart';
+import '../widgets/cycle_period_picker_sheet.dart';
 import 'cycle_reading_report_page.dart';
 
 /// Tela de compra/geração da Leitura do Ciclo (semana ou lunação).
@@ -186,32 +187,48 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     if (_isWorking) return;
     final l10n = AppLocalizations.of(context);
     final userId = context.read<AuthProvider>().currentUser.id;
+    // Lido ANTES dos await, como em _load: depois deles o context pode não
+    // valer mais.
+    final temVitalicio = _hasLifetime;
     final hoje = DateTime.now();
     final ultimoDia = DateTime(hoje.year, hoje.month, hoje.day);
 
-    final escolhido = await showDateRangePicker(
+    // Um ano para trás cobre qualquer retroativo plausível sem oferecer um
+    // calendário infinito.
+    final primeiroDia = ultimoDia.subtract(const Duration(days: 365));
+
+    // O mapa de calor: quantos registros em cada dia do ano. É o que faz a
+    // escolha ser informada em vez de às cegas — a pessoa vê onde a vida
+    // dela deixou marca antes de decidir o que comprar.
+    final densidade = await _service.composer.dailyRecordCounts(
+      userId: userId,
+      start: primeiroDia,
+      end: ultimoDia.add(const Duration(days: 1)),
+    );
+    if (!mounted) return;
+
+    final escolhido =
+        await showModalBottomSheet<({DateTime start, DateTime end})>(
       context: context,
-      // Um ano para trás cobre qualquer retroativo plausível sem oferecer
-      // um calendário infinito.
-      firstDate: ultimoDia.subtract(const Duration(days: 365)),
-      lastDate: ultimoDia,
-      currentDate: ultimoDia,
-      helpText: l10n.cycleReadingCustomPeriodTitle,
+      isScrollControlled: true,
+      backgroundColor: context.gc.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => CyclePeriodPickerSheet(
+        dailyCounts: densidade,
+        firstDate: primeiroDia,
+        lastDate: ultimoDia,
+        weekPrice: _prices[RevenueCatConfig.cycleReadingWeekProductId],
+        lunationPrice: _prices[RevenueCatConfig.cycleReadingMonthProductId],
+        lifetimeIncluded: temVitalicio,
+      ),
     );
     if (escolhido == null || !mounted) return;
 
-    // O picker devolve dias inclusivos (13 a 19 = 7 dias); a janela do app
-    // é `>= start AND < end`, então o fim vira a meia-noite do dia seguinte.
-    final start = DateTime(
-      escolhido.start.year,
-      escolhido.start.month,
-      escolhido.start.day,
-    );
-    final end = DateTime(
-      escolhido.end.year,
-      escolhido.end.month,
-      escolhido.end.day,
-    ).add(const Duration(days: 1));
+    // A folha já devolve `[start, end)` com o fim exclusivo.
+    final start = escolhido.start;
+    final end = escolhido.end;
 
     final veredito = await _service.validateCustomPeriod(
       userId: userId,
@@ -219,7 +236,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       end: end,
       // Sobreposição e cooldown são o ritmo do acesso incluído; quem paga
       // por leitura escolhe qualquer janela, quantas vezes quiser.
-      includedByLifetime: _hasLifetime,
+      includedByLifetime: temVitalicio,
     );
     if (!mounted) return;
 

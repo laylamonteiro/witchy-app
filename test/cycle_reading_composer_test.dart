@@ -76,6 +76,111 @@ void main() {
         'created_at': createdAt ?? inPeriod,
       });
 
+  group('mapa de calor do seletor de período', () {
+    test('agrupa por dia e ignora o que está fora da janela', () async {
+      final dia10 = DateTime(2026, 8, 10, 9).millisecondsSinceEpoch;
+      final dia10Tarde = DateTime(2026, 8, 10, 20).millisecondsSinceEpoch;
+      final dia12 = DateTime(2026, 8, 12, 8).millisecondsSinceEpoch;
+
+      await seedDream(createdAt: dia10);
+      await seed('gratitudes', {
+        'title': 'grata',
+        'content': 'pelo dia',
+        'date': dia10Tarde,
+        'created_at': dia10Tarde,
+      });
+      await seed('sigils', {
+        'intention': 'coragem',
+        'image_path': '/tmp/s.png',
+        'created_at': dia12,
+      });
+      // Fora da janela: não pode esquentar dia nenhum.
+      await seedDream(createdAt: outOfPeriod);
+
+      final mapa = await CycleReadingComposer().dailyRecordCounts(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+
+      expect(mapa['2026-08-10'], 2);
+      expect(mapa['2026-08-12'], 1);
+      expect(mapa['2026-07-10'], isNull);
+      // Dia sem registro não entra no mapa (o calendário desenha vazio).
+      expect(mapa.containsKey('2026-08-11'), isFalse);
+    });
+
+    test('o mapa e a contagem total enxergam os mesmos registros', () async {
+      // A regra que impede o calendário de mostrar um dia quente que a
+      // contagem não vê: as duas leem a MESMA lista de tabelas.
+      await seedDream(createdAt: DateTime(2026, 8, 3).millisecondsSinceEpoch);
+      await seed('tarot_readings', {
+        'question': 'e agora?',
+        'spread_type': 'three_cards',
+        'reading_data': '{}',
+        // `date` é NOT NULL no schema, como nas outras tiragens.
+        'date': DateTime(2026, 8, 5).millisecondsSinceEpoch,
+        'created_at': DateTime(2026, 8, 5).millisecondsSinceEpoch,
+      });
+      await seed('spells', {
+        'name': 'Feitiço',
+        'purpose': 'proteger a casa',
+        'type': 'protecao',
+        'category': 'protecao',
+        'steps': '[]',
+        'is_preloaded': 0,
+        'created_at': DateTime(2026, 8, 7).millisecondsSinceEpoch,
+      });
+      // Pré-carregado não é registro da pessoa: fica fora dos DOIS.
+      await seed('spells', {
+        'name': 'Ancestral',
+        'purpose': 'veio no app',
+        'type': 'protecao',
+        'category': 'protecao',
+        'steps': '[]',
+        'is_preloaded': 1,
+        'created_at': DateTime(2026, 8, 8).millisecondsSinceEpoch,
+      });
+
+      final composer = CycleReadingComposer();
+      final mapa = await composer.dailyRecordCounts(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+      final total = await composer.countPeriodRecords(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+
+      expect(mapa.values.fold<int>(0, (a, b) => a + b), total);
+      expect(total, 3);
+      expect(mapa.containsKey('2026-08-08'), isFalse);
+    });
+
+    test('registros de outra pessoa não esquentam o calendário', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('gratitudes', {
+        'id': uuid.v4(),
+        'user_id': 'outra-pessoa',
+        'title': 'grata',
+        'content': 'texto',
+        'date': inPeriod,
+        'created_at': inPeriod,
+        'updated_at': inPeriod,
+        'synced': 0,
+      });
+
+      final mapa = await CycleReadingComposer().dailyRecordCounts(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+      expect(mapa, isEmpty);
+    });
+  });
+
   test('conta apenas registros do período', () async {
     await seedDream();
     await seedDream(createdAt: outOfPeriod);

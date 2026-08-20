@@ -2353,6 +2353,19 @@
   "cycleReadingCustomPeriodButton": "Escolher outro período",
   "cycleReadingCustomPeriodTitle": "Qual pedaço da sua vida?",
   "cycleReadingCustomPeriodHint": "Até 7 dias vira Leitura da Semana; de 8 a 31 dias, Leitura da Lunação.",
+  "cycleReadingHeatLegend": "Os dias marcados são os que você registrou algo — quanto mais forte, mais viva foi a sua prática.",
+  "cycleReadingCustomPeriodConfirm": "Usar este período",
+  "cycleReadingSelectionSummary": "{days, plural, one{1 dia} other{{days} dias}} · {records, plural, =0{nenhum registro} one{1 registro} other{{records} registros}}",
+  "@cycleReadingSelectionSummary": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "cycleReadingCustomPeriodClear": "Voltar ao período atual",
   "cycleReadingCustomPeriodLine": "De {start} a {end} · {days, plural, one{1 dia} other{{days} dias}}",
   "@cycleReadingCustomPeriodLine": {
