@@ -266,24 +266,49 @@ jobs:
       - name: 🔍 A Leitura do Ciclo está DENTRO do bundle?
         # Verificação de fim de linha: não "o código está no arquivo", mas
         # "os textos da feature estão no JavaScript que o navegador baixa".
-        # A diferença entre as duas é onde este diagnóstico se perdeu por
-        # horas — código certo no repositório, e nenhuma forma de saber o
-        # que estava servido.
+        #
+        # SÓ TRECHOS ASCII. O dart2js emite JS ASCII-safe: acento vira
+        # escape \u00e1, então procurar os bytes UTF-8 de "grimório" dá
+        # falso negativo — foi assim que este check acusou ausência de uma
+        # feature que estava lá. O controle abaixo existe para essa
+        # armadilha nunca mais passar por diagnóstico de produto.
         run: |
+          js=$(find public -name '*.js' -type f)
+          if [ -z "$js" ]; then
+            echo "::error::Nenhum .js em public/ — a publicação não foi montada."
+            exit 1
+          fi
+
+          # Controle: string acentuada que existe no app desde sempre. Se
+          # ELA não for encontrada, o problema é o método de busca, não a
+          # feature — e o check diz isso em vez de acusar o inocente.
+          if grep -rqF "Evolução Mágica" $js 2>/dev/null; then
+            echo "ℹ️  Controle acentuado encontrado: acentos estão literais no bundle."
+          else
+            echo "ℹ️  Controle acentuado NÃO encontrado: o bundle escapa não-ASCII."
+            echo "   (esperado no dart2js; por isso as sondas abaixo são ASCII)"
+          fi
+
           faltando=0
           procurar() {
-            if grep -rqF "$1" public/*.js public/**/*.js 2>/dev/null; then
-              echo "  ✅ encontrado: $1"
+            if grep -rqF "$1" $js 2>/dev/null; then
+              echo "  ✅ $1"
             else
               echo "  ❌ AUSENTE: $1"
               faltando=1
             fi
           }
-          echo "Procurando os textos da Leitura do Ciclo no bundle:"
+          echo "Sondas da Leitura do Ciclo (ASCII):"
           procurar "Leitura do Ciclo"
-          procurar "O oráculo lê o seu grimório"
+          procurar "Leitura da Semana"
+          procurar "Gerar minha leitura"
+          procurar "Abrir minha leitura"
+          procurar "Usar meus sonhos"
+          procurar "tecida a partir do que"
+          procurar "Conhecer a Leitura do Ciclo"
+
           if [ "$faltando" = "1" ]; then
-            echo "::error::A Leitura do Ciclo não está no bundle publicado. O código está no repositório mas não chegou no JavaScript — investigar compilação condicional, tree-shaking ou build de origem errada."
+            echo "::error::Textos da Leitura do Ciclo ausentes do bundle publicado — investigar compilação condicional, tree-shaking ou build de origem errada."
             exit 1
           fi
           echo "A feature está no bundle."
