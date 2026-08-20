@@ -12,6 +12,7 @@ import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../data/models/cycle_reading_model.dart';
@@ -54,8 +55,15 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Esta janela sai de graça pelo Vitalício? Exige compra REAL do lifetime
   /// (entitlement sem expiração) — `SubscriptionPlan.lifetime` não serve,
   /// porque também vem de Código Premium e do admin.
+  /// Este Vitalício é qualquer um: compra real, Código Premium ou admin —
+  /// todos recebem `SubscriptionPlan.lifetime`. Decisão de produto: o
+  /// Vitalício cobre as leituras sem cobrança, venha de onde vier.
+  bool get _hasLifetime =>
+      context.read<AuthProvider>().currentUser.plan ==
+      SubscriptionPlan.lifetime;
+
   bool get _lifetimeCoversThisWindow =>
-      _payment.isLifetime && CycleReadingService.lifetimeCovers(_periodType);
+      _hasLifetime && CycleReadingService.lifetimeCovers(_periodType);
 
   String get _productId => _periodType == CycleReadingPeriodType.week
       ? RevenueCatConfig.cycleReadingWeekProductId
@@ -226,8 +234,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     }
   }
 
-  /// Crédito incluído no Vitalício: sem loja, sem cobrança. O gate é a
-  /// compra REAL do lifetime, conferida no RevenueCat na hora.
+  /// Crédito incluído no Vitalício: sem loja, sem cobrança. Vale para todo
+  /// Vitalício (compra real, Código Premium, admin) e para as duas janelas.
   Future<void> _claimLifetime() async {
     if (_isWorking) return;
     if (!_lifetimeCoversThisWindow) return;
@@ -549,7 +557,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     Widget option(String type, String label, String productId) {
       final selected = _periodType == type;
       final included =
-          _payment.isLifetime && CycleReadingService.lifetimeCovers(type);
+          _hasLifetime && CycleReadingService.lifetimeCovers(type);
       final price =
           included ? l10n.cycleReadingLifetimeTag : _prices[productId];
       return Expanded(
@@ -681,7 +689,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
     }
 
-    // Vitalício: a Leitura da Lunação está incluída. Gera direto, sem loja.
+    // Vitalício: esta janela está incluída. Gera direto, sem loja.
     if (_lifetimeCoversThisWindow) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
