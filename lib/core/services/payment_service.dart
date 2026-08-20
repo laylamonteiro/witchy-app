@@ -688,6 +688,16 @@ class PaymentService extends ChangeNotifier {
   ///
   /// Isso permite sincronizar compras entre dispositivos
   Future<void> logIn(String userId) async {
+    // O catálogo é resolvido POR CLIENTE do RevenueCat (moeda, loja,
+    // segmentação, experimentos). Trocar de conta sem esvaziar estes caches
+    // faz a conta nova herdar o catálogo da anterior — e, quando o pacote
+    // herdado não vale para ela, os preços somem e a compra não abre. Como
+    // `logIn` também é chamado ao adotar a sessão do servidor (retorno do
+    // OAuth na web), sem logout no meio, esta limpeza precisa estar AQUI, e
+    // não só no logOut.
+    _offerings = null;
+    _consumablePackages.clear();
+
     if (!RevenueCatConfig.isConfigured) return;
 
     try {
@@ -705,8 +715,9 @@ class PaymentService extends ChangeNotifier {
     // (isPremiumEffective/PremiumAccess) depende de isPro=false após logout.
     _customerInfo = null;
     _isPro = false;
-    // A próxima conta pode estar em outra loja/moeda: os pacotes avulsos
-    // resolvidos para esta sessão não valem para ela.
+    // A próxima conta pode estar em outra loja/moeda: nem os pacotes avulsos
+    // nem as offerings resolvidas para esta sessão valem para ela.
+    _offerings = null;
     _consumablePackages.clear();
     notifyListeners();
 
