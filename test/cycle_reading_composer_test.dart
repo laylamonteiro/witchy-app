@@ -174,6 +174,8 @@ void main() {
     await seedDream(createdAt: dia1, content: 'o mar');
     await seed('sigils', {
       'intention': 'coragem para mudar',
+      // image_path é NOT NULL no schema: todo sigilo tem o desenho salvo.
+      'image_path': '/tmp/sigilo.png',
       'created_at': dia2,
     });
 
