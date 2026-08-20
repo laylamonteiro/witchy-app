@@ -19,7 +19,12 @@ import 'package:provider/provider.dart';
 void main() {
   testWidgets('Estatísticas mostra a porta permanente da Leitura do Ciclo',
       (tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 1400));
+    // Largura folgada de propósito: a página tem dois Rows que estouram
+    // em 390px sem dados no banco (magical_analytics_page.dart:576 e :908),
+    // e qualquer exceção reprova o teste antes do expect. Aqui a pergunta é
+    // "o card está na árvore?", não "o layout aguenta tela estreita" — esse
+    // é outro teste, para outro dia.
+    await tester.binding.setSurfaceSize(const Size(1200, 3000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(

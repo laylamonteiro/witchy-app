@@ -25,6 +25,8 @@ name: 🚀 Release
 
 on:
   push:
+    branches:
+      - release
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -84,8 +86,20 @@ jobs:
         env:
           INPUT_VERSAO: ${{ inputs.versao }}
         run: |
+          git fetch --tags --quiet
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             NOME="${INPUT_VERSAO#v}"
+          elif [ "${GITHUB_REF_TYPE}" = "branch" ]; then
+            # Merge no branch `release` = "publique isto". A versão sai da
+            # última tag + 1 no patch: correção é o caso comum, e a decisão
+            # que sobra (2.0.26 ou 2.1.0?) não deve travar a publicação.
+            # Para minor/major, use o botão Run workflow ou scripts/release.sh
+            # com o número desejado — os dois continuam valendo.
+            ULTIMA=$(git tag -l 'v*' | sed -e 's/^v//' -e 's/+.*//' \
+              | sort -V | tail -1)
+            ULTIMA=${ULTIMA:-0.0.0}
+            NOME=$(echo "$ULTIMA" | awk -F. '{print $1"."$2"."$3+1}')
+            echo "Publicando a partir do branch release: $ULTIMA → $NOME"
           else
             NOME="${GITHUB_REF_NAME#v}"
           fi
@@ -103,7 +117,6 @@ jobs:
           # A nova versão precisa ser MAIOR que toda tag existente (as
           # legadas v2.0.25+126 contam pelo nome, ignorando o +N). No push
           # de tag a própria tag já existe — sai da comparação.
-          git fetch --tags --quiet
           MAIOR_EXISTENTE=$(git tag -l 'v*' \
             | grep -v "^v${NOME}\$" \
             | sed -e 's/^v//' -e 's/+.*//' \
@@ -484,11 +497,12 @@ jobs:
         with:
           ref: ${{ needs.preparar.outputs.sha }}
 
-      - name: 🏷️ Criar a tag (só no dispatch)
-        # No push de tag ela já existe. No dispatch ela nasce AQUI, depois
-        # da aprovação — um dry-run ou uma rejeição não queimam a versão.
-        # O push de tag pelo GITHUB_TOKEN não redispara este workflow.
-        if: github.event_name == 'workflow_dispatch'
+      - name: 🏷️ Criar a tag
+        # Só no push de tag ela já existe. No dispatch e no merge do branch
+        # `release` ela nasce AQUI, depois da aprovação — um dry-run ou uma
+        # rejeição não queimam a versão. O push de tag pelo GITHUB_TOKEN não
+        # redispara este workflow.
+        if: github.ref_type != 'tag'
         env:
           NOME: ${{ needs.preparar.outputs.version_name }}
           SHA: ${{ needs.preparar.outputs.sha }}
