@@ -5,19 +5,19 @@ name: ✅ Branch Validation
 # dele para o ar.
 #
 # Roda também em main, e não só nas branches de trabalho, porque o job de
-# publicação vive aqui: o release-parallel.yml cuida do APK/AAB e não toca no
-# site. Sem main nesta lista, o merge simplesmente parava de publicar — em
-# silêncio, com todo o CI verde.
+# publicação (staging) vive aqui: o release.yml só se move por tag.
+#
+# Roda em TODA branch e em TODO commit, sem `paths-ignore`, porque o job
+# `validate` é required status check da main: um check que não roda é um PR
+# que nunca fica mergeável. Com paths-ignore, um PR só de documentação
+# ficaria travado para sempre esperando um run que jamais aconteceria — e
+# com filtro de nome, um PR de uma branch fora do padrão faria o mesmo.
+# Dois minutos de gate valem menos que esse tipo de impasse.
 
 on:
   push:
     branches:
-      - main
-      - 'claude/**'
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.gitignore'
+      - '**'
   workflow_dispatch:
 
 # Pushes em sequência cancelam o run anterior desatualizado — corta o

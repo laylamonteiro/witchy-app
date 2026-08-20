@@ -4,7 +4,7 @@ Dois workflows, papéis sem sobreposição:
 
 | Workflow | Dispara em | O que faz | Toca usuários? |
 |---|---|---|---|
-| `branch-validate.yml` | push em `main` e `claude/**` | gate de qualidade + prévia/staging do site + APK candidato | **Nunca** |
+| `branch-validate.yml` | push em qualquer branch | gate de qualidade + prévia/staging do site + APK candidato | **Nunca** |
 | `release.yml` | tag `vX.Y.Z` ou botão Run workflow | gate de novo + builds assinados + publica site, Play e Release | **Só com aprovação** |
 
 O princípio: **publicar é decisão, nunca efeito colateral de merge.**
