@@ -26,7 +26,13 @@ name: 🚀 Release
 on:
   push:
     branches:
+      # `release` = publicar de verdade (merge do PR de publicação).
+      # `main`    = dry-run automático: valida + builda TUDO (analyze, testes,
+      #             AAB e APK assinados, web com a chave de produção) e para
+      #             antes de publicar. Deixa a main sempre PROVADAMENTE
+      #             pronta pra publicar, sem você precisar clicar em nada.
       - release
+      - main
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -74,6 +80,7 @@ jobs:
       version_code: ${{ steps.versao.outputs.codigo }}
       sha: ${{ steps.versao.outputs.sha }}
       faixa: ${{ steps.faixa.outputs.nome }}
+      dry_run: ${{ steps.versao.outputs.dry }}
 
     steps:
       - name: 📥 Checkout repository
@@ -90,19 +97,35 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             NOME="${INPUT_VERSAO#v}"
           elif [ "${GITHUB_REF_TYPE}" = "branch" ]; then
-            # Merge no branch `release` = "publique isto". A versão sai da
-            # última tag + 1 no patch: correção é o caso comum, e a decisão
-            # que sobra (2.0.26 ou 2.1.0?) não deve travar a publicação.
-            # Para minor/major, use o botão Run workflow ou scripts/release.sh
-            # com o número desejado — os dois continuam valendo.
+            # Push num branch (main ou release) = a versão sai da última tag
+            # + 1 no patch. No `release` isso vira a publicação de verdade; na
+            # `main` é só o dry-run (nada é publicado — ver a flag `dry`
+            # abaixo). Correção é o caso comum, e a decisão que sobra (2.0.26
+            # ou 2.1.0?) não deve travar. Para minor/major, use o botão Run
+            # workflow ou scripts/release.sh com o número desejado.
             ULTIMA=$(git tag -l 'v*' | sed -e 's/^v//' -e 's/+.*//' \
               | sort -V | tail -1)
             ULTIMA=${ULTIMA:-0.0.0}
             NOME=$(echo "$ULTIMA" | awk -F. '{print $1"."$2"."$3+1}')
-            echo "Publicando a partir do branch release: $ULTIMA → $NOME"
+            echo "Versão a partir do branch ${GITHUB_REF_NAME}: $ULTIMA → $NOME"
           else
             NOME="${GITHUB_REF_NAME#v}"
           fi
+
+          # Dry-run (valida e builda, não publica) quando: é o botão Run
+          # workflow com "somente validar" marcado, OU é um push na main (a
+          # main nunca publica — publicar é o merge no `release`). Um único
+          # lugar decide isso; os jobs `secrets` e `publicar` leem daqui.
+          if [ "${{ github.event_name }}" = "push" ] && \
+             [ "${GITHUB_REF_NAME}" = "main" ]; then
+            DRY=true
+          elif [ "${{ inputs.somente_validar }}" = "true" ]; then
+            DRY=true
+          else
+            DRY=false
+          fi
+          echo "dry=$DRY" >> "$GITHUB_OUTPUT"
+          echo "Dry-run: $DRY"
 
           if ! echo "$NOME" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "::error::Versão inválida: '$NOME'. Use o formato X.Y.Z (ex.: 2.1.0)."
@@ -197,7 +220,7 @@ jobs:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PLAY_SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          DRY_RUN: ${{ inputs.somente_validar }}
+          DRY_RUN: ${{ steps.versao.outputs.dry }}
         run: |
           faltando=""
           [ -z "$KEYSTORE" ] && faltando="$faltando ANDROID_KEYSTORE_BASE64"
@@ -614,7 +637,7 @@ jobs:
     needs: [preparar, validar, build-android, build-web]
     if: >-
       always() &&
-      inputs.somente_validar != true &&
+      needs.preparar.outputs.dry_run != 'true' &&
       needs.preparar.result == 'success' &&
       needs.validar.result == 'success' &&
       needs.build-web.result == 'success'
@@ -760,9 +783,19 @@ jobs:
           NOME: ${{ needs.preparar.outputs.version_name }}
           CODIGO: ${{ needs.preparar.outputs.version_code }}
           SHA: ${{ needs.preparar.outputs.sha }}
+          DRY: ${{ needs.preparar.outputs.dry_run }}
         run: |
           {
-            echo "## 🚀 Release v${NOME}"
+            if [ "$DRY" = "true" ]; then
+              echo "## 🧪 Dry-run do release (nada publicado)"
+              echo
+              echo "Validou e buildou tudo no caminho de publicação — sem"
+              echo "criar tag, subir site ou enviar à Play. A versão \`v${NOME}\`"
+              echo "é só a que SERIA usada; ela nasce mesmo no merge do PR de"
+              echo "publicação (main → release)."
+            else
+              echo "## 🚀 Release v${NOME}"
+            fi
             echo
             echo "| Etapa | Status |"
             echo "|---|---|"

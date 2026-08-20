@@ -4,8 +4,16 @@ name: ✅ Branch Validation
 # Análise e testes FALHAM o job aqui — é o gate de qualidade, e nada passa
 # dele para o ar.
 #
-# Roda também em main, e não só nas branches de trabalho, porque o job de
-# publicação (staging) vive aqui: o release.yml só se move por tag.
+# Divisão de trabalho com o release.yml na MAIN:
+#   - Todo push na main dispara o release.yml em modo dry-run (mesmo push),
+#     que já roda analyze + testes + ARB + scan de PT e ainda AAB/APK
+#     assinados e web de produção. Ele é o gate da main.
+#   - Por isso, na main, ESTE workflow não repete o `validate` nem o
+#     `apk-candidato`: fica só com o que é exclusivo dele — publicar o
+#     staging e abrir o PR de publicação (main → release).
+#   Nas branches de trabalho (claude/**) nada muda: o `validate` daqui
+#   continua sendo o gate e o required status check, porque o release.yml
+#   não roda nelas.
 #
 # Roda em TODA branch e em TODO commit, sem `paths-ignore`, porque o job
 # `validate` é required status check da main: um check que não roda é um PR
@@ -32,6 +40,13 @@ concurrency:
 jobs:
   validate:
     name: 🔍 Analyze, Test & Build
+    # NÃO roda na main: lá o release.yml dispara um dry-run no mesmo push, que
+    # já faz analyze + testes + ARB + scan de PT (e ainda AAB/APK assinados e
+    # web de produção). Rodar o mesmo gate aqui seria pagar duas vezes. Nas
+    # branches de trabalho e nos PRs este job continua sendo o gate — e o
+    # required status check da branch protection roda no push da branch, antes
+    # do merge, onde a ref é `claude/**`, não `main`.
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       native_changed: ${{ steps.native.outputs.changed }}
@@ -211,6 +226,12 @@ jobs:
   deploy-web:
     name: 🌐 Publicar site (Cloudflare Pages)
     needs: validate
+    # Na main o `validate` é pulado (o dry-run do release.yml é o gate), então
+    # aqui aceitamos `success` OU `skipped` — mas NUNCA `failure`: numa branch
+    # de trabalho, gate vermelho não publica prévia.
+    if: >-
+      always() &&
+      (needs.validate.result == 'success' || needs.validate.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
@@ -446,11 +467,14 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # ──────────────────────────────────────────────────────────────────────
-  # APK candidato: todo push em main gera um APK de RELEASE assinado, como
-  # artifact, para instalar no aparelho e testar ANTES de existir qualquer
-  # release. É o "instalo localmente e testo" do fluxo — sem tag, sem loja,
-  # sem tocar em usuários. O versionName ganha sufixo -rc.<sha> para o
-  # aparelho mostrar de qual commit veio.
+  # APK candidato: APK de RELEASE assinado, como artifact, para instalar no
+  # aparelho e testar. O versionName ganha sufixo -rc.<sha> para o aparelho
+  # mostrar de qual commit veio.
+  #
+  # SÓ no dispatch manual (botão Run workflow) — é o jeito de tirar um APK
+  # assinado de QUALQUER branch, sem versão nem tag. No push da main ele NÃO
+  # roda: o dry-run do release.yml (mesmo push) já produz um APK assinado
+  # idêntico como artifact; construir os dois seria pagar ~10 min à toa.
   # ──────────────────────────────────────────────────────────────────────
   apk-candidato:
     name: 📱 APK candidato (assinado)
@@ -458,7 +482,11 @@ jobs:
     # APK ~10, então publicar primeiro é ver o resultado antes. De quebra, se
     # a publicação falhar, não se gastam 10 minutos de build para descobrir.
     needs: [validate, deploy-web]
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: >-
+      always() &&
+      github.event_name == 'workflow_dispatch' &&
+      needs.deploy-web.result == 'success' &&
+      (needs.validate.result == 'success' || needs.validate.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
@@ -642,7 +670,9 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────
   pr-release:
     name: 🚢 PR de publicação (main → release)
-    needs: validate
+    # Sem `needs: validate` — na main esse job é pulado, e o PR de publicação
+    # só abre/atualiza a lista do que seria publicado. O gate da main é o
+    # dry-run do release.yml, cujos checks aparecem NESTE PR.
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
