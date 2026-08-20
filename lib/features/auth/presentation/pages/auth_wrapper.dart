@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/utils/mask.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/debug_log_service.dart';
@@ -41,6 +42,27 @@ class AuthWrapper extends StatelessWidget {
         // Log para debug (fire-and-forget)
         debugLog('NAV',
             'AuthWrapper: isAuthenticated=$isAuthenticated, hasSeenOnboarding=$hasSeenOnboarding, email=${maskEmail(authProvider.currentUser.email)}');
+
+        // Volta do login social com a troca do código ainda em voo: a
+        // sessão está a caminho do servidor. Mostrar a tela de login agora
+        // seria mentir ("não funcionou") para alguém cujo login FUNCIONOU —
+        // e induzir o segundo login que virou rotina. Espera com nome; o
+        // AuthProvider libera quando a sessão chega ou após 15s.
+        if (!isAuthenticated && authProvider.oauthReturnPending) {
+          debugLog('NAV', 'AuthWrapper: aguardando sessão do retorno OAuth');
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(AppLocalizations.of(context).authFinishingLogin),
+                ],
+              ),
+            ),
+          );
+        }
 
         // Se tem conta logada, ir para home
         if (isAuthenticated) {
