@@ -42,7 +42,13 @@ void main() {
           locale: Locale('pt', 'BR'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: MagicalAnalyticsPage(embedded: true),
+          // Scaffold de propósito: em `embedded: true` a página não traz
+          // o seu, porque na vida real ela vive dentro do Scaffold da
+          // Evolução Mágica (magical_progress_page.dart). Solta em `home:`,
+          // os InkWell dos cards de categoria não acham Material e derrubam
+          // o frame antes do expect. Aqui o teste monta a página como o app
+          // monta — que é a única montagem cujo resultado interessa.
+          home: Scaffold(body: MagicalAnalyticsPage(embedded: true)),
         ),
       ),
     );
