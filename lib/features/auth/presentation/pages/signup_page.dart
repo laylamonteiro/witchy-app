@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/legal/legal_document_page.dart';
@@ -8,6 +9,8 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
 import '../widgets/breathing_badge.dart';
+import '../widgets/auth_motion.dart';
+import '../widgets/auth_feedback.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -26,10 +29,15 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
+  final _shakeKey = GlobalKey<ShakerState>();
+  final _termsShakeKey = GlobalKey<ShakerState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmPasswordFocus = FocusNode();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -41,58 +49,89 @@ class _SignupPageState extends State<SignupPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmPasswordFocus.dispose();
     super.dispose();
+  }
+
+  /// Voltar seguro: vindo do onboarding esta tela pode ser a ÚNICA rota da
+  /// pilha — um pop cego a esvaziaria e deixaria a tela preta. Sem nada
+  /// abaixo, volta-se para a porta de entrada (Welcome).
+  void _handleBack() {
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+    } else {
+      nav.pushReplacementNamed('/welcome');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: context.gc.lilac),
-          onPressed: () => Navigator.pop(context),
+    // PopScope intercepta o gesto/botão de voltar do sistema, que sofre do
+    // mesmo esvaziamento de pilha que o botão da AppBar. Com rota abaixo,
+    // canPop=true preserva o pop nativo (e o swipe-back do iOS); só a rota
+    // solitária — deep link/web — é interceptada e redirecionada.
+    return PopScope(
+      canPop: Navigator.canPop(context),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleBack();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: context.gc.lilac),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: _handleBack,
+          ),
         ),
-      ),
-      body: StarfieldBackground(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 10),
-                  // Header
-                  CascadeIn(index: 0, child: _buildHeader()),
-                  const SizedBox(height: 24),
-                  // Campos de formulário
-                  CascadeIn(index: 1, child: _buildNameField()),
-                  const SizedBox(height: 16),
-                  CascadeIn(index: 2, child: _buildEmailField()),
-                  const SizedBox(height: 16),
-                  CascadeIn(index: 3, child: _buildPasswordField()),
-                  const SizedBox(height: 16),
-                  CascadeIn(index: 4, child: _buildConfirmPasswordField()),
-                  const SizedBox(height: 20),
-                  // Termos de uso
-                  CascadeIn(index: 5, child: _buildTermsCheckbox()),
-                  const SizedBox(height: 24),
-                  // Botão de cadastro
-                  _buildSignupButton(),
-                  const SizedBox(height: 32),
-                  // Divisor
-                  _buildDivider(),
-                  const SizedBox(height: 32),
-                  // Login social
-                  _buildSocialSignup(),
-                  const SizedBox(height: 32),
-                  // Link para login
-                  _buildLoginLink(),
-                  const SizedBox(height: 32),
-                ],
+        body: StarfieldBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Form(
+                key: _formKey,
+                child: AutofillGroup(
+                  child: Shaker(
+                    key: _shakeKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 10),
+                        // Header
+                        CascadeIn(index: 0, child: _buildHeader()),
+                        const SizedBox(height: 24),
+                        // Campos de formulário
+                        CascadeIn(index: 1, child: _buildNameField()),
+                        const SizedBox(height: 16),
+                        CascadeIn(index: 2, child: _buildEmailField()),
+                        const SizedBox(height: 16),
+                        CascadeIn(index: 3, child: _buildPasswordField()),
+                        const SizedBox(height: 16),
+                        CascadeIn(index: 4, child: _buildConfirmPasswordField()),
+                        const SizedBox(height: 20),
+                        // Termos de uso
+                        CascadeIn(index: 5, child: _buildTermsCheckbox()),
+                        const SizedBox(height: 24),
+                        // Botão de cadastro
+                        _buildSignupButton(),
+                        const SizedBox(height: 32),
+                        // Divisor
+                        _buildDivider(),
+                        const SizedBox(height: 32),
+                        // Login social
+                        _buildSocialSignup(),
+                        const SizedBox(height: 32),
+                        // Link para login
+                        _buildLoginLink(),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -144,7 +183,11 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildNameField() {
     return TextFormField(
       controller: _nameController,
+      enabled: !_isLoading,
       textCapitalization: TextCapitalization.words,
+      textInputAction: TextInputAction.next,
+      autofillHints: const [AutofillHints.name],
+      onFieldSubmitted: (_) => _emailFocus.requestFocus(),
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).authNameLabel,
@@ -166,7 +209,13 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
+      focusNode: _emailFocus,
+      enabled: !_isLoading,
       keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.next,
+      autofillHints: const [AutofillHints.email],
+      autocorrect: false,
+      onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).authEmailLabel,
@@ -188,18 +237,33 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildPasswordField() {
     return TextFormField(
       controller: _passwordController,
+      focusNode: _passwordFocus,
+      enabled: !_isLoading,
       obscureText: _obscurePassword,
+      textInputAction: TextInputAction.next,
+      autofillHints: const [AutofillHints.newPassword],
+      onFieldSubmitted: (_) => _confirmPasswordFocus.requestFocus(),
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).authPasswordLabel,
         hintText: AppLocalizations.of(context).authPasswordHintMin,
         prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: context.gc.textSecondary,
+          tooltip: _obscurePassword
+              ? AppLocalizations.of(context).authShowPassword
+              : AppLocalizations.of(context).authHidePassword,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (child, anim) =>
+                ScaleTransition(scale: anim, child: child),
+            child: Icon(
+              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              key: ValueKey(_obscurePassword),
+              color: context.gc.textSecondary,
+            ),
           ),
           onPressed: () {
+            HapticFeedback.selectionClick();
             setState(() {
               _obscurePassword = !_obscurePassword;
             });
@@ -221,18 +285,35 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildConfirmPasswordField() {
     return TextFormField(
       controller: _confirmPasswordController,
+      focusNode: _confirmPasswordFocus,
+      enabled: !_isLoading,
       obscureText: _obscureConfirmPassword,
+      textInputAction: TextInputAction.done,
+      autofillHints: const [AutofillHints.newPassword],
+      onFieldSubmitted: (_) => _handleSignup(),
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).authConfirmPasswordLabel,
         hintText: AppLocalizations.of(context).authConfirmPasswordHint,
         prefixIcon: Icon(Icons.lock_outline, color: context.gc.lilac),
         suffixIcon: IconButton(
-          icon: Icon(
-            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-            color: context.gc.textSecondary,
+          tooltip: _obscureConfirmPassword
+              ? AppLocalizations.of(context).authShowPassword
+              : AppLocalizations.of(context).authHidePassword,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (child, anim) =>
+                ScaleTransition(scale: anim, child: child),
+            child: Icon(
+              _obscureConfirmPassword
+                  ? Icons.visibility_off
+                  : Icons.visibility,
+              key: ValueKey(_obscureConfirmPassword),
+              color: context.gc.textSecondary,
+            ),
           ),
           onPressed: () {
+            HapticFeedback.selectionClick();
             setState(() {
               _obscureConfirmPassword = !_obscureConfirmPassword;
             });
@@ -252,15 +333,20 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Widget _buildTermsCheckbox() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    // A linha inteira alterna o aceite (alvo de toque generoso); os links
+    // dentro do texto continuam abrindo os documentos.
+    return Shaker(
+      key: _termsShakeKey,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
         SizedBox(
-          width: 24,
-          height: 24,
+          width: 40,
+          height: 40,
           child: Checkbox(
             value: _acceptedTerms,
             onChanged: (value) {
+              HapticFeedback.selectionClick();
               setState(() {
                 _acceptedTerms = value ?? false;
               });
@@ -270,10 +356,12 @@ class _SignupPageState extends State<SignupPage> {
             side: BorderSide(color: context.gc.surfaceBorder),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 4),
         Expanded(
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () {
+              HapticFeedback.selectionClick();
               setState(() {
                 _acceptedTerms = !_acceptedTerms;
               });
@@ -319,37 +407,64 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
       ],
+      ),
     );
   }
 
   Widget _buildSignupButton() {
-    return ElevatedButton(
-      onPressed: (_isLoading || !_acceptedTerms) ? null : _handleSignup,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: context.gc.lilac,
-        foregroundColor: const Color(0xFF2B2143),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
-      ),
-      child: _isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2B2143)),
+    final enabled = !_isLoading && _acceptedTerms;
+    // GestureDetector externo: um toque no botão DESABILITADO explica o
+    // porquê (sacode os termos) em vez de morrer no silêncio.
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: enabled
+          ? null
+          : () {
+              if (_isLoading) return;
+              _termsShakeKey.currentState?.shake();
+              showAuthSnack(
+                context,
+                AppLocalizations.of(context).authMustAcceptTerms,
+              );
+            },
+      child: PressableScale(
+        child: SheenSweep(
+          child: ElevatedButton(
+            onPressed: enabled ? _handleSignup : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.gc.lilac,
+              foregroundColor: const Color(0xFF2B2143),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-            )
-          : Text(
-              AppLocalizations.of(context).authCreateAccount,
-              style: GoogleFonts.nunito(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.3),
             ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: _isLoading
+                  ? const SizedBox(
+                      key: ValueKey('loading'),
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFF2B2143)),
+                      ),
+                    )
+                  : Text(
+                      AppLocalizations.of(context).authCreateAccount,
+                      key: const ValueKey('label'),
+                      style: GoogleFonts.nunito(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -402,39 +517,41 @@ class _SignupPageState extends State<SignupPage> {
     required String label,
     required VoidCallback onPressed,
   }) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: context.gc.textPrimary,
-        side: BorderSide(color: context.gc.surfaceBorder),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    return PressableScale(
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: context.gc.textPrimary,
+          side: BorderSide(color: context.gc.surfaceBorder),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (iconWidget != null)
-            iconWidget
-          else
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (iconWidget != null)
+              iconWidget
+            else
+              Text(
+                icon ?? '',
+                style: GoogleFonts.nunito(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: context.gc.textPrimary,
+                ),
+              ),
+            const SizedBox(width: 8),
             Text(
-              icon ?? '',
+              label,
               style: GoogleFonts.nunito(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: context.gc.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: GoogleFonts.nunito(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -474,14 +591,17 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _handleSignup() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isLoading) return;
+    if (!_formKey.currentState!.validate()) {
+      _shakeKey.currentState?.shake();
+      return;
+    }
 
     if (!_acceptedTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).authMustAcceptTerms),
-          backgroundColor: context.gc.alert,
-        ),
+      _termsShakeKey.currentState?.shake();
+      showAuthSnack(
+        context,
+        AppLocalizations.of(context).authMustAcceptTerms,
       );
       return;
     }
@@ -541,11 +661,10 @@ class _SignupPageState extends State<SignupPage> {
 
       if (mounted) {
         // Mostrar sucesso
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).authSignupSuccess),
-            backgroundColor: context.gc.success,
-          ),
+        showAuthSnack(
+          context,
+          AppLocalizations.of(context).authSignupSuccess,
+          type: AuthSnackType.success,
         );
 
         // Navegar para home
@@ -564,12 +683,8 @@ class _SignupPageState extends State<SignupPage> {
           errorMessage = e.toString().replaceAll('Exception: ', '');
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: context.gc.alert,
-          ),
-        );
+        _shakeKey.currentState?.shake();
+        showAuthSnack(context, errorMessage, type: AuthSnackType.error);
       }
     } finally {
       if (mounted) {
@@ -580,21 +695,18 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> _handleGoogleSignup() async {
     if (!_acceptedTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).authMustAcceptTerms),
-          backgroundColor: context.gc.alert,
-        ),
+      _termsShakeKey.currentState?.shake();
+      showAuthSnack(
+        context,
+        AppLocalizations.of(context).authMustAcceptTerms,
       );
       return;
     }
 
     if (!SupabaseConfig.isConfigured) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).authGoogleSignupUnavailable),
-          backgroundColor: context.gc.info,
-        ),
+      showAuthSnack(
+        context,
+        AppLocalizations.of(context).authGoogleSignupUnavailable,
       );
       return;
     }
@@ -602,11 +714,10 @@ class _SignupPageState extends State<SignupPage> {
     final captchaToken = await CaptchaGate.resolve(context);
     if (!mounted) return;
     if (CaptchaConfig.isConfigured && captchaToken == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).authCaptchaFailed),
-          backgroundColor: context.gc.alert,
-        ),
+      showAuthSnack(
+        context,
+        AppLocalizations.of(context).authCaptchaFailed,
+        type: AuthSnackType.error,
       );
       return;
     }
@@ -635,20 +746,19 @@ class _SignupPageState extends State<SignupPage> {
         // Navegar para home
         Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.errorMessage ?? AppLocalizations.of(context).authGoogleSignupError),
-            backgroundColor: context.gc.alert,
-          ),
+        showAuthSnack(
+          context,
+          result.errorMessage ??
+              AppLocalizations.of(context).authGoogleSignupError,
+          type: AuthSnackType.error,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppLocalizations.of(context).authGoogleSignupError}: $e'),
-            backgroundColor: context.gc.alert,
-          ),
+        showAuthSnack(
+          context,
+          '${AppLocalizations.of(context).authGoogleSignupError}: $e',
+          type: AuthSnackType.error,
         );
       }
     } finally {

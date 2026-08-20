@@ -111,34 +111,41 @@ class _BreathingBadgeState extends State<BreathingBadge>
             scale: Tween<double>(begin: 1.0, end: 1.05).animate(_curve),
             child: widget.child,
           ),
-          // Estrelas piscando ao redor — a assinatura da casa
+          // Estrelas piscando ao redor — a assinatura da casa. Decorativas:
+          // fora da árvore de semântica para não virar ruído no leitor de tela.
           if (widget.showStars) ...[
             Positioned(
               top: 6,
               left: spread - 26,
-              child: BlinkStar(
-                delay: Duration.zero,
-                color: context.gc.starYellow,
-                reduced: reduced,
+              child: ExcludeSemantics(
+                child: BlinkStar(
+                  delay: Duration.zero,
+                  color: context.gc.starYellow,
+                  reduced: reduced,
+                ),
               ),
             ),
             Positioned(
               top: spread - 18,
               right: 2,
-              child: BlinkStar(
-                delay: const Duration(milliseconds: 600),
-                color: context.gc.starYellow,
-                reduced: reduced,
-                size: 9,
+              child: ExcludeSemantics(
+                child: BlinkStar(
+                  delay: const Duration(milliseconds: 600),
+                  color: context.gc.starYellow,
+                  reduced: reduced,
+                  size: 9,
+                ),
               ),
             ),
             Positioned(
               bottom: 10,
               left: 8,
-              child: BlinkStar(
-                delay: const Duration(milliseconds: 1100),
-                color: context.gc.starYellow,
-                reduced: reduced,
+              child: ExcludeSemantics(
+                child: BlinkStar(
+                  delay: const Duration(milliseconds: 1100),
+                  color: context.gc.starYellow,
+                  reduced: reduced,
+                ),
               ),
             ),
           ],

@@ -196,6 +196,16 @@
   "forgotResendError": "Error al reenviar el correo",
   "forgotResendSuccess": "¡Correo reenviado con éxito!",
   "forgotResendErrorPrefix": "Error al reenviar",
+  "authShowPassword": "Mostrar contraseña",
+  "authHidePassword": "Ocultar contraseña",
+  "forgotResendIn": "Reenviar en {seconds}s",
+  "@forgotResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "changePasswordTitle": "Cambiar Contraseña",
   "changePasswordHeader": "Nueva Contraseña",
   "changePasswordSubtitle": "Ingresa tu contraseña actual y elige una nueva",

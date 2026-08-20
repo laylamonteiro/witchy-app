@@ -540,6 +540,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotResendErrorPrefix => 'Error resending';
 
   @override
+  String get authShowPassword => 'Show password';
+
+  @override
+  String get authHidePassword => 'Hide password';
+
+  @override
+  String forgotResendIn(int seconds) {
+    return 'Resend in ${seconds}s';
+  }
+
+  @override
   String get changePasswordTitle => 'Change Password';
 
   @override

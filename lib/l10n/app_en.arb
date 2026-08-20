@@ -196,6 +196,16 @@
   "forgotResendError": "Error resending email",
   "forgotResendSuccess": "Email resent successfully!",
   "forgotResendErrorPrefix": "Error resending",
+  "authShowPassword": "Show password",
+  "authHidePassword": "Hide password",
+  "forgotResendIn": "Resend in {seconds}s",
+  "@forgotResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "changePasswordTitle": "Change Password",
   "changePasswordHeader": "New Password",
   "changePasswordSubtitle": "Enter your current password and choose a new one",

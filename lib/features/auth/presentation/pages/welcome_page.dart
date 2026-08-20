@@ -4,6 +4,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
+import '../widgets/auth_motion.dart';
 import '../widgets/breathing_badge.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
@@ -82,33 +83,41 @@ class WelcomePage extends StatelessWidget {
   }
 
   Widget _buildLogo(BuildContext context) {
-    return BreathingBadge(
-      glowColor: context.gc.lilac,
-      haloSize: 150,
-      child: Container(
-        width: 120,
-        height: 120,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              context.gc.lilac.withValues(alpha: 0.3),
-              context.gc.pink.withValues(alpha: 0.3),
-            ],
-          ),
-          border: Border.all(
-            color: context.gc.lilac.withValues(alpha: 0.5),
-            width: 2,
+    return Stack(
+      alignment: Alignment.center,
+      clipBehavior: Clip.none,
+      children: [
+        BreathingBadge(
+          glowColor: context.gc.lilac,
+          haloSize: 150,
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  context.gc.lilac.withValues(alpha: 0.3),
+                  context.gc.pink.withValues(alpha: 0.3),
+                ],
+              ),
+              border: Border.all(
+                color: context.gc.lilac.withValues(alpha: 0.5),
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              Icons.auto_stories,
+              size: 56,
+              color: context.gc.lilac,
+            ),
           ),
         ),
-        child: Icon(
-          Icons.auto_stories,
-          size: 56,
-          color: context.gc.lilac,
-        ),
-      ),
+        // Uma faísca orbita o livro — a linguagem de órbita dos emblemas.
+        OrbitingSparkle(radius: 82, color: context.gc.starYellow),
+      ],
     );
   }
 
@@ -168,11 +177,13 @@ class WelcomePage extends StatelessWidget {
     return Column(
       children: [
         // Botão de cadastro (primário) com brilho respirando
-        BreathingGlow(
-          color: context.gc.lilac,
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
+        PressableScale(
+          child: BreathingGlow(
+            color: context.gc.lilac,
+            child: SheenSweep(
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SignupPage()),
@@ -193,13 +204,16 @@ class WelcomePage extends StatelessWidget {
                 ),
               ),
             ),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 12),
         // Botão de login (secundário)
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
+        PressableScale(
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -219,6 +233,7 @@ class WelcomePage extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ),
           ),
         ),
       ],
