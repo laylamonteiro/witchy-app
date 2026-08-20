@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/starfield_background.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_motion.dart';
+import '../widgets/breathing_badge.dart';
 
 /// Tela de onboarding com slides explicando funcionalidades do app
 class OnboardingPage extends StatefulWidget {
@@ -88,15 +92,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Page view com slides
+          // Fundo único: o gradiente se funde continuamente entre os slides,
+          // acompanhando o dedo — uma jornada num céu só, sem cortes.
+          Positioned.fill(child: _buildMorphingBackground()),
+          const Positioned.fill(
+            child: StarfieldBackground(child: SizedBox.expand()),
+          ),
+          // Page view com slides (transparentes: o céu é a camada de trás)
           PageView.builder(
             controller: _pageController,
             itemCount: _slides.length,
             onPageChanged: (index) {
+              HapticFeedback.selectionClick();
               setState(() => _currentPage = index);
             },
             itemBuilder: (context, index) {
-              return _buildSlide(_slides[index]);
+              return _buildSlide(_slides[index], index);
             },
           ),
           // Skip button
@@ -127,74 +138,113 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildSlide(OnboardingSlide slide) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: slide.gradient,
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
-              // Ícone
-              Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: slide.iconColor.withValues(alpha: 0.2),
-                  border: Border.all(
-                    color: slide.iconColor.withValues(alpha: 0.3),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: slide.iconColor.withValues(alpha: 0.3),
-                      blurRadius: 40,
-                      spreadRadius: 10,
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  slide.icon,
-                  size: 70,
-                  color: slide.iconColor,
-                ),
-              ),
-              const SizedBox(height: 48),
-              // Título
-              Text(
-                slide.title,
-                style: GoogleFonts.cinzelDecorative(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: context.gc.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              // Descrição
-              Text(
-                slide.description,
-                style: GoogleFonts.nunito(
-                  fontSize: 16,
-                  color: context.gc.textSecondary,
-                  height: 1.6,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const Spacer(flex: 3),
-            ],
+  /// O céu da jornada: interpola os gradientes dos slides conforme a
+  /// posição real do scroll, então o meio do arrasto é literalmente o meio
+  /// do caminho entre duas cores.
+  Widget _buildMorphingBackground() {
+    return AnimatedBuilder(
+      animation: _pageController,
+      builder: (context, _) {
+        // O getter _slides constrói a lista — materializa uma vez por frame.
+        final slides = _slides;
+        double page = _currentPage.toDouble();
+        if (_pageController.hasClients &&
+            _pageController.position.haveDimensions) {
+          page = _pageController.page ?? page;
+        }
+        final last = slides.length - 1;
+        final i = page.floor().clamp(0, last);
+        final j = (i + 1).clamp(0, last);
+        final t = (page - i).clamp(0.0, 1.0);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.lerp(slides[i].gradient[0], slides[j].gradient[0], t)!,
+                Color.lerp(slides[i].gradient[1], slides[j].gradient[1], t)!,
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSlide(OnboardingSlide slide, int index) {
+    return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(flex: 2),
+                // Ícone respirando, com parallax mais forte que o texto:
+                // camadas andando em velocidades diferentes dão profundidade
+                // ao deslizar entre os slides.
+                _Parallax(
+                  controller: _pageController,
+                  index: index,
+                  factor: 60,
+                  child: BreathingBadge(
+                    glowColor: slide.iconColor,
+                    haloSize: 150,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: slide.iconColor.withValues(alpha: 0.2),
+                        border: Border.all(
+                          color: slide.iconColor.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Icon(
+                        slide.icon,
+                        size: 60,
+                        color: slide.iconColor,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                // Título
+                _Parallax(
+                  controller: _pageController,
+                  index: index,
+                  factor: 28,
+                  child: Text(
+                    slide.title,
+                    style: GoogleFonts.cinzelDecorative(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: context.gc.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Descrição
+                _Parallax(
+                  controller: _pageController,
+                  index: index,
+                  factor: 14,
+                  child: Text(
+                    slide.description,
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      color: context.gc.textSecondary,
+                      height: 1.6,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const Spacer(flex: 3),
+              ],
+            ),
+          ),
     );
   }
 
@@ -223,41 +273,59 @@ class _OnboardingPageState extends State<OnboardingPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_slides.length, (index) {
               final isActive = index == _currentPage;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: isActive ? 24 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  color: isActive
-                      ? context.gc.lilac
-                      : context.gc.surfaceBorder,
+              // Cada bolinha é um atalho para o próprio slide (alvo de
+              // toque bem maior que os 8px visíveis).
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _pageController.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    width: isActive ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: isActive
+                          ? context.gc.lilac
+                          : context.gc.surfaceBorder,
+                    ),
+                  ),
                 ),
               );
             }),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
           // Botões
           if (isLast) ...[
             // Botão de criar conta
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _finishOnboarding(createAccount: true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.gc.lilac,
-                  foregroundColor: const Color(0xFF2B2143),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context).authCreateAccount,
-                  style: GoogleFonts.nunito(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            PressableScale(
+              child: SheenSweep(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _finishOnboarding(createAccount: true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.gc.lilac,
+                      foregroundColor: const Color(0xFF2B2143),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context).authCreateAccount,
+                      style: GoogleFonts.nunito(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -267,7 +335,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
+                onPressed: () => _finishOnboarding(createAccount: false),
                 child: Text(
                   AppLocalizations.of(context).onbHaveAccount,
                   style: GoogleFonts.nunito(
@@ -280,31 +348,33 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ),
           ] else ...[
             // Botão de próximo
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _nextPage,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.gc.lilac,
-                  foregroundColor: const Color(0xFF2B2143),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context).onbNext,
-                      style: GoogleFonts.nunito(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+            PressableScale(
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _nextPage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.gc.lilac,
+                    foregroundColor: const Color(0xFF2B2143),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward, size: 20),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context).onbNext,
+                        style: GoogleFonts.nunito(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward, size: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -334,14 +404,53 @@ class _OnboardingPageState extends State<OnboardingPage> {
     await authProvider.markOnboardingSeen();
 
     if (mounted) {
-      if (createAccount) {
-        Navigator.of(context).pushReplacementNamed('/signup');
-      } else {
-        // Sem conta não se entra: o app exige sessão. (Hoje nenhum botão
-        // chega aqui — o onboarding só oferece criar conta ou entrar.)
-        Navigator.of(context).pushReplacementNamed('/login');
-      }
+      final nav = Navigator.of(context);
+      // A Welcome fica NA BASE da pilha antes de empilhar o destino:
+      // substituir o onboarding direto por login/cadastro deixava essa tela
+      // como única rota — e o voltar (botão ou gesto) esvaziava a pilha,
+      // terminando numa tela preta.
+      nav.pushReplacementNamed('/welcome');
+      nav.pushNamed(createAccount ? '/signup' : '/login');
     }
+  }
+}
+
+/// Desloca o filho conforme o slide sai do centro — cada camada com seu
+/// [factor] (px por página de distância) — e esmaece nas bordas. O widget
+/// escuta o PageController: nada de setState por frame.
+class _Parallax extends StatelessWidget {
+  final PageController controller;
+  final int index;
+  final double factor;
+  final Widget child;
+
+  const _Parallax({
+    required this.controller,
+    required this.index,
+    required this.factor,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        double delta = 0;
+        if (controller.hasClients && controller.position.haveDimensions) {
+          delta = (controller.page ?? index.toDouble()) - index;
+        }
+        return Opacity(
+          opacity: (1 - delta.abs() * 0.6).clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(-delta * factor, 0),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
   }
 }
 

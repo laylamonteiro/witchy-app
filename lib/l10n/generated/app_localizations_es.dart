@@ -544,6 +544,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get forgotResendErrorPrefix => 'Error al reenviar';
 
   @override
+  String get authShowPassword => 'Mostrar contraseña';
+
+  @override
+  String get authHidePassword => 'Ocultar contraseña';
+
+  @override
+  String forgotResendIn(int seconds) {
+    return 'Reenviar en ${seconds}s';
+  }
+
+  @override
   String get changePasswordTitle => 'Cambiar Contraseña';
 
   @override
