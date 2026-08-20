@@ -127,6 +127,8 @@
   "premiumPlanYearly": "Anual",
   "premiumPerMonth": "/mes",
   "premiumPerYear": "/año",
+  "premiumPlanLifetime": "Vitalicio",
+  "premiumLifetimeOnce": "pago único, para siempre",
   "premiumSave33": "Ahorra 33%",
   "premiumTagSelected": "SELECCIONADO",
   "premiumTagPopular": "POPULAR",

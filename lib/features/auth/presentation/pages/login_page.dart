@@ -82,7 +82,14 @@ class _LoginPageState extends State<LoginPage> {
           child: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Form(
+              // Teto de largura para a web desktop: sem ele o formulário
+              // estica pela janela toda. Centralizado em ~480, mantém a
+              // leitura de app de celular (o starfield fica fora e segue
+              // preenchendo o fundo).
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Form(
                 key: _formKey,
                 child: AutofillGroup(
                   child: Shaker(
@@ -137,6 +144,8 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                   ),
+                ),
+                ),
                 ),
               ),
             ),

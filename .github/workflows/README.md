@@ -80,9 +80,11 @@ nenhum passo manual de digitação entre elas.
   da tag — sem `|| echo`.
 - **Builds do mesmo SHA**: APK e AAB em **jobs paralelos** (matrix, um
   runner cada — ~10 min em vez de ~20) e o site. Cada job confere a própria
-  assinatura contra o SHA-1 registrado; divergência é erro fatal. A
-  publicação exige os dois binários presentes antes de qualquer upload.
-  Nada publica sem Android **e** web verdes juntos.
+  assinatura contra o SHA-1 registrado (APK via apksigner, que lê v2/v3;
+  AAB via keytool, que lê o v1 do bundle); divergência é erro fatal.
+  **A Play precisa só do AAB** — o APK é anexo da GitHub Release e material
+  de teste. Publicar exige o AAB e o site verdes; um APK vermelho não
+  segura a publicação, só deixa de ser anexado (com aviso).
 - **Publicação** (job único, atrás do environment `production`):
   tag (se veio do botão) → site (`--branch=main`) → AAB na faixa de teste
   da Play → GitHub Release com `target_commitish` no SHA buildado.
