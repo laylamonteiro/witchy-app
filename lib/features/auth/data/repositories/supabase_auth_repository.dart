@@ -2,7 +2,8 @@ import '../../../../core/content/content_locale.dart';
 import '../../../../core/utils/mask.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
@@ -117,6 +118,27 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// Onde a conta NASCEU: `android`, `ios` ou `web`.
+  ///
+  /// É histórico, não estado: uma pessoa que criou a conta no site e hoje
+  /// usa o app continua tendo `web` aqui — e é exatamente isso que a torna
+  /// útil ("quantas contas novas vieram do site?").
+  ///
+  /// NÃO use este campo para decidir onde cancelar uma assinatura. Quem
+  /// sabe disso é o RevenueCat (`CustomerInfo.managementURL`), porque a
+  /// loja da assinatura pode ser outra e pode mudar. Ver
+  /// docs/ORIGEM_E_PAGAMENTO.md.
+  static String get _signupPlatform {
+    // defaultTargetPlatform e não dart:io: `Platform` não existe na web, e
+    // importá-lo condicionalmente aqui seria complexidade sem ganho.
+    if (kIsWeb) return 'web';
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => 'ios',
+      TargetPlatform.android => 'android',
+      _ => 'unknown',
+    };
+  }
+
   Future<void> _createProfile(User supabaseUser, String? displayName) async {
     try {
       await _supabase.from(SupabaseTables.profiles).upsert({
@@ -125,6 +147,17 @@ class SupabaseAuthRepository implements AuthRepository {
         'display_name': displayName,
         'updated_at': DateTime.now().toIso8601String(),
       });
+
+      // Fora do upsert de propósito: `upsert` reescreve a linha inteira, e
+      // este método também roda em login social de conta ANTIGA. Incluir a
+      // origem ali apagaria o registro original toda vez que a pessoa
+      // entrasse por outra plataforma. Este update só preenche o que ainda
+      // está vazio — nunca sobrescreve.
+      await _supabase
+          .from(SupabaseTables.profiles)
+          .update({'signup_platform': _signupPlatform})
+          .eq('id', supabaseUser.id)
+          .isFilter('signup_platform', null);
     } catch (e) {
       // Log error but don't fail registration
       print('Erro ao criar perfil: $e');
