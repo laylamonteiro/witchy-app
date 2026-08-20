@@ -60,6 +60,29 @@ void main() {
           p.dreamUserPrompt('sonhei com o mar', 'paz'),
       'dreamUserPrompt (sem emoções)': (p, g) =>
           p.dreamUserPrompt('sonhei com o mar', null),
+      'cycleReadingSystemPrompt': (p, g) => p.cycleReadingSystemPrompt(g),
+      'cycleReadingSectionInstruction (portrait)': (p, g) =>
+          p.cycleReadingSectionInstruction('portrait'),
+      'cycleReadingSectionInstruction (threads)': (p, g) =>
+          p.cycleReadingSectionInstruction('threads'),
+      'cycleReadingSectionInstruction (sky)': (p, g) =>
+          p.cycleReadingSectionInstruction('sky'),
+      'cycleReadingSectionInstruction (practice)': (p, g) =>
+          p.cycleReadingSectionInstruction('practice'),
+      'cycleReadingSectionInstruction (rituals)': (p, g) =>
+          p.cycleReadingSectionInstruction('rituals'),
+      'cycleReadingSectionInstruction (affirmation)': (p, g) =>
+          p.cycleReadingSectionInstruction('affirmation'),
+      'cycleReadingSectionInstruction (seal)': (p, g) =>
+          p.cycleReadingSectionInstruction('seal'),
+      'cycleReadingTeaserSystemPrompt': (p, g) =>
+          p.cycleReadingTeaserSystemPrompt(g),
+      'dreamTeaserSystemPrompt': (p, g) => p.dreamTeaserSystemPrompt(g),
+      'dailyWeatherTeaserSystemPrompt': (p, g) =>
+          p.dailyWeatherTeaserSystemPrompt(g),
+      'magicalProfileTeaserSystemPrompt': (p, g) =>
+          p.magicalProfileTeaserSystemPrompt(g),
+      'counselorTeaserSystemPrompt': (p, g) => p.counselorTeaserSystemPrompt(g),
       'defaultSpellName': (p, g) => p.defaultSpellName,
       'encyIdentifySystemPrompt (crystal)': (p, g) =>
           p.encyIdentifySystemPrompt('crystal'),
@@ -197,6 +220,80 @@ void main() {
             expect(prompt, contains(fragment),
                 reason: 'fragmento "$fragment" [$lang/${gender.name}]');
           }
+        }
+      });
+    });
+  });
+
+  group('AiPrompts — Leitura do Ciclo', () {
+    test('prompt de sistema referencia o contrato do material (JSON)', () {
+      promptsByLang.forEach((lang, prompts) {
+        for (final gender in Gender.values) {
+          final prompt = prompts.cycleReadingSystemPrompt(gender);
+          expect(prompt, contains('JSON'),
+              reason: 'JSON [$lang/${gender.name}]');
+          // A regra do horário de nascimento desconhecido cita a chave real
+          // do material — é ela que impede casas/ascendente inventados.
+          expect(prompt, contains('unknownBirthTime'),
+              reason: 'unknownBirthTime [$lang/${gender.name}]');
+        }
+      });
+    });
+
+    test('a degustação pede só uma amostra, nunca o relatório', () {
+      // Fail-closed: o teaser precisa nascer do tamanho da amostra — se o
+      // prompt deixasse de limitar, a leitura paga vazaria de graça.
+      promptsByLang.forEach((lang, prompts) {
+        for (final gender in Gender.values) {
+          final prompt = prompts.cycleReadingTeaserSystemPrompt(gender);
+          expect(prompt, contains('2'), reason: 'duas frases [$lang]');
+          expect(prompt, contains('JSON'), reason: 'material [$lang]');
+        }
+      });
+    });
+
+    test('toda degustação pede duas frases e proíbe inventar fato', () {
+      // A degustação é a prova do produto pago: ela precisa ser curta (senão
+      // entrega o que é pago) e presa aos fatos recebidos (senão a amostra
+      // vira ficção sobre a vida de quem lê).
+      final teasers = <String, String Function(AiPrompts, Gender)>{
+        'clima do dia': (p, g) => p.dailyWeatherTeaserSystemPrompt(g),
+        'perfil mágico': (p, g) => p.magicalProfileTeaserSystemPrompt(g),
+        'conselheiro': (p, g) => p.counselorTeaserSystemPrompt(g),
+        'sonho': (p, g) => p.dreamTeaserSystemPrompt(g),
+        'leitura do ciclo': (p, g) => p.cycleReadingTeaserSystemPrompt(g),
+      };
+      promptsByLang.forEach((lang, prompts) {
+        teasers.forEach((name, probe) {
+          for (final gender in Gender.values) {
+            final prompt = probe(prompts, gender);
+            expect(prompt, contains('2'),
+                reason: 'duas frases: $name [$lang/${gender.name}]');
+          }
+        });
+      });
+    });
+
+    test('cada seção tem instrução própria (não cai no fallback)', () {
+      const sectionKeys = [
+        'portrait',
+        'threads',
+        'sky',
+        'practice',
+        'rituals',
+        'affirmation',
+        'seal',
+      ];
+      promptsByLang.forEach((lang, prompts) {
+        final fallback = prompts.cycleReadingSectionInstruction('__unknown__');
+        final seen = <String>{};
+        for (final key in sectionKeys) {
+          final instruction = prompts.cycleReadingSectionInstruction(key);
+          expect(instruction.trim(), isNotEmpty, reason: '$key [$lang]');
+          expect(instruction, isNot(equals(fallback)),
+              reason: '$key usa fallback [$lang]');
+          expect(seen.add(instruction), isTrue,
+              reason: '$key repetida [$lang]');
         }
       });
     });

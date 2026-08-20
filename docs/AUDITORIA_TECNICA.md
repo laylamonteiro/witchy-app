@@ -33,14 +33,12 @@ histórico o preserva.
 - Proposta: confirmar a **rotação** da credencial no painel Prokerala (ação
   externa). Não reescrever histórico sem decisão explícita da mantenedora.
 
-### 1.3 MÉDIA — Testes non-blocking no release
-`release-parallel.yml` roda `flutter test … || echo` (linha 274) — falhas de
-teste não bloqueiam o release.
-
-- Mitigação atual: o workflow de branch (`branch-validate.yml`) é bloqueante
-  em analyze + suíte núcleo de i18n/conteúdo + scanner de PT + build.
-- Proposta: quando a suíte completa estiver verde (ver §5), tornar o passo do
-  release bloqueante também.
+### 1.3 ✅ RESOLVIDO — Testes non-blocking no release
+`release-parallel.yml` rodava `flutter test … || echo` — falhas de teste não
+bloqueavam o release. **Aplicado**: o workflow foi substituído por
+`release.yml` (gatilho por tag, publicação atrás do environment `production`),
+cujo job `validar` roda `flutter test` completo SEM escape, além de analyze,
+paridade de ARBs e scanner de PT — no commit exato da tag.
 
 ### 1.4 BAIXA — E-mail do usuário em logs de debug
 `auth_wrapper.dart:41` e `supabase_auth_repository.dart:142` registram o
@@ -134,10 +132,10 @@ de rolagem. Não é regressão (a chave que marcava o layout "cabe numa tela só
 foi removida do app junto com aquele design), mas é um número a considerar se
 o objetivo voltar a ser caber sem rolar.
 
-A suíte completa ainda roda como **informativa** no CI de branch; o núcleo de
-i18n/conteúdo (16+ arquivos de teste) é bloqueante. Com a suíte verde, dá
-para promovê-la a bloqueante — a contrapartida é que um teste instável passa
-a barrar a publicação do site.
+A suíte completa é **bloqueante** nos dois workflows (`branch-validate.yml`
+e `release.yml`) desde que a dívida foi zerada. A contrapartida assumida: um
+teste instável barra a publicação — se acontecer, o conserto é do teste,
+nunca do gate.
 
 ## 6. Arquitetura (anotações, sem refatoração em massa)
 

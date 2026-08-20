@@ -671,6 +671,46 @@ void main() {
     });
 
     testWidgets(
+        'assinatura mostra a porta permanente da Leitura do Ciclo',
+        (tester) async {
+      // A Leitura do Ciclo é compra avulsa e não entra na assinatura — nem
+      // para quem já é Pro. A tela de planos é onde a pessoa está decidindo
+      // gastar, então a porta precisa existir aqui, sempre. Este teste
+      // existe porque a porta some sem barulho: nada quebra, ela apenas
+      // deixa de ser encontrável, e a venda morre em silêncio.
+      final service = PaymentService();
+      addTearDown(service.clearTestProducts);
+      service.setTestProducts([
+        ProductInfo(
+          identifier: 'monthly-test',
+          title: 'Mensal',
+          description: 'Mensal',
+          priceString: 'R\$ 12,34',
+          price: 12.34,
+          currencyCode: 'BRL',
+          type: SubscriptionType.monthly,
+        ),
+      ]);
+
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AuthProvider>.value(
+          value: AuthProvider(),
+          child: const MaterialApp(
+            locale: Locale('pt', 'BR'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: SubscriptionPage(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Leitura do Ciclo'), findsOneWidget);
+    });
+
+    testWidgets(
         'página Free abre paywall, usa preços do serviço e compra uma vez',
         (tester) async {
       final service = PaymentService();

@@ -33,9 +33,25 @@ class _StarfieldBackgroundState extends State<StarfieldBackground>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 6),
-  )..repeat();
+  );
 
   late final List<_Star> _stars = _buildStars(widget.starCount);
+
+  /// O cintilar só começa depois do primeiro frame e SÓ quando o aparelho
+  /// aceita animação: quem pediu "reduzir movimento" no sistema recebe o céu
+  /// parado (e a bateria agradece). Como o ciclo é infinito, ligá-lo no
+  /// initState também deixaria qualquer teste da página preso para sempre
+  /// num pumpAndSettle.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animar = !MediaQuery.disableAnimationsOf(context);
+    if (animar && !_controller.isAnimating) {
+      _controller.repeat();
+    } else if (!animar && _controller.isAnimating) {
+      _controller.stop();
+    }
+  }
 
   static List<_Star> _buildStars(int count) {
     // Semente fixa: mesmo céu em todas as aberturas do app.

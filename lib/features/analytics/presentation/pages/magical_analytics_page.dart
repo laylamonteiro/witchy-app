@@ -14,6 +14,7 @@ import '../../../grimoire/data/models/spell_model.dart';
 import '../../../grimoire/presentation/pages/user_spells_list_page.dart';
 import '../../../journeys/presentation/pages/journeys_page.dart';
 import '../../../learning/presentation/providers/learning_provider.dart';
+import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 import '../../../your_day/data/daily_checkin_repository.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../diary/presentation/pages/dreams_list_page.dart';
@@ -395,6 +396,12 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
                   _buildPracticeDaysCard(),
                   const SizedBox(height: 20),
 
+                  // Porta permanente da Leitura do Ciclo (compra avulsa):
+                  // aqui é prateleira, não oferta — quem dispensou o convite
+                  // do Seu Dia ainda consegue chegar à compra.
+                  _buildCycleReadingCard(),
+                  const SizedBox(height: 20),
+
                   // Práticas por categoria
                   _buildCategoriesGrid(),
                   const SizedBox(height: 20),
@@ -668,6 +675,53 @@ class _MagicalAnalyticsPageState extends State<MagicalAnalyticsPage> {
             ),
             Icon(Icons.chevron_right, color: context.gc.lilac),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Prateleira da Leitura do Ciclo dentro das Estatísticas: o lugar onde
+  /// os registros do período já estão em evidência.
+  Widget _buildCycleReadingCard() {
+    final l10n = AppLocalizations.of(context);
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const CycleReadingIntroPage()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Text('🌙', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.cycleReadingTitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: context.gc.lilac,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.cycleReadingIntroTagline,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.gc.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: context.gc.textSecondary),
+            ],
+          ),
         ),
       ),
     );

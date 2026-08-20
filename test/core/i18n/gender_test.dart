@@ -59,11 +59,11 @@ void main() {
       );
     });
 
-    // O app trata a pessoa no feminino quando não há preferência salva —
-    // decisão de produto, escrita no próprio UserModel ("Default do app é
-    // tratamento feminino quando nao ha valor salvo"). Vale para contas
-    // antigas, criadas antes do campo existir.
-    test('usa tratamento feminino quando preferência não existe', () {
+    // Duas ausências diferentes, dois padrões diferentes — de propósito:
+    // uma conta antiga, sem o campo, é tratada no feminino (o padrão do
+    // app, decisão de produto); um valor GRAVADO que não existe mais no
+    // enum cai no neutro, que nunca erra com ninguém.
+    test('conta sem preferência salva usa o tratamento padrão do app', () {
       final user = UserModel.fromJson({
         'id': 'legacy',
         'role': 'free',
@@ -71,6 +71,17 @@ void main() {
       });
 
       expect(user.gender, Gender.feminine);
+    });
+
+    test('preferência salva desconhecida cai no neutro', () {
+      final user = UserModel.fromJson({
+        'id': 'legacy',
+        'role': 'free',
+        'plan': 'free',
+        'gender': 'inexistente',
+      });
+
+      expect(user.gender, Gender.neutral);
     });
   });
 }

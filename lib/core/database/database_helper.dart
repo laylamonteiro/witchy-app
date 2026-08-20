@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 20,
+      version: 21,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -345,6 +345,30 @@ class DatabaseHelper {
         synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
+
+    // Leituras do Ciclo (compra avulsa): o crédito da compra e o vínculo
+    // com o relatório gerado (free_writings). `status` = 'pending' enquanto
+    // a compra ainda não virou relatório salvo — é o que garante "falha de
+    // geração não consome a compra".
+    await db.execute('''
+      CREATE TABLE cycle_readings (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        period_type TEXT NOT NULL DEFAULT 'lunation',
+        period_start INTEGER NOT NULL,
+        period_end INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        origin TEXT NOT NULL DEFAULT 'purchase',
+        product_id TEXT,
+        writing_id TEXT,
+        regenerations_used INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute(
+        'CREATE INDEX idx_cycle_readings_user_id ON cycle_readings(user_id)');
 
     // Criar índices para user_id em todas as tabelas
     await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
@@ -1072,6 +1096,29 @@ class DatabaseHelper {
             "ALTER TABLE free_writings ADD COLUMN source TEXT NOT NULL DEFAULT 'free'");
       }
     }
+
+    // v21: Leitura do Ciclo — registro da compra avulsa + período coberto.
+    if (oldVersion < 21) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS cycle_readings (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT 'local_user',
+          period_type TEXT NOT NULL DEFAULT 'lunation',
+          period_start INTEGER NOT NULL,
+          period_end INTEGER NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          origin TEXT NOT NULL DEFAULT 'purchase',
+          product_id TEXT,
+          writing_id TEXT,
+          regenerations_used INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          synced INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_cycle_readings_user_id ON cycle_readings(user_id)');
+    }
   }
 
   /// Reconstrói `daily_checkins` a partir do rastro que o app já tinha:
@@ -1188,6 +1235,7 @@ class DatabaseHelper {
       'learning_progress',
       'guided_ritual_logs',
       'user_encyclopedia_entries',
+      'cycle_readings',
     ];
 
     await db.transaction((txn) async {
@@ -1289,6 +1337,7 @@ class DatabaseHelper {
       'learning_progress',
       'guided_ritual_logs',
       'user_encyclopedia_entries',
+      'cycle_readings',
     ];
 
     for (final table in tables) {

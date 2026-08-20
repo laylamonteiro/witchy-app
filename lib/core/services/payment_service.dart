@@ -233,6 +233,9 @@ class PaymentService extends ChangeNotifier {
     try {
       debugPrint('📦 Buscando ofertas no RevenueCat...');
       _offerings = await Purchases.getOfferings();
+      // Os pacotes avulsos resolvidos vieram das ofertas ANTIGAS (com os
+      // preços antigos): recarregar as ofertas invalida esse cache.
+      _consumablePackages.clear();
 
       if (_offerings?.current == null) {
         debugPrint('⚠️  Nenhuma oferta disponível no RevenueCat');
@@ -557,6 +560,97 @@ class PaymentService extends ChangeNotifier {
     }
   }
 
+  // ============================================================
+  // CONSUMÍVEIS (compra avulsa — ex.: Leitura do Ciclo)
+  // ============================================================
+
+  /// Cache dos pacotes avulsos já resolvidos (por id do produto).
+  final Map<String, Package> _consumablePackages = {};
+
+  Future<PurchaseResult> Function(String productId)? _consumableOverride;
+
+  /// Encontra (e cacheia) o pacote de um produto avulso.
+  ///
+  /// O caminho é SEMPRE por offering/pacote, e não por produto solto, porque
+  /// é o único que existe nas três plataformas: no navegador o SDK só
+  /// implementa `getOfferings`/`purchasePackage` — `getProducts` e
+  /// `purchaseStoreProduct` lançam `UnsupportedPlatformException`.
+  ///
+  /// Procura primeiro na offering dedicada
+  /// ([RevenueCatConfig.cycleReadingsOfferingId]) e depois em qualquer
+  /// offering disponível, casando pelo id do produto da loja — assim o app
+  /// não depende de como os pacotes foram nomeados no painel.
+  Future<Package?> getConsumablePackage(String productId) async {
+    if (!RevenueCatConfig.isConfigured) return null;
+    final cached = _consumablePackages[productId];
+    if (cached != null) return cached;
+
+    try {
+      final offerings = _offerings ?? await Purchases.getOfferings();
+      _offerings ??= offerings;
+
+      Package? matches(Offering? offering) {
+        if (offering == null) return null;
+        for (final package in offering.availablePackages) {
+          if (package.storeProduct.identifier == productId ||
+              package.storeProduct.identifier.startsWith('$productId:') ||
+              package.identifier == productId) {
+            return package;
+          }
+        }
+        return null;
+      }
+
+      final package =
+          matches(offerings.all[RevenueCatConfig.cycleReadingsOfferingId]) ??
+              matches(offerings.current) ??
+              offerings.all.values
+                  .map(matches)
+                  .firstWhere((p) => p != null, orElse: () => null);
+
+      if (package == null) {
+        debugPrint('⚠️ Pacote avulso não encontrado: $productId');
+        return null;
+      }
+      return _consumablePackages[productId] = package;
+    } catch (e) {
+      debugPrint('❌ Erro ao buscar pacote avulso $productId: $e');
+      return null;
+    }
+  }
+
+  /// Preço formatado de um produto avulso (null quando indisponível).
+  Future<String?> getConsumablePriceString(String productId) async =>
+      (await getConsumablePackage(productId))?.storeProduct.priceString;
+
+  /// Compra um produto avulso (consumível) pelo id do produto na loja.
+  ///
+  /// Consumível NÃO gera entitlement: o "crédito" é registrado pelo app
+  /// (ex.: tabela `cycle_readings`) — quem chama grava o registro após o
+  /// sucesso e só o consome quando o produto for entregue de verdade.
+  Future<PurchaseResult> purchaseConsumable(String productId) async {
+    if (_consumableOverride != null) return _consumableOverride!(productId);
+
+    if (!RevenueCatConfig.isConfigured) {
+      return PurchaseResult.error(_l10n.paymentNotConfigured);
+    }
+
+    final package = await getConsumablePackage(productId);
+    if (package == null) {
+      return PurchaseResult.error(_l10n.paymentProductNotFound(productId));
+    }
+
+    // purchasePackage já trata plataforma, cancelamento e erros de loja.
+    return purchasePackage(package);
+  }
+
+  @visibleForTesting
+  void setConsumableOverride(
+    Future<PurchaseResult> Function(String productId)? onPurchase,
+  ) {
+    _consumableOverride = onPurchase;
+  }
+
   /// Restaura compras anteriores
   Future<PurchaseResult> restorePurchases() async {
     if (!RevenueCatConfig.isConfigured) {
@@ -611,6 +705,9 @@ class PaymentService extends ChangeNotifier {
     // (isPremiumEffective/PremiumAccess) depende de isPro=false após logout.
     _customerInfo = null;
     _isPro = false;
+    // A próxima conta pode estar em outra loja/moeda: os pacotes avulsos
+    // resolvidos para esta sessão não valem para ela.
+    _consumablePackages.clear();
     notifyListeners();
 
     if (!RevenueCatConfig.isConfigured) return;
@@ -710,13 +807,30 @@ class PaymentService extends ChangeNotifier {
     return DateTime.tryParse(expirationDate);
   }
 
-  /// Verifica se a assinatura é vitalícia
+  /// Verifica se a assinatura é vitalícia.
+  ///
+  /// Vale dinheiro: é este getter que libera a Leitura da Lunação sem
+  /// cobrança. Por isso ele não confia só na ausência de data de expiração —
+  /// um CONSUMÍVEL ligado a um entitlement por engano no painel também
+  /// concederia o Pro sem expirar, e uma leitura de R$ 4,90 viraria Premium
+  /// vitalício mais leituras de graça para sempre. Se quem concedeu o
+  /// entitlement foi um avulso da Leitura do Ciclo, não é vitalício.
   bool get isLifetime {
     if (_customerInfo == null) return false;
 
     final pro = _customerInfo!.entitlements.active[
         RevenueCatConfig.proEntitlementId];
     if (pro == null) return false;
+
+    if (RevenueCatConfig.cycleReadingProductIds
+        .contains(pro.productIdentifier)) {
+      debugPrint(
+        '⚠️ Entitlement Pro concedido por ${pro.productIdentifier}: um '
+        'consumível da Leitura do Ciclo NÃO deveria ter entitlement no '
+        'painel do RevenueCat. Ignorando como vitalício.',
+      );
+      return false;
+    }
 
     // Lifetime não tem data de expiração
     return pro.expirationDate == null;

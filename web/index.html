@@ -159,6 +159,57 @@
     })();
   </script>
 
+  <script>
+    // Publicação nova sem "recarrega duas vezes".
+    //
+    // O service worker do Flutter baixa a versão nova em segundo plano e
+    // assume o controle depois — então o load em que a atualização chega
+    // ainda está rodando o app ANTIGO. Para quem publicou, isso se parece
+    // exatamente com "a mudança não subiu": nada quebra, nada avisa, e a
+    // novidade simplesmente não está lá.
+    //
+    // `controllerchange` dispara quando o SW novo assume. Aí recarregar é
+    // barato (os arquivos já estão em cache) e a pessoa passa a ver a
+    // versão nova sem saber que houve troca. A trava evita laço em
+    // navegador que dispare o evento mais de uma vez.
+    (function () {
+      if (!('serviceWorker' in navigator)) return;
+
+      // PRIMEIRA instalação não recarrega.
+      //
+      // Numa aba sem service worker (anônima, ou primeira visita), o SW é
+      // registrado e assume o controle durante ESTE load — e a página já
+      // está rodando a versão mais nova, porque acabou de baixá-la. Não há
+      // nada para atualizar, e recarregar aqui atropela o que estiver em
+      // curso: foi assim que o retorno do login Google (que volta com
+      // ?code=... na URL) virava um chute de volta para a tela de login,
+      // certinho na primeira tentativa e nunca na segunda.
+      //
+      // Só interessa o caso em que JÁ havia um controlador e ele foi
+      // trocado — aí sim a aba está com a versão velha e o reload é o que
+      // entrega a nova.
+      var tinhaControlador = !!navigator.serviceWorker.controller;
+      var recarregou = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (recarregou || !tinhaControlador) return;
+
+        // Cinto e suspensório: nunca recarregar em cima de um retorno de
+        // login social. O token vem na URL e só vale uma vez — perdê-lo
+        // custa a sessão, e a atualização pode esperar a próxima abertura.
+        var url = window.location;
+        if (url.search.indexOf('code=') !== -1 ||
+            url.hash.indexOf('access_token') !== -1 ||
+            url.hash.indexOf('error=') !== -1) {
+          return;
+        }
+
+        recarregou = true;
+        url.reload();
+      });
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

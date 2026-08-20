@@ -6,6 +6,10 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../cycle_reading/data/models/cycle_reading_model.dart';
+import '../../../cycle_reading/data/repositories/cycle_reading_repository.dart';
+import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
+import '../../../cycle_reading/presentation/pages/cycle_reading_report_page.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
 import 'record_detail_page.dart';
@@ -76,6 +80,13 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
           label: archiveSourceLabel(l10n, source),
           matches: (FreeWritingModel e) => e.source == source,
         ),
+      if (present.contains(FreeWritingSource.cycleReading))
+        (
+          id: FreeWritingSource.cycleReading,
+          label: archiveSourceLabel(l10n, FreeWritingSource.cycleReading),
+          matches: (FreeWritingModel e) =>
+              e.source == FreeWritingSource.cycleReading,
+        ),
       if (present.contains(FreeWritingSource.free))
         (
           id: FreeWritingSource.free,
@@ -130,6 +141,53 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
                   ],
                 ),
               ),
+              // Porta permanente da Leitura do Ciclo. Quem abre o acervo é
+              // exatamente quem dá valor ao histórico — e é do histórico
+              // que a leitura é tecida. Faixa fina de propósito: aqui ela
+              // é atalho, não anúncio.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CycleReadingIntroPage(),
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.gc.lilac.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🌙', style: TextStyle(fontSize: 18)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l10n.cycleReadingTitle,
+                            style: TextStyle(
+                              color: context.gc.lilac,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 20,
+                          color: context.gc.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
               Expanded(
                 child: provider.isLoading
                     ? Center(
@@ -172,6 +230,34 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
     );
   }
 
+  /// Abre a entrada na moldura certa: a Leitura do Ciclo é Markdown e tem
+  /// cartões para compartilhar, então volta pela própria página do
+  /// relatório — na página genérica ela apareceria com a marcação crua.
+  Future<void> _openEntry(BuildContext context, FreeWritingModel entry) async {
+    if (entry.source == FreeWritingSource.cycleReading) {
+      final reading = await CycleReadingRepository().findByWritingId(entry.id);
+      if (!context.mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CycleReadingReportPage(
+            writing: entry,
+            periodStart: reading?.periodStart,
+            periodEnd: reading?.periodEnd,
+            periodType:
+                reading?.periodType ?? CycleReadingPeriodType.lunation,
+          ),
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => RecordDetailPage(entry: entry)),
+    );
+  }
+
   Widget _buildEntryCard(
     BuildContext context,
     AppLocalizations l10n,
@@ -186,12 +272,7 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
             );
 
     return MagicalCard(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RecordDetailPage(entry: entry),
-        ),
-      ),
+      onTap: () => _openEntry(context, entry),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

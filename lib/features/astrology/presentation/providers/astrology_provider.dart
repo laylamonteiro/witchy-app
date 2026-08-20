@@ -88,12 +88,16 @@ class AstrologyProvider with ChangeNotifier {
   }
 
   /// Calcula e salva um novo mapa natal
+  ///
+  /// [hasFullAccess] decide se a análise personalizada (produto Premium)
+  /// entra junto: sem acesso, ela nem é pedida à IA.
   Future<BirthChartModel?> calculateAndSaveBirthChart({
     required DateTime birthDate,
     required TimeOfDay birthTime,
     required String birthPlace,
     required double latitude,
     required double longitude,
+    required bool hasFullAccess,
     bool unknownBirthTime = false,
   }) async {
     _isLoading = true;
@@ -128,7 +132,7 @@ class AstrologyProvider with ChangeNotifier {
       notifyListeners();
 
       // Iniciar geração do texto IA em background
-      generateAIMagicalProfile();
+      generateAIMagicalProfile(hasFullAccess: hasFullAccess);
 
       return chart;
     } catch (e) {
@@ -141,7 +145,10 @@ class AstrologyProvider with ChangeNotifier {
   }
 
   /// Atualiza o mapa natal existente
-  Future<void> updateBirthChart(BirthChartModel chart) async {
+  Future<void> updateBirthChart(
+    BirthChartModel chart, {
+    required bool hasFullAccess,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -161,7 +168,7 @@ class AstrologyProvider with ChangeNotifier {
       notifyListeners();
 
       // Iniciar geração do texto em background
-      generateAIMagicalProfile();
+      generateAIMagicalProfile(hasFullAccess: hasFullAccess);
 
       return;
     } catch (e) {
@@ -225,8 +232,13 @@ class AstrologyProvider with ChangeNotifier {
   }
 
   /// Gera texto personalizado do perfil mágico com IA
-  Future<void> generateAIMagicalProfile() async {
+  Future<void> generateAIMagicalProfile({required bool hasFullAccess}) async {
     if (_birthChart == null || _magicalProfile == null) return;
+
+    // A análise personalizada é produto Premium: sem acesso, não se gera nem
+    // se guarda (fail-closed — esconder na tela o que já está no aparelho
+    // nunca foi proteção). A degustação é gerada à parte, do tamanho dela.
+    if (!hasFullAccess) return;
 
     // Verificar se já existe texto gerado para o mesmo mapa
     final currentHash = _generateChartHash(_birthChart!);
@@ -262,8 +274,9 @@ class AstrologyProvider with ChangeNotifier {
   }
 
   /// Força regeneração do texto IA (mesmo que já exista)
-  Future<void> regenerateAIMagicalProfile() async {
+  Future<void> regenerateAIMagicalProfile({required bool hasFullAccess}) async {
     if (_birthChart == null || _magicalProfile == null) return;
+    if (!hasFullAccess) return;
 
     _isGeneratingAI = true;
     _error = null;

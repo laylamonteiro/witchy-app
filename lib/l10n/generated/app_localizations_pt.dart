@@ -545,6 +545,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get forgotResendErrorPrefix => 'Erro ao reenviar';
 
   @override
+  String get authShowPassword => 'Mostrar senha';
+
+  @override
+  String get authHidePassword => 'Ocultar senha';
+
+  @override
+  String forgotResendIn(int seconds) {
+    return 'Reenviar em ${seconds}s';
+  }
+
+  @override
   String get changePasswordTitle => 'Alterar Senha';
 
   @override
@@ -3186,6 +3197,17 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get forgotResendErrorPrefix => 'Erro ao reenviar';
+
+  @override
+  String get authShowPassword => 'Mostrar senha';
+
+  @override
+  String get authHidePassword => 'Ocultar senha';
+
+  @override
+  String forgotResendIn(int seconds) {
+    return 'Reenviar em ${seconds}s';
+  }
 
   @override
   String get changePasswordTitle => 'Alterar Senha';

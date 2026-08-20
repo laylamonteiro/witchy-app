@@ -1438,6 +1438,222 @@ class AIService {
         '${_prompts.dreamInterpreterSystemPrompt(gender)}';
   }
 
+  /// Gera UMA seção da Leitura do Ciclo (produto PAGO): chamada curta, a
+  /// partir do JSON de fatos do período montado no aparelho.
+  ///
+  /// Num produto pago, um 429 é inaceitável: além do fallback de provedor
+  /// já embutido em [_textRequest], o limite de requisições (janela por
+  /// minuto, deslizante) ganha novas tentativas com espera curta — segundos
+  /// depois a mesma chamada costuma passar. Esgotadas as tentativas, sobe
+  /// [AiRateLimitException]: a compra NÃO é consumida e a tela oferece
+  /// tentar de novo sem nova cobrança.
+  Future<String> generateCycleReadingSection({
+    required String sectionKey,
+    required String materialJson,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    final systemPrompt = '${_localizedInstruction()}\n\n'
+        '${_prompts.cycleReadingSystemPrompt(gender)}';
+    final userText = '${_prompts.cycleReadingSectionInstruction(sectionKey)}'
+        '\n\nJSON:\n$materialJson';
+
+    DioException? lastRateLimit;
+    for (var attempt = 0; attempt <= _quotaRetryDelays.length; attempt++) {
+      try {
+        final content = await _textRequest(
+          systemPrompt: systemPrompt,
+          userText: userText,
+          tag: 'leitura do ciclo',
+          temperature: 0.7,
+          maxTokens: 700,
+          receiveTimeout: const Duration(seconds: 45),
+        );
+        return content.trim();
+      } on DioException catch (e) {
+        if (e.response?.statusCode != 429) {
+          throw Exception(_prompts.errorConnection(e.message));
+        }
+        lastRateLimit = e;
+        if (attempt < _quotaRetryDelays.length) {
+          final delay = _quotaRetryDelays[attempt];
+          unawaited(debugLog(
+              'AI',
+              'leitura do ciclo ($sectionKey): 429 — nova tentativa '
+              'em ${delay.inSeconds}s'));
+          await Future.delayed(delay);
+        }
+      }
+    }
+    unawaited(debugLog(
+        'AI', 'leitura do ciclo ($sectionKey): 429 persistente '
+        '(${lastRateLimit?.message})'));
+    throw const AiRateLimitException();
+  }
+
+  /// Degustação da Leitura do Ciclo: 2 frases REAIS sobre o período, do
+  /// mesmo material que a leitura paga usaria.
+  ///
+  /// Chamada curta e barata de propósito — quem não comprou vê o gostinho,
+  /// e o relatório inteiro nem chega a ser gerado. Cabe a quem chama cachear
+  /// a amostra por janela (o custo de IA é real).
+  Future<String> generateCycleReadingTeaser({
+    required String materialJson,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.cycleReadingTeaserSystemPrompt(gender)}',
+        userText: materialJson,
+        tag: 'teaser leitura do ciclo',
+        temperature: 0.7,
+        maxTokens: 220,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
+  /// Degustação da interpretação de sonhos (Motor de Ofertas): APENAS 2
+  /// frases — o conteúdo completo nem chega a existir no aparelho, então a
+  /// amostra pode ser exibida sem vazar o produto Premium.
+  Future<String> generateDreamTeaser({
+    required String dreamDescription,
+    String? feelings,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.dreamTeaserSystemPrompt(gender)}',
+        userText: _prompts.dreamUserPrompt(dreamDescription, feelings),
+        tag: 'teaser sonho',
+        temperature: 0.6,
+        maxTokens: 200,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
+  /// Degustação da Previsão Mágica do Dia: 2 frases REAIS tiradas dos mesmos
+  /// fatos do céu que a previsão Premium usaria.
+  ///
+  /// Quem não tem acesso nunca gera a previsão inteira — é esta chamada
+  /// curta que roda no lugar dela (fail-closed e barata). Cabe a quem chama
+  /// cachear a amostra por dia.
+  Future<String> generateDailyWeatherTeaser({
+    required String moonPhase,
+    required ZodiacSign moonSign,
+    required EnergyLevel overallEnergy,
+    required List<String> energyKeywords,
+    required List<Map<String, String>> transits,
+    required List<Map<String, String>> aspects,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.dailyWeatherTeaserSystemPrompt(gender)}',
+        userText: _buildWeatherSummary(
+          moonPhase: moonPhase,
+          moonSign: moonSign,
+          overallEnergy: overallEnergy,
+          energyKeywords: energyKeywords,
+          transits: transits,
+          aspects: aspects,
+        ),
+        tag: 'teaser clima do dia',
+        temperature: 0.7,
+        maxTokens: 200,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
+  /// Degustação da análise personalizada do Perfil Mágico: 2 frases REAIS do
+  /// mapa, no lugar da análise completa (que nem chega a ser gerada).
+  Future<String> generateMagicalProfileTeaser({
+    required BirthChartModel birthChart,
+    required MagicalProfile profile,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.magicalProfileTeaserSystemPrompt(gender)}',
+        userText: _buildChartSummary(birthChart, profile),
+        tag: 'teaser perfil mágico',
+        temperature: 0.7,
+        maxTokens: 200,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
+  /// Degustação do Conselheiro Místico sobre uma tiragem recém-feita: 2
+  /// frases REAIS, no lugar do conselho completo.
+  Future<String> generateCounselorTeaser({
+    required String readingSummary,
+    Gender? gender,
+  }) async {
+    gender ??= _gender;
+    try {
+      final content = await _textRequest(
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.counselorTeaserSystemPrompt(gender)}',
+        userText: readingSummary,
+        tag: 'teaser conselheiro',
+        temperature: 0.7,
+        maxTokens: 200,
+        receiveTimeout: const Duration(seconds: 30),
+      );
+      return content.trim();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        throw const AiRateLimitException();
+      }
+      throw Exception(_prompts.errorConnection(e.message));
+    } catch (e) {
+      throw Exception(_prompts.errorProcessing(e));
+    }
+  }
+
   String _buildMysticAdvisorSystemPrompt(
     Gender gender,
   ) {

@@ -43,6 +43,13 @@ class AiPrompts {
     required this.encyGenerateUserMessage,
     required this.affirmationUserPrompt,
     required this.dreamUserPrompt,
+    required this.cycleReadingSystemPrompt,
+    required this.cycleReadingSectionInstruction,
+    required this.cycleReadingTeaserSystemPrompt,
+    required this.dreamTeaserSystemPrompt,
+    required this.dailyWeatherTeaserSystemPrompt,
+    required this.magicalProfileTeaserSystemPrompt,
+    required this.counselorTeaserSystemPrompt,
     required this.defaultSpellName,
     required this.errorInvalidRequest,
     required this.errorBadRequest,
@@ -127,6 +134,41 @@ class AiPrompts {
   /// Mensagem de usuário da interpretação de sonho (relato + emoções).
   final String Function(String dreamDescription, String? feelings)
       dreamUserPrompt;
+
+  /// Leitura do Ciclo (produto pago): persona que narra o período a partir
+  /// do JSON de fatos montado no aparelho (`CycleReadingComposer`). Tom de
+  /// acolhimento, nunca previsão determinista; respeita `unknownBirthTime`.
+  /// Cada seção é gerada numa chamada CURTA separada — a instrução da vez
+  /// vem de [cycleReadingSectionInstruction].
+  final String Function(Gender gender) cycleReadingSystemPrompt;
+
+  /// Instrução de UMA seção da Leitura do Ciclo. Chaves invariantes
+  /// (`CycleReadingSections`): `portrait`, `threads`, `sky`, `practice`,
+  /// `rituals`, `affirmation`, `seal`.
+  final String Function(String sectionKey) cycleReadingSectionInstruction;
+
+  /// Degustação da Leitura do Ciclo: 2 frases REAIS sobre o período, a
+  /// partir do mesmo material que a leitura paga usaria. Como no sonho, a
+  /// amostra já nasce do tamanho da degustação — o relatório completo nem
+  /// chega a existir no aparelho de quem não comprou (fail-closed).
+  final String Function(Gender gender) cycleReadingTeaserSystemPrompt;
+
+  /// Degustação da interpretação de sonhos: responde APENAS 2 frases — o
+  /// conteúdo completo nem chega a existir no aparelho (fail-closed).
+  final String Function(Gender gender) dreamTeaserSystemPrompt;
+
+  /// Degustação da Previsão Mágica do Dia: 2 frases REAIS a partir dos
+  /// mesmos fatos do céu que a previsão Premium usaria. Quem não tem acesso
+  /// nunca chega a gerar a previsão inteira (fail-closed).
+  final String Function(Gender gender) dailyWeatherTeaserSystemPrompt;
+
+  /// Degustação da análise personalizada do Perfil Mágico: 2 frases REAIS
+  /// sobre o mapa, sem gerar a análise completa.
+  final String Function(Gender gender) magicalProfileTeaserSystemPrompt;
+
+  /// Degustação do Conselheiro Místico sobre uma tiragem recém-feita: 2
+  /// frases REAIS, parando onde o conselho completo continuaria.
+  final String Function(Gender gender) counselorTeaserSystemPrompt;
 
   /// Nome padrão quando o JSON do feitiço vem sem `name`.
   final String defaultSpellName;

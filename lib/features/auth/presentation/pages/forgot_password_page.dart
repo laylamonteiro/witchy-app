@@ -1,7 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
+import '../widgets/breathing_badge.dart';
+import '../widgets/auth_motion.dart';
+import '../widgets/auth_feedback.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import 'login_page.dart';
@@ -18,12 +25,34 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
+  final _shakeKey = GlobalKey<ShakerState>();
   final _emailController = TextEditingController();
   bool _isLoading = false;
   bool _emailSent = false;
 
+  /// Cooldown do reenvio: evita spam no serviço de email e comunica ao
+  /// usuário que o envio JÁ aconteceu — reenviar de novo em segundos não
+  /// faria o email chegar mais rápido.
+  static const _resendCooldown = 30;
+  int _resendSecondsLeft = 0;
+  Timer? _resendTimer;
+
+  void _startResendCooldown() {
+    _resendTimer?.cancel();
+    setState(() => _resendSecondsLeft = _resendCooldown);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() => _resendSecondsLeft -= 1);
+      if (_resendSecondsLeft <= 0) t.cancel();
+    });
+  }
+
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _emailController.dispose();
     super.dispose();
   }
@@ -36,13 +65,40 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: context.gc.lilac),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: _emailSent ? _buildSuccessContent() : _buildFormContent(),
+      body: StarfieldBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            // A troca formulário → sucesso acontece num respiro, não num corte.
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 450),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.04),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: _emailSent
+                  ? KeyedSubtree(
+                      key: const ValueKey('success'),
+                      child: _buildSuccessContent(),
+                    )
+                  : KeyedSubtree(
+                      key: const ValueKey('form'),
+                      child: _buildFormContent(),
+                    ),
+            ),
+          ),
         ),
       ),
     );
@@ -51,22 +107,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget _buildFormContent() {
     return Form(
       key: _formKey,
-      child: Column(
+      child: Shaker(
+        key: _shakeKey,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 40),
           // Header
-          _buildHeader(),
-          const SizedBox(height: 48),
+          CascadeIn(index: 0, child: _buildHeader()),
+          const SizedBox(height: 40),
           // Campo de email
-          _buildEmailField(),
+          CascadeIn(index: 1, child: _buildEmailField()),
           const SizedBox(height: 32),
           // Botão de enviar
-          _buildSendButton(),
+          CascadeIn(index: 2, child: _buildSendButton()),
           const SizedBox(height: 32),
           // Link para voltar ao login
-          _buildBackToLogin(),
+          CascadeIn(index: 3, child: _buildBackToLogin()),
         ],
+        ),
       ),
     );
   }
@@ -75,21 +134,27 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 60),
-        // Ícone de sucesso
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.gc.success.withValues(alpha: 0.2),
-          ),
-          child: Icon(
-            Icons.mark_email_read_outlined,
-            size: 64,
-            color: context.gc.success,
+        const SizedBox(height: 48),
+        // Ícone de sucesso respirando — a carta partiu
+        Center(
+          child: BreathingBadge(
+            glowColor: context.gc.success,
+            haloSize: 132,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.gc.success.withValues(alpha: 0.2),
+              ),
+              child: Icon(
+                Icons.mark_email_read_outlined,
+                size: 64,
+                color: context.gc.success,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
         // Título
         Text(
           AppLocalizations.of(context).forgotEmailSent,
@@ -122,36 +187,45 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
         const SizedBox(height: 48),
         // Botão de voltar ao login
-        ElevatedButton(
-          onPressed: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: context.gc.lilac,
-            foregroundColor: const Color(0xFF2B2143),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+        PressableScale(
+          child: ElevatedButton(
+            onPressed: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginPage()),
             ),
-          ),
-          child: Text(
-            AppLocalizations.of(context).forgotBackToLogin,
-            style: GoogleFonts.nunito(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.gc.lilac,
+              foregroundColor: const Color(0xFF2B2143),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              AppLocalizations.of(context).forgotBackToLogin,
+              style: GoogleFonts.nunito(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        // Link para reenviar
+        // Link para reenviar — com contagem regressiva enquanto o reenvio
+        // descansa, para o botão explicar a própria indisponibilidade.
         TextButton(
-          onPressed: _isLoading ? null : _handleResend,
+          onPressed:
+              (_isLoading || _resendSecondsLeft > 0) ? null : _handleResend,
           child: Text(
-            AppLocalizations.of(context).forgotResend,
+            _resendSecondsLeft > 0
+                ? AppLocalizations.of(context)
+                    .forgotResendIn(_resendSecondsLeft)
+                : AppLocalizations.of(context).forgotResend,
             style: GoogleFonts.nunito(
               fontSize: 14,
-              color: context.gc.lilac,
+              color: _resendSecondsLeft > 0
+                  ? context.gc.textSecondary
+                  : context.gc.lilac,
             ),
           ),
         ),
@@ -162,19 +236,23 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.gc.starYellow.withValues(alpha: 0.2),
-          ),
-          child: Icon(
-            Icons.lock_reset,
-            size: 40,
-            color: context.gc.starYellow,
+        BreathingBadge(
+          glowColor: context.gc.starYellow,
+          haloSize: 96,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: context.gc.starYellow.withValues(alpha: 0.2),
+            ),
+            child: Icon(
+              Icons.lock_reset,
+              size: 40,
+              color: context.gc.starYellow,
+            ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context).forgotTitle,
           style: GoogleFonts.cinzelDecorative(
@@ -200,7 +278,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
+      enabled: !_isLoading,
       keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.done,
+      autofillHints: const [AutofillHints.email],
+      autocorrect: false,
+      onFieldSubmitted: (_) => _handleSendReset(),
       style: GoogleFonts.nunito(color: context.gc.textPrimary),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).authEmailLabel,
@@ -220,33 +303,43 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Widget _buildSendButton() {
-    return ElevatedButton(
-      onPressed: _isLoading ? null : _handleSendReset,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: context.gc.lilac,
-        foregroundColor: const Color(0xFF2B2143),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
-      ),
-      child: _isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2B2143)),
-              ),
-            )
-          : Text(
-              AppLocalizations.of(context).forgotSendLink,
-              style: GoogleFonts.nunito(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+    return PressableScale(
+      child: SheenSweep(
+        child: ElevatedButton(
+          onPressed: _isLoading ? null : _handleSendReset,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: context.gc.lilac,
+            foregroundColor: const Color(0xFF2B2143),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
+            disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: _isLoading
+                ? const SizedBox(
+                    key: ValueKey('loading'),
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF2B2143)),
+                    ),
+                  )
+                : Text(
+                    AppLocalizations.of(context).forgotSendLink,
+                    key: const ValueKey('label'),
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -282,7 +375,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Future<void> _handleSendReset() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isLoading) return;
+    if (!_formKey.currentState!.validate()) {
+      _shakeKey.currentState?.shake();
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -315,15 +412,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           _emailSent = true;
           _isLoading = false;
         });
+        _startResendCooldown();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppLocalizations.of(context).forgotSendError}: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: context.gc.alert,
-          ),
+        _shakeKey.currentState?.shake();
+        showAuthSnack(
+          context,
+          '${AppLocalizations.of(context).forgotSendError}: ${e.toString().replaceAll('Exception: ', '')}',
+          type: AuthSnackType.error,
         );
       }
     }
@@ -357,21 +455,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).forgotResendSuccess),
-            backgroundColor: context.gc.success,
-          ),
+        _startResendCooldown();
+        showAuthSnack(
+          context,
+          AppLocalizations.of(context).forgotResendSuccess,
+          type: AuthSnackType.success,
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppLocalizations.of(context).forgotResendErrorPrefix}: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: context.gc.alert,
-          ),
+        showAuthSnack(
+          context,
+          '${AppLocalizations.of(context).forgotResendErrorPrefix}: ${e.toString().replaceAll('Exception: ', '')}',
+          type: AuthSnackType.error,
         );
       }
     }
