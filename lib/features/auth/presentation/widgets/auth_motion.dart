@@ -138,6 +138,10 @@ class _SheenSweepState extends State<SheenSweep>
     return ClipRRect(
       borderRadius: widget.borderRadius,
       child: Stack(
+        // passthrough: repassa as constraints do pai intactas ao botão.
+        // O fit padrão (loose) as afrouxa — num Column(stretch), o botão
+        // encolhia para a largura intrínseca em vez de ocupar a linha.
+        fit: StackFit.passthrough,
         children: [
           widget.child,
           Positioned.fill(
@@ -147,13 +151,17 @@ class _SheenSweepState extends State<SheenSweep>
                 builder: (context, _) {
                   // A faixa cruza o botão no primeiro 1/3 do ciclo e
                   // descansa o resto — brilho ocasional, não estroboscópio.
+                  // Align (e não translação): o deslocamento é relativo ao
+                  // BOTÃO, e além de ±1 a faixa entra/sai pelas bordas,
+                  // aparada pelo ClipRRect.
                   final t = (_c.value * 3).clamp(0.0, 1.0);
-                  return FractionalTranslation(
-                    translation: Offset(-1.2 + t * 2.6, 0),
+                  return Align(
+                    alignment: Alignment(-1.6 + t * 3.2, 0),
                     child: Transform(
                       transform: Matrix4.skewX(-0.35),
                       child: Container(
                         width: 42,
+                        height: double.infinity,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
