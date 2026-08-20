@@ -237,7 +237,16 @@ class PaymentService extends ChangeNotifier {
       // preços antigos): recarregar as ofertas invalida esse cache.
       _consumablePackages.clear();
 
-      if (_offerings?.current == null) {
+      // Nas lojas (App Store/Play) o "current" sempre vem. No RevenueCat
+      // Billing (web) há projetos que só têm offerings em `all`, sem marcar
+      // uma como current — aí caímos para a primeira disponível, senão a web
+      // mostraria "planos indisponíveis" mesmo com produtos cadastrados.
+      final offering = _offerings?.current ??
+          (_offerings != null && _offerings!.all.isNotEmpty
+              ? _offerings!.all.values.first
+              : null);
+
+      if (offering == null) {
         debugPrint('⚠️  Nenhuma oferta disponível no RevenueCat');
         debugPrint('💡 Verifique se:');
         debugPrint('   1. A offering "default" existe no dashboard');
@@ -246,14 +255,13 @@ class PaymentService extends ChangeNotifier {
         return;
       }
 
-      debugPrint('✅ Offering encontrada: ${_offerings!.current!.identifier}');
-      debugPrint('📦 Pacotes disponíveis: ${_offerings!.current!.availablePackages.length}');
+      debugPrint('✅ Offering encontrada: ${offering.identifier}');
+      debugPrint('📦 Pacotes disponíveis: ${offering.availablePackages.length}');
 
       _products = [];
 
-      for (final package in _offerings!.current!.availablePackages) {
+      for (final package in offering.availablePackages) {
         final product = package.storeProduct;
-        SubscriptionType? type;
 
         debugPrint('   📦 ${package.identifier}:');
         debugPrint('      - Product ID: ${product.identifier}');
@@ -261,19 +269,10 @@ class PaymentService extends ChangeNotifier {
         debugPrint('      - Preço: ${product.priceString}');
         debugPrint('      - Tipo: ${package.packageType}');
 
-        switch (package.packageType) {
-          case PackageType.monthly:
-            type = SubscriptionType.monthly;
-            break;
-          case PackageType.annual:
-            type = SubscriptionType.yearly;
-            break;
-          case PackageType.lifetime:
-            type = SubscriptionType.lifetime;
-            break;
-          default:
-            debugPrint('      ⚠️  Tipo de pacote não reconhecido, pulando...');
-            continue;
+        final type = _subscriptionTypeFor(package);
+        if (type == null) {
+          debugPrint('      ⚠️  Tipo de pacote não reconhecido, pulando...');
+          continue;
         }
 
         _products.add(ProductInfo(
@@ -451,38 +450,36 @@ class PaymentService extends ChangeNotifier {
       debugPrint('📦 Buscando ofertas...');
       final offerings = await Purchases.getOfferings();
 
-      if (offerings.current == null) {
+      // Mesma tolerância do catálogo: na web a offering pode não estar marcada
+      // como current, então caímos para a primeira disponível em `all`.
+      final offering = offerings.current ??
+          (offerings.all.isNotEmpty ? offerings.all.values.first : null);
+
+      if (offering == null) {
         debugPrint('❌ Nenhuma oferta disponível');
         debugPrint('💡 Verifique se a offering "default" existe no RevenueCat Dashboard');
         _setStatus(PurchaseStatus.error);
         return PurchaseResult.error(_l10n.paymentNoOffers);
       }
 
-      debugPrint('✅ Offering encontrada: ${offerings.current!.identifier}');
+      debugPrint('✅ Offering encontrada: ${offering.identifier}');
 
-      // Encontrar o pacote correto
-      Package? package;
-      String packageName = '';
-
-      switch (type) {
-        case SubscriptionType.monthly:
-          package = offerings.current!.monthly;
-          packageName = 'monthly';
-          break;
-        case SubscriptionType.yearly:
-          package = offerings.current!.annual;
-          packageName = 'annual';
-          break;
-        case SubscriptionType.lifetime:
-          package = offerings.current!.lifetime;
-          packageName = 'lifetime';
-          break;
-      }
+      // Encontrar o pacote correto. Os atalhos `.monthly/.annual/.lifetime` só
+      // acham pacotes com identificador padrão (`$rc_...`) — o que vale nas
+      // lojas. No RevenueCat Billing (web) os pacotes costumam ter
+      // identificador próprio (PackageType.custom), então caímos para a mesma
+      // dedução por identificador usada ao montar o catálogo.
+      final packageName = switch (type) {
+        SubscriptionType.monthly => 'monthly',
+        SubscriptionType.yearly => 'annual',
+        SubscriptionType.lifetime => 'lifetime',
+      };
+      final package = _packageForType(offering, type);
 
       if (package == null) {
         debugPrint('❌ Pacote $packageName não encontrado na offering');
         debugPrint('💡 Verifique se o produto está associado à offering no RevenueCat Dashboard');
-        debugPrint('   Pacotes disponíveis: ${offerings.current!.availablePackages.map((p) => p.identifier).join(", ")}');
+        debugPrint('   Pacotes disponíveis: ${offering.availablePackages.map((p) => p.identifier).join(", ")}');
         _setStatus(PurchaseStatus.error);
         return PurchaseResult.error(_l10n.paymentProductNotFound(packageName));
       }
@@ -776,6 +773,78 @@ class PaymentService extends ChangeNotifier {
       (p) => p?.type == type,
       orElse: () => null,
     );
+  }
+
+  /// Deduz o tipo de assinatura de um pacote.
+  ///
+  /// Nas lojas (App Store/Play) o RevenueCat entrega os pacotes já com
+  /// `PackageType.monthly/annual/lifetime`. No RevenueCat Billing (web), porém,
+  /// os pacotes costumam vir como `PackageType.custom` — o identificador não é
+  /// um dos `$rc_` padrão. Se dependêssemos só do `packageType`, na web TODOS
+  /// os pacotes seriam descartados: a tela mostraria "planos indisponíveis" e o
+  /// Vitalício nunca apareceria. Por isso, quando o tipo não é uma duração
+  /// reconhecida, caímos para o identificador do pacote/produto.
+  SubscriptionType? _subscriptionTypeFor(Package package) {
+    switch (package.packageType) {
+      case PackageType.monthly:
+        return SubscriptionType.monthly;
+      case PackageType.annual:
+        return SubscriptionType.yearly;
+      case PackageType.lifetime:
+        return SubscriptionType.lifetime;
+      default:
+        return subscriptionTypeFromIdentifier(
+          '${package.identifier} ${package.storeProduct.identifier}',
+        );
+    }
+  }
+
+  /// Casa um identificador (do pacote e/ou do produto) com um tipo de
+  /// assinatura. Só usado como plano B, quando o `packageType` não diz a
+  /// duração — o caso da web.
+  ///
+  /// Evita de propósito os tokens curtos "ano"/"mes": ambos são substring de
+  /// palavras comuns em português (ex.: "plano" contém "ano"), o que
+  /// classificaria errado. "anual"/"mensal" já cobrem o português com
+  /// segurança.
+  @visibleForTesting
+  static SubscriptionType? subscriptionTypeFromIdentifier(String raw) {
+    final id = raw.toLowerCase();
+    if (id.contains('lifetime') || id.contains('vitalic')) {
+      return SubscriptionType.lifetime;
+    }
+    if (id.contains('annual') ||
+        id.contains('anual') ||
+        id.contains('yearly') ||
+        id.contains('year')) {
+      return SubscriptionType.yearly;
+    }
+    if (id.contains('monthly') ||
+        id.contains('mensal') ||
+        id.contains('month')) {
+      return SubscriptionType.monthly;
+    }
+    return null;
+  }
+
+  /// Acha o pacote de um tipo dentro de uma offering.
+  ///
+  /// Tenta primeiro os atalhos do RevenueCat (que só valem para os
+  /// identificadores `$rc_` padrão das lojas) e, se não achar, varre os
+  /// pacotes deduzindo o tipo pelo identificador — assim a compra também
+  /// funciona na web, onde os pacotes têm nome próprio.
+  Package? _packageForType(Offering offering, SubscriptionType type) {
+    final direct = switch (type) {
+      SubscriptionType.monthly => offering.monthly,
+      SubscriptionType.yearly => offering.annual,
+      SubscriptionType.lifetime => offering.lifetime,
+    };
+    if (direct != null) return direct;
+
+    for (final package in offering.availablePackages) {
+      if (_subscriptionTypeFor(package) == type) return package;
+    }
+    return null;
   }
 
   @visibleForTesting

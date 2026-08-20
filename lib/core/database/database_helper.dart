@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 21,
+      version: 22,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -369,6 +369,11 @@ class DatabaseHelper {
     ''');
     await db.execute(
         'CREATE INDEX idx_cycle_readings_user_id ON cycle_readings(user_id)');
+
+    // Tabela de Tiragens de Tarô (ver _createTarotReadingsSql)
+    await db.execute(_createTarotReadingsSql);
+    await db.execute(
+        'CREATE INDEX idx_tarot_readings_user_id ON tarot_readings(user_id)');
 
     // Criar índices para user_id em todas as tabelas
     await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
@@ -1119,7 +1124,38 @@ class DatabaseHelper {
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_cycle_readings_user_id ON cycle_readings(user_id)');
     }
+
+    // v22: tiragens de Tarô persistidas (como runas/oráculo/pêndulo já eram).
+    // Sem isso, a tiragem só existia se salva à mão no acervo — e a Leitura
+    // do Ciclo não enxergava o tarô do período. `signature` deduplica a
+    // mesma mesa (ex.: a carta do dia reaberta) sem criar linha nova.
+    if (oldVersion < 22) {
+      await db.execute(_createTarotReadingsSql);
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_tarot_readings_user_id ON tarot_readings(user_id)');
+    }
   }
+
+  /// SQL da tabela de tiragens de Tarô — compartilhado entre onCreate e a
+  /// migração v22 para nunca divergirem.
+  ///
+  /// Local-only por enquanto (fora do DataSyncService): espelhar exige a
+  /// tabela correspondente no Supabase — quando ela existir, basta
+  /// adicionar o SyncEntity.
+  static const _createTarotReadingsSql = '''
+      CREATE TABLE IF NOT EXISTS tarot_readings (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        question TEXT,
+        spread_type TEXT NOT NULL,
+        signature TEXT,
+        reading_data TEXT NOT NULL,
+        date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''';
 
   /// Reconstrói `daily_checkins` a partir do rastro que o app já tinha:
   /// conteúdo criado, lições concluídas e climas consultados. Conserta a

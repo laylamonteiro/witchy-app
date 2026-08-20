@@ -58,7 +58,14 @@ enum AppDeepLink {
       ritualId: 'sun_water'),
 
   /// Diários → aba Sonhos (diário onírico).
-  dreamsDiary('diary/dreams', homeTab: 3, diaryTab: 3);
+  dreamsDiary('diary/dreams', homeTab: 3, diaryTab: 3),
+
+  /// Leitura do Ciclo: a notificação de "sua próxima leitura já pode nascer"
+  /// abre a própria tela da leitura, sobre a aba Seu Dia. Diferente dos
+  /// outros destinos, que só trocam de aba — aqui a HomePage empilha a
+  /// página (ver [opensCycleReading]), porque o convite não faz sentido
+  /// largando a pessoa numa aba para procurar sozinha.
+  cycleReading('cycle_reading');
 
   const AppDeepLink(this.payload,
       {this.homeTab = 0,
@@ -91,6 +98,9 @@ enum AppDeepLink {
   /// É um destino de página guiada de ritual?
   bool get isGuidedRitual =>
       ritualId != null || this == AppDeepLink.guidedRitualSabbat;
+
+  /// Este destino abre a Leitura do Ciclo empilhada sobre a aba?
+  bool get opensCycleReading => this == AppDeepLink.cycleReading;
 
   static AppDeepLink? fromPayload(String? payload) =>
       PendingDeepLink.parse(payload)?.link;

@@ -75,6 +75,57 @@ class CycleReadingRepository {
     return CycleReadingModel.fromMap(rows.first);
   }
 
+  /// A última leitura GERADA deste tipo — âncora do cooldown (semanal a
+  /// cada 7 dias, mensal a cada 30). Créditos pendentes ficam de fora: uma
+  /// compra que ainda não virou relatório não conta como "leitura feita".
+  Future<CycleReadingModel?> latestGenerated(
+    String userId,
+    String periodType,
+  ) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND period_type = ? AND status = ?',
+      whereArgs: [userId, periodType, CycleReadingStatus.generated],
+      orderBy: 'created_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CycleReadingModel.fromMap(rows.first);
+  }
+
+  /// Uma leitura JÁ GERADA cujo período cruza a janela `[start, end)`.
+  ///
+  /// É a trava do período escolhido a dedo: retroagir para ler um pedaço de
+  /// vida ainda não lido é legítimo (e o motivo de existir a escolha de
+  /// datas); repetir um pedaço já lido não é uma leitura nova.
+  ///
+  /// Sobreposição clássica de intervalos meio-abertos: existe cruzamento
+  /// quando `period_start < end` E `period_end > start`. Encostar não é
+  /// cruzar — uma janela que começa exatamente onde a outra terminou passa.
+  Future<CycleReadingModel?> overlappingGenerated(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND status = ? '
+          'AND period_start < ? AND period_end > ?',
+      whereArgs: [
+        userId,
+        CycleReadingStatus.generated,
+        end.millisecondsSinceEpoch,
+        start.millisecondsSinceEpoch,
+      ],
+      orderBy: 'period_start DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CycleReadingModel.fromMap(rows.first);
+  }
+
   Future<List<CycleReadingModel>> getAll(String userId) async {
     final db = await _db;
     final rows = await db.query(

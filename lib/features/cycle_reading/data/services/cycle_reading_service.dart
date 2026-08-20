@@ -9,6 +9,7 @@ import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../models/cycle_reading_model.dart';
 import '../repositories/cycle_reading_repository.dart';
 import 'cycle_reading_composer.dart';
+import 'cycle_reading_draft_store.dart';
 
 /// Strings do idioma atual sem BuildContext (mesmo padrão dos serviços que
 /// "assam" texto no salvamento).
@@ -80,15 +81,18 @@ class CycleReadingService {
     CycleReadingRepository? repository,
     FreeWritingRepository? writings,
     CycleSectionGenerator? generateSection,
+    CycleReadingDraftStore drafts = const CycleReadingDraftStore(),
   })  : _composer = composer ?? CycleReadingComposer(),
         _repository = repository ?? CycleReadingRepository(),
         _writings = writings ?? FreeWritingRepository(),
-        _generateSection = generateSection;
+        _generateSection = generateSection,
+        _drafts = drafts;
 
   final CycleReadingComposer _composer;
   final CycleReadingRepository _repository;
   final FreeWritingRepository _writings;
   final CycleSectionGenerator? _generateSection;
+  final CycleReadingDraftStore _drafts;
 
   CycleReadingComposer get composer => _composer;
   CycleReadingRepository get repository => _repository;
@@ -123,6 +127,147 @@ class CycleReadingService {
           ? currentWeek(now: now)
           : currentLunation(now: now);
 
+  // ===== Período customizado e cooldown (regras da dona) =====
+
+  /// Teto de um período escolhido a dedo: 31 dias, porque há meses de 31 —
+  /// acima disso não é mais "um ciclo", é um histórico.
+  static const int maxCustomPeriodDays = 31;
+
+  /// Dias INCLUSIVOS de uma janela `>= start AND < end` (end exclusivo):
+  /// 14/08 00h → 21/08 00h são 7 dias vividos.
+  static int spanInDays(DateTime start, DateTime end) =>
+      end.difference(start).inDays;
+
+  /// Classifica um período escolhido a dedo: até 7 dias é produto SEMANAL;
+  /// de 8 a 31, MENSAL (lunação). Quem chama já validou o teto de 31.
+  static String periodTypeForSpan(DateTime start, DateTime end) =>
+      spanInDays(start, end) <= 7
+          ? CycleReadingPeriodType.week
+          : CycleReadingPeriodType.lunation;
+
+  /// Intervalo mínimo entre duas leituras do MESMO tipo: uma semanal a cada
+  /// 7 dias, uma mensal a cada 30.
+  ///
+  /// Vale SÓ para quem tem o acesso incluído (Vitalício): ali a leitura não
+  /// custa nada por unidade, e sem ritmo o app viraria um gerador de textos
+  /// sobre a mesma semana. Quem paga por leitura não é limitado — cada
+  /// leitura já é uma compra, e limitar seria recusar dinheiro e autonomia.
+  /// Ver [validateCustomPeriod] e o parâmetro `includedByLifetime`.
+  static Duration cooldownFor(String periodType) =>
+      periodType == CycleReadingPeriodType.week
+          ? const Duration(days: 7)
+          : const Duration(days: 30);
+
+  /// Quando a próxima leitura deste tipo libera; null = já liberada.
+  ///
+  /// Âncora: `createdAt` da última leitura GERADA do tipo (o momento da
+  /// compra/geração). Regenerar a mesma janela não reinicia a contagem —
+  /// `copyWith` preserva o createdAt.
+  Future<DateTime?> nextAllowedAt(
+    String userId,
+    String periodType, {
+    DateTime? now,
+  }) async {
+    final latest = await _repository.latestGenerated(userId, periodType);
+    if (latest == null) return null;
+    final release = latest.createdAt.add(cooldownFor(periodType));
+    return release.isAfter(now ?? DateTime.now()) ? release : null;
+  }
+
+  /// Por que um período escolhido a dedo foi recusado (null = aceito).
+  ///
+  /// Existe porque a tela precisa dizer O QUE fazer a respeito, e cada
+  /// motivo pede uma frase diferente — um enum evita a tela adivinhar por
+  /// mensagem de erro.
+  static const rejectionEmpty = 'empty';
+  static const rejectionTooLong = 'tooLong';
+  static const rejectionFuture = 'future';
+  static const rejectionOverlaps = 'overlaps';
+  static const rejectionCooldown = 'cooldown';
+
+  /// O veredito de um período escolhido a dedo.
+  ///
+  /// [periodType] sai da duração (ate 7 dias = semana; 8 a 31 = lunação) e
+  /// só faz sentido quando [reason] é null. [releaseAt] acompanha a recusa
+  /// por cooldown; [conflict] acompanha a recusa por sobreposição — as duas
+  /// dão à tela o "quando" e o "com qual leitura".
+  static ({
+    String? reason,
+    String periodType,
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  }) _verdict(
+    String? reason,
+    String periodType, {
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  }) =>
+      (
+        reason: reason,
+        periodType: periodType,
+        releaseAt: releaseAt,
+        conflict: conflict,
+      );
+
+  /// Valida um período escolhido a dedo.
+  ///
+  /// Duas famílias de regra, com alcances diferentes:
+  ///
+  /// **Sempre** (é o que a leitura consegue fazer):
+  /// 1. a janela é vazia ou invertida;
+  /// 2. passa de [maxCustomPeriodDays] (31, porque há meses de 31);
+  /// 3. avança no futuro — não se lê um ciclo que ainda não foi vivido.
+  ///
+  /// **Só com [includedByLifetime]** (é o ritmo do acesso incluído):
+  /// 4. cruza um período JÁ LIDO;
+  /// 5. o cooldown do tipo resultante ainda não venceu.
+  ///
+  /// Quem paga por leitura passa direto pelas duas últimas: pode comprar
+  /// qualquer período, quantas vezes quiser, inclusive relendo um pedaço já
+  /// lido. Cada leitura é uma compra — e o app não tem por que dizer não.
+  ///
+  /// A ordem importa: as três primeiras são do próprio pedido e não custam
+  /// banco; as duas últimas consultam, e a de sobreposição vem antes porque
+  /// é a mais específica ("este pedaço você já leu" ajuda mais que "espere").
+  Future<({
+    String? reason,
+    String periodType,
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  })> validateCustomPeriod({
+    required String userId,
+    required DateTime start,
+    required DateTime end,
+    bool includedByLifetime = false,
+    DateTime? now,
+  }) async {
+    final tipo = periodTypeForSpan(start, end);
+    final dias = spanInDays(start, end);
+    if (dias <= 0) return _verdict(rejectionEmpty, tipo);
+    if (dias > maxCustomPeriodDays) return _verdict(rejectionTooLong, tipo);
+
+    final agora = now ?? DateTime.now();
+    // `end` é exclusivo: uma janela que termina "amanhã 00h" cobre até hoje
+    // e é legítima. Só recusa o que passa disso.
+    final amanha = DateTime(agora.year, agora.month, agora.day)
+        .add(const Duration(days: 1));
+    if (end.isAfter(amanha)) return _verdict(rejectionFuture, tipo);
+
+    // A partir daqui é ritmo do acesso incluído, não limite da leitura.
+    if (!includedByLifetime) return _verdict(null, tipo);
+
+    final conflito = await _repository.overlappingGenerated(userId, start, end);
+    if (conflito != null) {
+      return _verdict(rejectionOverlaps, tipo, conflict: conflito);
+    }
+
+    final liberaEm = await nextAllowedAt(userId, tipo, now: agora);
+    if (liberaEm != null) {
+      return _verdict(rejectionCooldown, tipo, releaseAt: liberaEm);
+    }
+    return _verdict(null, tipo);
+  }
+
   /// O Vitalício cobre esta janela?
   ///
   /// Decisão de produto (reafirmada pela dona): o Vitalício cobre AS DUAS
@@ -154,6 +299,10 @@ class CycleReadingService {
   /// acervo → crédito marcado como consumido. Qualquer falha no meio deixa
   /// o crédito `pending` (ou o relatório anterior intacto, na regeneração)
   /// — tentar de novo nunca custa nova cobrança.
+  ///
+  /// Cada seção pronta é guardada num rascunho ([CycleReadingDraftStore]):
+  /// se a quinta chamada falhar, a próxima tentativa retoma da quinta em vez
+  /// de refazer as quatro anteriores.
   Future<CycleReadingResult> generateForCredit({
     required CycleReadingModel credit,
     required String userId,
@@ -171,12 +320,35 @@ class CycleReadingService {
       periodType: credit.periodType,
       options: options,
     );
-    final materialJson = material.compactJson;
     final generate = _generateSection ?? _defaultGenerate;
 
-    final sections = <String, String>{};
+    // Impressão digital do material: muda quando ela desliga uma fonte na
+    // privacidade ou registra algo novo no período. Rascunho de material
+    // diferente é descartado em vez de misturado.
+    //
+    // Tamanho + hash, e não só o hash: uma colisão faria seções escritas
+    // com material diferente entrarem no mesmo relatório, e é barato
+    // demais exigir que o tamanho também bata.
+    final materialJson = material.compactJson;
+    final fingerprint = '${materialJson.length}:${materialJson.hashCode}';
+    if (regenerate) {
+      // Regenerar é pedir um texto NOVO: reaproveitar o rascunho devolveria
+      // exatamente o que ela quis trocar.
+      await _drafts.clear(credit.id);
+    }
+    final sections = regenerate
+        ? <String, String>{}
+        : await _drafts.load(credit.id, fingerprint);
+
     for (final key in CycleReadingSections.forPeriod(credit.periodType)) {
-      sections[key] = (await generate(key, materialJson)).trim();
+      if (sections[key]?.isNotEmpty ?? false) continue;
+      // Cada seção recebe só o material que ela usa (ver compactJsonFor).
+      sections[key] = (await generate(
+        key,
+        material.compactJsonFor(key),
+      )).trim();
+      // Grava a cada seção: é o que permite retomar de onde parou.
+      await _drafts.save(credit.id, fingerprint, sections);
     }
 
     final affirmation = _cleanAffirmation(
@@ -229,6 +401,9 @@ class CycleReadingService {
           regenerate ? credit.regenerationsUsed + 1 : credit.regenerationsUsed,
     );
     await _repository.update(updated);
+
+    // Relatório salvo e crédito consumido: o rascunho cumpriu o papel.
+    await _drafts.clear(credit.id);
 
     return CycleReadingResult(
       reading: updated,

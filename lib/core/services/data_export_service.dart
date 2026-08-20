@@ -38,12 +38,16 @@ class DataExportService {
     'rune_readings',
     'pendulum_consultations',
     'oracle_readings',
+    'tarot_readings',
     'daily_magical_weather',
     'learning_progress',
     'guided_ritual_logs',
     'user_encyclopedia_entries',
     'free_writings',
     'daily_checkins',
+    // O relatório em si sai em free_writings; aqui vai o registro da compra
+    // e do período coberto — exportar os dados dela é exportar tudo.
+    'cycle_readings',
   ];
 
   /// Lê todas as tabelas e devolve o JSON do backup.

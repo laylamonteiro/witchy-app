@@ -191,6 +191,16 @@ class AuthProvider extends ChangeNotifier {
 
     _isInitialized = true;
     notifyListeners();
+
+    // Sync oportunista de BOOT (fire-and-forget): o auto-sync pós-login roda
+    // uma única vez — se falhou (rede, sessão atrasada) ou se esta instalação
+    // logou antes de o backup existir, o aparelho ficava para sempre sem os
+    // dados da nuvem. Aqui todo boot autenticado tenta de novo; os gates
+    // internos do serviço (Premium, toggle, sessão) fazem o não-elegível
+    // sair barato.
+    if (_currentUser.isAuthenticated) {
+      unawaited(_autoSyncAfterLogin());
+    }
   }
 
   /// Adota no estado local uma sessão autenticada vinda do servidor.
