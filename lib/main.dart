@@ -128,6 +128,15 @@ Future<SharedPreferences> _initializeApp() async {
   await DatabaseHelper.instance.database;
   await debugLog('SYSTEM', 'Banco de dados aberto');
 
+  // Registrar AGORA se este boot é a volta de um login social: o
+  // Supabase.initialize pode limpar o ?code= da URL enquanto a troca do
+  // código ainda está em voo, e depois dele não há mais como saber.
+  // O AuthWrapper usa isso para segurar uma tela de "entrando..." em vez
+  // de despejar a pessoa na tela de login com a sessão a caminho.
+  AuthProvider.bootCameFromOAuthReturn = kIsWeb &&
+      (Uri.base.queryParameters.containsKey('code') ||
+          Uri.base.fragment.contains('access_token'));
+
   // Initialize Supabase
   if (SupabaseConfig.isConfigured) {
     await Supabase.initialize(

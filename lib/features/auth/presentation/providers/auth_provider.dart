@@ -46,6 +46,18 @@ class AuthProvider extends ChangeNotifier {
 
   UserModel _currentUser = UserModel.defaultUser();
   bool _isInitialized = false;
+
+  /// Marcado no main() quando o boot veio da volta de um login social
+  /// (?code= na URL) — ANTES do Supabase.initialize, que limpa a URL.
+  static bool bootCameFromOAuthReturn = false;
+
+  /// Enquanto true, a troca do código OAuth pode estar em voo: o AuthWrapper
+  /// mostra "entrando..." em vez da tela de login. Sem isso, quem terminava
+  /// o login no Google caía de volta na tela de login por 1-3 segundos — ou
+  /// para sempre, se tocasse em algo — e "logar duas vezes" virava o normal.
+  bool _oauthReturnPending = false;
+  bool get oauthReturnPending => _oauthReturnPending;
+  Timer? _oauthReturnTimeout;
   bool _hasSeenOnboarding = false;
   bool _isOriginalAdmin =
       false; // Mantém acesso ao painel admin ao simular outros roles
@@ -160,6 +172,20 @@ class AuthProvider extends ChangeNotifier {
     // Verificar se assinatura expirou (exceto para Códigos Premium lifetime e admin)
     await _checkSubscriptionExpiration();
 
+    // Boot vindo do retorno OAuth com estado local anônimo: a sessão está
+    // a caminho. Segura a tela de entrada até ela chegar — com prazo: se a
+    // troca falhar (código expirado, verifier perdido), a pessoa não pode
+    // ficar presa num spinner eterno.
+    if (bootCameFromOAuthReturn && !_currentUser.isAuthenticated) {
+      _oauthReturnPending = true;
+      _oauthReturnTimeout = Timer(const Duration(seconds: 15), () {
+        if (!_oauthReturnPending) return;
+        _oauthReturnPending = false;
+        debugLog('AUTH', 'Retorno OAuth não virou sessão em 15s — liberando a tela de entrada');
+        notifyListeners();
+      });
+    }
+
     // Adota uma sessão que já exista no servidor (retorno do OAuth na web).
     await _watchServerSession();
 
@@ -185,6 +211,13 @@ class AuthProvider extends ChangeNotifier {
       await debugLog('AUTH', 'Falha ao adotar sessão do servidor: $e');
     } finally {
       _restoringServerSession = false;
+      // A sessão chegou (ou falhou de vez): a espera do retorno OAuth acaba
+      // aqui, e o AuthWrapper decide pelo estado real.
+      if (_oauthReturnPending) {
+        _oauthReturnPending = false;
+        _oauthReturnTimeout?.cancel();
+        notifyListeners();
+      }
     }
   }
 
@@ -219,6 +252,7 @@ class AuthProvider extends ChangeNotifier {
   @override
   void dispose() {
     _serverSessionSubscription?.cancel();
+    _oauthReturnTimeout?.cancel();
     super.dispose();
   }
 

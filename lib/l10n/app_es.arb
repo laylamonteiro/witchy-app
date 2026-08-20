@@ -962,6 +962,7 @@
   "authCaptchaSubtitle": "Una verificación rápida para separar personas de robots — casi siempre pasa sola",
   "authCaptchaFailed": "No se pudo completar la verificación. Inténtalo de nuevo",
   "authErrCaptchaOutdated": "Actualiza la app en la Play Store para continuar",
+  "authFinishingLogin": "Entrando… confirmando tu inicio de sesión con seguridad.",
   "authErrConnection": "Error de conexión: {error}",
   "authErrGoogleCredentials": "No fue posible obtener las credenciales de Google",
   "authErrFacebookUnavailable": "El inicio de sesión con Facebook ya no está disponible",

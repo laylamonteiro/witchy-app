@@ -962,6 +962,7 @@
   "authCaptchaSubtitle": "A quick check to tell people from bots — it usually passes on its own",
   "authCaptchaFailed": "The verification could not be completed. Try again",
   "authErrCaptchaOutdated": "Update the app on the Play Store to continue",
+  "authFinishingLogin": "Signing you in… confirming your login securely.",
   "authErrConnection": "Connection error: {error}",
   "authErrGoogleCredentials": "Could not get Google credentials",
   "authErrFacebookUnavailable": "Facebook sign-in is no longer available",
