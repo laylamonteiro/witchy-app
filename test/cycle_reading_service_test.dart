@@ -333,6 +333,125 @@ void main() {
     });
   });
 
+  group('período a dedo: retroativo vale, repetir não', () {
+    // As DUAS travas juntas, como a dona pediu: escolher datas serve para
+    // ler um pedaço retroativo AINDA NÃO LIDO — não para driblar o
+    // intervalo entre compras.
+    final hoje = DateTime(2026, 8, 20);
+
+    Future<void> geradaNoPeriodo(
+      String periodType,
+      DateTime inicio,
+      DateTime fim, {
+      DateTime? createdAt,
+    }) async {
+      await CycleReadingRepository().insert(CycleReadingModel(
+        userId: userId,
+        periodType: periodType,
+        periodStart: inicio,
+        periodEnd: fim,
+        status: CycleReadingStatus.generated,
+        createdAt: createdAt ?? DateTime(2026, 1, 1),
+      ));
+    }
+
+    test('um pedaço retroativo nunca lido é aceito', () async {
+      final v = await CycleReadingService().validateCustomPeriod(
+        userId: userId,
+        start: DateTime(2026, 5, 1),
+        end: DateTime(2026, 5, 8),
+        now: hoje,
+      );
+      expect(v.reason, isNull);
+      expect(v.periodType, CycleReadingPeriodType.week);
+    });
+
+    test('cruzar um período já lido é recusado, mesmo sem cooldown',
+        () async {
+      // createdAt bem antigo: o cooldown já venceu há muito. O que barra
+      // aqui é a sobreposição, e é isso que o teste prova.
+      await geradaNoPeriodo(
+        CycleReadingPeriodType.week,
+        DateTime(2026, 5, 1),
+        DateTime(2026, 5, 8),
+        createdAt: DateTime(2026, 5, 8),
+      );
+      final v = await CycleReadingService().validateCustomPeriod(
+        userId: userId,
+        start: DateTime(2026, 5, 5),
+        end: DateTime(2026, 5, 12),
+        now: hoje,
+      );
+      expect(v.reason, CycleReadingService.rejectionOverlaps);
+      expect(v.conflict, isNotNull);
+    });
+
+    test('encostar não é cruzar: começar onde a outra terminou passa',
+        () async {
+      await geradaNoPeriodo(
+        CycleReadingPeriodType.week,
+        DateTime(2026, 5, 1),
+        DateTime(2026, 5, 8),
+        createdAt: DateTime(2026, 5, 8),
+      );
+      final v = await CycleReadingService().validateCustomPeriod(
+        userId: userId,
+        start: DateTime(2026, 5, 8),
+        end: DateTime(2026, 5, 15),
+        now: hoje,
+      );
+      expect(v.reason, isNull);
+    });
+
+    test('período novo ainda respeita o cooldown da compra recente',
+        () async {
+      // Leitura de OUTRO pedaço, feita ontem: sem sobreposição, mas a
+      // trava de intervalo entre compras continua valendo.
+      await geradaNoPeriodo(
+        CycleReadingPeriodType.week,
+        DateTime(2026, 3, 1),
+        DateTime(2026, 3, 8),
+        createdAt: hoje.subtract(const Duration(days: 1)),
+      );
+      final v = await CycleReadingService().validateCustomPeriod(
+        userId: userId,
+        start: DateTime(2026, 6, 1),
+        end: DateTime(2026, 6, 8),
+        now: hoje,
+      );
+      expect(v.reason, CycleReadingService.rejectionCooldown);
+      expect(v.releaseAt, isNotNull);
+    });
+
+    test('futuro e janela grande demais são recusados', () async {
+      final futuro = await CycleReadingService().validateCustomPeriod(
+        userId: userId,
+        start: hoje,
+        end: hoje.add(const Duration(days: 5)),
+        now: hoje,
+      );
+      expect(futuro.reason, CycleReadingService.rejectionFuture);
+
+      final longo = await CycleReadingService().validateCustomPeriod(
+        userId: userId,
+        start: DateTime(2026, 4, 1),
+        end: DateTime(2026, 5, 10),
+        now: hoje,
+      );
+      expect(longo.reason, CycleReadingService.rejectionTooLong);
+    });
+
+    test('a janela que termina amanhã 00h (cobre hoje) é aceita', () async {
+      final v = await CycleReadingService().validateCustomPeriod(
+        userId: userId,
+        start: hoje.subtract(const Duration(days: 6)),
+        end: hoje.add(const Duration(days: 1)),
+        now: hoje,
+      );
+      expect(v.reason, isNull);
+    });
+  });
+
   test('semana corrente cobre 7 dias e inclui hoje', () {
     final now = DateTime(2026, 8, 19, 15);
     final week = CycleReadingService.currentWeek(now: now);

@@ -1642,6 +1642,38 @@
       }
     }
   },
+  "cycleReadingCustomPeriodButton": "Choose another period",
+  "cycleReadingCustomPeriodTitle": "Which stretch of your life?",
+  "cycleReadingCustomPeriodHint": "Up to 7 days becomes a Week Reading; 8 to 31 days, a Lunation Reading.",
+  "cycleReadingCustomPeriodClear": "Back to the current period",
+  "cycleReadingCustomPeriodLine": "From {start} to {end} · {days, plural, one{1 day} other{{days} days}}",
+  "@cycleReadingCustomPeriodLine": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingRejectTooLong": "A reading period goes up to 31 days. Choose a shorter window.",
+  "cycleReadingRejectFuture": "You can only read a period you have already lived. Choose dates up to today.",
+  "cycleReadingRejectEmpty": "Choose a start and an end date.",
+  "cycleReadingRejectOverlaps": "You have already read a period that crosses these dates ({start} to {end}). Choose a window that hasn't been read yet.",
+  "@cycleReadingRejectOverlaps": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
   "cycleReadingNotifTitle": "Your reading is ready to be born 🌙",
   "cycleReadingNotifWeekBody": "Seven days have passed since your last Week Reading. What has your grimoire kept since then?",
   "cycleReadingNotifLunationBody": "A lunar cycle has completed since your last Lunation Reading. Shall we read what you lived?",

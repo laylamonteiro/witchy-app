@@ -1642,6 +1642,38 @@
       }
     }
   },
+  "cycleReadingCustomPeriodButton": "Elegir otro periodo",
+  "cycleReadingCustomPeriodTitle": "¿Qué tramo de tu vida?",
+  "cycleReadingCustomPeriodHint": "Hasta 7 días es Lectura de la Semana; de 8 a 31 días, Lectura de la Lunación.",
+  "cycleReadingCustomPeriodClear": "Volver al periodo actual",
+  "cycleReadingCustomPeriodLine": "Del {start} al {end} · {days, plural, one{1 día} other{{days} días}}",
+  "@cycleReadingCustomPeriodLine": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingRejectTooLong": "Un periodo de lectura llega hasta 31 días. Elige una ventana más corta.",
+  "cycleReadingRejectFuture": "Solo se puede leer un periodo ya vivido. Elige fechas hasta hoy.",
+  "cycleReadingRejectEmpty": "Elige una fecha inicial y una final.",
+  "cycleReadingRejectOverlaps": "Ya leíste un periodo que cruza estas fechas ({start} al {end}). Elige una ventana que aún no hayas leído.",
+  "@cycleReadingRejectOverlaps": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
   "cycleReadingNotifTitle": "Tu lectura está lista para nacer 🌙",
   "cycleReadingNotifWeekBody": "Han pasado siete días desde tu última Lectura de la Semana. ¿Qué ha guardado tu grimorio desde entonces?",
   "cycleReadingNotifLunationBody": "Un ciclo lunar se ha completado desde tu última Lectura de la Lunación. ¿Leemos lo que viviste?",

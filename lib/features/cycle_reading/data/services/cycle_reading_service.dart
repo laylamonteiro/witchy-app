@@ -166,6 +166,91 @@ class CycleReadingService {
     return release.isAfter(now ?? DateTime.now()) ? release : null;
   }
 
+  /// Por que um período escolhido a dedo foi recusado (null = aceito).
+  ///
+  /// Existe porque a tela precisa dizer O QUE fazer a respeito, e cada
+  /// motivo pede uma frase diferente — um enum evita a tela adivinhar por
+  /// mensagem de erro.
+  static const rejectionEmpty = 'empty';
+  static const rejectionTooLong = 'tooLong';
+  static const rejectionFuture = 'future';
+  static const rejectionOverlaps = 'overlaps';
+  static const rejectionCooldown = 'cooldown';
+
+  /// O veredito de um período escolhido a dedo.
+  ///
+  /// [periodType] sai da duração (ate 7 dias = semana; 8 a 31 = lunação) e
+  /// só faz sentido quando [reason] é null. [releaseAt] acompanha a recusa
+  /// por cooldown; [conflict] acompanha a recusa por sobreposição — as duas
+  /// dão à tela o "quando" e o "com qual leitura".
+  static ({
+    String? reason,
+    String periodType,
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  }) _verdict(
+    String? reason,
+    String periodType, {
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  }) =>
+      (
+        reason: reason,
+        periodType: periodType,
+        releaseAt: releaseAt,
+        conflict: conflict,
+      );
+
+  /// Valida um período escolhido a dedo, com as DUAS travas.
+  ///
+  /// A dona quis as duas de propósito: a escolha de datas existe para ler um
+  /// pedaço RETROATIVO ainda não lido, não para driblar o intervalo entre
+  /// compras. Então recusa quando:
+  ///
+  /// 1. a janela é vazia ou invertida;
+  /// 2. passa de [maxCustomPeriodDays] (31, porque há meses de 31);
+  /// 3. avança no futuro — não se lê um ciclo que ainda não foi vivido;
+  /// 4. cruza um período JÁ LIDO (a leitura seria a mesma vida de novo);
+  /// 5. o cooldown do tipo resultante ainda não venceu.
+  ///
+  /// A ordem importa: as três primeiras são do próprio pedido e não custam
+  /// banco; as duas últimas consultam, e a de sobreposição vem antes porque
+  /// é a mais específica ("este pedaço você já leu" ajuda mais que "espere").
+  Future<({
+    String? reason,
+    String periodType,
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  })> validateCustomPeriod({
+    required String userId,
+    required DateTime start,
+    required DateTime end,
+    DateTime? now,
+  }) async {
+    final tipo = periodTypeForSpan(start, end);
+    final dias = spanInDays(start, end);
+    if (dias <= 0) return _verdict(rejectionEmpty, tipo);
+    if (dias > maxCustomPeriodDays) return _verdict(rejectionTooLong, tipo);
+
+    final agora = now ?? DateTime.now();
+    // `end` é exclusivo: uma janela que termina "amanhã 00h" cobre até hoje
+    // e é legítima. Só recusa o que passa disso.
+    final amanha = DateTime(agora.year, agora.month, agora.day)
+        .add(const Duration(days: 1));
+    if (end.isAfter(amanha)) return _verdict(rejectionFuture, tipo);
+
+    final conflito = await _repository.overlappingGenerated(userId, start, end);
+    if (conflito != null) {
+      return _verdict(rejectionOverlaps, tipo, conflict: conflito);
+    }
+
+    final liberaEm = await nextAllowedAt(userId, tipo, now: agora);
+    if (liberaEm != null) {
+      return _verdict(rejectionCooldown, tipo, releaseAt: liberaEm);
+    }
+    return _verdict(null, tipo);
+  }
+
   /// O Vitalício cobre esta janela?
   ///
   /// Decisão de produto (reafirmada pela dona): o Vitalício cobre AS DUAS

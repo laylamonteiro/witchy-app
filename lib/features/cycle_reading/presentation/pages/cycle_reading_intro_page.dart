@@ -50,8 +50,21 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   final PaymentService _payment = PaymentService();
 
   late String _periodType = widget.initialPeriodType;
+
+  /// Janela escolhida a dedo (null = a janela corrente do tipo).
+  ///
+  /// Existe para ler um pedaço RETROATIVO: a lunação passada, aquela semana
+  /// específica. Quando está preenchida, ela manda — e o [_periodType]
+  /// passa a sair do TAMANHO dela (até 7 dias = semana; 8 a 31 = lunação),
+  /// porque é o tamanho que define o produto, não o rótulo escolhido antes.
+  ({DateTime start, DateTime end})? _customPeriod;
+
   ({DateTime start, DateTime end}) get _period =>
-      CycleReadingService.periodFor(_periodType);
+      _customPeriod ?? CycleReadingService.periodFor(_periodType);
+
+  /// Por que a janela escolhida foi recusada (null = nenhuma recusa à
+  /// vista). Fica na tela até a pessoa escolher outra.
+  String? _customRejection;
 
   /// Esta janela sai de graça pelo Vitalício? Exige compra REAL do lifetime
   /// (entitlement sem expiração) — `SubscriptionPlan.lifetime` não serve,
@@ -156,10 +169,114 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     });
   }
 
+  /// Abre o seletor de datas e valida a janela escolhida.
+  ///
+  /// As DUAS travas valem aqui (decisão da dona): pode-se retroagir para
+  /// ler um pedaço ainda não lido, mas não reler um já lido nem furar o
+  /// intervalo entre compras. O veredito vem do serviço — a tela só traduz
+  /// o motivo para uma frase.
+  Future<void> _pickCustomPeriod() async {
+    if (_isWorking) return;
+    final l10n = AppLocalizations.of(context);
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final hoje = DateTime.now();
+    final ultimoDia = DateTime(hoje.year, hoje.month, hoje.day);
+
+    final escolhido = await showDateRangePicker(
+      context: context,
+      // Um ano para trás cobre qualquer retroativo plausível sem oferecer
+      // um calendário infinito.
+      firstDate: ultimoDia.subtract(const Duration(days: 365)),
+      lastDate: ultimoDia,
+      currentDate: ultimoDia,
+      helpText: l10n.cycleReadingCustomPeriodTitle,
+    );
+    if (escolhido == null || !mounted) return;
+
+    // O picker devolve dias inclusivos (13 a 19 = 7 dias); a janela do app
+    // é `>= start AND < end`, então o fim vira a meia-noite do dia seguinte.
+    final start = DateTime(
+      escolhido.start.year,
+      escolhido.start.month,
+      escolhido.start.day,
+    );
+    final end = DateTime(
+      escolhido.end.year,
+      escolhido.end.month,
+      escolhido.end.day,
+    ).add(const Duration(days: 1));
+
+    final veredito = await _service.validateCustomPeriod(
+      userId: userId,
+      start: start,
+      end: end,
+    );
+    if (!mounted) return;
+
+    if (veredito.reason != null) {
+      setState(() => _customRejection = _rejectionMessage(l10n, veredito));
+      return;
+    }
+
+    setState(() {
+      _customPeriod = (start: start, end: end);
+      _periodType = veredito.periodType;
+      _customRejection = null;
+      // Amostra é por janela: janela nova, amostra nova.
+      _teaser = null;
+      _isLoading = true;
+    });
+    await _load();
+    await _restoreCachedTeaser();
+  }
+
+  /// A frase de cada recusa. O cooldown NÃO passa por aqui: ele já tem a
+  /// sua própria faixa na tela (com a contagem de dias), e repetir a mesma
+  /// informação em dois lugares só confunde.
+  String? _rejectionMessage(
+    AppLocalizations l10n,
+    ({
+      String? reason,
+      String periodType,
+      DateTime? releaseAt,
+      CycleReadingModel? conflict,
+    }) veredito,
+  ) {
+    final formato = DateFormat.yMd(l10n.localeName);
+    switch (veredito.reason) {
+      case CycleReadingService.rejectionTooLong:
+        return l10n.cycleReadingRejectTooLong;
+      case CycleReadingService.rejectionFuture:
+        return l10n.cycleReadingRejectFuture;
+      case CycleReadingService.rejectionEmpty:
+        return l10n.cycleReadingRejectEmpty;
+      case CycleReadingService.rejectionOverlaps:
+        final conflito = veredito.conflict!;
+        return l10n.cycleReadingRejectOverlaps(
+          formato.format(conflito.periodStart),
+          // O fim guardado é exclusivo; mostrar o dia anterior é o que a
+          // pessoa reconhece como "até tal dia".
+          formato.format(
+            conflito.periodEnd.subtract(const Duration(days: 1)),
+          ),
+        );
+      case CycleReadingService.rejectionCooldown:
+        // Tratado pela faixa de cooldown; aqui não vira mensagem.
+        return null;
+      default:
+        return null;
+    }
+  }
+
   Future<void> _selectPeriod(String periodType) async {
-    if (periodType == _periodType || _isWorking) return;
+    if (_isWorking) return;
+    // Com uma janela a dedo em cena, tocar num dos dois botões volta para a
+    // janela corrente daquele tipo — mesmo que o tipo não mude.
+    if (periodType == _periodType && _customPeriod == null) return;
     setState(() {
       _periodType = periodType;
+      _customPeriod = null;
+      _customRejection = null;
       _isLoading = true;
       // A amostra é de UMA janela: trocar de janela zera o que está à vista
       // (a da outra janela continua guardada no cache).
@@ -664,19 +781,84 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
     }
 
-    return Row(
+    final custom = _customPeriod;
+    final formato = DateFormat.yMd(l10n.localeName);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        option(
-          CycleReadingPeriodType.week,
-          l10n.cycleReadingWeekTitle,
-          RevenueCatConfig.cycleReadingWeekProductId,
+        Row(
+          children: [
+            option(
+              CycleReadingPeriodType.week,
+              l10n.cycleReadingWeekTitle,
+              RevenueCatConfig.cycleReadingWeekProductId,
+            ),
+            const SizedBox(width: 10),
+            option(
+              CycleReadingPeriodType.lunation,
+              l10n.cycleReadingLunationTitle,
+              RevenueCatConfig.cycleReadingMonthProductId,
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        option(
-          CycleReadingPeriodType.lunation,
-          l10n.cycleReadingLunationTitle,
-          RevenueCatConfig.cycleReadingMonthProductId,
-        ),
+        const SizedBox(height: 8),
+        // Ler um pedaço retroativo: a lunação passada, aquela semana
+        // específica. O tamanho escolhido decide o produto.
+        if (custom == null)
+          TextButton.icon(
+            onPressed: _isWorking ? null : _pickCustomPeriod,
+            icon: const Icon(Icons.event_repeat, size: 18),
+            label: Text(l10n.cycleReadingCustomPeriodButton),
+          )
+        else ...[
+          Text(
+            l10n.cycleReadingCustomPeriodLine(
+              formato.format(custom.start),
+              // O fim guardado é exclusivo: mostra o último dia vivido.
+              formato.format(custom.end.subtract(const Duration(days: 1))),
+              CycleReadingService.spanInDays(custom.start, custom.end),
+            ),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.lilac,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          TextButton.icon(
+            onPressed: _isWorking ? null : _pickCustomPeriod,
+            icon: const Icon(Icons.edit_calendar, size: 18),
+            label: Text(l10n.cycleReadingCustomPeriodButton),
+          ),
+          TextButton(
+            onPressed: _isWorking
+                ? null
+                : () => _selectPeriod(CycleReadingPeriodType.lunation),
+            child: Text(l10n.cycleReadingCustomPeriodClear),
+          ),
+        ],
+        if (_customRejection != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              _customRejection!,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.gc.alert,
+                  ),
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              l10n.cycleReadingCustomPeriodHint,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.gc.textSecondary,
+                  ),
+            ),
+          ),
       ],
     );
   }
