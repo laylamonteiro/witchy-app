@@ -376,14 +376,41 @@ jobs:
         # Google em produção — e um AAB assinado errado não pode nem chegar
         # perto da Play. Erro fatal, não aviso de log. Cada job confere o
         # SEU artefato: nenhum dos dois sai sem passar por aqui.
+        #
+        # DUAS ferramentas, de propósito. O APK de release sai só com v2/v3
+        # (o v1/JAR fica desligado por padrão com AGP >= 8 e minSdk >= 24),
+        # e `keytool -printcert -jarfile` só lê o v1 — daí a leitura vinha
+        # vazia e o release parava aqui. O apksigner lê v2/v3 e é a
+        # ferramenta certa para APK. O AAB tem assinatura JAR (v1), que o
+        # keytool lê bem — e o apksigner nem verifica bundle. Por isso cada
+        # formato usa a sua.
         env:
+          FORMATO: ${{ matrix.formato }}
           ARQUIVO: ${{ matrix.formato == 'apk'
             && 'build/app/outputs/flutter-apk/app-release.apk'
             || 'build/app/outputs/bundle/release/app-release.aab' }}
         run: |
-          sha1=$(keytool -printcert -jarfile "$ARQUIVO" 2>/dev/null \
-            | grep -m1 'SHA1:' | sed 's/.*SHA1: *//' | tr -d ' ' | tr 'a-f' 'A-F')
-          esperado=$(echo "$SHA1_ESPERADO" | tr -d ' ')
+          if [ "$FORMATO" = "apk" ]; then
+            sdk="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+            apksigner=$(find "$sdk/build-tools" -name apksigner 2>/dev/null \
+              | sort -V | tail -1)
+            if [ -z "$apksigner" ]; then
+              echo "::error::apksigner não encontrado em $sdk/build-tools."
+              exit 1
+            fi
+            bruto=$("$apksigner" verify --print-certs "$ARQUIVO" 2>/dev/null \
+              | grep -m1 'SHA-1 digest:' | sed 's/.*digest: *//')
+          else
+            bruto=$(keytool -printcert -jarfile "$ARQUIVO" 2>/dev/null \
+              | grep -m1 'SHA1:' | sed 's/.*SHA1: *//')
+          fi
+
+          # Normaliza os dois lados: sem espaço, sem ':' e maiúsculo — o
+          # keytool imprime com dois-pontos, o apksigner sem.
+          norm() { echo "$1" | tr -d ' :' | tr 'a-f' 'A-F'; }
+          sha1=$(norm "$bruto")
+          esperado=$(norm "$SHA1_ESPERADO")
+
           if [ -z "$sha1" ]; then
             echo "::error::Não foi possível ler a assinatura de $ARQUIVO."
             exit 1
