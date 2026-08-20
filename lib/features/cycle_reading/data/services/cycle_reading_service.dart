@@ -325,7 +325,12 @@ class CycleReadingService {
     // Impressão digital do material: muda quando ela desliga uma fonte na
     // privacidade ou registra algo novo no período. Rascunho de material
     // diferente é descartado em vez de misturado.
-    final fingerprint = material.compactJson.hashCode.toString();
+    //
+    // Tamanho + hash, e não só o hash: uma colisão faria seções escritas
+    // com material diferente entrarem no mesmo relatório, e é barato
+    // demais exigir que o tamanho também bata.
+    final materialJson = material.compactJson;
+    final fingerprint = '${materialJson.length}:${materialJson.hashCode}';
     if (regenerate) {
       // Regenerar é pedir um texto NOVO: reaproveitar o rascunho devolveria
       // exatamente o que ela quis trocar.

@@ -151,6 +151,22 @@ void main() {
 
   test('material mudou: o rascunho é descartado, não misturado', () async {
     final credit = await insertCredit();
+    // Um sonho DENTRO do período: sem ele, desligar os sonhos não mudaria
+    // material nenhum, a impressão digital seria a mesma e o rascunho
+    // seria reusado — corretamente. O teste só prova algo com a fonte
+    // presente.
+    final db = await DatabaseHelper.instance.database;
+    await db.insert('dreams', {
+      'id': 'sonho-1',
+      'user_id': userId,
+      'title': 'a casa antiga',
+      'content': 'voltei ao quintal da infancia',
+      'date': periodStart.millisecondsSinceEpoch,
+      'created_at': periodStart.millisecondsSinceEpoch,
+      'updated_at': periodStart.millisecondsSinceEpoch,
+      'synced': 0,
+    });
+
     final quebra = CycleReadingService(
       generateSection: (key, json) async =>
           key == 'sky' ? throw Exception('429') : 'trecho de $key',
