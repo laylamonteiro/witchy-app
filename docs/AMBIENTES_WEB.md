@@ -31,17 +31,36 @@ O Turnstile casa **subdomínios automaticamente**, então
 
 ## 2. Supabase — Redirect URLs (volta do login social)
 
-Sintoma: o Google autentica, mas você volta para o **site de produção** (ou
-para lugar nenhum), nunca logada no endereço que estava usando. O app pede
-`redirectTo: Uri.base.origin` (`supabase_auth_repository.dart:149`); quando
-essa origem não está na allowlist, o Supabase a ignora e usa o *Site URL*.
+Sintoma: o Google autentica, mas você volta para o **site de produção**,
+nunca logada no endereço que estava usando — e como os dois sites são
+idênticos por fora, a troca passa despercebida. Você loga de novo (agora a
+partir de produção, então funciona) e passa a testar o app ANTIGO achando
+que está no staging. Foi assim que "a novidade não aparece" sobreviveu a
+uma dezena de investigações.
+
+O app pede `redirectTo: '${Uri.base.origin}/'`
+(`supabase_auth_repository.dart:149`); quando essa origem não casa com
+nenhum padrão da allowlist, o Supabase a ignora **em silêncio** e usa o
+*Site URL*. O código PKCE chega no domínio errado, onde o segredo da troca
+não existe — daí o "tem que logar duas vezes".
+
+> **A barra final não é detalhe.** Os padrões são globs literais:
+> `https://*.grimorio-de-bolso.pages.dev/**` só casa se a URL tiver a barra
+> depois do domínio. `Uri.base.origin` não a tem — por isso o app a
+> acrescenta. Se algum dia alguém tirar essa barra do código, o login volta
+> a cair em produção sem erro nenhum no console.
 
 Supabase → **Authentication → URL Configuration** → *Redirect URLs*:
 
 ```
 https://grimoriodebolso.app/**
+https://grimorio-de-bolso.pages.dev/**
 https://*.grimorio-de-bolso.pages.dev/**
 ```
+
+As três linhas: produção, o domínio-raiz do projeto Pages, e o curinga que
+cobre `staging.` e as prévias por branch. O curinga do Supabase casa **um
+nível** de subdomínio, então o domínio-raiz precisa da própria entrada.
 
 *Site URL* fica em `https://grimoriodebolso.app`.
 
