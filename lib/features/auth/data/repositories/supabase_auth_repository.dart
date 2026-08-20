@@ -142,11 +142,19 @@ class SupabaseAuthRepository implements AuthRepository {
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
           // Para onde a usuária volta DEPOIS do login — a origem do próprio
-          // app (grimoriodebolso.app em produção, localhost em dev), não o
-          // callback interno do Supabase (que era o valor anterior e deixava
-          // a usuária parada numa URL do Supabase em vez de voltar ao app).
-          // Precisa estar na allowlist de Redirect URLs do projeto Supabase.
-          redirectTo: Uri.base.origin,
+          // app (grimoriodebolso.app em produção, staging ou prévia, ou
+          // localhost em dev), não o callback interno do Supabase (que era o
+          // valor anterior e deixava a usuária parada numa URL do Supabase).
+          //
+          // COM BARRA NO FIM. Os padrões de Redirect URLs do Supabase são
+          // globs literais: `https://*.grimorio-de-bolso.pages.dev/**` exige
+          // a barra para casar, e `Uri.base.origin` não a tem. Sem casar, o
+          // Supabase ignora o pedido em silêncio e manda para o *Site URL* —
+          // ou seja, quem logava no staging reaparecia em PRODUÇÃO, com um
+          // código PKCE inútil (o segredo ficou no localStorage do staging).
+          // Resultado: um login que falha, um segundo que funciona, e a
+          // pessoa testando o app antigo sem perceber que trocou de site.
+          redirectTo: '${Uri.base.origin}/',
         );
         // O navegador já está saindo para o Google. Devolver "sucesso" com um
         // usuário anônimo (como antes) fazia a tela sincronizar essa conta
