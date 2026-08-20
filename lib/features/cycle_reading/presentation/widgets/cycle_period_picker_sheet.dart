@@ -55,11 +55,38 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
   DateTime? _start;
   DateTime? _end;
 
-  /// O maior numero de registros num unico dia do mapa — a regua do calor.
-  /// Sem ele, "muito" e "pouco" nao teriam com o que ser comparados.
-  late final int _busiestDay = widget.dailyCounts.values.isEmpty
-      ? 0
-      : widget.dailyCounts.values.reduce((a, b) => a > b ? a : b);
+  /// Os cortes de intensidade do calor, em 3 faixas.
+  ///
+  /// NAO e proporcao ao dia mais cheio do ano: um unico dia excepcional
+  /// (20 registros) achataria todos os outros para quase invisivel, e o
+  /// calendario pareceria vazio para quem registra 2 ou 3 por dia — que e
+  /// a pessoa normal. Aqui os cortes saem dos QUARTIS dos dias que tem
+  /// algo, entao o calor sempre distingue "pouco", "medio" e "muito"
+  /// dentro da escala real daquela pessoa.
+  late final List<int> _thresholds = _computeThresholds();
+
+  List<int> _computeThresholds() {
+    final comRegistro = widget.dailyCounts.values.where((v) => v > 0).toList()
+      ..sort();
+    if (comRegistro.isEmpty) return const [1, 2, 3];
+    int quantil(double q) =>
+        comRegistro[((comRegistro.length - 1) * q).round()];
+    // Cortes crescentes mesmo quando os quartis coincidem (poucos dias, ou
+    // todos com a mesma contagem): sem isto, duas faixas empatadas fariam
+    // dias iguais receberem tons diferentes por acaso da ordenacao.
+    final baixo = quantil(0.33);
+    final medio = quantil(0.66) > baixo ? quantil(0.66) : baixo + 1;
+    final alto = comRegistro.last > medio ? comRegistro.last : medio + 1;
+    return [baixo, medio, alto];
+  }
+
+  /// A opacidade do dia conforme a faixa em que ele cai.
+  double _heatAlpha(int registros) {
+    if (registros <= 0) return 0;
+    if (registros <= _thresholds[0]) return 0.20;
+    if (registros <= _thresholds[1]) return 0.40;
+    return 0.62;
+  }
 
   static String _key(DateTime day) =>
       '${day.year.toString().padLeft(4, '0')}-'
@@ -285,14 +312,11 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
         inicio != null && fim != null && day.isAfter(inicio) && day.isBefore(fim);
     final selecionado = ehInicio || ehFim || noMeio;
 
-    // O calor: proporcao em relacao ao dia mais movimentado, com piso
-    // visivel — um unico registro precisa aparecer, senao o mapa mente por
-    // omissao.
-    final intensidade =
-        _busiestDay == 0 ? 0.0 : (registros / _busiestDay).clamp(0.0, 1.0);
+    // O calor por faixa (ver _thresholds): um unico registro ja aparece,
+    // senao o mapa mentiria por omissao.
     final calor = registros == 0
         ? Colors.transparent
-        : context.gc.lilac.withValues(alpha: 0.12 + intensidade * 0.45);
+        : context.gc.lilac.withValues(alpha: _heatAlpha(registros));
 
     return InkWell(
       onTap: foraDaFaixa ? null : () => _tapDay(day),

@@ -29,6 +29,7 @@ enum SyncEntity {
   runeReadings,
   pendulumConsultations,
   oracleReadings,
+  tarotReadings,
   dailyMagicalWeather,
   dailyCheckins,
   learningProgress,
@@ -597,6 +598,8 @@ class DataSyncService {
         return SupabaseTables.learningProgress;
       case SyncEntity.userEncyclopediaEntries:
         return SupabaseTables.userEncyclopediaEntries;
+      case SyncEntity.tarotReadings:
+        return SupabaseTables.tarotReadings;
       case SyncEntity.cycleReadings:
         return SupabaseTables.cycleReadings;
     }
@@ -641,6 +644,8 @@ class DataSyncService {
         return 'learning_progress';
       case SyncEntity.userEncyclopediaEntries:
         return 'user_encyclopedia_entries';
+      case SyncEntity.tarotReadings:
+        return 'tarot_readings';
       case SyncEntity.cycleReadings:
         return 'cycle_readings';
     }
@@ -735,6 +740,7 @@ class DataSyncService {
     'magical_profiles': {'profile_data'},
     'rune_readings': {'reading_data'},
     'oracle_readings': {'reading_data'},
+    'tarot_readings': {'reading_data'},
     'daily_magical_weather': {'weather_data'},
     'user_encyclopedia_entries': {'data'},
   };
@@ -754,6 +760,7 @@ class DataSyncService {
     'rune_readings': {'date', 'created_at', 'updated_at'},
     'pendulum_consultations': {'date', 'created_at', 'updated_at'},
     'oracle_readings': {'date', 'created_at', 'updated_at'},
+    'tarot_readings': {'date', 'created_at', 'updated_at'},
     'daily_magical_weather': {'created_at', 'updated_at'},
     // `date` fica de fora de propósito nas duas: já é a string YYYY-MM-DD
     // do dia local, e converter para timestamp faria o dia "virar" para
@@ -768,6 +775,14 @@ class DataSyncService {
       'updated_at',
     },
   };
+
+  /// Os nomes de tabela por entidade, para o teste que garante que nenhuma
+  /// entidade fique sem par (uma tabela fora do sync some na reinstalação).
+  @visibleForTesting
+  String localTableForTest(SyncEntity entity) => _getLocalTableName(entity);
+
+  @visibleForTesting
+  String remoteTableForTest(SyncEntity entity) => _getTableName(entity);
 
   @visibleForTesting
   Map<String, dynamic> toRemoteForTest(
