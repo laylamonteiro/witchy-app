@@ -58,6 +58,70 @@ class CycleReadingMaterial {
   const CycleReadingMaterial({required this.json, required this.recordCount});
 
   String get compactJson => jsonEncode(json);
+
+  /// O material que UMA seção precisa ver.
+  ///
+  /// O relatório é gerado seção a seção, e o JSON inteiro ia em todas as
+  /// chamadas — a IA relia o mesmo material 7 vezes. Aqui as seções cuja
+  /// instrução já diz de onde ela tira o texto recebem só isso.
+  ///
+  /// O corte é conservador de propósito: retrato, fios, rituais e afirmação
+  /// continuam vendo TUDO, porque são as que precisam cruzar fontes para
+  /// achar o que floresce e o que pede atenção — economizar ali sairia caro
+  /// na única coisa que a leitura promete, que é falar da vida daquela
+  /// pessoa. Onde não há certeza, o material vai inteiro.
+  String compactJsonFor(String sectionKey) {
+    final campos = _sectionFields[sectionKey];
+    if (campos == null) return compactJson;
+    return jsonEncode({
+      for (final entry in json.entries)
+        if (campos.contains(entry.key)) entry.key: entry.value,
+    });
+  }
+
+  /// Só as seções listadas aqui recebem material reduzido. As demais (e
+  /// qualquer seção nova) recebem tudo — esquecer de cadastrar uma seção
+  /// custa tokens, nunca contexto.
+  static const Map<String, Set<String>> _sectionFields = {
+    // "o céu sobre você": a própria instrução manda usar sky + timeline +
+    // moonByDay. Os trechos longos de cada fonte não entram: a nota curta
+    // de cada momento na timeline já diz o que ela registrou naquele dia.
+    'sky': {
+      'period',
+      'sky',
+      'moonByDay',
+      'timeline',
+      'recordCount',
+      'practiceDays',
+      'streak',
+    },
+    // "sua prática": fala dos ritos e feitiços dela. Sonhos, gratidões e
+    // tiragens não são matéria desta seção.
+    'practice': {
+      'period',
+      'practice',
+      'timeline',
+      'moonByDay',
+      'sky',
+      'learning',
+      'recordCount',
+      'practiceDays',
+      'streak',
+    },
+    // O selo são 3 palavras que resumem o ciclo: a forma do período (a
+    // timeline e as contagens) basta, e é o que ele de fato usa.
+    'seal': {
+      'period',
+      'timeline',
+      'moonByDay',
+      'sky',
+      'recordCount',
+      'dreamCount',
+      'divinationCount',
+      'practiceDays',
+      'streak',
+    },
+  };
 }
 
 /// Monta o retrato do período a partir do que a pessoa registrou no app +

@@ -9,6 +9,7 @@ import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../models/cycle_reading_model.dart';
 import '../repositories/cycle_reading_repository.dart';
 import 'cycle_reading_composer.dart';
+import 'cycle_reading_draft_store.dart';
 
 /// Strings do idioma atual sem BuildContext (mesmo padrão dos serviços que
 /// "assam" texto no salvamento).
@@ -80,15 +81,18 @@ class CycleReadingService {
     CycleReadingRepository? repository,
     FreeWritingRepository? writings,
     CycleSectionGenerator? generateSection,
+    CycleReadingDraftStore drafts = const CycleReadingDraftStore(),
   })  : _composer = composer ?? CycleReadingComposer(),
         _repository = repository ?? CycleReadingRepository(),
         _writings = writings ?? FreeWritingRepository(),
-        _generateSection = generateSection;
+        _generateSection = generateSection,
+        _drafts = drafts;
 
   final CycleReadingComposer _composer;
   final CycleReadingRepository _repository;
   final FreeWritingRepository _writings;
   final CycleSectionGenerator? _generateSection;
+  final CycleReadingDraftStore _drafts;
 
   CycleReadingComposer get composer => _composer;
   CycleReadingRepository get repository => _repository;
@@ -295,6 +299,10 @@ class CycleReadingService {
   /// acervo → crédito marcado como consumido. Qualquer falha no meio deixa
   /// o crédito `pending` (ou o relatório anterior intacto, na regeneração)
   /// — tentar de novo nunca custa nova cobrança.
+  ///
+  /// Cada seção pronta é guardada num rascunho ([CycleReadingDraftStore]):
+  /// se a quinta chamada falhar, a próxima tentativa retoma da quinta em vez
+  /// de refazer as quatro anteriores.
   Future<CycleReadingResult> generateForCredit({
     required CycleReadingModel credit,
     required String userId,
@@ -312,12 +320,35 @@ class CycleReadingService {
       periodType: credit.periodType,
       options: options,
     );
-    final materialJson = material.compactJson;
     final generate = _generateSection ?? _defaultGenerate;
 
-    final sections = <String, String>{};
+    // Impressão digital do material: muda quando ela desliga uma fonte na
+    // privacidade ou registra algo novo no período. Rascunho de material
+    // diferente é descartado em vez de misturado.
+    //
+    // Tamanho + hash, e não só o hash: uma colisão faria seções escritas
+    // com material diferente entrarem no mesmo relatório, e é barato
+    // demais exigir que o tamanho também bata.
+    final materialJson = material.compactJson;
+    final fingerprint = '${materialJson.length}:${materialJson.hashCode}';
+    if (regenerate) {
+      // Regenerar é pedir um texto NOVO: reaproveitar o rascunho devolveria
+      // exatamente o que ela quis trocar.
+      await _drafts.clear(credit.id);
+    }
+    final sections = regenerate
+        ? <String, String>{}
+        : await _drafts.load(credit.id, fingerprint);
+
     for (final key in CycleReadingSections.forPeriod(credit.periodType)) {
-      sections[key] = (await generate(key, materialJson)).trim();
+      if (sections[key]?.isNotEmpty ?? false) continue;
+      // Cada seção recebe só o material que ela usa (ver compactJsonFor).
+      sections[key] = (await generate(
+        key,
+        material.compactJsonFor(key),
+      )).trim();
+      // Grava a cada seção: é o que permite retomar de onde parou.
+      await _drafts.save(credit.id, fingerprint, sections);
     }
 
     final affirmation = _cleanAffirmation(
@@ -370,6 +401,9 @@ class CycleReadingService {
           regenerate ? credit.regenerationsUsed + 1 : credit.regenerationsUsed,
     );
     await _repository.update(updated);
+
+    // Relatório salvo e crédito consumido: o rascunho cumpriu o papel.
+    await _drafts.clear(credit.id);
 
     return CycleReadingResult(
       reading: updated,
