@@ -112,6 +112,7 @@ class CycleReadingComposer {
       'ritual_logs',
       'guided_ritual_logs',
       'spells',
+      'sigils',
     ];
     var total = 0;
     for (final table in tables) {
@@ -196,6 +197,8 @@ class CycleReadingComposer {
             'title': _excerpt(row['title']),
             if (_isNotBlank(row['feeling'])) 'feeling': _excerpt(row['feeling']),
             'excerpt': _excerpt(row['content']),
+            if (_isNotBlank(row['interpretation']))
+              'meaning': _excerpt(row['interpretation']),
           },
       ];
     }
@@ -225,23 +228,49 @@ class CycleReadingComposer {
           {
             'title': _excerpt(row['title']),
             'status': '${row['status']}',
+            if (_isNotBlank(row['description']))
+              'excerpt': _excerpt(row['description']),
+            if (_isNotBlank(row['evolution']))
+              'evolution': _excerpt(row['evolution']),
           },
       ];
     }
 
-    // ===== Afirmações favoritas (autoimagem desejada) =====
+    // ===== Afirmações da pessoa (autoimagem desejada) =====
+    // As que ela CRIOU (is_preloaded=0) contam como registro do período e
+    // são as mais reveladoras; somam-se as favoritas (mesmo pré-carregadas),
+    // porque favoritar também é uma escolha que diz algo sobre ela.
     try {
+      final createdAffirmations = await rowsOf(
+        'affirmations',
+        extraWhere: 'is_preloaded = 0',
+      );
+      recordCount += createdAffirmations.length;
       final favorites = await db.rawQuery(
         'SELECT text FROM affirmations WHERE user_id = ? AND is_favorite = 1 '
         'ORDER BY updated_at DESC LIMIT ?',
         [userId, _maxItemsPerSource],
       );
-      if (favorites.isNotEmpty) {
-        json['favoriteAffirmations'] = [
-          for (final row in favorites) _excerpt(row['text']),
-        ];
+      final texts = <String>{
+        for (final row in createdAffirmations.take(_maxItemsPerSource))
+          if (_isNotBlank(row['text'])) _excerpt(row['text']),
+        for (final row in favorites)
+          if (_isNotBlank(row['text'])) _excerpt(row['text']),
+      };
+      if (texts.isNotEmpty) {
+        json['affirmations'] = texts.take(_maxItemsPerSource).toList();
       }
     } catch (_) {}
+
+    // ===== Sigilos (a intenção mágica desenhada — pura personalização) =====
+    final sigils = await rowsOf('sigils');
+    recordCount += sigils.length;
+    if (sigils.isNotEmpty) {
+      json['sigils'] = [
+        for (final row in sigils.take(_maxItemsPerSource))
+          if (_isNotBlank(row['intention'])) _excerpt(row['intention']),
+      ];
+    }
 
     // ===== Escrita livre + leituras arquivadas =====
     final writings = (await rowsOf('free_writings'))
@@ -266,9 +295,16 @@ class CycleReadingComposer {
       ];
     }
     if (archivedReadings.isNotEmpty) {
-      json['archivedReadings'] = [
+      // O que a pessoa GUARDOU no acervo (tarot, oráculo, runas, quiromancia
+      // salvos): agora vai o conteúdo real da leitura, não só o título — é
+      // dele que sai a especificidade.
+      json['savedReadings'] = [
         for (final row in archivedReadings.take(_maxItemsPerSource))
-          _excerpt(row['title'] ?? row['content']),
+          {
+            'type': '${row['source']}',
+            if (_isNotBlank(row['title'])) 'title': _excerpt(row['title']),
+            'excerpt': _excerpt(row['content']),
+          },
       ];
     }
 
@@ -279,14 +315,33 @@ class CycleReadingComposer {
     recordCount +=
         runeReadings.length + pendulumConsults.length + oracleReadings.length;
     if (options.includeOracleQuestions) {
-      final questions = <String>[
-        for (final row in runeReadings)
-          if (_isNotBlank(row['question'])) _excerpt(row['question']),
-        for (final row in pendulumConsults)
-          if (_isNotBlank(row['question'])) _excerpt(row['question']),
-      ];
-      if (questions.isNotEmpty) {
-        json['oracleQuestions'] = questions.take(_maxItemsPerSource).toList();
+      // Não só a pergunta — a tiragem inteira: a runa/carta e o que ela
+      // respondeu. É a conversa real da pessoa com o oráculo no período.
+      final divinations = <Map<String, dynamic>>[
+        for (final row in runeReadings.take(_maxItemsPerSource))
+          {
+            'oracle': 'runas',
+            if (_isNotBlank(row['question']))
+              'question': _excerpt(row['question']),
+            if (_readingInterpretation(row['reading_data']) case final m?)
+              'answer': m,
+          },
+        for (final row in pendulumConsults.take(_maxItemsPerSource))
+          {
+            'oracle': 'pêndulo',
+            if (_isNotBlank(row['question']))
+              'question': _excerpt(row['question']),
+            if (_isNotBlank(row['answer'])) 'answer': _excerpt(row['answer']),
+          },
+        for (final row in oracleReadings.take(_maxItemsPerSource))
+          {
+            'oracle': 'oráculo',
+            if (_readingInterpretation(row['reading_data']) case final m?)
+              'answer': m,
+          },
+      ].where((d) => d.length > 1).toList();
+      if (divinations.isNotEmpty) {
+        json['oracle'] = divinations;
       }
     }
     json['divinationCount'] =
@@ -312,6 +367,22 @@ class CycleReadingComposer {
       'ritualLogs': ritualLogs.length,
       'guidedRituals': guidedLogs.length,
       'spellsCreated': spells.length,
+      // Os feitiços que ela CRIOU no período (nome + propósito) — o que a
+      // magia dela buscou, não só quantos foram.
+      if (spells.isNotEmpty)
+        'spells': [
+          for (final row in spells.take(_maxItemsPerSource))
+            {
+              'name': _excerpt(row['name']),
+              if (_isNotBlank(row['purpose'])) 'purpose': _excerpt(row['purpose']),
+            },
+        ],
+      // Notas que ela deixou nos ritos concluídos (quando houver).
+      if ([...ritualLogs, ...guidedLogs].any((r) => _isNotBlank(r['notes'])))
+        'ritualNotes': [
+          for (final row in [...ritualLogs, ...guidedLogs])
+            if (_isNotBlank(row['notes'])) _excerpt(row['notes']),
+        ].take(_maxItemsPerSource).toList(),
     };
 
     // ===== Constância (check-ins) e estudo =====
@@ -427,6 +498,37 @@ class CycleReadingComposer {
 
   static bool _isNotBlank(Object? value) =>
       value is String && value.trim().isNotEmpty;
+
+  /// A resposta de uma tiragem (runas/oráculo), extraída do JSON bruto
+  /// `reading_data`. Best-effort: procura a interpretação salva; se não
+  /// achar, junta os nomes das runas/cartas. Qualquer falha de parse
+  /// devolve null — o campo simplesmente não entra, sem quebrar a leitura.
+  static String? _readingInterpretation(Object? raw) {
+    if (raw is! String || raw.trim().isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        for (final key in const ['interpretation', 'summary', 'meaning']) {
+          if (_isNotBlank(decoded[key])) return _excerpt(decoded[key]);
+        }
+        // Sem texto pronto: liste o que foi tirado (runas/cartas).
+        for (final key in const ['runes', 'cards', 'positions', 'draws']) {
+          final list = decoded[key];
+          if (list is List && list.isNotEmpty) {
+            final nomes = <String>[
+              for (final item in list.take(5))
+                if (item is Map && _isNotBlank(item['name']))
+                  '${item['name']}'
+                else if (item is String && _isNotBlank(item))
+                  item,
+            ];
+            if (nomes.isNotEmpty) return _excerpt(nomes.join(', '));
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
 
   /// Trecho curto e de linha única: espaços colapsados e corte em limite de
   /// palavra — nunca o diário inteiro.

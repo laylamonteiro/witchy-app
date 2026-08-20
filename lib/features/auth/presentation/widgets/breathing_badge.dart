@@ -92,13 +92,13 @@ class _BreathingBadgeState extends State<BreathingBadge>
             builder: (context, _) {
               final t = _curve.value;
               return Container(
-                width: widget.haloSize + t * 16,
-                height: widget.haloSize + t * 16,
+                width: widget.haloSize + t * 8,
+                height: widget.haloSize + t * 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      widget.glowColor.withValues(alpha: 0.18 + t * 0.22),
+                      widget.glowColor.withValues(alpha: 0.16 + t * 0.12),
                       widget.glowColor.withValues(alpha: 0),
                     ],
                   ),
@@ -108,7 +108,7 @@ class _BreathingBadgeState extends State<BreathingBadge>
           ),
           // O distintivo respirando
           ScaleTransition(
-            scale: Tween<double>(begin: 1.0, end: 1.05).animate(_curve),
+            scale: Tween<double>(begin: 1.0, end: 1.02).animate(_curve),
             child: widget.child,
           ),
           // Estrelas piscando ao redor — a assinatura da casa. Decorativas:

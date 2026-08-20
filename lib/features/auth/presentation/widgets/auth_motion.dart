@@ -155,21 +155,22 @@ class _SheenSweepState extends State<SheenSweep>
                   // BOTÃO, e além de ±1 a faixa entra/sai pelas bordas,
                   // aparada pelo ClipRRect.
                   final t = (_c.value * 3).clamp(0.0, 1.0);
+                  // Faixa RETA (sem skew) e mais sutil. O skewX antes a
+                  // inclinava em torno da origem e ela "tombava" ao cruzar o
+                  // botão — lia como uma página virando. Reta, é só um brilho
+                  // discreto passando.
                   return Align(
                     alignment: Alignment(-1.6 + t * 3.2, 0),
-                    child: Transform(
-                      transform: Matrix4.skewX(-0.35),
-                      child: Container(
-                        width: 42,
-                        height: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withValues(alpha: 0),
-                              Colors.white.withValues(alpha: 0.28),
-                              Colors.white.withValues(alpha: 0),
-                            ],
-                          ),
+                    child: Container(
+                      width: 40,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withValues(alpha: 0),
+                            Colors.white.withValues(alpha: 0.16),
+                            Colors.white.withValues(alpha: 0),
+                          ],
                         ),
                       ),
                     ),
