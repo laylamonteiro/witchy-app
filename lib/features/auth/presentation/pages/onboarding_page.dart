@@ -189,10 +189,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   factor: 60,
                   child: BreathingBadge(
                     glowColor: slide.iconColor,
-                    haloSize: 170,
+                    haloSize: 150,
                     child: Container(
-                      width: 140,
-                      height: 140,
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: slide.iconColor.withValues(alpha: 0.2),
@@ -203,7 +203,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ),
                       child: Icon(
                         slide.icon,
-                        size: 70,
+                        size: 60,
                         color: slide.iconColor,
                       ),
                     ),

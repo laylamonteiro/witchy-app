@@ -34,46 +34,64 @@ class WelcomePage extends StatelessWidget {
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                children: [
-                  const Spacer(flex: 2),
-                  // Logo/Ícone respirando
-                  CascadeIn(index: 0, child: _buildLogo(context)),
-                  const SizedBox(height: 20),
-                  // Título
-                  CascadeIn(
-                    index: 1,
-                    child: Text(
-                      'Grimório de Bolso',
-                      style: GoogleFonts.cinzelDecorative(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: context.gc.lilac,
+              // Em telas baixas o conteúdo fixo passa da altura e os Spacers
+              // colapsam — sem isto, o rodapé era CORTADO. O minHeight mantém
+              // o layout esticado (Spacers vivos) quando a altura sobra; a
+              // rolagem só existe quando falta.
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          const Spacer(flex: 2),
+                          // Logo/Ícone respirando
+                          CascadeIn(index: 0, child: _buildLogo(context)),
+                          const SizedBox(height: 16),
+                          // Título — linha única, encolhe se a largura apertar
+                          CascadeIn(
+                            index: 1,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Grimório de Bolso',
+                                style: GoogleFonts.cinzelDecorative(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: context.gc.lilac,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Subtítulo
+                          CascadeIn(
+                            index: 2,
+                            child: Text(
+                              AppLocalizations.of(context).welcomeSubtitle,
+                              style: GoogleFonts.nunito(
+                                fontSize: 16,
+                                color: context.gc.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const Spacer(flex: 2),
+                          // Features preview
+                          CascadeIn(
+                              index: 3, child: _buildFeaturesList(context)),
+                          const Spacer(flex: 2),
+                          // Botões
+                          CascadeIn(index: 4, child: _buildButtons(context)),
+                          const SizedBox(height: 24),
+                        ],
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  // Subtítulo
-                  CascadeIn(
-                    index: 2,
-                    child: Text(
-                      AppLocalizations.of(context).welcomeSubtitle,
-                      style: GoogleFonts.nunito(
-                        fontSize: 16,
-                        color: context.gc.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const Spacer(flex: 2),
-                  // Features preview
-                  CascadeIn(index: 3, child: _buildFeaturesList(context)),
-                  const Spacer(flex: 2),
-                  // Botões
-                  CascadeIn(index: 4, child: _buildButtons(context)),
-                  const SizedBox(height: 48),
-                ],
+                ),
               ),
             ),
           ),
@@ -89,7 +107,7 @@ class WelcomePage extends StatelessWidget {
       children: [
         BreathingBadge(
           glowColor: context.gc.lilac,
-          haloSize: 150,
+          haloSize: 144,
           child: Container(
             width: 120,
             height: 120,
@@ -116,7 +134,7 @@ class WelcomePage extends StatelessWidget {
           ),
         ),
         // Uma faísca orbita o livro — a linguagem de órbita dos emblemas.
-        OrbitingSparkle(radius: 82, color: context.gc.starYellow),
+        OrbitingSparkle(radius: 78, color: context.gc.starYellow),
       ],
     );
   }
