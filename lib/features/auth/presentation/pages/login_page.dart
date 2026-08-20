@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
+import '../widgets/breathing_badge.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/config/admin_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -47,54 +50,59 @@ class _LoginPageState extends State<LoginPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                // Header
-                _buildHeader(),
-                const SizedBox(height: 48),
-                // Campos de formulário
-                _buildEmailField(),
-                const SizedBox(height: 16),
-                _buildPasswordField(),
-                const SizedBox(height: 12),
-                // Link de esqueci a senha
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context).authForgotPassword,
-                      style: GoogleFonts.nunito(
-                        fontSize: 14,
-                        color: context.gc.lilac,
+      body: StarfieldBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  // Header
+                  CascadeIn(index: 0, child: _buildHeader()),
+                  const SizedBox(height: 40),
+                  // Campos de formulário
+                  CascadeIn(index: 1, child: _buildEmailField()),
+                  const SizedBox(height: 16),
+                  CascadeIn(index: 2, child: _buildPasswordField()),
+                  const SizedBox(height: 12),
+                  // Link de esqueci a senha
+                  CascadeIn(
+                    index: 3,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                        ),
+                        child: Text(
+                          AppLocalizations.of(context).authForgotPassword,
+                          style: GoogleFonts.nunito(
+                            fontSize: 14,
+                            color: context.gc.lilac,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                // Botão de login
-                _buildLoginButton(),
-                const SizedBox(height: 32),
-                // Divisor
-                _buildDivider(),
-                const SizedBox(height: 32),
-                // Login social
-                _buildSocialLogin(),
-                const SizedBox(height: 32),
-                // Link para cadastro
-                _buildSignupLink(),
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 24),
+                  // Botão de login
+                  CascadeIn(index: 4, child: _buildLoginButton()),
+                  const SizedBox(height: 32),
+                  // Divisor
+                  CascadeIn(index: 5, child: _buildDivider()),
+                  const SizedBox(height: 32),
+                  // Login social
+                  _buildSocialLogin(),
+                  const SizedBox(height: 32),
+                  // Link para cadastro
+                  _buildSignupLink(),
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
@@ -186,20 +194,24 @@ class _LoginPageState extends State<LoginPage> {
         // precisar logar): revela se as credenciais foram embutidas no build.
         GestureDetector(
           onLongPress: _showConfigDiagnostic,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: context.gc.lilac.withValues(alpha: 0.2),
-            ),
-            child: Icon(
-              Icons.lock_outline,
-              size: 40,
-              color: context.gc.lilac,
+          child: BreathingBadge(
+            glowColor: context.gc.lilac,
+            haloSize: 96,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.gc.lilac.withValues(alpha: 0.2),
+              ),
+              child: Icon(
+                Icons.lock_outline,
+                size: 40,
+                color: context.gc.lilac,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context).authWelcomeBack,
           style: GoogleFonts.cinzelDecorative(
@@ -285,33 +297,36 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildLoginButton() {
-    return ElevatedButton(
-      onPressed: _isLoading ? null : _handleLogin,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: context.gc.lilac,
-        foregroundColor: const Color(0xFF2B2143),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    return BreathingGlow(
+      color: context.gc.lilac,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleLogin,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: context.gc.lilac,
+          foregroundColor: const Color(0xFF2B2143),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
         ),
-        disabledBackgroundColor: context.gc.lilac.withValues(alpha: 0.5),
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2B2143)),
+                ),
+              )
+            : Text(
+                AppLocalizations.of(context).authLogin,
+                style: GoogleFonts.nunito(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
       ),
-      child: _isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2B2143)),
-              ),
-            )
-          : Text(
-              AppLocalizations.of(context).authLogin,
-              style: GoogleFonts.nunito(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
     );
   }
 

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
+import '../widgets/breathing_badge.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
 import 'login_page.dart';
@@ -39,10 +42,36 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: _emailSent ? _buildSuccessContent() : _buildFormContent(),
+      body: StarfieldBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            // A troca formulário → sucesso acontece num respiro, não num corte.
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 450),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.04),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: _emailSent
+                  ? KeyedSubtree(
+                      key: const ValueKey('success'),
+                      child: _buildSuccessContent(),
+                    )
+                  : KeyedSubtree(
+                      key: const ValueKey('form'),
+                      child: _buildFormContent(),
+                    ),
+            ),
+          ),
         ),
       ),
     );
@@ -56,16 +85,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         children: [
           const SizedBox(height: 40),
           // Header
-          _buildHeader(),
-          const SizedBox(height: 48),
+          CascadeIn(index: 0, child: _buildHeader()),
+          const SizedBox(height: 40),
           // Campo de email
-          _buildEmailField(),
+          CascadeIn(index: 1, child: _buildEmailField()),
           const SizedBox(height: 32),
           // Botão de enviar
-          _buildSendButton(),
+          CascadeIn(index: 2, child: _buildSendButton()),
           const SizedBox(height: 32),
           // Link para voltar ao login
-          _buildBackToLogin(),
+          CascadeIn(index: 3, child: _buildBackToLogin()),
         ],
       ),
     );
@@ -75,21 +104,27 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 60),
-        // Ícone de sucesso
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.gc.success.withValues(alpha: 0.2),
-          ),
-          child: Icon(
-            Icons.mark_email_read_outlined,
-            size: 64,
-            color: context.gc.success,
+        const SizedBox(height: 48),
+        // Ícone de sucesso respirando — a carta partiu
+        Center(
+          child: BreathingBadge(
+            glowColor: context.gc.success,
+            haloSize: 132,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.gc.success.withValues(alpha: 0.2),
+              ),
+              child: Icon(
+                Icons.mark_email_read_outlined,
+                size: 64,
+                color: context.gc.success,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
         // Título
         Text(
           AppLocalizations.of(context).forgotEmailSent,
@@ -162,19 +197,23 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.gc.starYellow.withValues(alpha: 0.2),
-          ),
-          child: Icon(
-            Icons.lock_reset,
-            size: 40,
-            color: context.gc.starYellow,
+        BreathingBadge(
+          glowColor: context.gc.starYellow,
+          haloSize: 96,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: context.gc.starYellow.withValues(alpha: 0.2),
+            ),
+            child: Icon(
+              Icons.lock_reset,
+              size: 40,
+              color: context.gc.starYellow,
+            ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context).forgotTitle,
           style: GoogleFonts.cinzelDecorative(

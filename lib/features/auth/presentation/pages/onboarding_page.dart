@@ -3,7 +3,9 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/starfield_background.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/breathing_badge.dart';
 
 /// Tela de onboarding com slides explicando funcionalidades do app
 class OnboardingPage extends StatefulWidget {
@@ -96,7 +98,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               setState(() => _currentPage = index);
             },
             itemBuilder: (context, index) {
-              return _buildSlide(_slides[index]);
+              return _buildSlide(_slides[index], index);
             },
           ),
           // Skip button
@@ -127,7 +129,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildSlide(OnboardingSlide slide) {
+  Widget _buildSlide(OnboardingSlide slide, int index) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -136,62 +138,78 @@ class _OnboardingPageState extends State<OnboardingPage> {
           colors: slide.gradient,
         ),
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
-              // Ícone
-              Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: slide.iconColor.withValues(alpha: 0.2),
-                  border: Border.all(
-                    color: slide.iconColor.withValues(alpha: 0.3),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: slide.iconColor.withValues(alpha: 0.3),
-                      blurRadius: 40,
-                      spreadRadius: 10,
+      child: StarfieldBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(flex: 2),
+                // Ícone respirando, com parallax mais forte que o texto:
+                // camadas andando em velocidades diferentes dão profundidade
+                // ao deslizar entre os slides.
+                _Parallax(
+                  controller: _pageController,
+                  index: index,
+                  factor: 60,
+                  child: BreathingBadge(
+                    glowColor: slide.iconColor,
+                    haloSize: 170,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: slide.iconColor.withValues(alpha: 0.2),
+                        border: Border.all(
+                          color: slide.iconColor.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Icon(
+                        slide.icon,
+                        size: 70,
+                        color: slide.iconColor,
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-                child: Icon(
-                  slide.icon,
-                  size: 70,
-                  color: slide.iconColor,
+                const SizedBox(height: 28),
+                // Título
+                _Parallax(
+                  controller: _pageController,
+                  index: index,
+                  factor: 28,
+                  child: Text(
+                    slide.title,
+                    style: GoogleFonts.cinzelDecorative(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: context.gc.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 48),
-              // Título
-              Text(
-                slide.title,
-                style: GoogleFonts.cinzelDecorative(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: context.gc.textPrimary,
+                const SizedBox(height: 20),
+                // Descrição
+                _Parallax(
+                  controller: _pageController,
+                  index: index,
+                  factor: 14,
+                  child: Text(
+                    slide.description,
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      color: context.gc.textSecondary,
+                      height: 1.6,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              // Descrição
-              Text(
-                slide.description,
-                style: GoogleFonts.nunito(
-                  fontSize: 16,
-                  color: context.gc.textSecondary,
-                  height: 1.6,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const Spacer(flex: 3),
-            ],
+                const Spacer(flex: 3),
+              ],
+            ),
           ),
         ),
       ),
@@ -342,6 +360,45 @@ class _OnboardingPageState extends State<OnboardingPage> {
         Navigator.of(context).pushReplacementNamed('/login');
       }
     }
+  }
+}
+
+/// Desloca o filho conforme o slide sai do centro — cada camada com seu
+/// [factor] (px por página de distância) — e esmaece nas bordas. O widget
+/// escuta o PageController: nada de setState por frame.
+class _Parallax extends StatelessWidget {
+  final PageController controller;
+  final int index;
+  final double factor;
+  final Widget child;
+
+  const _Parallax({
+    required this.controller,
+    required this.index,
+    required this.factor,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        double delta = 0;
+        if (controller.hasClients && controller.position.haveDimensions) {
+          delta = (controller.page ?? index.toDouble()) - index;
+        }
+        return Opacity(
+          opacity: (1 - delta.abs() * 0.6).clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(-delta * factor, 0),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
   }
 }
 

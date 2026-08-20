@@ -5,6 +5,9 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/legal/legal_document_page.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/staggered_entrance.dart';
+import '../../../../core/widgets/starfield_background.dart';
+import '../widgets/breathing_badge.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
@@ -52,43 +55,45 @@ class _SignupPageState extends State<SignupPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 10),
-                // Header
-                _buildHeader(),
-                const SizedBox(height: 32),
-                // Campos de formulário
-                _buildNameField(),
-                const SizedBox(height: 16),
-                _buildEmailField(),
-                const SizedBox(height: 16),
-                _buildPasswordField(),
-                const SizedBox(height: 16),
-                _buildConfirmPasswordField(),
-                const SizedBox(height: 20),
-                // Termos de uso
-                _buildTermsCheckbox(),
-                const SizedBox(height: 24),
-                // Botão de cadastro
-                _buildSignupButton(),
-                const SizedBox(height: 32),
-                // Divisor
-                _buildDivider(),
-                const SizedBox(height: 32),
-                // Login social
-                _buildSocialSignup(),
-                const SizedBox(height: 32),
-                // Link para login
-                _buildLoginLink(),
-                const SizedBox(height: 32),
-              ],
+      body: StarfieldBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 10),
+                  // Header
+                  CascadeIn(index: 0, child: _buildHeader()),
+                  const SizedBox(height: 24),
+                  // Campos de formulário
+                  CascadeIn(index: 1, child: _buildNameField()),
+                  const SizedBox(height: 16),
+                  CascadeIn(index: 2, child: _buildEmailField()),
+                  const SizedBox(height: 16),
+                  CascadeIn(index: 3, child: _buildPasswordField()),
+                  const SizedBox(height: 16),
+                  CascadeIn(index: 4, child: _buildConfirmPasswordField()),
+                  const SizedBox(height: 20),
+                  // Termos de uso
+                  CascadeIn(index: 5, child: _buildTermsCheckbox()),
+                  const SizedBox(height: 24),
+                  // Botão de cadastro
+                  _buildSignupButton(),
+                  const SizedBox(height: 32),
+                  // Divisor
+                  _buildDivider(),
+                  const SizedBox(height: 32),
+                  // Login social
+                  _buildSocialSignup(),
+                  const SizedBox(height: 32),
+                  // Link para login
+                  _buildLoginLink(),
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
@@ -99,19 +104,23 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.gc.mint.withValues(alpha: 0.2),
-          ),
-          child: Icon(
-            Icons.person_add_outlined,
-            size: 40,
-            color: context.gc.mint,
+        BreathingBadge(
+          glowColor: context.gc.mint,
+          haloSize: 96,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: context.gc.mint.withValues(alpha: 0.2),
+            ),
+            child: Icon(
+              Icons.person_add_outlined,
+              size: 40,
+              color: context.gc.mint,
+            ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context).authCreateAccount,
           style: GoogleFonts.cinzelDecorative(
