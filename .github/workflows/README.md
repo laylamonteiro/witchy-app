@@ -47,6 +47,13 @@ bash scripts/release.sh 2.1.0
   jamais passa `--branch=main` ao wrangler, e um passo confere via API que
   a Production branch do projeto Cloudflare segue `main`; divergência é
   erro).
+- **PR automático**: toda branch que não seja `main` ganha um PR em draft
+  para a `main` assim que o gate fica verde (job `abrir-pr`). Já existindo
+  um PR aberto, o job não faz nada — os commits seguintes entram nele.
+- **Carimbo de versão**: todo site publicado (prévia, staging e produção)
+  serve `/version.txt` com commit, branch e run. "Por que a novidade não
+  aparece?" se responde abrindo `<endereço>/version.txt`, em vez de
+  adivinhar qual build está naquela aba.
 - **APK candidato** (só em `main`): APK de **release assinado**, versionName
   `X.Y.Z-rc.<sha>`, como artifact — para instalar e testar antes de decidir
   publicar.

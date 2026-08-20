@@ -263,6 +263,20 @@ jobs:
       - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
         run: bash scripts/assemble_site.sh public
 
+      - name: 🔖 Carimbo de versão (public/version.txt)
+        # Endereço de deploy é hash e todo build parece igual por fora. Sem
+        # carimbo, "por que a novidade não aparece?" só se responde
+        # adivinhando qual build está servindo aquela aba. Com ele, é abrir
+        # <endereço>/version.txt e ler o commit.
+        run: |
+          {
+            echo "commit:   ${GITHUB_SHA}"
+            echo "branch:   ${GITHUB_REF_NAME}"
+            echo "run:      ${GITHUB_RUN_NUMBER} (${GITHUB_RUN_ID})"
+            echo "buildado: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } > public/version.txt
+          cat public/version.txt
+
       - name: 🛡️ Garantir que nenhum admin foi embutido
         # Rede de segurança: se algum dia ADMIN_* entrar no build por engano,
         # o site publicado daria acesso de admin a qualquer visitante.
@@ -481,3 +495,70 @@ jobs:
             echo "aparelho e teste. Quando estiver satisfeita, publique este"
             echo "commit com \`bash scripts/release.sh <versão>\`."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Abre o PR da branch de trabalho para a main, sozinho.
+  #
+  # Com branch protection ligada, TODA mudança passa por PR — e abrir um PR
+  # à mão a cada branch é o tipo de passo manual que a reestruturação
+  # existe para eliminar.
+  #
+  # Só abre depois do gate VERDE (`needs: validate`): PR aberto com o CI
+  # vermelho é ruído, e o gate leva ~2 min. Se o PR já existe, não faz nada
+  # — os commits seguintes entram nele sozinhos.
+  #
+  # O PR nasce em DRAFT: sinaliza "em andamento" sem impedir você de
+  # acompanhar o diff, e vira normal com um clique quando estiver pronta.
+  # ──────────────────────────────────────────────────────────────────────
+  abrir-pr:
+    name: 🔀 Abrir PR para a main
+    needs: validate
+    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔀 Abrir se ainda não existe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          existente=$(gh pr list --head "$BRANCH" --state open \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$existente" ]; then
+            echo "PR #$existente já está aberto para $BRANCH — nada a fazer."
+            echo "- PR já aberto: #$existente" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Branch sem nada além da main não rende PR — o GitHub recusaria
+          # e o job ficaria vermelho por um não-problema.
+          git fetch origin main --quiet
+          if [ -z "$(git log --oneline origin/main..HEAD)" ]; then
+            echo "Nenhum commit além da main — PR desnecessário."
+            exit 0
+          fi
+
+          numero=$(git log --oneline origin/main..HEAD | wc -l | tr -d ' ')
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --draft \
+            --title "$(git log -1 --pretty=%s)" \
+            --body "$(printf '%s\n\n%s\n\n%s\n' \
+              "Aberto pelo CI depois do gate verde em \`$BRANCH\`." \
+              "$numero commit(s) além da \`main\`:" \
+              "$(git log --pretty='- %s' origin/main..HEAD)")"
+
+          novo=$(gh pr list --head "$BRANCH" --state open \
+            --json number --jq '.[0].number // empty')
+          echo "- PR aberto: #$novo" >> "$GITHUB_STEP_SUMMARY"
