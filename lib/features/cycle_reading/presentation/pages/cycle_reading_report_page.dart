@@ -62,16 +62,24 @@ class CycleReadingReportPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             MarkdownBody(
-              data: writing.content,
+              // Sem o `# Título` de topo: a AppBar já o mostra, e repeti-lo
+              // dava o título duplicado. O `_período_` (itálico) segue como
+              // subtítulo. Só exibição — o conteúdo salvo no acervo é intacto.
+              data: _forDisplay(writing.content),
               styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
                   .copyWith(
-                h1: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: context.gc.lilac,
-                    ),
                 h2: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: context.gc.lilac,
                       fontWeight: FontWeight.bold,
                     ),
+                h2Padding: const EdgeInsets.only(top: 20, bottom: 4),
+                pPadding: const EdgeInsets.only(bottom: 8),
+                p: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.5),
+                em: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: context.gc.textSecondary,
+                ),
+                blockquotePadding: const EdgeInsets.all(16),
                 blockquoteDecoration: BoxDecoration(
                   color: context.gc.lilac.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
@@ -113,6 +121,19 @@ class CycleReadingReportPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Só para exibição: remove o `# Título` inicial (a AppBar já o traz),
+  /// preservando o resto — inclusive a linha `_período_`.
+  static String _forDisplay(String markdown) {
+    final lines = markdown.split('\n');
+    if (lines.isNotEmpty && lines.first.trimLeft().startsWith('# ')) {
+      lines.removeAt(0);
+      while (lines.isNotEmpty && lines.first.trim().isEmpty) {
+        lines.removeAt(0);
+      }
+    }
+    return lines.join('\n');
   }
 
   void _shareAffirmation(

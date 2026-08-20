@@ -124,8 +124,10 @@ void main() {
     expect((dreams.first as Map)['excerpt'], 'sonhei com o mar aberto');
     final desires = material.json['desires'] as List;
     expect((desires.first as Map)['title'], 'Casa nova');
-    final questions = material.json['oracleQuestions'] as List;
-    expect(questions, ['Devo mudar de casa?']);
+    final oracle = material.json['oracle'] as List;
+    final pend = oracle.first as Map;
+    expect(pend['question'], 'Devo mudar de casa?');
+    expect(pend['answer'], 'yes');
     // Fases da lua sempre presentes (cálculo local, sem mapa natal).
     final sky = material.json['sky'] as Map;
     expect(sky['moonPhases'], isNotEmpty);

@@ -96,6 +96,13 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Preços das duas janelas — carregados juntos para o seletor já nascer
   /// com os dois valores à vista (a escolha é de preço, não só de janela).
   Future<void> _loadPrices() async {
+    // A loja precisa estar configurada para haver preço. Contas que entram
+    // sem passar pelo login de servidor (admin local, simulação de plano)
+    // nunca chamam initialize — e aí o catálogo fica vazio e o preço some.
+    // initialize é idempotente: no-op se já rodou.
+    if (!_payment.isInitialized) {
+      await _payment.initialize();
+    }
     for (final id in [
       RevenueCatConfig.cycleReadingWeekProductId,
       RevenueCatConfig.cycleReadingMonthProductId,
@@ -437,41 +444,52 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 ],
               ),
             ),
+            // Sanfona: recolhida por padrão, para não tomar a tela. Quem quer
+            // ajustar a privacidade abre; quem confia no padrão (tudo ligado)
+            // segue direto para a compra.
             MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+              child: Theme(
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: EdgeInsets.zero,
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  iconColor: context.gc.lilac,
+                  collapsedIconColor: context.gc.lilac,
+                  title: Text(
                     l10n.cycleReadingPrivacyTitle,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: context.gc.lilac,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.cycleReadingPrivacyBody,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.cycleReadingIncludeDreams),
-                    value: _includeDreams,
-                    onChanged: (v) => setState(() => _includeDreams = v),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.cycleReadingIncludeFreeWriting),
-                    value: _includeFreeWriting,
-                    onChanged: (v) => setState(() => _includeFreeWriting = v),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.cycleReadingIncludeQuestions),
-                    value: _includeQuestions,
-                    onChanged: (v) => setState(() => _includeQuestions = v),
-                  ),
-                ],
+                  children: [
+                    Text(
+                      l10n.cycleReadingPrivacyBody,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.cycleReadingIncludeDreams),
+                      value: _includeDreams,
+                      onChanged: (v) => setState(() => _includeDreams = v),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.cycleReadingIncludeFreeWriting),
+                      value: _includeFreeWriting,
+                      onChanged: (v) =>
+                          setState(() => _includeFreeWriting = v),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.cycleReadingIncludeQuestions),
+                      value: _includeQuestions,
+                      onChanged: (v) => setState(() => _includeQuestions = v),
+                    ),
+                  ],
+                ),
               ),
             ),
             Padding(
