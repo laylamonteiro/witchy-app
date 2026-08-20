@@ -9,6 +9,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
+import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 
 /// Página de gerenciamento de assinatura
 ///
@@ -108,6 +109,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                           _buildBetaCodeCard(authProvider),
                         ],
 
+                        const SizedBox(height: 24),
+
+                        // A Leitura do Ciclo é compra avulsa: não entra na
+                        // assinatura, nem para quem já é Pro. Por isso ela
+                        // aparece nos DOIS ramos — é aqui que a pessoa está
+                        // decidindo gastar, e antes ela não era citada.
+                        _buildCycleReadingCard(),
                         const SizedBox(height: 24),
 
                         // Restaurar compras
@@ -527,6 +535,54 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             const SizedBox(width: 8),
             Text(_l10n.profileManageSubscription),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCycleReadingCard() {
+    return SizedBox(
+      width: double.infinity,
+      child: MagicalCard(
+        margin: EdgeInsets.zero,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CycleReadingIntroPage()),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('🌙', style: TextStyle(fontSize: 24)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _l10n.cycleReadingTitle,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: context.gc.lilac,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: context.gc.softWhite.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _l10n.cycleReadingIntroTagline,
+                style: TextStyle(
+                  color: context.gc.softWhite.withValues(alpha: 0.7),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
