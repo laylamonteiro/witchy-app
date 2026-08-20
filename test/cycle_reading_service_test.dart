@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/database/database_helper.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/models/cycle_reading_model.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/repositories/cycle_reading_repository.dart';
+import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_composer.dart';
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -108,6 +109,77 @@ void main() {
     expect(stored!.isPending, isTrue, reason: 'crédito preservado');
     final db = await DatabaseHelper.instance.database;
     expect(await db.query('free_writings'), isEmpty);
+  });
+
+  test('retomada: a segunda tentativa não refaz as seções já prontas',
+      () async {
+    final credit = await insertCredit();
+
+    // Primeira tentativa: quebra na 3ª seção (sky). As duas anteriores
+    // ficam guardadas no rascunho.
+    final chamadas = <String>[];
+    final quebra = CycleReadingService(
+      generateSection: (key, json) async {
+        chamadas.add(key);
+        if (key == 'sky') throw Exception('429');
+        return 'trecho de $key';
+      },
+    );
+    await expectLater(
+      quebra.generateForCredit(credit: credit, userId: userId),
+      throwsA(isA<Exception>()),
+    );
+    expect(chamadas, ['portrait', 'threads', 'sky']);
+
+    // Segunda tentativa: retoma do 'sky' — retrato e fios NÃO voltam à IA.
+    final segundas = <String>[];
+    await CycleReadingService(
+      generateSection: (key, json) async {
+        segundas.add(key);
+        return key == 'seal' ? 'raiz, agua, coragem' : 'trecho de $key';
+      },
+    ).generateForCredit(credit: credit, userId: userId);
+
+    expect(
+      segundas,
+      isNot(contains('portrait')),
+      reason: 'seção já pronta foi refeita — o rascunho não serviu de nada',
+    );
+    expect(segundas, isNot(contains('threads')));
+    expect(segundas.first, 'sky', reason: 'retoma exatamente onde parou');
+  });
+
+  test('material mudou: o rascunho é descartado, não misturado', () async {
+    final credit = await insertCredit();
+    final quebra = CycleReadingService(
+      generateSection: (key, json) async =>
+          key == 'sky' ? throw Exception('429') : 'trecho de $key',
+    );
+    await expectLater(
+      quebra.generateForCredit(credit: credit, userId: userId),
+      throwsA(isA<Exception>()),
+    );
+
+    // Ela desliga os sonhos na privacidade: o material deixa de ser o mesmo,
+    // e reusar seções escritas com o material antigo citaria o que ela
+    // acabou de excluir.
+    final segundas = <String>[];
+    await CycleReadingService(
+      generateSection: (key, json) async {
+        segundas.add(key);
+        return key == 'seal' ? 'raiz, agua, coragem' : 'trecho de $key';
+      },
+    ).generateForCredit(
+      credit: credit,
+      userId: userId,
+      options: const CycleReadingSourceOptions(includeDreams: false),
+    );
+
+    expect(
+      segundas,
+      contains('portrait'),
+      reason: 'material diferente exige reescrever tudo',
+    );
   });
 
   test('regeneração substitui o mesmo relatório e respeita o teto de 2×',
