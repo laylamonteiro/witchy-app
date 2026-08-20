@@ -213,7 +213,11 @@ void main() {
     expect(week.end.difference(week.start).inDays, 7);
   });
 
-  group('o Vitalício cobre a lunação, e só ela', () {
+  group('o Vitalício cobre as duas janelas', () {
+    // Decisão de produto (reafirmada pela dona): semana E lunação entram no
+    // Vitalício. O custo é conhecido e aceito — no limite, ~208 gerações de
+    // IA por ano por pessoa vitalícia. Se um dia voltar a ser só a lunação,
+    // é aqui e em lifetimeCovers que se reverte.
     test('a lunação entra na compra vitalícia', () {
       expect(
         CycleReadingService.lifetimeCovers(CycleReadingPeriodType.lunation),
@@ -221,12 +225,10 @@ void main() {
       );
     });
 
-    test('a semana continua avulsa mesmo para quem tem o Vitalício', () {
-      // Se isto virar true sem decisão de produto, o Vitalício passa a
-      // custear 208 chamadas de IA por ano por pessoa, para sempre.
+    test('a semana também entra na compra vitalícia', () {
       expect(
         CycleReadingService.lifetimeCovers(CycleReadingPeriodType.week),
-        isFalse,
+        isTrue,
       );
     });
 

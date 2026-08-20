@@ -125,16 +125,13 @@ class CycleReadingService {
 
   /// O Vitalício cobre esta janela?
   ///
-  /// Só a Leitura da Lunação entra na compra vitalícia — a Leitura da Semana
-  /// segue avulsa para todo mundo, inclusive para quem tem o Vitalício. É a
-  /// lunação (7 seções e o selo) que faz o Vitalício valer, e é ela que dá a
-  /// ele um motivo de voltar a cada ciclo; manter a semanal paga preserva
-  /// uma linha de receita depois da compra única.
-  ///
-  /// Quem chama precisa conferir a compra REAL do lifetime
-  /// (`PaymentService.isLifetime`), nunca `SubscriptionPlan.lifetime`: esse
-  /// último também é concedido por Código Premium e pelo admin.
+  /// Decisão de produto (reafirmada pela dona): o Vitalício cobre AS DUAS
+  /// janelas — semana e lunação — sem cobrança extra. É o que dá peso à
+  /// compra única, e vale para todo Vitalício: compra real, Código Premium
+  /// e admin. Por isso quem chama gateia por `SubscriptionPlan.lifetime`
+  /// (via AuthProvider), e não por `PaymentService.isLifetime`.
   static bool lifetimeCovers(String periodType) =>
+      periodType == CycleReadingPeriodType.week ||
       periodType == CycleReadingPeriodType.lunation;
 
   /// Identidade do ciclo para o Motor de Ofertas (1 convite por lunação).

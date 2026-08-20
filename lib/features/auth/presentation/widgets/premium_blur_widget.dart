@@ -415,10 +415,13 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                       _productFor(SubscriptionType.monthly) != null;
                   final yearlyAvailable =
                       _productFor(SubscriptionType.yearly) != null;
+                  final lifetimeAvailable =
+                      _productFor(SubscriptionType.lifetime) != null;
                   final selectedAvailable = _productFor(_selectedPlan) != null;
                   final noProducts = _paymentService.isInitialized &&
                       !monthlyAvailable &&
-                      !yearlyAvailable;
+                      !yearlyAvailable &&
+                      !lifetimeAvailable;
 
                   return LayoutBuilder(
                     builder: (context, constraints) {
@@ -443,8 +446,15 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                   SubscriptionType.yearly,
                                   'R\$ 79,90',
                                 ),
+                                lifetimePrice: lifetimeAvailable
+                                    ? _priceFor(
+                                        SubscriptionType.lifetime,
+                                        '',
+                                      )
+                                    : null,
                                 monthlyEnabled: monthlyAvailable,
                                 yearlyEnabled: yearlyAvailable,
+                                lifetimeEnabled: lifetimeAvailable,
                                 purchaseLoading: _isPurchasing ||
                                     _paymentService.status ==
                                         PurchaseStatus.loading,

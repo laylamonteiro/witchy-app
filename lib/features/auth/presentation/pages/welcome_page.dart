@@ -32,7 +32,14 @@ class WelcomePage extends StatelessWidget {
         ),
         child: StarfieldBackground(
           child: SafeArea(
-            child: Padding(
+            // Teto de largura para a web desktop: sem ele a coluna se espalha
+            // pela janela inteira. Centralizado em ~480, mantém a leitura de
+            // "aplicativo no bolso" em qualquer tela (o starfield fica fora,
+            // então as estrelas seguem preenchendo o fundo todo).
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               // Em telas baixas o conteúdo fixo passa da altura e os Spacers
               // colapsam — sem isto, o rodapé era CORTADO. O minHeight mantém
@@ -97,6 +104,8 @@ class WelcomePage extends StatelessWidget {
           ),
         ),
       ),
+    ),
+    ),
     );
   }
 

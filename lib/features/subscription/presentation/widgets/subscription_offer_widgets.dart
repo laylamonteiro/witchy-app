@@ -356,8 +356,10 @@ class PremiumOfferPanel extends StatelessWidget {
   final ValueChanged<SubscriptionType> onSelected;
   final String monthlyPrice;
   final String yearlyPrice;
+  final String? lifetimePrice;
   final bool monthlyEnabled;
   final bool yearlyEnabled;
+  final bool lifetimeEnabled;
   final bool purchaseLoading;
   final bool purchaseEnabled;
   final VoidCallback onPurchase;
@@ -372,8 +374,10 @@ class PremiumOfferPanel extends StatelessWidget {
     required this.purchaseLoading,
     required this.purchaseEnabled,
     required this.onPurchase,
+    this.lifetimePrice,
     this.monthlyEnabled = true,
     this.yearlyEnabled = true,
+    this.lifetimeEnabled = false,
     this.unavailableNotice,
   });
 
@@ -420,8 +424,10 @@ class PremiumOfferPanel extends StatelessWidget {
                 onSelected: onSelected,
                 monthlyPrice: monthlyPrice,
                 yearlyPrice: yearlyPrice,
+                lifetimePrice: lifetimePrice,
                 monthlyEnabled: monthlyEnabled,
                 yearlyEnabled: yearlyEnabled,
+                lifetimeEnabled: lifetimeEnabled,
               ),
               const SizedBox(height: 12),
               SubscriptionPurchaseButton(
@@ -444,8 +450,10 @@ class SubscriptionPlanSelector extends StatelessWidget {
   final ValueChanged<SubscriptionType> onSelected;
   final String monthlyPrice;
   final String yearlyPrice;
+  final String? lifetimePrice;
   final bool monthlyEnabled;
   final bool yearlyEnabled;
+  final bool lifetimeEnabled;
 
   const SubscriptionPlanSelector({
     super.key,
@@ -453,8 +461,10 @@ class SubscriptionPlanSelector extends StatelessWidget {
     required this.onSelected,
     required this.monthlyPrice,
     required this.yearlyPrice,
+    this.lifetimePrice,
     this.monthlyEnabled = true,
     this.yearlyEnabled = true,
+    this.lifetimeEnabled = false,
   });
 
   @override
@@ -481,13 +491,112 @@ class SubscriptionPlanSelector extends StatelessWidget {
       onTap: () => onSelected(SubscriptionType.yearly),
     );
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
       children: [
-        Expanded(flex: 10, child: monthly),
-        const SizedBox(width: 12),
-        Expanded(flex: 11, child: yearly),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(flex: 10, child: monthly),
+            const SizedBox(width: 12),
+            Expanded(flex: 11, child: yearly),
+          ],
+        ),
+        // Vitalício: card LARGO abaixo do par mensal/anual, de propósito.
+        // Três cards lado a lado espremeriam em tela estreita (o mesmo
+        // aperto da tela de login); aqui a compra única respira e ainda
+        // ganha destaque. Só aparece quando o produto existe na loja.
+        if (lifetimeEnabled && lifetimePrice != null) ...[
+          const SizedBox(height: 12),
+          _LifetimeOfferCard(
+            title: AppLocalizations.of(context).premiumPlanLifetime,
+            subtitle: AppLocalizations.of(context).premiumLifetimeOnce,
+            price: lifetimePrice!,
+            selected: selectedPlan == SubscriptionType.lifetime,
+            onTap: () => onSelected(SubscriptionType.lifetime),
+          ),
+        ],
       ],
+    );
+  }
+}
+
+/// Card de largura cheia da compra Vitalícia — mesma lógica de seleção dos
+/// cards de plano, layout horizontal (nome + subtítulo à esquerda, preço à
+/// direita) para caber confortável em qualquer largura.
+class _LifetimeOfferCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String price;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LifetimeOfferCard({
+    required this.title,
+    required this.subtitle,
+    required this.price,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor =
+        selected ? context.gc.lilac : context.gc.surfaceBorder;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: selected
+              ? context.gc.lilac.withValues(alpha: 0.14)
+              : Colors.transparent,
+          border: Border.all(color: borderColor, width: selected ? 2 : 1),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              size: 20,
+              color: selected ? context.gc.lilac : context.gc.textSecondary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: selected
+                              ? context.gc.lilac
+                              : context.gc.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: context.gc.textSecondary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              price,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: context.gc.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
