@@ -75,6 +75,25 @@ class CycleReadingRepository {
     return CycleReadingModel.fromMap(rows.first);
   }
 
+  /// A última leitura GERADA deste tipo — âncora do cooldown (semanal a
+  /// cada 7 dias, mensal a cada 30). Créditos pendentes ficam de fora: uma
+  /// compra que ainda não virou relatório não conta como "leitura feita".
+  Future<CycleReadingModel?> latestGenerated(
+    String userId,
+    String periodType,
+  ) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND period_type = ? AND status = ?',
+      whereArgs: [userId, periodType, CycleReadingStatus.generated],
+      orderBy: 'created_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CycleReadingModel.fromMap(rows.first);
+  }
+
   Future<List<CycleReadingModel>> getAll(String userId) async {
     final db = await _db;
     final rows = await db.query(

@@ -271,6 +271,43 @@ class NotificationService {
     );
   }
 
+  /// Ids fixos (um slot por janela): reagendar substitui o anterior em vez
+  /// de empilhar lembretes de leituras que já foram feitas.
+  static const int cycleReadingWeekNotificationId = 900001;
+  static const int cycleReadingLunationNotificationId = 900002;
+
+  /// Avisa quando a próxima Leitura do Ciclo daquela janela liberar.
+  ///
+  /// [isWeekly] escolhe o texto e o slot; [releaseAt] é o fim do cooldown
+  /// (7 dias para a semana, 30 para a lunação). Data no passado não agenda
+  /// nada — o [_schedule] já filtra.
+  Future<void> scheduleCycleReadingUnlock({
+    required bool isWeekly,
+    required DateTime releaseAt,
+  }) async {
+    // 10h: hora civilizada para um convite, não a virada exata do prazo.
+    final at = DateTime(
+      releaseAt.year,
+      releaseAt.month,
+      releaseAt.day,
+      10,
+    );
+    await _schedule(
+      id: isWeekly
+          ? cycleReadingWeekNotificationId
+          : cycleReadingLunationNotificationId,
+      title: _l10n.cycleReadingNotifTitle,
+      body: isWeekly
+          ? _l10n.cycleReadingNotifWeekBody
+          : _l10n.cycleReadingNotifLunationBody,
+      // Se o prazo cair de madrugada, 10h do MESMO dia já passou: manda no
+      // dia seguinte em vez de silenciar o lembrete.
+      localDate: at.isAfter(releaseAt) ? at : at.add(const Duration(days: 1)),
+      details: _moonDetails(),
+      payload: AppDeepLink.cycleReading.payload,
+    );
+  }
+
   NotificationDetails _moonDetails() => NotificationDetails(
         android: AndroidNotificationDetails(
           'moon_notifications',

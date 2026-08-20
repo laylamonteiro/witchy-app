@@ -123,6 +123,49 @@ class CycleReadingService {
           ? currentWeek(now: now)
           : currentLunation(now: now);
 
+  // ===== Período customizado e cooldown (regras da dona) =====
+
+  /// Teto de um período escolhido a dedo: 31 dias, porque há meses de 31 —
+  /// acima disso não é mais "um ciclo", é um histórico.
+  static const int maxCustomPeriodDays = 31;
+
+  /// Dias INCLUSIVOS de uma janela `>= start AND < end` (end exclusivo):
+  /// 14/08 00h → 21/08 00h são 7 dias vividos.
+  static int spanInDays(DateTime start, DateTime end) =>
+      end.difference(start).inDays;
+
+  /// Classifica um período escolhido a dedo: até 7 dias é produto SEMANAL;
+  /// de 8 a 31, MENSAL (lunação). Quem chama já validou o teto de 31.
+  static String periodTypeForSpan(DateTime start, DateTime end) =>
+      spanInDays(start, end) <= 7
+          ? CycleReadingPeriodType.week
+          : CycleReadingPeriodType.lunation;
+
+  /// Intervalo mínimo entre duas leituras do MESMO tipo: uma semanal a cada
+  /// 7 dias, uma mensal a cada 30. Sem isso a janela rolante da semana
+  /// permitiria comprar uma leitura "da semana" todo dia — e ler o mesmo
+  /// período de novo não é uma leitura nova.
+  static Duration cooldownFor(String periodType) =>
+      periodType == CycleReadingPeriodType.week
+          ? const Duration(days: 7)
+          : const Duration(days: 30);
+
+  /// Quando a próxima leitura deste tipo libera; null = já liberada.
+  ///
+  /// Âncora: `createdAt` da última leitura GERADA do tipo (o momento da
+  /// compra/geração). Regenerar a mesma janela não reinicia a contagem —
+  /// `copyWith` preserva o createdAt.
+  Future<DateTime?> nextAllowedAt(
+    String userId,
+    String periodType, {
+    DateTime? now,
+  }) async {
+    final latest = await _repository.latestGenerated(userId, periodType);
+    if (latest == null) return null;
+    final release = latest.createdAt.add(cooldownFor(periodType));
+    return release.isAfter(now ?? DateTime.now()) ? release : null;
+  }
+
   /// O Vitalício cobre esta janela?
   ///
   /// Decisão de produto (reafirmada pela dona): o Vitalício cobre AS DUAS

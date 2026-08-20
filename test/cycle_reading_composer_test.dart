@@ -43,6 +43,8 @@ void main() {
       'rune_readings',
       'oracle_readings',
       'pendulum_consultations',
+      'tarot_readings',
+      'sigils',
       'ritual_logs',
       'guided_ritual_logs',
       'spells',
@@ -131,6 +133,96 @@ void main() {
     // Fases da lua sempre presentes (cálculo local, sem mapa natal).
     final sky = material.json['sky'] as Map;
     expect(sky['moonPhases'], isNotEmpty);
+  });
+
+  test('tiragem de tarô entra na leitura (conta e aparece no oracle)',
+      () async {
+    await seed('tarot_readings', {
+      'question': 'O que preciso ver?',
+      'spread_type': 'three_cards',
+      'signature': 'sig-1',
+      'reading_data':
+          '{"cards":[{"name":"A Lua"}],"interpretation":"olhe o que se esconde"}',
+      'date': inPeriod,
+    });
+
+    final material = await CycleReadingComposer().compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+
+    expect(material.recordCount, 1);
+    expect(material.json['divinationCount'], 1);
+    final oracle = material.json['oracle'] as List;
+    final tarot = oracle.firstWhere((d) => (d as Map)['tool'] == 'tarot') as Map;
+    expect(tarot['question'], 'O que preciso ver?');
+    expect(tarot['answer'], 'olhe o que se esconde');
+  });
+
+  test('linha do tempo sai em ordem, com a lua de cada dia', () async {
+    final dia1 = DateTime(2026, 8, 3).millisecondsSinceEpoch;
+    final dia2 = DateTime(2026, 8, 9).millisecondsSinceEpoch;
+    final dia3 = DateTime(2026, 8, 20).millisecondsSinceEpoch;
+    // Semeados FORA de ordem: a ordenação é responsabilidade do composer.
+    await seed('gratitudes', {
+      'title': 'Gratidão tardia',
+      'content': 'pelo fim do mês',
+      'date': dia3,
+      'created_at': dia3,
+    });
+    await seedDream(createdAt: dia1, content: 'o mar');
+    await seed('sigils', {
+      'intention': 'coragem para mudar',
+      'created_at': dia2,
+    });
+
+    final material = await CycleReadingComposer().compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+
+    final timeline = material.json['timeline'] as List;
+    expect(timeline.length, 3);
+    expect(
+      timeline.map((m) => (m as Map)['kind']).toList(),
+      ['dream', 'sigil', 'gratitude'],
+    );
+    expect(
+      timeline.map((m) => (m as Map)['date']).toList(),
+      ['2026-08-03', '2026-08-09', '2026-08-20'],
+    );
+    // A nota vem do próprio registro (título/intenção), curta.
+    expect((timeline[1] as Map)['note'], 'coragem para mudar');
+
+    // E cada dia com registro tem a lua daquele dia.
+    final moonByDay = material.json['moonByDay'] as Map;
+    expect(moonByDay.keys.toSet(),
+        {'2026-08-03', '2026-08-09', '2026-08-20'});
+    expect((moonByDay['2026-08-03'] as Map)['phase'], isNotEmpty);
+  });
+
+  test('exclusão de fontes íntimas também tira da linha do tempo', () async {
+    await seedDream(content: 'segredo');
+    await seed('gratitudes', {
+      'title': 'Grata',
+      'content': 'pelo dia',
+      'date': inPeriod,
+    });
+
+    final material = await CycleReadingComposer().compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+      options: const CycleReadingSourceOptions(includeDreams: false),
+    );
+
+    final timeline = material.json['timeline'] as List;
+    expect(timeline.map((m) => (m as Map)['kind']), isNot(contains('dream')));
+    expect(timeline.map((m) => (m as Map)['kind']), contains('gratitude'));
+    // Mas o sonho continua contando como registro do período.
+    expect(material.recordCount, 2);
   });
 
   test('trechos são curtos: nunca o diário inteiro', () async {

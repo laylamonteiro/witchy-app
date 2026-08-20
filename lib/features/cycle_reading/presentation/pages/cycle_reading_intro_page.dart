@@ -8,6 +8,7 @@ import '../../../../core/config/revenuecat_config.dart';
 import '../../../../core/offers/offer_engine.dart';
 import '../../../../core/offers/teaser_cache.dart';
 import '../../../../core/offers/teaser_reveal.dart';
+import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -74,6 +75,24 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   int _recordCount = 0;
   CycleReadingModel? _existing;
 
+  /// Quando a próxima leitura desta janela libera (null = já liberada).
+  /// Uma semanal a cada 7 dias, uma lunação a cada 30: sem isso, a janela
+  /// rolante da semana deixaria comprar "a semana" todo dia, relendo quase
+  /// o mesmo período.
+  DateTime? _nextAllowedAt;
+
+  bool get _isOnCooldown => _nextAllowedAt != null;
+
+  /// Dias que faltam para liberar (arredondando para cima: faltando 6h,
+  /// ainda é "1 dia", nunca "0").
+  int get _daysUntilRelease {
+    final release = _nextAllowedAt;
+    if (release == null) return 0;
+    final remaining = release.difference(DateTime.now());
+    if (remaining.isNegative) return 0;
+    return remaining.inHours ~/ 24 + (remaining.inHours % 24 > 0 ? 1 : 0);
+  }
+
   /// A amostra desta janela (null = ainda não pedida).
   String? _teaser;
   bool _isTeasing = false;
@@ -127,10 +146,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       period.start,
       periodType: _periodType,
     );
+    final nextAllowedAt = await _service.nextAllowedAt(userId, _periodType);
     if (!mounted) return;
     setState(() {
       _recordCount = recordCount;
       _existing = existing;
+      _nextAllowedAt = nextAllowedAt;
       _isLoading = false;
     });
   }
@@ -203,6 +224,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
 
   Future<void> _buy() async {
     if (_isWorking) return;
+    // Trava de segurança: a interface já esconde a compra durante o
+    // intervalo, mas o CTA da degustação também chama aqui — nunca cobrar
+    // por uma janela que ainda não pode ser lida.
+    if (_isOnCooldown) return;
     setState(() => _isWorking = true);
     final messenger = ScaffoldMessenger.of(context);
     final userId = context.read<AuthProvider>().currentUser.id;
@@ -281,6 +306,20 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
       if (!mounted) return;
       setState(() => _existing = result.reading);
+
+      // A leitura nasceu: marca quando a próxima desta janela libera e
+      // agenda o convite de volta. Regeneração NÃO reinicia a contagem (o
+      // createdAt do crédito é preservado), então o lembrete continua
+      // apontando para o mesmo dia.
+      final release = result.reading.createdAt
+          .add(CycleReadingService.cooldownFor(credit.periodType));
+      setState(() => _nextAllowedAt =
+          release.isAfter(DateTime.now()) ? release : null);
+      await context.read<NotificationProvider>().scheduleCycleReadingUnlock(
+            isWeekly: credit.isWeekly,
+            releaseAt: release,
+          );
+      if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => CycleReadingReportPage(
@@ -413,7 +452,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             // real convence mais que a lista de seções.
             // Quem já tem a janela incluída no Vitalício não degusta o
             // que já é dele.
-            if (!_isLoading && _existing == null && !_lifetimeCoversThisWindow)
+            if (!_isLoading &&
+                _existing == null &&
+                !_lifetimeCoversThisWindow &&
+                !_isOnCooldown)
               _buildTeaserCard(l10n),
             MagicalCard(
               child: Column(
@@ -704,6 +746,38 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                   ),
             ),
         ],
+      );
+    }
+
+    // Intervalo entre leituras: uma semanal a cada 7 dias, uma lunação a
+    // cada 30. Vem DEPOIS dos casos acima de propósito — crédito já pago
+    // (pendente ou gerado) nunca é bloqueado por isto; o intervalo trava a
+    // compra de uma leitura NOVA, não o acesso ao que já é dela.
+    if (_isOnCooldown) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.gc.lilac.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.gc.lilac.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('🌙 ', style: TextStyle(color: context.gc.lilac)),
+            Expanded(
+              child: Text(
+                _periodType == CycleReadingPeriodType.week
+                    ? l10n.cycleReadingCooldownWeek(_daysUntilRelease)
+                    : l10n.cycleReadingCooldownLunation(_daysUntilRelease),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.gc.textSecondary,
+                      height: 1.4,
+                    ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 

@@ -1626,6 +1626,25 @@
   "cycleReadingDisclaimer": "La lectura es una invitación al autoconocimiento — nunca una predicción determinista de salud, dinero o relaciones.",
   "cycleReadingRecordCount": "{count, plural, =0{Aún no hay registros en esta lunación} one{1 registro en esta lunación} other{{count} registros en esta lunación}}",
   "cycleReadingShallowWarning": "Pocos registros en este período: la lectura puede salir superficial. ¿Qué tal registrar unos días más antes de comprar?",
+  "cycleReadingCooldownWeek": "Tu próxima Lectura de la Semana se abre en {days, plural, one{1 día} other{{days} días}}. Siete días de vida dan una lectura nueva — antes de eso, sería releer el mismo período.",
+  "@cycleReadingCooldownWeek": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingCooldownLunation": "Tu próxima Lectura de la Lunación se abre en {days, plural, one{1 día} other{{days} días}}. Un ciclo entero necesita ser vivido antes de ser leído.",
+  "@cycleReadingCooldownLunation": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingNotifTitle": "Tu lectura está lista para nacer 🌙",
+  "cycleReadingNotifWeekBody": "Han pasado siete días desde tu última Lectura de la Semana. ¿Qué ha guardado tu grimorio desde entonces?",
+  "cycleReadingNotifLunationBody": "Un ciclo lunar se ha completado desde tu última Lectura de la Lunación. ¿Leemos lo que viviste?",
   "cycleReadingPrivacyTitle": "Qué se envía para el análisis",
   "cycleReadingPrivacyBody": "Fragmentos cortos y conteos de tus registros del período — nunca los diarios completos — más hechos del cielo calculados en tu dispositivo. Puedes excluir fuentes íntimas:",
   "cycleReadingIncludeDreams": "Usar mis sueños",

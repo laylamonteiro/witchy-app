@@ -205,6 +205,134 @@ void main() {
     );
   });
 
+  group('intervalo entre leituras (uma semanal por semana, mensal por mês)',
+      () {
+    Future<void> gerada(String periodType, DateTime createdAt) async {
+      final repo = CycleReadingRepository();
+      await repo.insert(CycleReadingModel(
+        userId: userId,
+        periodType: periodType,
+        periodStart: periodStart,
+        periodEnd: periodEnd,
+        status: CycleReadingStatus.generated,
+        createdAt: createdAt,
+      ));
+    }
+
+    test('sem leitura anterior, está liberada', () async {
+      final next = await CycleReadingService()
+          .nextAllowedAt(userId, CycleReadingPeriodType.week);
+      expect(next, isNull);
+    });
+
+    test('semanal feita ontem ainda está travada', () async {
+      // Truncado ao milissegundo: é essa a precisão que sobrevive à ida e
+      // volta pelo SQLite (created_at é INTEGER em millis), e sem isso a
+      // comparação falharia por microssegundos.
+      final ontem = DateTime.fromMillisecondsSinceEpoch(
+        DateTime.now()
+            .subtract(const Duration(days: 1))
+            .millisecondsSinceEpoch,
+      );
+      await gerada(CycleReadingPeriodType.week, ontem);
+
+      final next = await CycleReadingService()
+          .nextAllowedAt(userId, CycleReadingPeriodType.week);
+      expect(next, isNotNull);
+      expect(next, ontem.add(const Duration(days: 7)));
+    });
+
+    test('semanal feita há 8 dias liberou', () async {
+      await gerada(CycleReadingPeriodType.week,
+          DateTime.now().subtract(const Duration(days: 8)));
+
+      final next = await CycleReadingService()
+          .nextAllowedAt(userId, CycleReadingPeriodType.week);
+      expect(next, isNull);
+    });
+
+    test('o intervalo é por tipo: a semanal não trava a lunação', () async {
+      await gerada(CycleReadingPeriodType.week, DateTime.now());
+
+      expect(
+        await CycleReadingService()
+            .nextAllowedAt(userId, CycleReadingPeriodType.lunation),
+        isNull,
+      );
+      expect(
+        await CycleReadingService()
+            .nextAllowedAt(userId, CycleReadingPeriodType.week),
+        isNotNull,
+      );
+    });
+
+    test('crédito pendente não conta como leitura feita', () async {
+      final repo = CycleReadingRepository();
+      await repo.insert(CycleReadingModel(
+        userId: userId,
+        periodType: CycleReadingPeriodType.week,
+        periodStart: periodStart,
+        periodEnd: periodEnd,
+        // pending: comprou e ainda não gerou — não pode travar a próxima.
+        createdAt: DateTime.now(),
+      ));
+
+      expect(
+        await CycleReadingService()
+            .nextAllowedAt(userId, CycleReadingPeriodType.week),
+        isNull,
+      );
+    });
+
+    test('lunação usa 30 dias, semana usa 7', () {
+      expect(
+        CycleReadingService.cooldownFor(CycleReadingPeriodType.week),
+        const Duration(days: 7),
+      );
+      expect(
+        CycleReadingService.cooldownFor(CycleReadingPeriodType.lunation),
+        const Duration(days: 30),
+      );
+    });
+  });
+
+  group('período escolhido a dedo vira semana ou lunação pelo tamanho', () {
+    test('até 7 dias é leitura da semana', () {
+      expect(
+        CycleReadingService.periodTypeForSpan(
+            DateTime(2026, 8, 1), DateTime(2026, 8, 8)),
+        CycleReadingPeriodType.week,
+      );
+      expect(
+        CycleReadingService.periodTypeForSpan(
+            DateTime(2026, 8, 1), DateTime(2026, 8, 4)),
+        CycleReadingPeriodType.week,
+      );
+    });
+
+    test('de 8 a 31 dias é leitura da lunação', () {
+      expect(
+        CycleReadingService.periodTypeForSpan(
+            DateTime(2026, 8, 1), DateTime(2026, 8, 9)),
+        CycleReadingPeriodType.lunation,
+      );
+      expect(
+        CycleReadingService.periodTypeForSpan(
+            DateTime(2026, 8, 1), DateTime(2026, 9, 1)),
+        CycleReadingPeriodType.lunation,
+      );
+    });
+
+    test('o teto é 31 dias (há meses de 31)', () {
+      expect(CycleReadingService.maxCustomPeriodDays, 31);
+      expect(
+        CycleReadingService.spanInDays(
+            DateTime(2026, 8, 1), DateTime(2026, 9, 1)),
+        31,
+      );
+    });
+  });
+
   test('semana corrente cobre 7 dias e inclui hoje', () {
     final now = DateTime(2026, 8, 19, 15);
     final week = CycleReadingService.currentWeek(now: now);

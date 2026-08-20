@@ -89,6 +89,16 @@ class CycleReadingComposer {
   /// Teto de caracteres de cada trecho citado.
   static const int _maxExcerptLength = 160;
 
+  /// Teto de pontos da linha do tempo. Uma lunação movimentada rende bem
+  /// mais que isto; o corte é por AMOSTRAGEM UNIFORME (ver [_sampleEvenly]),
+  /// nunca pelos primeiros N — pegar só o começo daria uma cronologia que
+  /// morre no meio do mês.
+  static const int _maxTimelineMoments = 40;
+
+  /// Teto de cada nota da linha do tempo: ali o que importa é QUANDO e O
+  /// QUÊ; o conteúdo cheio já vai nas listas por fonte.
+  static const int _maxTimelineNoteLength = 70;
+
   Future<Database> get _db async =>
       _dbOverride ?? await DatabaseHelper.instance.database;
 
@@ -109,6 +119,7 @@ class CycleReadingComposer {
       'rune_readings',
       'oracle_readings',
       'pendulum_consultations',
+      'tarot_readings',
       'ritual_logs',
       'guided_ritual_logs',
       'spells',
@@ -312,14 +323,18 @@ class CycleReadingComposer {
     final runeReadings = await rowsOf('rune_readings');
     final pendulumConsults = await rowsOf('pendulum_consultations');
     final oracleReadings = await rowsOf('oracle_readings');
-    recordCount +=
-        runeReadings.length + pendulumConsults.length + oracleReadings.length;
+    final tarotReadings = await rowsOf('tarot_readings');
+    recordCount += runeReadings.length +
+        pendulumConsults.length +
+        oracleReadings.length +
+        tarotReadings.length;
     if (options.includeOracleQuestions) {
       // Não só a pergunta — a tiragem inteira: a runa/carta e o que ela
       // respondeu. É a conversa real da pessoa com o oráculo no período.
       final divinations = <Map<String, dynamic>>[
         for (final row in runeReadings.take(_maxItemsPerSource))
           {
+            'date': _dayOf(row['created_at']),
             'tool': 'runes',
             if (_isNotBlank(row['question']))
               'question': _excerpt(row['question']),
@@ -328,6 +343,7 @@ class CycleReadingComposer {
           },
         for (final row in pendulumConsults.take(_maxItemsPerSource))
           {
+            'date': _dayOf(row['created_at']),
             'tool': 'pendulum',
             if (_isNotBlank(row['question']))
               'question': _excerpt(row['question']),
@@ -335,17 +351,29 @@ class CycleReadingComposer {
           },
         for (final row in oracleReadings.take(_maxItemsPerSource))
           {
+            'date': _dayOf(row['created_at']),
             'tool': 'oracle-cards',
             if (_readingInterpretation(row['reading_data']) case final m?)
               'answer': m,
           },
-      ].where((d) => d.length > 1).toList();
+        for (final row in tarotReadings.take(_maxItemsPerSource))
+          {
+            'date': _dayOf(row['created_at']),
+            'tool': 'tarot',
+            if (_isNotBlank(row['question']))
+              'question': _excerpt(row['question']),
+            if (_readingInterpretation(row['reading_data']) case final m?)
+              'answer': m,
+          },
+      ].where((d) => d.length > 2).toList();
       if (divinations.isNotEmpty) {
         json['oracle'] = divinations;
       }
     }
-    json['divinationCount'] =
-        runeReadings.length + pendulumConsults.length + oracleReadings.length;
+    json['divinationCount'] = runeReadings.length +
+        pendulumConsults.length +
+        oracleReadings.length +
+        tarotReadings.length;
 
     // ===== Prática mágica efetiva =====
     final ritualLogs = await rowsOf(
@@ -420,6 +448,100 @@ class CycleReadingComposer {
         };
       }
     } catch (_) {}
+
+    // ===== Linha do tempo (a espinha cronológica da narrativa) =====
+    // Cada registro datado vira um ponto {date, kind, note} ordenado no
+    // tempo. É este eixo que permite narrar o período em ORDEM — "no início,
+    // sob a lua nova...; perto da cheia..." — em vez de listar fontes soltas.
+    // Respeita os mesmos desligamentos de privacidade das listas acima.
+    final moments = <({int ms, String kind, String? note})>[];
+    void addMoment(Object? millis, String kind, Object? text) {
+      if (millis is! int) return;
+      moments.add((
+        ms: millis,
+        kind: kind,
+        note: _isNotBlank(text) ? _shortExcerpt(text) : null,
+      ));
+    }
+
+    if (options.includeDreams) {
+      for (final row in dreams) {
+        addMoment(row['date'] ?? row['created_at'], 'dream', row['title']);
+      }
+    }
+    for (final row in gratitudes) {
+      addMoment(
+        row['date'] ?? row['created_at'],
+        'gratitude',
+        _isNotBlank(row['title']) ? row['title'] : row['content'],
+      );
+    }
+    for (final row in desires) {
+      addMoment(row['created_at'], 'desire', row['title']);
+    }
+    for (final row in sigils) {
+      addMoment(row['created_at'], 'sigil', row['intention']);
+    }
+    if (options.includeFreeWriting) {
+      for (final row in reflections) {
+        addMoment(row['created_at'], 'reflection', row['content']);
+      }
+    }
+    if (options.includeOracleQuestions) {
+      for (final row in runeReadings) {
+        addMoment(row['created_at'], 'runes', row['question']);
+      }
+      for (final row in pendulumConsults) {
+        addMoment(row['created_at'], 'pendulum', row['question']);
+      }
+      for (final row in oracleReadings) {
+        addMoment(row['created_at'], 'oracle-cards', null);
+      }
+      for (final row in tarotReadings) {
+        addMoment(row['created_at'], 'tarot', row['question']);
+      }
+    }
+    for (final row in [...ritualLogs, ...guidedLogs]) {
+      addMoment(row['completed_at'], 'ritual', row['notes']);
+    }
+    for (final row in spells) {
+      addMoment(row['created_at'], 'spell', row['name']);
+    }
+
+    moments.sort((a, b) => a.ms.compareTo(b.ms));
+    final sampled = _sampleEvenly(moments, _maxTimelineMoments);
+    if (sampled.isNotEmpty) {
+      json['timeline'] = [
+        for (final m in sampled)
+          {
+            'date': _dayOf(m.ms),
+            'kind': m.kind,
+            if (m.note != null) 'note': m.note,
+          },
+      ];
+
+      // A lua de CADA dia com registro (fase + signo quando calculável):
+      // o elo entre o que a pessoa viveu e o céu daquele momento — a base
+      // da narrativa cronológica que relaciona registro e trânsito.
+      final moonByDay = <String, Map<String, String>>{};
+      for (final m in sampled) {
+        final day = _dayOf(m.ms);
+        if (day.isEmpty || moonByDay.containsKey(day)) continue;
+        final date = DateTime.fromMillisecondsSinceEpoch(m.ms);
+        final noon = DateTime(date.year, date.month, date.day, 12);
+        final entry = <String, String>{
+          'phase': LunarProvider.phaseOn(noon).displayName,
+        };
+        // Só a Lua (moonSignOn), nunca a mesa inteira de trânsitos: são
+        // dezenas de dias, e calcular todos os planetas em cada um seria
+        // pagar caríssimo por um dado só. Sem efemérides a fase sozinha já
+        // sustenta a cronologia.
+        final sign = await _transits.moonSignOn(noon);
+        if (sign != null) entry['sign'] = sign.displayName;
+        moonByDay[day] = entry;
+      }
+      json['moonByDay'] = moonByDay;
+    }
 
     // ===== O céu do período (calculado no aparelho; a IA só narra) =====
     json['sky'] = await _skyFacts(userId, start, end);
@@ -528,6 +650,27 @@ class CycleReadingComposer {
       }
     } catch (_) {}
     return null;
+  }
+
+  /// Amostra [max] itens distribuídos por TODA a lista (primeiro e último
+  /// sempre incluídos). Preserva a forma do período — começo, meio e fim —
+  /// em vez de truncar no primeiro terço.
+  static List<T> _sampleEvenly<T>(List<T> items, int max) {
+    if (items.length <= max) return items;
+    if (max <= 1) return items.isEmpty ? const [] : [items.first];
+    final step = (items.length - 1) / (max - 1);
+    return [
+      for (var i = 0; i < max; i++) items[(i * step).round()],
+    ];
+  }
+
+  /// Nota curta da linha do tempo (mais apertada que [_excerpt]).
+  static String _shortExcerpt(Object? value) {
+    final text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (text.length <= _maxTimelineNoteLength) return text;
+    final cut = text.substring(0, _maxTimelineNoteLength);
+    final lastSpace = cut.lastIndexOf(' ');
+    return '${cut.substring(0, lastSpace > 30 ? lastSpace : cut.length)}…';
   }
 
   /// Trecho curto e de linha única: espaços colapsados e corte em limite de
