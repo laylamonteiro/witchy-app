@@ -159,6 +159,30 @@
     })();
   </script>
 
+  <script>
+    // Publicação nova sem "recarrega duas vezes".
+    //
+    // O service worker do Flutter baixa a versão nova em segundo plano e
+    // assume o controle depois — então o load em que a atualização chega
+    // ainda está rodando o app ANTIGO. Para quem publicou, isso se parece
+    // exatamente com "a mudança não subiu": nada quebra, nada avisa, e a
+    // novidade simplesmente não está lá.
+    //
+    // `controllerchange` dispara quando o SW novo assume. Aí recarregar é
+    // barato (os arquivos já estão em cache) e a pessoa passa a ver a
+    // versão nova sem saber que houve troca. A trava evita laço em
+    // navegador que dispare o evento mais de uma vez.
+    (function () {
+      if (!('serviceWorker' in navigator)) return;
+      var recarregou = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (recarregou) return;
+        recarregou = true;
+        window.location.reload();
+      });
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

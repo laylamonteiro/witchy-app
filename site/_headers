@@ -1,0 +1,30 @@
+# Cloudflare Pages lê este arquivo na raiz da publicação.
+#
+# O problema que ele resolve: o app é um PWA com service worker, e o
+# Flutter registra o SW novo mas só o ativa no load SEGUINTE. Some a isso
+# um bootstrap cacheado no navegador e o resultado é uma publicação que
+# não aparece — a pessoa recarrega, vê o app antigo, e não há nada
+# quebrado para investigar.
+#
+# Os arquivos abaixo são os PONTOS DE ENTRADA: eles decidem quais versões
+# de todo o resto serão baixadas. Revalidar só eles custa alguns KB por
+# visita e mantém o cache pesado (main.dart.js, fontes, wasm) intacto,
+# porque esses vêm com hash no nome e podem ser cacheados para sempre.
+
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/flutter_bootstrap.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/flutter_service_worker.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/version.json
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/version.txt
+  Cache-Control: no-cache, no-store, must-revalidate
