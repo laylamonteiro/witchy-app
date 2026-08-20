@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../ai/ai_service.dart';
 import '../content/content_locale.dart';
 
-class LanguageProvider extends ChangeNotifier {
+class LanguageProvider extends ChangeNotifier with WidgetsBindingObserver {
   static const String preferencesKey = 'selected_locale';
   static const Locale fallbackLocale = Locale('pt', 'BR');
   static const List<Locale> supportedLocales = [
@@ -30,7 +30,23 @@ class LanguageProvider extends ChangeNotifier {
     // DEPOIS da construção — a leitura inicial devolveria en-US e um
     // aparelho em português abriria em inglês. Enquanto não houver escolha
     // manual, reagimos quando o sistema reporta o idioma de verdade.
-    ui.PlatformDispatcher.instance.onLocaleChanged = _onDeviceLocaleChanged;
+    //
+    // Via WidgetsBindingObserver (didChangeLocales), NUNCA sobrescrevendo
+    // PlatformDispatcher.onLocaleChanged — esse é um callback único que o
+    // próprio Flutter usa para propagar a troca de idioma; tomá-lo quebraria
+    // o didChangeLocales de todo o app.
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    _onDeviceLocaleChanged();
   }
 
   /// Idioma a partir do dispositivo: varre a LISTA de locales (mais confiável
