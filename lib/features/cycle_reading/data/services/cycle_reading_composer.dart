@@ -320,7 +320,7 @@ class CycleReadingComposer {
       final divinations = <Map<String, dynamic>>[
         for (final row in runeReadings.take(_maxItemsPerSource))
           {
-            'oracle': 'runas',
+            'tool': 'runes',
             if (_isNotBlank(row['question']))
               'question': _excerpt(row['question']),
             if (_readingInterpretation(row['reading_data']) case final m?)
@@ -328,14 +328,14 @@ class CycleReadingComposer {
           },
         for (final row in pendulumConsults.take(_maxItemsPerSource))
           {
-            'oracle': 'pêndulo',
+            'tool': 'pendulum',
             if (_isNotBlank(row['question']))
               'question': _excerpt(row['question']),
             if (_isNotBlank(row['answer'])) 'answer': _excerpt(row['answer']),
           },
         for (final row in oracleReadings.take(_maxItemsPerSource))
           {
-            'oracle': 'oráculo',
+            'tool': 'oracle-cards',
             if (_readingInterpretation(row['reading_data']) case final m?)
               'answer': m,
           },
