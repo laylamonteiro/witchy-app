@@ -579,8 +579,21 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   publicar:
     name: 📣 Publicar (site + Play + Release)
-    needs: [preparar, build-android, build-web]
-    if: inputs.somente_validar != true
+    # NÃO exige a matrix Android inteira verde. O que vai para a Play é o
+    # AAB; o APK é só anexo da GitHub Release e material de teste local.
+    # Um APK vermelho não pode segurar a publicação do AAB — por isso o
+    # gate real é a PRESENÇA do AAB (passo abaixo), não o resultado do job.
+    # `always()` faz o publicar rodar mesmo com a matrix parcialmente
+    # vermelha; as condições explícitas garantem que gate, site e versão
+    # estejam verdes. Ainda assim ESPERA a matrix terminar (está em needs),
+    # para um APK que só demorou entrar no anexo.
+    needs: [preparar, validar, build-android, build-web]
+    if: >-
+      always() &&
+      inputs.somente_validar != true &&
+      needs.preparar.result == 'success' &&
+      needs.validar.result == 'success' &&
+      needs.build-web.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -630,19 +643,23 @@ jobs:
           merge-multiple: true
           path: release-files
 
-      - name: 🔎 Os dois binários chegaram?
-        # Um artifact faltando aqui viraria uma Release sem APK ou, pior,
-        # um upload para a Play sem AAB — que o r0adkll trataria como
-        # "nada a enviar" e seguiria verde.
+      - name: 🔎 O AAB chegou? (o APK é opcional)
+        # O AAB é o que vai para a Play — sem ele, publicar não faz sentido,
+        # e um upload vazio o r0adkll trataria como "nada a enviar" seguindo
+        # verde. Então AAB ausente é erro fatal. O APK só é anexado à GitHub
+        # Release; se o job dele falhou, a publicação segue sem o anexo, com
+        # um aviso — nunca travando a Play por causa dele.
         run: |
           ls -la release-files/
-          for ext in apk aab; do
-            if ! ls release-files/*."$ext" >/dev/null 2>&1; then
-              echo "::error::Nenhum .$ext em release-files — o job build-android ($ext) não entregou."
-              exit 1
-            fi
-          done
-          echo "✅ APK e AAB presentes."
+          if ! ls release-files/*.aab >/dev/null 2>&1; then
+            echo "::error::Nenhum .aab em release-files — o build do AAB não entregou. Sem ele não há o que publicar na Play."
+            exit 1
+          fi
+          if ls release-files/*.apk >/dev/null 2>&1; then
+            echo "✅ AAB presente; APK também (irá anexado à Release)."
+          else
+            echo "::warning::AAB presente, APK ausente — publicando na Play e anexando só o AAB à Release. O APK falhou; a Play não depende dele."
+          fi
 
       - name: 🔎 Conferir a branch de produção do projeto Cloudflare
         # Aqui o --branch=main PRECISA significar produção. Divergência é
