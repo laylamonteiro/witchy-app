@@ -44,9 +44,16 @@ Na prática:
 responder "quantas usuárias novas vieram do site?" — pergunta que o
 RevenueCat não responde, porque ele só conhece quem pagou.
 
-Preenchido uma vez, na criação do perfil. Contas anteriores a este campo
-ficam com `NULL` — e `NULL` significa "não sabemos", não "veio da Play".
-Tratar `NULL` como Play seria inventar dado.
+Preenchido uma vez, na criação do perfil.
+
+As contas anteriores ao campo foram carimbadas como `android` pela
+migração, e isso **não** é estimativa: até o webapp aceitar cadastro, a
+Play Store era a única porta de entrada. Por isso a migração tem uma data
+de corte — carimbar tudo indiscriminadamente marcaria como Play quem já
+tivesse entrado pelo site (as contas de teste na web, inclusive).
+
+`NULL` que sobrar significa "criada depois do corte e ainda sem carimbo", e
+some sozinho conforme as pessoas entram numa versão que preenche o campo.
 
 ## Uma pessoa, duas plataformas
 
