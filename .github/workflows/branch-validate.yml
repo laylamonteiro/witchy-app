@@ -263,6 +263,31 @@ jobs:
       - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
         run: bash scripts/assemble_site.sh public
 
+      - name: 🔍 A Leitura do Ciclo está DENTRO do bundle?
+        # Verificação de fim de linha: não "o código está no arquivo", mas
+        # "os textos da feature estão no JavaScript que o navegador baixa".
+        # A diferença entre as duas é onde este diagnóstico se perdeu por
+        # horas — código certo no repositório, e nenhuma forma de saber o
+        # que estava servido.
+        run: |
+          faltando=0
+          procurar() {
+            if grep -rqF "$1" public/*.js public/**/*.js 2>/dev/null; then
+              echo "  ✅ encontrado: $1"
+            else
+              echo "  ❌ AUSENTE: $1"
+              faltando=1
+            fi
+          }
+          echo "Procurando os textos da Leitura do Ciclo no bundle:"
+          procurar "Leitura do Ciclo"
+          procurar "O oráculo lê o seu grimório"
+          if [ "$faltando" = "1" ]; then
+            echo "::error::A Leitura do Ciclo não está no bundle publicado. O código está no repositório mas não chegou no JavaScript — investigar compilação condicional, tree-shaking ou build de origem errada."
+            exit 1
+          fi
+          echo "A feature está no bundle."
+
       - name: 🔖 Carimbo de versão (public/version.txt)
         # Endereço de deploy é hash e todo build parece igual por fora. Sem
         # carimbo, "por que a novidade não aparece?" só se responde
