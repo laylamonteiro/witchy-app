@@ -200,7 +200,8 @@ jobs:
   # Secrets necessários (Settings → Secrets and variables → Actions):
   #   CLOUDFLARE_API_TOKEN   token com permissão "Cloudflare Pages: Edit"
   #   CLOUDFLARE_ACCOUNT_ID  id da conta (aparece na barra lateral do painel)
-  #   REVENUECAT_WEB_KEY     chave rcb_ do RevenueCat Billing
+  #   REVENUECAT_WEB_KEY_SANDBOX  chave rcb_sb_ do RevenueCat Billing
+  #                               (sandbox: cartão de teste; nunca cobra)
   #   (SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY, GROQ_API_KEY,
   #    GEMINI_API_KEY e PROKERALA_* já são usados pelo workflow de release)
   #
@@ -252,8 +253,20 @@ jobs:
           SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
           TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
-          REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY }}
+          # Staging usa a chave SANDBOX do RevenueCat Billing (rcb_sb_):
+          # cartão de teste, nada cobrado. A de produção (rcb_) fica só no
+          # release.yml. Sem fallback para a de produção — de propósito:
+          # cair na chave real no staging cobraria cartões de verdade.
+          REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY_SANDBOX }}
         run: |
+          # Trava: no staging a chave web PRECISA ser sandbox. Se veio uma
+          # que não começa com rcb_sb_ (ex.: a de produção por engano), para
+          # aqui em vez de aceitar pagamento real numa prévia.
+          if [ -n "$REVENUECAT_WEB_KEY" ] && \
+             ! printf '%s' "$REVENUECAT_WEB_KEY" | grep -q '^rcb_sb_'; then
+            echo "::error::REVENUECAT_WEB_KEY_SANDBOX não é uma chave sandbox (rcb_sb_). O staging não pode usar a chave de produção."
+            exit 1
+          fi
           flutter build web --release --no-wasm-dry-run \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \

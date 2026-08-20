@@ -78,6 +78,25 @@ Sintoma: a compra não abre ou o checkout recusa a origem. No painel do
 RevenueCat, em **Web Billing**, os domínios autorizados precisam incluir os
 mesmos endereços.
 
+### Duas chaves web: sandbox × produção (automático)
+
+O RevenueCat Billing tem **duas** chaves públicas para a web e cada estágio
+da esteira usa a sua — não precisa trocar id na mão:
+
+| Secret do GitHub            | Prefixo   | Onde é usada                                     |
+| --------------------------- | --------- | ------------------------------------------------ |
+| `REVENUECAT_WEB_KEY_SANDBOX`| `rcb_sb_` | `branch-validate.yml` → staging e prévias        |
+| `REVENUECAT_WEB_KEY`        | `rcb_`    | `release.yml` → produção (grimoriodebolso.app)   |
+
+A sandbox aceita **cartão de teste** e não cobra nada; a de produção cobra
+de verdade. Cada workflow tem uma **trava**: o staging aborta se a chave não
+começar com `rcb_sb_`, e a produção aborta se começar com `rcb_sb_`. Assim
+uma prévia nunca cobra cartão real e o site de produção nunca fica preso em
+cartão de teste, mesmo que os secrets sejam trocados por engano.
+
+> As chaves de Android/iOS **não** têm par sandbox/produção — a própria loja
+> decide o ambiente (license tester → sandbox). Só a web precisa das duas.
+
 ## Regra prática
 
 Prefira sempre **staging** para testar: é um endereço fixo, autorizado uma

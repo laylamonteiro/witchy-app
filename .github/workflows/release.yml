@@ -495,8 +495,19 @@ jobs:
           SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
           TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+          # Produção usa a chave REAL do RevenueCat Billing (rcb_): cobra de
+          # verdade. A sandbox (rcb_sb_) fica só no branch-validate.yml
+          # (staging/prévias). Simétrico à trava de lá.
           REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY }}
         run: |
+          # Trava: em produção a chave web NÃO pode ser sandbox. Se veio uma
+          # rcb_sb_ (ex.: a de teste por engano), para aqui — senão o site
+          # de produção aceitaria só cartão de teste e ninguém conseguiria
+          # pagar de verdade.
+          if printf '%s' "$REVENUECAT_WEB_KEY" | grep -q '^rcb_sb_'; then
+            echo "::error::REVENUECAT_WEB_KEY é uma chave sandbox (rcb_sb_). A produção precisa da chave real (rcb_)."
+            exit 1
+          fi
           flutter build web --release --no-wasm-dry-run \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
