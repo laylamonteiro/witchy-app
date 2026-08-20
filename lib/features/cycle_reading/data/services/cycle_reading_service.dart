@@ -123,6 +123,147 @@ class CycleReadingService {
           ? currentWeek(now: now)
           : currentLunation(now: now);
 
+  // ===== Período customizado e cooldown (regras da dona) =====
+
+  /// Teto de um período escolhido a dedo: 31 dias, porque há meses de 31 —
+  /// acima disso não é mais "um ciclo", é um histórico.
+  static const int maxCustomPeriodDays = 31;
+
+  /// Dias INCLUSIVOS de uma janela `>= start AND < end` (end exclusivo):
+  /// 14/08 00h → 21/08 00h são 7 dias vividos.
+  static int spanInDays(DateTime start, DateTime end) =>
+      end.difference(start).inDays;
+
+  /// Classifica um período escolhido a dedo: até 7 dias é produto SEMANAL;
+  /// de 8 a 31, MENSAL (lunação). Quem chama já validou o teto de 31.
+  static String periodTypeForSpan(DateTime start, DateTime end) =>
+      spanInDays(start, end) <= 7
+          ? CycleReadingPeriodType.week
+          : CycleReadingPeriodType.lunation;
+
+  /// Intervalo mínimo entre duas leituras do MESMO tipo: uma semanal a cada
+  /// 7 dias, uma mensal a cada 30.
+  ///
+  /// Vale SÓ para quem tem o acesso incluído (Vitalício): ali a leitura não
+  /// custa nada por unidade, e sem ritmo o app viraria um gerador de textos
+  /// sobre a mesma semana. Quem paga por leitura não é limitado — cada
+  /// leitura já é uma compra, e limitar seria recusar dinheiro e autonomia.
+  /// Ver [validateCustomPeriod] e o parâmetro `includedByLifetime`.
+  static Duration cooldownFor(String periodType) =>
+      periodType == CycleReadingPeriodType.week
+          ? const Duration(days: 7)
+          : const Duration(days: 30);
+
+  /// Quando a próxima leitura deste tipo libera; null = já liberada.
+  ///
+  /// Âncora: `createdAt` da última leitura GERADA do tipo (o momento da
+  /// compra/geração). Regenerar a mesma janela não reinicia a contagem —
+  /// `copyWith` preserva o createdAt.
+  Future<DateTime?> nextAllowedAt(
+    String userId,
+    String periodType, {
+    DateTime? now,
+  }) async {
+    final latest = await _repository.latestGenerated(userId, periodType);
+    if (latest == null) return null;
+    final release = latest.createdAt.add(cooldownFor(periodType));
+    return release.isAfter(now ?? DateTime.now()) ? release : null;
+  }
+
+  /// Por que um período escolhido a dedo foi recusado (null = aceito).
+  ///
+  /// Existe porque a tela precisa dizer O QUE fazer a respeito, e cada
+  /// motivo pede uma frase diferente — um enum evita a tela adivinhar por
+  /// mensagem de erro.
+  static const rejectionEmpty = 'empty';
+  static const rejectionTooLong = 'tooLong';
+  static const rejectionFuture = 'future';
+  static const rejectionOverlaps = 'overlaps';
+  static const rejectionCooldown = 'cooldown';
+
+  /// O veredito de um período escolhido a dedo.
+  ///
+  /// [periodType] sai da duração (ate 7 dias = semana; 8 a 31 = lunação) e
+  /// só faz sentido quando [reason] é null. [releaseAt] acompanha a recusa
+  /// por cooldown; [conflict] acompanha a recusa por sobreposição — as duas
+  /// dão à tela o "quando" e o "com qual leitura".
+  static ({
+    String? reason,
+    String periodType,
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  }) _verdict(
+    String? reason,
+    String periodType, {
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  }) =>
+      (
+        reason: reason,
+        periodType: periodType,
+        releaseAt: releaseAt,
+        conflict: conflict,
+      );
+
+  /// Valida um período escolhido a dedo.
+  ///
+  /// Duas famílias de regra, com alcances diferentes:
+  ///
+  /// **Sempre** (é o que a leitura consegue fazer):
+  /// 1. a janela é vazia ou invertida;
+  /// 2. passa de [maxCustomPeriodDays] (31, porque há meses de 31);
+  /// 3. avança no futuro — não se lê um ciclo que ainda não foi vivido.
+  ///
+  /// **Só com [includedByLifetime]** (é o ritmo do acesso incluído):
+  /// 4. cruza um período JÁ LIDO;
+  /// 5. o cooldown do tipo resultante ainda não venceu.
+  ///
+  /// Quem paga por leitura passa direto pelas duas últimas: pode comprar
+  /// qualquer período, quantas vezes quiser, inclusive relendo um pedaço já
+  /// lido. Cada leitura é uma compra — e o app não tem por que dizer não.
+  ///
+  /// A ordem importa: as três primeiras são do próprio pedido e não custam
+  /// banco; as duas últimas consultam, e a de sobreposição vem antes porque
+  /// é a mais específica ("este pedaço você já leu" ajuda mais que "espere").
+  Future<({
+    String? reason,
+    String periodType,
+    DateTime? releaseAt,
+    CycleReadingModel? conflict,
+  })> validateCustomPeriod({
+    required String userId,
+    required DateTime start,
+    required DateTime end,
+    bool includedByLifetime = false,
+    DateTime? now,
+  }) async {
+    final tipo = periodTypeForSpan(start, end);
+    final dias = spanInDays(start, end);
+    if (dias <= 0) return _verdict(rejectionEmpty, tipo);
+    if (dias > maxCustomPeriodDays) return _verdict(rejectionTooLong, tipo);
+
+    final agora = now ?? DateTime.now();
+    // `end` é exclusivo: uma janela que termina "amanhã 00h" cobre até hoje
+    // e é legítima. Só recusa o que passa disso.
+    final amanha = DateTime(agora.year, agora.month, agora.day)
+        .add(const Duration(days: 1));
+    if (end.isAfter(amanha)) return _verdict(rejectionFuture, tipo);
+
+    // A partir daqui é ritmo do acesso incluído, não limite da leitura.
+    if (!includedByLifetime) return _verdict(null, tipo);
+
+    final conflito = await _repository.overlappingGenerated(userId, start, end);
+    if (conflito != null) {
+      return _verdict(rejectionOverlaps, tipo, conflict: conflito);
+    }
+
+    final liberaEm = await nextAllowedAt(userId, tipo, now: agora);
+    if (liberaEm != null) {
+      return _verdict(rejectionCooldown, tipo, releaseAt: liberaEm);
+    }
+    return _verdict(null, tipo);
+  }
+
   /// O Vitalício cobre esta janela?
   ///
   /// Decisão de produto (reafirmada pela dona): o Vitalício cobre AS DUAS

@@ -3,6 +3,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 import '../../../grimoire/presentation/pages/grimoire_page.dart';
 import '../../../your_day/presentation/pages/your_day_page.dart';
 import '../../../diary/presentation/pages/diary_page.dart';
@@ -156,11 +157,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void _onDeepLink() {
     final link = DeepLinkService.instance.pending.value?.link;
     if (link == null || !mounted) return;
-    _navigatorKeys[link.homeTab]
-        .currentState
-        ?.popUntil((route) => route.isFirst);
+    final navigator = _navigatorKeys[link.homeTab].currentState;
+    navigator?.popUntil((route) => route.isFirst);
     if (_selectedIndex != link.homeTab) {
       setState(() => _selectedIndex = link.homeTab);
+    }
+
+    // A Leitura do Ciclo não tem aba própria: o convite empilha a página
+    // sobre a aba de destino e consome o link aqui mesmo (nenhuma seção
+    // reivindica este destino, então ninguém mais o consumiria).
+    if (link.opensCycleReading) {
+      navigator?.push(
+        MaterialPageRoute(builder: (_) => const CycleReadingIntroPage()),
+      );
+      DeepLinkService.instance.consume();
     }
   }
 

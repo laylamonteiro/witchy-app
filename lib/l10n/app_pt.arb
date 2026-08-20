@@ -2334,11 +2334,78 @@
     }
   },
   "cycleReadingShallowWarning": "Poucos registros neste período: a leitura pode sair rasa. Que tal registrar mais alguns dias antes de comprar?",
+  "cycleReadingCooldownWeek": "Sua próxima Leitura da Semana abre em {days, plural, one{1 dia} other{{days} dias}}. Sete dias de vida rendem uma leitura nova — antes disso, seria reler o mesmo período.",
+  "@cycleReadingCooldownWeek": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingCooldownLunation": "Sua próxima Leitura da Lunação abre em {days, plural, one{1 dia} other{{days} dias}}. Um ciclo inteiro precisa ser vivido antes de ser lido.",
+  "@cycleReadingCooldownLunation": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingCustomPeriodButton": "Escolher outro período",
+  "cycleReadingCustomPeriodTitle": "Qual pedaço da sua vida?",
+  "cycleReadingCustomPeriodHint": "Até 7 dias vira Leitura da Semana; de 8 a 31 dias, Leitura da Lunação.",
+  "cycleReadingHeatLegend": "Os dias marcados são os que você registrou algo — quanto mais forte, mais viva foi a sua prática.",
+  "cycleReadingCustomPeriodConfirm": "Usar este período",
+  "cycleReadingSelectionSummary": "{days, plural, one{1 dia} other{{days} dias}} · {records, plural, =0{nenhum registro} one{1 registro} other{{records} registros}}",
+  "@cycleReadingSelectionSummary": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingCustomPeriodClear": "Voltar ao período atual",
+  "cycleReadingCustomPeriodLine": "De {start} a {end} · {days, plural, one{1 dia} other{{days} dias}}",
+  "@cycleReadingCustomPeriodLine": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingRejectTooLong": "Um período de leitura vai até 31 dias. Escolha uma janela menor.",
+  "cycleReadingRejectFuture": "Só dá para ler um período já vivido. Escolha datas até hoje.",
+  "cycleReadingRejectEmpty": "Escolha uma data inicial e uma final.",
+  "cycleReadingRejectOverlaps": "Você já leu um período que cruza estas datas ({start} a {end}). Escolha uma janela que ainda não foi lida.",
+  "@cycleReadingRejectOverlaps": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "cycleReadingNotifTitle": "Sua leitura está pronta para nascer 🌙",
+  "cycleReadingNotifWeekBody": "Passaram-se sete dias desde a sua última Leitura da Semana. O que o seu grimório guardou desde então?",
+  "cycleReadingNotifLunationBody": "Um ciclo lunar se completou desde a sua última Leitura da Lunação. Que tal ler o que você viveu?",
   "cycleReadingPrivacyTitle": "O que é enviado para análise",
-  "cycleReadingPrivacyBody": "Trechos curtos e contagens dos seus registros do período — nunca os diários inteiros — mais fatos do céu calculados no seu aparelho. Você pode excluir fontes íntimas:",
+  "cycleReadingPrivacyBody": "Trechos curtos e contagens dos seus registros do período — nunca os diários inteiros — mais fatos do céu calculados no seu aparelho. Você escolhe o que entra:",
   "cycleReadingIncludeDreams": "Usar meus sonhos",
-  "cycleReadingIncludeFreeWriting": "Usar minha escrita livre",
-  "cycleReadingIncludeQuestions": "Usar minhas perguntas ao oráculo",
+  "cycleReadingIncludeFreeWriting": "Usar meus diários e intenções",
+  "cycleReadingIncludeFreeWritingHint": "Gratidões, desejos, afirmações que você criou, sigilos e escrita livre.",
+  "cycleReadingIncludeQuestions": "Usar minhas tiragens e leituras",
+  "cycleReadingIncludePractice": "Usar minha prática mágica",
+  "cycleReadingIncludeQuestionsHint": "Runas, pêndulo, cartas, tarô e as leituras guardadas no acervo.",
   "cycleReadingBuyFor": "Comprar leitura — {price}",
   "@cycleReadingBuyFor": {
     "placeholders": {
@@ -2426,5 +2493,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "cycleReadingIncludePracticeHint": "Feitiços que você criou e as notas dos seus ritos."
 }

@@ -15,6 +15,7 @@ import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/data_sources/tarot_cards_data.dart';
 import '../../data/models/tarot_card_model.dart';
+import '../../data/repositories/tarot_reading_repository.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/services/reading_archive_composer.dart';
 import '../../../diary/presentation/widgets/save_to_records_button.dart';
@@ -295,6 +296,17 @@ class _SpreadTabState extends State<_SpreadTab> {
     // o usuário não fica regerando a resposta (ex.: a carta do dia).
     final saved = await _savedReadingFor(_signature(spread, drawn));
 
+    // A mesa revelada é registro da jornada (como cada consulta de runas já
+    // era) — é daqui que a Leitura do Ciclo enxerga o tarô do período.
+    // Idempotente por assinatura: reabrir a carta do dia não duplica.
+    unawaited(TarotReadingRepository().recordDraw(
+      userId: _userId,
+      spreadName: spread.name,
+      signature: _signature(spread, drawn),
+      drawn: drawn,
+      question: question,
+    ));
+
     // Pequena pausa de "embaralhamento" antes de revelar.
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
@@ -337,6 +349,12 @@ class _SpreadTabState extends State<_SpreadTab> {
       setState(() => _aiReading = reading);
       // Guarda a interpretação atrelada a estas cartas para não regerar.
       await _persistReading(_signature(_activeSpread!, _drawn), reading);
+      // E anexa ao registro da tiragem — a Leitura do Ciclo cita a resposta.
+      unawaited(TarotReadingRepository().attachInterpretation(
+        userId: _userId,
+        signature: _signature(_activeSpread!, _drawn),
+        interpretation: reading,
+      ));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -43,6 +43,8 @@ void main() {
       'rune_readings',
       'oracle_readings',
       'pendulum_consultations',
+      'tarot_readings',
+      'sigils',
       'ritual_logs',
       'guided_ritual_logs',
       'spells',
@@ -73,6 +75,159 @@ void main() {
         'date': createdAt ?? inPeriod,
         'created_at': createdAt ?? inPeriod,
       });
+
+  group('mapa de calor do seletor de período', () {
+    test('agrupa por dia e ignora o que está fora da janela', () async {
+      final dia10 = DateTime(2026, 8, 10, 9).millisecondsSinceEpoch;
+      final dia10Tarde = DateTime(2026, 8, 10, 20).millisecondsSinceEpoch;
+      final dia12 = DateTime(2026, 8, 12, 8).millisecondsSinceEpoch;
+
+      await seedDream(createdAt: dia10);
+      await seed('gratitudes', {
+        'title': 'grata',
+        'content': 'pelo dia',
+        'date': dia10Tarde,
+        'created_at': dia10Tarde,
+      });
+      await seed('sigils', {
+        'intention': 'coragem',
+        'image_path': '/tmp/s.png',
+        'created_at': dia12,
+      });
+      // Fora da janela: não pode esquentar dia nenhum.
+      await seedDream(createdAt: outOfPeriod);
+
+      final mapa = await CycleReadingComposer().dailyRecordCounts(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+
+      expect(mapa['2026-08-10'], 2);
+      expect(mapa['2026-08-12'], 1);
+      expect(mapa['2026-07-10'], isNull);
+      // Dia sem registro não entra no mapa (o calendário desenha vazio).
+      expect(mapa.containsKey('2026-08-11'), isFalse);
+    });
+
+    test('o mapa e a contagem total enxergam os mesmos registros', () async {
+      // A regra que impede o calendário de mostrar um dia quente que a
+      // contagem não vê: as duas leem a MESMA lista de tabelas.
+      await seedDream(createdAt: DateTime(2026, 8, 3).millisecondsSinceEpoch);
+      await seed('tarot_readings', {
+        'question': 'e agora?',
+        'spread_type': 'three_cards',
+        'reading_data': '{}',
+        // `date` é NOT NULL no schema, como nas outras tiragens.
+        'date': DateTime(2026, 8, 5).millisecondsSinceEpoch,
+        'created_at': DateTime(2026, 8, 5).millisecondsSinceEpoch,
+      });
+      await seed('spells', {
+        'name': 'Feitiço',
+        'purpose': 'proteger a casa',
+        'type': 'protecao',
+        'category': 'protecao',
+        'steps': '[]',
+        'is_preloaded': 0,
+        'created_at': DateTime(2026, 8, 7).millisecondsSinceEpoch,
+      });
+      // Pré-carregado não é registro da pessoa: fica fora dos DOIS.
+      await seed('spells', {
+        'name': 'Ancestral',
+        'purpose': 'veio no app',
+        'type': 'protecao',
+        'category': 'protecao',
+        'steps': '[]',
+        'is_preloaded': 1,
+        'created_at': DateTime(2026, 8, 8).millisecondsSinceEpoch,
+      });
+
+      final composer = CycleReadingComposer();
+      final mapa = await composer.dailyRecordCounts(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+      final total = await composer.countPeriodRecords(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+
+      expect(mapa.values.fold<int>(0, (a, b) => a + b), total);
+      expect(total, 3);
+      expect(mapa.containsKey('2026-08-08'), isFalse);
+    });
+
+    test('registros de outra pessoa não esquentam o calendário', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('gratitudes', {
+        'id': uuid.v4(),
+        'user_id': 'outra-pessoa',
+        'title': 'grata',
+        'content': 'texto',
+        'date': inPeriod,
+        'created_at': inPeriod,
+        'updated_at': inPeriod,
+        'synced': 0,
+      });
+
+      final mapa = await CycleReadingComposer().dailyRecordCounts(
+        userId: userId,
+        start: periodStart,
+        end: periodEnd,
+      );
+      expect(mapa, isEmpty);
+    });
+  });
+
+  test('a contagem da tela bate com a que a leitura usa', () async {
+    // Eram duas contas separadas: countPeriodRecords (o número que a tela
+    // mostra, e que decide "leitura rasa") e o recordCount somado dentro
+    // do compose. As afirmações criadas entravam só na segunda, então a
+    // tela dizia menos do que a análise realmente tinha. Uma fonte nova
+    // que esqueça a lista compartilhada quebra este teste.
+    await seedDream();
+    await seed('gratitudes', {
+      'title': 'Grata',
+      'content': 'pelo dia',
+      'date': inPeriod,
+    });
+    await seed('affirmations', {
+      'text': 'Eu confio no meu tempo',
+      'category': 'confianca',
+      'is_preloaded': 0,
+      'is_favorite': 0,
+    });
+    await seed('tarot_readings', {
+      'question': 'o que preciso ver?',
+      'spread_type': 'single',
+      'reading_data': '{}',
+      'date': inPeriod,
+    });
+    // Pré-carregada não é registro dela: fora das DUAS contas.
+    await seed('affirmations', {
+      'text': 'Veio no app',
+      'category': 'confianca',
+      'is_preloaded': 1,
+      'is_favorite': 0,
+    });
+
+    final composer = CycleReadingComposer();
+    final daTela = await composer.countPeriodRecords(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+    final material = await composer.compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+
+    expect(daTela, material.recordCount);
+    expect(daTela, 4);
+  });
 
   test('conta apenas registros do período', () async {
     await seedDream();
@@ -133,6 +288,98 @@ void main() {
     expect(sky['moonPhases'], isNotEmpty);
   });
 
+  test('tiragem de tarô entra na leitura (conta e aparece no oracle)',
+      () async {
+    await seed('tarot_readings', {
+      'question': 'O que preciso ver?',
+      'spread_type': 'three_cards',
+      'signature': 'sig-1',
+      'reading_data':
+          '{"cards":[{"name":"A Lua"}],"interpretation":"olhe o que se esconde"}',
+      'date': inPeriod,
+    });
+
+    final material = await CycleReadingComposer().compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+
+    expect(material.recordCount, 1);
+    expect(material.json['divinationCount'], 1);
+    final oracle = material.json['oracle'] as List;
+    final tarot = oracle.firstWhere((d) => (d as Map)['tool'] == 'tarot') as Map;
+    expect(tarot['question'], 'O que preciso ver?');
+    expect(tarot['answer'], 'olhe o que se esconde');
+  });
+
+  test('linha do tempo sai em ordem, com a lua de cada dia', () async {
+    final dia1 = DateTime(2026, 8, 3).millisecondsSinceEpoch;
+    final dia2 = DateTime(2026, 8, 9).millisecondsSinceEpoch;
+    final dia3 = DateTime(2026, 8, 20).millisecondsSinceEpoch;
+    // Semeados FORA de ordem: a ordenação é responsabilidade do composer.
+    await seed('gratitudes', {
+      'title': 'Gratidão tardia',
+      'content': 'pelo fim do mês',
+      'date': dia3,
+      'created_at': dia3,
+    });
+    await seedDream(createdAt: dia1, content: 'o mar');
+    await seed('sigils', {
+      'intention': 'coragem para mudar',
+      // image_path é NOT NULL no schema: todo sigilo tem o desenho salvo.
+      'image_path': '/tmp/sigilo.png',
+      'created_at': dia2,
+    });
+
+    final material = await CycleReadingComposer().compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+
+    final timeline = material.json['timeline'] as List;
+    expect(timeline.length, 3);
+    expect(
+      timeline.map((m) => (m as Map)['kind']).toList(),
+      ['dream', 'sigil', 'gratitude'],
+    );
+    expect(
+      timeline.map((m) => (m as Map)['date']).toList(),
+      ['2026-08-03', '2026-08-09', '2026-08-20'],
+    );
+    // A nota vem do próprio registro (título/intenção), curta.
+    expect((timeline[1] as Map)['note'], 'coragem para mudar');
+
+    // E cada dia com registro tem a lua daquele dia.
+    final moonByDay = material.json['moonByDay'] as Map;
+    expect(moonByDay.keys.toSet(),
+        {'2026-08-03', '2026-08-09', '2026-08-20'});
+    expect((moonByDay['2026-08-03'] as Map)['phase'], isNotEmpty);
+  });
+
+  test('exclusão de fontes íntimas também tira da linha do tempo', () async {
+    await seedDream(content: 'segredo');
+    await seed('gratitudes', {
+      'title': 'Grata',
+      'content': 'pelo dia',
+      'date': inPeriod,
+    });
+
+    final material = await CycleReadingComposer().compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+      options: const CycleReadingSourceOptions(includeDreams: false),
+    );
+
+    final timeline = material.json['timeline'] as List;
+    expect(timeline.map((m) => (m as Map)['kind']), isNot(contains('dream')));
+    expect(timeline.map((m) => (m as Map)['kind']), contains('gratitude'));
+    // Mas o sonho continua contando como registro do período.
+    expect(material.recordCount, 2);
+  });
+
   test('trechos são curtos: nunca o diário inteiro', () async {
     await seedDream(content: 'palavra ${'muito longa ' * 40}fim');
 
@@ -168,8 +415,9 @@ void main() {
       end: periodEnd,
       options: const CycleReadingSourceOptions(
         includeDreams: false,
-        includeFreeWriting: false,
-        includeOracleQuestions: false,
+        includeJournals: false,
+        includeDivination: false,
+        includePractice: false,
       ),
     );
 

@@ -13,6 +13,32 @@ AppLocalizations get _l10n =>
 
 /// Calcula trânsitos planetários em tempo real
 class TransitCalculator {
+  /// O signo em que a Lua estava numa data — só a Lua.
+  ///
+  /// Existe para quem precisa disso DIA A DIA (a linha do tempo da Leitura
+  /// do Ciclo percorre cada dia com registro): [calculateTransits] calcula
+  /// todos os corpos e loga cada um, e repetir isso por dia seria pagar
+  /// dezenas de vezes por um dado só. Devolve null se as efemérides não
+  /// estiverem disponíveis — quem chama segue sem o signo.
+  Future<ZodiacSign?> moonSignOn(DateTime date) async {
+    try {
+      await SwephService.instance.ensureReady();
+      final utc = date.toUtc();
+      final jd = SwephService.instance.julianDayUt(
+        year: utc.year,
+        month: utc.month,
+        day: utc.day,
+        hourUt: utc.hour + utc.minute / 60.0 + utc.second / 3600.0,
+      );
+      final pos = SwephService.instance
+          .bodyPosition(jd, SwephService.heavenlyBody(Planet.moon));
+      if (pos.longitude.isNaN || pos.longitude.isInfinite) return null;
+      return ZodiacSign.fromLongitude(pos.longitude);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Calcula as posições dos planetas para uma data específica.
   ///
   /// Usa o Swiss Ephemeris (Moshier) para precisão de arco-minuto e detecção

@@ -46,6 +46,28 @@ class NotificationProvider with ChangeNotifier {
   Future<List<PendingNotificationRequest>> pendingNotifications() =>
       _notificationService.pendingNotifications();
 
+  /// Agenda o convite de "sua próxima Leitura do Ciclo já pode nascer" para
+  /// quando o intervalo daquela janela terminar.
+  ///
+  /// Fora do bloco de preferências de lua/sabbat de propósito: não é um
+  /// lembrete recorrente que a pessoa liga e desliga, e sim a continuação de
+  /// algo que ela comprou — some sozinho depois de disparar uma vez.
+  Future<void> scheduleCycleReadingUnlock({
+    required bool isWeekly,
+    required DateTime releaseAt,
+  }) async {
+    if (kIsWeb) return;
+    try {
+      await _notificationService.scheduleCycleReadingUnlock(
+        isWeekly: isWeekly,
+        releaseAt: releaseAt,
+      );
+    } catch (_) {
+      // Um lembrete que não pôde ser agendado (permissão negada, plugin
+      // indisponível) nunca pode derrubar a leitura recém-gerada.
+    }
+  }
+
   Future<bool?> areNotificationsEnabled() =>
       _notificationService.areNotificationsEnabled();
 
