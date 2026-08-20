@@ -12,25 +12,29 @@ O princípio: **publicar é decisão, nunca efeito colateral de merge.**
 ## O fluxo do dia a dia
 
 ```
-branch claude/** ──push──▶ validação + prévia própria do site
+qualquer branch ──push──▶ gate + prévia própria do site
+        │                 + o CI ABRE O PR para a main (draft)
         │
-        ▼ merge (PR)
-      main ──push──▶ validação + STAGING (staging.grimorio-de-bolso.pages.dev)
-        │                        + APK candidato assinado (artifact, 14 dias)
+        ▼ VOCÊ mergeia o PR
+      main ──push──▶ gate + STAGING (staging.grimorio-de-bolso.pages.dev)
+        │                  + APK candidato assinado (artifact, 14 dias)
+        │                  + o CI ABRE/ATUALIZA o PR "🚢 Publicar vX.Y.Z"
         │
         │  baixa o candidato, instala no aparelho, testa
-        ▼
-bash scripts/release.sh 2.1.0
+        │  (e o site novo já está em staging para testar na web)
+        ▼ VOCÊ mergeia o PR de publicação
+    release ──push──▶ release.yml: guardas → gate → APK+AAB+web do commit
         │
-        ▼
-   release.yml: guardas → gate bloqueante → APK+AAB+web do commit da tag
-        │
-        ▼ aprovação humana (environment `production`)
+        ▼ VOCÊ aprova o environment `production`
    site em produção + AAB na faixa de teste da Play + GitHub Release
         │
         ▼ testa pela faixa de teste e, quando aprovar,
    promove para produção NA PLAY CONSOLE (manual, de propósito)
 ```
+
+O CI abre os dois PRs; **mergear os dois é você**, e ainda há a aprovação
+do environment depois. Três decisões suas entre uma branch e a usuária, e
+nenhum passo manual de digitação entre elas.
 
 ## branch-validate.yml
 
@@ -68,8 +72,10 @@ bash scripts/release.sh 2.1.0
   existente, versionCode acima do legado (piso 126), secrets presentes.
 - **Gate bloqueante**: os mesmos testes do branch-validate, no commit exato
   da tag — sem `|| echo`.
-- **Builds do mesmo SHA**: APK+AAB assinados (assinatura conferida contra o
-  SHA-1 registrado — divergência é erro fatal, nos dois artefatos) e o site.
+- **Builds do mesmo SHA**: APK e AAB em **jobs paralelos** (matrix, um
+  runner cada — ~10 min em vez de ~20) e o site. Cada job confere a própria
+  assinatura contra o SHA-1 registrado; divergência é erro fatal. A
+  publicação exige os dois binários presentes antes de qualquer upload.
   Nada publica sem Android **e** web verdes juntos.
 - **Publicação** (job único, atrás do environment `production`):
   tag (se veio do botão) → site (`--branch=main`) → AAB na faixa de teste

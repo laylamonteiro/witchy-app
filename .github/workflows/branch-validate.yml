@@ -513,7 +513,10 @@ jobs:
   abrir-pr:
     name: 🔀 Abrir PR para a main
     needs: validate
-    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
+    if: >-
+      github.ref != 'refs/heads/main' &&
+      github.ref != 'refs/heads/release' &&
+      github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -562,3 +565,77 @@ jobs:
           novo=$(gh pr list --head "$BRANCH" --state open \
             --json number --jq '.[0].number // empty')
           echo "- PR aberto: #$novo" >> "$GITHUB_STEP_SUMMARY"
+
+  # ──────────────────────────────────────────────────────────────────────
+  # PR de publicação: main → release.
+  #
+  # `release` é o branch do que ESTÁ publicado. O que está na main e não
+  # está nele é exatamente o que ainda não chegou em usuária — e esse
+  # diff, num PR aberto, é a lista do que você publicaria se mergeasse.
+  #
+  # O CI abre e mantém o PR; MERGEAR é seu. O merge dispara o release.yml,
+  # que ainda para na aprovação do environment `production`. São dois
+  # cliques seus entre a main e a usuária, e nenhum deles é meu.
+  # ──────────────────────────────────────────────────────────────────────
+  pr-release:
+    name: 🚢 PR de publicação (main → release)
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🚢 Abrir ou atualizar o PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --quiet origin
+
+          # Primeira vez: `release` nasce na última tag publicada, não na
+          # main. Assim o primeiro PR já contém tudo que está pronto e
+          # nunca foi publicado, em vez de nascer vazio.
+          if ! git ls-remote --exit-code --heads origin release >/dev/null 2>&1; then
+            ULTIMA_TAG=$(git tag -l 'v*' | sort -V | tail -1)
+            base=${ULTIMA_TAG:-$(git rev-list --max-parents=0 HEAD | tail -1)}
+            echo "Branch release não existe — criando em $base."
+            git push origin "$base:refs/heads/release"
+            git fetch origin release --quiet
+          fi
+
+          pendentes=$(git log --oneline origin/release..origin/main | wc -l | tr -d ' ')
+          if [ "$pendentes" = "0" ]; then
+            echo "Nada por publicar — release já tem tudo da main."
+            echo "Nada por publicar." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Mesma conta do release.yml para o merge no branch release.
+          ULTIMA=$(git tag -l 'v*' | sed -e 's/^v//' -e 's/+.*//' | sort -V | tail -1)
+          ULTIMA=${ULTIMA:-0.0.0}
+          PROXIMA=$(echo "$ULTIMA" | awk -F. '{print $1"."$2"."$3+1}')
+
+          titulo="🚢 Publicar v$PROXIMA ($pendentes commit(s))"
+          corpo=$(printf '%s\n\n%s\n\n%s\n\n%s\n' \
+            "Mergear este PR **publica**: site em grimoriodebolso.app, AAB na faixa de teste da Play e GitHub Release — depois da sua aprovação no environment \`production\`." \
+            "Versão proposta: **v$PROXIMA** (última publicada: v$ULTIMA). Para minor/major, use \`bash scripts/release.sh X.Y.Z\` em vez de mergear." \
+            "### O que entra" \
+            "$(git log --pretty='- %s' origin/release..origin/main)")
+
+          existente=$(gh pr list --base release --head main --state open \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$existente" ]; then
+            gh pr edit "$existente" --title "$titulo" --body "$corpo"
+            echo "PR de publicação #$existente atualizado." >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh pr create --base release --head main \
+              --title "$titulo" --body "$corpo"
+            echo "PR de publicação aberto." >> "$GITHUB_STEP_SUMMARY"
+          fi
