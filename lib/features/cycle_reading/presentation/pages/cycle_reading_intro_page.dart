@@ -96,6 +96,13 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Preços das duas janelas — carregados juntos para o seletor já nascer
   /// com os dois valores à vista (a escolha é de preço, não só de janela).
   Future<void> _loadPrices() async {
+    // A loja precisa estar configurada para haver preço. Contas que entram
+    // sem passar pelo login de servidor (admin local, simulação de plano)
+    // nunca chamam initialize — e aí o catálogo fica vazio e o preço some.
+    // initialize é idempotente: no-op se já rodou.
+    if (!_payment.isInitialized) {
+      await _payment.initialize();
+    }
     for (final id in [
       RevenueCatConfig.cycleReadingWeekProductId,
       RevenueCatConfig.cycleReadingMonthProductId,
