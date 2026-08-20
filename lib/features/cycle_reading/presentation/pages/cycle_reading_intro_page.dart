@@ -148,6 +148,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Recarrega o que depende da janela escolhida.
   Future<void> _load() async {
     final userId = context.read<AuthProvider>().currentUser.id;
+    // Lido ANTES dos await: depois deles, tocar no context seria uso após
+    // gap assíncrono (a tela pode ter saído).
+    final incluido = _lifetimeCoversThisWindow;
     final period = _period;
     final recordCount = await _service.composer.countPeriodRecords(
       userId: userId,
@@ -159,7 +162,11 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       period.start,
       periodType: _periodType,
     );
-    final nextAllowedAt = await _service.nextAllowedAt(userId, _periodType);
+    // O intervalo entre leituras é o RITMO do acesso incluído (Vitalício).
+    // Quem paga por leitura não é limitado: cada leitura é uma compra, e o
+    // app não recusa dinheiro nem autonomia. Sem Vitalício, nem consulta.
+    final nextAllowedAt =
+        incluido ? await _service.nextAllowedAt(userId, _periodType) : null;
     if (!mounted) return;
     setState(() {
       _recordCount = recordCount;
@@ -210,6 +217,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       userId: userId,
       start: start,
       end: end,
+      // Sobreposição e cooldown são o ritmo do acesso incluído; quem paga
+      // por leitura escolhe qualquer janela, quantas vezes quiser.
+      includedByLifetime: _hasLifetime,
     );
     if (!mounted) return;
 
@@ -424,18 +434,22 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       if (!mounted) return;
       setState(() => _existing = result.reading);
 
-      // A leitura nasceu: marca quando a próxima desta janela libera e
-      // agenda o convite de volta. Regeneração NÃO reinicia a contagem (o
-      // createdAt do crédito é preservado), então o lembrete continua
-      // apontando para o mesmo dia.
-      final release = result.reading.createdAt
-          .add(CycleReadingService.cooldownFor(credit.periodType));
-      setState(() => _nextAllowedAt =
-          release.isAfter(DateTime.now()) ? release : null);
-      await context.read<NotificationProvider>().scheduleCycleReadingUnlock(
-            isWeekly: credit.isWeekly,
-            releaseAt: release,
-          );
+      // A leitura nasceu. Marcar a próxima e agendar o convite de volta só
+      // faz sentido para o acesso incluído — é lá que existe espera. Quem
+      // paga por leitura pode comprar de novo agora, e um lembrete de
+      // "já pode" seria mentira (e cobrança disfarçada).
+      if (_lifetimeCoversThisWindow) {
+        // Regeneração NÃO reinicia a contagem (o createdAt do crédito é
+        // preservado), então o lembrete aponta sempre para o mesmo dia.
+        final release = result.reading.createdAt
+            .add(CycleReadingService.cooldownFor(credit.periodType));
+        setState(() => _nextAllowedAt =
+            release.isAfter(DateTime.now()) ? release : null);
+        await context.read<NotificationProvider>().scheduleCycleReadingUnlock(
+              isWeekly: credit.isWeekly,
+              releaseAt: release,
+            );
+      }
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
@@ -931,10 +945,13 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
     }
 
-    // Intervalo entre leituras: uma semanal a cada 7 dias, uma lunação a
-    // cada 30. Vem DEPOIS dos casos acima de propósito — crédito já pago
-    // (pendente ou gerado) nunca é bloqueado por isto; o intervalo trava a
-    // compra de uma leitura NOVA, não o acesso ao que já é dela.
+    // Ritmo do acesso INCLUÍDO (Vitalício): uma semanal a cada 7 dias, uma
+    // lunação a cada 30 — `_nextAllowedAt` só é preenchido nesse caso, então
+    // quem paga por leitura nunca vê esta faixa.
+    //
+    // Vem DEPOIS dos casos acima de propósito: crédito já pago (pendente ou
+    // gerado) nunca é bloqueado por isto; o ritmo trava uma leitura NOVA,
+    // não o acesso ao que já é dela.
     if (_isOnCooldown) {
       return Container(
         padding: const EdgeInsets.all(14),

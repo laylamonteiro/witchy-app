@@ -333,10 +333,10 @@ void main() {
     });
   });
 
-  group('período a dedo: retroativo vale, repetir não', () {
-    // As DUAS travas juntas, como a dona pediu: escolher datas serve para
-    // ler um pedaço retroativo AINDA NÃO LIDO — não para driblar o
-    // intervalo entre compras.
+  group('período a dedo: ritmo só para o acesso incluído', () {
+    // Sobreposição e cooldown são o RITMO do Vitalício (onde a leitura não
+    // custa por unidade). Quem paga por leitura escolhe qualquer janela,
+    // quantas vezes quiser — os dois últimos testes do grupo provam isso.
     final hoje = DateTime(2026, 8, 20);
 
     Future<void> geradaNoPeriodo(
@@ -380,6 +380,7 @@ void main() {
         userId: userId,
         start: DateTime(2026, 5, 5),
         end: DateTime(2026, 5, 12),
+        includedByLifetime: true,
         now: hoje,
       );
       expect(v.reason, CycleReadingService.rejectionOverlaps);
@@ -398,6 +399,7 @@ void main() {
         userId: userId,
         start: DateTime(2026, 5, 8),
         end: DateTime(2026, 5, 15),
+        includedByLifetime: true,
         now: hoje,
       );
       expect(v.reason, isNull);
@@ -417,21 +419,35 @@ void main() {
         userId: userId,
         start: DateTime(2026, 6, 1),
         end: DateTime(2026, 6, 8),
+        includedByLifetime: true,
         now: hoje,
       );
       expect(v.reason, CycleReadingService.rejectionCooldown);
       expect(v.releaseAt, isNotNull);
     });
 
-    test('futuro e janela grande demais são recusados', () async {
-      final futuro = await CycleReadingService().validateCustomPeriod(
+    test('quem paga por leitura pode reler um período já lido', () async {
+      await geradaNoPeriodo(
+        CycleReadingPeriodType.week,
+        DateTime(2026, 5, 1),
+        DateTime(2026, 5, 8),
+        createdAt: hoje.subtract(const Duration(days: 1)),
+      );
+      // Mesma janela, cooldown fresquíssimo — e ainda assim aceita: sem o
+      // acesso incluído, cada leitura é uma compra.
+      final v = await CycleReadingService().validateCustomPeriod(
         userId: userId,
-        start: hoje,
-        end: hoje.add(const Duration(days: 5)),
+        start: DateTime(2026, 5, 1),
+        end: DateTime(2026, 5, 8),
         now: hoje,
       );
-      expect(futuro.reason, CycleReadingService.rejectionFuture);
+      expect(v.reason, isNull);
+    });
 
+    test('os limites estruturais valem para todo mundo', () async {
+      // Sem acesso incluído, mas 40 dias continua sendo grande demais e o
+      // futuro continua não vivido — isso não é ritmo, é o que a leitura
+      // consegue fazer.
       final longo = await CycleReadingService().validateCustomPeriod(
         userId: userId,
         start: DateTime(2026, 4, 1),
@@ -439,6 +455,14 @@ void main() {
         now: hoje,
       );
       expect(longo.reason, CycleReadingService.rejectionTooLong);
+
+      final futuro = await CycleReadingService().validateCustomPeriod(
+        userId: userId,
+        start: hoje,
+        end: hoje.add(const Duration(days: 5)),
+        now: hoje,
+      );
+      expect(futuro.reason, CycleReadingService.rejectionFuture);
     });
 
     test('a janela que termina amanhã 00h (cobre hoje) é aceita', () async {

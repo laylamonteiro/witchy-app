@@ -142,9 +142,13 @@ class CycleReadingService {
           : CycleReadingPeriodType.lunation;
 
   /// Intervalo mínimo entre duas leituras do MESMO tipo: uma semanal a cada
-  /// 7 dias, uma mensal a cada 30. Sem isso a janela rolante da semana
-  /// permitiria comprar uma leitura "da semana" todo dia — e ler o mesmo
-  /// período de novo não é uma leitura nova.
+  /// 7 dias, uma mensal a cada 30.
+  ///
+  /// Vale SÓ para quem tem o acesso incluído (Vitalício): ali a leitura não
+  /// custa nada por unidade, e sem ritmo o app viraria um gerador de textos
+  /// sobre a mesma semana. Quem paga por leitura não é limitado — cada
+  /// leitura já é uma compra, e limitar seria recusar dinheiro e autonomia.
+  /// Ver [validateCustomPeriod] e o parâmetro `includedByLifetime`.
   static Duration cooldownFor(String periodType) =>
       periodType == CycleReadingPeriodType.week
           ? const Duration(days: 7)
@@ -201,17 +205,22 @@ class CycleReadingService {
         conflict: conflict,
       );
 
-  /// Valida um período escolhido a dedo, com as DUAS travas.
+  /// Valida um período escolhido a dedo.
   ///
-  /// A dona quis as duas de propósito: a escolha de datas existe para ler um
-  /// pedaço RETROATIVO ainda não lido, não para driblar o intervalo entre
-  /// compras. Então recusa quando:
+  /// Duas famílias de regra, com alcances diferentes:
   ///
+  /// **Sempre** (é o que a leitura consegue fazer):
   /// 1. a janela é vazia ou invertida;
   /// 2. passa de [maxCustomPeriodDays] (31, porque há meses de 31);
-  /// 3. avança no futuro — não se lê um ciclo que ainda não foi vivido;
-  /// 4. cruza um período JÁ LIDO (a leitura seria a mesma vida de novo);
+  /// 3. avança no futuro — não se lê um ciclo que ainda não foi vivido.
+  ///
+  /// **Só com [includedByLifetime]** (é o ritmo do acesso incluído):
+  /// 4. cruza um período JÁ LIDO;
   /// 5. o cooldown do tipo resultante ainda não venceu.
+  ///
+  /// Quem paga por leitura passa direto pelas duas últimas: pode comprar
+  /// qualquer período, quantas vezes quiser, inclusive relendo um pedaço já
+  /// lido. Cada leitura é uma compra — e o app não tem por que dizer não.
   ///
   /// A ordem importa: as três primeiras são do próprio pedido e não custam
   /// banco; as duas últimas consultam, e a de sobreposição vem antes porque
@@ -225,6 +234,7 @@ class CycleReadingService {
     required String userId,
     required DateTime start,
     required DateTime end,
+    bool includedByLifetime = false,
     DateTime? now,
   }) async {
     final tipo = periodTypeForSpan(start, end);
@@ -238,6 +248,9 @@ class CycleReadingService {
     final amanha = DateTime(agora.year, agora.month, agora.day)
         .add(const Duration(days: 1));
     if (end.isAfter(amanha)) return _verdict(rejectionFuture, tipo);
+
+    // A partir daqui é ritmo do acesso incluído, não limite da leitura.
+    if (!includedByLifetime) return _verdict(null, tipo);
 
     final conflito = await _repository.overlappingGenerated(userId, start, end);
     if (conflito != null) {
