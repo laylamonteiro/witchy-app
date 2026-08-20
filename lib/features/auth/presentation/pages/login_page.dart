@@ -49,9 +49,16 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Form(
-            key: _formKey,
+          // Teto de largura para a web desktop: sem ele o formulário estica
+          // pela janela toda (o app é feito para o celular). Centralizado
+          // em ~480 mantém a mesma leitura em qualquer tela.
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Form(
+                  key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -94,11 +101,14 @@ class _LoginPageState extends State<LoginPage> {
                 // Link para cadastro
                 _buildSignupLink(),
                 const SizedBox(height: 32),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),
       ),
+    ),
     );
   }
 

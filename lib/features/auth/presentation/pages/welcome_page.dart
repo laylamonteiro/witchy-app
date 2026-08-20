@@ -24,10 +24,17 @@ class WelcomePage extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              children: [
+          // App é desenhado para o celular. Na web desktop, sem um teto de
+          // largura, a coluna se espalha pela janela inteira e os elementos
+          // ficam soltos/desalinhados. Segurar em ~480 mantém a leitura de
+          // "aplicativo no bolso" em qualquer tela.
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  children: [
                 const Spacer(flex: 2),
                 // Logo/Ícone
                 _buildLogo(context),
@@ -58,8 +65,10 @@ class WelcomePage extends StatelessWidget {
                 const Spacer(flex: 2),
                 // Botões
                 _buildButtons(context),
-                const SizedBox(height: 48),
-              ],
+                    const SizedBox(height: 48),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
