@@ -127,6 +127,8 @@
   "premiumPlanYearly": "Yearly",
   "premiumPerMonth": "/month",
   "premiumPerYear": "/year",
+  "premiumPlanLifetime": "Lifetime",
+  "premiumLifetimeOnce": "one-time payment, forever",
   "premiumSave33": "Save 33%",
   "premiumTagSelected": "SELECTED",
   "premiumTagPopular": "POPULAR",
