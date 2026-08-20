@@ -4,10 +4,16 @@ Dois workflows, papéis sem sobreposição:
 
 | Workflow | Dispara em | O que faz | Toca usuários? |
 |---|---|---|---|
-| `branch-validate.yml` | push em qualquer branch | gate de qualidade + prévia/staging do site + APK candidato | **Nunca** |
-| `release.yml` | tag `vX.Y.Z` ou botão Run workflow | gate de novo + builds assinados + publica site, Play e Release | **Só com aprovação** |
+| `branch-validate.yml` | push em qualquer branch | gate de qualidade (branches) + prévia/staging do site + APK candidato (dispatch) | **Nunca** |
+| `release.yml` | push na `main` (dry-run), push na `release` / tag `vX.Y.Z` / botão Run workflow | gate + builds assinados; **na main só valida**, no resto publica site, Play e Release | **Só com aprovação** |
 
 O princípio: **publicar é decisão, nunca efeito colateral de merge.**
+
+Na `main`, os dois se dividem sem sobrepor: o `release.yml` roda em **dry-run**
+(gate + AAB/APK assinados + web de produção, sem publicar), e o
+`branch-validate.yml` fica só com o que é dele — **staging** e o **PR de
+publicação**. Assim toda main fica provadamente pronta pra publicar, sem
+nenhum dry-run manual.
 
 ## O fluxo do dia a dia
 
@@ -16,11 +22,12 @@ qualquer branch ──push──▶ gate + prévia própria do site
         │                 + o CI ABRE O PR para a main (draft)
         │
         ▼ VOCÊ mergeia o PR
-      main ──push──▶ gate + STAGING (staging.grimorio-de-bolso.pages.dev)
-        │                  + APK candidato assinado (artifact, 14 dias)
+      main ──push──▶ branch-validate: STAGING (staging.grimorio-de-bolso.pages.dev)
         │                  + o CI ABRE/ATUALIZA o PR "🚢 Publicar vX.Y.Z"
+        │            release.yml (DRY-RUN, mesmo push): gate + AAB/APK
+        │                  assinados (artifact) + web de produção — NÃO publica
         │
-        │  baixa o candidato, instala no aparelho, testa
+        │  baixa o APK do dry-run, instala no aparelho, testa
         │  (e o site novo já está em staging para testar na web)
         ▼ VOCÊ mergeia o PR de publicação
     release ──push──▶ release.yml: guardas → gate → APK+AAB+web do commit
@@ -40,12 +47,14 @@ nenhum passo manual de digitação entre elas.
 
 - **Gate** (bloqueante): `flutter analyze`, suíte completa de testes,
   paridade dos 4 ARBs, scanner de PT hardcoded. ~2 min — o build Android
-  saiu daqui de propósito (ver abaixo).
+  saiu daqui de propósito (ver abaixo). **Não roda na `main`**: lá o dry-run
+  do `release.yml` (mesmo push) é o gate; roda nas branches de trabalho e nos
+  PRs, onde é o required status check.
 - **Build de fumaça Android**: job separado, só quando `android/` ou
-  `pubspec` mudam **e** o `apk-candidato` não vai rodar. Fora do gate para
-  não atrasar o site em ~8 min.
-- **Ordem em `main`**: gate → site → APK candidato. O site leva ~2 min e o
-  APK ~10; publicar primeiro é ver o resultado antes de o build terminar.
+  `pubspec` mudam. Fora do gate para não atrasar o site em ~8 min.
+- **Na `main`**: este workflow faz só STAGING + PR de publicação. O gate, o
+  APK e o AAB assinados vêm do dry-run do `release.yml`, disparado no mesmo
+  push — sem repetição.
 - **Site**: toda branch ganha prévia própria; `main` publica no alias fixo
   `staging` — **grimoriodebolso.app não muda nunca por este workflow** (ele
   jamais passa `--branch=main` ao wrangler, e um passo confere via API que
@@ -64,12 +73,18 @@ nenhum passo manual de digitação entre elas.
   serve `/version.txt` com commit, branch e run. "Por que a novidade não
   aparece?" se responde abrindo `<endereço>/version.txt`, em vez de
   adivinhar qual build está naquela aba.
-- **APK candidato** (só em `main`): APK de **release assinado**, versionName
-  `X.Y.Z-rc.<sha>`, como artifact — para instalar e testar antes de decidir
-  publicar.
+- **APK candidato** (só no **dispatch** manual): APK de **release assinado**,
+  versionName `X.Y.Z-rc.<sha>`, como artifact — o jeito de tirar um APK
+  assinado de qualquer branch. Na `main` não roda: o dry-run do `release.yml`
+  já produz um APK assinado idêntico no mesmo push.
 
 ## release.yml
 
+- **Quando roda**: push na `release` ou tag `vX.Y.Z` → **publica**; push na
+  `main` → **dry-run** (valida e builda tudo, não publica); botão Run workflow
+  → publica ou dry-run conforme `somente_validar`. Um único ponto no job
+  `preparar` decide "isto é dry-run?" (`main` sempre é) e os jobs `secrets` e
+  `publicar` leem dessa flag.
 - **Versão**: a tag é a fonte de verdade. `versionName` = tag sem o `v`;
   `versionCode` = `major*100000 + minor*1000 + patch*10` (2.1.0 → 201000).
   Determinístico, monotônico (verificado contra todas as tags, incluindo as
@@ -95,9 +110,11 @@ nenhum passo manual de digitação entre elas.
   `preparar` ainda **pergunta à Play se a faixa existe** antes de qualquer
   build (`scripts/ci/conferir_faixa_play.py`) — o identificador errado morre
   em ~20s, e não no upload, que é depois do site já ter ido ao ar.
-- **Dry-run**: Run workflow com `somente_validar: true` exercita tudo até os
-  builds sem criar tag nem publicar nada — incluindo a conferência da faixa
-  da Play, que é justamente o que não dá para adivinhar no papel.
+- **Dry-run**: acontece automático em **todo push na `main`**, e também pelo
+  botão Run workflow com `somente_validar: true`. Exercita tudo até os builds
+  (AAB/APK assinados, web de produção) sem criar tag nem publicar nada —
+  incluindo a conferência da faixa da Play, que é justamente o que não dá para
+  adivinhar no papel. É o que mantém a `main` sempre pronta pra publicar.
 
 ## Como publicar uma versão
 

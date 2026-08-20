@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../ai/ai_service.dart';
 import '../content/content_locale.dart';
 
-class LanguageProvider extends ChangeNotifier {
+class LanguageProvider extends ChangeNotifier with WidgetsBindingObserver {
   static const String preferencesKey = 'selected_locale';
   static const Locale fallbackLocale = Locale('pt', 'BR');
   static const List<Locale> supportedLocales = [
@@ -22,11 +22,57 @@ class LanguageProvider extends ChangeNotifier {
     final savedTag = _prefs.getString(preferencesKey);
     // Sem preferência salva, o idioma inicial segue o do dispositivo
     // (com fallback pt-BR); a escolha manual é persistida em setLocale.
-    _locale = savedTag != null
-        ? _localeFromTag(savedTag)
-        : _normalize(ui.PlatformDispatcher.instance.locale);
+    _locale = savedTag != null ? _localeFromTag(savedTag) : _fromDevice();
     AIService.instance.setLocale(_locale);
     ContentLocale.instance.setLocale(_locale);
+
+    // Na web (e em cold start), o locale real do dispositivo pode chegar
+    // DEPOIS da construção — a leitura inicial devolveria en-US e um
+    // aparelho em português abriria em inglês. Enquanto não houver escolha
+    // manual, reagimos quando o sistema reporta o idioma de verdade.
+    //
+    // Via WidgetsBindingObserver (didChangeLocales), NUNCA sobrescrevendo
+    // PlatformDispatcher.onLocaleChanged — esse é um callback único que o
+    // próprio Flutter usa para propagar a troca de idioma; tomá-lo quebraria
+    // o didChangeLocales de todo o app.
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    _onDeviceLocaleChanged();
+  }
+
+  /// Idioma a partir do dispositivo: varre a LISTA de locales (mais confiável
+  /// que o `.locale` único) e pega o primeiro cujo idioma o app suporta;
+  /// nada casando, cai no pt-BR. Um aparelho em português SEMPRE resulta em
+  /// pt-BR aqui (o pt casa antes de qualquer fallback).
+  static Locale _fromDevice() {
+    for (final device in ui.PlatformDispatcher.instance.locales) {
+      for (final supported in supportedLocales) {
+        if (supported.languageCode == device.languageCode) {
+          return _normalize(device);
+        }
+      }
+    }
+    return fallbackLocale;
+  }
+
+  void _onDeviceLocaleChanged() {
+    // Escolha manual manda: não sobrescreve o que a pessoa fixou.
+    if (_prefs.getString(preferencesKey) != null) return;
+    final detected = _fromDevice();
+    if (detected == _locale) return;
+    _locale = detected;
+    AIService.instance.setLocale(_locale);
+    ContentLocale.instance.setLocale(_locale);
+    notifyListeners();
   }
 
   Locale get locale => _locale;
