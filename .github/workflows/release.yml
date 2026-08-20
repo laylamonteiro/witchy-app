@@ -276,13 +276,30 @@ jobs:
         run: bash scripts/check_hardcoded_pt.sh
 
   # ────────────────────────────────────────────────────────────────────
-  # APK + AAB no MESMO job: ambiente idêntico por construção, mesmo
-  # versionCode nos dois, e o appbundle reaproveita o cache Gradle do apk.
+  # APK e AAB em PARALELO, um runner para cada.
+  #
+  # Eram sequenciais no mesmo job (o appbundle reaproveitava o cache Gradle
+  # do apk). Em paralelo paga-se esse cache duas vezes, e em troca o tempo
+  # de parede cai de ~20 min para ~10: numa publicação, a espera custa mais
+  # que o minuto de runner.
+  #
+  # Matrix em vez de dois jobs copiados: a receita de build (a lista longa
+  # de --dart-define) vive num lugar só. Um define que entrasse em um e não
+  # no outro produziria dois binários diferentes da MESMA versão — o tipo
+  # de divergência que não aparece em teste nenhum.
+  #
+  # fail-fast: false de propósito: se um falhar, ainda interessa saber se o
+  # outro passou. "Quebrou o Android" e "quebrou só o empacotamento do AAB"
+  # são diagnósticos diferentes.
   # ────────────────────────────────────────────────────────────────────
   build-android:
-    name: 🤖 Build Android (APK + AAB assinados)
+    name: 🤖 Build Android (${{ matrix.formato }})
     needs: [preparar, validar]
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        formato: [apk, aab]
 
     steps:
       - name: 📥 Checkout repository
@@ -316,10 +333,11 @@ jobs:
           store-password: ${{ secrets.ANDROID_STORE_PASSWORD }}
           keystore-type: ${{ secrets.ANDROID_KEYSTORE_TYPE || 'JKS' }}
 
-      - name: 🏗️ Build APK e AAB
+      - name: 🏗️ Build ${{ matrix.formato }}
         # Secrets entram via env e expandem entre aspas: valores com
         # caracteres especiais de shell não quebram o script nem vazam.
         env:
+          ALVO: ${{ matrix.formato == 'apk' && 'apk' || 'appbundle' }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
           REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
@@ -351,53 +369,55 @@ jobs:
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL"
             --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD"
           )
-          flutter build apk --release "${DEFINES[@]}" $ADMOB_FLAG $CAPTCHA_FLAG
-          flutter build appbundle --release "${DEFINES[@]}" $ADMOB_FLAG $CAPTCHA_FLAG
+          flutter build "$ALVO" --release "${DEFINES[@]}" $ADMOB_FLAG $CAPTCHA_FLAG
 
-      - name: 🔏 Conferir a assinatura dos DOIS artefatos
+      - name: 🔏 Conferir a assinatura
         # Assinatura diferente da registrada no Google Cloud quebra o login
         # Google em produção — e um AAB assinado errado não pode nem chegar
-        # perto da Play. Erro fatal, não aviso de log.
+        # perto da Play. Erro fatal, não aviso de log. Cada job confere o
+        # SEU artefato: nenhum dos dois sai sem passar por aqui.
+        env:
+          ARQUIVO: ${{ matrix.formato == 'apk'
+            && 'build/app/outputs/flutter-apk/app-release.apk'
+            || 'build/app/outputs/bundle/release/app-release.aab' }}
         run: |
-          conferir() {
-            local arquivo="$1"
-            local sha1
-            sha1=$(keytool -printcert -jarfile "$arquivo" 2>/dev/null \
-              | grep -m1 'SHA1:' | sed 's/.*SHA1: *//' | tr -d ' ' | tr 'a-f' 'A-F')
-            esperado=$(echo "$SHA1_ESPERADO" | tr -d ' ')
-            if [ -z "$sha1" ]; then
-              echo "::error::Não foi possível ler a assinatura de $arquivo."
-              exit 1
-            fi
-            if [ "$sha1" != "$esperado" ]; then
-              echo "::error::$arquivo assinado com SHA-1 $sha1, esperado $esperado."
-              exit 1
-            fi
-            echo "✅ $arquivo assinado com o keystore esperado."
-          }
-          conferir build/app/outputs/flutter-apk/app-release.apk
-          conferir build/app/outputs/bundle/release/app-release.aab
+          sha1=$(keytool -printcert -jarfile "$ARQUIVO" 2>/dev/null \
+            | grep -m1 'SHA1:' | sed 's/.*SHA1: *//' | tr -d ' ' | tr 'a-f' 'A-F')
+          esperado=$(echo "$SHA1_ESPERADO" | tr -d ' ')
+          if [ -z "$sha1" ]; then
+            echo "::error::Não foi possível ler a assinatura de $ARQUIVO."
+            exit 1
+          fi
+          if [ "$sha1" != "$esperado" ]; then
+            echo "::error::$ARQUIVO assinado com SHA-1 $sha1, esperado $esperado."
+            exit 1
+          fi
+          echo "✅ $ARQUIVO assinado com o keystore esperado."
 
-      - name: 📦 Empacotar artefatos
+      - name: 📦 Empacotar artefato
+        # Os símbolos saem só do AAB: os dois builds os produzem, e com
+        # nomes iguais eles colidiriam ao juntar os artifacts na publicação.
+        # É o do AAB que interessa — é o binário que vai para a Play.
         env:
           NOME: ${{ needs.preparar.outputs.version_name }}
           CODIGO: ${{ needs.preparar.outputs.version_code }}
+          FORMATO: ${{ matrix.formato }}
+          ARQUIVO: ${{ matrix.formato == 'apk'
+            && 'build/app/outputs/flutter-apk/app-release.apk'
+            || 'build/app/outputs/bundle/release/app-release.aab' }}
         run: |
           mkdir -p release-files
-          cp build/app/outputs/flutter-apk/app-release.apk \
-             "release-files/grimorio-de-bolso-${NOME}+${CODIGO}.apk"
-          cp build/app/outputs/bundle/release/app-release.aab \
-             "release-files/grimorio-de-bolso-${NOME}+${CODIGO}.aab"
-          if [ -d build/app/outputs/symbols ]; then
+          cp "$ARQUIVO" "release-files/grimorio-de-bolso-${NOME}+${CODIGO}.${FORMATO}"
+          if [ "$FORMATO" = "aab" ] && [ -d build/app/outputs/symbols ]; then
             (cd build/app/outputs/symbols && zip -qr - .) \
               > "release-files/grimorio-de-bolso-${NOME}-symbols.zip"
           fi
           ls -la release-files/
 
-      - name: 📤 Upload dos artefatos Android
+      - name: 📤 Upload do artefato Android
         uses: actions/upload-artifact@v4
         with:
-          name: android-release
+          name: android-release-${{ matrix.formato }}
           path: release-files/*
           retention-days: 30
 
@@ -523,10 +543,29 @@ jobs:
           path: public
 
       - name: 📥 Baixar os artefatos Android
+        # Dois artifacts agora (um por job da matrix); merge-multiple junta
+        # os dois na MESMA pasta, que é o que os passos seguintes esperam:
+        # o upload da Play pega release-files/*.aab e a GitHub Release
+        # anexa release-files/* inteiro.
         uses: actions/download-artifact@v4
         with:
-          name: android-release
+          pattern: android-release-*
+          merge-multiple: true
           path: release-files
+
+      - name: 🔎 Os dois binários chegaram?
+        # Um artifact faltando aqui viraria uma Release sem APK ou, pior,
+        # um upload para a Play sem AAB — que o r0adkll trataria como
+        # "nada a enviar" e seguiria verde.
+        run: |
+          ls -la release-files/
+          for ext in apk aab; do
+            if ! ls release-files/*."$ext" >/dev/null 2>&1; then
+              echo "::error::Nenhum .$ext em release-files — o job build-android ($ext) não entregou."
+              exit 1
+            fi
+          done
+          echo "✅ APK e AAB presentes."
 
       - name: 🔎 Conferir a branch de produção do projeto Cloudflare
         # Aqui o --branch=main PRECISA significar produção. Divergência é

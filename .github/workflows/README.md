@@ -72,8 +72,10 @@ nenhum passo manual de digitação entre elas.
   existente, versionCode acima do legado (piso 126), secrets presentes.
 - **Gate bloqueante**: os mesmos testes do branch-validate, no commit exato
   da tag — sem `|| echo`.
-- **Builds do mesmo SHA**: APK+AAB assinados (assinatura conferida contra o
-  SHA-1 registrado — divergência é erro fatal, nos dois artefatos) e o site.
+- **Builds do mesmo SHA**: APK e AAB em **jobs paralelos** (matrix, um
+  runner cada — ~10 min em vez de ~20) e o site. Cada job confere a própria
+  assinatura contra o SHA-1 registrado; divergência é erro fatal. A
+  publicação exige os dois binários presentes antes de qualquer upload.
   Nada publica sem Android **e** web verdes juntos.
 - **Publicação** (job único, atrás do environment `production`):
   tag (se veio do botão) → site (`--branch=main`) → AAB na faixa de teste
