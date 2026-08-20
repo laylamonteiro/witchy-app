@@ -18,19 +18,27 @@ import '../models/cycle_reading_model.dart';
 /// lugar: a tela de compra oferece estes desligamentos antes de enviar
 /// qualquer coisa para a IA).
 class CycleReadingSourceOptions {
-  /// Sonhos (conteúdo íntimo por definição).
+  /// Sonhos. Continua sozinho, e não dentro dos diários, porque é a fonte
+  /// mais íntima de todas — quem quer excluir só isso não deveria ter de
+  /// abrir mão do resto do diário junto.
   final bool includeDreams;
 
-  /// Escrita livre / reflexões.
-  final bool includeFreeWriting;
+  /// O que ela escreve e deseja: gratidões, desejos, afirmações criadas,
+  /// sigilos e escrita livre.
+  final bool includeJournals;
 
-  /// Perguntas feitas a runas e pêndulo.
-  final bool includeOracleQuestions;
+  /// A conversa com o oráculo: runas, pêndulo, cartas, tarô e as leituras
+  /// guardadas no acervo.
+  final bool includeDivination;
+
+  /// A prática efetiva: feitiços criados e as notas deixadas nos ritos.
+  final bool includePractice;
 
   const CycleReadingSourceOptions({
     this.includeDreams = true,
-    this.includeFreeWriting = true,
-    this.includeOracleQuestions = true,
+    this.includeJournals = true,
+    this.includeDivination = true,
+    this.includePractice = true,
   });
 }
 
@@ -111,6 +119,10 @@ class CycleReadingComposer {
     'dreams',
     'gratitudes',
     'desires',
+    // As afirmações que ela CRIOU (as pré-carregadas ficam de fora pelo
+    // filtro): estavam sendo somadas dentro da leitura e não aqui, então a
+    // tela dizia um número e a análise usava outro.
+    'affirmations',
     'free_writings',
     'rune_readings',
     'oracle_readings',
@@ -132,6 +144,7 @@ class CycleReadingComposer {
   /// inflaria o ciclo seguinte.
   static String _ownRecordsFilter(String table) => switch (table) {
         'spells' => ' AND is_preloaded = 0',
+        'affirmations' => ' AND is_preloaded = 0',
         'free_writings' =>
           " AND source != '${FreeWritingSource.cycleReading}'",
         _ => '',
@@ -273,7 +286,7 @@ class CycleReadingComposer {
     // ===== Gratidões =====
     final gratitudes = await rowsOf('gratitudes');
     recordCount += gratitudes.length;
-    if (gratitudes.isNotEmpty) {
+    if (options.includeJournals && gratitudes.isNotEmpty) {
       json['gratitudes'] = [
         for (final row in gratitudes.take(_maxItemsPerSource))
           {
@@ -288,7 +301,7 @@ class CycleReadingComposer {
     // ===== Desejos (manifestações) =====
     final desires = await rowsOf('desires');
     recordCount += desires.length;
-    if (desires.isNotEmpty) {
+    if (options.includeJournals && desires.isNotEmpty) {
       json['desires'] = [
         for (final row in desires.take(_maxItemsPerSource))
           {
@@ -323,7 +336,7 @@ class CycleReadingComposer {
         for (final row in favorites)
           if (_isNotBlank(row['text'])) _excerpt(row['text']),
       };
-      if (texts.isNotEmpty) {
+      if (options.includeJournals && texts.isNotEmpty) {
         json['affirmations'] = texts.take(_maxItemsPerSource).toList();
       }
     } catch (_) {}
@@ -331,7 +344,7 @@ class CycleReadingComposer {
     // ===== Sigilos (a intenção mágica desenhada — pura personalização) =====
     final sigils = await rowsOf('sigils');
     recordCount += sigils.length;
-    if (sigils.isNotEmpty) {
+    if (options.includeJournals && sigils.isNotEmpty) {
       json['sigils'] = [
         for (final row in sigils.take(_maxItemsPerSource))
           if (_isNotBlank(row['intention'])) _excerpt(row['intention']),
@@ -351,7 +364,7 @@ class CycleReadingComposer {
         .where((row) =>
             FreeWritingSource.readings.contains(row['source'] ?? ''))
         .toList();
-    if (options.includeFreeWriting && reflections.isNotEmpty) {
+    if (options.includeJournals && reflections.isNotEmpty) {
       json['freeWriting'] = [
         for (final row in reflections.take(_maxItemsPerSource))
           {
@@ -360,7 +373,7 @@ class CycleReadingComposer {
           },
       ];
     }
-    if (archivedReadings.isNotEmpty) {
+    if (options.includeDivination && archivedReadings.isNotEmpty) {
       // O que a pessoa GUARDOU no acervo (tarot, oráculo, runas, quiromancia
       // salvos): agora vai o conteúdo real da leitura, não só o título — é
       // dele que sai a especificidade.
@@ -383,7 +396,7 @@ class CycleReadingComposer {
         pendulumConsults.length +
         oracleReadings.length +
         tarotReadings.length;
-    if (options.includeOracleQuestions) {
+    if (options.includeDivination) {
       // Não só a pergunta — a tiragem inteira: a runa/carta e o que ela
       // respondeu. É a conversa real da pessoa com o oráculo no período.
       final divinations = <Map<String, dynamic>>[
@@ -451,8 +464,10 @@ class CycleReadingComposer {
       'guidedRituals': guidedLogs.length,
       'spellsCreated': spells.length,
       // Os feitiços que ela CRIOU no período (nome + propósito) — o que a
-      // magia dela buscou, não só quantos foram.
-      if (spells.isNotEmpty)
+      // magia dela buscou, não só quantos foram. As CONTAGENS acima ficam
+      // mesmo com a fonte desligada: dizer "você fez 4 ritos" não expõe
+      // nada; dizer o nome e a nota, sim.
+      if (options.includePractice && spells.isNotEmpty)
         'spells': [
           for (final row in spells.take(_maxItemsPerSource))
             {
@@ -461,7 +476,8 @@ class CycleReadingComposer {
             },
         ],
       // Notas que ela deixou nos ritos concluídos (quando houver).
-      if ([...ritualLogs, ...guidedLogs].any((r) => _isNotBlank(r['notes'])))
+      if (options.includePractice &&
+          [...ritualLogs, ...guidedLogs].any((r) => _isNotBlank(r['notes'])))
         'ritualNotes': [
           for (final row in [...ritualLogs, ...guidedLogs])
             if (_isNotBlank(row['notes'])) _excerpt(row['notes']),
@@ -524,25 +540,25 @@ class CycleReadingComposer {
         addMoment(row['date'] ?? row['created_at'], 'dream', row['title']);
       }
     }
-    for (final row in gratitudes) {
-      addMoment(
-        row['date'] ?? row['created_at'],
-        'gratitude',
-        _isNotBlank(row['title']) ? row['title'] : row['content'],
-      );
-    }
-    for (final row in desires) {
-      addMoment(row['created_at'], 'desire', row['title']);
-    }
-    for (final row in sigils) {
-      addMoment(row['created_at'], 'sigil', row['intention']);
-    }
-    if (options.includeFreeWriting) {
+    if (options.includeJournals) {
+      for (final row in gratitudes) {
+        addMoment(
+          row['date'] ?? row['created_at'],
+          'gratitude',
+          _isNotBlank(row['title']) ? row['title'] : row['content'],
+        );
+      }
+      for (final row in desires) {
+        addMoment(row['created_at'], 'desire', row['title']);
+      }
+      for (final row in sigils) {
+        addMoment(row['created_at'], 'sigil', row['intention']);
+      }
       for (final row in reflections) {
         addMoment(row['created_at'], 'reflection', row['content']);
       }
     }
-    if (options.includeOracleQuestions) {
+    if (options.includeDivination) {
       for (final row in runeReadings) {
         addMoment(row['created_at'], 'runes', row['question']);
       }
@@ -556,11 +572,13 @@ class CycleReadingComposer {
         addMoment(row['created_at'], 'tarot', row['question']);
       }
     }
-    for (final row in [...ritualLogs, ...guidedLogs]) {
-      addMoment(row['completed_at'], 'ritual', row['notes']);
-    }
-    for (final row in spells) {
-      addMoment(row['created_at'], 'spell', row['name']);
+    if (options.includePractice) {
+      for (final row in [...ritualLogs, ...guidedLogs]) {
+        addMoment(row['completed_at'], 'ritual', row['notes']);
+      }
+      for (final row in spells) {
+        addMoment(row['created_at'], 'spell', row['name']);
+      }
     }
 
     moments.sort((a, b) => a.ms.compareTo(b.ms));

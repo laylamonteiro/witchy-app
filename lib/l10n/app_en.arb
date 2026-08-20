@@ -1691,10 +1691,13 @@
   "cycleReadingNotifWeekBody": "Seven days have passed since your last Week Reading. What has your grimoire kept since then?",
   "cycleReadingNotifLunationBody": "A lunar cycle has completed since your last Lunation Reading. Shall we read what you lived?",
   "cycleReadingPrivacyTitle": "What is sent for analysis",
-  "cycleReadingPrivacyBody": "Short excerpts and counts of your records from the period — never the full diaries — plus sky facts calculated on your device. You can exclude intimate sources:",
+  "cycleReadingPrivacyBody": "Short excerpts and counts of your records from the period — never whole journals — plus sky facts calculated on your device. You choose what goes in:",
   "cycleReadingIncludeDreams": "Use my dreams",
-  "cycleReadingIncludeFreeWriting": "Use my free writing",
-  "cycleReadingIncludeQuestions": "Use my oracle questions",
+  "cycleReadingIncludeFreeWriting": "Use my journals and intentions",
+  "cycleReadingIncludeFreeWritingHint": "Gratitudes, desires, affirmations you created, sigils and free writing.",
+  "cycleReadingIncludeQuestions": "Use my draws and readings",
+  "cycleReadingIncludePractice": "Use my magical practice",
+  "cycleReadingIncludeQuestionsHint": "Runes, pendulum, cards, tarot and the readings kept in your archive.",
   "cycleReadingBuyFor": "Buy reading — {price}",
   "cycleReadingTeaserTitle": "Peek at the start of your reading",
   "cycleReadingTeaserIntro": "Two real sentences about your period — drawn from your own records. The rest comes in the full reading.",
@@ -1737,5 +1740,6 @@
   "lessonTeaserIntro": "The next lessons in the trail are Premium — but the beginning of this one is yours.",
   "zodiacTwelveSigns": "The 12 Signs",
   "zodiacPersonality": "Personality",
-  "zodiacRulingPlanet": "Ruling Planet: {planet}"
+  "zodiacRulingPlanet": "Ruling Planet: {planet}",
+  "cycleReadingIncludePracticeHint": "Spells you created and the notes from your rites."
 }

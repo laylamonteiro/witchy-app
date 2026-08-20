@@ -2399,10 +2399,13 @@
   "cycleReadingNotifWeekBody": "Passaram-se sete dias desde a sua última Leitura da Semana. O que o seu grimório guardou desde então?",
   "cycleReadingNotifLunationBody": "Um ciclo lunar se completou desde a sua última Leitura da Lunação. Que tal ler o que você viveu?",
   "cycleReadingPrivacyTitle": "O que é enviado para análise",
-  "cycleReadingPrivacyBody": "Trechos curtos e contagens dos seus registros do período — nunca os diários inteiros — mais fatos do céu calculados no seu aparelho. Você pode excluir fontes íntimas:",
+  "cycleReadingPrivacyBody": "Trechos curtos e contagens dos seus registros do período — nunca os diários inteiros — mais fatos do céu calculados no seu aparelho. Você escolhe o que entra:",
   "cycleReadingIncludeDreams": "Usar meus sonhos",
-  "cycleReadingIncludeFreeWriting": "Usar minha escrita livre",
-  "cycleReadingIncludeQuestions": "Usar minhas perguntas ao oráculo",
+  "cycleReadingIncludeFreeWriting": "Usar meus diários e intenções",
+  "cycleReadingIncludeFreeWritingHint": "Gratidões, desejos, afirmações que você criou, sigilos e escrita livre.",
+  "cycleReadingIncludeQuestions": "Usar minhas tiragens e leituras",
+  "cycleReadingIncludePractice": "Usar minha prática mágica",
+  "cycleReadingIncludeQuestionsHint": "Runas, pêndulo, cartas, tarô e as leituras guardadas no acervo.",
   "cycleReadingBuyFor": "Comprar leitura — {price}",
   "@cycleReadingBuyFor": {
     "placeholders": {
@@ -2490,5 +2493,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "cycleReadingIncludePracticeHint": "Feitiços que você criou e as notas dos seus ritos."
 }

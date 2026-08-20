@@ -114,9 +114,13 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Preço por janela (null = produto indisponível nesta plataforma/loja).
   final Map<String, String?> _prices = {};
 
+  // Grupos de fontes que a pessoa pode desligar antes de enviar à análise.
+  // Agrupados (e não um interruptor por tabela) para a tela continuar
+  // legível: oito chaves viram um painel, não uma escolha.
   bool _includeDreams = true;
-  bool _includeFreeWriting = true;
-  bool _includeQuestions = true;
+  bool _includeJournals = true;
+  bool _includePractice = true;
+  bool _includeDivination = true;
 
   @override
   void initState() {
@@ -362,8 +366,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
 
   CycleReadingSourceOptions get _options => CycleReadingSourceOptions(
         includeDreams: _includeDreams,
-        includeFreeWriting: _includeFreeWriting,
-        includeOracleQuestions: _includeQuestions,
+        includeJournals: _includeJournals,
+        includeDivination: _includeDivination,
+        includePractice: _includePractice,
       );
 
   Future<void> _buy() async {
@@ -673,15 +678,23 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(l10n.cycleReadingIncludeFreeWriting),
-                      value: _includeFreeWriting,
-                      onChanged: (v) =>
-                          setState(() => _includeFreeWriting = v),
+                      subtitle: Text(l10n.cycleReadingIncludeFreeWritingHint),
+                      value: _includeJournals,
+                      onChanged: (v) => setState(() => _includeJournals = v),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(l10n.cycleReadingIncludeQuestions),
-                      value: _includeQuestions,
-                      onChanged: (v) => setState(() => _includeQuestions = v),
+                      subtitle: Text(l10n.cycleReadingIncludeQuestionsHint),
+                      value: _includeDivination,
+                      onChanged: (v) => setState(() => _includeDivination = v),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.cycleReadingIncludePractice),
+                      subtitle: Text(l10n.cycleReadingIncludePracticeHint),
+                      value: _includePractice,
+                      onChanged: (v) => setState(() => _includePractice = v),
                     ),
                   ],
                 ),

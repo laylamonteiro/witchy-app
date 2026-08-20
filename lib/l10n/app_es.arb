@@ -1691,10 +1691,13 @@
   "cycleReadingNotifWeekBody": "Han pasado siete días desde tu última Lectura de la Semana. ¿Qué ha guardado tu grimorio desde entonces?",
   "cycleReadingNotifLunationBody": "Un ciclo lunar se ha completado desde tu última Lectura de la Lunación. ¿Leemos lo que viviste?",
   "cycleReadingPrivacyTitle": "Qué se envía para el análisis",
-  "cycleReadingPrivacyBody": "Fragmentos cortos y conteos de tus registros del período — nunca los diarios completos — más hechos del cielo calculados en tu dispositivo. Puedes excluir fuentes íntimas:",
+  "cycleReadingPrivacyBody": "Fragmentos cortos y recuentos de tus registros del periodo — nunca los diarios enteros — más datos del cielo calculados en tu dispositivo. Tú eliges qué entra:",
   "cycleReadingIncludeDreams": "Usar mis sueños",
-  "cycleReadingIncludeFreeWriting": "Usar mi escritura libre",
-  "cycleReadingIncludeQuestions": "Usar mis preguntas al oráculo",
+  "cycleReadingIncludeFreeWriting": "Usar mis diarios e intenciones",
+  "cycleReadingIncludeFreeWritingHint": "Gratitudes, deseos, afirmaciones que creaste, sigilos y escritura libre.",
+  "cycleReadingIncludeQuestions": "Usar mis tiradas y lecturas",
+  "cycleReadingIncludePractice": "Usar mi práctica mágica",
+  "cycleReadingIncludeQuestionsHint": "Runas, péndulo, cartas, tarot y las lecturas guardadas en tu archivo.",
   "cycleReadingBuyFor": "Comprar lectura — {price}",
   "cycleReadingTeaserTitle": "Espía el comienzo de tu lectura",
   "cycleReadingTeaserIntro": "Dos frases de verdad sobre tu período — sacadas de tus propios registros. El resto viene en la lectura completa.",
@@ -1737,5 +1740,6 @@
   "lessonTeaserIntro": "Las siguientes lecciones del sendero son Premium — pero el comienzo de esta es tuyo.",
   "zodiacTwelveSigns": "Los 12 Signos",
   "zodiacPersonality": "Personalidad",
-  "zodiacRulingPlanet": "Planeta Regente: {planet}"
+  "zodiacRulingPlanet": "Planeta Regente: {planet}",
+  "cycleReadingIncludePracticeHint": "Hechizos que creaste y las notas de tus ritos."
 }

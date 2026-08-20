@@ -181,6 +181,54 @@ void main() {
     });
   });
 
+  test('a contagem da tela bate com a que a leitura usa', () async {
+    // Eram duas contas separadas: countPeriodRecords (o número que a tela
+    // mostra, e que decide "leitura rasa") e o recordCount somado dentro
+    // do compose. As afirmações criadas entravam só na segunda, então a
+    // tela dizia menos do que a análise realmente tinha. Uma fonte nova
+    // que esqueça a lista compartilhada quebra este teste.
+    await seedDream();
+    await seed('gratitudes', {
+      'title': 'Grata',
+      'content': 'pelo dia',
+      'date': inPeriod,
+    });
+    await seed('affirmations', {
+      'text': 'Eu confio no meu tempo',
+      'category': 'confianca',
+      'is_preloaded': 0,
+      'is_favorite': 0,
+    });
+    await seed('tarot_readings', {
+      'question': 'o que preciso ver?',
+      'spread_type': 'single',
+      'reading_data': '{}',
+      'date': inPeriod,
+    });
+    // Pré-carregada não é registro dela: fora das DUAS contas.
+    await seed('affirmations', {
+      'text': 'Veio no app',
+      'category': 'confianca',
+      'is_preloaded': 1,
+      'is_favorite': 0,
+    });
+
+    final composer = CycleReadingComposer();
+    final daTela = await composer.countPeriodRecords(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+    final material = await composer.compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+
+    expect(daTela, material.recordCount);
+    expect(daTela, 4);
+  });
+
   test('conta apenas registros do período', () async {
     await seedDream();
     await seedDream(createdAt: outOfPeriod);
@@ -367,8 +415,9 @@ void main() {
       end: periodEnd,
       options: const CycleReadingSourceOptions(
         includeDreams: false,
-        includeFreeWriting: false,
-        includeOracleQuestions: false,
+        includeJournals: false,
+        includeDivination: false,
+        includePractice: false,
       ),
     );
 
