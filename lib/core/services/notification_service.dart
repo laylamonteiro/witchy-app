@@ -276,11 +276,17 @@ class NotificationService {
   static const int cycleReadingWeekNotificationId = 900001;
   static const int cycleReadingLunationNotificationId = 900002;
 
-  /// Avisa quando a próxima Leitura do Ciclo daquela janela liberar.
+  /// Convida de volta quando um novo ciclo se completa desde a última
+  /// Leitura do Ciclo daquela janela.
   ///
-  /// [isWeekly] escolhe o texto e o slot; [releaseAt] é o fim do cooldown
-  /// (7 dias para a semana, 30 para a lunação). Data no passado não agenda
-  /// nada — o [_schedule] já filtra.
+  /// Vale para todo mundo, e é convite, não aviso de desbloqueio: quem
+  /// pagou para ler uma vez pode querer ler de novo quando o ciclo
+  /// recomeçar. Por isso o texto fala do tempo que passou ("passaram-se
+  /// sete dias — o que o seu grimório guardou?"), nunca de permissão.
+  ///
+  /// [isWeekly] escolhe o texto e o slot; [releaseAt] é quando o ciclo se
+  /// completa (7 dias para a semana, 30 para a lunação). Data no passado
+  /// não agenda nada — o [_schedule] já filtra.
   Future<void> scheduleCycleReadingUnlock({
     required bool isWeekly,
     required DateTime releaseAt,

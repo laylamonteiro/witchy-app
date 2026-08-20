@@ -434,21 +434,26 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       if (!mounted) return;
       setState(() => _existing = result.reading);
 
-      // A leitura nasceu. Marcar a próxima e agendar o convite de volta só
-      // faz sentido para o acesso incluído — é lá que existe espera. Quem
-      // paga por leitura pode comprar de novo agora, e um lembrete de
-      // "já pode" seria mentira (e cobrança disfarçada).
+      // A leitura nasceu. Regeneração NÃO reinicia a contagem (o createdAt
+      // do crédito é preservado), então o convite aponta sempre para o
+      // mesmo dia.
+      final release = result.reading.createdAt
+          .add(CycleReadingService.cooldownFor(credit.periodType));
+
+      // O convite de volta vale para TODO MUNDO: quem pagou para ler uma
+      // vez pode querer ler de novo quando o ciclo recomeçar, e é disso que
+      // o lembrete fala ("passaram-se sete dias, o que seu grimório
+      // guardou?") — não de desbloqueio.
+      await context.read<NotificationProvider>().scheduleCycleReadingUnlock(
+            isWeekly: credit.isWeekly,
+            releaseAt: release,
+          );
+
+      // Já a FAIXA de espera é outra coisa: ela bloqueia, e só o acesso
+      // incluído tem ritmo. Quem paga por leitura nunca é bloqueado.
       if (_lifetimeCoversThisWindow) {
-        // Regeneração NÃO reinicia a contagem (o createdAt do crédito é
-        // preservado), então o lembrete aponta sempre para o mesmo dia.
-        final release = result.reading.createdAt
-            .add(CycleReadingService.cooldownFor(credit.periodType));
         setState(() => _nextAllowedAt =
             release.isAfter(DateTime.now()) ? release : null);
-        await context.read<NotificationProvider>().scheduleCycleReadingUnlock(
-              isWeekly: credit.isWeekly,
-              releaseAt: release,
-            );
       }
       if (!mounted) return;
       await Navigator.of(context).push(

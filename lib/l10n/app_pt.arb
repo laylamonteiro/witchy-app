@@ -2334,7 +2334,7 @@
     }
   },
   "cycleReadingShallowWarning": "Poucos registros neste período: a leitura pode sair rasa. Que tal registrar mais alguns dias antes de comprar?",
-  "cycleReadingCooldownWeek": "Sua próxima Leitura da Semana abre em {days, plural, one{1 dia} other{{days} dias}}. Como ela está incluída no seu Vitalício, o ritmo é o do ciclo: sete dias de vida rendem uma leitura nova.",
+  "cycleReadingCooldownWeek": "Sua próxima Leitura da Semana abre em {days, plural, one{1 dia} other{{days} dias}}. Sete dias de vida rendem uma leitura nova — antes disso, seria reler o mesmo período.",
   "@cycleReadingCooldownWeek": {
     "placeholders": {
       "days": {
@@ -2342,7 +2342,7 @@
       }
     }
   },
-  "cycleReadingCooldownLunation": "Sua próxima Leitura da Lunação abre em {days, plural, one{1 dia} other{{days} dias}}. Como ela está incluída no seu Vitalício, o ritmo é o do ciclo: um ciclo inteiro precisa ser vivido antes de ser lido.",
+  "cycleReadingCooldownLunation": "Sua próxima Leitura da Lunação abre em {days, plural, one{1 dia} other{{days} dias}}. Um ciclo inteiro precisa ser vivido antes de ser lido.",
   "@cycleReadingCooldownLunation": {
     "placeholders": {
       "days": {
@@ -2371,7 +2371,7 @@
   "cycleReadingRejectTooLong": "Um período de leitura vai até 31 dias. Escolha uma janela menor.",
   "cycleReadingRejectFuture": "Só dá para ler um período já vivido. Escolha datas até hoje.",
   "cycleReadingRejectEmpty": "Escolha uma data inicial e uma final.",
-  "cycleReadingRejectOverlaps": "Você já leu um período que cruza estas datas ({start} a {end}). Com o Vitalício, cada leitura cobre um pedaço novo da sua história.",
+  "cycleReadingRejectOverlaps": "Você já leu um período que cruza estas datas ({start} a {end}). Escolha uma janela que ainda não foi lida.",
   "@cycleReadingRejectOverlaps": {
     "placeholders": {
       "start": {

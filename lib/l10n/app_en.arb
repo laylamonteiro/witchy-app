@@ -1626,7 +1626,7 @@
   "cycleReadingDisclaimer": "The reading is an invitation to self-knowledge — never a deterministic prediction about health, money or relationships.",
   "cycleReadingRecordCount": "{count, plural, =0{No records in this lunation yet} one{1 record in this lunation} other{{count} records in this lunation}}",
   "cycleReadingShallowWarning": "Few records in this period: the reading may come out shallow. How about recording a few more days before buying?",
-  "cycleReadingCooldownWeek": "Your next Week Reading opens in {days, plural, one{1 day} other{{days} days}}. Since it is included in your Lifetime, the rhythm follows the cycle: seven days of living make a new reading.",
+  "cycleReadingCooldownWeek": "Your next Week Reading opens in {days, plural, one{1 day} other{{days} days}}. Seven days of living make a new reading — before that, it would only reread the same stretch.",
   "@cycleReadingCooldownWeek": {
     "placeholders": {
       "days": {
@@ -1634,7 +1634,7 @@
       }
     }
   },
-  "cycleReadingCooldownLunation": "Your next Lunation Reading opens in {days, plural, one{1 day} other{{days} days}}. Since it is included in your Lifetime, the rhythm follows the cycle: a whole cycle must be lived before it can be read.",
+  "cycleReadingCooldownLunation": "Your next Lunation Reading opens in {days, plural, one{1 day} other{{days} days}}. A whole cycle has to be lived before it can be read.",
   "@cycleReadingCooldownLunation": {
     "placeholders": {
       "days": {
@@ -1663,7 +1663,7 @@
   "cycleReadingRejectTooLong": "A reading period goes up to 31 days. Choose a shorter window.",
   "cycleReadingRejectFuture": "You can only read a period you have already lived. Choose dates up to today.",
   "cycleReadingRejectEmpty": "Choose a start and an end date.",
-  "cycleReadingRejectOverlaps": "You have already read a period that crosses these dates ({start} to {end}). With Lifetime, each reading covers a new stretch of your story.",
+  "cycleReadingRejectOverlaps": "You have already read a period that crosses these dates ({start} to {end}). Choose a window that hasn't been read yet.",
   "@cycleReadingRejectOverlaps": {
     "placeholders": {
       "start": {
