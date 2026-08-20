@@ -159,12 +159,25 @@ jobs:
           VAR_FAIXA: ${{ vars.PLAY_TRACK }}
         run: |
           FAIXA="${INPUT_FAIXA:-$VAR_FAIXA}"
-          FAIXA="${FAIXA:-internal}"
-
-          if ! echo "$FAIXA" | grep -qE '^[a-zA-Z0-9][a-zA-Z0-9._:-]*$'; then
-            echo "::error::Faixa inválida: '$FAIXA'."
-            exit 1
+          if [ -z "$FAIXA" ]; then
+            echo "::warning::PLAY_TRACK vazio (não é uma *variável* de repositório, ou tem outro nome) — caindo em 'internal'. Se você quer outra faixa, confira Settings → Secrets and variables → Actions → aba VARIABLES."
+            FAIXA="internal"
+          elif [ -n "$INPUT_FAIXA" ]; then
+            echo "Faixa pelo input do botão Run workflow: '$FAIXA'."
+          else
+            echo "Faixa pela variável PLAY_TRACK: '$FAIXA'."
           fi
+
+          # Rejeita só o que quebraria a chamada: vazio (tratado acima),
+          # espaços ou quebras de linha. Acento é permitido — o identificador
+          # da faixa fechada pode ser "Pré-produção", com é/ç/ã, e a API da
+          # Play o aceita como está.
+          case "$FAIXA" in
+            *[[:space:]]*)
+              echo "::error::Faixa '$FAIXA' tem espaço ou quebra de linha — o identificador não pode ter."
+              exit 1
+              ;;
+          esac
 
           # A service account não tem permissão de produção (ver
           # docs/PLAY_SERVICE_ACCOUNT.md); esta guarda existe para o erro
