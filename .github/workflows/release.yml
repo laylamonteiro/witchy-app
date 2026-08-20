@@ -165,6 +165,7 @@ jobs:
           echo "✅ AAB irá para a faixa '$FAIXA'."
 
       - name: 🔑 Conferir secrets obrigatórios
+        id: secrets
         env:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -183,6 +184,14 @@ jobs:
             echo "::error::Secrets ausentes:$faltando — configure antes de publicar (docs/PLAY_SERVICE_ACCOUNT.md para o da Play)."
             exit 1
           fi
+          # O contexto `secrets` NÃO existe em `if:` de step — só `env` e
+          # `steps`. Por isso a presença do secret da Play sai daqui como
+          # output, e o passo seguinte decide por ele.
+          if [ -n "$PLAY_SA" ]; then
+            echo "tem_play=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tem_play=false" >> "$GITHUB_OUTPUT"
+          fi
           echo "Secrets presentes."
 
       - name: 🔎 A faixa existe mesmo na Play?
@@ -193,7 +202,7 @@ jobs:
         #
         # Roda também no dry-run (é o que faz o dry-run realmente provar a
         # faixa); só é pulada se o secret da Play ainda não existir.
-        if: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        if: steps.secrets.outputs.tem_play == 'true'
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           PLAY_TRACK: ${{ steps.faixa.outputs.nome }}
@@ -423,6 +432,20 @@ jobs:
 
       - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
         run: bash scripts/assemble_site.sh public
+
+      - name: 🔖 Carimbo de versão (public/version.txt)
+        # Endereço de deploy é hash e todo build parece igual por fora. Sem
+        # carimbo, "por que a novidade não aparece?" só se responde
+        # adivinhando qual build está servindo aquela aba. Com ele, é abrir
+        # <endereço>/version.txt e ler o commit.
+        run: |
+          {
+            echo "commit:   ${GITHUB_SHA}"
+            echo "branch:   ${GITHUB_REF_NAME}"
+            echo "run:      ${GITHUB_RUN_NUMBER} (${GITHUB_RUN_ID})"
+            echo "buildado: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } > public/version.txt
+          cat public/version.txt
 
       - name: 🛡️ Garantir que nenhum admin foi embutido
         run: |

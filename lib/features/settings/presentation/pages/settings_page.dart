@@ -18,6 +18,7 @@ import '../../../lunar/presentation/providers/lunar_provider.dart';
 import '../../../wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import '../../../auth/auth.dart';
 import '../../../journeys/journeys.dart';
+import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
 import 'about_help_page.dart';
@@ -612,6 +613,19 @@ class SettingsPage extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MagicalProgressPage()),
+            ),
+          ),
+          _buildDivider(context),
+          // Porta permanente da Leitura do Ciclo. Prateleira, não oferta:
+          // o convite do Seu Dia espera o momento certo (streak, registros),
+          // mas quem veio procurar precisa achar sem depender de gatilho.
+          _buildOptionTile(
+            context,
+            icon: Icons.nightlight_round,
+            title: AppLocalizations.of(context).cycleReadingTitle,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CycleReadingIntroPage()),
             ),
           ),
           _buildDivider(context),

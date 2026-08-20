@@ -8,6 +8,7 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../cycle_reading/data/models/cycle_reading_model.dart';
 import '../../../cycle_reading/data/repositories/cycle_reading_repository.dart';
+import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 import '../../../cycle_reading/presentation/pages/cycle_reading_report_page.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
@@ -138,6 +139,53 @@ class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
                         ),
                       ),
                   ],
+                ),
+              ),
+              // Porta permanente da Leitura do Ciclo. Quem abre o acervo é
+              // exatamente quem dá valor ao histórico — e é do histórico
+              // que a leitura é tecida. Faixa fina de propósito: aqui ela
+              // é atalho, não anúncio.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CycleReadingIntroPage(),
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.gc.lilac.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🌙', style: TextStyle(fontSize: 18)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l10n.cycleReadingTitle,
+                            style: TextStyle(
+                              color: context.gc.lilac,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 20,
+                          color: context.gc.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               Expanded(
