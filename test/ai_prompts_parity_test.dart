@@ -44,7 +44,7 @@ void main() {
       test('${entry.key}: o prompt pede exatamente 12 seções', () {
         final prompt = entry.value.magicalProfileSystemPrompt(Gender.fallback);
         expect(
-          RegExp(r'^##\s+\S', multiLine: true).allMatches(prompt).length,
+          RegExp(r'^##[ \t]+\S', multiLine: true).allMatches(prompt).length,
           12,
         );
       });

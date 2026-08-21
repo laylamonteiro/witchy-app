@@ -277,9 +277,14 @@ class AIService {
   }
 
   /// Conta os cabeçalhos `## ` de um markdown — independe do idioma.
+  ///
+  /// O espaço depois do `##` é de MESMA LINHA (`[ \t]`, não `\s`): com `\s`
+  /// o casamento atravessa a quebra de linha, e um `##` solto no fim de uma
+  /// resposta cortada contaria como seção — justamente o caso que esta
+  /// contagem existe para detectar.
   @visibleForTesting
   static int contaSecoes(String texto) =>
-      RegExp(r'^##\s+\S', multiLine: true).allMatches(texto).length;
+      RegExp(r'^##[ \t]+\S', multiLine: true).allMatches(texto).length;
 
   /// Gerar texto do Clima Mágico Diário com IA
   Future<String> generateDailyMagicalWeatherText({
