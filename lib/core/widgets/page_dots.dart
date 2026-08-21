@@ -5,8 +5,11 @@ import '../theme/grimoire_colors.dart';
 /// Os pontinhos que indicam em que página a pessoa está.
 ///
 /// O app tinha três cópias deste mesmo desenho, com geometrias levemente
-/// diferentes (carrossel lunar, onboarding e tour do Salem). Esta é a versão
-/// única; as outras podem migrar para cá numa limpeza separada.
+/// diferentes. A do onboarding saiu com a tela; a do carrossel lunar migrou
+/// para cá. A do tour do Salem fica onde está: lá os pontos são alinhados à
+/// esquerda dentro de um `FittedBox`, sem toque e sem folga vertical — trazer
+/// esta versão mudaria a altura e o alinhamento do balão, e o parâmetro que
+/// resolveria isso só teria um usuário.
 ///
 /// Com [onTap] os pontos viram alvo de toque para pular direto para a página;
 /// sem ele são apenas decorativos — e nesse caso saem da árvore de semântica,
