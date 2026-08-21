@@ -92,8 +92,6 @@ void main() {
           p.cycleReadingSectionInstruction('affirmation'),
       'cycleReadingSectionInstruction (seal)': (p, g) =>
           p.cycleReadingSectionInstruction('seal'),
-      'cycleReadingTeaserSystemPrompt': (p, g) =>
-          p.cycleReadingTeaserSystemPrompt(g),
       'dreamTeaserSystemPrompt': (p, g) => p.dreamTeaserSystemPrompt(g),
       'dailyWeatherTeaserSystemPrompt': (p, g) =>
           p.dailyWeatherTeaserSystemPrompt(g),
@@ -257,18 +255,6 @@ void main() {
       });
     });
 
-    test('a degustação pede só uma amostra, nunca o relatório', () {
-      // Fail-closed: o teaser precisa nascer do tamanho da amostra — se o
-      // prompt deixasse de limitar, a leitura paga vazaria de graça.
-      promptsByLang.forEach((lang, prompts) {
-        for (final gender in Gender.values) {
-          final prompt = prompts.cycleReadingTeaserSystemPrompt(gender);
-          expect(prompt, contains('2'), reason: 'duas frases [$lang]');
-          expect(prompt, contains('JSON'), reason: 'material [$lang]');
-        }
-      });
-    });
-
     test('toda degustação pede duas frases e proíbe inventar fato', () {
       // A degustação é a prova do produto pago: ela precisa ser curta (senão
       // entrega o que é pago) e presa aos fatos recebidos (senão a amostra
@@ -278,7 +264,6 @@ void main() {
         'perfil mágico': (p, g) => p.magicalProfileTeaserSystemPrompt(g),
         'conselheiro': (p, g) => p.counselorTeaserSystemPrompt(g),
         'sonho': (p, g) => p.dreamTeaserSystemPrompt(g),
-        'leitura do ciclo': (p, g) => p.cycleReadingTeaserSystemPrompt(g),
       };
       promptsByLang.forEach((lang, prompts) {
         teasers.forEach((name, probe) {

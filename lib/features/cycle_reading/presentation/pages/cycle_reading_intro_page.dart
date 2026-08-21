@@ -3,11 +3,8 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/ai/ai_service.dart';
 import '../../../../core/config/revenuecat_config.dart';
 import '../../../../core/offers/offer_engine.dart';
-import '../../../../core/offers/teaser_cache.dart';
-import '../../../../core/offers/teaser_reveal.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -86,6 +83,14 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Leitura já gerada que cruza a janela escolhida — AVISO, nunca recusa.
   CycleReadingModel? _conflito;
 
+  /// O preço só entra em cena depois que a pessoa pede a leitura completa.
+  ///
+  /// Antes disso a tela mostra o que a leitura É — o período, o que ela tem
+  /// dentro, quantos registros vai usar. Preço na primeira dobra faz a
+  /// decisão começar por "quanto custa" em vez de "o que é isso"; e quem
+  /// nem sabe o que está comprando responde não.
+  bool _ofertaAberta = false;
+
   /// Esta janela sai de graça pelo Vitalício? Exige compra REAL do lifetime
   /// (entitlement sem expiração) — `SubscriptionPlan.lifetime` não serve,
   /// porque também vem de Código Premium e do admin.
@@ -107,10 +112,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   bool _isWorking = false;
   int _recordCount = 0;
   CycleReadingModel? _existing;
-
-  /// A amostra desta janela (null = ainda não pedida).
-  String? _teaser;
-  bool _isTeasing = false;
 
   /// Preço por janela (null = produto indisponível nesta plataforma/loja).
   final Map<String, String?> _prices = {};
@@ -137,10 +138,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       _periodType =
           CycleReadingService.periodTypeForSpan(janela.start, janela.end);
       _periodoEscolhido = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        await _load();
-        await _restoreCachedTeaser();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load();
       });
     }
   }
@@ -237,13 +236,11 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       _periodType = veredito.periodType;
       _conflito = veredito.conflict;
       _customRejection = null;
-      // Amostra é por janela: janela nova, amostra nova.
-      _teaser = null;
       _periodoEscolhido = true;
+      _ofertaAberta = false;
       _isLoading = true;
     });
     await _load();
-    await _restoreCachedTeaser();
   }
 
   /// Volta para o calendário mantendo a janela marcada — trocar de período é
@@ -253,6 +250,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     setState(() {
       _periodoEscolhido = false;
       _customRejection = null;
+      _ofertaAberta = false;
     });
   }
 
@@ -274,53 +272,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         return l10n.cycleReadingRejectEmpty;
       default:
         return null;
-    }
-  }
-
-  /// Chave da amostra: uma por janela (tipo + início do período).
-  String get _teaserKey {
-    final start = _period.start;
-    return '${_periodType}_${start.year}-${start.month}-${start.day}';
-  }
-
-  /// Reexibe a amostra já paga em IA, sem gastar outra chamada.
-  Future<void> _restoreCachedTeaser() async {
-    final cached = await TeaserAiCache.get('cycle_reading', _teaserKey);
-    if (!mounted || cached == null) return;
-    setState(() => _teaser = cached);
-  }
-
-  /// Gera a amostra desta janela (uma única vez — depois vem do cache).
-  Future<void> _loadTeaser() async {
-    if (_isTeasing) return;
-    setState(() => _isTeasing = true);
-    final messenger = ScaffoldMessenger.of(context);
-    final alertColor = context.gc.alert;
-    final l10n = AppLocalizations.of(context);
-    final userId = context.read<AuthProvider>().currentUser.id;
-    final period = _period;
-    try {
-      final material = await _service.composer.compose(
-        userId: userId,
-        start: period.start,
-        end: period.end,
-        periodType: _periodType,
-        options: _options,
-      );
-      final sample = await AIService.instance.generateCycleReadingTeaser(
-        materialJson: material.compactJson,
-      );
-      await TeaserAiCache.put('cycle_reading', _teaserKey, sample);
-      if (!mounted) return;
-      setState(() => _teaser = sample);
-    } catch (_) {
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-        content: Text(l10n.cycleReadingTeaserFailed),
-        backgroundColor: alertColor,
-      ));
-    } finally {
-      if (mounted) setState(() => _isTeasing = false);
     }
   }
 
@@ -548,7 +499,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     );
   }
 
-  /// Etapa 2: a oferta que a janela escolhida fez nascer, e o resto da tela.
+  /// Etapa 2: a leitura que a janela escolhida faria — e, só quando pedida,
+  /// a oferta.
   Widget _buildOferta(AppLocalizations l10n) {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 32),
@@ -556,12 +508,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildOfferCard(l10n),
-          // A degustação vem ANTES do "o que vem na leitura": o gostinho
-          // real convence mais que a lista de seções.
-          // Quem já tem a janela incluída no Vitalício não degusta o
-          // que já é dele.
-          if (!_isLoading && _existing == null && !_lifetimeCoversThisWindow)
-            _buildTeaserCard(l10n),
           _buildSumario(l10n),
           // Sanfona: recolhida por padrão, para não tomar a tela. Quem quer
           // ajustar a privacidade abre; quem confia no padrão (tudo ligado)
@@ -704,16 +650,18 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         _ => l10n.cycleReadingSectionSeal,
       };
 
-  /// O cartão da oferta: o produto que a janela virou, por quanto, com o que
-  /// ela tem dentro — e o botão. Tudo o que decide a compra num lugar só.
+  /// O cartão da leitura: o que a janela escolhida virou, o que ela tem
+  /// dentro — e, só quando pedido, quanto custa.
   Widget _buildOfferCard(AppLocalizations l10n) {
     final format = DateFormat('dd/MM/yyyy');
     final period = _period;
     final isWeek = _periodType == CycleReadingPeriodType.week;
     final incluida = _lifetimeCoversThisWindow;
+    // O preço só aparece quando é informação e não obstáculo: pedido pela
+    // pessoa, ou quando não há preço nenhum a temer (janela incluída).
     final preco = incluida
         ? l10n.cycleReadingLifetimeTag
-        : _prices[_productId];
+        : (_ofertaAberta ? _prices[_productId] : null);
     final titulo =
         isWeek ? l10n.cycleReadingWeekTitle : l10n.cycleReadingLunationTitle;
 
@@ -803,7 +751,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
               ),
             ],
             const SizedBox(height: 16),
-            _buildActions(l10n),
+            _buildAcaoOuOferta(l10n),
           ],
           const SizedBox(height: 4),
           Center(
@@ -815,6 +763,26 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// O que fica embaixo do cartão: o pedido, ou a oferta que ele destrancou.
+  ///
+  /// Só o caminho de COMPRA tem duas etapas. Crédito já pago, leitura já
+  /// gerada e janela incluída no Vitalício vão direto ao botão que resolve —
+  /// esconder preço de quem não vai pagar preço nenhum seria só um toque a
+  /// mais no caminho.
+  Widget _buildAcaoOuOferta(AppLocalizations l10n) {
+    final precisaComprar = !_isWorking &&
+        _existing == null &&
+        !_lifetimeCoversThisWindow;
+
+    if (!precisaComprar || _ofertaAberta) return _buildActions(l10n);
+
+    return ElevatedButton.icon(
+      onPressed: () => setState(() => _ofertaAberta = true),
+      icon: const Icon(Icons.auto_awesome, size: 18),
+      label: Text(l10n.cycleReadingWantFull),
     );
   }
 
@@ -830,76 +798,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       child: Text(
         texto,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cor),
-      ),
-    );
-  }
-
-  /// A degustação: duas frases REAIS sobre o período, o resto sob véu.
-  ///
-  /// É o mesmo princípio das outras degustações do app — mostrar valor real
-  /// no momento em que ele existe. A amostra nasce já do tamanho certo (o
-  /// relatório completo nem é gerado) e fica cacheada por janela, porque
-  /// cada geração custa uma chamada de IA de verdade.
-  Widget _buildTeaserCard(AppLocalizations l10n) {
-    // Acento amarelo: é a única coisa GRÁTIS da tela e a que mais convence.
-    // Passar despercebida entre cartões neutros era desperdício.
-    return MagicalCard.accent(
-      accent: context.gc.starYellow,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('✨ ', style: TextStyle(color: context.gc.starYellow)),
-              Expanded(
-                child: Text(
-                  l10n.cycleReadingTeaserTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: context.gc.lilac,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (_teaser == null) ...[
-            Text(
-              l10n.cycleReadingTeaserIntro,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 10),
-            Center(
-              child: OutlinedButton.icon(
-                onPressed: _isTeasing ? null : _loadTeaser,
-                icon: _isTeasing
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.gc.lilac,
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome, size: 18),
-                label: Text(l10n.cycleReadingTeaserPeek),
-              ),
-            ),
-          ] else
-            TeaserReveal(
-              sample: Text(
-                _teaser!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      height: 1.5,
-                    ),
-              ),
-              ctaLabel: l10n.cycleReadingTeaserCta,
-              onCta: _buy,
-            ),
-        ],
       ),
     );
   }
