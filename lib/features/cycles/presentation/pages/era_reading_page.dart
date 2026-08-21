@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/highlighted_text.dart';
 import '../../../../core/widgets/paged_reading.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/data/models/feature_access.dart';
@@ -141,7 +142,9 @@ class _Trecho extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
+        // As expressões marcadas no conteúdo saem realçadas: dão pontos de
+        // apoio para o olho e fazem a leitura parecer escrita para a pessoa.
+        HighlightedText(
           corpo,
           style: tema.textTheme.bodyMedium?.copyWith(
             color: context.gc.textPrimary,
