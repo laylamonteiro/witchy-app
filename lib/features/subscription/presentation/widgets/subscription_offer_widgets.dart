@@ -542,7 +542,7 @@ class SubscriptionPlanSelector extends StatelessWidget {
       title: l10n.premiumPlanYearly,
       price: yearlyPrice,
       period: l10n.premiumPerYear,
-      savings: l10n.premiumSave33,
+      savings: l10n.premiumSaveYearly,
       popular: true,
       emphasized: true,
       selected: selectedPlan == SubscriptionType.yearly,

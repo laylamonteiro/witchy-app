@@ -438,13 +438,15 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                 selectedPlan: _selectedPlan,
                                 onSelected: (plan) =>
                                     setState(() => _selectedPlan = plan),
+                                // Só aparecem enquanto a loja não respondeu:
+                                // o preço de verdade vem da RevenueCat.
                                 monthlyPrice: _priceFor(
                                   SubscriptionType.monthly,
-                                  'R\$ 9,90',
+                                  'R\$ 19,90',
                                 ),
                                 yearlyPrice: _priceFor(
                                   SubscriptionType.yearly,
-                                  'R\$ 89,90',
+                                  'R\$ 119,90',
                                 ),
                                 lifetimePrice: lifetimeAvailable
                                     ? _priceFor(
