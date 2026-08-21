@@ -116,3 +116,64 @@ class RequireAuth extends StatelessWidget {
     return child;
   }
 }
+
+/// O oposto de [RequireAuth]: telas de ENTRADA que quem já entrou não deve
+/// ver — boas-vindas, login e cadastro.
+///
+/// Na web o botão (ou gesto) de voltar caminha pelo histórico do navegador,
+/// e o histórico guarda a URL de antes do login. Sem esta verificação, um
+/// voltar depois de entrar reabria `#/login` — a tela de login por cima de
+/// uma sessão viva. A pessoa não era deslogada, mas via a porta de entrada
+/// de novo, o que é indistinguível de ter sido.
+///
+/// A correção não é só mostrar a Home no lugar: é TROCAR de rota, com a
+/// pilha limpa. Renderizar a Home sob a URL `#/login` deixaria o endereço
+/// mentindo e a rota de entrada guardada no histórico, pronta para o mesmo
+/// susto no voltar seguinte.
+class GuestOnly extends StatefulWidget {
+  final Widget child;
+
+  const GuestOnly({super.key, required this.child});
+
+  @override
+  State<GuestOnly> createState() => _GuestOnlyState();
+}
+
+class _GuestOnlyState extends State<GuestOnly> {
+  bool _redirecionando = false;
+
+  void _paraHome() {
+    if (_redirecionando) return;
+    _redirecionando = true;
+    // Depois do frame: durante o build não se navega. Se a própria tela de
+    // login já tiver empurrado a Home (o caminho normal do login), este
+    // widget já saiu da árvore e o `mounted` cancela a segunda ida.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      debugLog('NAV', 'GuestOnly: sessão viva → /home');
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
+    // Antes de a sessão ser lida do disco não se decide nada: mostrar a tela
+    // de login por meio segundo e trocar por Home é pior que esperar.
+    if (!authProvider.isInitialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (authProvider.currentUser.isAuthenticated) {
+      _paraHome();
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return widget.child;
+  }
+}
