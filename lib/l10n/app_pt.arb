@@ -2310,7 +2310,6 @@
   "cycleReadingSectionSeal": "🌙 Palavras-chave do ciclo",
   "cycleReadingIntroTagline": "O oráculo lê o seu grimório: uma análise mágica única da sua lunação, tecida a partir do que você registrou.",
   "cycleReadingIntroWhatTitle": "O que vem na leitura",
-  "cycleReadingIntroWhatBody": "Sete seções só suas: retrato do momento, os fios que se repetem, o céu sobre você (trânsitos e fases da lua), sua prática, rituais para o próximo ciclo, uma afirmação sob medida e as palavras-chave do ciclo — tudo salvo para sempre em Meus Registros.",
   "cycleReadingDisclaimer": "A leitura é um convite ao autoconhecimento — nunca uma previsão determinista de saúde, dinheiro ou relacionamentos.",
   "cycleReadingRecordCount": "{count, plural, =0{Nenhum registro nesta lunação ainda} one{1 registro nesta lunação} other{{count} registros nesta lunação}}",
   "@cycleReadingRecordCount": {
@@ -2424,7 +2423,6 @@
       }
     }
   },
-  "cycleReadingWeekWhatBody": "Quatro seções diretas sobre os seus últimos sete dias: retrato do momento, os fios que se repetem, o céu sobre você e uma afirmação sob medida — salvas para sempre em Meus Registros. O balanço da prática, os rituais do próximo ciclo e as palavras-chave são da Leitura da Lunação.",
   "dreamTeaserTitle": "O que este sonho quer dizer?",
   "dreamTeaserIntro": "A interpretação completa é do Premium — mas o primeiro fio é seu.",
   "dreamTeaserPeek": "Espiar a interpretação",
@@ -2552,7 +2550,18 @@
   "cyclesRulerJupiter": "Júpiter",
   "cyclesRulerSaturno": "Saturno",
   "cyclesRulerMercurio": "Mercúrio",
-  "cyclesReadingCardSubtitle": "Uma leitura da sua semana ou da sua lunação, tecida do que você registrou",
+  "cyclesReadingCardPitch": "Sete partes tecidas do que você viveu: o retrato do momento, os fios que se repetem, o céu sobre você e rituais para o ciclo que vem",
+  "cyclesReadingCardCta": "Ver o que este ciclo tem a dizer",
+  "cyclesReadingCardReady": "Sua leitura desta lunação está pronta",
+  "cyclesReadingCardEmpty": "Esta lunação ainda está em branco no seu grimório",
+  "cyclesReadingCardDaysLeft": "{days, plural, =0{Esta lunação fecha hoje} one{Falta 1 dia para esta lunação fechar} other{Faltam {days} dias para esta lunação fechar}}",
+  "@cyclesReadingCardDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "cyclesTabIntro": "Onde você está no tempo — a semana, a lunação e os 120 anos da sua vida",
   "cyclesMonthTitle": "Este mês",
   "cyclesMonthSubtitle": "O que o céu faz nas próximas semanas",

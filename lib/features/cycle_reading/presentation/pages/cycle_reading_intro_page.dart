@@ -37,9 +37,17 @@ class CycleReadingIntroPage extends StatefulWidget {
   /// lunação; a porta de entrada barata é a semana).
   final String initialPeriodType;
 
+  /// Abrir JÁ nesta janela, pulando o calendário.
+  ///
+  /// É o caminho de quem vem de um cartão que fala de um período concreto
+  /// ("sua leitura desta lunação está pronta"): mandar essa pessoa escolher
+  /// datas seria pedir de novo o que ela já disse.
+  final ({DateTime start, DateTime end})? initialPeriod;
+
   const CycleReadingIntroPage({
     super.key,
     this.initialPeriodType = CycleReadingPeriodType.lunation,
+    this.initialPeriod,
   });
 
   @override
@@ -122,6 +130,19 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // janela. O que a primeira tela precisa é do calendário.
     _loadPrices();
     _carregarDensidade();
+
+    final janela = widget.initialPeriod;
+    if (janela != null) {
+      _customPeriod = janela;
+      _periodType =
+          CycleReadingService.periodTypeForSpan(janela.start, janela.end);
+      _periodoEscolhido = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await _load();
+        await _restoreCachedTeaser();
+      });
+    }
   }
 
   /// O mapa de calor do último ano — quantos registros em cada dia.
@@ -541,35 +562,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           // que já é dele.
           if (!_isLoading && _existing == null && !_lifetimeCoversThisWindow)
             _buildTeaserCard(l10n),
-          MagicalCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.cycleReadingIntroWhatTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: context.gc.lilac,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _periodType == CycleReadingPeriodType.week
-                      ? l10n.cycleReadingWeekWhatBody
-                      : l10n.cycleReadingIntroWhatBody,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.cycleReadingDisclaimer,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.gc.textSecondary,
-                        fontStyle: FontStyle.italic,
-                      ),
-                ),
-              ],
-            ),
-          ),
+          _buildSumario(l10n),
           // Sanfona: recolhida por padrão, para não tomar a tela. Quem quer
           // ajustar a privacidade abre; quem confia no padrão (tudo ligado)
           // segue direto para a compra.
@@ -630,6 +623,86 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       ),
     );
   }
+
+  /// O sumário da leitura: as seções, uma a uma, com cadeado.
+  ///
+  /// A lista faz o que o parágrafo não fazia — dá forma ao que vem dentro.
+  /// Ver sete títulos concretos, cada um prometendo uma coisa diferente
+  /// sobre a SUA vida, cria a curiosidade que "sete seções personalizadas"
+  /// não cria. O cadeado some quando a leitura é sua.
+  Widget _buildSumario(AppLocalizations l10n) {
+    final chaves = CycleReadingSections.forPeriod(_periodType);
+    final destrancada = _existing != null || _lifetimeCoversThisWindow;
+
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.cycleReadingIntroWhatTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: context.gc.lilac,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 10),
+          for (final chave in chaves)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    destrancada ? Icons.check_circle_outline : Icons.lock,
+                    size: 16,
+                    color: destrancada
+                        ? context.gc.lilac
+                        : context.gc.textSecondary.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _tituloDaSecao(l10n, chave),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: context.gc.textPrimary,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.cycleReadingSavedToArchive,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.cycleReadingDisclaimer,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// O título de cada seção, no idioma da tela. As chaves são invariantes;
+  /// os títulos, não.
+  String _tituloDaSecao(AppLocalizations l10n, String chave) =>
+      switch (chave) {
+        CycleReadingSections.portrait => l10n.cycleReadingSectionPortrait,
+        CycleReadingSections.threads => l10n.cycleReadingSectionThreads,
+        CycleReadingSections.sky => l10n.cycleReadingSectionSky,
+        CycleReadingSections.practice => l10n.cycleReadingSectionPractice,
+        CycleReadingSections.rituals => l10n.cycleReadingSectionRituals,
+        CycleReadingSections.affirmation => l10n.cycleReadingSectionAffirmation,
+        _ => l10n.cycleReadingSectionSeal,
+      };
 
   /// O cartão da oferta: o produto que a janela virou, por quanto, com o que
   /// ela tem dentro — e o botão. Tudo o que decide a compra num lugar só.
@@ -768,7 +841,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// relatório completo nem é gerado) e fica cacheada por janela, porque
   /// cada geração custa uma chamada de IA de verdade.
   Widget _buildTeaserCard(AppLocalizations l10n) {
-    return MagicalCard(
+    // Acento amarelo: é a única coisa GRÁTIS da tela e a que mais convence.
+    // Passar despercebida entre cartões neutros era desperdício.
+    return MagicalCard.accent(
+      accent: context.gc.starYellow,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

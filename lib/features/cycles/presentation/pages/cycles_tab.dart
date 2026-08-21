@@ -9,6 +9,8 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../astrology/presentation/pages/birth_chart_input_page.dart';
 import '../../../astrology/presentation/providers/astrology_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../cycle_reading/data/models/cycle_reading_model.dart';
+import '../../../cycle_reading/data/services/cycle_reading_service.dart';
 import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 import '../../data/data_sources/life_eras_content.dart';
 import '../../data/models/life_eras_state.dart';
@@ -90,6 +92,10 @@ class _CyclesBodyState extends State<_CyclesBody> {
             customArt: const CyclesEmblemArt(),
             intro: l10n.cyclesTabIntro,
           ),
+          // A Leitura do Ciclo abre a aba: é a única coisa aqui que fala do
+          // que a PESSOA viveu (as Eras e o mês falam do céu), a única que
+          // muda toda semana, e a única que se compra.
+          const _CartaoDaLeituraDoCiclo(),
           if (estado == null || eras.carregando)
             const _Carregando()
           else
@@ -101,9 +107,7 @@ class _CyclesBodyState extends State<_CyclesBody> {
               LifeErasIncomplete() => [const _SemMapa()],
               LifeErasError() => [const _DeuErrado()],
             },
-          // Do longo ao curto: as Eras (120 anos), o mês, e a semana/lunação.
           const MonthSkyCard(),
-          _CartaoDaLeituraDoCiclo(titulo: l10n.cycleReadingTitle),
           const SizedBox(height: 12),
         ],
       ),
@@ -348,46 +352,191 @@ class _DeuErrado extends StatelessWidget {
   }
 }
 
-/// A escala curta: a Leitura do Ciclo, que já existe, agora com casa própria.
-class _CartaoDaLeituraDoCiclo extends StatelessWidget {
-  const _CartaoDaLeituraDoCiclo({required this.titulo});
+/// A Leitura do Ciclo na aba Ciclos — o cartão que abre a seção.
+///
+/// Desenhado para ser lido em dois segundos e dar vontade de tocar, sem
+/// inventar urgência nenhuma. Tudo o que ele diz é verificável:
+///
+/// - **O que já é seu.** "Sua lunação rendeu 14 registros" é o número real
+///   do banco. A matéria-prima da leitura já existe e é dela — ver isso
+///   escrito vale mais que qualquer adjetivo sobre o produto.
+/// - **Um prazo de verdade.** A lunação fecha sozinha, num dia que a
+///   astronomia decidiu. A barra mostra quanto do ciclo já passou e quantos
+///   dias faltam: é o relógio do próprio céu, não uma contagem inventada
+///   para apressar ninguém.
+/// - **Curiosidade com substância.** Em vez de "compre sua leitura", o
+///   cartão nomeia o que vem dentro — o retrato do momento, os fios que se
+///   repetem — sem entregar nada.
+/// - **Estado antes de venda.** Se a leitura desta lunação já existe, o
+///   cartão vira porta para ela; se está paga e não gerada, vira o botão de
+///   gerar. Vender de novo o que a pessoa já comprou é o jeito mais rápido
+///   de perder a confiança dela.
+class _CartaoDaLeituraDoCiclo extends StatefulWidget {
+  const _CartaoDaLeituraDoCiclo();
 
-  final String titulo;
+  @override
+  State<_CartaoDaLeituraDoCiclo> createState() =>
+      _CartaoDaLeituraDoCicloState();
+}
+
+class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
+  final CycleReadingService _service = CycleReadingService();
+
+  bool _carregando = true;
+  int _registros = 0;
+  CycleReadingModel? _leitura;
+  late ({DateTime start, DateTime end}) _lunacao =
+      CycleReadingService.currentLunation();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _carregar();
+    });
+  }
+
+  Future<void> _carregar() async {
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final lunacao = CycleReadingService.currentLunation();
+    final registros = await _service.composer.countPeriodRecords(
+      userId: userId,
+      start: lunacao.start,
+      end: lunacao.end,
+    );
+    final leitura = await _service.repository.findForPeriod(
+      userId,
+      lunacao.start,
+      periodType: CycleReadingPeriodType.lunation,
+    );
+    if (!mounted) return;
+    setState(() {
+      _lunacao = lunacao;
+      _registros = registros;
+      _leitura = leitura;
+      _carregando = false;
+    });
+  }
+
+  /// Quanto da lunação já passou (0..1) — o relógio do céu.
+  double get _percorrido {
+    final total = _lunacao.end.difference(_lunacao.start).inMinutes;
+    if (total <= 0) return 0;
+    final andado = DateTime.now().difference(_lunacao.start).inMinutes;
+    return (andado / total).clamp(0.0, 1.0);
+  }
+
+  /// Dias que faltam para o ciclo fechar, arredondando para cima (faltando
+  /// 6 horas ainda é "1 dia", nunca "0").
+  int get _diasRestantes {
+    final restante = _lunacao.end.difference(DateTime.now());
+    if (restante.isNegative) return 0;
+    return restante.inHours ~/ 24 + (restante.inHours % 24 > 0 ? 1 : 0);
+  }
+
+  Future<void> _abrir() async {
+    // Com leitura (pronta ou paga) desta lunação, a tela abre NELA: quem
+    // veio de "sua leitura está pronta" não pode cair num calendário.
+    final janela = _leitura == null ? null : _lunacao;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CycleReadingIntroPage(initialPeriod: janela),
+      ),
+    );
+    // Voltou da tela: pode ter comprado, gerado ou lido — o cartão relê o
+    // seu estado em vez de continuar mostrando o de antes.
+    if (mounted) _carregar();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tema = Theme.of(context);
+    final leitura = _leitura;
 
-    return MagicalCard(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const CycleReadingIntroPage()),
-      ),
-      child: Row(
+    // Chamada e botão mudam com o estado — nunca oferecer a compra de algo
+    // que a pessoa já tem.
+    final (String chamada, String rotulo) = switch (leitura) {
+      final l? when l.isGenerated =>
+        (l10n.cyclesReadingCardReady, l10n.cycleReadingOpenReport),
+      final l? when l.isPending =>
+        (l10n.cycleReadingPendingCredit, l10n.cycleReadingGenerate),
+      _ when _registros == 0 =>
+        (l10n.cyclesReadingCardEmpty, l10n.cyclesReadingCardCta),
+      _ => (l10n.cycleReadingOfferTitle(_registros), l10n.cyclesReadingCardCta),
+    };
+
+    return MagicalCard.hero(
+      accent: context.gc.lilac,
+      onTap: _abrir,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('🌙', style: TextStyle(fontSize: 34)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  titulo,
-                  style: tema.textTheme.titleMedium?.copyWith(
-                    color: context.gc.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('🌙', style: TextStyle(fontSize: 34)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.cycleReadingTitle,
+                      style: tema.textTheme.titleLarge?.copyWith(
+                        color: context.gc.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      chamada,
+                      style: tema.textTheme.bodyMedium?.copyWith(
+                        color: context.gc.lilac,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.cyclesReadingCardSubtitle,
-                  style: tema.textTheme.bodySmall
-                      ?.copyWith(color: context.gc.textSecondary),
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.cyclesReadingCardPitch,
+            style: tema.textTheme.bodySmall?.copyWith(
+              color: context.gc.textSecondary,
+              height: 1.45,
             ),
           ),
-          Icon(Icons.arrow_forward_ios, size: 16, color: context.gc.lilac),
+          const SizedBox(height: 14),
+          // O relógio do céu: quanto da lunação já passou.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: _percorrido,
+              minHeight: 6,
+              backgroundColor: context.gc.lilac.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(context.gc.lilac),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.cyclesReadingCardDaysLeft(_diasRestantes),
+            style: tema.textTheme.bodySmall
+                ?.copyWith(color: context.gc.textSecondary),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              // Enquanto a contagem não chegou, o botão espera: um rótulo
+              // que muda debaixo do dedo é pior que meio segundo de espera.
+              onPressed: _carregando ? null : _abrir,
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text(rotulo),
+            ),
+          ),
         ],
       ),
     );
