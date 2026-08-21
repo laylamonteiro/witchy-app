@@ -1664,6 +1664,17 @@
   "cycleReadingUnavailable": "Compra no disponible por el momento. Inténtalo más tarde.",
   "cycleReadingShareAffirmation": "Compartir afirmación",
   "cycleReadingShareSeal": "Compartir las palabras clave",
+  "cycleReadingSaveRitual": "Guardar en mis hechizos",
+  "cycleReadingRitualSaved": "Guardado en tus hechizos",
+  "cycleReadingRitualPurpose": "Ritual sugerido por tu Lectura del Ciclo",
+  "cycleReadingRitualFrom": "Sugerido por tu Lectura del Ciclo de {period}",
+  "@cycleReadingRitualFrom": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
   "cycleReadingSavedToArchive": "Guardada en Mis Registros — tu lectura queda en tu archivo para siempre.",
   "cycleReadingOfferTitle": "{count, plural, one{Tu lunación rindió 1 registro} other{Tu lunación rindió {count} registros}}",
   "cycleReadingOfferBody": "¿Quieres su lectura? El oráculo entreteje tus registros y el cielo del período en un análisis solo tuyo.",

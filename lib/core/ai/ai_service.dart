@@ -341,7 +341,21 @@ class AIService {
       cut = m.end;
     }
     final cortado = cut > 0 ? trimmed.substring(0, cut).trimRight() : trimmed;
-    return semTituloOrfao(cortado);
+    return semTituloOrfao(semRealcePendurado(cortado));
+  }
+
+  /// Fecha (removendo) uma marcação de realce que o corte deixou aberta.
+  ///
+  /// `**` sem par não é realce: o Markdown mostra os asteriscos na tela, e a
+  /// pessoa vê "do **Ritual" no meio do texto. Ímpar significa pendurado, e
+  /// o último é o culpado.
+  @visibleForTesting
+  static String semRealcePendurado(String texto) {
+    final marcas = '**'.allMatches(texto).length;
+    if (marcas.isEven) return texto;
+    final ultima = texto.lastIndexOf('**');
+    return (texto.substring(0, ultima) + texto.substring(ultima + 2))
+        .trimRight();
   }
 
   /// Remove um cabeçalho de seção que ficou sem corpo no fim do texto.
@@ -1595,7 +1609,11 @@ class AIService {
           userText: userText,
           tag: 'leitura do ciclo',
           temperature: 0.7,
-          maxTokens: 700,
+          // 700 dava para o parágrafo pedido, mas não para um período cheio:
+          // "sua prática" cita feitiços, ritos e notas um a um, e vinha
+          // cortada no meio da frase. O dobro do necessário custa pouco e
+          // some com a classe inteira de defeito.
+          maxTokens: 1400,
           receiveTimeout: const Duration(seconds: 45),
         );
         return content.trim();

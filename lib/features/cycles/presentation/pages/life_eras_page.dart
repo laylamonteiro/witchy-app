@@ -228,6 +228,10 @@ class _Agora extends StatelessWidget {
               ],
             ),
           ),
+          // Cores de card comum, e não de fundo de acento: o `hero` mistura
+          // o acento a 24% sobre a superfície, ou seja, o fundo continua
+          // ESCURO. Com `onPrimary` — que é a cor de texto para fundo claro —
+          // o cartão saía escuro sobre escuro, praticamente ilegível.
           MagicalCard.hero(
             accent: context.gc.lilac,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -239,18 +243,18 @@ class _Agora extends StatelessWidget {
                 Text(
                   l10n.cyclesCurrentPhaseLabel,
                   style: tema.textTheme.bodySmall
-                      ?.copyWith(color: context.gc.onPrimary),
+                      ?.copyWith(color: context.gc.textSecondary),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   textoFase.titulo,
                   style: tema.textTheme.titleMedium?.copyWith(
-                    color: context.gc.onPrimary,
+                    color: context.gc.lilac,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
-                CycleTagChips(tags: textoFase.tags, onAccent: true),
+                CycleTagChips(tags: textoFase.tags),
                 const SizedBox(height: 12),
                 Text(
                   '${l10n.cyclesPeriodRange(
@@ -258,7 +262,7 @@ class _Agora extends StatelessWidget {
                     formatarMesAno(context, fase.fim),
                   )}  ·  ${formatarIntervalo(l10n, fase.inicio, fase.fim)}',
                   style: tema.textTheme.bodySmall
-                      ?.copyWith(color: context.gc.onPrimary),
+                      ?.copyWith(color: context.gc.textSecondary),
                 ),
               ],
             ),

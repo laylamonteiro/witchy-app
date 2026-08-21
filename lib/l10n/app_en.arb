@@ -1664,6 +1664,17 @@
   "cycleReadingUnavailable": "Purchase unavailable at the moment. Try again later.",
   "cycleReadingShareAffirmation": "Share affirmation",
   "cycleReadingShareSeal": "Share the keywords",
+  "cycleReadingSaveRitual": "Save to my spells",
+  "cycleReadingRitualSaved": "Saved to your spells",
+  "cycleReadingRitualPurpose": "Ritual suggested by your Cycle Reading",
+  "cycleReadingRitualFrom": "Suggested by your Cycle Reading of {period}",
+  "@cycleReadingRitualFrom": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
   "cycleReadingSavedToArchive": "Saved in My Records — your reading stays in your archive forever.",
   "cycleReadingOfferTitle": "{count, plural, one{Your lunation yielded 1 record} other{Your lunation yielded {count} records}}",
   "cycleReadingOfferBody": "Want its reading? The oracle weaves your records and the sky of the period into an analysis that is only yours.",

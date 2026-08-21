@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:provider/provider.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
@@ -8,7 +9,11 @@ import '../../../../core/sharing/share_card_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/paged_reading.dart';
+import '../../../../core/widgets/magical_card.dart';
 import '../../../diary/data/models/free_writing_model.dart';
+import '../../../grimoire/data/models/spell_model.dart';
+import '../../../grimoire/presentation/pages/spell_detail_page.dart';
+import '../../../grimoire/presentation/providers/spell_provider.dart';
 import '../../data/models/cycle_reading_model.dart';
 import '../../data/services/cycle_reading_service.dart';
 
@@ -55,6 +60,9 @@ class CycleReadingReportPage extends StatelessWidget {
     final secoes = _sections(corpo);
     final ondeVaiAAfirmacao =
         _indiceDaAfirmacao(secoes, l10n, resolvedAffirmation);
+    final ondeVaoOsRituais = secoes.indexWhere(
+      (secao) => secao.contains(l10n.cycleReadingSectionRituals),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -105,6 +113,9 @@ class CycleReadingReportPage extends StatelessWidget {
                       // seção era outro.
                       palavrasChave:
                           i == secoes.length - 1 ? resolvedSeal : const [],
+                      // Os rituais deixam de ser uma lista corrida: cada um
+                      // ganha cartão e um botão para virar feitiço.
+                      rituais: i == ondeVaoOsRituais,
                       ultima: i == secoes.length - 1,
                     ),
                 ],
@@ -146,12 +157,23 @@ class CycleReadingReportPage extends StatelessWidget {
     required String? afirmacao,
     required List<String> palavrasChave,
     required bool ultima,
+    bool rituais = false,
   }) {
+    final ritos = rituais ? _rituais(secao) : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _markdown(context, secao),
+        if (ritos != null) ...[
+          _markdown(context, ritos.cabecalho),
+          for (final rito in ritos.itens)
+            _CartaoDeRitual(
+              nome: rito.nome,
+              corpo: rito.corpo,
+              periodo: _periodoParaNota(),
+            ),
+        ] else
+          _markdown(context, secao),
         if (_temAfirmacao(afirmacao)) ...[
           const SizedBox(height: 20),
           _botaoAfirmacao(context, l10n, afirmacao!),
@@ -166,6 +188,69 @@ class CycleReadingReportPage extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  /// Recorta a seção dos rituais em cabeçalho + um item por ritual.
+  ///
+  /// A geração pede uma lista com "-", e cada item vem como
+  /// `**Nome do ritual**: como fazer`. Se o formato não for esse (leitura
+  /// antiga, geração torta), devolve null e a seção segue como texto — é um
+  /// produto pago e não pode depender do formato exato que a IA produziu.
+  static ({String cabecalho, List<({String nome, String corpo})> itens})?
+      _rituais(String secao) {
+    final linhas = secao.split('\n');
+    final cabecalho = <String>[];
+    final blocos = <List<String>>[];
+
+    for (final linha in linhas) {
+      final limpa = linha.trimLeft();
+      final marcador = RegExp(r'^[-*+]\s+');
+      if (marcador.hasMatch(limpa)) {
+        blocos.add([limpa.replaceFirst(marcador, '')]);
+      } else if (blocos.isEmpty) {
+        cabecalho.add(linha);
+      } else if (limpa.isNotEmpty) {
+        // Continuação do item anterior (a IA quebra linha no meio).
+        blocos.last.add(limpa);
+      }
+    }
+    if (blocos.isEmpty) return null;
+
+    final itens = <({String nome, String corpo})>[];
+    for (final bloco in blocos) {
+      final texto = bloco.join(' ').trim();
+      if (texto.isEmpty) continue;
+      final comRealce =
+          RegExp(r'^\*\*(.+?)\*\*\s*[:—–-]?\s*(.*)$', dotAll: true)
+              .firstMatch(texto);
+      if (comRealce != null) {
+        itens.add((
+          nome: comRealce.group(1)!.trim(),
+          corpo: comRealce.group(2)!.trim(),
+        ));
+        continue;
+      }
+      final doisPontos = texto.indexOf(':');
+      if (doisPontos > 0 && doisPontos < 80) {
+        itens.add((
+          nome: texto.substring(0, doisPontos).trim(),
+          corpo: texto.substring(doisPontos + 1).trim(),
+        ));
+        continue;
+      }
+      itens.add((nome: '', corpo: texto));
+    }
+    if (itens.isEmpty) return null;
+    return (cabecalho: cabecalho.join('\n').trim(), itens: itens);
+  }
+
+  /// "13/08/2026 a 11/09/2026" para a observação do feitiço salvo; null ao
+  /// abrir do acervo, onde o período não vem.
+  String? _periodoParaNota() {
+    if (periodStart == null || periodEnd == null) return null;
+    final formato = DateFormat('dd/MM/yyyy');
+    return '${formato.format(periodStart!)} — '
+        '${formato.format(periodEnd!.subtract(const Duration(days: 1)))}';
   }
 
   Widget _botaoAfirmacao(
@@ -236,7 +321,7 @@ class CycleReadingReportPage extends StatelessWidget {
     return cheias.length < 2 ? const [] : cheias;
   }
 
-  Widget _markdown(BuildContext context, String data) {
+  static Widget _markdown(BuildContext context, String data) {
     return MarkdownBody(
       // Sem o `# Título` de topo: a AppBar já o mostra, e repeti-lo dava o
       // título duplicado. O `_período_` (itálico) segue como subtítulo. Só
@@ -326,6 +411,132 @@ class CycleReadingReportPage extends StatelessWidget {
       ),
       fileName: 'leitura_ciclo_palavras_chave',
       shareText: keywords.join(' · '),
+    );
+  }
+}
+
+/// Um ritual sugerido pela leitura, com o caminho para virar feitiço.
+///
+/// A sugestão nasce sob medida para o ciclo que a pessoa viveu e, até agora,
+/// morria no texto: para guardá-la era preciso copiar à mão para o Grimório.
+/// O botão fecha esse caminho — o ritual entra em Meus Feitiços com o nome
+/// que a leitura deu, o passo a passo que ela escreveu e a origem anotada.
+class _CartaoDeRitual extends StatefulWidget {
+  const _CartaoDeRitual({
+    required this.nome,
+    required this.corpo,
+    this.periodo,
+  });
+
+  final String nome;
+  final String corpo;
+
+  /// Período lido, para a observação do feitiço (null ao abrir do acervo).
+  final String? periodo;
+
+  @override
+  State<_CartaoDeRitual> createState() => _CartaoDeRitualState();
+}
+
+class _CartaoDeRitualState extends State<_CartaoDeRitual> {
+  bool _salvo = false;
+  bool _salvando = false;
+
+  /// Texto sem NENHUMA marcação: o feitiço vive no Grimório, onde o campo é
+  /// texto puro — `**realce**` e `*itálico*` sairiam como asteriscos na
+  /// ficha. Na leitura, ao contrário, a marcação é lida pelo Markdown.
+  static String _textoPuro(String texto) =>
+      CycleReadingService.semRealce(texto).replaceAll('*', '').trim();
+
+  Future<void> _salvar() async {
+    if (_salvando || _salvo) return;
+    setState(() => _salvando = true);
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final destaque = context.gc.lilac;
+
+    // Sem a marcação de realce: o feitiço é texto do Grimório, não Markdown
+    // da leitura.
+    final feitico = SpellModel(
+      name: _textoPuro(
+        widget.nome.isEmpty ? l10n.cycleReadingSectionRituals : widget.nome,
+      ),
+      purpose: l10n.cycleReadingRitualPurpose,
+      // O que a leitura sugere é sempre construtivo, e a categoria fica em
+      // "outros": inventar uma pelo texto acertaria pouco e a pessoa pode
+      // corrigir num toque na ficha do feitiço.
+      type: SpellType.attraction,
+      category: SpellCategory.other,
+      steps: _textoPuro(widget.corpo),
+      observations: widget.periodo == null
+          ? l10n.cycleReadingRitualPurpose
+          : l10n.cycleReadingRitualFrom(widget.periodo!),
+    );
+
+    await context.read<SpellProvider>().addSpell(feitico);
+    if (!mounted) return;
+    setState(() {
+      _salvo = true;
+      _salvando = false;
+    });
+    messenger.showSnackBar(SnackBar(
+      content: Text(l10n.cycleReadingRitualSaved),
+      action: SnackBarAction(
+        label: l10n.numSee,
+        textColor: destaque,
+        onPressed: () => navigator.push(
+          MaterialPageRoute(builder: (_) => SpellDetailPage(spell: feitico)),
+        ),
+      ),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final tema = Theme.of(context);
+
+    return MagicalCard(
+      margin: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.nome.isNotEmpty)
+            Text(
+              _textoPuro(widget.nome),
+              style: tema.textTheme.titleMedium?.copyWith(
+                color: context.gc.lilac,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          if (widget.nome.isNotEmpty) const SizedBox(height: 6),
+          CycleReadingReportPage._markdown(context, widget.corpo),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _salvo
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle_outline,
+                          size: 18, color: context.gc.lilac),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.cycleReadingRitualSaved,
+                        style: tema.textTheme.bodySmall
+                            ?.copyWith(color: context.gc.textSecondary),
+                      ),
+                    ],
+                  )
+                : OutlinedButton.icon(
+                    onPressed: _salvando ? null : _salvar,
+                    icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+                    label: Text(l10n.cycleReadingSaveRitual),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

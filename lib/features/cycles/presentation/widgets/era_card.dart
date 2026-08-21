@@ -9,16 +9,15 @@ import 'cycle_labels.dart';
 
 /// As três palavras-chave de uma Era ou Fase, em pílulas.
 class CycleTagChips extends StatelessWidget {
-  const CycleTagChips({super.key, required this.tags, this.onAccent = false});
+  const CycleTagChips({super.key, required this.tags});
 
   final List<String> tags;
 
-  /// Em cima de fundo de acento as pílulas invertem o contraste.
-  final bool onAccent;
-
   @override
   Widget build(BuildContext context) {
-    final cor = onAccent ? context.gc.onPrimary : context.gc.lilac;
+    // Sempre lilás: nenhum card desta feature tem fundo claro — nem o
+    // `hero`, que mistura o acento a 24% sobre a superfície escura.
+    final cor = context.gc.lilac;
     return Wrap(
       spacing: 8,
       runSpacing: 8,

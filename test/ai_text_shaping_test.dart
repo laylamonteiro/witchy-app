@@ -34,6 +34,35 @@ Corpo.
     });
   });
 
+  group('semRealcePendurado', () {
+    test('tira a marcação que o corte deixou aberta', () {
+      // O caso real: a resposta acabou no meio de "do **Ritual…", e o
+      // Markdown mostrava os dois asteriscos na tela.
+      expect(
+        AIService.semRealcePendurado(
+          'na criação do *Ritual da Chama*, do **Ritual',
+        ),
+        'na criação do *Ritual da Chama*, do Ritual',
+      );
+    });
+
+    test('com marcação aberta E fechada, só a aberta some', () {
+      expect(
+        AIService.semRealcePendurado('o **fio mais forte** e o **outro'),
+        'o **fio mais forte** e o outro',
+      );
+    });
+
+    test('texto com marcação fechada fica intacto', () {
+      const inteiro = 'o **fio mais forte** do período';
+      expect(AIService.semRealcePendurado(inteiro), inteiro);
+    });
+
+    test('sem marcação nenhuma, nada muda', () {
+      expect(AIService.semRealcePendurado('texto simples'), 'texto simples');
+    });
+  });
+
   group('semTituloOrfao', () {
     test('remove o cabeçalho que ficou sem corpo no fim', () {
       const cortado = '## Suas Forças\n\nVocê é assim.\n\n## Seus Aliados Mágicos';
