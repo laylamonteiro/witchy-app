@@ -6,6 +6,8 @@ import 'dart:js_interop';
 // simplesmente não existir.
 import 'dart:js_interop_unsafe';
 
+import 'package:web/web.dart' as web;
+
 /// Pede ao Google, DENTRO da própria página, a credencial de quem já está
 /// logado no navegador (Google Identity Services).
 ///
@@ -22,7 +24,7 @@ Future<String?> pedirIdTokenDoGoogle({
   required String nonceHash,
   required Duration limite,
 }) async {
-  if (!_scriptCarregado) return null;
+  if (_enderecoEfemero || !_scriptCarregado) return null;
 
   final resposta = Completer<String?>();
 
