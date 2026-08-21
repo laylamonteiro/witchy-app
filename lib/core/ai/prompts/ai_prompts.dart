@@ -26,6 +26,7 @@ class AiPrompts {
     required this.spellGenerationSystemPrompt,
     required this.cycleRitualToSpellIntention,
     required this.magicalProfileSystemPrompt,
+    required this.magicalProfileSectionInstruction,
     required this.dailyWeatherSystemPrompt,
     required this.affirmationSystemPrompt,
     required this.mysticAdvisorSystemPrompt,
@@ -80,8 +81,15 @@ class AiPrompts {
   final String Function(String nome, String corpo, String extras)
       cycleRitualToSpellIntention;
 
-  /// Bruxa ancestral que interpreta o mapa astral (Perfil Mágico, 12 seções).
+  /// Bruxa ancestral que interpreta o mapa astral (Perfil Mágico). Escreve
+  /// UMA seção por chamada, em três blocos `### ` — a seção da vez vem de
+  /// [magicalProfileSectionInstruction].
   final String Function(Gender gender) magicalProfileSystemPrompt;
+
+  /// Instrução de UMA seção da Análise Personalizada. Chaves invariantes
+  /// (`MagicalProfileSections`): `essence`, `intuition`, `voice`, `love`,
+  /// `power`, `transformation`, `spirit`, `allies`, `practice`, `shadow`.
+  final String Function(String sectionKey) magicalProfileSectionInstruction;
 
   /// Bruxa sábia do Clima Mágico Diário (7 seções com cabeçalhos exatos).
   final String Function(Gender gender) dailyWeatherSystemPrompt;

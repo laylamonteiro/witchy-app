@@ -9,6 +9,7 @@ import 'package:grimorio_de_bolso/core/content/content_locale.dart';
 import 'package:grimorio_de_bolso/core/i18n/gender.dart';
 import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content.dart';
+import 'package:grimorio_de_bolso/features/astrology/data/models/magical_profile_report.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_en.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_es.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_pt.dart';
@@ -35,19 +36,42 @@ void main() {
     ContentLocale.instance.setLocale(const Locale('pt', 'BR'));
   });
 
-  /// O `AIService` decide se o Perfil Mágico veio inteiro contando os
-  /// cabeçalhos `## ` da resposta contra uma constante de 12. Se um prompt
-  /// ganhar ou perder uma seção e a constante ficar para trás, todo perfil
-  /// passa a ser considerado incompleto (ou um perfil cortado passa por
-  /// completo) — silenciosamente. Este teste amarra as duas pontas.
-  group('Perfil Mágico — 12 seções nos três idiomas', () {
+  /// A Análise Personalizada é tecida seção a seção, e a tela monta os
+  /// cards a partir das chaves. Um prompt que perca uma chave devolve um
+  /// card vazio; um que devolva a mesma instrução para tudo devolve dez
+  /// cards iguais. Este teste amarra as chaves às instruções nos três
+  /// idiomas — e ao formato de três blocos que a leitura em páginas espera.
+  group('Perfil Mágico — uma instrução por seção, nos três idiomas', () {
     for (final entry in promptsByLang.entries) {
-      test('${entry.key}: o prompt pede exatamente 12 seções', () {
+      test('${entry.key}: cada chave tem instrução própria', () {
+        final instrucoes = {
+          for (final chave in MagicalProfileSections.ordered)
+            chave: entry.value.magicalProfileSectionInstruction(chave),
+        };
+        for (final chave in MagicalProfileSections.ordered) {
+          expect(instrucoes[chave]!.trim(), isNotEmpty,
+              reason: 'instrução vazia: $chave [${entry.key}]');
+        }
+        expect(instrucoes.values.toSet(),
+            hasLength(MagicalProfileSections.ordered.length),
+            reason: 'instruções repetidas em ${entry.key}');
+        // A chave desconhecida não pode cair numa das dez: o `_` do switch
+        // existe para não quebrar, não para clonar uma seção real.
+        expect(
+          instrucoes.values,
+          isNot(contains(entry.value.magicalProfileSectionInstruction('xyz'))),
+        );
+      });
+
+      test('${entry.key}: o prompt pede os três blocos `### `', () {
         final prompt = entry.value.magicalProfileSystemPrompt(Gender.fallback);
         expect(
-          RegExp(r'^##[ \t]+\S', multiLine: true).allMatches(prompt).length,
-          12,
+          RegExp(r'^###[ \t]+\S', multiLine: true).allMatches(prompt).length,
+          3,
         );
+        // Nenhum `## ` no prompt: o cabeçalho da seção quem escreve é o app,
+        // com a chave. Se a IA escrever o dela, o parser cria um card órfão.
+        expect(RegExp(r'^##[ \t]+\S', multiLine: true).hasMatch(prompt), isFalse);
       });
     }
   });
@@ -61,6 +85,10 @@ void main() {
       'spellGenerationSystemPrompt': (p, g) =>
           p.spellGenerationSystemPrompt(g),
       'magicalProfileSystemPrompt': (p, g) => p.magicalProfileSystemPrompt(g),
+      'magicalProfileSectionInstruction (essence)': (p, g) =>
+          p.magicalProfileSectionInstruction(MagicalProfileSections.essence),
+      'magicalProfileSectionInstruction (shadow)': (p, g) =>
+          p.magicalProfileSectionInstruction(MagicalProfileSections.shadow),
       'dailyWeatherSystemPrompt': (p, g) => p.dailyWeatherSystemPrompt(g),
       'affirmationSystemPrompt': (p, g) => p.affirmationSystemPrompt(g),
       'mysticAdvisorSystemPrompt': (p, g) => p.mysticAdvisorSystemPrompt(g),

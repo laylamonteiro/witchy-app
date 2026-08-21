@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../data/models/birth_chart_model.dart';
+import '../../data/models/magical_profile_report.dart';
 import '../../data/models/magical_profile_model.dart';
 import '../../data/repositories/astrology_repository.dart';
 import '../../data/services/chart_calculator.dart';
@@ -18,6 +19,7 @@ class AstrologyProvider with ChangeNotifier {
   MagicalProfile? _magicalProfile;
   bool _isLoading = false;
   bool _isGeneratingAI = false;
+  int _aiSectionsDone = 0;
   String? _error;
   String _currentUserId = 'local_user';
 
@@ -25,6 +27,12 @@ class AstrologyProvider with ChangeNotifier {
   MagicalProfile? get magicalProfile => _magicalProfile;
   bool get isLoading => _isLoading;
   bool get isGeneratingAI => _isGeneratingAI;
+
+  /// Quantas seções da Análise Personalizada já foram tecidas nesta geração.
+  /// A tela mostra o progresso porque são dez chamadas: sem número na tela,
+  /// meio minuto de spinner parece travamento.
+  int get aiSectionsDone => _aiSectionsDone;
+  int get aiSectionsTotal => MagicalProfileSections.ordered.length;
   String? get error => _error;
   bool get hasBirthChart => _birthChart != null;
   bool get hasMagicalProfile => _magicalProfile != null;
@@ -231,73 +239,89 @@ class AstrologyProvider with ChangeNotifier {
     return md5.convert(utf8.encode(data)).toString();
   }
 
-  /// Gera texto personalizado do perfil mágico com IA
+  /// Tece a Análise Personalizada, uma seção por chamada.
+  ///
+  /// O texto salvo continua sendo um markdown só; o que separa as seções é
+  /// o marcador de chave (`## [essence]`), que a tela usa para montar os
+  /// cards e para rotular cada um pelo l10n — o corpo fica no idioma em que
+  /// foi tecido, os títulos acompanham o app.
+  ///
+  /// Uma seção que falha não derruba o relatório: as outras seguem, e a que
+  /// faltou simplesmente não vira card. Só se TODAS falharem é que a tela
+  /// mostra erro.
+  Future<String?> _tecerAnalise() async {
+    final partes = <String>[];
+    _aiSectionsDone = 0;
+
+    for (final chave in MagicalProfileSections.ordered) {
+      try {
+        final corpo = await _aiService.generateMagicalProfileSection(
+          birthChart: _birthChart!,
+          profile: _magicalProfile!,
+          sectionKey: chave,
+        );
+        if (corpo.trim().isNotEmpty) {
+          partes.add('${MagicalProfileSections.header(chave)}\n\n$corpo');
+        }
+      } catch (e) {
+        debugPrint('Perfil mágico: seção $chave falhou — $e');
+      }
+      _aiSectionsDone++;
+      notifyListeners();
+    }
+
+    if (partes.isEmpty) return null;
+    return partes.join('\n\n');
+  }
+
+  /// Gera a Análise Personalizada, se ainda não existir para este mapa.
   Future<void> generateAIMagicalProfile({required bool hasFullAccess}) async {
     if (_birthChart == null || _magicalProfile == null) return;
 
     // A análise personalizada é produto Premium: sem acesso, não se gera nem
     // se guarda (fail-closed — esconder na tela o que já está no aparelho
-    // nunca foi proteção). A degustação é gerada à parte, do tamanho dela.
+    // nunca foi proteção).
     if (!hasFullAccess) return;
 
-    // Verificar se já existe texto gerado para o mesmo mapa
     final currentHash = _generateChartHash(_birthChart!);
     if (_magicalProfile!.aiGeneratedText != null &&
         _magicalProfile!.chartHash == currentHash) {
       return;
     }
 
-    _isGeneratingAI = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final aiText = await _aiService.generateMagicalProfileText(
-        birthChart: _birthChart!,
-        profile: _magicalProfile!,
-      );
-
-      // Atualizar perfil com texto IA
-      _magicalProfile = _magicalProfile!.copyWith(
-        aiGeneratedText: aiText,
-        chartHash: currentHash,
-      );
-
-      // Salvar perfil atualizado
-      await _repository.saveMagicalProfile(_magicalProfile!);
-    } catch (e) {
-      _error = 'Erro ao gerar perfil personalizado: $e';
-    } finally {
-      _isGeneratingAI = false;
-      notifyListeners();
-    }
+    await _gerarAnaliseInterna(currentHash, 'Erro ao gerar perfil personalizado');
   }
 
-  /// Força regeneração do texto IA (mesmo que já exista)
+  /// Força a regeneração (mesmo que já exista texto para este mapa).
   Future<void> regenerateAIMagicalProfile({required bool hasFullAccess}) async {
     if (_birthChart == null || _magicalProfile == null) return;
     if (!hasFullAccess) return;
 
+    await _gerarAnaliseInterna(
+      _generateChartHash(_birthChart!),
+      'Erro ao regenerar perfil',
+    );
+  }
+
+  Future<void> _gerarAnaliseInterna(String chartHash, String mensagemDeErro) async {
     _isGeneratingAI = true;
     _error = null;
     notifyListeners();
 
     try {
-      final aiText = await _aiService.generateMagicalProfileText(
-        birthChart: _birthChart!,
-        profile: _magicalProfile!,
-      );
-
-      final currentHash = _generateChartHash(_birthChart!);
+      final aiText = await _tecerAnalise();
+      if (aiText == null) {
+        _error = mensagemDeErro;
+        return;
+      }
 
       _magicalProfile = _magicalProfile!.copyWith(
         aiGeneratedText: aiText,
-        chartHash: currentHash,
+        chartHash: chartHash,
       );
-
       await _repository.saveMagicalProfile(_magicalProfile!);
     } catch (e) {
-      _error = 'Erro ao regenerar perfil: $e';
+      _error = '$mensagemDeErro: $e';
     } finally {
       _isGeneratingAI = false;
       notifyListeners();

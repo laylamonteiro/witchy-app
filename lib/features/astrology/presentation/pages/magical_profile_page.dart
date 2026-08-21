@@ -10,7 +10,9 @@ import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/astrology_provider.dart';
+import 'magical_profile_section_page.dart';
 import '../../data/models/enums.dart';
+import '../../data/models/magical_profile_report.dart';
 import '../../data/data_sources/planet_sign_interpretations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
@@ -441,17 +443,14 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                 fontWeight: FontWeight.w500,
               ),
             ),
+            // Sem o glifo do signo ao lado do nome: em muitos aparelhos ele
+            // vira um emoji colorido em caixa, que destoa do resto da linha.
             Text(
               sign.displayName,
               style: TextStyle(
                 color: context.gc.lilac,
                 fontWeight: FontWeight.bold,
               ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              sign.symbol,
-              style: const TextStyle(fontSize: 16),
             ),
             if (isRetrograde) ...[
               const SizedBox(width: 8),
@@ -537,11 +536,12 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
+            // Uma seção por chamada: sem o número na tela, meia dúzia de
+            // chamadas seguidas parecem travamento.
             Text(
-              _sel(
-                pt: 'O Conselheiro Místico está analisando seu mapa astral\ne criando uma interpretação única para você.',
-                en: 'The Mystic Counselor is analyzing your birth chart\nand creating a unique interpretation for you.',
-                es: 'El Consejero Místico está analizando tu carta natal\ny creando una interpretación única para ti.',
+              AppLocalizations.of(context).profileAnalysisWeaving(
+                provider.aiSectionsDone,
+                provider.aiSectionsTotal,
               ),
               style: TextStyle(
                 color: context.gc.softWhite.withValues(alpha: 0.7),
@@ -555,14 +555,19 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     }
 
     // Se tem texto IA gerado
-    if (profile?.aiGeneratedText != null) {
+    final texto = profile?.aiGeneratedText;
+    if (texto != null) {
+      final secoes = parseMagicalProfile(texto);
+      if (secoes.isNotEmpty) return _buildAnaliseEmCards(secoes);
+      // Texto salvo que não rende seção nenhuma (formato inesperado): mostra
+      // como estava antes, em vez de sumir com o que a pessoa já pagou.
       return MagicalCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildAISectionHeader(),
             MarkdownBody(
-              data: profile!.aiGeneratedText!,
+              data: texto,
               styleSheet: _getMarkdownStyleSheet(),
             ),
           ],
@@ -718,6 +723,87 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     );
   }
 
+  /// A análise como uma lista de cards — um por tema, cada um abrindo uma
+  /// leitura que desliza.
+  ///
+  /// Era um markdown corrido de doze seções numa tela só: quem abria via uma
+  /// parede de texto e rolava até o fim sem ler. Card com título, uma linha
+  /// dizendo do que ele trata e uma seta é um convite; a parede não era.
+  Widget _buildAnaliseEmCards(List<ProfileSection> secoes) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        MagicalCard(child: _buildAISectionHeader()),
+        for (final secao in secoes)
+          _buildSectionCard(l10n, secao),
+      ],
+    );
+  }
+
+  Widget _buildSectionCard(AppLocalizations l10n, ProfileSection secao) {
+    final rotulo = profileSectionLabel(l10n, secao.key);
+    final titulo = rotulo?.title ?? secao.legacyTitle ?? '';
+    if (titulo.isEmpty) return const SizedBox.shrink();
+
+    return MagicalCard(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => MagicalProfileSectionPage(
+            title: titulo,
+            section: secao,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titulo,
+                  style: GoogleFonts.cinzelDecorative(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: context.gc.lilac,
+                  ),
+                ),
+                if (rotulo != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    rotulo.subtitle,
+                    style: TextStyle(
+                      color: context.gc.textSecondary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: context.gc.lilac.withValues(alpha: 0.18),
+            ),
+            child: Icon(
+              Icons.arrow_outward,
+              size: 18,
+              color: context.gc.lilac,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// O que a análise completa traria — os títulos à vista, o texto sob véu.
   ///
   /// Não gera nada: os títulos são fixos, do l10n, e o conteúdo verdadeiro
@@ -731,12 +817,10 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
           _buildAISectionHeader(),
           PremiumLockedPreview(
             titles: [
-              l10n.profileTeaserItem1,
-              l10n.profileTeaserItem2,
-              l10n.profileTeaserItem3,
-              l10n.profileTeaserItem4,
-              l10n.profileTeaserItem5,
+              for (final chave in MagicalProfileSections.ordered)
+                profileSectionLabel(l10n, chave)!.title,
             ],
+            linesPerSection: 1,
             onCta: _onTeaserCta,
           ),
         ],

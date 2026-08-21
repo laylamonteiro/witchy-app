@@ -1710,11 +1710,6 @@
   "dreamTeaserTitle": "¿Qué quiere decir este sueño?",
   "cycleReadingLifetimeTag": "Incluida",
   "commonTryAgain": "Intentar de nuevo",
-  "profileTeaserItem1": "Tu esencia mágica y tus dones intuitivos",
-  "profileTeaserItem2": "Cómo comunicas magia, amas y te proteges",
-  "profileTeaserItem3": "Tu camino de transformación y tu portal espiritual",
-  "profileTeaserItem4": "Prácticas y aliados — cristales, hierbas y colores de tu carta",
-  "profileTeaserItem5": "Tus mayores fuerzas y tu trabajo de sombra",
   "lessonTeaserTitle": "El comienzo de esta lección",
   "lessonTeaserIntro": "Las siguientes lecciones del sendero son Premium — pero el comienzo de esta es tuyo.",
   "zodiacTwelveSigns": "Los 12 Signos",
@@ -1832,5 +1827,36 @@
   "encyLockedDescriptionHerb": "La planta descrita a partir de tu foto",
   "encyLockedDescriptionCrystal": "La piedra descrita a partir de tu foto",
   "encyLockedDescriptionColor": "El color descrito a partir de tu foto",
-  "encyLockedSaved": "La página lista, guardada en tu enciclopedia con tu foto"
+  "encyLockedSaved": "La página lista, guardada en tu enciclopedia con tu foto",
+  "profileSectionEssenceTitle": "Tu Esencia Mágica",
+  "profileSectionEssenceSubtitle": "Tu Sol y el tipo de magia que nace contigo",
+  "profileSectionIntuitionTitle": "Tus Dones Intuitivos",
+  "profileSectionIntuitionSubtitle": "La Luna, lo que siente antes que tú y cómo escucharla",
+  "profileSectionVoiceTitle": "Tu Voz y Tus Encantamientos",
+  "profileSectionVoiceSubtitle": "Mercurio: cómo tus palabras ganan fuerza",
+  "profileSectionLoveTitle": "Amor, Belleza y Vínculos",
+  "profileSectionLoveSubtitle": "Venus: qué te atrae y qué atraes tú",
+  "profileSectionPowerTitle": "Tu Fuerza y Tu Protección",
+  "profileSectionPowerSubtitle": "Marte: cómo actúas, defiendes y cortas",
+  "profileSectionTransformationTitle": "El Camino de la Transformación",
+  "profileSectionTransformationSubtitle": "La Casa 8 y la magia que te cambia por dentro",
+  "profileSectionSpiritTitle": "El Portal Espiritual",
+  "profileSectionSpiritSubtitle": "La Casa 12, los sueños y lo que atraviesa el velo",
+  "profileSectionAlliesTitle": "Tus Aliados Mágicos",
+  "profileSectionAlliesSubtitle": "Cristales, hierbas, colores y herramientas de tu carta",
+  "profileSectionPracticeTitle": "Prácticas Que Resuenan",
+  "profileSectionPracticeSubtitle": "Los rituales y los tiempos que te funcionan",
+  "profileSectionShadowTitle": "El Trabajo de Sombra",
+  "profileSectionShadowSubtitle": "Lo que pide cuidado y dónde está tu crecimiento",
+  "profileAnalysisWeaving": "Tejiendo tu análisis… {done} de {total}",
+  "@profileAnalysisWeaving": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }
