@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -83,6 +85,14 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Leitura já gerada que cruza a janela escolhida — AVISO, nunca recusa.
   CycleReadingModel? _conflito;
 
+  /// Onde a oferta mora na rolagem — para levar a pessoa até ela depois de
+  /// confirmar o período (o cartão nasce abaixo da dobra, e uma tela que não
+  /// se mexe parece uma tela que não obedeceu).
+  final GlobalKey _ancoraDaOferta = GlobalKey();
+
+  /// As leituras já geradas (null = ainda carregando).
+  List<CycleReadingModel>? _recentes;
+
   /// O preço só entra em cena depois que a pessoa pede a leitura completa.
   ///
   /// Antes disso a tela mostra o que a leitura É — o período, o que ela tem
@@ -160,8 +170,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       start: primeiroDia,
       end: ultimoDia.add(const Duration(days: 1)),
     );
+    final recentes = await _service.repository.recentGenerated(userId);
     if (!mounted) return;
-    setState(() => _densidade = densidade);
+    setState(() {
+      _densidade = densidade;
+      _recentes = recentes;
+    });
   }
 
   /// Preços das duas janelas — carregados juntos para o seletor já nascer
@@ -241,16 +255,28 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       _isLoading = true;
     });
     await _load();
+    _mostrarAOferta();
   }
 
-  /// Volta para o calendário mantendo a janela marcada — trocar de período é
-  /// reabrir a mesma decisão, não recomeçar do zero.
-  void _voltarAoCalendario() {
-    if (_isWorking) return;
-    setState(() {
-      _periodoEscolhido = false;
-      _customRejection = null;
-      _ofertaAberta = false;
+  /// Relê a lista de leituras — depois de gerar uma, ela mudou.
+  Future<void> _recarregarRecentes() async {
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final recentes = await _service.repository.recentGenerated(userId);
+    if (!mounted) return;
+    setState(() => _recentes = recentes);
+  }
+
+  /// Leva a rolagem até o cartão da janela escolhida.
+  void _mostrarAOferta() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final alvo = _ancoraDaOferta.currentContext;
+      if (alvo == null) return;
+      Scrollable.ensureVisible(
+        alvo,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+        alignment: 0.05,
+      );
     });
   }
 
@@ -362,6 +388,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
       if (!mounted) return;
       setState(() => _existing = result.reading);
+      // A lista de leituras acabou de ganhar mais uma.
+      unawaited(_recarregarRecentes());
 
       // A leitura nasceu. Regeneração NÃO reinicia a contagem (o createdAt
       // do crédito é preservado), então o convite aponta sempre para o
@@ -403,8 +431,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     }
   }
 
-  Future<void> _openExistingReport() async {
-    final writingId = _existing?.writingId;
+  /// Abre o relatório de uma leitura já gerada — a desta janela ou uma da
+  /// lista das recentes.
+  Future<void> _abrirRelatorio(CycleReadingModel leitura) async {
+    final writingId = leitura.writingId;
     if (writingId == null) return;
     final writing = await FreeWritingRepository().getById(writingId);
     if (writing == null || !mounted) return;
@@ -412,10 +442,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       MaterialPageRoute(
         builder: (_) => CycleReadingReportPage(
           writing: writing,
-          periodStart: _existing?.periodStart,
-          periodEnd: _existing?.periodEnd,
-          periodType: _existing?.periodType ??
-              CycleReadingPeriodType.lunation,
+          periodStart: leitura.periodStart,
+          periodEnd: leitura.periodEnd,
+          periodType: leitura.periodType,
         ),
       ),
     );
@@ -429,29 +458,51 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       appBar: AppBar(
         title: ResponsiveAppBarTitle(l10n.cycleReadingTitle),
       ),
-      // Duas etapas, nesta ordem: escolher o pedaço da vida, e só então ver
-      // a oferta que aquele pedaço fez nascer. Misturar as duas — como era
-      // antes, com o seletor de janela e a oferta na mesma tela — pedia duas
-      // decisões ao mesmo tempo e nenhuma ficava clara.
-      body: _periodoEscolhido ? _buildOferta(l10n) : _buildCalendario(l10n),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // O calendário abre a tela: antes de qualquer oferta, a pessoa vê
+            // o mapa de calor dos próprios dias e escolhe o pedaço que quer
+            // ler. Era um botão discreto no meio da tela; virou a primeira
+            // coisa, porque é a primeira decisão.
+            _buildCalendario(l10n),
+            if (_periodoEscolhido) ...[
+              Container(key: _ancoraDaOferta),
+              _buildOfferCard(l10n),
+            ],
+            _buildLeiturasRecentes(l10n),
+            if (_periodoEscolhido) ...[
+              _buildSumario(l10n),
+              _buildPrivacidade(l10n),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
-  /// Etapa 1: o calendário, e mais nada.
+  /// O calendário com o mapa de calor — sempre à vista, no topo.
   Widget _buildCalendario(AppLocalizations l10n) {
     final densidade = _densidade;
     if (densidade == null) {
-      return Center(child: CircularProgressIndicator(color: context.gc.lilac));
+      return const MagicalCard(
+        child: SizedBox(
+          height: 240,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
     }
 
     final hoje = DateTime.now();
     final ultimoDia = DateTime(hoje.year, hoje.month, hoje.day);
     final primeiroDia = ultimoDia.subtract(const Duration(days: 365));
 
-    return Column(
-      children: [
-        Expanded(
-          child: CyclePeriodPickerSheet(
+    return MagicalCard(
+      child: Column(
+        children: [
+          CyclePeriodPickerSheet(
             // A chave leva a janela: mudar de período reconstrói o seletor
             // com as datas novas já marcadas, em vez de guardar o estado
             // antigo do calendário.
@@ -467,19 +518,100 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 _prices[RevenueCatConfig.cycleReadingMonthProductId],
             lifetimeIncluded: _hasLifetime,
           ),
-        ),
-        if (_customRejection != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Text(
-              _customRejection!,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.alert,
-                  ),
+          if (_customRejection != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _customRejection!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.gc.alert,
+                    ),
+              ),
             ),
+        ],
+      ),
+    );
+  }
+
+  /// As leituras já geradas, da mais recente para a mais antiga.
+  ///
+  /// Elas moram logo abaixo do calendário porque quem volta a esta tela em
+  /// geral volta para RELER, não para comprar — e procurar a própria leitura
+  /// no acervo, entre todos os outros registros, era caminho demais.
+  Widget _buildLeiturasRecentes(AppLocalizations l10n) {
+    final leituras = _recentes;
+    if (leituras == null || leituras.isEmpty) return const SizedBox.shrink();
+
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.cycleReadingRecentTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: context.gc.lilac,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-      ],
+          const SizedBox(height: 4),
+          for (final leitura in leituras)
+            InkWell(
+              onTap: () => _abrirRelatorio(leitura),
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Text(
+                      leitura.isWeekly ? '🌤️' : '🌙',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            leitura.isWeekly
+                                ? l10n.cycleReadingWeekTitle
+                                : l10n.cycleReadingLunationTitle,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: context.gc.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          Text(
+                            _intervalo(l10n, leitura),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: context.gc.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.arrow_forward_ios,
+                        size: 14, color: context.gc.lilac),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// "13/08/2026 a 11/09/2026" — o fim guardado é exclusivo, então mostra o
+  /// último dia vivido.
+  String _intervalo(AppLocalizations l10n, CycleReadingModel leitura) {
+    final formato = DateFormat.yMd(l10n.localeName);
+    return l10n.cycleReadingRecentRange(
+      formato.format(leitura.periodStart),
+      formato.format(leitura.periodEnd.subtract(const Duration(days: 1))),
     );
   }
 
@@ -499,73 +631,60 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     );
   }
 
-  /// Etapa 2: a leitura que a janela escolhida faria — e, só quando pedida,
-  /// a oferta.
-  Widget _buildOferta(AppLocalizations l10n) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildOfferCard(l10n),
-          _buildSumario(l10n),
-          // Sanfona: recolhida por padrão, para não tomar a tela. Quem quer
-          // ajustar a privacidade abre; quem confia no padrão (tudo ligado)
-          // segue direto para a compra.
-          MagicalCard(
-            child: Theme(
-              data:
-                  Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                childrenPadding: EdgeInsets.zero,
-                expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                iconColor: context.gc.lilac,
-                collapsedIconColor: context.gc.lilac,
-                title: Text(
-                  l10n.cycleReadingPrivacyTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: context.gc.lilac,
-                        fontWeight: FontWeight.bold,
-                      ),
+  /// Sanfona da privacidade: recolhida por padrão, para não tomar a tela.
+  /// Quem quer ajustar o que entra na análise abre; quem confia no padrão
+  /// (tudo ligado) segue direto.
+  Widget _buildPrivacidade(AppLocalizations l10n) {
+    return MagicalCard(
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: EdgeInsets.zero,
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          iconColor: context.gc.lilac,
+          collapsedIconColor: context.gc.lilac,
+          title: Text(
+            l10n.cycleReadingPrivacyTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: context.gc.lilac,
+                  fontWeight: FontWeight.bold,
                 ),
-                children: [
-                  Text(
-                    l10n.cycleReadingPrivacyBody,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.cycleReadingIncludeDreams),
-                    value: _includeDreams,
-                    onChanged: (v) => setState(() => _includeDreams = v),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.cycleReadingIncludeFreeWriting),
-                    subtitle: Text(l10n.cycleReadingIncludeFreeWritingHint),
-                    value: _includeJournals,
-                    onChanged: (v) => setState(() => _includeJournals = v),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.cycleReadingIncludeQuestions),
-                    subtitle: Text(l10n.cycleReadingIncludeQuestionsHint),
-                    value: _includeDivination,
-                    onChanged: (v) => setState(() => _includeDivination = v),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.cycleReadingIncludePractice),
-                    subtitle: Text(l10n.cycleReadingIncludePracticeHint),
-                    value: _includePractice,
-                    onChanged: (v) => setState(() => _includePractice = v),
-                  ),
-                ],
-              ),
-            ),
           ),
-        ],
+          children: [
+            Text(
+              l10n.cycleReadingPrivacyBody,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.cycleReadingIncludeDreams),
+              value: _includeDreams,
+              onChanged: (v) => setState(() => _includeDreams = v),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.cycleReadingIncludeFreeWriting),
+              subtitle: Text(l10n.cycleReadingIncludeFreeWritingHint),
+              value: _includeJournals,
+              onChanged: (v) => setState(() => _includeJournals = v),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.cycleReadingIncludeQuestions),
+              subtitle: Text(l10n.cycleReadingIncludeQuestionsHint),
+              value: _includeDivination,
+              onChanged: (v) => setState(() => _includeDivination = v),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.cycleReadingIncludePractice),
+              subtitle: Text(l10n.cycleReadingIncludePracticeHint),
+              value: _includePractice,
+              onChanged: (v) => setState(() => _includePractice = v),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -753,14 +872,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             const SizedBox(height: 16),
             _buildAcaoOuOferta(l10n),
           ],
-          const SizedBox(height: 4),
-          Center(
-            child: TextButton.icon(
-              onPressed: _isWorking ? null : _voltarAoCalendario,
-              icon: const Icon(Icons.edit_calendar, size: 18),
-              label: Text(l10n.cycleReadingCustomPeriodButton),
-            ),
-          ),
         ],
       ),
     );
@@ -847,7 +958,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ElevatedButton.icon(
-            onPressed: _openExistingReport,
+            onPressed: () => _abrirRelatorio(existing),
             icon: const Icon(Icons.menu_book, size: 18),
             label: Text(l10n.cycleReadingOpenReport),
           ),

@@ -183,9 +183,14 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+    // Embutido, quem rola e a distancia das bordas sao da tela que hospeda:
+    // um scroll dentro de outro no mesmo eixo trava o gesto.
+    return _Envolucro(
+      embedded: widget.embedded,
+      child: Padding(
+        padding: widget.embedded
+            ? EdgeInsets.zero
+            : const EdgeInsets.fromLTRB(16, 8, 16, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -457,4 +462,18 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
 
   static bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+/// Como folha, o seletor cuida da area segura e da propria rolagem; embutido
+/// numa tela, quem rola e a tela.
+class _Envolucro extends StatelessWidget {
+  const _Envolucro({required this.embedded, required this.child});
+
+  final bool embedded;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => embedded
+      ? child
+      : SafeArea(child: SingleChildScrollView(child: child));
 }

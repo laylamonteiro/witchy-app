@@ -10,6 +10,7 @@ import '../../../astrology/presentation/pages/birth_chart_input_page.dart';
 import '../../../astrology/presentation/providers/astrology_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../cycle_reading/data/models/cycle_reading_model.dart';
+import '../../../cycle_reading/data/services/cycle_reading_composer.dart';
 import '../../../cycle_reading/data/services/cycle_reading_service.dart';
 import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
 import '../../data/data_sources/life_eras_content.dart';
@@ -357,20 +358,22 @@ class _DeuErrado extends StatelessWidget {
 /// Desenhado para ser lido em dois segundos e dar vontade de tocar, sem
 /// inventar urgência nenhuma. Tudo o que ele diz é verificável:
 ///
-/// - **O que já é seu.** "Sua lunação rendeu 14 registros" é o número real
-///   do banco. A matéria-prima da leitura já existe e é dela — ver isso
-///   escrito vale mais que qualquer adjetivo sobre o produto.
-/// - **Um prazo de verdade.** A lunação fecha sozinha, num dia que a
-///   astronomia decidiu. A barra mostra quanto do ciclo já passou e quantos
-///   dias faltam: é o relógio do próprio céu, não uma contagem inventada
-///   para apressar ninguém.
+/// - **O que já é seu e ainda não foi lido.** "23 registros desde a sua
+///   última leitura" é a conta real: quantos registros existem depois do fim
+///   do período que a última leitura cobriu. A matéria-prima já existe, é
+///   dela, e ninguém leu ainda — ver isso escrito vale mais que qualquer
+///   adjetivo sobre o produto.
+/// - **Uma medida honesta, não um prazo inventado.** A barra mostra o quanto
+///   esse acúmulo já passa do mínimo em que a leitura ganha profundidade. Não
+///   é contagem regressiva de lunação: leituras podem ser de qualquer
+///   período, inclusive retroativo, e o relógio do céu não dizia nada sobre
+///   o que a pessoa registrou.
 /// - **Curiosidade com substância.** Em vez de "compre sua leitura", o
 ///   cartão nomeia o que vem dentro — o retrato do momento, os fios que se
 ///   repetem — sem entregar nada.
-/// - **Estado antes de venda.** Se a leitura desta lunação já existe, o
-///   cartão vira porta para ela; se está paga e não gerada, vira o botão de
-///   gerar. Vender de novo o que a pessoa já comprou é o jeito mais rápido
-///   de perder a confiança dela.
+/// - **Estado antes de venda.** Crédito pago e não gerado vira o botão de
+///   gerar, na janela dele. Vender de novo o que a pessoa já comprou é o
+///   jeito mais rápido de perder a confiança dela.
 class _CartaoDaLeituraDoCiclo extends StatefulWidget {
   const _CartaoDaLeituraDoCiclo();
 
@@ -383,10 +386,15 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
   final CycleReadingService _service = CycleReadingService();
 
   bool _carregando = true;
-  int _registros = 0;
-  CycleReadingModel? _leitura;
-  late ({DateTime start, DateTime end}) _lunacao =
-      CycleReadingService.currentLunation();
+
+  /// Registros que ainda não entraram em leitura nenhuma.
+  int _naoLidos = 0;
+
+  /// A leitura que cobre o período mais recente (null = nunca leu).
+  CycleReadingModel? _ultima;
+
+  /// Crédito comprado e ainda não gerado, se houver.
+  CycleReadingModel? _pendente;
 
   @override
   void initState() {
@@ -398,49 +406,57 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
 
   Future<void> _carregar() async {
     final userId = context.read<AuthProvider>().currentUser.id;
-    final lunacao = CycleReadingService.currentLunation();
-    final registros = await _service.composer.countPeriodRecords(
-      userId: userId,
-      start: lunacao.start,
-      end: lunacao.end,
-    );
-    final leitura = await _service.repository.findForPeriod(
-      userId,
-      lunacao.start,
-      periodType: CycleReadingPeriodType.lunation,
-    );
+    final hoje = DateTime.now();
+    final amanha = DateTime(hoje.year, hoje.month, hoje.day)
+        .add(const Duration(days: 1));
+
+    final geradas = await _service.repository.recentGenerated(userId, limit: 1);
+    final ultima = geradas.isEmpty ? null : geradas.first;
+
+    // Sem leitura anterior, conta o último ano — que é até onde o calendário
+    // deixa retroagir. Contar "desde sempre" prometeria um período que a
+    // leitura não aceita.
+    final desde = ultima?.periodEnd ??
+        DateTime(hoje.year, hoje.month, hoje.day)
+            .subtract(const Duration(days: 365));
+
+    final naoLidos = desde.isBefore(amanha)
+        ? await _service.composer.countPeriodRecords(
+            userId: userId,
+            start: desde,
+            end: amanha,
+          )
+        : 0;
+
+    // Crédito pendente: uma compra que ainda não virou relatório não pode
+    // ficar esquecida atrás de uma oferta nova.
+    final todas = await _service.repository.getAll(userId);
+    final pendentes = todas.where((l) => l.isPending);
+
     if (!mounted) return;
     setState(() {
-      _lunacao = lunacao;
-      _registros = registros;
-      _leitura = leitura;
+      _ultima = ultima;
+      _naoLidos = naoLidos;
+      _pendente = pendentes.isEmpty ? null : pendentes.first;
       _carregando = false;
     });
   }
 
-  /// Quanto da lunação já passou (0..1) — o relógio do céu.
-  double get _percorrido {
-    final total = _lunacao.end.difference(_lunacao.start).inMinutes;
-    if (total <= 0) return 0;
-    final andado = DateTime.now().difference(_lunacao.start).inMinutes;
-    return (andado / total).clamp(0.0, 1.0);
-  }
-
-  /// Dias que faltam para o ciclo fechar, arredondando para cima (faltando
-  /// 6 horas ainda é "1 dia", nunca "0").
-  int get _diasRestantes {
-    final restante = _lunacao.end.difference(DateTime.now());
-    if (restante.isNegative) return 0;
-    return restante.inHours ~/ 24 + (restante.inHours % 24 > 0 ? 1 : 0);
-  }
+  /// Quanto o acúmulo já passa do mínimo em que a leitura ganha profundidade.
+  double get _profundidade =>
+      (_naoLidos / CycleReadingComposer.minRecordsForDepth).clamp(0.0, 1.0);
 
   Future<void> _abrir() async {
-    // Com leitura (pronta ou paga) desta lunação, a tela abre NELA: quem
-    // veio de "sua leitura está pronta" não pode cair num calendário.
-    final janela = _leitura == null ? null : _lunacao;
+    // Com crédito pendente, a tela abre na janela dele: aquilo já está pago
+    // e só falta gerar.
+    final pendente = _pendente;
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => CycleReadingIntroPage(initialPeriod: janela),
+        builder: (_) => CycleReadingIntroPage(
+          initialPeriod: pendente == null
+              ? null
+              : (start: pendente.periodStart, end: pendente.periodEnd),
+        ),
       ),
     );
     // Voltou da tela: pode ter comprado, gerado ou lido — o cartão relê o
@@ -452,25 +468,31 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tema = Theme.of(context);
-    final leitura = _leitura;
 
-    // Chamada e botão mudam com o estado — nunca oferecer a compra de algo
-    // que a pessoa já tem.
     final String chamada;
     final String rotulo;
-    if (leitura != null && leitura.isGenerated) {
-      chamada = l10n.cyclesReadingCardReady;
-      rotulo = l10n.cycleReadingOpenReport;
-    } else if (leitura != null && leitura.isPending) {
+    if (_pendente != null) {
       chamada = l10n.cycleReadingPendingCredit;
       rotulo = l10n.cycleReadingGenerate;
-    } else if (_registros == 0) {
-      chamada = l10n.cyclesReadingCardEmpty;
+    } else if (_ultima != null) {
+      chamada = l10n.cyclesReadingCardUnread(_naoLidos);
       rotulo = l10n.cyclesReadingCardCta;
     } else {
-      chamada = l10n.cycleReadingOfferTitle(_registros);
+      chamada = l10n.cyclesReadingCardWaiting(_naoLidos);
       rotulo = l10n.cyclesReadingCardCta;
     }
+
+    final ultima = _ultima;
+    final rodape = ultima == null
+        ? l10n.cyclesReadingCardDepthHint(
+            CycleReadingComposer.minRecordsForDepth)
+        : l10n.cyclesReadingCardLastRead(
+            formatarDiaMesAno(
+              context,
+              // O fim guardado é exclusivo: o último dia lido é o anterior.
+              ultima.periodEnd.subtract(const Duration(days: 1)),
+            ),
+          );
 
     return MagicalCard.hero(
       accent: context.gc.lilac,
@@ -516,11 +538,12 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
             ),
           ),
           const SizedBox(height: 14),
-          // O relógio do céu: quanto da lunação já passou.
+          // Quanto do material já dá uma leitura funda — medida do grimório
+          // dela, não do calendário.
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: _percorrido,
+              value: _profundidade,
               minHeight: 6,
               backgroundColor: context.gc.lilac.withValues(alpha: 0.15),
               valueColor: AlwaysStoppedAnimation<Color>(context.gc.lilac),
@@ -528,7 +551,7 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
           ),
           const SizedBox(height: 6),
           Text(
-            l10n.cyclesReadingCardDaysLeft(_diasRestantes),
+            rodape,
             style: tema.textTheme.bodySmall
                 ?.copyWith(color: context.gc.textSecondary),
           ),

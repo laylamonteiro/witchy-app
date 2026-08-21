@@ -107,6 +107,27 @@ class CycleReadingRepository {
     return CycleReadingModel.fromMap(rows.first);
   }
 
+  /// As últimas leituras GERADAS, da que cobre o período mais recente para
+  /// a mais antiga.
+  ///
+  /// A ordem é por `period_end`, não por `created_at`: o que importa aqui é
+  /// até onde a vida da pessoa já foi lida, e uma leitura retroativa feita
+  /// hoje cobre um pedaço antigo.
+  Future<List<CycleReadingModel>> recentGenerated(
+    String userId, {
+    int limit = 5,
+  }) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND status = ?',
+      whereArgs: [userId, CycleReadingStatus.generated],
+      orderBy: 'period_end DESC',
+      limit: limit,
+    );
+    return rows.map(CycleReadingModel.fromMap).toList();
+  }
+
   Future<List<CycleReadingModel>> getAll(String userId) async {
     final db = await _db;
     final rows = await db.query(

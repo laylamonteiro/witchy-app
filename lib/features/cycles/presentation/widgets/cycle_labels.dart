@@ -32,6 +32,11 @@ String formatarMesAno(BuildContext context, DateTime quando) {
   return texto[0].toUpperCase() + texto.substring(1);
 }
 
+/// Dia, mês e ano no formato curto do idioma, como "11/09/2026".
+String formatarDiaMesAno(BuildContext context, DateTime quando) =>
+    DateFormat.yMd(Localizations.localeOf(context).toString())
+        .format(quando.toLocal());
+
 /// Duração em anos e meses, como "3 anos e 8 meses".
 ///
 /// Arredonda para o mês porque é essa a precisão em que o cálculo faz sentido

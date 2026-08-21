@@ -1612,7 +1612,6 @@
   "cycleReadingDisclaimer": "La lectura es una invitación al autoconocimiento — nunca una predicción determinista de salud, dinero o relaciones.",
   "cycleReadingRecordCount": "{count, plural, =0{Aún no hay registros en esta lunación} one{1 registro en esta lunación} other{{count} registros en esta lunación}}",
   "cycleReadingShallowWarning": "Pocos registros en este período: la lectura puede salir superficial. ¿Qué tal registrar unos días más antes de comprar?",
-  "cycleReadingCustomPeriodButton": "Elegir otro periodo",
   "cycleReadingCustomPeriodTitle": "¿Qué tramo de tu vida?",
   "cycleReadingCustomPeriodHint": "Hasta 7 días es Lectura de la Semana; de 8 a 31 días, Lectura de la Lunación.",
   "cycleReadingHeatLegend": "Los días marcados son aquellos en que registraste algo: cuanto más fuerte, más viva estuvo tu práctica.",
@@ -1739,17 +1738,51 @@
   "cyclesRulerSaturno": "Saturno",
   "cyclesRulerMercurio": "Mercurio",
   "cyclesReadingCardPitch": "Siete partes tejidas con lo que viviste: el retrato del momento, los hilos que se repiten, el cielo sobre ti y rituales para el ciclo que viene",
-  "cyclesReadingCardCta": "Ver qué tiene que decir este ciclo",
-  "cyclesReadingCardReady": "Tu lectura de esta lunación está lista",
-  "cyclesReadingCardEmpty": "Esta lunación aún está en blanco en tu grimorio",
-  "cyclesReadingCardDaysLeft": "{days, plural, =0{Esta lunación cierra hoy} one{Falta 1 día para que esta lunación cierre} other{Faltan {days} días para que esta lunación cierre}}",
-  "@cyclesReadingCardDaysLeft": {
+  "cyclesReadingCardUnread": "{count, plural, =0{Ningún registro nuevo desde tu última lectura} one{1 registro desde tu última lectura} other{{count} registros desde tu última lectura}}",
+  "@cyclesReadingCardUnread": {
     "placeholders": {
-      "days": {
+      "count": {
         "type": "int"
       }
     }
   },
+  "cyclesReadingCardWaiting": "{count, plural, =0{Tu grimorio aún espera el primer registro} one{1 registro esperando una lectura} other{{count} registros esperando una lectura}}",
+  "@cyclesReadingCardWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cyclesReadingCardLastRead": "Tu última lectura llegó hasta {date}",
+  "@cyclesReadingCardLastRead": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cyclesReadingCardDepthHint": "A partir de {count} registros la lectura gana profundidad",
+  "@cyclesReadingCardDepthHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingRecentTitle": "Tus lecturas",
+  "cycleReadingRecentRange": "{start} a {end}",
+  "@cycleReadingRecentRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "cyclesReadingCardCta": "Ver qué tiene que decir este ciclo",
   "cyclesTabIntro": "Dónde estás en el tiempo — la semana, la lunación y los 120 años de tu vida",
   "cyclesMonthTitle": "Este mes",
   "cyclesMonthSubtitle": "Lo que hace el cielo en las próximas semanas",
