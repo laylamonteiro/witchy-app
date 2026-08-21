@@ -1,5 +1,10 @@
 import 'dart:async';
-import 'dart:js_util' as js;
+import 'dart:js_interop';
+// `getProperty` mora aqui, não em `dart:js_interop`: ler um campo de objeto
+// JS por nome é "unsafe" porque o tipo não é verificado em compilação. Aqui
+// é o que precisamos — o que se lê é o objeto global do navegador, que pode
+// simplesmente não existir.
+import 'dart:js_interop_unsafe';
 
 /// Pede ao Google, DENTRO da própria página, a credencial de quem já está
 /// logado no navegador (Google Identity Services).
@@ -12,43 +17,35 @@ import 'dart:js_util' as js;
 /// O [nonceHash] vai para o Google e volta DENTRO do token; o Supabase
 /// compara com o nonce cru que recebe à parte. É o que impede que um token
 /// interceptado seja reaproveitado noutra sessão.
-///
-/// A ponte é `dart:js_util` e não `dart:js_interop` de propósito: o segundo
-/// exige `extension type`, que pede linguagem 3.3, e a trava de SDK deste
-/// projeto ainda é 3.0. Trocar a trava por causa de um login seria mexer no
-/// piso de todo mundo — quando ela subir, este arquivo é o primeiro a
-/// migrar.
 Future<String?> pedirIdTokenDoGoogle({
   required String clientId,
   required String nonceHash,
   required Duration limite,
 }) async {
-  final api = _apiDoGoogle();
-  if (api == null) return null;
+  if (!_scriptCarregado) return null;
 
   final resposta = Completer<String?>();
 
-  void aoReceber(Object credencial) {
-    final token = js.getProperty(credencial, 'credential');
+  void aoReceber(_CredentialResponse credencial) {
+    final token = credencial.credential;
     if (!resposta.isCompleted) {
-      resposta.complete(token is String && token.isNotEmpty ? token : null);
+      resposta.complete(token.isEmpty ? null : token);
     }
   }
 
   try {
-    js.callMethod(api, 'initialize', [
-      js.jsify({
-        // Nomes em snake_case porque são os campos da API do Google.
-        'client_id': clientId,
-        'callback': js.allowInterop(aoReceber),
-        'nonce': nonceHash,
+    _initialize(
+      _IdConfiguration(
+        client_id: clientId,
+        callback: aoReceber.toJS,
+        nonce: nonceHash,
         // Nunca entrar sozinha: a pessoa tocou num botão, e é a escolha dela
         // de conta que decide — não a última sessão do navegador.
-        'auto_select': false,
-        'cancel_on_tap_outside': true,
-      })
-    ]);
-    js.callMethod(api, 'prompt', const []);
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      ),
+    );
+    _prompt();
   } catch (_) {
     return null;
   }
@@ -58,7 +55,7 @@ Future<String?> pedirIdTokenDoGoogle({
     // Sem credencial: fecha a janelinha antes de devolver o controle, senão
     // ela ficaria aberta por cima do redirecionamento que vem a seguir.
     try {
-      js.callMethod(api, 'cancel', const []);
+      _cancel();
     } catch (_) {
       // Já fechada ou nunca aberta.
     }
@@ -66,18 +63,35 @@ Future<String?> pedirIdTokenDoGoogle({
   return token;
 }
 
-/// `google.accounts.id`, ou nulo se o script ainda não chegou.
-///
-/// Ele carrega com `async`: numa rede ruim pode não estar pronto quando a
-/// pessoa toca no botão, e chamar o que não existe levantaria erro de JS.
-Object? _apiDoGoogle() {
-  try {
-    final google = js.getProperty<Object?>(js.globalThis, 'google');
-    if (google == null) return null;
-    final accounts = js.getProperty<Object?>(google, 'accounts');
-    if (accounts == null) return null;
-    return js.getProperty<Object?>(accounts, 'id');
-  } catch (_) {
-    return null;
-  }
+/// O script do Google carrega com `async`: numa rede ruim ele pode não estar
+/// pronto quando a pessoa toca no botão. Sem esta conferência, chamar
+/// `google.accounts.id` levantaria um erro de JS.
+bool get _scriptCarregado {
+  final google = globalContext.getProperty<JSObject?>('google'.toJS);
+  final accounts = google?.getProperty<JSObject?>('accounts'.toJS);
+  return accounts?.getProperty<JSObject?>('id'.toJS) != null;
+}
+
+@JS('google.accounts.id.initialize')
+external void _initialize(_IdConfiguration config);
+
+@JS('google.accounts.id.prompt')
+external void _prompt();
+
+@JS('google.accounts.id.cancel')
+external void _cancel();
+
+extension type _IdConfiguration._(JSObject _) implements JSObject {
+  external factory _IdConfiguration({
+    // Nomes em snake_case porque são os campos da API do Google, não nossos.
+    required String client_id,
+    required JSFunction callback,
+    String? nonce,
+    bool auto_select,
+    bool cancel_on_tap_outside,
+  });
+}
+
+extension type _CredentialResponse._(JSObject _) implements JSObject {
+  external String get credential;
 }
