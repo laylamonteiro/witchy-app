@@ -467,7 +467,6 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             '/welcome': (context) => const WelcomePage(),
             '/login': (context) => const LoginPage(),
             '/signup': (context) => const SignupPage(),
-            '/onboarding': (context) => const OnboardingPage(),
           },
           debugShowCheckedModeBanner: false,
         ),

@@ -23,7 +23,6 @@ AppLocalizations get _l10n =>
 /// Provider para gerenciar autenticação e estado do usuário
 class AuthProvider extends ChangeNotifier {
   static const String _userKey = 'current_user';
-  static const String _hasSeenOnboardingKey = 'has_seen_onboarding';
   static const String _lastDiaryResetKey = 'last_diary_reset';
   static const String _lastAiResetKey = 'last_ai_reset';
   static const String _lastPendulumResetKey = 'last_pendulum_reset';
@@ -33,14 +32,13 @@ class AuthProvider extends ChangeNotifier {
 
   /// Versão atual do fluxo de autenticação
   ///
-  /// ⚠️ ATENÇÃO: Incrementar esta versão força TODOS os usuários a verem o onboarding novamente
-  /// e REMOVE suas credenciais (email, role). Use apenas para mudanças CRÍTICAS no fluxo de auth.
+  /// ⚠️ ATENÇÃO: Incrementar esta versão REMOVE as credenciais de todos os
+  /// usuários (email, role). Use apenas para mudanças CRÍTICAS no fluxo de auth.
   ///
   /// IMPORTANTE: Esta versão NÃO afeta o banco de dados - os dados do usuário são PRESERVADOS.
   /// Usuários autenticados precisarão fazer login novamente para ver seus dados após o reset.
   ///
   /// Para atualizações normais do app: NÃO incremente esta versão.
-  /// Para mudanças no onboarding que não afetam auth: considere usar outra flag.
   /// Para mudanças críticas de segurança/auth: incremente com MUITO cuidado.
   static const int _currentAuthVersion = 3;
 
@@ -58,7 +56,6 @@ class AuthProvider extends ChangeNotifier {
   bool _oauthReturnPending = false;
   bool get oauthReturnPending => _oauthReturnPending;
   Timer? _oauthReturnTimeout;
-  bool _hasSeenOnboarding = false;
   bool _isOriginalAdmin =
       false; // Mantém acesso ao painel admin ao simular outros roles
   bool _isSigningOut = false;
@@ -70,7 +67,6 @@ class AuthProvider extends ChangeNotifier {
 
   UserModel get currentUser => _currentUser;
   bool get isInitialized => _isInitialized;
-  bool get hasSeenOnboarding => _hasSeenOnboarding;
 
   /// Retorna true se o usuário é admin original (mesmo simulando outro role)
   bool get isOriginalAdmin => _isOriginalAdmin;
@@ -112,7 +108,7 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
 
     // Verificar versão do fluxo de autenticação
-    // Se a versão mudou, resetar o estado de onboarding e usuário
+    // Se a versão mudou, resetar o estado do usuário
     final savedAuthVersion = prefs.getInt(_authVersionKey) ?? 0;
     await debugLog('AUTH',
         'savedVersion=$savedAuthVersion, currentVersion=$_currentAuthVersion');
@@ -126,12 +122,10 @@ class AuthProvider extends ChangeNotifier {
 
       // Remove apenas credenciais de autenticação (SharedPreferences)
       // ✅ BANCO DE DADOS É PRESERVADO - dados não são perdidos!
-      await prefs.remove(_hasSeenOnboardingKey);
       await prefs.remove(_userKey);
       await prefs.remove(_isOriginalAdminKey);
       await prefs.setInt(_authVersionKey, _currentAuthVersion);
 
-      _hasSeenOnboarding = false;
       _isOriginalAdmin = false;
       _currentUser = UserModel.defaultUser();
       _isInitialized = true;
@@ -143,10 +137,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
-
-    // Verificar se já viu onboarding
-    _hasSeenOnboarding = prefs.getBool(_hasSeenOnboardingKey) ?? false;
-    await debugLog('AUTH', 'hasSeenOnboarding=$_hasSeenOnboarding');
 
     // Carregar flag de admin original
     _isOriginalAdmin = prefs.getBool(_isOriginalAdminKey) ?? false;
@@ -336,14 +326,6 @@ class AuthProvider extends ChangeNotifier {
     if (_currentUser.gender == preference) return;
     _currentUser = _currentUser.copyWith(gender: preference);
     await _saveUser();
-    notifyListeners();
-  }
-
-  /// Marca que o onboarding foi visto
-  Future<void> markOnboardingSeen() async {
-    _hasSeenOnboarding = true;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_hasSeenOnboardingKey, true);
     notifyListeners();
   }
 
@@ -825,9 +807,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> clearAllData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);
-    await prefs.remove(_hasSeenOnboardingKey);
     _currentUser = UserModel.defaultUser();
-    _hasSeenOnboarding = false;
     notifyListeners();
   }
 
@@ -886,7 +866,6 @@ class AuthProvider extends ChangeNotifier {
       await debugLog('AUTH', 'Keeping database - user has cloud sync enabled');
     }
 
-    // Mantém hasSeenOnboarding para não mostrar onboarding novamente
     // Limpa apenas dados do usuário
     await prefs.remove(_userKey);
     await prefs.remove(_isOriginalAdminKey);

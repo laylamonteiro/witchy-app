@@ -597,50 +597,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changePasswordWrongCurrent => 'Current password is incorrect';
 
   @override
-  String get onbSlide1Title => 'Your Digital Grimoire';
-
-  @override
-  String get onbSlide1Desc =>
-      'Keep your spells, rituals and magical recipes in one place. Organize by moon phase, ingredients and much more.';
-
-  @override
-  String get onbSlide2Title => 'Lunar Calendar';
-
-  @override
-  String get onbSlide2Desc =>
-      'Follow the moon phases and discover the best moment for each kind of magic. Get notified on full and new moons.';
-
-  @override
-  String get onbSlide3Title => 'Magical Diaries';
-
-  @override
-  String get onbSlide3Desc =>
-      'Record dreams, desires, gratitude and affirmations. Follow your spiritual growth day by day.';
-
-  @override
-  String get onbSlide4Title => 'Complete Astrology';
-
-  @override
-  String get onbSlide4Desc =>
-      'Discover your birth chart, personalized magical profile and daily forecasts based on planetary transits.';
-
-  @override
-  String get onbSlide5Title => 'Ready to Begin?';
-
-  @override
-  String get onbSlide5Desc =>
-      'Create your account to sync your data across devices and get full access to all features.';
-
-  @override
-  String get onbSkip => 'Skip';
-
-  @override
-  String get onbHaveAccount => 'I already have an account';
-
-  @override
-  String get onbNext => 'Next';
-
-  @override
   String get profileTitle => 'My Profile';
 
   @override
