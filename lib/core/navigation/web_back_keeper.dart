@@ -72,8 +72,13 @@ class _WebBackKeeperState extends State<WebBackKeeper> with RouteAware {
 
   /// A rota que estava por cima saiu — o voltar acabou de gastar a entrada
   /// do app. Repõe outra antes que o próximo voltar chegue ao fim da pilha.
+  ///
+  /// Depois do frame, nunca durante: o observador avisa no meio do pop, com
+  /// o Navigator travado, e empurrar ali dispara `!_debugLocked`.
   @override
-  void didPopNext() => _repor();
+  void didPopNext() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _repor());
+  }
 
   void _repor() {
     if (!mounted) return;
@@ -93,6 +98,11 @@ class _WebBackKeeperState extends State<WebBackKeeper> with RouteAware {
     );
   }
 
+  /// O fundo do app, não vazio: entre o pop e a reposição existe UM frame
+  /// em que esta entrada aparece, e um retângulo transparente seria uma
+  /// piscada preta a cada voltar.
   @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
+  Widget build(BuildContext context) => SizedBox.expand(
+        child: ColoredBox(color: Theme.of(context).scaffoldBackgroundColor),
+      );
 }
