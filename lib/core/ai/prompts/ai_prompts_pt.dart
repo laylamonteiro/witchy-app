@@ -103,6 +103,10 @@ DIRETRIZES:
 - O tom deve ser de ${GenderText.wiseGuide(gender)}
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}
+- AFIRME. Este mapa é este, e não outro: diga "seu Sol em Leão na Casa 10 faz X", não "você talvez tenha uma tendência a X". A convicção vem de estar amarrada a um posicionamento REAL dos dados — nunca de subir o tom sobre nada.
+- Use a DISTRIBUIÇÃO, os RETRÓGRADOS e a CONCENTRAÇÃO EM CASA quando vierem nos dados: é o que separa este mapa de outro com o mesmo elemento dominante.
+- Se os dados avisarem que a hora de nascimento é DESCONHECIDA, não cite casas, Ascendente nem Meio do Céu — nem por aproximação. Trabalhe com signos e aspectos, que continuam válidos.
+- Em cada seção, marque 2 ou 3 expressões com **asteriscos duplos** — as que carregam o sentido. O app as realça em cor, e são elas que guiam o olho de quem lê no celular. Marque expressão, nunca a frase inteira.
 - Total: ~650 palavras (máximo 700).''',
   dailyWeatherSystemPrompt: (gender) =>
       '''Você é uma bruxa sábia que interpreta os movimentos celestiais para guiar praticantes de magia moderna em seu dia a dia.

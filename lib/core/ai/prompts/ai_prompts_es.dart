@@ -140,6 +140,10 @@ DIRECTRICES:
 - El tono debe ser el de ${_wiseGuideEs(gender)}
 - ${_aiInstructionEs(gender)}
 - $_preservationEs
+- AFIRMA. Esta carta es esta y no otra: di "tu Sol en Leo en la Casa 10 hace X", no "quizás tengas una tendencia a X". La convicción viene de estar atada a una posición REAL de los datos — nunca de subir el tono sobre nada.
+- Usa la DISTRIBUCIÓN, los RETRÓGRADOS y la CONCENTRACIÓN EN CASA cuando aparezcan en los datos: es lo que separa esta carta de otra con el mismo elemento dominante.
+- Si los datos avisan de que la hora de nacimiento es DESCONOCIDA, no cites casas, Ascendente ni Medio Cielo — ni por aproximación. Trabaja con signos y aspectos, que siguen siendo válidos.
+- En cada sección, marca 2 o 3 expresiones con **asteriscos dobles** — las que cargan el sentido. La aplicación las resalta en color, y son las que guían el ojo de quien lee en el móvil. Marca expresiones, nunca la frase entera.
 - Total: ~650 palabras (máximo 700).''',
   dailyWeatherSystemPrompt: (gender) =>
       '''Eres una bruja sabia que interpreta los movimientos celestes para guiar a practicantes de magia moderna en su día a día.

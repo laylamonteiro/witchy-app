@@ -9,8 +9,10 @@ import '../i18n/gender.dart';
 import '../services/debug_log_service.dart';
 import '../utils/accents.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
+import '../../features/astrology/data/models/aspect_model.dart';
 import '../../features/astrology/data/models/enums.dart';
 import '../../features/astrology/data/models/magical_profile_model.dart';
+import '../../features/astrology/data/models/planet_position_model.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 import 'gemini_credentials.dart';
 import 'groq_credentials.dart';
@@ -314,27 +316,39 @@ class AIService {
       if (match.isEmpty) return null;
       final p = match.first;
       final retro = p.isRetrograde ? ' (R)' : '';
-      return '$label: ${p.positionString} - Casa ${p.houseNumber}$retro';
+      return '$label: ${p.positionString}${casa(p)}$retro';
     }
+
+    // Sem hora de nascimento o mapa é calculado com meio-dia: as casas, o
+    // Ascendente e o Meio do Céu saem FABRICADOS. Mandá-los assim faria a
+    // interpretação afirmar com convicção coisas que ninguém sabe. O prompt
+    // da Leitura do Ciclo já tratava disso; aqui não tratava.
+    final semHora = chart.unknownBirthTime;
+    String casa(PlanetPosition p) => semHora ? '' : ' - Casa ${p.houseNumber}';
 
     buffer.writeln('DADOS DO MAPA ASTRAL:');
     buffer.writeln('');
-    buffer.writeln(
-        'SOL: ${chart.sun.positionString} - Casa ${chart.sun.houseNumber}');
-    buffer.writeln(
-        'LUA: ${chart.moon.positionString} - Casa ${chart.moon.houseNumber}');
-    if (chart.ascendant != null) {
+    if (semHora) {
+      buffer.writeln(
+        'ATENÇÃO: a hora de nascimento é DESCONHECIDA. Não há casas, '
+        'Ascendente nem Meio do Céu neste mapa — não cite nenhum dos três, '
+        'e não invente equivalentes. Os signos e aspectos abaixo valem.',
+      );
+      buffer.writeln('');
+    }
+    buffer.writeln('SOL: ${chart.sun.positionString}${casa(chart.sun)}');
+    buffer.writeln('LUA: ${chart.moon.positionString}${casa(chart.moon)}');
+    if (!semHora && chart.ascendant != null) {
       buffer.writeln('ASCENDENTE: ${chart.ascendant!.positionString}');
     }
-    if (chart.midheaven != null) {
+    if (!semHora && chart.midheaven != null) {
       buffer.writeln('MEIO DO CÉU: ${chart.midheaven!.positionString}');
     }
-    buffer.writeln('MERCÚRIO: ${chart.mercury.positionString}'
-        ' - Casa ${chart.mercury.houseNumber}');
-    buffer.writeln('VÊNUS: ${chart.venus.positionString}'
-        ' - Casa ${chart.venus.houseNumber}');
-    buffer.writeln('MARTE: ${chart.mars.positionString}'
-        ' - Casa ${chart.mars.houseNumber}');
+    buffer.writeln(
+        'MERCÚRIO: ${chart.mercury.positionString}${casa(chart.mercury)}');
+    buffer
+        .writeln('VÊNUS: ${chart.venus.positionString}${casa(chart.venus)}');
+    buffer.writeln('MARTE: ${chart.mars.positionString}${casa(chart.mars)}');
     // Planetas sociais, transpessoais e pontos místicos (quando presentes).
     for (final line in [
       body(Planet.jupiter, 'JÚPITER'),
@@ -346,25 +360,84 @@ class AIService {
       body(Planet.southNode, 'NODO SUL'),
       body(Planet.lilith, 'LILITH (LUA NEGRA)'),
       body(Planet.partOfFortune, 'PARTE DA FORTUNA'),
+      body(Planet.vertex, 'VÉRTEX'),
     ]) {
       if (line != null) buffer.writeln(line);
     }
     buffer.writeln('');
+
+    // A DISTRIBUIÇÃO diz muito mais que o dominante: cinco planetas em fogo e
+    // um mapa equilibrado 3/3/3/3 têm o mesmo "dominante" e são pessoas
+    // completamente diferentes.
+    String reparte<T>(Map<T, int> dist, String Function(T) nome) =>
+        (dist.entries.where((e) => e.value > 0).toList()
+              ..sort((a, b) => b.value.compareTo(a.value)))
+            .map((e) => '${nome(e.key)} ${e.value}')
+            .join(', ');
+
     buffer
         .writeln('ELEMENTO DOMINANTE: ${profile.dominantElement.displayName}');
+    buffer.writeln('DISTRIBUIÇÃO POR ELEMENTO: '
+        '${reparte(chart.getElementDistribution(), (e) => e.displayName)}');
     buffer.writeln(
       'MODALIDADE DOMINANTE: ${profile.dominantModality.displayName}',
     );
+    buffer.writeln('DISTRIBUIÇÃO POR MODALIDADE: '
+        '${reparte(chart.getModalityDistribution(), (m) => m.displayName)}');
+
+    // Retrógrados: quantos, e quais. Um mapa com cinco retrógrados pede outra
+    // conversa que um sem nenhum.
+    final retrogrados =
+        chart.planets.where((p) => p.isRetrograde).toList();
+    if (retrogrados.isNotEmpty) {
+      buffer.writeln('RETRÓGRADOS (${retrogrados.length}): '
+          '${retrogrados.map((p) => p.planet.displayName).join(", ")}');
+    }
+
+    // Acúmulo numa casa (3+ corpos) é das coisas mais definidoras de um mapa,
+    // e não era enviado. Só faz sentido com hora conhecida.
+    if (!semHora) {
+      final acumulos = <String>[];
+      for (var h = 1; h <= 12; h++) {
+        final corpos = chart.getPlanetsInHouse(h);
+        if (corpos.length >= 3) {
+          acumulos.add('Casa $h: '
+              '${corpos.map((p) => p.planet.displayName).join(", ")}');
+        }
+      }
+      if (acumulos.isNotEmpty) {
+        buffer.writeln('CONCENTRAÇÃO EM CASA: ${acumulos.join(" | ")}');
+      }
+    }
     buffer.writeln('');
-    buffer.writeln('CASAS IMPORTANTES:');
-    buffer.writeln('Casa 8 (Magia): ${profile.houseOfMagic}');
-    buffer.writeln('Casa 12 (Espiritualidade): ${profile.houseOfSpirit}');
-    buffer.writeln('');
+    if (!semHora) {
+      buffer.writeln('CASAS IMPORTANTES:');
+      buffer.writeln('Casa 8 (Magia): ${profile.houseOfMagic}');
+      buffer.writeln('Casa 12 (Espiritualidade): ${profile.houseOfSpirit}');
+      buffer.writeln('');
+    }
     // Aspectos mais exatos (menor orbe) — material único para a interpretação.
     if (chart.aspects.isNotEmpty) {
-      final sorted = [...chart.aspects]..sort((a, b) => a.orb.compareTo(b.orb));
+      // Ordenar só pelo orbe deixava de fora quadraturas e oposições que
+      // definem o caráter, em favor de sextis apertados entre planetas
+      // lentos — que valem para uma geração inteira, não para esta pessoa.
+      // Aspectos entre planetas PESSOAIS vêm primeiro; depois o orbe.
+      const pessoais = {
+        Planet.sun,
+        Planet.moon,
+        Planet.mercury,
+        Planet.venus,
+        Planet.mars,
+      };
+      int peso(Aspect a) =>
+          (pessoais.contains(a.planet1) ? 0 : 1) +
+          (pessoais.contains(a.planet2) ? 0 : 1);
+      final sorted = [...chart.aspects]..sort((a, b) {
+          final porPessoal = peso(a).compareTo(peso(b));
+          return porPessoal != 0 ? porPessoal : a.orb.compareTo(b.orb);
+        });
       buffer.writeln('ASPECTOS PRINCIPAIS:');
-      for (final a in sorted.take(5)) {
+      for (final a in sorted.take(8)) {
         buffer.writeln('- ${a.description}');
       }
       buffer.writeln('');
