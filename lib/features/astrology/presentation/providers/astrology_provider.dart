@@ -18,16 +18,27 @@ class AstrologyProvider with ChangeNotifier {
   BirthChartModel? _birthChart;
   MagicalProfile? _magicalProfile;
   bool _isLoading = false;
-  String? _generatingSection;
+  final Set<String> _tecendo = <String>{};
+  bool _ultimaFalhaFoiLimite = false;
   String? _error;
   String _currentUserId = 'local_user';
 
   BirthChartModel? get birthChart => _birthChart;
   MagicalProfile? get magicalProfile => _magicalProfile;
   bool get isLoading => _isLoading;
-  /// A seção da Análise Personalizada sendo tecida agora (nula em repouso).
-  String? get generatingSection => _generatingSection;
-  bool get isGeneratingAI => _generatingSection != null;
+  /// Esta seção da Análise Personalizada está sendo tecida agora?
+  ///
+  /// Por seção, e não uma de cada vez: abrir um card enquanto outro ainda
+  /// termina é o comportamento normal de quem está explorando, e a trava
+  /// global fazia o segundo card não começar nunca — ficava numa tela morta
+  /// até tocar em "tentar novamente".
+  bool isWeavingSection(String key) => _tecendo.contains(key);
+  bool get isGeneratingAI => _tecendo.isNotEmpty;
+
+  /// A última seção falhou por limite de requisições do provedor de IA?
+  /// A tela troca isso por uma frase que orienta ("aguarde e tente de novo"),
+  /// em vez do nome de uma classe de exceção.
+  bool get lastFailureWasRateLimit => _ultimaFalhaFoiLimite;
 
   /// As seções já tecidas, na ordem em que foram guardadas.
   ///
@@ -269,26 +280,41 @@ class AstrologyProvider with ChangeNotifier {
     // (fail-closed — esconder na tela o que já está no aparelho nunca foi
     // proteção).
     if (!hasFullAccess) return;
-    if (_generatingSection != null) return;
+    if (_tecendo.contains(sectionKey)) return;
 
-    _generatingSection = sectionKey;
+    _tecendo.add(sectionKey);
     _error = null;
+    _ultimaFalhaFoiLimite = false;
     notifyListeners();
 
     try {
-      final hashAtual = _generateChartHash(_birthChart!);
-      final mesmoMapa = _magicalProfile!.chartHash == hashAtual;
-      final acumulado = mesmoMapa ? _magicalProfile!.aiGeneratedText : null;
-
       final corpo = await _aiService.generateMagicalProfileSection(
         birthChart: _birthChart!,
         profile: _magicalProfile!,
         sectionKey: sectionKey,
       );
       if (corpo.trim().isEmpty) {
-        _error = 'Erro ao gerar perfil personalizado';
+        // Sem motivo a exibir: a tela mostra a falha genérica, que é o que
+        // dá para dizer com honestidade quando a resposta volta vazia.
+        debugPrint('Perfil mágico: seção $sectionKey voltou vazia');
         return;
       }
+
+      // O acumulado é lido DEPOIS da chamada, nunca antes: duas seções
+      // tecendo ao mesmo tempo liam o mesmo texto no começo e a segunda a
+      // terminar apagava a primeira.
+      final hashAtual = _generateChartHash(_birthChart!);
+      final mesmoMapa = _magicalProfile!.chartHash == hashAtual;
+      // Mapa trocado desde a última seção: o que havia é descartado, senão
+      // o relatório ficaria costurado de dois mapas diferentes.
+      final guardado = mesmoMapa ? _magicalProfile!.aiGeneratedText : null;
+      // Tirar a versão anterior desta seção antes de acrescentar a nova é o
+      // que faz "tecer de novo" ser só tecer: sem isto sobrariam duas
+      // seções com a mesma chave, e a tela abriria a velha. E a antiga só
+      // sai depois que a nova chega — uma falha não apaga o que existia.
+      final acumulado = guardado == null
+          ? null
+          : removeMagicalProfileSection(guardado, sectionKey);
 
       final secao = '${MagicalProfileSections.header(sectionKey)}\n\n$corpo';
       final texto = (acumulado == null || acumulado.trim().isEmpty)
@@ -300,26 +326,14 @@ class AstrologyProvider with ChangeNotifier {
         chartHash: hashAtual,
       );
       await _repository.saveMagicalProfile(_magicalProfile!);
+    } on AiRateLimitException {
+      _ultimaFalhaFoiLimite = true;
+      _error = null;
     } catch (e) {
-      _error = 'Erro ao gerar perfil personalizado: $e';
+      _error = '$e'.replaceAll('Exception: ', '');
     } finally {
-      _generatingSection = null;
+      _tecendo.remove(sectionKey);
       notifyListeners();
     }
-  }
-
-  /// Tece de novo uma seção que já existe, no lugar da anterior.
-  Future<void> regenerateProfileSection(
-    String sectionKey, {
-    required bool hasFullAccess,
-  }) async {
-    if (_magicalProfile == null || !hasFullAccess) return;
-    final texto = _magicalProfile!.aiGeneratedText;
-    if (texto != null) {
-      _magicalProfile = _magicalProfile!.copyWith(
-        aiGeneratedText: removeMagicalProfileSection(texto, sectionKey),
-      );
-    }
-    await generateProfileSection(sectionKey, hasFullAccess: hasFullAccess);
   }
 }

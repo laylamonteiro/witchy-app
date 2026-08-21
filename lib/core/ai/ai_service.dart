@@ -251,17 +251,40 @@ class AIService {
         '${_prompts.magicalProfileSectionInstruction(sectionKey)}\n\n'
         '${_buildChartSummary(birthChart, profile)}';
 
-    Future<String> gerar() => _textRequest(
-          systemPrompt: systemPrompt,
-          userText: userText,
-          tag: 'perfil mágico ($sectionKey)',
-          temperature: 0.7,
-          // Três parágrafos de 4 a 6 frases mais os subtítulos cabem com
-          // folga em 1400; o dobro do necessário custa pouco e some com a
-          // classe inteira de defeito (seção cortada no meio da frase).
-          maxTokens: 1400,
-          receiveTimeout: const Duration(seconds: 45),
-        );
+    // Uma seção por vez, sob demanda: o 429 (limite por minuto, compartilhado
+    // por todas as usuárias) cai justo na primeira tentativa e some segundos
+    // depois. Sem esta espera curta, a tela dizia "não foi possível" para
+    // algo que funcionava no toque seguinte — foi exatamente o que apareceu
+    // em teste, em todo card aberto.
+    Future<String> gerar() async {
+      DioException? ultimo429;
+      for (var tentativa = 0;
+          tentativa <= _quotaRetryDelays.length;
+          tentativa++) {
+        try {
+          return await _textRequest(
+            systemPrompt: systemPrompt,
+            userText: userText,
+            tag: 'perfil mágico ($sectionKey)',
+            temperature: 0.7,
+            // Três parágrafos de 4 a 6 frases mais os subtítulos cabem com
+            // folga em 1400; o dobro do necessário custa pouco e some com a
+            // classe inteira de defeito (seção cortada no meio da frase).
+            maxTokens: 1400,
+            receiveTimeout: const Duration(seconds: 45),
+          );
+        } on DioException catch (e) {
+          if (e.response?.statusCode != 429) rethrow;
+          ultimo429 = e;
+          if (tentativa < _quotaRetryDelays.length) {
+            await Future.delayed(_quotaRetryDelays[tentativa]);
+          }
+        }
+      }
+      unawaited(debugLog('AI',
+          'perfil mágico ($sectionKey): 429 persistente (${ultimo429?.message})'));
+      throw const AiRateLimitException();
+    }
 
     final primeira = (await gerar()).trim();
     // Sem nenhum `### `, a seção viraria uma página só de texto corrido — a

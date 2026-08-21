@@ -5,7 +5,12 @@ publish_to: 'none'
 version: 2.0.25+126
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  # A trava dizia 3.0.0 e estava desatualizada havia tempo: o app já usa
+  # `Color.withValues` (Flutter 3.27 / Dart 3.6) e o CI compila com o
+  # Flutter 3.47. Sobe para 3.3.0, que é o mínimo para `extension type` —
+  # exigido pela única ponte com JavaScript que ainda existe: o
+  # `dart:js_util` antigo foi REMOVIDO no Dart 3.9.
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   flutter:
