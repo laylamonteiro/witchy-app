@@ -529,10 +529,15 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     final titulo = rotulo?.title ?? secao?.legacyTitle ?? '';
     if (titulo.isEmpty) return const SizedBox.shrink();
 
+    // Todos os cards são iguais, tecidos ou não: a seção é gerada no toque,
+    // em segundos, e avisar "ainda não tecida" só entregaria a costura do
+    // app para quem não precisa saber dela.
+    //
     // O Consumer acima já escuta o provider: ler aqui não perde rebuild.
-    final guardada =
-        secao ?? (chave == null ? null : context.read<AstrologyProvider>().profileSection(chave));
-    final tecida = guardada != null;
+    final guardada = secao ??
+        (chave == null
+            ? null
+            : context.read<AstrologyProvider>().profileSection(chave));
 
     return MagicalCard(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -571,18 +576,6 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                     ),
                   ),
                 ],
-                if (chave != null && !tecida) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.profileSectionUnread,
-                    style: TextStyle(
-                      color: context.gc.lilac.withValues(alpha: 0.75),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -595,7 +588,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               color: context.gc.lilac.withValues(alpha: 0.18),
             ),
             child: Icon(
-              tecida ? Icons.arrow_outward : Icons.auto_awesome,
+              Icons.arrow_outward,
               size: 18,
               color: context.gc.lilac,
             ),

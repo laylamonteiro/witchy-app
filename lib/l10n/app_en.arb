@@ -1850,6 +1850,5 @@
   "profileSectionWeaving": "The Mystic Counselor is reading this part of your chart. It takes a few seconds",
   "profileSectionFailed": "We could not weave this part right now",
   "profileSectionRegenerate": "Weave again",
-  "profileSectionUnread": "Not woven yet",
   "premiumSaveYearly": "Save 50%"
 }
