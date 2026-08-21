@@ -132,7 +132,6 @@
   "premiumLifetimeShort": "para siempre",
   "premiumBenefitLifetimeCycle": "Lectura del Ciclo incluida — semana y lunación, sin compra aparte",
   "premiumBenefitLifetimeNoRenew": "Pago único: sin renovación, sin mensualidad, para siempre",
-  "premiumSave33": "Ahorra 33%",
   "premiumTagSelected": "SELECCIONADO",
   "premiumTagPopular": "POPULAR",
   "premiumPlanSemantics": "Plan {title}, {price} {period}",
@@ -1848,15 +1847,9 @@
   "profileSectionPracticeSubtitle": "Los rituales y los tiempos que te funcionan",
   "profileSectionShadowTitle": "El Trabajo de Sombra",
   "profileSectionShadowSubtitle": "Lo que pide cuidado y dónde está tu crecimiento",
-  "profileAnalysisWeaving": "Tejiendo tu análisis… {done} de {total}",
-  "@profileAnalysisWeaving": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  }
+  "profileSectionWeaving": "El Consejero Místico está leyendo esta parte de tu carta. Tarda unos segundos",
+  "profileSectionFailed": "No fue posible tejer esta parte ahora",
+  "profileSectionRegenerate": "Tejer de nuevo",
+  "profileSectionUnread": "Aún no tejida",
+  "premiumSave33": "Ahorra 33%"
 }

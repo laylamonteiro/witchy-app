@@ -161,3 +161,26 @@ List<ProfileSlide> _fatiar(String corpo) {
 
   return slides;
 }
+
+/// Tira uma seção do markdown guardado — usado para tecê-la de novo no
+/// lugar da anterior, sem mexer nas outras.
+String removeMagicalProfileSection(String markdown, String key) {
+  final linhas = markdown.split('\n');
+  final mantidas = <String>[];
+  var dentro = false;
+
+  for (final linha in linhas) {
+    final comChave = _cabecalhoComChave.firstMatch(linha);
+    if (comChave != null) {
+      dentro = comChave.group(1) == key;
+      if (dentro) continue;
+    } else if (dentro && !_cabecalhoEscrito.hasMatch(linha)) {
+      continue;
+    } else if (dentro) {
+      dentro = false;
+    }
+    mantidas.add(linha);
+  }
+
+  return mantidas.join('\n').trim();
+}

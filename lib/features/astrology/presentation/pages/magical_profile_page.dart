@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/content/content_locale.dart';
 import '../../../../core/offers/offer_engine.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -59,32 +58,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
         title: ResponsiveAppBarTitle(
             AppLocalizations.of(context).astroMagicalProfile),
         backgroundColor: context.gc.darkBackground,
-        actions: [
-          Consumer<AstrologyProvider>(
-            builder: (context, provider, _) {
-              if (provider.hasAIGeneratedProfile) {
-                return IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: provider.isGeneratingAI
-                      ? null
-                      : () => provider.regenerateAIMagicalProfile(
-                            hasFullAccess: context
-                                .read<AuthProvider>()
-                                .isPremiumEffective,
-                          ),
-                  tooltip: ContentLocale.instance.select(
-                    pt: 'Regenerar análise',
-                    en: 'Regenerate analysis',
-                    es: 'Regenerar análisis',
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
       ),
-      backgroundColor: context.gc.darkBackground,
       body: Consumer<AstrologyProvider>(
         builder: (context, provider, _) {
           final profile = provider.magicalProfile;
@@ -505,222 +479,21 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     );
   }
 
-  /// Mostra dialog com todos os planetas
+  /// A Análise Personalizada: dez cards, tecidos um a um.
   Widget _buildAISection(AstrologyProvider provider, bool hasFullAccess) {
-    final profile = provider.magicalProfile;
+    // Sem acesso, a análise nem chega a ser gerada (o gate está no
+    // provider). O que esta pessoa vê são os títulos do que existe atrás do
+    // cadeado.
+    if (!hasFullAccess) return _buildProfileTeaserCard();
 
-    // Sem acesso, a análise completa nem chega a ser gerada (o gate está no
-    // provider). O que esta pessoa vê é a degustação — e ela aparece mesmo
-    // sem nenhum texto salvo, porque nunca vai haver um.
-    if (!hasFullAccess) {
-      return _buildProfileTeaserCard();
-    }
+    // Perfil do formato antigo: veio inteiro numa geração só, com os
+    // títulos escritos no próprio texto. Continua abrindo como está.
+    final antigas = provider.profileSections
+        .where((secao) => secao.key == null)
+        .toList();
+    if (antigas.isNotEmpty) return _buildAnaliseEmCards(antigas);
 
-    // Se está gerando IA
-    if (provider.isGeneratingAI) {
-      return MagicalCard(
-        child: Column(
-          children: [
-            CircularProgressIndicator(color: context.gc.lilac),
-            const SizedBox(height: 16),
-            Text(
-              _sel(
-                pt: 'Gerando sua análise personalizada...',
-                en: 'Generating your personalized analysis...',
-                es: 'Generando tu análisis personalizado...',
-              ),
-              style: GoogleFonts.cinzelDecorative(
-                fontSize: 18,
-                color: context.gc.lilac,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            // Uma seção por chamada: sem o número na tela, meia dúzia de
-            // chamadas seguidas parecem travamento.
-            Text(
-              AppLocalizations.of(context).profileAnalysisWeaving(
-                provider.aiSectionsDone,
-                provider.aiSectionsTotal,
-              ),
-              style: TextStyle(
-                color: context.gc.softWhite.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Se tem texto IA gerado
-    final texto = profile?.aiGeneratedText;
-    if (texto != null) {
-      final secoes = parseMagicalProfile(texto);
-      if (secoes.isNotEmpty) return _buildAnaliseEmCards(secoes);
-      // Texto salvo que não rende seção nenhuma (formato inesperado): mostra
-      // como estava antes, em vez de sumir com o que a pessoa já pagou.
-      return MagicalCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAISectionHeader(),
-            MarkdownBody(
-              data: texto,
-              styleSheet: _getMarkdownStyleSheet(),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Se não tem texto IA e houve erro
-    if (provider.error != null) {
-      return MagicalCard(
-        child: Column(
-          children: [
-            Icon(Icons.error_outline, color: context.gc.alert, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              ContentLocale.instance.select(
-                pt: 'Não foi possível gerar sua análise',
-                en: 'We could not generate your analysis',
-                es: 'No fue posible generar tu análisis',
-              ),
-              style: GoogleFonts.cinzelDecorative(
-                fontSize: 18,
-                color: context.gc.alert,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              ContentLocale.instance.select(
-                pt: 'Verifique sua conexão e tente novamente.',
-                en: 'Check your connection and try again.',
-                es: 'Verifica tu conexión e inténtalo de nuevo.',
-              ),
-              style: TextStyle(
-                color: context.gc.softWhite.withValues(alpha: 0.7),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => provider.generateAIMagicalProfile(
-                    hasFullAccess:
-                        context.read<AuthProvider>().isPremiumEffective,
-                  ),
-              icon: const Icon(Icons.refresh),
-              label: Text(AppLocalizations.of(context).commonTryAgain),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.gc.lilac,
-                foregroundColor: context.gc.darkBackground,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Botão para gerar
-    return MagicalCard(
-      child: Column(
-        children: [
-          const Text('🔮', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 16),
-          Text(
-            _sel(
-              pt: 'Análise Personalizada',
-              en: 'Personalized Analysis',
-              es: 'Análisis Personalizado',
-            ),
-            style: GoogleFonts.cinzelDecorative(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: context.gc.lilac,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _sel(
-              pt: 'Consulte o Conselheiro Místico para uma\nanálise única do seu perfil mágico.',
-              en: 'Consult the Mystic Counselor for a\nunique analysis of your magical profile.',
-              es: 'Consulta al Consejero Místico para un\nanálisis único de tu perfil mágico.',
-            ),
-            style: TextStyle(
-              color: context.gc.softWhite.withValues(alpha: 0.8),
-              fontSize: 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => provider.generateAIMagicalProfile(
-                    hasFullAccess:
-                        context.read<AuthProvider>().isPremiumEffective,
-                  ),
-            icon: const Icon(Icons.auto_awesome),
-            label: Text(ContentLocale.instance.select(
-              pt: 'Gerar Análise',
-              en: 'Generate Analysis',
-              es: 'Generar Análisis',
-            )),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.gc.lilac,
-              foregroundColor: context.gc.darkBackground,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Cabeçalho da análise personalizada — o mesmo para quem lê e para quem
-  /// está degustando.
-  Widget _buildAISectionHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text('🌟', style: TextStyle(fontSize: 24)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _sel(
-                  pt: 'Sua Análise Personalizada',
-                  en: 'Your Personalized Analysis',
-                  es: 'Tu Análisis Personalizado',
-                ),
-                style: GoogleFonts.cinzelDecorative(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: context.gc.lilac,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          _sel(
-            pt: 'Gerada especialmente para você com base no seu mapa astral',
-            en: 'Created especially for you based on your birth chart',
-            es: 'Creada especialmente para ti a partir de tu carta natal',
-          ),
-          style: TextStyle(
-            color: context.gc.softWhite.withValues(alpha: 0.6),
-            fontSize: 12,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Divider(color: context.gc.lilac),
-        const SizedBox(height: 12),
-      ],
-    );
+    return _buildAnaliseEmCards(null);
   }
 
   /// A análise como uma lista de cards — um por tema, cada um abrindo uma
@@ -729,22 +502,37 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
   /// Era um markdown corrido de doze seções numa tela só: quem abria via uma
   /// parede de texto e rolava até o fim sem ler. Card com título, uma linha
   /// dizendo do que ele trata e uma seta é um convite; a parede não era.
-  Widget _buildAnaliseEmCards(List<ProfileSection> secoes) {
+  Widget _buildAnaliseEmCards(List<ProfileSection>? antigas) {
     final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MagicalCard(child: _buildAISectionHeader()),
-        for (final secao in secoes)
-          _buildSectionCard(l10n, secao),
+        if (antigas != null)
+          for (final secao in antigas)
+            _buildSectionCard(l10n, chave: null, secao: secao)
+        else
+          for (final chave in MagicalProfileSections.ordered)
+            _buildSectionCard(l10n, chave: chave),
       ],
     );
   }
 
-  Widget _buildSectionCard(AppLocalizations l10n, ProfileSection secao) {
-    final rotulo = profileSectionLabel(l10n, secao.key);
-    final titulo = rotulo?.title ?? secao.legacyTitle ?? '';
+  /// Um card por tema. Com [chave], ele abre a leitura e tece a seção se
+  /// ainda não existir; sem ela (perfil antigo), só abre o que já está lá.
+  Widget _buildSectionCard(
+    AppLocalizations l10n, {
+    required String? chave,
+    ProfileSection? secao,
+  }) {
+    final rotulo = profileSectionLabel(l10n, chave ?? secao?.key);
+    final titulo = rotulo?.title ?? secao?.legacyTitle ?? '';
     if (titulo.isEmpty) return const SizedBox.shrink();
+
+    // O Consumer acima já escuta o provider: ler aqui não perde rebuild.
+    final guardada =
+        secao ?? (chave == null ? null : context.read<AstrologyProvider>().profileSection(chave));
+    final tecida = guardada != null;
 
     return MagicalCard(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -753,7 +541,8 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
         MaterialPageRoute(
           builder: (_) => MagicalProfileSectionPage(
             title: titulo,
-            section: secao,
+            sectionKey: chave,
+            section: guardada,
           ),
         ),
       ),
@@ -782,6 +571,18 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
                     ),
                   ),
                 ],
+                if (chave != null && !tecida) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.profileSectionUnread,
+                    style: TextStyle(
+                      color: context.gc.lilac.withValues(alpha: 0.75),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -794,7 +595,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               color: context.gc.lilac.withValues(alpha: 0.18),
             ),
             child: Icon(
-              Icons.arrow_outward,
+              tecida ? Icons.arrow_outward : Icons.auto_awesome,
               size: 18,
               color: context.gc.lilac,
             ),
@@ -828,30 +629,4 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     );
   }
 
-  MarkdownStyleSheet _getMarkdownStyleSheet() {
-    return MarkdownStyleSheet(
-      h2: GoogleFonts.cinzelDecorative(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: context.gc.lilac,
-      ),
-      p: TextStyle(
-        color: context.gc.softWhite,
-        height: 1.6,
-        fontSize: 15,
-      ),
-      listBullet: TextStyle(
-        color: context.gc.lilac,
-        fontSize: 15,
-      ),
-      strong: TextStyle(
-        color: context.gc.lilac,
-        fontWeight: FontWeight.bold,
-      ),
-      em: TextStyle(
-        color: context.gc.softWhite.withValues(alpha: 0.9),
-        fontStyle: FontStyle.italic,
-      ),
-    );
-  }
 }

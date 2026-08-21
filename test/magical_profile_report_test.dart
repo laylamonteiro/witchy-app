@@ -74,6 +74,41 @@ Outro parágrafo.
       expect(parseMagicalProfile('só um parágrafo solto'), isEmpty);
     });
 
+    test('remover uma seção não mexe nas vizinhas', () {
+      final markdown = [
+        '${MagicalProfileSections.header(MagicalProfileSections.essence)}\n',
+        '### A\nCorpo A.\n\n',
+        '${MagicalProfileSections.header(MagicalProfileSections.voice)}\n',
+        '### B\nCorpo B.\n\n',
+        '${MagicalProfileSections.header(MagicalProfileSections.shadow)}\n',
+        '### C\nCorpo C.\n',
+      ].join();
+
+      final semVoz = removeMagicalProfileSection(
+        markdown,
+        MagicalProfileSections.voice,
+      );
+      final secoes = parseMagicalProfile(semVoz);
+
+      expect(secoes.map((s) => s.key), [
+        MagicalProfileSections.essence,
+        MagicalProfileSections.shadow,
+      ]);
+      expect(semVoz, isNot(contains('Corpo B.')));
+      expect(semVoz, contains('Corpo A.'));
+      expect(semVoz, contains('Corpo C.'));
+    });
+
+    test('remover a única seção deixa o texto vazio', () {
+      final markdown =
+          '${MagicalProfileSections.header(MagicalProfileSections.love)}\n\n'
+          '### Vênus\nCorpo.\n';
+      expect(
+        removeMagicalProfileSection(markdown, MagicalProfileSections.love),
+        isEmpty,
+      );
+    });
+
     test('a ordem das chaves é a ordem de leitura, com a sombra por último',
         () {
       expect(MagicalProfileSections.ordered.first,

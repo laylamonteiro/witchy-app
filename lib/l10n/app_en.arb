@@ -132,7 +132,6 @@
   "premiumLifetimeShort": "forever",
   "premiumBenefitLifetimeCycle": "Cycle Reading included — week and lunation, no separate purchase",
   "premiumBenefitLifetimeNoRenew": "One payment: no renewal, no monthly fee, forever",
-  "premiumSave33": "Save 33%",
   "premiumTagSelected": "SELECTED",
   "premiumTagPopular": "POPULAR",
   "premiumPlanSemantics": "{title} plan, {price} {period}",
@@ -1848,15 +1847,9 @@
   "profileSectionPracticeSubtitle": "The rituals and timings that work for you",
   "profileSectionShadowTitle": "The Shadow Work",
   "profileSectionShadowSubtitle": "What asks for care and where your growth lives",
-  "profileAnalysisWeaving": "Weaving your analysis… {done} of {total}",
-  "@profileAnalysisWeaving": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  }
+  "profileSectionWeaving": "The Mystic Counselor is reading this part of your chart. It takes a few seconds",
+  "profileSectionFailed": "We could not weave this part right now",
+  "profileSectionRegenerate": "Weave again",
+  "profileSectionUnread": "Not woven yet",
+  "premiumSave33": "Save 33%"
 }

@@ -397,6 +397,7 @@ You will receive a JSON with REAL excerpts of the person's records + sky facts a
 - timeline: the CHRONOLOGICAL spine of the period — each record as {date, kind, note}, in order. kind is the nature of the record (dream, gratitude, desire, sigil, reflection, runes, pendulum, oracle-cards, tarot, ritual, spell).
 - moonByDay: the moon on each day that holds a record ({phase, sign}) — the link between what she lived and the sky of that day.
 - dreams (with meaning=interpretation), gratitudes, desires (with excerpt/evolution), affirmations (phrases she created or favorited), sigils (the INTENTION she drew), oracle (rune/pendulum/oracle/tarot draws, with question and answer), savedReadings (readings she saved, with excerpt), freeWriting (reflections), practice (rites, spells created with name/purpose, notes), sky (the period's transits and phases).
+- profile: her magical portrait, taken from the Personalized Analysis of her natal chart (essence, intuition, allies, practice, shadow). Use it to TAILOR the advice to her — the ritual suggested, the material, the timing — never to repeat what the analysis already said.
 
 Each message will ask for ONE section of the report.
 
