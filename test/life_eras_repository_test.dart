@@ -19,7 +19,6 @@ BirthChartModel mapa({
   required double longitudeDaLua,
   bool horaDesconhecida = false,
   String id = 'mapa-1',
-  int calcVersion = 3,
 }) {
   return BirthChartModel(
     id: id,
@@ -61,7 +60,7 @@ BirthChartModel mapa({
     houses: const [],
     aspects: const [],
     calculatedAt: DateTime(2026, 1, 1),
-    calcVersion: calcVersion,
+    calcVersion: 3,
   );
 }
 
@@ -141,7 +140,12 @@ void main() {
       expect(segunda.linha.regenteNatal, primeira.linha.regenteNatal);
     });
 
-    test('recalcular o mapa derruba o cache', () async {
+    test('regravar o mapa sob o MESMO id, com dados novos, derruba o cache',
+        () async {
+      // É o que acontece quando o app recalcula um mapa antigo em silêncio
+      // (`_recalculateIfOutdated` preserva o id) ou quando alguém chama
+      // `updateBirthChart`. Carimbar o cache pelo id deixaria a tela mostrando
+      // uma linha do tempo velha; carimbar pelas entradas do cálculo, não.
       final repo = LifeErasRepository();
 
       final antes = await repo.load(
@@ -149,15 +153,32 @@ void main() {
         chart: mapa(longitudeDaLua: 83.4598),
       ) as LifeErasReady;
 
-      // Mesmo id, versão de cálculo nova: é o que acontece quando o app sobe
-      // `kChartCalcVersion` e recalcula os mapas antigos em silêncio.
       final depois = await repo.load(
         userId: 'bruxa-1',
-        chart: mapa(longitudeDaLua: 300.0, calcVersion: 4),
+        chart: mapa(longitudeDaLua: 300.0),
       ) as LifeErasReady;
 
       expect(antes.linha.regenteNatal, EraRegente.marte);
       expect(depois.linha.regenteNatal, EraRegente.sol);
+    });
+
+    test('corrigir a hora de nascimento derruba o cache', () async {
+      final repo = LifeErasRepository();
+      final chart = mapa(longitudeDaLua: 83.4598);
+
+      final antes =
+          await repo.load(userId: 'bruxa-1', chart: chart) as LifeErasReady;
+
+      // Mesma Lua, mesmo id — só a hora muda. O instante muda junto, e com
+      // ele a fatia do setor lunar já percorrida ao nascer.
+      final depois = await repo.load(
+        userId: 'bruxa-1',
+        chart: chart.copyWith(birthTime: const TimeOfDay(hour: 3, minute: 0)),
+      ) as LifeErasReady;
+
+      expect(depois.linha.nascimentoUtc, DateTime.utc(1994, 8, 15, 3, 0));
+      expect(depois.linha.eras.first.inicio,
+          isNot(antes.linha.eras.first.inicio));
     });
 
     test('trocar o mapa derruba o cache', () async {

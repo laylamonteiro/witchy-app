@@ -25,9 +25,17 @@ class LifeErasProvider extends ChangeNotifier {
   /// Carimbo do que gerou o [_state] atual — se não mudar, não recarrega.
   String? _assinatura;
 
-  static String _assinar(String userId, BirthChartModel? chart) => chart == null
-      ? '$userId|sem-mapa'
-      : '$userId|${chart.id}|${chart.calcVersion}';
+  /// Carimba pelas ENTRADAS do cálculo, não pelo id do mapa: o mapa pode ser
+  /// regravado sob o mesmo id com dados novos, e aí o carimbo por id deixaria
+  /// a tela mostrando uma linha do tempo velha.
+  static String _assinar(String userId, BirthChartModel? chart) {
+    if (chart == null) return '$userId|sem-mapa';
+    final entrada = LifeErasRepository.entradaDoMapa(chart);
+    return '$userId'
+        '|${entrada.longitudeLua}'
+        '|${entrada.nascimentoUtc.millisecondsSinceEpoch}'
+        '|${chart.unknownBirthTime}';
+  }
 
   /// Garante que [state] corresponde a [chart]. Chamar à vontade: repetições
   /// com o mesmo mapa não custam nada.
@@ -47,12 +55,5 @@ class LifeErasProvider extends ChangeNotifier {
 
     _carregando = false;
     notifyListeners();
-  }
-
-  /// Força o recálculo na próxima [sync] — usado quando a pessoa corrige os
-  /// dados de nascimento sem que o id do mapa mude.
-  void invalidar() {
-    _assinatura = null;
-    _state = null;
   }
 }

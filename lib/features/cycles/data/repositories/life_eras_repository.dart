@@ -19,9 +19,12 @@ import '../models/life_eras_state.dart';
 /// quando `kChartCalcVersion` sobe.
 ///
 /// O cache local existe só para não refazer a conta a cada abertura de tela:
-/// uma chave por usuária, carimbada com o mapa e a versão do algoritmo que a
-/// produziram. Qualquer divergência recalcula e sobrescreve, então corrigir os
-/// dados de nascimento invalida o cache sem nenhum código de invalidação.
+/// uma chave por usuária, carimbada com as ENTRADAS do cálculo — a longitude
+/// da Lua e o instante do nascimento. Carimbar pelo id do mapa seria mais
+/// barato e menos seguro: `AstrologyProvider.updateBirthChart` é público e
+/// pode gravar dados novos sob o mesmo id, e aí o cache ficaria velho em
+/// silêncio. Com as próprias entradas, cache velho é impossível por
+/// construção: se elas não mudaram, a linha do tempo é a mesma.
 class LifeErasRepository {
   LifeErasRepository({SharedPreferences? prefs}) : _prefsOverride = prefs;
 
@@ -44,7 +47,9 @@ class LifeErasRepository {
     if (chart == null) return const LifeErasIncomplete();
 
     try {
-      final cacheada = await _lerCache(userId, chart);
+      final entrada = entradaDoMapa(chart);
+
+      final cacheada = await _lerCache(userId, entrada);
       if (cacheada != null) {
         return LifeErasReady(
           linha: cacheada,
@@ -52,8 +57,11 @@ class LifeErasRepository {
         );
       }
 
-      final linha = calcularParaMapa(chart);
-      await _gravarCache(userId, chart, linha);
+      final linha = calcularLinhaDoTempo(
+        longitudeLuaTropical: entrada.longitudeLua,
+        nascimentoUtc: entrada.nascimentoUtc,
+      );
+      await _gravarCache(userId, entrada, linha);
       return LifeErasReady(
         linha: linha,
         horaIncerta: chart.unknownBirthTime,
@@ -63,10 +71,13 @@ class LifeErasRepository {
     }
   }
 
-  /// O cálculo puro, alimentado pelo mapa.
+  /// As duas entradas do cálculo, extraídas do mapa.
   ///
-  /// Separado de [load] para poder ser exercitado sem SharedPreferences.
-  static LinhaDoTempo calcularParaMapa(BirthChartModel chart) {
+  /// Tudo que a linha do tempo precisa saber sobre a pessoa cabe aqui — e é
+  /// por isso que elas servem de carimbo do cache.
+  static ({double longitudeLua, DateTime nascimentoUtc}) entradaDoMapa(
+    BirthChartModel chart,
+  ) {
     // O fuso vem do mesmo resolvedor que o mapa usou (com horário de verão
     // histórico), para que o instante seja exatamente o do cálculo original.
     final resolvido = TimezoneResolver.resolve(
@@ -77,12 +88,23 @@ class LifeErasRepository {
       longitude: chart.longitude,
     );
 
-    return calcularLinhaDoTempo(
+    return (
       // `chart.moon.longitude` é TROPICAL: o SwephService roda com
       // SEFLG_MOSEPH e nunca com flag sideral. A conversão acontece dentro
       // do cálculo.
-      longitudeLuaTropical: chart.moon.longitude,
+      longitudeLua: chart.moon.longitude,
       nascimentoUtc: resolvido.utc,
+    );
+  }
+
+  /// O cálculo puro, alimentado pelo mapa.
+  ///
+  /// Separado de [load] para poder ser exercitado sem SharedPreferences.
+  static LinhaDoTempo calcularParaMapa(BirthChartModel chart) {
+    final entrada = entradaDoMapa(chart);
+    return calcularLinhaDoTempo(
+      longitudeLuaTropical: entrada.longitudeLua,
+      nascimentoUtc: entrada.nascimentoUtc,
     );
   }
 
@@ -93,17 +115,24 @@ class LifeErasRepository {
   }
 
   Future<LinhaDoTempo?> _lerCache(
-      String userId, BirthChartModel chart) async {
+    String userId,
+    ({double longitudeLua, DateTime nascimentoUtc}) entrada,
+  ) async {
     final prefs = await _prefs;
     final bruto = prefs.getString(_chave(userId));
     if (bruto == null) return null;
 
     try {
       final json = jsonDecode(bruto) as Map<String, dynamic>;
-      // O carimbo é o que faz a invalidação: mapa diferente, mapa recalculado
-      // ou algoritmo novo derrubam o cache sozinhos.
-      if (json['chartId'] != chart.id) return null;
-      if (json['calcVersion'] != chart.calcVersion) return null;
+      // Entrada diferente ou algoritmo novo derrubam o cache sozinhos.
+      // Comparar como num: se o JSON gravado tiver a longitude sem casa
+      // decimal, ela volta como int e um `!=` cru derrubaria o cache sempre.
+      final longitudeGravada = (json['longitudeLua'] as num?)?.toDouble();
+      if (longitudeGravada != entrada.longitudeLua) return null;
+      if (json['nascimentoUtc'] !=
+          entrada.nascimentoUtc.millisecondsSinceEpoch) {
+        return null;
+      }
       if (json['algoVersion'] != kLifeErasAlgoVersion) return null;
       return LinhaDoTempo.fromJson(json['linha'] as Map<String, dynamic>);
     } catch (_) {
@@ -114,15 +143,15 @@ class LifeErasRepository {
 
   Future<void> _gravarCache(
     String userId,
-    BirthChartModel chart,
+    ({double longitudeLua, DateTime nascimentoUtc}) entrada,
     LinhaDoTempo linha,
   ) async {
     final prefs = await _prefs;
     await prefs.setString(
       _chave(userId),
       jsonEncode({
-        'chartId': chart.id,
-        'calcVersion': chart.calcVersion,
+        'longitudeLua': entrada.longitudeLua,
+        'nascimentoUtc': entrada.nascimentoUtc.millisecondsSinceEpoch,
         'algoVersion': kLifeErasAlgoVersion,
         'linha': linha.toJson(),
       }),
