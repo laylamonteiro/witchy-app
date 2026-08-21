@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import '../../../../core/utils/mask.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/navigation/web_back_keeper.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../providers/auth_provider.dart';
 import 'welcome_page.dart';
@@ -63,9 +65,19 @@ class AuthWrapper extends StatelessWidget {
         // Se tem conta logada, ir para home
         if (isAuthenticated) {
           debugLog('NAV', 'AuthWrapper: → HomePage (autenticado)');
-          return showSplash
-              ? const SplashScreen(child: HomePage())
-              : const HomePage();
+          if (showSplash) return const SplashScreen(child: HomePage());
+          // Na web, a Home passa a viver numa rota EMPURRADA sobre esta.
+          // Não é capricho de navegação: é o que dá ao voltar do navegador
+          // uma entrada do app para gastar, em vez de sair para a página
+          // anterior da aba — a do Google, depois de um login social. Ver
+          // [WebBackKeeper]. No celular nada disso existe: o voltar já é da
+          // pilha do app, e a Home continua desenhada aqui mesmo.
+          if (kIsWeb) {
+            return WebBackKeeper(
+              pagina: (_) => const RequireAuth(child: HomePage()),
+            );
+          }
+          return const HomePage();
         }
 
         // Sem conta: a porta de entrada é a tela de boas-vindas, que já
