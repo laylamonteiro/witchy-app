@@ -464,9 +464,13 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
             '/home': (context) => const RequireAuth(child: HomePage()),
             '/subscription': (context) =>
                 const RequireAuth(child: SubscriptionPage()),
-            '/welcome': (context) => const WelcomePage(),
-            '/login': (context) => const LoginPage(),
-            '/signup': (context) => const SignupPage(),
+            // E o inverso: as telas de ENTRADA não podem aparecer para quem
+            // já entrou. Voltar no navegador caminha pelo histórico, que
+            // guarda a URL de antes do login — sem GuestOnly, um voltar
+            // reabria `#/login` por cima de uma sessão viva.
+            '/welcome': (context) => const GuestOnly(child: WelcomePage()),
+            '/login': (context) => const GuestOnly(child: LoginPage()),
+            '/signup': (context) => const GuestOnly(child: SignupPage()),
           },
           debugShowCheckedModeBanner: false,
         ),

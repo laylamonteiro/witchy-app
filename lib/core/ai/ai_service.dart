@@ -229,62 +229,49 @@ class AIService {
     }
   }
 
-  /// Quantas seções `## ` o Perfil Mágico tem — os três prompts pedem as
-  /// mesmas 12. Serve para saber se a geração chegou ao fim.
-  static const int _secoesDoPerfil = 12;
-
-  /// Gerar texto personalizado do Perfil Mágico com IA
+  /// Gera UMA seção da Análise Personalizada do Perfil Mágico.
   ///
-  /// O perfil é entregue INTEIRO ou não é entregue: um texto que para no meio
-  /// deixa títulos vazios na tela, e a pessoa fica sem as seções finais sem
-  /// saber que elas existiam. Duas defesas, nesta ordem:
+  /// Antes o perfil inteiro saía de uma chamada só, e o teto de tokens
+  /// decidia a profundidade: doze seções espremidas em parágrafos de três
+  /// frases, que liam como horóscopo de revista. Agora cada seção tem a sua
+  /// chamada e o seu espaço — três blocos, cada um com um parágrafo de
+  /// verdade — e a tela mostra o progresso enquanto o relatório é tecido.
   ///
-  /// 1. Teto de tokens com folga real. O prompt pede ~700 palavras em 12
-  ///    seções; com o resumo do mapa mais rico, a geração passou a encostar
-  ///    no teto antigo de 2048 e vinha aparada no meio.
-  /// 2. Se ainda assim vier curta, refaz UMA vez e fica com a mais completa.
-  ///    Truncar duas vezes seguidas com esse teto é raro; e mesmo o segundo
-  ///    texto curto é melhor que o primeiro, se tiver mais seções.
-  Future<String> generateMagicalProfileText({
+  /// A chamada é curta de propósito: se uma seção falhar, é uma seção que
+  /// se refaz, não o relatório inteiro.
+  Future<String> generateMagicalProfileSection({
     required BirthChartModel birthChart,
     required MagicalProfile profile,
+    required String sectionKey,
     Gender? gender,
   }) async {
-    try {
-      final chartSummary = _buildChartSummary(birthChart, profile);
-      final systemPrompt = _buildMagicalProfileSystemPrompt(gender ?? _gender);
+    gender ??= _gender;
+    final systemPrompt = _buildMagicalProfileSystemPrompt(gender);
+    final userText =
+        '${_prompts.magicalProfileSectionInstruction(sectionKey)}\n\n'
+        '${_buildChartSummary(birthChart, profile)}';
 
-      Future<String> gerar() => _textRequest(
-            systemPrompt: systemPrompt,
-            userText: chartSummary,
-            tag: 'perfil mágico',
-            temperature: 0.7,
-            maxTokens: 4096,
-          );
+    Future<String> gerar() => _textRequest(
+          systemPrompt: systemPrompt,
+          userText: userText,
+          tag: 'perfil mágico ($sectionKey)',
+          temperature: 0.7,
+          // Três parágrafos de 4 a 6 frases mais os subtítulos cabem com
+          // folga em 1400; o dobro do necessário custa pouco e some com a
+          // classe inteira de defeito (seção cortada no meio da frase).
+          maxTokens: 1400,
+          receiveTimeout: const Duration(seconds: 45),
+        );
 
-      final primeira = await gerar();
-      if (contaSecoes(primeira) >= _secoesDoPerfil) return primeira;
-
-      unawaited(debugLog(
-          'AI',
-          'perfil mágico: veio com ${contaSecoes(primeira)} de '
-          '$_secoesDoPerfil seções — refazendo uma vez'));
-      final segunda = await gerar();
-      return contaSecoes(segunda) > contaSecoes(primeira) ? segunda : primeira;
-    } catch (e) {
-      rethrow;
-    }
+    final primeira = (await gerar()).trim();
+    // Sem nenhum `### `, a seção viraria uma página só de texto corrido — a
+    // parede que esta mudança existe para acabar. Refaz UMA vez.
+    if (primeira.contains('### ')) return primeira;
+    unawaited(debugLog(
+        'AI', 'perfil mágico ($sectionKey): veio sem blocos — refazendo'));
+    final segunda = (await gerar()).trim();
+    return segunda.contains('### ') ? segunda : primeira;
   }
-
-  /// Conta os cabeçalhos `## ` de um markdown — independe do idioma.
-  ///
-  /// O espaço depois do `##` é de MESMA LINHA (`[ \t]`, não `\s`): com `\s`
-  /// o casamento atravessa a quebra de linha, e um `##` solto no fim de uma
-  /// resposta cortada contaria como seção — justamente o caso que esta
-  /// contagem existe para detectar.
-  @visibleForTesting
-  static int contaSecoes(String texto) =>
-      RegExp(r'^##[ \t]+\S', multiLine: true).allMatches(texto).length;
 
   /// Gerar texto do Clima Mágico Diário com IA
   Future<String> generateDailyMagicalWeatherText({

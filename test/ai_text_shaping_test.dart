@@ -1,39 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/core/ai/ai_service.dart';
 
-/// Forma do texto que volta da IA: contagem de seções (usada para saber se o
-/// Perfil Mágico veio inteiro) e a poda do título órfão que sobra quando a
-/// geração é cortada logo depois de um cabeçalho.
+/// Forma do texto que volta da IA: a poda do realce pendurado e do título
+/// órfão que sobram quando a geração é cortada no meio.
 void main() {
-  group('contaSecoes', () {
-    test('conta apenas cabeçalhos de nível 2 com conteúdo', () {
-      const texto = '''
-# Título do documento
-
-## Primeira
-
-Corpo.
-
-## Segunda
-
-Corpo.
-
-### Subseção
-
-Corpo.
-''';
-      expect(AIService.contaSecoes(texto), 2);
-    });
-
-    test('não conta um "##" solto nem "##" no meio da linha', () {
-      expect(AIService.contaSecoes('##\n\ntexto ## ainda\n'), 0);
-    });
-
-    test('independe do idioma', () {
-      expect(AIService.contaSecoes('## Your Essence\nx\n## Final Message\ny'), 2);
-    });
-  });
-
   group('semRealcePendurado', () {
     test('tira a marcação que o corte deixou aberta', () {
       // O caso real: a resposta acabou no meio de "do **Ritual…", e o

@@ -9,7 +9,6 @@ import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/utils/input_formatters.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/services/geocoding_service.dart';
 import '../providers/astrology_provider.dart';
 import 'birth_chart_view_page.dart';
@@ -224,7 +223,6 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
         birthPlace: _birthPlace!,
         latitude: latitude,
         longitude: longitude,
-        hasFullAccess: context.read<AuthProvider>().isPremiumEffective,
         unknownBirthTime: _unknownBirthTime,
       );
 
