@@ -16,6 +16,7 @@ import '../../../numerology/presentation/pages/numerology_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../diary/presentation/pages/dream_tools_page.dart';
+import '../../../cycles/presentation/pages/cycles_tab.dart';
 import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
 import '../../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
 import '../../../learning/presentation/pages/learning_home_page.dart';
@@ -40,6 +41,9 @@ class _GrimoirePageState extends State<GrimoirePage>
   /// Aba central "Ferramentas Mágicas" — a aba inicial e o alvo do reset
   /// (duplo-toque em "Ferramentas" na bottom nav). "Meu Grimório" saiu daqui
   /// e virou a primeira seção do livro (Grimório).
+  ///
+  /// "Ciclos" entrou DEPOIS desta, no índice 2, justamente para o índice
+  /// padrão não mudar.
   static const int _defaultTabIndex = 1;
 
   /// Trocado para recriar o TabBarView quando o re-toque na bottom bar pede
@@ -53,7 +57,7 @@ class _GrimoirePageState extends State<GrimoirePage>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 2,
+      length: 3,
       vsync: this,
       initialIndex: _defaultTabIndex,
     )..addListener(_dismissKeyboard);
@@ -111,6 +115,7 @@ class _GrimoirePageState extends State<GrimoirePage>
           tabs: [
             Tab(text: AppLocalizations.of(context).grimoireTabAstrology),
             Tab(text: AppLocalizations.of(context).grimoireTabTools),
+            Tab(text: AppLocalizations.of(context).grimoireTabCycles),
           ],
         ),
       ),
@@ -120,6 +125,7 @@ class _GrimoirePageState extends State<GrimoirePage>
         children: const [
           AstrologyTab(),
           _ToolsTab(),
+          CyclesTab(),
         ],
       ),
     );
