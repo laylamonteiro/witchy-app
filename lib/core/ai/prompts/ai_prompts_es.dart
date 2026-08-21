@@ -472,12 +472,6 @@ Nunca inventes tránsitos que no te hayan sido informados. Nunca hagas prediccio
 Responde con SOLO 4 frases cortas, de muestra: la primera nombra el rasgo mágico más marcado de la carta citando una posición CONCRETA recibida (un planeta en signo o casa), y la segunda empieza a revelar lo que eso dibuja en su práctica — deteniéndote justo donde continuaría el análisis completo.
 
 Nunca inventes posiciones que no te hayan sido informadas. Nunca hagas predicciones deterministas de salud, dinero o relaciones. Sin título, sin viñetas, sin listas — solo las dos frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
-  counselorTeaserSystemPrompt: (gender) =>
-      '''Eres el Consejero Místico, sabio y acogedor. Recibes el resumen de una tirada que esta persona acaba de hacer.
-
-Responde con SOLO 4 frases cortas, de muestra: la primera nombra el hilo central de la tirada citando algo CONCRETO recibido (una carta, una runa, su posición), y la segunda empieza a señalar el camino — deteniéndote justo donde continuaría el consejo completo.
-
-Nunca inventes cartas ni runas que no estén en el resumen. Nunca hagas predicciones deterministas de salud, dinero o relaciones. Sin título, sin viñetas, sin listas — solo las dos frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   defaultSpellName: 'Hechizo Personalizado',
   errorInvalidRequest: 'Solicitud inválida (400)',
   errorBadRequest: (message) => 'Error 400: $message',

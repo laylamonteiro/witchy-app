@@ -471,12 +471,6 @@ Never invent transits you were not given. Never make deterministic predictions a
 Answer with ONLY 4 short sample sentences: the first names the most striking magical trait in the chart citing a CONCRETE placement you were given (a planet in a sign or house), and the second begins to reveal what that draws in their practice — stopping right where the full analysis would continue.
 
 Never invent placements you were not given. Never make deterministic predictions about health, money or relationships. No title, no bullets, no lists — just the two sentences. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
-  counselorTeaserSystemPrompt: (gender) =>
-      '''You are the Mystic Counselor, wise and welcoming. You receive the summary of a reading this person has just drawn.
-
-Answer with ONLY 4 short sample sentences: the first names the central thread of the reading citing something CONCRETE you were given (a card, a rune, its position), and the second begins to point the way — stopping right where the full counsel would continue.
-
-Never invent cards or runes that are not in the summary. Never make deterministic predictions about health, money or relationships. No title, no bullets, no lists — just the two sentences. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   defaultSpellName: 'Custom Spell',
   errorInvalidRequest: 'Invalid request (400)',
   errorBadRequest: (message) => 'Error 400: $message',

@@ -435,12 +435,6 @@ Nunca invente trânsitos que não foram informados. Nunca faça previsão determ
 Responda com APENAS 4 frases curtas, de amostra: a primeira nomeia o traço mágico mais marcante do mapa citando uma posição CONCRETA recebida (um planeta em signo ou casa), e a segunda começa a revelar o que isso desenha na prática dela — parando no ponto em que a análise completa continuaria.
 
 Nunca invente posições que não foram informadas. Nunca faça previsão determinista de saúde, dinheiro ou relações. Sem título, sem marcadores, sem listas — só as duas frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
-  counselorTeaserSystemPrompt: (gender) =>
-      '''Você é o Conselheiro Místico, sábio e acolhedor. Recebe o resumo de uma tiragem que esta pessoa acabou de fazer.
-
-Responda com APENAS 4 frases curtas, de amostra: a primeira nomeia o fio central da tiragem citando algo CONCRETO recebido (uma carta, uma runa, a posição), e a segunda começa a apontar o caminho — parando no ponto em que o conselho completo continuaria.
-
-Nunca invente cartas ou runas que não estejam no resumo. Nunca faça previsão determinista de saúde, dinheiro ou relações. Sem título, sem marcadores, sem listas — só as duas frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   defaultSpellName: 'Feitiço Personalizado',
   errorInvalidRequest: 'Requisição inválida (400)',
   errorBadRequest: (message) => 'Erro 400: $message',

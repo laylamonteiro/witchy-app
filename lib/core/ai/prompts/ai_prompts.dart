@@ -49,7 +49,6 @@ class AiPrompts {
     required this.dreamTeaserSystemPrompt,
     required this.dailyWeatherTeaserSystemPrompt,
     required this.magicalProfileTeaserSystemPrompt,
-    required this.counselorTeaserSystemPrompt,
     required this.defaultSpellName,
     required this.errorInvalidRequest,
     required this.errorBadRequest,
@@ -175,9 +174,6 @@ class AiPrompts {
   /// sobre o mapa, sem gerar a análise completa.
   final String Function(Gender gender) magicalProfileTeaserSystemPrompt;
 
-  /// Degustação do Conselheiro Místico sobre uma tiragem recém-feita: 2
-  /// frases REAIS, parando onde o conselho completo continuaria.
-  final String Function(Gender gender) counselorTeaserSystemPrompt;
 
   /// Nome padrão quando o JSON do feitiço vem sem `name`.
   final String defaultSpellName;

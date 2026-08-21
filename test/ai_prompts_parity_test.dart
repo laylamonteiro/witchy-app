@@ -100,7 +100,6 @@ void main() {
           p.dailyWeatherTeaserSystemPrompt(g),
       'magicalProfileTeaserSystemPrompt': (p, g) =>
           p.magicalProfileTeaserSystemPrompt(g),
-      'counselorTeaserSystemPrompt': (p, g) => p.counselorTeaserSystemPrompt(g),
       'defaultSpellName': (p, g) => p.defaultSpellName,
       'encyIdentifySystemPrompt (crystal)': (p, g) =>
           p.encyIdentifySystemPrompt('crystal'),
@@ -266,7 +265,6 @@ void main() {
       final teasers = <String, String Function(AiPrompts, Gender)>{
         'clima do dia': (p, g) => p.dailyWeatherTeaserSystemPrompt(g),
         'perfil mágico': (p, g) => p.magicalProfileTeaserSystemPrompt(g),
-        'conselheiro': (p, g) => p.counselorTeaserSystemPrompt(g),
         'sonho': (p, g) => p.dreamTeaserSystemPrompt(g),
       };
       promptsByLang.forEach((lang, prompts) {

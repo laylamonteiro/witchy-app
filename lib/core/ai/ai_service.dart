@@ -1741,34 +1741,6 @@ class AIService {
     }
   }
 
-  /// Degustação do Conselheiro Místico sobre uma tiragem recém-feita: 2
-  /// frases REAIS, no lugar do conselho completo.
-  Future<String> generateCounselorTeaser({
-    required String readingSummary,
-    Gender? gender,
-  }) async {
-    gender ??= _gender;
-    try {
-      final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
-            '${_prompts.counselorTeaserSystemPrompt(gender)}',
-        userText: readingSummary,
-        tag: 'teaser conselheiro',
-        temperature: 0.7,
-        maxTokens: 400,
-        receiveTimeout: const Duration(seconds: 30),
-      );
-      return content.trim();
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 429) {
-        throw const AiRateLimitException();
-      }
-      throw Exception(_prompts.errorConnection(e.message));
-    } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
-    }
-  }
-
   String _buildMysticAdvisorSystemPrompt(
     Gender gender,
   ) {
