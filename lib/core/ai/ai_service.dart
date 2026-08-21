@@ -229,7 +229,22 @@ class AIService {
     }
   }
 
+  /// Quantas seções `## ` o Perfil Mágico tem — os três prompts pedem as
+  /// mesmas 12. Serve para saber se a geração chegou ao fim.
+  static const int _secoesDoPerfil = 12;
+
   /// Gerar texto personalizado do Perfil Mágico com IA
+  ///
+  /// O perfil é entregue INTEIRO ou não é entregue: um texto que para no meio
+  /// deixa títulos vazios na tela, e a pessoa fica sem as seções finais sem
+  /// saber que elas existiam. Duas defesas, nesta ordem:
+  ///
+  /// 1. Teto de tokens com folga real. O prompt pede ~700 palavras em 12
+  ///    seções; com o resumo do mapa mais rico, a geração passou a encostar
+  ///    no teto antigo de 2048 e vinha aparada no meio.
+  /// 2. Se ainda assim vier curta, refaz UMA vez e fica com a mais completa.
+  ///    Truncar duas vezes seguidas com esse teto é raro; e mesmo o segundo
+  ///    texto curto é melhor que o primeiro, se tiver mais seções.
   Future<String> generateMagicalProfileText({
     required BirthChartModel birthChart,
     required MagicalProfile profile,
@@ -237,18 +252,34 @@ class AIService {
   }) async {
     try {
       final chartSummary = _buildChartSummary(birthChart, profile);
+      final systemPrompt = _buildMagicalProfileSystemPrompt(gender ?? _gender);
 
-      return await _textRequest(
-        systemPrompt: _buildMagicalProfileSystemPrompt(gender ?? _gender),
-        userText: chartSummary,
-        tag: 'perfil mágico',
-        temperature: 0.7,
-        maxTokens: 2048,
-      );
+      Future<String> gerar() => _textRequest(
+            systemPrompt: systemPrompt,
+            userText: chartSummary,
+            tag: 'perfil mágico',
+            temperature: 0.7,
+            maxTokens: 4096,
+          );
+
+      final primeira = await gerar();
+      if (contaSecoes(primeira) >= _secoesDoPerfil) return primeira;
+
+      unawaited(debugLog(
+          'AI',
+          'perfil mágico: veio com ${contaSecoes(primeira)} de '
+          '$_secoesDoPerfil seções — refazendo uma vez'));
+      final segunda = await gerar();
+      return contaSecoes(segunda) > contaSecoes(primeira) ? segunda : primeira;
     } catch (e) {
       rethrow;
     }
   }
+
+  /// Conta os cabeçalhos `## ` de um markdown — independe do idioma.
+  @visibleForTesting
+  static int contaSecoes(String texto) =>
+      RegExp(r'^##\s+\S', multiLine: true).allMatches(texto).length;
 
   /// Gerar texto do Clima Mágico Diário com IA
   Future<String> generateDailyMagicalWeatherText({
@@ -304,7 +335,27 @@ class AIService {
     for (final m in RegExp(r'[.!?…\n]').allMatches(trimmed)) {
       cut = m.end;
     }
-    return cut > 0 ? trimmed.substring(0, cut).trimRight() : trimmed;
+    final cortado = cut > 0 ? trimmed.substring(0, cut).trimRight() : trimmed;
+    return semTituloOrfao(cortado);
+  }
+
+  /// Remove um cabeçalho de seção que ficou sem corpo no fim do texto.
+  ///
+  /// Quando a geração é cortada logo depois de um título, aparar até a última
+  /// frase deixa o título sozinho — a tela mostra "Seus Aliados Mágicos" e
+  /// nada embaixo, que parece defeito da tela e não do texto.
+  @visibleForTesting
+  static String semTituloOrfao(String texto) {
+    final linhas = texto.split('\n');
+    while (linhas.isNotEmpty) {
+      final ultima = linhas.last.trim();
+      if (ultima.isEmpty || ultima.startsWith('#')) {
+        linhas.removeLast();
+        continue;
+      }
+      break;
+    }
+    return linhas.join('\n').trimRight();
   }
 
   String _buildChartSummary(BirthChartModel chart, MagicalProfile profile) {

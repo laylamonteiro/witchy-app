@@ -34,6 +34,23 @@ void main() {
     ContentLocale.instance.setLocale(const Locale('pt', 'BR'));
   });
 
+  /// O `AIService` decide se o Perfil Mágico veio inteiro contando os
+  /// cabeçalhos `## ` da resposta contra uma constante de 12. Se um prompt
+  /// ganhar ou perder uma seção e a constante ficar para trás, todo perfil
+  /// passa a ser considerado incompleto (ou um perfil cortado passa por
+  /// completo) — silenciosamente. Este teste amarra as duas pontas.
+  group('Perfil Mágico — 12 seções nos três idiomas', () {
+    for (final entry in promptsByLang.entries) {
+      test('${entry.key}: o prompt pede exatamente 12 seções', () {
+        final prompt = entry.value.magicalProfileSystemPrompt(Gender.fallback);
+        expect(
+          RegExp(r'^##\s+\S', multiLine: true).allMatches(prompt).length,
+          12,
+        );
+      });
+    }
+  });
+
   group('AiPrompts — campos não vazios nas três línguas', () {
     // Sondas nomeadas: cada uma resolve um campo para String.
     final probes = <String, String Function(AiPrompts p, Gender g)>{
