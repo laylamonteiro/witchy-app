@@ -381,10 +381,15 @@ REGRAS INEGOCIÁVEIS:
 - Perspectiva, não sentença: "seus registros mostram", "o céu sugere", "talvez valha olhar para". NUNCA previsão determinista de saúde, dinheiro ou relacionamentos, e nunca diga o que vai acontecer. Parafraseie o íntimo, sem expor trechos longos.
 - Responda em Markdown simples. NÃO inclua título nem cabeçalho de seção: o app os adiciona. Sem preâmbulos — só a seção pedida.
 - ${GenderText.aiInstruction(gender)}
-- ${GenderText.preservationInstruction()}''',
+- ${GenderText.preservationInstruction()}
+
+FORMA (o app mostra cada seção como UMA TELA que desliza — texto denso mata a leitura):
+- Parágrafos CURTOS, de 1 a 3 frases, com linha em branco entre eles. Uma ideia por parágrafo, nunca um bloco corrido.
+- Em cada parágrafo, marque 2 ou 3 expressões com **asteriscos duplos** — as que carregam o sentido, não palavras soltas. O app as realça em cor, e são elas que guiam o olho de quem lê no celular.
+- Marque expressão, nunca a frase inteira: realce demais é o mesmo que realce nenhum.''',
   cycleReadingSectionInstruction: (sectionKey) => switch (sectionKey) {
     'portrait' =>
-      'Escreva o "retrato do momento" percorrendo a timeline EM ORDEM CRONOLÓGICA: como o período começou, o que mudou no meio, onde chegou. No máximo 2 parágrafos (menos, se há poucos registros). Cite registros concretos com a data ou o momento lunar em que aconteceram (use moonByDay), para ela reconhecer os próprios dias. Comece direto na narrativa, sem generalidades.',
+      'Escreva o "retrato do momento" percorrendo a timeline EM ORDEM CRONOLÓGICA: como o período começou, o que mudou no meio, onde chegou. Abra com UMA frase-âncora que nomeia o fio mais forte do período, e só depois narre. Poucos parágrafos curtos (menos ainda, se há poucos registros). Cite registros concretos com a data ou o momento lunar em que aconteceram (use moonByDay), para ela reconhecer os próprios dias. Comece direto na narrativa, sem generalidades.',
     'threads' =>
       'Escreva "os fios que se repetem" olhando a vida dela de fora. Divida em DUAS leituras: (a) o que está FLORESCENDO — temas que cruzam fontes diferentes, gratidões, desejos que evoluíram — e como potencializar isso; (b) o que PEDE ATENÇÃO — o que ela nomeou e não voltou, um desejo parado, uma área em silêncio, uma pergunta repetida ao oráculo. Nomeie cada fio e cite a fonte de onde ele vem. Se os dados não formam padrão claro, diga isso em 1-2 frases em vez de forçar um fio inexistente.',
     'sky' =>

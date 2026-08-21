@@ -418,10 +418,15 @@ REGLAS INNEGOCIABLES:
 - Perspectiva, no sentencia: "tus registros muestran", "el cielo sugiere", "quizá valga la pena mirar". NUNCA predicciones deterministas de salud, dinero o relaciones, y nunca digas lo que va a ocurrir. Parafrasea lo íntimo, sin exponer fragmentos largos.
 - Responde en Markdown simple. NO incluyas título ni encabezado de sección: la aplicación los añade. Sin preámbulos — solo la sección pedida.
 - ${GenderText.aiInstruction(gender)}
-- ${GenderText.preservationInstruction()}''',
+- ${GenderText.preservationInstruction()}
+
+FORMA (la aplicación muestra cada sección como UNA PANTALLA que se desliza — el texto denso mata la lectura):
+- Párrafos CORTOS, de 1 a 3 frases, con línea en blanco entre ellos. Una idea por párrafo, nunca un bloque corrido.
+- En cada párrafo, marca 2 o 3 expresiones con **asteriscos dobles** — las que cargan el sentido, no palabras sueltas. La aplicación las resalta en color, y son las que guían el ojo de quien lee en el móvil.
+- Marca expresiones, nunca la frase entera: demasiado resalte es lo mismo que ninguno.''',
   cycleReadingSectionInstruction: (sectionKey) => switch (sectionKey) {
     'portrait' =>
-      'Escribe el "retrato del momento" recorriendo la timeline EN ORDEN CRONOLÓGICO: cómo empezó el período, qué cambió en el medio, adónde llegó. Como máximo 2 párrafos (menos, si hay pocos registros). Cita registros concretos junto con la fecha o el momento lunar en que ocurrieron (usa moonByDay), para que ella reconozca sus propios días. Empieza directo en la narrativa, sin generalidades.',
+      'Escribe el "retrato del momento" recorriendo la timeline EN ORDEN CRONOLÓGICO: cómo empezó el período, qué cambió en el medio, adónde llegó. Abre con UNA frase ancla que nombre el hilo más fuerte del período, y solo después narra. Pocos párrafos cortos (menos aún, si hay pocos registros). Cita registros concretos junto con la fecha o el momento lunar en que ocurrieron (usa moonByDay), para que ella reconozca sus propios días. Empieza directo en la narrativa, sin generalidades.',
     'threads' =>
       'Escribe "los hilos que se repiten" mirando su vida desde fuera. Divídelo en DOS lecturas: (a) lo que está FLORECIENDO — temas que cruzan fuentes distintas, gratitudes, deseos que evolucionaron — y cómo potenciarlo; (b) lo que PIDE ATENCIÓN — algo que nombró y a lo que no volvió, un deseo detenido, un área en silencio, una pregunta repetida al oráculo. Nombra cada hilo y cita la fuente de donde viene. Si los datos no forman un patrón claro, dilo en 1-2 frases en vez de forzar un hilo inexistente.',
     'sky' =>

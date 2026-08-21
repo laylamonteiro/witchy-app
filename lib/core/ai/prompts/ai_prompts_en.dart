@@ -417,10 +417,15 @@ NON-NEGOTIABLE RULES:
 - Perspective, not verdict: "your records show", "the sky suggests", "it may be worth looking at". NEVER deterministic predictions about health, money or relationships, and never say what will happen. Paraphrase the intimate, without exposing long excerpts.
 - Answer in simple Markdown. Do NOT include a title or section heading: the app adds them. No preamble — only the requested section.
 - ${GenderText.aiInstruction(gender)}
-- ${GenderText.preservationInstruction()}''',
+- ${GenderText.preservationInstruction()}
+
+SHAPE (the app shows each section as ONE SWIPEABLE SCREEN — dense text kills the reading):
+- SHORT paragraphs, 1 to 3 sentences, with a blank line between them. One idea per paragraph, never a solid block.
+- In each paragraph, mark 2 or 3 expressions with **double asterisks** — the ones carrying the meaning, not stray words. The app highlights them in colour, and they are what guides the eye on a phone.
+- Mark expressions, never a whole sentence: too much highlighting is the same as none.''',
   cycleReadingSectionInstruction: (sectionKey) => switch (sectionKey) {
     'portrait' =>
-      'Write the "portrait of the moment" by walking the timeline IN CHRONOLOGICAL ORDER: how the period opened, what shifted in the middle, where it arrived. At most 2 paragraphs (fewer, if there are few records). Quote concrete records along with the date or the lunar moment they happened in (use moonByDay), so she recognizes her own days. Start straight into the narrative, no generalities.',
+      'Write the "portrait of the moment" by walking the timeline IN CHRONOLOGICAL ORDER: how the period opened, what shifted in the middle, where it arrived. Open with ONE anchor sentence naming the strongest thread of the period, and only then narrate. A few short paragraphs (fewer still, if there are few records). Quote concrete records along with the date or the lunar moment they happened in (use moonByDay), so she recognizes her own days. Start straight into the narrative, no generalities.',
     'threads' =>
       'Write "the threads that repeat", looking at her life from the outside. Split it into TWO readings: (a) what is FLOURISHING — themes crossing different sources, gratitudes, desires that evolved — and how to amplify it; (b) what ASKS FOR ATTENTION — something she named and never returned to, a desire left standing, an area in silence, a question asked of the oracle again and again. Name each thread and cite the source it comes from. If the data forms no clear pattern, say so in 1-2 sentences instead of forcing a thread that is not there.',
     'sky' =>

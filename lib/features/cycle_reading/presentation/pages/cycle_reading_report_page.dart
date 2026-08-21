@@ -254,6 +254,13 @@ class CycleReadingReportPage extends StatelessWidget {
           fontStyle: FontStyle.italic,
           color: context.gc.textSecondary,
         ),
+        // As expressões que a leitura marca com `**` saem em COR, não em
+        // negrito — a mesma gramática das leituras das Eras. Negrito no meio
+        // do parágrafo pesa; cor guia o olho sem quebrar o ritmo.
+        strong: TextStyle(
+          color: context.gc.lilac,
+          fontWeight: FontWeight.normal,
+        ),
         blockquotePadding: const EdgeInsets.all(16),
         blockquoteDecoration: BoxDecoration(
           color: context.gc.lilac.withValues(alpha: 0.10),
