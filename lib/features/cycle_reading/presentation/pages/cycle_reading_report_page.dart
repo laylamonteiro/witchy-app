@@ -53,7 +53,8 @@ class CycleReadingReportPage extends StatelessWidget {
 
     final corpo = _forDisplay(writing.content);
     final secoes = _sections(corpo);
-    final acoes = _actions(context, l10n, resolvedAffirmation, resolvedSeal);
+    final ondeVaiAAfirmacao =
+        _indiceDaAfirmacao(secoes, l10n, resolvedAffirmation);
 
     return Scaffold(
       appBar: AppBar(
@@ -75,18 +76,129 @@ class CycleReadingReportPage extends StatelessWidget {
                   children: [
                     _markdown(context, corpo),
                     const SizedBox(height: 24),
-                    acoes,
+                    if (_temAfirmacao(resolvedAffirmation))
+                      _botaoAfirmacao(context, l10n, resolvedAffirmation!),
+                    if (resolvedSeal.isNotEmpty)
+                      _botaoPalavrasChave(context, l10n, resolvedSeal),
+                    const SizedBox(height: 16),
+                    _notaDoAcervo(context, l10n),
                   ],
                 ),
               )
             : PagedReading(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 pages: [
-                  for (final secao in secoes) _markdown(context, secao),
-                  acoes,
+                  for (var i = 0; i < secoes.length; i++)
+                    _pagina(
+                      context,
+                      l10n,
+                      secao: secoes[i],
+                      // O botão de compartilhar mora na página da seção a que
+                      // pertence: a afirmação com a afirmação, as palavras-chave
+                      // com as palavras-chave. Antes ficavam numa página de
+                      // ações no fim, longe do que compartilhavam.
+                      afirmacao:
+                          i == ondeVaiAAfirmacao ? resolvedAffirmation : null,
+                      // As palavras-chave fecham o relatório — é a mesma
+                      // premissa que `sealFromMarkdown` usa para recortá-las,
+                      // e vale também para leituras antigas, cujo título da
+                      // seção era outro.
+                      palavrasChave:
+                          i == secoes.length - 1 ? resolvedSeal : const [],
+                      ultima: i == secoes.length - 1,
+                    ),
                 ],
               ),
       ),
+    );
+  }
+
+  static bool _temAfirmacao(String? afirmacao) =>
+      afirmacao != null && afirmacao.trim().isNotEmpty;
+
+  /// Em que seção mora a afirmação.
+  ///
+  /// Procura primeiro pelo título da seção, que é o que o app escreve no
+  /// Markdown; se não achar (relatório antigo, título diferente), procura o
+  /// próprio texto da afirmação. Sem nenhum dos dois, cai na última página —
+  /// o botão pode ficar fora de lugar, mas nunca some.
+  static int _indiceDaAfirmacao(
+    List<String> secoes,
+    AppLocalizations l10n,
+    String? afirmacao,
+  ) {
+    final titulo = l10n.cycleReadingSectionAffirmation;
+    for (var i = 0; i < secoes.length; i++) {
+      if (secoes[i].contains(titulo)) return i;
+    }
+    if (_temAfirmacao(afirmacao)) {
+      for (var i = 0; i < secoes.length; i++) {
+        if (secoes[i].contains(afirmacao!.trim())) return i;
+      }
+    }
+    return secoes.length - 1;
+  }
+
+  Widget _pagina(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required String secao,
+    required String? afirmacao,
+    required List<String> palavrasChave,
+    required bool ultima,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _markdown(context, secao),
+        if (_temAfirmacao(afirmacao)) ...[
+          const SizedBox(height: 20),
+          _botaoAfirmacao(context, l10n, afirmacao!),
+        ],
+        if (palavrasChave.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          _botaoPalavrasChave(context, l10n, palavrasChave),
+        ],
+        if (ultima) ...[
+          const SizedBox(height: 20),
+          _notaDoAcervo(context, l10n),
+        ],
+      ],
+    );
+  }
+
+  Widget _botaoAfirmacao(
+    BuildContext context,
+    AppLocalizations l10n,
+    String afirmacao,
+  ) {
+    return ElevatedButton.icon(
+      onPressed: () => _shareAffirmation(context, l10n, afirmacao),
+      icon: const Icon(Icons.ios_share, size: 18),
+      label: Text(l10n.cycleReadingShareAffirmation),
+    );
+  }
+
+  Widget _botaoPalavrasChave(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<String> palavras,
+  ) {
+    return OutlinedButton.icon(
+      onPressed: () => _shareSeal(context, l10n, palavras),
+      icon: const Icon(Icons.auto_awesome, size: 18),
+      label: Text(l10n.cycleReadingShareSeal),
+    );
+  }
+
+  Widget _notaDoAcervo(BuildContext context, AppLocalizations l10n) {
+    return Text(
+      l10n.cycleReadingSavedToArchive,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: context.gc.textSecondary,
+          ),
     );
   }
 
@@ -154,61 +266,6 @@ class CycleReadingReportPage extends StatelessWidget {
     );
   }
 
-  /// A última página: os dois cartões compartilháveis e o aviso de que a
-  /// leitura ficou guardada no acervo.
-  Widget _actions(
-    BuildContext context,
-    AppLocalizations l10n,
-    String? resolvedAffirmation,
-    List<String> resolvedSeal,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (resolvedAffirmation != null && resolvedAffirmation.isNotEmpty) ...[
-          ElevatedButton.icon(
-            onPressed: () => _shareAffirmation(
-              context,
-              l10n,
-              resolvedAffirmation,
-            ),
-            icon: const Icon(Icons.ios_share, size: 18),
-            label: Text(l10n.cycleReadingShareAffirmation),
-          ),
-          const SizedBox(height: 8),
-        ],
-        if (resolvedSeal.isNotEmpty)
-          OutlinedButton.icon(
-            onPressed: () => _shareSeal(context, l10n, resolvedSeal),
-            icon: const Icon(Icons.auto_awesome, size: 18),
-            label: Text(l10n.cycleReadingShareSeal),
-          ),
-        const SizedBox(height: 16),
-        Text(
-          l10n.cycleReadingSavedToArchive,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.gc.textSecondary,
-              ),
-        ),
-      ],
-    );
-  }
-
-  /// Só para exibição: remove o `# Título` inicial (a AppBar já o traz),
-  /// preservando o resto — inclusive a linha `_período_`.
-  static String _forDisplay(String markdown) {
-    final lines = markdown.split('\n');
-    if (lines.isNotEmpty && lines.first.trimLeft().startsWith('# ')) {
-      lines.removeAt(0);
-      while (lines.isNotEmpty && lines.first.trim().isEmpty) {
-        lines.removeAt(0);
-      }
-    }
-    return lines.join('\n');
-  }
-
   void _shareAffirmation(
     BuildContext context,
     AppLocalizations l10n,
@@ -247,7 +304,7 @@ class CycleReadingReportPage extends StatelessWidget {
           accent: ShareCard.colors.lilac,
         ),
       ),
-      fileName: 'leitura_ciclo_selo',
+      fileName: 'leitura_ciclo_palavras_chave',
       shareText: keywords.join(' · '),
     );
   }

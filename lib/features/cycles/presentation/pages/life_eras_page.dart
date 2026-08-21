@@ -28,7 +28,12 @@ class LifeErasPage extends StatefulWidget {
 }
 
 class _LifeErasPageState extends State<LifeErasPage> {
-  int _aba = 0;
+  /// Passado · Agora · Futuro, nesta ordem — a linha do tempo corre da
+  /// esquerda para a direita, como se lê. Abre no meio, no Agora: é o que a
+  /// pessoa veio ver.
+  static const int _abaAgora = 1;
+
+  int _aba = _abaAgora;
 
   @override
   Widget build(BuildContext context) {
@@ -46,19 +51,26 @@ class _LifeErasPageState extends State<LifeErasPage> {
           children: [
             _SeletorDePeriodo(
               selecionado: _aba,
-              rotulos: [l10n.cyclesTabNow, l10n.cyclesTabPast, l10n.cyclesTabFuture],
+              rotulos: [
+                l10n.cyclesTabPast,
+                l10n.cyclesTabNow,
+                l10n.cyclesTabFuture,
+              ],
               onSelecionar: (i) => setState(() => _aba = i),
             ),
             Expanded(
+              // Literais, e não a constante: identificador solto num padrão
+              // do Dart 3 é padrão de VARIÁVEL, que casa com tudo — o Agora
+              // apareceria nas três abas.
               child: switch (_aba) {
-                0 => _Agora(linha: widget.linha, agora: agora),
-                1 => _ListaDeEras(
+                0 => _ListaDeEras(
                     eras: widget.linha.passadas(agora),
                     agora: agora,
                     passado: true,
                     liberado: liberado,
                     vazio: l10n.cyclesPastEmpty,
                   ),
+                1 => _Agora(linha: widget.linha, agora: agora),
                 _ => _ListaDeEras(
                     eras: widget.linha.futuras(agora),
                     agora: agora,

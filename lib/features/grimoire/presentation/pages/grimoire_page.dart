@@ -38,13 +38,13 @@ class _GrimoirePageState extends State<GrimoirePage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
 
-  /// Aba central "Ferramentas Mágicas" — a aba inicial e o alvo do reset
-  /// (duplo-toque em "Ferramentas" na bottom nav). "Meu Grimório" saiu daqui
-  /// e virou a primeira seção do livro (Grimório).
+  /// "Ferramentas Mágicas" abre a seção e é o alvo do reset (duplo-toque em
+  /// "Ferramentas" na bottom nav). "Meu Grimório" saiu daqui e virou a
+  /// primeira seção do livro (Grimório).
   ///
-  /// "Ciclos" entrou DEPOIS desta, no índice 2, justamente para o índice
-  /// padrão não mudar.
-  static const int _defaultTabIndex = 1;
+  /// A ordem das abas vai do prático ao contemplativo: Ferramentas, Ciclos,
+  /// Astrologia.
+  static const int _defaultTabIndex = 0;
 
   /// Trocado para recriar o TabBarView quando o re-toque na bottom bar pede
   /// "voltar ao início" já estando na aba inicial.
@@ -113,9 +113,9 @@ class _GrimoirePageState extends State<GrimoirePage>
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           labelPadding: const EdgeInsets.symmetric(horizontal: 16),
           tabs: [
-            Tab(text: AppLocalizations.of(context).grimoireTabAstrology),
             Tab(text: AppLocalizations.of(context).grimoireTabTools),
             Tab(text: AppLocalizations.of(context).grimoireTabCycles),
+            Tab(text: AppLocalizations.of(context).grimoireTabAstrology),
           ],
         ),
       ),
@@ -123,9 +123,9 @@ class _GrimoirePageState extends State<GrimoirePage>
         key: ValueKey(_viewEpoch),
         controller: _tabController,
         children: const [
-          AstrologyTab(),
           _ToolsTab(),
           CyclesTab(),
+          AstrologyTab(),
         ],
       ),
     );

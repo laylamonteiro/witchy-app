@@ -1619,10 +1619,10 @@
   "cycleReadingSectionPractice": "🔮 Your practice",
   "cycleReadingSectionRituals": "✨ Rituals for the next cycle",
   "cycleReadingSectionAffirmation": "💫 An affirmation to carry",
-  "cycleReadingSectionSeal": "🌙 Seal of the cycle",
+  "cycleReadingSectionSeal": "🌙 Cycle keywords",
   "cycleReadingIntroTagline": "The oracle reads your grimoire: a unique magical analysis of your lunation, woven from what you recorded.",
   "cycleReadingIntroWhatTitle": "What the reading includes",
-  "cycleReadingIntroWhatBody": "Seven sections all yours: portrait of the moment, the threads that repeat, the sky above you (transits and moon phases), your practice, rituals for the next cycle, a tailored affirmation and the seal of the cycle — all saved forever in My Records.",
+  "cycleReadingIntroWhatBody": "Seven sections all yours: portrait of the moment, the threads that repeat, the sky above you (transits and moon phases), your practice, rituals for the next cycle, a tailored affirmation and the cycle keywords — all saved forever in My Records.",
   "cycleReadingDisclaimer": "The reading is an invitation to self-knowledge — never a deterministic prediction about health, money or relationships.",
   "cycleReadingRecordCount": "{count, plural, =0{No records in this lunation yet} one{1 record in this lunation} other{{count} records in this lunation}}",
   "cycleReadingShallowWarning": "Few records in this period: the reading may come out shallow. How about recording a few more days before buying?",
@@ -1713,7 +1713,7 @@
   "cycleReadingGenerationFailed": "Could not generate right now. Your purchase still stands — try again in a moment, at no extra charge.",
   "cycleReadingUnavailable": "Purchase unavailable at the moment. Try again later.",
   "cycleReadingShareAffirmation": "Share affirmation",
-  "cycleReadingShareSeal": "Share seal of the cycle",
+  "cycleReadingShareSeal": "Share the keywords",
   "cycleReadingSavedToArchive": "Saved in My Records — your reading stays in your archive forever.",
   "cycleReadingOfferTitle": "{count, plural, one{Your lunation yielded 1 record} other{Your lunation yielded {count} records}}",
   "cycleReadingOfferBody": "Want its reading? The oracle weaves your records and the sky of the period into an analysis that is only yours.",
@@ -1722,7 +1722,7 @@
   "cycleReadingLunationTitle": "Lunation Reading",
   "cycleReadingWeekPeriodLine": "Last 7 days, from {start} to {end}",
   "cycleReadingWeekRecordCount": "{count, plural, =0{No records this week yet} one{1 record this week} other{{count} records this week}}",
-  "cycleReadingWeekWhatBody": "Four direct sections about your last seven days: portrait of the moment, the threads that repeat, the sky above you and a tailored affirmation — saved forever in My Records. The practice review, the rituals for the next cycle and the seal belong to the Lunation Reading.",
+  "cycleReadingWeekWhatBody": "Four direct sections about your last seven days: portrait of the moment, the threads that repeat, the sky above you and a tailored affirmation — saved forever in My Records. The practice review, the rituals for the next cycle and the keywords belong to the Lunation Reading.",
   "dreamTeaserTitle": "What does this dream mean?",
   "dreamTeaserIntro": "The full interpretation is Premium — but the first thread is yours.",
   "dreamTeaserPeek": "Peek at the interpretation",
@@ -1788,5 +1788,6 @@
   "cyclesRulerJupiter": "Jupiter",
   "cyclesRulerSaturno": "Saturn",
   "cyclesRulerMercurio": "Mercury",
-  "cyclesReadingCardSubtitle": "A reading of your week or your lunation, woven from what you recorded"
+  "cyclesReadingCardSubtitle": "A reading of your week or your lunation, woven from what you recorded",
+  "cyclesTabIntro": "Where you stand in time — the week, the lunation and the 120 years of your life"
 }

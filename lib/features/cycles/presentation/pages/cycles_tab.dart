@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -14,6 +15,7 @@ import '../../data/models/life_eras_state.dart';
 import '../../domain/life_timeline.dart';
 import '../providers/life_eras_provider.dart';
 import '../widgets/cycle_labels.dart';
+import '../widgets/cycles_emblem.dart';
 import '../widgets/era_card.dart';
 import 'life_eras_page.dart';
 
@@ -75,6 +77,11 @@ class _CyclesBodyState extends State<_CyclesBody> {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: StaggeredEntrance(
         children: [
+          // O emblema vivo abre a seção, como nas outras abas.
+          SectionEmblemHeader.custom(
+            customArt: const CyclesEmblemArt(),
+            intro: l10n.cyclesTabIntro,
+          ),
           if (estado == null || eras.carregando)
             const _Carregando()
           else

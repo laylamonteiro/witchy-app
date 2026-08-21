@@ -1619,10 +1619,10 @@
   "cycleReadingSectionPractice": "🔮 Sua prática",
   "cycleReadingSectionRituals": "✨ Rituais para o próximo ciclo",
   "cycleReadingSectionAffirmation": "💫 Uma afirmação para levar",
-  "cycleReadingSectionSeal": "🌙 Selo do ciclo",
+  "cycleReadingSectionSeal": "🌙 Palavras-chave do ciclo",
   "cycleReadingIntroTagline": "O oráculo lê o seu grimório: uma análise mágica única da sua lunação, tecida a partir do que você registrou.",
   "cycleReadingIntroWhatTitle": "O que vem na leitura",
-  "cycleReadingIntroWhatBody": "Sete seções só suas: retrato do momento, os fios que se repetem, o céu sobre você (trânsitos e fases da lua), sua prática, rituais para o próximo ciclo, uma afirmação sob medida e o selo do ciclo — tudo salvo para sempre em Meus Registros.",
+  "cycleReadingIntroWhatBody": "Sete seções só suas: retrato do momento, os fios que se repetem, o céu sobre você (trânsitos e fases da lua), sua prática, rituais para o próximo ciclo, uma afirmação sob medida e as palavras-chave do ciclo — tudo salvo para sempre em Meus Registros.",
   "cycleReadingDisclaimer": "A leitura é um convite ao autoconhecimento — nunca uma previsão determinista de saúde, dinheiro ou relacionamentos.",
   "cycleReadingRecordCount": "{count, plural, =0{Nenhum registro nesta lunação ainda} one{1 registro nesta lunação} other{{count} registros nesta lunação}}",
   "cycleReadingShallowWarning": "Poucos registros neste período: a leitura pode sair rasa. Que tal registrar mais alguns dias antes de comprar?",
@@ -1713,7 +1713,7 @@
   "cycleReadingGenerationFailed": "Não foi possível gerar agora. Sua compra continua valendo — tente de novo em instantes, sem nova cobrança.",
   "cycleReadingUnavailable": "Compra indisponível no momento. Tente mais tarde.",
   "cycleReadingShareAffirmation": "Compartilhar afirmação",
-  "cycleReadingShareSeal": "Compartilhar selo do ciclo",
+  "cycleReadingShareSeal": "Compartilhar as palavras-chave",
   "cycleReadingSavedToArchive": "Salva em Meus Registros — sua leitura fica no acervo para sempre.",
   "cycleReadingOfferTitle": "{count, plural, one{Sua lunação rendeu 1 registro} other{Sua lunação rendeu {count} registros}}",
   "cycleReadingOfferBody": "Quer a leitura dela? O oráculo costura seus registros e o céu do período numa análise só sua.",
@@ -1722,7 +1722,7 @@
   "cycleReadingLunationTitle": "Leitura da Lunação",
   "cycleReadingWeekPeriodLine": "Últimos 7 dias, de {start} a {end}",
   "cycleReadingWeekRecordCount": "{count, plural, =0{Nenhum registro nesta semana ainda} one{1 registro nesta semana} other{{count} registros nesta semana}}",
-  "cycleReadingWeekWhatBody": "Quatro seções diretas sobre os seus últimos sete dias: retrato do momento, os fios que se repetem, o céu sobre você e uma afirmação sob medida — salvas para sempre em Meus Registros. O balanço da prática, os rituais do próximo ciclo e o selo são da Leitura da Lunação.",
+  "cycleReadingWeekWhatBody": "Quatro seções diretas sobre os seus últimos sete dias: retrato do momento, os fios que se repetem, o céu sobre você e uma afirmação sob medida — salvas para sempre em Meus Registros. O balanço da prática, os rituais do próximo ciclo e as palavras-chave são da Leitura da Lunação.",
   "dreamTeaserTitle": "O que este sonho quer dizer?",
   "dreamTeaserIntro": "A interpretação completa é do Premium — mas o primeiro fio é seu.",
   "dreamTeaserPeek": "Espiar a interpretação",
@@ -1788,5 +1788,6 @@
   "cyclesRulerJupiter": "Júpiter",
   "cyclesRulerSaturno": "Saturno",
   "cyclesRulerMercurio": "Mercúrio",
-  "cyclesReadingCardSubtitle": "Uma leitura da sua semana ou da sua lunação, tecida do que você registrou"
+  "cyclesReadingCardSubtitle": "Uma leitura da sua semana ou da sua lunação, tecida do que você registrou",
+  "cyclesTabIntro": "Onde você está no tempo — a semana, a lunação e os 120 anos da sua vida"
 }
