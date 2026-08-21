@@ -95,11 +95,6 @@ void main() {
           p.cycleReadingSectionInstruction('affirmation'),
       'cycleReadingSectionInstruction (seal)': (p, g) =>
           p.cycleReadingSectionInstruction('seal'),
-      'dreamTeaserSystemPrompt': (p, g) => p.dreamTeaserSystemPrompt(g),
-      'dailyWeatherTeaserSystemPrompt': (p, g) =>
-          p.dailyWeatherTeaserSystemPrompt(g),
-      'magicalProfileTeaserSystemPrompt': (p, g) =>
-          p.magicalProfileTeaserSystemPrompt(g),
       'defaultSpellName': (p, g) => p.defaultSpellName,
       'encyIdentifySystemPrompt (crystal)': (p, g) =>
           p.encyIdentifySystemPrompt('crystal'),
@@ -254,27 +249,6 @@ void main() {
           expect(prompt, contains('unknownBirthTime'),
               reason: 'unknownBirthTime [$lang/${gender.name}]');
         }
-      });
-    });
-
-    test('toda degustação pede um número CURTO de frases', () {
-      // A degustação é a prova do produto pago: precisa ser curta (senão
-      // entrega o que é pago) e presa aos fatos recebidos (senão a amostra
-      // vira ficção sobre a vida de quem lê). Quatro frases dão ideia do
-      // que vem; sem número nenhum, a amostra viraria o produto.
-      final teasers = <String, String Function(AiPrompts, Gender)>{
-        'clima do dia': (p, g) => p.dailyWeatherTeaserSystemPrompt(g),
-        'perfil mágico': (p, g) => p.magicalProfileTeaserSystemPrompt(g),
-        'sonho': (p, g) => p.dreamTeaserSystemPrompt(g),
-      };
-      promptsByLang.forEach((lang, prompts) {
-        teasers.forEach((name, probe) {
-          for (final gender in Gender.values) {
-            final prompt = probe(prompts, gender);
-            expect(prompt, contains('4'),
-                reason: 'quatro frases: $name [$lang/${gender.name}]');
-          }
-        });
       });
     });
 
