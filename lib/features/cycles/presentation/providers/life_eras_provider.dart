@@ -39,20 +39,29 @@ class LifeErasProvider extends ChangeNotifier {
 
   /// Garante que [state] corresponde a [chart]. Chamar à vontade: repetições
   /// com o mesmo mapa não custam nada.
+  ///
+  /// Não chame durante o build — [notifyListeners] é síncrono aqui e o
+  /// Provider recusa alterações com a árvore montando. Quem chama de
+  /// `didChangeDependencies` deve adiar para depois do frame.
   Future<void> sync({
     required String userId,
     required BirthChartModel? chart,
   }) async {
     final assinatura = _assinar(userId, chart);
     if (assinatura == _assinatura && _state != null) return;
-    if (_carregando) return;
 
     _assinatura = assinatura;
     _carregando = true;
     notifyListeners();
 
-    _state = await _repository.load(userId: userId, chart: chart);
+    final resultado = await _repository.load(userId: userId, chart: chart);
 
+    // Uma sync mais nova assumiu enquanto esta esperava: o resultado dela é
+    // que vale. Descartar aqui evita que a resposta antiga chegue por último
+    // e sobrescreva a nova.
+    if (_assinatura != assinatura) return;
+
+    _state = resultado;
     _carregando = false;
     notifyListeners();
   }

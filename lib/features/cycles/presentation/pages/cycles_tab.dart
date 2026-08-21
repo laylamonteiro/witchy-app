@@ -47,7 +47,13 @@ class _CyclesBodyState extends State<_CyclesBody> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _sincronizar();
+    // Adiado para depois do frame de propósito: `sync` notifica de forma
+    // síncrona, e mexer num provider com a árvore ainda montando é erro em
+    // tempo de execução — do tipo que nem o analisador nem os testes pegam.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _sincronizar();
+    });
   }
 
   void _sincronizar() {

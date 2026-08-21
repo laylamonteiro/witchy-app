@@ -6,6 +6,7 @@ import 'package:grimorio_de_bolso/features/astrology/data/models/planet_position
 import 'package:grimorio_de_bolso/features/cycles/data/models/life_eras_state.dart';
 import 'package:grimorio_de_bolso/features/cycles/data/repositories/life_eras_repository.dart';
 import 'package:grimorio_de_bolso/features/cycles/domain/era_ruler.dart';
+import 'package:grimorio_de_bolso/features/cycles/presentation/providers/life_eras_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A costura entre o mapa astral salvo e o cálculo das Eras.
@@ -216,6 +217,60 @@ void main() {
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('life_eras_bruxa-1'), isNull);
+    });
+  });
+
+  group('LifeErasProvider', () {
+    test('sem mapa, chega ao estado incompleto', () async {
+      final provider = LifeErasProvider();
+      await provider.sync(userId: 'bruxa-1', chart: null);
+
+      expect(provider.state, isA<LifeErasIncomplete>());
+      expect(provider.carregando, isFalse);
+    });
+
+    test('com mapa, chega à linha do tempo', () async {
+      final provider = LifeErasProvider();
+      await provider.sync(
+        userId: 'bruxa-1',
+        chart: mapa(longitudeDaLua: 83.4598),
+      );
+
+      expect(provider.state, isA<LifeErasReady>());
+      expect((provider.state as LifeErasReady).linha.regenteNatal,
+          EraRegente.marte);
+    });
+
+    test('repetir a sync com o mesmo mapa não avisa a tela de novo', () async {
+      // A aba chama `sync` a cada mudança de dependência; se cada chamada
+      // notificasse, a tela se reconstruiria à toa em looping.
+      final provider = LifeErasProvider();
+      final chart = mapa(longitudeDaLua: 83.4598);
+      var avisos = 0;
+      provider.addListener(() => avisos++);
+
+      await provider.sync(userId: 'bruxa-1', chart: chart);
+      final depoisDaPrimeira = avisos;
+      await provider.sync(userId: 'bruxa-1', chart: chart);
+
+      expect(depoisDaPrimeira, greaterThan(0));
+      expect(avisos, depoisDaPrimeira);
+    });
+
+    test('trocar o mapa refaz a conta', () async {
+      final provider = LifeErasProvider();
+
+      await provider.sync(
+        userId: 'bruxa-1',
+        chart: mapa(longitudeDaLua: 83.4598),
+      );
+      await provider.sync(
+        userId: 'bruxa-1',
+        chart: mapa(longitudeDaLua: 300.0, id: 'mapa-2'),
+      );
+
+      expect((provider.state as LifeErasReady).linha.regenteNatal,
+          EraRegente.sol);
     });
   });
 }
