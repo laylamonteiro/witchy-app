@@ -522,6 +522,11 @@ jobs:
           # verdade. A sandbox (rcb_sb_) fica só no branch-validate.yml
           # (staging/prévias). Simétrico à trava de lá.
           REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY }}
+          # ID do cliente OAuth *Web* do Google (o mesmo do provedor Google
+          # no Supabase). Com ele, a entrada com o Google acontece dentro da
+          # página e a aba nunca vai para accounts.google.com. Sem ele, o app
+          # continua no redirecionamento de sempre — não é obrigatório.
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
         run: |
           # Trava: em produção a chave web NÃO pode ser sandbox. Se veio uma
           # rcb_sb_ (ex.: a de teste por engano), para aqui — senão o site
@@ -535,7 +540,8 @@ jobs:
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
-            --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY"
+            --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
 
       - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
         run: bash scripts/assemble_site.sh public

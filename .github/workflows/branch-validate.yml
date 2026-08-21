@@ -220,6 +220,9 @@ jobs:
   #   CLOUDFLARE_ACCOUNT_ID  id da conta (aparece na barra lateral do painel)
   #   REVENUECAT_WEB_KEY_SANDBOX  chave rcb_sb_ do RevenueCat Billing
   #                               (sandbox: cartão de teste; nunca cobra)
+  #   GOOGLE_WEB_CLIENT_ID        (opcional) id do cliente OAuth Web do
+  #                               Google. Sem ele o login social segue pelo
+  #                               redirecionamento de página inteira.
   #   (SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY, GROQ_API_KEY,
   #    GEMINI_API_KEY e PROKERALA_* já são usados pelo workflow de release)
   #
@@ -282,6 +285,11 @@ jobs:
           # release.yml. Sem fallback para a de produção — de propósito:
           # cair na chave real no staging cobraria cartões de verdade.
           REVENUECAT_WEB_KEY: ${{ secrets.REVENUECAT_WEB_KEY_SANDBOX }}
+          # ID do cliente OAuth *Web* do Google (o mesmo do provedor Google
+          # no Supabase). Com ele, a entrada com o Google acontece dentro da
+          # página e a aba nunca vai para accounts.google.com. Sem ele, o app
+          # continua no redirecionamento de sempre — não é obrigatório.
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
         run: |
           # Trava: no staging a chave web PRECISA ser sandbox. Se veio uma
           # que não começa com rcb_sb_ (ex.: a de produção por engano), para
@@ -300,7 +308,8 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
             --dart-define=UNLIMITED_CYCLE_READINGS=true \
-            --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY"
+            --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
 
       - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
         run: bash scripts/assemble_site.sh public
