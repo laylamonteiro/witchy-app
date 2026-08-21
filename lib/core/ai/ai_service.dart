@@ -310,6 +310,13 @@ class AIService {
   String _buildChartSummary(BirthChartModel chart, MagicalProfile profile) {
     final buffer = StringBuffer();
 
+    // Sem hora de nascimento o mapa é calculado com meio-dia: as casas, o
+    // Ascendente e o Meio do Céu saem FABRICADOS. Mandá-los assim faria a
+    // interpretação afirmar com convicção coisas que ninguém sabe. O prompt
+    // da Leitura do Ciclo já tratava disso; aqui não tratava.
+    final semHora = chart.unknownBirthTime;
+    String casa(PlanetPosition p) => semHora ? '' : ' - Casa ${p.houseNumber}';
+
     // Formata um corpo/ponto do mapa com signo, grau e casa (se presente).
     String? body(Planet pl, String label) {
       final match = chart.planets.where((p) => p.planet == pl);
@@ -318,13 +325,6 @@ class AIService {
       final retro = p.isRetrograde ? ' (R)' : '';
       return '$label: ${p.positionString}${casa(p)}$retro';
     }
-
-    // Sem hora de nascimento o mapa é calculado com meio-dia: as casas, o
-    // Ascendente e o Meio do Céu saem FABRICADOS. Mandá-los assim faria a
-    // interpretação afirmar com convicção coisas que ninguém sabe. O prompt
-    // da Leitura do Ciclo já tratava disso; aqui não tratava.
-    final semHora = chart.unknownBirthTime;
-    String casa(PlanetPosition p) => semHora ? '' : ' - Casa ${p.houseNumber}';
 
     buffer.writeln('DADOS DO MAPA ASTRAL:');
     buffer.writeln('');
