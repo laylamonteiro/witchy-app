@@ -29,6 +29,7 @@ void main() {
 
     test('destinos apontam para a seção/aba certa', () {
       // Bottom bar: 0 = Seu Dia, 1 = Grimório, 2 = Ferramentas, 3 = Diários.
+      // (Ferramentas tem três abas internas: Astrologia, Ferramentas e Ciclos.)
       expect(AppDeepLink.yourDay.homeTab, 0);
       expect(AppDeepLink.yourDay.encyclopediaSection, isNull);
       expect(AppDeepLink.grimoireIndex.homeTab, 1);
@@ -59,6 +60,10 @@ void main() {
       }
       // Diários → aba Sonhos (Gratidão 0, Afirmações 1, Escrita 2, Sonhos 3).
       expect(AppDeepLink.dreamsDiary.homeTab, 3);
+      // A Leitura do Ciclo empilha sobre Ferramentas, que é onde mora a aba
+      // Ciclos — fechar a leitura devolve a pessoa ao lado das Eras.
+      expect(AppDeepLink.cycleReading.homeTab, 2);
+      expect(AppDeepLink.cycleReading.opensCycleReading, isTrue);
       expect(AppDeepLink.dreamsDiary.diaryTab, 3);
       expect(AppDeepLink.dreamsDiary.encyclopediaSection, isNull);
       expect(AppDeepLink.moonEncyclopedia.diaryTab, isNull);

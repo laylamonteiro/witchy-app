@@ -44,6 +44,13 @@ enum AppFeature {
   astrologyDailyWeather,
   astrologyPersonalizedSuggestions,
 
+  // Ciclos — Suas Eras
+  /// A Era e a Fase de agora: abertas para todo mundo.
+  lifeErasNow,
+
+  /// Passado, futuro e as leituras completas: Premium.
+  lifeErasFull,
+
   // Runas
   runesBasic,
   runesReadings,
@@ -365,6 +372,9 @@ class FeatureAccessService {
       AppFeature.wheelOfYearBasic,
       AppFeature.runesBasic,
       AppFeature.astrologyBasic,
+      // A Era e a Fase correntes são a isca da feature: sem elas abertas,
+      // ninguém descobre que existem 120 anos de linha do tempo por trás.
+      AppFeature.lifeErasNow,
       AppFeature.settingsBasic,
       AppFeature.mascotInteraction,
       AppFeature.grimoireView,
@@ -417,6 +427,8 @@ class FeatureAccessService {
       case AppFeature.astrologyDailyWeather:
       case AppFeature.astrologyPersonalizedSuggestions:
         return _l10n.featurePreviewAstrology;
+      case AppFeature.lifeErasFull:
+        return _l10n.featurePreviewCycles;
       case AppFeature.sigilsCreate:
       case AppFeature.sigilsView:
         return _l10n.featurePreviewSigils;

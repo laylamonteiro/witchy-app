@@ -108,6 +108,9 @@ jobs:
             test/guided_rituals_parity_test.dart \
             test/tarot_concept_questions_parity_test.dart \
             test/ai_prompts_parity_test.dart \
+            test/life_eras_content_parity_test.dart \
+            test/highlighted_text_test.dart \
+            test/month_sky_math_test.dart \
             test/l10n_test.dart \
             test/numerology_calculator_test.dart \
             test/i18n_smoke_test.dart
@@ -288,10 +291,15 @@ jobs:
             echo "::error::REVENUECAT_WEB_KEY_SANDBOX não é uma chave sandbox (rcb_sb_). O staging não pode usar a chave de produção."
             exit 1
           fi
+          # Prévia de branch e staging são ambientes de TESTE: a Leitura do
+          # Ciclo sai sem a espera de 7/30 dias, para dar para avaliar o
+          # resultado sem esperar um mês. O release.yml, que é quem publica
+          # em produção, tem o build dele e NÃO passa este define.
           flutter build web --release --no-wasm-dry-run \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
+            --dart-define=UNLIMITED_CYCLE_READINGS=true \
             --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY"
 
       - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
@@ -565,7 +573,8 @@ jobs:
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
-            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG $CAPTCHA_FLAG
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            --dart-define=UNLIMITED_CYCLE_READINGS=true $ADMOB_FLAG $CAPTCHA_FLAG
           mkdir -p candidato
           cp build/app/outputs/flutter-apk/app-release.apk \
              "candidato/grimorio-de-bolso-${{ steps.versao.outputs.nome }}.apk"

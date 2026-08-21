@@ -444,7 +444,7 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                 ),
                                 yearlyPrice: _priceFor(
                                   SubscriptionType.yearly,
-                                  'R\$ 79,90',
+                                  'R\$ 89,90',
                                 ),
                                 lifetimePrice: lifetimeAvailable
                                     ? _priceFor(

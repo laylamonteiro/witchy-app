@@ -269,27 +269,50 @@ class PremiumOfferDivider extends StatelessWidget {
   }
 }
 
+/// O que está incluso — e a lista MUDA com o plano escolhido.
+///
+/// O Vitalício não é o Premium mais caro: ele carrega coisas que a assinatura
+/// não dá (a Leitura do Ciclo, que é compra avulsa para todo mundo, e o fim
+/// da renovação). Se a lista ficasse igual nos três planos, o preço maior
+/// pareceria só um preço maior. Selecionar Vitalício acrescenta as duas
+/// linhas extras, em destaque.
 class PremiumBenefitsSection extends StatelessWidget {
-  const PremiumBenefitsSection({super.key});
+  const PremiumBenefitsSection({super.key, this.selectedPlan});
+
+  /// Plano em foco; nulo mostra apenas o que vale para qualquer Premium.
+  final SubscriptionType? selectedPlan;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final benefits = [
-      ('assets/premium/icon_orb.png', l10n.premiumBenefitAdvisor),
-      ('assets/premium/icon_book.png', l10n.premiumBenefitEncyclopedia),
-      ('assets/premium/icon_moon.png', l10n.premiumBenefitDailyClimate),
-      ('assets/premium/icon_runes.png', l10n.premiumBenefitUnlimitedReadings),
-      ('assets/premium/icon_cloud.png', l10n.premiumBenefitCloudSync),
+    final benefits = <_Benefit>[
+      _Benefit.asset('assets/premium/icon_orb.png', l10n.premiumBenefitAdvisor),
+      _Benefit.asset(
+        'assets/premium/icon_book.png',
+        l10n.premiumBenefitEncyclopedia,
+      ),
+      _Benefit.asset(
+        'assets/premium/icon_moon.png',
+        l10n.premiumBenefitDailyClimate,
+      ),
+      _Benefit.asset(
+        'assets/premium/icon_runes.png',
+        l10n.premiumBenefitUnlimitedReadings,
+      ),
+      _Benefit.asset(
+        'assets/premium/icon_cloud.png',
+        l10n.premiumBenefitCloudSync,
+      ),
+      if (selectedPlan == SubscriptionType.lifetime) ...[
+        _Benefit.icon(Icons.auto_awesome, l10n.premiumBenefitLifetimeCycle),
+        _Benefit.icon(Icons.all_inclusive, l10n.premiumBenefitLifetimeNoRenew),
+      ],
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var index = 0; index < benefits.length; index++) ...[
-          _PremiumBenefitRow(
-            assetPath: benefits[index].$1,
-            label: benefits[index].$2,
-          ),
+          _PremiumBenefitRow(benefit: benefits[index]),
           if (index != benefits.length - 1)
             Divider(height: 10, color: context.gc.surfaceBorder),
         ],
@@ -298,14 +321,36 @@ class PremiumBenefitsSection extends StatelessWidget {
   }
 }
 
-class _PremiumBenefitRow extends StatelessWidget {
-  final String assetPath;
-  final String label;
+/// Uma linha da lista: ou uma arte do pacote premium, ou um ícone do sistema
+/// (as exclusivas do Vitalício não têm arte própria e ganham realce lilás).
+class _Benefit {
+  const _Benefit._({
+    required this.label,
+    this.assetPath,
+    this.iconData,
+    this.highlighted = false,
+  });
 
-  const _PremiumBenefitRow({required this.assetPath, required this.label});
+  factory _Benefit.asset(String assetPath, String label) =>
+      _Benefit._(assetPath: assetPath, label: label);
+
+  factory _Benefit.icon(IconData iconData, String label) =>
+      _Benefit._(iconData: iconData, label: label, highlighted: true);
+
+  final String label;
+  final String? assetPath;
+  final IconData? iconData;
+  final bool highlighted;
+}
+
+class _PremiumBenefitRow extends StatelessWidget {
+  final _Benefit benefit;
+
+  const _PremiumBenefitRow({required this.benefit});
 
   @override
   Widget build(BuildContext context) {
+    final destaque = benefit.highlighted;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -317,8 +362,13 @@ class _PremiumBenefitRow extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              color: destaque
+                  ? context.gc.lilac.withValues(alpha: 0.16)
+                  : null,
               border: Border.all(
-                color: context.gc.lilac.withValues(alpha: 0.30),
+                color: context.gc.lilac.withValues(
+                  alpha: destaque ? 0.55 : 0.30,
+                ),
               ),
               boxShadow: [
                 BoxShadow(
@@ -327,18 +377,20 @@ class _PremiumBenefitRow extends StatelessWidget {
                 ),
               ],
             ),
-            child: Image.asset(
-              assetPath,
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
-            ),
+            child: benefit.assetPath != null
+                ? Image.asset(
+                    benefit.assetPath!,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  )
+                : Icon(benefit.iconData, size: 22, color: context.gc.lilac),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              label,
+              benefit.label,
               style: GoogleFonts.lora(
-                color: context.gc.textPrimary,
+                color: destaque ? context.gc.lilac : context.gc.textPrimary,
                 fontSize: 14.5,
                 height: 1.22,
                 fontWeight: FontWeight.w700,
@@ -413,7 +465,7 @@ class PremiumOfferPanel extends StatelessWidget {
               const SizedBox(height: 10),
               const PremiumOfferDivider(),
               const SizedBox(height: 12),
-              const PremiumBenefitsSection(),
+              PremiumBenefitsSection(selectedPlan: selectedPlan),
               const SizedBox(height: 14),
               if (unavailableNotice != null) ...[
                 unavailableNotice!,
@@ -469,134 +521,67 @@ class SubscriptionPlanSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    // Os três lado a lado: esconder o Vitalício embaixo o fazia parecer
+    // consolo, não escolha. Quando ele existe na loja, os cards dividem a
+    // largura igualmente e encolhem (compacto) para caber em tela estreita.
+    final tresPlanos = lifetimeEnabled && lifetimePrice != null;
+
     final monthly = _SubscriptionPlanCard(
       type: SubscriptionType.monthly,
-      title: AppLocalizations.of(context).premiumPlanMonthly,
+      title: l10n.premiumPlanMonthly,
       price: monthlyPrice,
-      period: AppLocalizations.of(context).premiumPerMonth,
+      period: l10n.premiumPerMonth,
       selected: selectedPlan == SubscriptionType.monthly,
       enabled: monthlyEnabled,
+      compacto: tresPlanos,
       onTap: () => onSelected(SubscriptionType.monthly),
     );
     final yearly = _SubscriptionPlanCard(
       type: SubscriptionType.yearly,
-      title: AppLocalizations.of(context).premiumPlanYearly,
+      title: l10n.premiumPlanYearly,
       price: yearlyPrice,
-      period: AppLocalizations.of(context).premiumPerYear,
-      savings: AppLocalizations.of(context).premiumSave33,
+      period: l10n.premiumPerYear,
+      savings: l10n.premiumSave33,
       popular: true,
       emphasized: true,
       selected: selectedPlan == SubscriptionType.yearly,
       enabled: yearlyEnabled,
+      compacto: tresPlanos,
       onTap: () => onSelected(SubscriptionType.yearly),
     );
 
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(flex: 10, child: monthly),
-            const SizedBox(width: 12),
-            Expanded(flex: 11, child: yearly),
-          ],
-        ),
-        // Vitalício: card LARGO abaixo do par mensal/anual, de propósito.
-        // Três cards lado a lado espremeriam em tela estreita (o mesmo
-        // aperto da tela de login); aqui a compra única respira e ainda
-        // ganha destaque. Só aparece quando o produto existe na loja.
-        if (lifetimeEnabled && lifetimePrice != null) ...[
-          const SizedBox(height: 12),
-          _LifetimeOfferCard(
-            title: AppLocalizations.of(context).premiumPlanLifetime,
-            subtitle: AppLocalizations.of(context).premiumLifetimeOnce,
-            price: lifetimePrice!,
-            selected: selectedPlan == SubscriptionType.lifetime,
-            onTap: () => onSelected(SubscriptionType.lifetime),
-          ),
+    if (!tresPlanos) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(flex: 10, child: monthly),
+          const SizedBox(width: 12),
+          Expanded(flex: 11, child: yearly),
         ],
-      ],
+      );
+    }
+
+    final lifetime = _SubscriptionPlanCard(
+      type: SubscriptionType.lifetime,
+      title: l10n.premiumPlanLifetime,
+      price: lifetimePrice!,
+      period: l10n.premiumLifetimeShort,
+      selected: selectedPlan == SubscriptionType.lifetime,
+      enabled: lifetimeEnabled,
+      compacto: true,
+      onTap: () => onSelected(SubscriptionType.lifetime),
     );
-  }
-}
 
-/// Card de largura cheia da compra Vitalícia — mesma lógica de seleção dos
-/// cards de plano, layout horizontal (nome + subtítulo à esquerda, preço à
-/// direita) para caber confortável em qualquer largura.
-class _LifetimeOfferCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String price;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _LifetimeOfferCard({
-    required this.title,
-    required this.subtitle,
-    required this.price,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final borderColor =
-        selected ? context.gc.lilac : context.gc.surfaceBorder;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: selected
-              ? context.gc.lilac.withValues(alpha: 0.14)
-              : Colors.transparent,
-          border: Border.all(color: borderColor, width: selected ? 2 : 1),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              size: 20,
-              color: selected ? context.gc.lilac : context.gc.textSecondary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: selected
-                              ? context.gc.lilac
-                              : context.gc.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.textSecondary,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              price,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: context.gc.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ],
-        ),
-      ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(child: monthly),
+        const SizedBox(width: 8),
+        Expanded(child: yearly),
+        const SizedBox(width: 8),
+        Expanded(child: lifetime),
+      ],
     );
   }
 }
@@ -611,6 +596,10 @@ class _SubscriptionPlanCard extends StatelessWidget {
   final bool emphasized;
   final bool selected;
   final bool enabled;
+
+  /// Três cards dividindo a largura: tipografia e alturas encolhem, e o
+  /// período desce para baixo do preço em vez de disputar a mesma linha.
+  final bool compacto;
   final VoidCallback onTap;
 
   const _SubscriptionPlanCard({
@@ -624,6 +613,7 @@ class _SubscriptionPlanCard extends StatelessWidget {
     this.savings,
     this.popular = false,
     this.emphasized = false,
+    this.compacto = false,
   });
 
   @override
@@ -647,8 +637,17 @@ class _SubscriptionPlanCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
             child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            constraints: BoxConstraints(minHeight: emphasized ? 152 : 136),
-            padding: EdgeInsets.fromLTRB(10, emphasized ? 12 : 10, 10, 10),
+            constraints: BoxConstraints(
+              minHeight: compacto
+                  ? (emphasized ? 132 : 120)
+                  : (emphasized ? 152 : 136),
+            ),
+            padding: EdgeInsets.fromLTRB(
+              compacto ? 6 : 10,
+              emphasized ? 12 : 10,
+              compacto ? 6 : 10,
+              10,
+            ),
             decoration: BoxDecoration(
               color: selected
                   ? Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!
@@ -674,22 +673,26 @@ class _SubscriptionPlanCard extends StatelessWidget {
                   height: 20,
                   child: tag == null
                       ? null
-                      : DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: context.gc.lilac,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 3,
+                      : FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: context.gc.lilac,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Text(
-                              tag,
-                              style: TextStyle(
-                                color: context.gc.textPrimary,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: compacto ? 7 : 10,
+                                vertical: 3,
+                              ),
+                              child: Text(
+                                tag,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color: context.gc.textPrimary,
+                                  fontSize: compacto ? 9 : 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),
@@ -698,49 +701,79 @@ class _SubscriptionPlanCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.lora(
                     color: context.gc.textPrimary,
-                    fontSize: 16,
+                    fontSize: compacto ? 13 : 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        price,
-                        maxLines: 1,
-                        style: GoogleFonts.lora(
-                          color: context.gc.textPrimary,
-                          fontSize: emphasized ? 23 : 21,
-                          fontWeight: FontWeight.w700,
-                        ),
+                if (compacto) ...[
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      price,
+                      maxLines: 1,
+                      style: GoogleFonts.lora(
+                        color: context.gc.textPrimary,
+                        fontSize: emphasized ? 18 : 17,
+                        fontWeight: FontWeight.w700,
                       ),
-                      const SizedBox(width: 3),
-                      Text(
-                        period,
-                        style: GoogleFonts.lora(
-                          color: context.gc.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      period,
+                      maxLines: 1,
+                      style: GoogleFonts.lora(
+                        color: context.gc.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ] else
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          price,
+                          maxLines: 1,
+                          style: GoogleFonts.lora(
+                            color: context.gc.textPrimary,
+                            fontSize: emphasized ? 23 : 21,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          period,
+                          style: GoogleFonts.lora(
+                            color: context.gc.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (savings != null) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    savings!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: context.gc.success,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      savings!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: context.gc.success,
+                        fontSize: compacto ? 10 : 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],

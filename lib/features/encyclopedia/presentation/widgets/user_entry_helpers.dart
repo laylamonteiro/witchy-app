@@ -3,9 +3,6 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
-import '../../../auth/data/models/feature_access.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/user_entry_model.dart';
 import '../pages/add_entry_page.dart';
 import '../providers/encyclopedia_provider.dart';
@@ -174,19 +171,10 @@ class AddUserEntryFab extends StatelessWidget {
         backgroundColor: context.gc.lilac,
         foregroundColor: context.gc.onPrimary,
         tooltip: AppLocalizations.of(context).encyAddFabTooltip,
+        // Sem gate aqui: quem não tem acesso entra, vê os campos que o
+        // verbete traria e decide. Barrar na porta nunca disse o que havia
+        // atrás dela — o paywall é da própria AddEntryPage, no toque da foto.
         onPressed: () {
-          final access = context
-              .read<AuthProvider>()
-              .checkFeatureAccess(AppFeature.encyclopediaPersonalEntries);
-          if (!access.hasFullAccess) {
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              isScrollControlled: true,
-              builder: (_) => const PremiumUpgradeSheet(),
-            );
-            return;
-          }
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => AddEntryPage(category: category),

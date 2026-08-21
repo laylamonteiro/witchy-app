@@ -2,22 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/ai/ai_service.dart';
 import '../../../../core/offers/offer_engine.dart';
-import '../../../../core/offers/teaser_cache.dart';
-import '../../../../core/offers/teaser_reveal.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/dream_model.dart';
 
-/// Degustação da interpretação de sonhos (Motor de Ofertas, B1).
+/// O que a interpretação deste sonho traria (Motor de Ofertas, B1).
 ///
 /// Momento-gatilho: a pessoa está RELENDO um sonho salvo sem interpretação
-/// (tela de leitura — nunca interrompe a escrita). A amostra são 2 frases
-/// REAIS geradas sob demanda (o texto completo nem existe no aparelho),
-/// cacheadas por sonho: nunca uma segunda chamada de IA pelo mesmo registro.
+/// (tela de leitura — nunca interrompe a escrita). Mostra as seções da
+/// interpretação pelo nome, com o texto sob véu: nada é gerado, então este
+/// card não custa uma chamada de IA e o conteúdo real nunca chega ao
+/// aparelho de quem não tem acesso.
 class DreamTeaserCard extends StatefulWidget {
   final DreamModel dream;
 
@@ -33,8 +32,6 @@ class _DreamTeaserCardState extends State<DreamTeaserCard> {
   OfferEngine? _engine;
   bool _visible = false;
   bool _exposureRecorded = false;
-  String? _sample;
-  bool _isGenerating = false;
 
   @override
   void initState() {
@@ -44,12 +41,8 @@ class _DreamTeaserCardState extends State<DreamTeaserCard> {
 
   Future<void> _load() async {
     final engine = await OfferEngine.load();
-    final cached = await TeaserAiCache.get(_slot.name, widget.dream.id);
     if (!mounted) return;
-    setState(() {
-      _engine = engine;
-      _sample = cached;
-    });
+    setState(() => _engine = engine);
     _evaluate();
   }
 
@@ -68,30 +61,6 @@ class _DreamTeaserCardState extends State<DreamTeaserCard> {
       engine.recordExposure(_slot);
     }
     if (mounted) setState(() => _visible = show);
-  }
-
-  Future<void> _generateSample() async {
-    if (_isGenerating) return;
-    setState(() => _isGenerating = true);
-    final messenger = ScaffoldMessenger.of(context);
-    final alertColor = context.gc.alert;
-    try {
-      final sample = await AIService.instance.generateDreamTeaser(
-        dreamDescription: widget.dream.content,
-        feelings: widget.dream.feeling,
-      );
-      await TeaserAiCache.put(_slot.name, widget.dream.id, sample);
-      if (!mounted) return;
-      setState(() => _sample = sample);
-    } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-        content: Text('$e'.replaceAll('Exception: ', '')),
-        backgroundColor: alertColor,
-      ));
-    } finally {
-      if (mounted) setState(() => _isGenerating = false);
-    }
   }
 
   Future<void> _dismiss() async {
@@ -148,41 +117,17 @@ class _DreamTeaserCardState extends State<DreamTeaserCard> {
             ],
           ),
           const SizedBox(height: 8),
-          if (_sample == null) ...[
-            Text(
-              l10n.dreamTeaserIntro,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 10),
-            Center(
-              child: OutlinedButton.icon(
-                onPressed: _isGenerating ? null : _generateSample,
-                icon: _isGenerating
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.gc.lilac,
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome, size: 18),
-                label: Text(l10n.dreamTeaserPeek),
-              ),
-            ),
-          ] else
-            TeaserReveal(
-              sample: Text(
-                _sample!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      height: 1.5,
-                    ),
-              ),
-              onCta: _onCta,
-            ),
+          PremiumLockedPreview(
+            titles: [
+              l10n.dreamLockedTitle1,
+              l10n.dreamLockedTitle2,
+              l10n.dreamLockedTitle3,
+              l10n.dreamLockedTitle4,
+              l10n.dreamLockedTitle5,
+            ],
+            linesPerSection: 1,
+            onCta: _onCta,
+          ),
         ],
       ),
     );

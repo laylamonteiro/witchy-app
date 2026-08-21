@@ -28,6 +28,7 @@ enum SpellCategory {
   work, // Trabalho e carreira
   study, // Estudos
   other, // Outros
+  suggested, // Sugeridos pelo app (rituais da Leitura do Ciclo)
 }
 
 enum MoonPhase {
@@ -245,6 +246,8 @@ extension SpellCategoryExtension on SpellCategory {
         return '📖';
       case SpellCategory.other:
         return '🌟';
+      case SpellCategory.suggested:
+        return '🌙';
     }
   }
 }
@@ -371,6 +374,7 @@ const Map<SpellCategory, String> _spellCategoryNamesPt = {
   SpellCategory.work: 'Trabalho',
   SpellCategory.study: 'Estudos',
   SpellCategory.other: 'Outros',
+  SpellCategory.suggested: 'Sugeridos',
 };
 
 const Map<SpellCategory, String> _spellCategoryNamesEn = {
@@ -394,6 +398,7 @@ const Map<SpellCategory, String> _spellCategoryNamesEn = {
   SpellCategory.work: 'Work',
   SpellCategory.study: 'Studies',
   SpellCategory.other: 'Other',
+  SpellCategory.suggested: 'Suggested',
 };
 
 const Map<SpellCategory, String> _spellCategoryNamesEs = {
@@ -417,4 +422,5 @@ const Map<SpellCategory, String> _spellCategoryNamesEs = {
   SpellCategory.work: 'Trabajo',
   SpellCategory.study: 'Estudios',
   SpellCategory.other: 'Otros',
+  SpellCategory.suggested: 'Sugeridos',
 };

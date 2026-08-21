@@ -8,10 +8,10 @@ import '../../../../core/utils/image_compression.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../diary/presentation/widgets/dream_interpretation_text.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../grimoire/presentation/pages/record_detail_page.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
@@ -35,26 +35,24 @@ class _PalmistryPageState extends State<PalmistryPage> {
   String? _reading;
   bool _saved = false;
 
-  @override
-  void initState() {
-    super.initState();
-    // Funcionalidade 100% Premium: sem acesso, sobe o paywall direto
-    // (sem tela intermediária de "Seja Premium") e volta.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
-  }
-
-  Future<void> _ensureAccess() async {
-    final access =
-        context.read<AuthProvider>().checkFeatureAccess(AppFeature.aiPalmistry);
-    if (!access.hasFullAccess && mounted) {
-      await showPaywallThenPop(context);
-    }
-  }
+  /// Pediu a leitura sem ter Premium: a tela mostra o sumário do que ela
+  /// diria, em vez de bater a porta na entrada.
+  bool _mostrarPrevia = false;
 
   static const int _maxUploadBytes = 4 * 1024 * 1024; // limite Groq ~4MB base64
 
   Future<void> _pick(ImageSource source) async {
     if (_isAnalyzing) return;
+
+    // Sem Premium a leitura não é feita: a foto não é escolhida, não sai do
+    // aparelho e nenhuma chamada de visão acontece. O que aparece é o
+    // sumário do que a leitura traria.
+    final access =
+        context.read<AuthProvider>().checkFeatureAccess(AppFeature.aiPalmistry);
+    if (!access.hasFullAccess) {
+      setState(() => _mostrarPrevia = true);
+      return;
+    }
 
     // Limite diário (protege a cota compartilhada da API de visão do Groq).
     if (!context.read<AuthProvider>().canUsePalmistry) {
@@ -173,15 +171,15 @@ class _PalmistryPageState extends State<PalmistryPage> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    final access = authProvider.checkFeatureAccess(AppFeature.aiPalmistry);
 
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).toolPalmistryTitle),
       ),
-      body: !access.hasFullAccess
-          ? const SizedBox.shrink()
-          : _buildFlow(authProvider.remainingPalmistryReadings),
+      // A tela é a mesma para todo mundo: quem não tem Premium lê como
+      // fotografar a mão, escolhe a foto e vê o SUMÁRIO do que a leitura
+      // diria, ponto a ponto, sob véu. A foto nem chega a ser enviada.
+      body: _buildFlow(authProvider.remainingPalmistryReadings),
     );
   }
 
@@ -268,6 +266,19 @@ class _PalmistryPageState extends State<PalmistryPage> {
                     AppLocalizations.of(context).palmReadingLines,
                     style: TextStyle(color: context.gc.textSecondary),
                   ),
+                ],
+              ),
+            ),
+          if (_mostrarPrevia && _reading == null)
+            MagicalCard(
+              child: PremiumLockedPreview(
+                titles: [
+                  AppLocalizations.of(context).palmLockedTitle1,
+                  AppLocalizations.of(context).palmLockedTitle2,
+                  AppLocalizations.of(context).palmLockedTitle3,
+                  AppLocalizations.of(context).palmLockedTitle4,
+                  AppLocalizations.of(context).palmLockedTitle5,
+                  AppLocalizations.of(context).palmLockedTitle6,
                 ],
               ),
             ),

@@ -5,6 +5,7 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/breathing_moon.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/moon_phase_widget.dart';
+import '../../../../core/widgets/page_dots.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../providers/lunar_provider.dart';
 
@@ -81,30 +82,7 @@ class _MoonDayCarouselState extends State<MoonDayCarousel> {
           ),
         ),
         // Pontinhos: a pista visual de que existem outros dias.
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(3, (index) {
-            final active = index == _currentPage;
-            return GestureDetector(
-              onTap: () => _goTo(index),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  width: active ? 18 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: active
-                        ? context.gc.lilac
-                        : context.gc.lilac.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
+        PageDots(count: 3, index: _currentPage, onTap: _goTo),
       ],
     );
   }
