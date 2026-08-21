@@ -266,6 +266,19 @@ class CycleReadingReportPage extends StatelessWidget {
     );
   }
 
+  /// Só para exibição: remove o `# Título` inicial (a AppBar já o traz),
+  /// preservando o resto — inclusive a linha `_período_`.
+  static String _forDisplay(String markdown) {
+    final lines = markdown.split('\n');
+    if (lines.isNotEmpty && lines.first.trimLeft().startsWith('# ')) {
+      lines.removeAt(0);
+      while (lines.isNotEmpty && lines.first.trim().isEmpty) {
+        lines.removeAt(0);
+      }
+    }
+    return lines.join('\n');
+  }
+
   void _shareAffirmation(
     BuildContext context,
     AppLocalizations l10n,
