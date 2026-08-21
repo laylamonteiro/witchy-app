@@ -1838,5 +1838,8 @@
   "cyclesMonthIngressHint": "The season turns: the month changes subject",
   "cyclesMonthRetroStartHint": "Time to revise, not to launch",
   "cyclesMonthRetroEndHint": "What was stuck starts moving again",
-  "cyclesMonthEmpty": "A quiet month in the sky — good for keeping what is already under way"
+  "cyclesMonthEmpty": "A quiet month in the sky — good for keeping what is already under way",
+  "premiumLifetimeShort": "forever",
+  "premiumBenefitLifetimeCycle": "Cycle Reading included — week and lunation, no separate purchase",
+  "premiumBenefitLifetimeNoRenew": "One payment: no renewal, no monthly fee, forever"
 }

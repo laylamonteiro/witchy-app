@@ -2681,5 +2681,8 @@
   "cyclesMonthIngressHint": "Vira a estação: o foco do mês muda de assunto",
   "cyclesMonthRetroStartHint": "Tempo de revisar, não de estrear",
   "cyclesMonthRetroEndHint": "O que estava travado volta a andar",
-  "cyclesMonthEmpty": "Um mês de céu quieto — bom para manter o que já está em marcha"
+  "cyclesMonthEmpty": "Um mês de céu quieto — bom para manter o que já está em marcha",
+  "premiumLifetimeShort": "para sempre",
+  "premiumBenefitLifetimeCycle": "Leitura do Ciclo incluída — semana e lunação, sem compra avulsa",
+  "premiumBenefitLifetimeNoRenew": "Pagamento único: sem renovação, sem mensalidade, para sempre"
 }

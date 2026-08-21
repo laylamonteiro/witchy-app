@@ -613,6 +613,91 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    // O Vitalício já morou num card largo abaixo do par mensal/anual e
+    // parecia consolo, não escolha. Quando a loja tem o produto, os três
+    // dividem a mesma linha — e quem escolhe o Vitalício vê a lista de
+    // benefícios CRESCER, porque ele carrega o que a assinatura não dá.
+    testWidgets('com Vitalício disponível, os três planos dividem a linha',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(360, 760));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      var selected = SubscriptionType.yearly;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('pt', 'BR'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: AppTheme.darkTheme,
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) => SubscriptionPlanSelector(
+                selectedPlan: selected,
+                onSelected: (plan) => setState(() => selected = plan),
+                monthlyPrice: 'R\$ 9,90',
+                yearlyPrice: 'R\$ 89,90',
+                lifetimePrice: 'R\$ 199,90',
+                lifetimeEnabled: true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final monthly = tester.getRect(
+        find.byKey(const ValueKey('subscription_plan_monthly')),
+      );
+      final yearly = tester.getRect(
+        find.byKey(const ValueKey('subscription_plan_yearly')),
+      );
+      final lifetime = tester.getRect(
+        find.byKey(const ValueKey('subscription_plan_lifetime')),
+      );
+      expect(monthly.right, lessThanOrEqualTo(yearly.left));
+      expect(yearly.right, lessThanOrEqualTo(lifetime.left));
+      expect(monthly.center.dy, closeTo(yearly.center.dy, 0.01));
+      expect(yearly.center.dy, closeTo(lifetime.center.dy, 0.01));
+
+      await tester.tap(
+        find.byKey(const ValueKey('subscription_plan_lifetime')),
+      );
+      await tester.pumpAndSettle();
+      expect(selected, SubscriptionType.lifetime);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Vitalício selecionado acrescenta o que a assinatura não dá',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(390, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final l10n = lookupAppLocalizations(const Locale('pt', 'BR'));
+
+      Future<void> pump(SubscriptionType plan) => tester.pumpWidget(
+            MaterialApp(
+              locale: const Locale('pt', 'BR'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              theme: AppTheme.darkTheme,
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  child: PremiumBenefitsSection(selectedPlan: plan),
+                ),
+              ),
+            ),
+          );
+
+      await pump(SubscriptionType.yearly);
+      expect(find.text(l10n.premiumBenefitLifetimeCycle), findsNothing);
+      expect(find.text(l10n.premiumBenefitLifetimeNoRenew), findsNothing);
+
+      await pump(SubscriptionType.lifetime);
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.premiumBenefitAdvisor), findsOneWidget);
+      expect(find.text(l10n.premiumBenefitLifetimeCycle), findsOneWidget);
+      expect(find.text(l10n.premiumBenefitLifetimeNoRenew), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('planos permanecem lado a lado com fonte ampliada',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(320, 700));
