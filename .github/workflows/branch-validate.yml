@@ -290,10 +290,15 @@ jobs:
             echo "::error::REVENUECAT_WEB_KEY_SANDBOX não é uma chave sandbox (rcb_sb_). O staging não pode usar a chave de produção."
             exit 1
           fi
+          # Prévia de branch e staging são ambientes de TESTE: a Leitura do
+          # Ciclo sai sem a espera de 7/30 dias, para dar para avaliar o
+          # resultado sem esperar um mês. O release.yml, que é quem publica
+          # em produção, tem o build dele e NÃO passa este define.
           flutter build web --release --no-wasm-dry-run \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
+            --dart-define=UNLIMITED_CYCLE_READINGS=true \
             --dart-define=REVENUECAT_WEB_KEY="$REVENUECAT_WEB_KEY"
 
       - name: 🧩 Montar publicação (app na raiz, páginas estáticas ao lado)
