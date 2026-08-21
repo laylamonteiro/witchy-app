@@ -49,6 +49,9 @@ final AiPrompts aiPromptsEn = AiPrompts(
   localizedInstruction: (languageTag) =>
       'Reply in the app\'s current language: $languageTag. '
       'Preserve literally any names, notes, intentions, and other content provided by the user; do not translate them automatically.',
+  cycleRitualToSpellIntention: (nome, corpo, extras) =>
+      'Ritual "$nome", suggested by this person\'s cycle reading: $corpo$extras\n\n'
+      'Detail this ritual as a complete spell, keeping EXACTLY this name and the intent above.',
   spellGenerationSystemPrompt: (gender) =>
       '''You are the ${_advisorTitleEn(gender)}, guardian of the arcane wisdom of the Pocket Grimoire.
 

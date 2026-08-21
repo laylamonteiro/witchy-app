@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/ai/ai_service.dart';
+import '../../../../core/ai/prompts/ai_prompts.dart';
 import '../../../../core/sharing/share_card.dart';
 import '../../../../core/sharing/share_card_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -574,67 +576,118 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
   bool _salvo = false;
   bool _salvando = false;
 
+  /// O feitiço recém-salvo, para o atalho "ver" logo ali.
+  SpellModel? _feitico;
+
   /// Texto sem NENHUMA marcação: o feitiço vive no Grimório, onde o campo é
   /// texto puro — `**realce**` e `*itálico*` sairiam como asteriscos na
   /// ficha. Na leitura, ao contrário, a marcação é lida pelo Markdown.
   static String _textoPuro(String texto) =>
       CycleReadingService.semRealce(texto).replaceAll('*', '').trim();
 
+  /// Guarda o ritual como feitiço — completo, como os outros do Grimório.
+  ///
+  /// A leitura sugere o ritual em duas frases, porque é uma LEITURA. Salvo
+  /// assim, ele virava uma ficha pela metade: sem ingredientes e com um
+  /// "como realizar" de uma linha, ao lado de feitiços com sete passos.
+  ///
+  /// Então o ritual volta para a geração de feitiços como intenção, e o que
+  /// entra no Grimório tem ingredientes, passo a passo e duração. O nome e a
+  /// intenção são preservados: nasceram do ciclo desta pessoa.
+  ///
+  /// Se a geração falhar (sem rede, limite da IA), salva do jeito simples —
+  /// o que ela pediu foi guardar o ritual, e isso nunca pode falhar.
   Future<void> _salvar() async {
     if (_salvando || _salvo) return;
     setState(() => _salvando = true);
     final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    final destaque = context.gc.lilac;
+    final provider = context.read<SpellProvider>();
 
-    // Sem a marcação de realce: o feitiço é texto do Grimório, não Markdown
-    // da leitura.
-    final feitico = SpellModel(
-      name: _textoPuro(
-        widget.nome.isEmpty ? l10n.cycleReadingSectionRituals : widget.nome,
-      ),
-      purpose: l10n.cycleReadingRitualPurpose,
-      // O que a leitura sugere é sempre construtivo. A categoria é
-      // "Sugeridos", que existe para isto: separar no Grimório o que veio
-      // do app do que a pessoa escreveu. Inventar uma categoria temática
-      // pelo texto acertaria pouco — e ela pode trocar num toque na ficha.
-      //
-      type: SpellType.attraction,
-      category: SpellCategory.suggested,
-      // Lua e ingredientes vêm da anotação que a própria geração escreve,
-      // em campo separado — não de tentar adivinhá-los no meio da frase.
-      // Sem anotação, ficam vazios e a ficha do feitiço espera a Bruxa.
-      moonPhase: widget.lua,
-      // Os ingredientes moram no próprio passo a passo ("uma vela amarela,
-      // uma xícara de chá"): separá-los exigiria adivinhar o que é
-      // ingrediente e o que é gesto, e a ficha do feitiço deixa a Bruxa
-      // listar o que quiser.
-      ingredients:
-          widget.ingredientes.map(_textoPuro).where((i) => i.isNotEmpty)
-              .toList(),
-      steps: _textoPuro(widget.corpo),
-      observations: widget.periodo == null
-          ? l10n.cycleReadingRitualPurpose
-          : l10n.cycleReadingRitualFrom(widget.periodo!),
+    final nome = _textoPuro(
+      widget.nome.isEmpty ? l10n.cycleReadingSectionRituals : widget.nome,
+    );
+    final corpo = _textoPuro(widget.corpo);
+    final ingredientes = widget.ingredientes
+        .map(_textoPuro)
+        .where((i) => i.isNotEmpty)
+        .toList();
+    final origem = widget.periodo == null
+        ? l10n.cycleReadingRitualPurpose
+        : l10n.cycleReadingRitualFrom(widget.periodo!);
+
+    final feitico = await _tecerFeitico(
+      nome: nome,
+      corpo: corpo,
+      ingredientes: ingredientes,
+      origem: origem,
+      l10n: l10n,
     );
 
-    await context.read<SpellProvider>().addSpell(feitico);
+    await provider.addSpell(feitico);
     if (!mounted) return;
     setState(() {
+      _feitico = feitico;
       _salvo = true;
       _salvando = false;
     });
-    messenger.showSnackBar(SnackBar(
-      content: Text(l10n.cycleReadingRitualSaved),
-      action: SnackBarAction(
-        label: l10n.numSee,
-        textColor: destaque,
-        onPressed: () => navigator.push(
-          MaterialPageRoute(builder: (_) => SpellDetailPage(spell: feitico)),
-        ),
-      ),
-    ));
+  }
+
+  /// O feitiço em si: detalhado pela IA quando dá, simples quando não dá.
+  Future<SpellModel> _tecerFeitico({
+    required String nome,
+    required String corpo,
+    required List<String> ingredientes,
+    required String origem,
+    required AppLocalizations l10n,
+  }) async {
+    // O que a leitura anotou entra na intenção: a fase escolhida a partir do
+    // céu do período e os ingredientes que ela já sugeriu.
+    final extras = StringBuffer();
+    final lua = widget.lua;
+    if (lua != null) {
+      extras.write(' (${lua.displayName})');
+    }
+    if (ingredientes.isNotEmpty) {
+      extras.write(' [${ingredientes.join('; ')}]');
+    }
+
+    try {
+      final tecido = await AIService.instance.generateSpell(
+        aiPrompts.cycleRitualToSpellIntention(nome, corpo, extras.toString()),
+      );
+      return tecido.copyWith(
+        // O nome e o propósito vêm do ciclo dela, não de uma invenção nova.
+        name: nome,
+        category: SpellCategory.suggested,
+        moonPhase: lua ?? tecido.moonPhase,
+        ingredients:
+            tecido.ingredients.isNotEmpty ? tecido.ingredients : ingredientes,
+        // A origem vai junto das observações de segurança que a geração
+        // escreve — as duas coisas interessam a quem for fazer o ritual.
+        observations: [origem, tecido.observations ?? '']
+            .where((t) => t.trim().isNotEmpty)
+            .join('\n\n'),
+      );
+    } catch (_) {
+      return SpellModel(
+        name: nome,
+        purpose: l10n.cycleReadingRitualPurpose,
+        type: SpellType.attraction,
+        category: SpellCategory.suggested,
+        moonPhase: lua,
+        ingredients: ingredientes,
+        steps: corpo,
+        observations: origem,
+      );
+    }
+  }
+
+  void _abrirFeitico() {
+    final feitico = _feitico;
+    if (feitico == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => SpellDetailPage(spell: feitico)),
+    );
   }
 
   @override
@@ -690,12 +743,31 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
                         style: tema.textTheme.bodySmall
                             ?.copyWith(color: context.gc.textSecondary),
                       ),
+                      const SizedBox(width: 4),
+                      TextButton(
+                        onPressed: _abrirFeitico,
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(l10n.numSee),
+                      ),
                     ],
                   )
                 : OutlinedButton.icon(
                     onPressed: _salvando ? null : _salvar,
-                    icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-                    label: Text(l10n.cycleReadingSaveRitual),
+                    icon: _salvando
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: context.gc.lilac,
+                            ),
+                          )
+                        : const Icon(Icons.bookmark_add_outlined, size: 18),
+                    label: Text(_salvando
+                        ? l10n.cycleReadingRitualWeaving
+                        : l10n.cycleReadingSaveRitual),
                   ),
           ),
         ],

@@ -24,6 +24,7 @@ class AiPrompts {
   const AiPrompts({
     required this.localizedInstruction,
     required this.spellGenerationSystemPrompt,
+    required this.cycleRitualToSpellIntention,
     required this.magicalProfileSystemPrompt,
     required this.dailyWeatherSystemPrompt,
     required this.affirmationSystemPrompt,
@@ -68,6 +69,20 @@ class AiPrompts {
 
   /// Persona geradora de feitiços (retorna JSON estrito).
   final String Function(Gender gender) spellGenerationSystemPrompt;
+
+  /// A intenção que transforma um ritual da Leitura do Ciclo em feitiço
+  /// completo.
+  ///
+  /// A leitura sugere o ritual em duas frases — é uma leitura, não uma
+  /// receita. Para virar feitiço de verdade, com ingredientes e passo a
+  /// passo como os outros do Grimório, o texto volta para a geração de
+  /// feitiços como INTENÇÃO. O nome e o propósito são preservados: eles
+  /// nasceram do ciclo desta pessoa e é isso que dá sentido ao ritual.
+  ///
+  /// `extras` traz, já montado, o que a leitura anotou (fase da lua e
+  /// ingredientes sugeridos) — vazio quando não anotou nada.
+  final String Function(String nome, String corpo, String extras)
+      cycleRitualToSpellIntention;
 
   /// Bruxa ancestral que interpreta o mapa astral (Perfil Mágico, 12 seções).
   final String Function(Gender gender) magicalProfileSystemPrompt;

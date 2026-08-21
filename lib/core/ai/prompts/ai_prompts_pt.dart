@@ -12,6 +12,9 @@ final AiPrompts aiPromptsPt = AiPrompts(
   localizedInstruction: (languageTag) =>
       'Responda no idioma atual do aplicativo: $languageTag. '
       'Preserve literalmente nomes, anotações, intenções e demais conteúdos fornecidos pelo usuário; não os traduza automaticamente.',
+  cycleRitualToSpellIntention: (nome, corpo, extras) =>
+      'Ritual "$nome", sugerido pela leitura do ciclo desta pessoa: $corpo$extras\n\n'
+      'Detalhe este ritual como um feitiço completo, mantendo EXATAMENTE este nome e a intenção acima.',
   spellGenerationSystemPrompt: (gender) =>
       '''Você é o ${GenderText.advisorTitle(gender)}, guardião da sabedoria arcana do Grimório de Bolso.
 

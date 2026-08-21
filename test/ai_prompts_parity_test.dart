@@ -56,6 +56,8 @@ void main() {
     // Sondas nomeadas: cada uma resolve um campo para String.
     final probes = <String, String Function(AiPrompts p, Gender g)>{
       'localizedInstruction': (p, g) => p.localizedInstruction('pt-BR'),
+      'cycleRitualToSpellIntention': (p, g) =>
+          p.cycleRitualToSpellIntention('Nome', 'Corpo', ''),
       'spellGenerationSystemPrompt': (p, g) =>
           p.spellGenerationSystemPrompt(g),
       'magicalProfileSystemPrompt': (p, g) => p.magicalProfileSystemPrompt(g),
