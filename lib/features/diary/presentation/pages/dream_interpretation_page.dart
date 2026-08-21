@@ -260,7 +260,6 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
           if (_mostrarPrevia && _interpretation == null)
             MagicalCard(
               child: PremiumLockedPreview(
-                intro: AppLocalizations.of(context).dreamLockedIntro,
                 titles: [
                   AppLocalizations.of(context).dreamLockedTitle1,
                   AppLocalizations.of(context).dreamLockedTitle2,

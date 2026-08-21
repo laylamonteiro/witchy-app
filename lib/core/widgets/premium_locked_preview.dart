@@ -16,6 +16,10 @@ import '../theme/grimoire_colors.dart';
 /// deixa de ser um parágrafo gerado e passa a ser o mapa do que existe atrás
 /// do cadeado.
 ///
+/// Sem linha de abertura de propósito: uma frase do tipo "veja o que a
+/// leitura traria" soa como vendedor. A lista de cadeados diz sozinha o que
+/// está faltando — e é a falta que move, não o anúncio.
+///
 /// Dois princípios que este widget respeita:
 ///
 /// - **Não custa uma chamada de IA.** Os títulos são fixos, do l10n: quem
@@ -28,7 +32,6 @@ class PremiumLockedPreview extends StatelessWidget {
   const PremiumLockedPreview({
     super.key,
     required this.titles,
-    this.intro,
     this.ctaLabel,
     this.onCta,
     this.linesPerSection = 2,
@@ -36,9 +39,6 @@ class PremiumLockedPreview extends StatelessWidget {
 
   /// Os nomes das seções que a leitura completa traria, na ordem.
   final List<String> titles;
-
-  /// Uma linha de contexto acima da lista (opcional).
-  final String? intro;
 
   /// Rótulo do convite; sem ele, o "Seja Premium" do app.
   final String? ctaLabel;
@@ -57,16 +57,6 @@ class PremiumLockedPreview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (intro != null) ...[
-          Text(
-            intro!,
-            style: tema.textTheme.bodySmall?.copyWith(
-              color: context.gc.textSecondary,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
         for (var i = 0; i < titles.length; i++) ...[
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,

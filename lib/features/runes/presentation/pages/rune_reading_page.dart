@@ -701,7 +701,6 @@ class _RuneReadingPageState extends State<RuneReadingPage>
 Widget _previaDoConselheiro(BuildContext context) {
   final l10n = AppLocalizations.of(context);
   return PremiumLockedPreview(
-    intro: l10n.counselorLockedIntro,
     titles: [
       l10n.counselorLockedTitle1,
       l10n.counselorLockedTitle2,

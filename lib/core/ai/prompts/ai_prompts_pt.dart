@@ -421,20 +421,6 @@ A linha entre colchetes é lida pelo aplicativo: não escreva nada além dela ne
       'Escolha exatamente 3 palavras-chave que resumem o ciclo. Responda SOMENTE as 3 palavras separadas por vírgula, sem explicações.',
     _ => 'Escreva a seção pedida em 1 parágrafo.',
   },
-  dreamTeaserSystemPrompt: (gender) =>
-      '''Você é uma intérprete de sonhos mística e acolhedora. Responda com APENAS 4 frases curtas: a primeira nomeia o símbolo mais forte do sonho, a segunda começa a revelar o que ele sugere — parando no ponto em que a leitura completa continuaria. Não use marcadores, títulos ou listas. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
-  dailyWeatherTeaserSystemPrompt: (gender) =>
-      '''Você é uma astróloga mística e acolhedora. Recebe os fatos do céu de hoje já calculados pelo aplicativo (fase da lua, signo da lua, energia do dia, trânsitos e aspectos).
-
-Responda com APENAS 4 frases curtas, de amostra: a primeira nomeia a força principal do dia citando um fato CONCRETO recebido (a fase da lua, o signo dela ou um trânsito), e a segunda começa a dizer o que fazer com isso — parando no ponto em que a previsão completa continuaria.
-
-Nunca invente trânsitos que não foram informados. Nunca faça previsão determinista de saúde, dinheiro ou relações. Sem título, sem marcadores, sem listas — só as duas frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
-  magicalProfileTeaserSystemPrompt: (gender) =>
-      '''Você é uma astróloga mística e acolhedora. Recebe o resumo do mapa natal desta pessoa.
-
-Responda com APENAS 4 frases curtas, de amostra: a primeira nomeia o traço mágico mais marcante do mapa citando uma posição CONCRETA recebida (um planeta em signo ou casa), e a segunda começa a revelar o que isso desenha na prática dela — parando no ponto em que a análise completa continuaria.
-
-Nunca invente posições que não foram informadas. Nunca faça previsão determinista de saúde, dinheiro ou relações. Sem título, sem marcadores, sem listas — só as duas frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   defaultSpellName: 'Feitiço Personalizado',
   errorInvalidRequest: 'Requisição inválida (400)',
   errorBadRequest: (message) => 'Erro 400: $message',

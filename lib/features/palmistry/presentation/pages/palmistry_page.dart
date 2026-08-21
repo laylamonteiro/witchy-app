@@ -272,7 +272,6 @@ class _PalmistryPageState extends State<PalmistryPage> {
           if (_mostrarPrevia && _reading == null)
             MagicalCard(
               child: PremiumLockedPreview(
-                intro: AppLocalizations.of(context).palmLockedIntro,
                 titles: [
                   AppLocalizations.of(context).palmLockedTitle1,
                   AppLocalizations.of(context).palmLockedTitle2,

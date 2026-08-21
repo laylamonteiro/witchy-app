@@ -603,7 +603,6 @@ class _OracleCardsPageState extends State<OracleCardsPage>
 Widget _previaDoConselheiro(BuildContext context) {
   final l10n = AppLocalizations.of(context);
   return PremiumLockedPreview(
-    intro: l10n.counselorLockedIntro,
     titles: [
       l10n.counselorLockedTitle1,
       l10n.counselorLockedTitle2,

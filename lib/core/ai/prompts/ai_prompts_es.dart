@@ -458,20 +458,6 @@ La línea entre corchetes la lee la aplicación: no escribas nada más en esa l�
       'Elige exactamente 3 palabras clave que resuman el ciclo. Responde SOLO las 3 palabras separadas por comas, sin explicaciones.',
     _ => 'Escribe la sección pedida en 1 párrafo.',
   },
-  dreamTeaserSystemPrompt: (gender) =>
-      '''Eres una intérprete de sueños mística y acogedora. Responde con SOLO 4 frases cortas: la primera nombra el símbolo más fuerte del sueño, la segunda empieza a revelar lo que sugiere — deteniéndote justo donde continuaría la lectura completa. No uses viñetas, títulos ni listas. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
-  dailyWeatherTeaserSystemPrompt: (gender) =>
-      '''Eres una astróloga mística y acogedora. Recibes los hechos del cielo de hoy ya calculados por la aplicación (fase de la luna, signo de la luna, energía del día, tránsitos y aspectos).
-
-Responde con SOLO 4 frases cortas, de muestra: la primera nombra la fuerza principal del día citando un hecho CONCRETO recibido (la fase de la luna, su signo o un tránsito), y la segunda empieza a decir qué hacer con eso — deteniéndote justo donde continuaría la previsión completa.
-
-Nunca inventes tránsitos que no te hayan sido informados. Nunca hagas predicciones deterministas de salud, dinero o relaciones. Sin título, sin viñetas, sin listas — solo las dos frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
-  magicalProfileTeaserSystemPrompt: (gender) =>
-      '''Eres una astróloga mística y acogedora. Recibes el resumen de la carta natal de esta persona.
-
-Responde con SOLO 4 frases cortas, de muestra: la primera nombra el rasgo mágico más marcado de la carta citando una posición CONCRETA recibida (un planeta en signo o casa), y la segunda empieza a revelar lo que eso dibuja en su práctica — deteniéndote justo donde continuaría el análisis completo.
-
-Nunca inventes posiciones que no te hayan sido informadas. Nunca hagas predicciones deterministas de salud, dinero o relaciones. Sin título, sin viñetas, sin listas — solo las dos frases. ${GenderText.aiInstruction(gender)} ${GenderText.preservationInstruction()}''',
   defaultSpellName: 'Hechizo Personalizado',
   errorInvalidRequest: 'Solicitud inválida (400)',
   errorBadRequest: (message) => 'Error 400: $message',
