@@ -1789,5 +1789,18 @@
   "cyclesRulerSaturno": "Saturno",
   "cyclesRulerMercurio": "Mercurio",
   "cyclesReadingCardSubtitle": "Una lectura de tu semana o de tu lunación, tejida con lo que registraste",
-  "cyclesTabIntro": "Dónde estás en el tiempo — la semana, la lunación y los 120 años de tu vida"
+  "cyclesTabIntro": "Dónde estás en el tiempo — la semana, la lunación y los 120 años de tu vida",
+  "cyclesMonthTitle": "Este mes",
+  "cyclesMonthSubtitle": "Lo que hace el cielo en las próximas semanas",
+  "cyclesMonthNewMoon": "Luna nueva en {sign}",
+  "cyclesMonthFullMoon": "Luna llena en {sign}",
+  "cyclesMonthSunIngress": "El Sol entra en {sign}",
+  "cyclesMonthRetroStart": "{planet} empieza a retrogradar",
+  "cyclesMonthRetroEnd": "{planet} vuelve a andar",
+  "cyclesMonthNewMoonHint": "Comienzo de ciclo: bueno para plantar intención",
+  "cyclesMonthFullMoonHint": "El punto alto: lo que estaba escondido aparece",
+  "cyclesMonthIngressHint": "Cambia la estación: el foco del mes cambia de tema",
+  "cyclesMonthRetroStartHint": "Tiempo de revisar, no de estrenar",
+  "cyclesMonthRetroEndHint": "Lo que estaba trabado vuelve a andar",
+  "cyclesMonthEmpty": "Un mes de cielo tranquilo — bueno para mantener lo que ya está en marcha"
 }

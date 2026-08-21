@@ -54,3 +54,9 @@ String formatarDuracao(AppLocalizations l10n, double anos) {
 /// Duração entre dois instantes, já em anos e meses.
 String formatarIntervalo(AppLocalizations l10n, DateTime de, DateTime ate) =>
     formatarDuracao(l10n, duracaoParaAnos(ate.difference(de)));
+
+/// Só o mês abreviado, como "ago" — para a coluna de data do céu do mês.
+String formatarMesCurto(BuildContext context, DateTime quando) {
+  final locale = Localizations.localeOf(context).toString();
+  return DateFormat('MMM', locale).format(quando.toLocal());
+}

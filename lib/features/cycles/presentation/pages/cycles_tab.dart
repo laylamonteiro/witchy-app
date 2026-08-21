@@ -14,9 +14,11 @@ import '../../data/data_sources/life_eras_content.dart';
 import '../../data/models/life_eras_state.dart';
 import '../../domain/life_timeline.dart';
 import '../providers/life_eras_provider.dart';
+import '../providers/month_sky_provider.dart';
 import '../widgets/cycle_labels.dart';
 import '../widgets/cycles_emblem.dart';
 import '../widgets/era_card.dart';
+import '../widgets/month_sky_card.dart';
 import 'life_eras_page.dart';
 
 /// A aba Ciclos, dentro de Ferramentas.
@@ -31,8 +33,11 @@ class CyclesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => LifeErasProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LifeErasProvider()),
+        ChangeNotifierProvider(create: (_) => MonthSkyProvider()),
+      ],
       child: const _CyclesBody(),
     );
   }
@@ -63,6 +68,9 @@ class _CyclesBodyState extends State<_CyclesBody> {
     final userId = context.read<AuthProvider>().currentUser.id;
     // Repetições com o mesmo mapa saem cedo dentro do provider.
     context.read<LifeErasProvider>().sync(userId: userId, chart: chart);
+    // O céu do mês não depende do mapa: vale para todo mundo, com ou sem
+    // dados de nascimento.
+    context.read<MonthSkyProvider>().sync(DateTime.now());
   }
 
   @override
@@ -93,6 +101,8 @@ class _CyclesBodyState extends State<_CyclesBody> {
               LifeErasIncomplete() => [const _SemMapa()],
               LifeErasError() => [const _DeuErrado()],
             },
+          // Do longo ao curto: as Eras (120 anos), o mês, e a semana/lunação.
+          const MonthSkyCard(),
           _CartaoDaLeituraDoCiclo(titulo: l10n.cycleReadingTitle),
           const SizedBox(height: 12),
         ],
