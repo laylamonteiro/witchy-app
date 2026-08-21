@@ -359,9 +359,9 @@ class _DeuErrado extends StatelessWidget {
 /// inventar urgência nenhuma. Tudo o que ele diz é verificável:
 ///
 /// - **O que já é seu e ainda não foi lido.** "23 registros desde a sua
-///   última leitura" é a conta real: quantos registros existem depois do fim
-///   do período que a última leitura cobriu. A matéria-prima já existe, é
-///   dela, e ninguém leu ainda — ver isso escrito vale mais que qualquer
+///   última leitura" é a conta real: quantos registros ela criou depois do
+///   instante em que a última leitura foi gerada. A matéria-prima já existe,
+///   é dela, e ninguém leu ainda — ver isso escrito vale mais que qualquer
 ///   adjetivo sobre o produto.
 /// - **Uma medida honesta, não um prazo inventado.** A barra mostra o quanto
 ///   esse acúmulo já passa do mínimo em que a leitura ganha profundidade. Não
@@ -390,7 +390,7 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
   /// Registros que ainda não entraram em leitura nenhuma.
   int _naoLidos = 0;
 
-  /// A leitura que cobre o período mais recente (null = nunca leu).
+  /// A última leitura GERADA (null = nunca leu).
   CycleReadingModel? _ultima;
 
   /// Crédito comprado e ainda não gerado, se houver.
@@ -410,13 +410,18 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
     final amanha = DateTime(hoje.year, hoje.month, hoje.day)
         .add(const Duration(days: 1));
 
-    final geradas = await _service.repository.recentGenerated(userId, limit: 1);
-    final ultima = geradas.isEmpty ? null : geradas.first;
+    final ultima = await _service.repository.lastGenerated(userId);
 
+    // A âncora é o INSTANTE DA GERAÇÃO, não o fim do período lido: as
+    // tabelas de registro guardam `created_at`, e o que a leitura não viu é
+    // exatamente o que nasceu depois dela. Com o fim do período, quem lia
+    // "até hoje" e registrava algo em seguida via zero — o registro caía
+    // dentro da janela já lida, mesmo tendo nascido depois do texto.
+    //
     // Sem leitura anterior, conta o último ano — que é até onde o calendário
     // deixa retroagir. Contar "desde sempre" prometeria um período que a
     // leitura não aceita.
-    final desde = ultima?.periodEnd ??
+    final desde = ultima?.createdAt ??
         DateTime(hoje.year, hoje.month, hoje.day)
             .subtract(const Duration(days: 365));
 
@@ -487,11 +492,7 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
         ? l10n.cyclesReadingCardDepthHint(
             CycleReadingComposer.minRecordsForDepth)
         : l10n.cyclesReadingCardLastRead(
-            formatarDiaMesAno(
-              context,
-              // O fim guardado é exclusivo: o último dia lido é o anterior.
-              ultima.periodEnd.subtract(const Duration(days: 1)),
-            ),
+            formatarDiaMesAno(context, ultima.createdAt),
           );
 
     return MagicalCard.hero(

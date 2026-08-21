@@ -7,6 +7,7 @@ import 'package:grimorio_de_bolso/core/ai/prompts/ai_prompts_es.dart';
 import 'package:grimorio_de_bolso/core/ai/prompts/ai_prompts_pt.dart';
 import 'package:grimorio_de_bolso/core/content/content_locale.dart';
 import 'package:grimorio_de_bolso/core/i18n/gender.dart';
+import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_en.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_es.dart';
@@ -273,6 +274,23 @@ void main() {
                 reason: 'duas frases: $name [$lang/${gender.name}]');
           }
         });
+      });
+    });
+
+    test('os rituais pedem a anotação que o app lê', () {
+      // O cartão do ritual tira a lua e os ingredientes de `[moon: ...]` e
+      // `[items: ...]`. Se o prompt parar de pedir a anotação, o feitiço
+      // salvo perde os dois em silêncio — nada quebra, só empobrece.
+      promptsByLang.forEach((lang, prompts) {
+        final instrucao = prompts.cycleReadingSectionInstruction('rituals');
+        expect(instrucao, contains('[moon:'), reason: 'lua [$lang]');
+        expect(instrucao, contains('[items:'), reason: 'ingredientes [$lang]');
+        // Os nomes das fases são invariantes: traduzi-los quebraria o
+        // recorte, que casa com `MoonPhase.name`.
+        for (final fase in MoonPhase.values) {
+          expect(instrucao, contains(fase.name),
+              reason: '${fase.name} [$lang]');
+        }
       });
     });
 

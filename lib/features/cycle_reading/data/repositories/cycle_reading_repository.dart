@@ -61,6 +61,26 @@ class CycleReadingRepository {
     return CycleReadingModel.fromMap(rows.first);
   }
 
+  /// A leitura gerada mais recente POR DATA DE GERAÇÃO.
+  ///
+  /// Diferente de [recentGenerated], que ordena pelo fim do período: aqui a
+  /// pergunta é "quando foi a última vez que ela leu", e não "até onde a
+  /// vida dela já foi lida". É esse instante que separa o que a leitura viu
+  /// do que veio depois — as tabelas de registro guardam `created_at`, então
+  /// é com ele que a conta bate.
+  Future<CycleReadingModel?> lastGenerated(String userId) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND status = ?',
+      whereArgs: [userId, CycleReadingStatus.generated],
+      orderBy: 'created_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CycleReadingModel.fromMap(rows.first);
+  }
+
   /// Apaga o registro da leitura — local e na nuvem.
   ///
   /// Some com a linha, não com o relatório: quem apaga a entrada do acervo

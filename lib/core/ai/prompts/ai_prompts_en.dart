@@ -437,7 +437,17 @@ SHAPE (the app shows each section as ONE SWIPEABLE SCREEN — dense text kills t
     'practice' =>
       'Write "your practice": 1 paragraph honoring the magic she did — quote the spells (name/purpose), rites and notes from the JSON where present, and say what that practice reveals about what she was seeking. With no practice records, be brief and honest about it.',
     'rituals' =>
-      'Suggest 2-3 rituals for the NEXT cycle, as a "-" list: each item with an evocative name and 1-2 sentences on how to do it. Each ritual must answer something SPECIFIC the reading found — preferably what "asks for attention" — and say, in a few words, which thread it answers. Choose the fitting lunar moment from the phases provided. Simple, safe ingredients.',
+      '''Suggest 2-3 rituals for the NEXT cycle. Each ritual must answer something SPECIFIC the reading found — preferably what "asks for attention".
+
+Write EACH ritual in exactly this format, in three lines:
+
+- **Evocative name of the ritual**
+  [moon: PHASE] [items: ingredient; ingredient; ingredient]
+  1-2 sentences on how to do it, saying which thread of the reading it answers.
+
+For PHASE use ONE of these words, exactly as written and WITHOUT translating, chosen from the phases provided: newMoon, waxingCrescent, firstQuarter, waxingGibbous, fullMoon, waningGibbous, lastQuarter, waningCrescent.
+For items, 2 to 5 simple, safe ingredients separated by semicolons — just the name of each, no quantity and no explanation.
+The bracketed line is read by the app: write nothing else on that line.''',
     'affirmation' =>
       'Write ONE affirmation tailored to the period, in first person, at most 20 words. Answer ONLY the affirmation, without quotes, asterisks or explanations.',
     'seal' =>

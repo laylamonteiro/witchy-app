@@ -224,6 +224,8 @@ class CycleReadingReportPage extends StatelessWidget {
             _CartaoDeRitual(
               nome: rito.nome,
               corpo: rito.corpo,
+              lua: rito.lua,
+              ingredientes: rito.ingredientes,
               periodo: _periodoParaNota(),
             ),
         ] else
@@ -244,14 +246,33 @@ class CycleReadingReportPage extends StatelessWidget {
     );
   }
 
+  /// A anotação que a geração deixa para o app: `[moon: fase]` e
+  /// `[items: a; b; c]`.
+  ///
+  /// Fica entre colchetes e em inglês nos TRÊS idiomas de propósito: é
+  /// campo de máquina, não texto de leitura. Assim o mesmo recorte vale
+  /// para uma leitura gerada em espanhol e aberta em português.
+  static final RegExp _anotacao =
+      RegExp(r'\[\s*(moon|items)\s*:\s*([^\]]*)\]', caseSensitive: false);
+
   /// Recorta a seção dos rituais em cabeçalho + um item por ritual.
   ///
   /// A geração pede uma lista com "-", e cada item vem como
-  /// `**Nome do ritual**: como fazer`. Se o formato não for esse (leitura
-  /// antiga, geração torta), devolve null e a seção segue como texto — é um
-  /// produto pago e não pode depender do formato exato que a IA produziu.
-  static ({String cabecalho, List<({String nome, String corpo})> itens})?
-      _rituais(String secao) {
+  /// `**Nome do ritual**`, a anotação do app e o passo a passo. Se o formato
+  /// não for esse (leitura antiga, geração torta), devolve null e a seção
+  /// segue como texto — é um produto pago e não pode depender do formato
+  /// exato que a IA produziu; e cada pedaço tem seu próprio plano B: sem
+  /// anotação, o cartão só perde a lua e os ingredientes.
+  static ({
+    String cabecalho,
+    List<
+        ({
+          String nome,
+          String corpo,
+          MoonPhase? lua,
+          List<String> ingredientes
+        })> itens,
+  })? _rituais(String secao) {
     final linhas = secao.split('\n');
     final cabecalho = <String>[];
     final blocos = <List<String>>[];
@@ -270,10 +291,36 @@ class CycleReadingReportPage extends StatelessWidget {
     }
     if (blocos.isEmpty) return null;
 
-    final itens = <({String nome, String corpo})>[];
+    final itens = <({
+      String nome,
+      String corpo,
+      MoonPhase? lua,
+      List<String> ingredientes
+    })>[];
+
     for (final bloco in blocos) {
-      final texto = bloco.join(' ').trim();
+      var texto = bloco.join(' ').trim();
       if (texto.isEmpty) continue;
+
+      MoonPhase? lua;
+      var ingredientes = const <String>[];
+      for (final achado in _anotacao.allMatches(texto)) {
+        final valor = achado.group(2)!.trim();
+        if (achado.group(1)!.toLowerCase() == 'moon') {
+          lua = _luaDe(valor);
+        } else {
+          ingredientes = valor
+              .split(RegExp(r'[;,]'))
+              .map((i) => i.trim())
+              .where((i) => i.isNotEmpty)
+              .toList();
+        }
+      }
+      // A anotação sai do texto: ela é para o app, não para quem lê.
+      texto = texto.replaceAll(_anotacao, '').replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      if (texto.isEmpty) continue;
+
       final comRealce =
           RegExp(r'^\*\*(.+?)\*\*\s*[:—–-]?\s*(.*)$', dotAll: true)
               .firstMatch(texto);
@@ -281,6 +328,8 @@ class CycleReadingReportPage extends StatelessWidget {
         itens.add((
           nome: comRealce.group(1)!.trim(),
           corpo: comRealce.group(2)!.trim(),
+          lua: lua,
+          ingredientes: ingredientes,
         ));
         continue;
       }
@@ -289,13 +338,31 @@ class CycleReadingReportPage extends StatelessWidget {
         itens.add((
           nome: texto.substring(0, doisPontos).trim(),
           corpo: texto.substring(doisPontos + 1).trim(),
+          lua: lua,
+          ingredientes: ingredientes,
         ));
         continue;
       }
-      itens.add((nome: '', corpo: texto));
+      itens.add((
+        nome: '',
+        corpo: texto,
+        lua: lua,
+        ingredientes: ingredientes,
+      ));
     }
     if (itens.isEmpty) return null;
     return (cabecalho: cabecalho.join('\n').trim(), itens: itens);
+  }
+
+  /// A fase da lua pelo nome invariante que o prompt pede. Valor
+  /// desconhecido (ou traduzido, contra o combinado) vira null: melhor sem
+  /// lua do que com a lua errada.
+  static MoonPhase? _luaDe(String valor) {
+    final alvo = valor.trim().toLowerCase();
+    for (final fase in MoonPhase.values) {
+      if (fase.name.toLowerCase() == alvo) return fase;
+    }
+    return null;
   }
 
   /// "13/08/2026 a 11/09/2026" para a observação do feitiço salvo; null ao
@@ -422,7 +489,10 @@ class CycleReadingReportPage extends StatelessWidget {
         lines.removeAt(0);
       }
     }
-    return lines.join('\n');
+    // A anotação dos rituais é campo de máquina: some do texto exibido,
+    // inclusive nesta rolagem de reserva (usada quando os títulos de seção
+    // não são reconhecidos e não há cartões).
+    return lines.join('\n').replaceAll(_anotacao, '');
   }
 
   void _shareAffirmation(
@@ -479,11 +549,19 @@ class _CartaoDeRitual extends StatefulWidget {
   const _CartaoDeRitual({
     required this.nome,
     required this.corpo,
+    this.lua,
+    this.ingredientes = const [],
     this.periodo,
   });
 
   final String nome;
   final String corpo;
+
+  /// Fase da lua sugerida (null quando a geração não anotou).
+  final MoonPhase? lua;
+
+  /// Ingredientes, já separados (vazio quando a geração não anotou).
+  final List<String> ingredientes;
 
   /// Período lido, para a observação do feitiço (null ao abrir do acervo).
   final String? periodo;
@@ -522,16 +600,19 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
       // do app do que a pessoa escreveu. Inventar uma categoria temática
       // pelo texto acertaria pouco — e ela pode trocar num toque na ficha.
       //
-      // A fase da lua fica em branco de propósito: o ritual costuma dizer
-      // "na Lua Crescente" no corpo, mas ler isso do texto em três idiomas
-      // erraria mais do que acertaria.
       type: SpellType.attraction,
       category: SpellCategory.suggested,
+      // Lua e ingredientes vêm da anotação que a própria geração escreve,
+      // em campo separado — não de tentar adivinhá-los no meio da frase.
+      // Sem anotação, ficam vazios e a ficha do feitiço espera a Bruxa.
+      moonPhase: widget.lua,
       // Os ingredientes moram no próprio passo a passo ("uma vela amarela,
       // uma xícara de chá"): separá-los exigiria adivinhar o que é
       // ingrediente e o que é gesto, e a ficha do feitiço deixa a Bruxa
       // listar o que quiser.
-      ingredients: const [],
+      ingredients:
+          widget.ingredientes.map(_textoPuro).where((i) => i.isNotEmpty)
+              .toList(),
       steps: _textoPuro(widget.corpo),
       observations: widget.periodo == null
           ? l10n.cycleReadingRitualPurpose
@@ -575,6 +656,24 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
               ),
             ),
           if (widget.nome.isNotEmpty) const SizedBox(height: 6),
+          if (widget.lua != null || widget.ingredientes.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                if (widget.lua != null)
+                  _Pilula(
+                    texto:
+                        '${widget.lua!.emoji} ${widget.lua!.displayName}',
+                    destaque: true,
+                  ),
+                for (final item in widget.ingredientes)
+                  _Pilula(texto: _textoPuro(item)),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
           CycleReadingReportPage._markdown(context, widget.corpo),
           const SizedBox(height: 12),
           Align(
@@ -600,6 +699,31 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Etiqueta curta do cartão de ritual: a fase da lua (em destaque) e cada
+/// ingrediente.
+class _Pilula extends StatelessWidget {
+  const _Pilula({required this.texto, this.destaque = false});
+
+  final String texto;
+  final bool destaque;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = destaque ? context.gc.starYellow : context.gc.lilac;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: cor.withValues(alpha: 0.55)),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        texto,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cor),
       ),
     );
   }

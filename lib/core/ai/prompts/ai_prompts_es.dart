@@ -438,7 +438,17 @@ FORMA (la aplicación muestra cada sección como UNA PANTALLA que se desliza —
     'practice' =>
       'Escribe "tu práctica": 1 párrafo reconociendo la magia que hizo — cita los hechizos (name/purpose), ritos y notas del JSON cuando los haya, y di qué revela esa práctica sobre lo que ella estaba buscando. Sin registros de práctica, sé breve y honesta al respecto.',
     'rituals' =>
-      'Sugiere 2-3 rituales para el PRÓXIMO ciclo, en lista con "-": cada ítem con nombre evocador y 1-2 frases de cómo hacerlo. Cada ritual debe responder a algo ESPECÍFICO que la lectura encontró — preferiblemente a lo que "pide atención" — y decir, en pocas palabras, a qué hilo responde. Elige el momento lunar adecuado a partir de las fases proporcionadas. Ingredientes simples y seguros.',
+      '''Sugiere 2-3 rituales para el PRÓXIMO ciclo. Cada ritual debe responder a algo ESPECÍFICO que la lectura encontró — preferiblemente a lo que "pide atención".
+
+Escribe CADA ritual exactamente en este formato, en tres líneas:
+
+- **Nombre evocador del ritual**
+  [moon: FASE] [items: ingrediente; ingrediente; ingrediente]
+  1-2 frases de cómo hacerlo, diciendo a qué hilo de la lectura responde.
+
+En FASE usa UNA de estas palabras, exactamente como están y SIN traducir, elegida a partir de las fases proporcionadas: newMoon, waxingCrescent, firstQuarter, waxingGibbous, fullMoon, waningGibbous, lastQuarter, waningCrescent.
+En items, de 2 a 5 ingredientes simples y seguros separados por punto y coma — solo el nombre de cada uno, sin cantidad ni explicación.
+La línea entre corchetes la lee la aplicación: no escribas nada más en esa línea.''',
     'affirmation' =>
       'Escribe UNA afirmación a la medida del período, en primera persona, máximo 20 palabras. Responde SOLO la afirmación, sin comillas, sin asteriscos y sin explicaciones.',
     'seal' =>

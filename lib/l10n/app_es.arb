@@ -1765,7 +1765,7 @@
       }
     }
   },
-  "cyclesReadingCardLastRead": "Tu última lectura llegó hasta {date}",
+  "cyclesReadingCardLastRead": "Tu última lectura fue el {date}",
   "@cyclesReadingCardLastRead": {
     "placeholders": {
       "date": {
