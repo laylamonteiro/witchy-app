@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
 import '../../../astrology/data/models/enums.dart';
+import '../../../astrology/data/models/magical_profile_report.dart';
 import '../../../astrology/data/repositories/astrology_repository.dart';
 import '../../../astrology/data/services/transit_calculator.dart';
 import '../../../diary/data/models/free_writing_model.dart';
@@ -100,6 +101,7 @@ class CycleReadingMaterial {
     'practice': {
       'period',
       'practice',
+      'profile',
       'timeline',
       'moonByDay',
       'sky',
@@ -683,9 +685,60 @@ class CycleReadingComposer {
     // ===== O céu do período (calculado no aparelho; a IA só narra) =====
     json['sky'] = await _skyFacts(userId, start, end);
 
+    // ===== Quem ela é, segundo a própria Análise Personalizada =====
+    final perfil = await _profileFacts(userId);
+    if (perfil.isNotEmpty) json['profile'] = perfil;
+
     json['recordCount'] = recordCount;
     return CycleReadingMaterial(json: json, recordCount: recordCount);
   }
+
+  /// O retrato mágico dela, tirado da Análise Personalizada que ela já leu.
+  ///
+  /// A leitura do ciclo conta o que ela VIVEU; o perfil diz de que jeito ela
+  /// pratica. Juntando os dois, o ritual sugerido deixa de ser "acenda uma
+  /// vela branca" e passa a ser o que combina com o mapa dela.
+  ///
+  /// Só entra o que já foi tecido — nada é gerado aqui: a leitura do ciclo
+  /// não paga a conta de IA da análise do perfil. E entra CURTO: a primeira
+  /// página de cada seção, aparada, porque o material inteiro dobraria o
+  /// tamanho do JSON em toda chamada.
+  Future<Map<String, String>> _profileFacts(String userId) async {
+    try {
+      final profile = await _astrology.getMagicalProfile(userId);
+      final texto = profile?.aiGeneratedText;
+      if (texto == null || texto.trim().isEmpty) return const {};
+
+      final facts = <String, String>{};
+      for (final secao in parseMagicalProfile(texto)) {
+        final chave = secao.key;
+        if (chave == null || !_profileKeys.contains(chave)) continue;
+        final corpo = secao.slides.first.body.trim();
+        if (corpo.isEmpty) continue;
+        facts[chave] = corpo.length <= _maxProfileExcerpt
+            ? corpo
+            : '${corpo.substring(0, _maxProfileExcerpt)}…';
+      }
+      return facts;
+    } catch (e) {
+      debugPrint('CycleReadingComposer: perfil indisponível ($e)');
+      return const {};
+    }
+  }
+
+  /// As seções do perfil que ajudam a leitura do ciclo: quem ela é, como a
+  /// intuição chega, o que ressoa com ela e o que dói. As outras (Vênus,
+  /// Marte, Casa 8, Casa 12) diriam mais sobre o mapa do que sobre o ciclo.
+  static const _profileKeys = {
+    MagicalProfileSections.essence,
+    MagicalProfileSections.intuition,
+    MagicalProfileSections.allies,
+    MagicalProfileSections.practice,
+    MagicalProfileSections.shadow,
+  };
+
+  /// Teto de cada trecho do perfil (o material inteiro dobraria o JSON).
+  static const int _maxProfileExcerpt = 240;
 
   /// Fatos do céu: fases da lua do período + trânsitos sobre o mapa natal.
   /// Best-effort: sem mapa (ou sem efemérides) a leitura segue só com a
