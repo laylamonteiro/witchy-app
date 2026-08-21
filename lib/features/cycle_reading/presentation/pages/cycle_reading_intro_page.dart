@@ -14,7 +14,9 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
+import '../../../grimoire/presentation/pages/records_archive_list_page.dart';
 import '../../data/models/cycle_reading_model.dart';
 import '../../data/services/cycle_reading_composer.dart';
 import '../../data/services/cycle_reading_service.dart';
@@ -91,7 +93,13 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   final GlobalKey _ancoraDaOferta = GlobalKey();
 
   /// As leituras já geradas (null = ainda carregando).
+  ///
+  /// Vem uma a mais do que cabe na tela, de propósito: é assim que a tela
+  /// sabe que existe mais para ver sem pedir uma contagem ao banco.
   List<CycleReadingModel>? _recentes;
+
+  /// Quantas leituras a lista mostra antes de mandar para o acervo.
+  static const int _recentesNaTela = 4;
 
   /// O preço só entra em cena depois que a pessoa pede a leitura completa.
   ///
@@ -170,7 +178,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       start: primeiroDia,
       end: ultimoDia.add(const Duration(days: 1)),
     );
-    final recentes = await _service.repository.recentGenerated(userId);
+    final recentes = await _service.repository
+        .recentGenerated(userId, limit: _recentesNaTela + 1);
     if (!mounted) return;
     setState(() {
       _densidade = densidade;
@@ -261,7 +270,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Relê a lista de leituras — depois de gerar uma, ela mudou.
   Future<void> _recarregarRecentes() async {
     final userId = context.read<AuthProvider>().currentUser.id;
-    final recentes = await _service.repository.recentGenerated(userId);
+    final recentes = await _service.repository
+        .recentGenerated(userId, limit: _recentesNaTela + 1);
     if (!mounted) return;
     setState(() => _recentes = recentes);
   }
@@ -574,8 +584,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// geral volta para RELER, não para comprar — e procurar a própria leitura
   /// no acervo, entre todos os outros registros, era caminho demais.
   Widget _buildLeiturasRecentes(AppLocalizations l10n) {
-    final leituras = _recentes;
-    if (leituras == null || leituras.isEmpty) return const SizedBox.shrink();
+    final todas = _recentes;
+    if (todas == null || todas.isEmpty) return const SizedBox.shrink();
+    // Quatro cabem sem empurrar o resto da tela para baixo; passando disso,
+    // a lista vira acervo — e o acervo já existe, com busca e filtros.
+    final leituras = todas.take(_recentesNaTela).toList();
+    final temMais = todas.length > _recentesNaTela;
 
     return MagicalCard(
       child: Column(
@@ -632,6 +646,23 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                         size: 14, color: context.gc.lilac),
                   ],
                 ),
+              ),
+            ),
+          if (temMais)
+            Center(
+              child: TextButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    // O acervo já abre no chip da Leitura do Ciclo: quem
+                    // veio daqui não quer procurar as leituras no meio de
+                    // sonhos, tiragens e páginas de trilha.
+                    builder: (_) => const RecordsArchiveListPage(
+                      initialFilterId: FreeWritingSource.cycleReading,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Icons.auto_stories, size: 18),
+                label: Text(l10n.cycleReadingRecentSeeAll),
               ),
             ),
         ],

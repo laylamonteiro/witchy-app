@@ -1783,6 +1783,7 @@
     }
   },
   "cycleReadingRecentTitle": "Your readings",
+  "cycleReadingRecentSeeAll": "See all readings",
   "cycleReadingRecentRange": "{start} to {end}",
   "@cycleReadingRecentRange": {
     "placeholders": {
