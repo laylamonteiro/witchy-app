@@ -27,7 +27,6 @@ import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
 import 'core/navigation/app_deep_link.dart';
-import 'core/navigation/web_back_keeper.dart';
 import 'core/utils/app_session_policy.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/auth/auth.dart';
@@ -443,9 +442,6 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       child: Consumer2<LanguageProvider, ThemeProvider>(
         builder: (context, languageProvider, themeProvider, child) => MaterialApp(
           navigatorKey: _rootNavigatorKey,
-          // O WebBackKeeper escuta por aqui para saber quando a entrada de
-          // baixo voltou a aparecer (ver web_back_keeper.dart).
-          navigatorObservers: [appRouteObserver],
           title: 'Grimório de Bolso',
           locale: languageProvider.locale,
           localizationsDelegates: const [

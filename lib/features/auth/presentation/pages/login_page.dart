@@ -5,7 +5,6 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:package_info_plus/package_info_plus.dart';
-import '../../../../core/navigation/web_back_keeper.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
 import '../../../../core/widgets/starfield_background.dart';
@@ -557,7 +556,7 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         if (mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', keepBackAnchor());
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
         }
         return;
       }
@@ -587,7 +586,7 @@ class _LoginPageState extends State<LoginPage> {
       await authProvider.syncAuthenticatedUser(result.user!);
 
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', keepBackAnchor());
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
       }
     } catch (e) {
       if (mounted) {
@@ -645,7 +644,7 @@ class _LoginPageState extends State<LoginPage> {
 
         if (!mounted) return;
         // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', keepBackAnchor());
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
       } else {
         showAuthSnack(
           context,
