@@ -456,15 +456,21 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
 
     // Chamada e botão mudam com o estado — nunca oferecer a compra de algo
     // que a pessoa já tem.
-    final (String chamada, String rotulo) = switch (leitura) {
-      final l? when l.isGenerated =>
-        (l10n.cyclesReadingCardReady, l10n.cycleReadingOpenReport),
-      final l? when l.isPending =>
-        (l10n.cycleReadingPendingCredit, l10n.cycleReadingGenerate),
-      _ when _registros == 0 =>
-        (l10n.cyclesReadingCardEmpty, l10n.cyclesReadingCardCta),
-      _ => (l10n.cycleReadingOfferTitle(_registros), l10n.cyclesReadingCardCta),
-    };
+    final String chamada;
+    final String rotulo;
+    if (leitura != null && leitura.isGenerated) {
+      chamada = l10n.cyclesReadingCardReady;
+      rotulo = l10n.cycleReadingOpenReport;
+    } else if (leitura != null && leitura.isPending) {
+      chamada = l10n.cycleReadingPendingCredit;
+      rotulo = l10n.cycleReadingGenerate;
+    } else if (_registros == 0) {
+      chamada = l10n.cyclesReadingCardEmpty;
+      rotulo = l10n.cyclesReadingCardCta;
+    } else {
+      chamada = l10n.cycleReadingOfferTitle(_registros);
+      rotulo = l10n.cyclesReadingCardCta;
+    }
 
     return MagicalCard.hero(
       accent: context.gc.lilac,
