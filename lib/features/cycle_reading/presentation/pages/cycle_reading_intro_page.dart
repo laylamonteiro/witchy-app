@@ -13,6 +13,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../astrology/presentation/pages/birth_chart_input_page.dart';
+import '../../../astrology/presentation/providers/astrology_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
@@ -507,6 +509,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
               Container(key: _ancoraDaOferta),
               _buildOfferCard(l10n),
             ],
+            _buildConviteDoMapa(l10n),
             _buildLeiturasRecentes(l10n),
             if (_periodoEscolhido) ...[
               _buildSumario(l10n),
@@ -567,6 +570,71 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         ],
       ),
     );
+  }
+
+  /// O convite para completar o nascimento — aqui, sem sair da leitura.
+  ///
+  /// A leitura funciona sem mapa: a seção do céu simplesmente fica mais
+  /// pobre. Mas mandar quem quer LER parar na Astrologia para preencher um
+  /// formulário é perder a pessoa no meio do caminho — e depois pedir os
+  /// mesmos dados de novo seria pior ainda. O formulário é o mesmo do Mapa
+  /// Astral e volta para cá quando termina: preenche uma vez, vale para a
+  /// leitura, para o mapa e para as Eras.
+  Widget _buildConviteDoMapa(AppLocalizations l10n) {
+    if (context.watch<AstrologyProvider>().hasBirthChart) {
+      return const SizedBox.shrink();
+    }
+
+    return MagicalCard.accent(
+      accent: context.gc.starYellow,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('🌟', style: TextStyle(fontSize: 22)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.cycleReadingChartTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.starYellow,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.cycleReadingChartBody,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.gc.textSecondary,
+                  height: 1.45,
+                ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _completarNascimento,
+            icon: const Icon(Icons.auto_awesome, size: 18),
+            label: Text(l10n.cycleReadingChartCta),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Abre o formulário de nascimento e volta para a leitura com ele pronto.
+  Future<void> _completarNascimento() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const BirthChartInputPage(returnWhenDone: true),
+      ),
+    );
+    if (!mounted) return;
+    // Com mapa novo, o céu do período entra na leitura: se já havia uma
+    // janela escolhida, ela é relida com o material completo.
+    if (_periodoEscolhido) await _load();
   }
 
   /// As leituras já geradas, da mais recente para a mais antiga.
