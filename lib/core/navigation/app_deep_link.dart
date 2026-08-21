@@ -61,11 +61,15 @@ enum AppDeepLink {
   dreamsDiary('diary/dreams', homeTab: 3, diaryTab: 3),
 
   /// Leitura do Ciclo: a notificação de "sua próxima leitura já pode nascer"
-  /// abre a própria tela da leitura, sobre a aba Seu Dia. Diferente dos
-  /// outros destinos, que só trocam de aba — aqui a HomePage empilha a
-  /// página (ver [opensCycleReading]), porque o convite não faz sentido
-  /// largando a pessoa numa aba para procurar sozinha.
-  cycleReading('cycle_reading');
+  /// abre a própria tela da leitura. Diferente dos outros destinos, que só
+  /// trocam de aba — aqui a HomePage empilha a página (ver
+  /// [opensCycleReading]), porque o convite não faz sentido largando a pessoa
+  /// numa aba para procurar sozinha.
+  ///
+  /// Empilha sobre Ferramentas (aba 2), que é onde mora a aba Ciclos: ao
+  /// fechar a leitura, a pessoa cai ao lado das Eras em vez de num lugar sem
+  /// relação com o convite que ela acabou de aceitar.
+  cycleReading('cycle_reading', homeTab: 2);
 
   const AppDeepLink(this.payload,
       {this.homeTab = 0,
