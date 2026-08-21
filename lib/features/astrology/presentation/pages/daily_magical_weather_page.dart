@@ -7,8 +7,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/content/content_locale.dart';
 import '../../../../core/offers/offer_engine.dart';
-import '../../../../core/offers/teaser_cache.dart';
-import '../../../../core/offers/teaser_reveal.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -63,9 +61,6 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
   bool _isLoading = false;
   String? _error;
 
-  /// Degustação de quem não tem acesso: 2 frases reais no lugar da previsão.
-  String? _teaser;
-  bool _isTeasing = false;
   OfferEngine? _engine;
 
   @override
@@ -74,16 +69,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     _loadWeather();
   }
 
-  /// Chave da amostra no cache: um dia, uma geração (o custo de IA é real).
-  String get _teaserKey =>
-      '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}';
-
   Future<void> _loadWeather() async {
     print('🌙 DailyMagicalWeatherPage: Iniciando carregamento...');
     setState(() {
       _isLoading = true;
       _error = null;
-      _teaser = null;
     });
 
     try {
@@ -113,7 +103,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
       print('✅ DailyMagicalWeatherPage: Estado atualizado!');
 
       if (!hasAccess) {
-        await _prepareTeaser();
+        await _prepareOfferEngine();
       }
     } catch (e, stackTrace) {
       print('❌ DailyMagicalWeatherPage: ERRO ao calcular clima mágico: $e');
@@ -143,39 +133,11 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     }
   }
 
-  /// Recupera a amostra já gerada para este dia, se houver. A geração em si
-  /// só acontece no toque — degustação não gasta IA de quem só passou.
-  Future<void> _prepareTeaser() async {
+  Future<void> _prepareOfferEngine() async {
     final engine = await OfferEngine.load();
-    final cached = await TeaserAiCache.get(_teaserSlot.name, _teaserKey);
     if (!mounted) return;
-    setState(() {
-      _engine = engine;
-      _teaser = cached;
-    });
+    setState(() => _engine = engine);
     engine.recordWallExposure(_teaserSlot);
-  }
-
-  Future<void> _generateTeaser() async {
-    final data = _weatherCache?.weatherData;
-    if (_isTeasing || data == null) return;
-    setState(() => _isTeasing = true);
-    final messenger = ScaffoldMessenger.of(context);
-    final alertColor = context.gc.alert;
-    try {
-      final sample = await _repository.generateTeaser(data);
-      await TeaserAiCache.put(_teaserSlot.name, _teaserKey, sample);
-      if (!mounted) return;
-      setState(() => _teaser = sample);
-    } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-        content: Text('$e'.replaceAll('Exception: ', '')),
-        backgroundColor: alertColor,
-      ));
-    } finally {
-      if (mounted) setState(() => _isTeasing = false);
-    }
   }
 
   void _onTeaserCta() {
@@ -567,12 +529,12 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
               Divider(color: context.gc.lilac),
               const SizedBox(height: 12),
               // Sem acesso: a previsão completa nem foi gerada (o gate está
-              // no repositório). O que aparece aqui é degustação — os
-              // assuntos do dia e duas frases REAIS sobre o céu de hoje.
+              // no repositório). O que aparece aqui são os assuntos do dia,
+              // pelo nome, com o texto sob véu — e o convite embaixo.
               if (isFree) ...[
                 _buildFreeForecastPreview(),
                 const SizedBox(height: 16),
-                _buildForecastTeaser(),
+                _buildForecastCta(),
               ] else ...[
                 MarkdownBody(
                   data: _weatherCache!.aiGeneratedText,
@@ -586,53 +548,23 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     );
   }
 
-  /// Degustação no lugar do paywall frio: duas frases verdadeiras sobre o
-  /// céu de hoje e o convite para ler a previsão inteira.
-  Widget _buildForecastTeaser() {
-    final l10n = AppLocalizations.of(context);
-    final sample = _teaser;
-    if (sample == null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.weatherTeaserIntro,
-            style: TextStyle(
-              color: context.gc.textSecondary,
-              fontSize: 13,
-            ),
+  /// O convite, depois dos assuntos do dia sob véu. Nada de amostra gerada:
+  /// o que cria vontade é ver a FORMA da previsão, não um parágrafo solto.
+  Widget _buildForecastCta() {
+    return Center(
+      child: ElevatedButton.icon(
+        onPressed: _onTeaserCta,
+        icon: const Icon(Icons.star, size: 18),
+        label: Text(AppLocalizations.of(context).premiumBePremium),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: context.gc.lilac,
+          foregroundColor: context.gc.onPrimary,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
           ),
-          const SizedBox(height: 10),
-          Center(
-            child: OutlinedButton.icon(
-              onPressed: _isTeasing ? null : _generateTeaser,
-              icon: _isTeasing
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.gc.lilac,
-                      ),
-                    )
-                  : const Icon(Icons.auto_awesome, size: 18),
-              label: Text(l10n.weatherTeaserPeek),
-            ),
-          ),
-        ],
-      );
-    }
-    return TeaserReveal(
-      sample: Text(
-        sample,
-        style: TextStyle(
-          color: context.gc.softWhite,
-          fontSize: 15,
-          height: 1.55,
-          fontStyle: FontStyle.italic,
         ),
       ),
-      onCta: _onTeaserCta,
     );
   }
 

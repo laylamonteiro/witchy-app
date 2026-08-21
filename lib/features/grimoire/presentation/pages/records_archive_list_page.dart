@@ -32,7 +32,14 @@ const _defaultFilterId = 'records';
 /// recortam por origem. Não há botão de criar: as entradas nascem das
 /// lições, das leituras e da aba 💭 dos Diários.
 class RecordsArchiveListPage extends StatefulWidget {
-  const RecordsArchiveListPage({super.key});
+  /// Chip já escolhido ao abrir (o id é o `source` da entrada).
+  ///
+  /// Serve a quem chega de um lugar que já fala de UMA origem — o "ver
+  /// todas" da lista de leituras, por exemplo. Id sem entrada no acervo cai
+  /// no filtro padrão sozinho, então não há como abrir numa lista vazia.
+  final String? initialFilterId;
+
+  const RecordsArchiveListPage({super.key, this.initialFilterId});
 
   @override
   State<RecordsArchiveListPage> createState() =>
@@ -40,7 +47,7 @@ class RecordsArchiveListPage extends StatefulWidget {
 }
 
 class _RecordsArchiveListPageState extends State<RecordsArchiveListPage> {
-  String _filterId = _defaultFilterId;
+  late String _filterId = widget.initialFilterId ?? _defaultFilterId;
 
   @override
   void initState() {

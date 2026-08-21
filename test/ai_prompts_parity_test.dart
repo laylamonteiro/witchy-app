@@ -7,6 +7,7 @@ import 'package:grimorio_de_bolso/core/ai/prompts/ai_prompts_es.dart';
 import 'package:grimorio_de_bolso/core/ai/prompts/ai_prompts_pt.dart';
 import 'package:grimorio_de_bolso/core/content/content_locale.dart';
 import 'package:grimorio_de_bolso/core/i18n/gender.dart';
+import 'package:grimorio_de_bolso/features/grimoire/data/models/spell_model.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_en.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/data_sources/daily_weather_content_es.dart';
@@ -34,10 +35,29 @@ void main() {
     ContentLocale.instance.setLocale(const Locale('pt', 'BR'));
   });
 
+  /// O `AIService` decide se o Perfil Mágico veio inteiro contando os
+  /// cabeçalhos `## ` da resposta contra uma constante de 12. Se um prompt
+  /// ganhar ou perder uma seção e a constante ficar para trás, todo perfil
+  /// passa a ser considerado incompleto (ou um perfil cortado passa por
+  /// completo) — silenciosamente. Este teste amarra as duas pontas.
+  group('Perfil Mágico — 12 seções nos três idiomas', () {
+    for (final entry in promptsByLang.entries) {
+      test('${entry.key}: o prompt pede exatamente 12 seções', () {
+        final prompt = entry.value.magicalProfileSystemPrompt(Gender.fallback);
+        expect(
+          RegExp(r'^##[ \t]+\S', multiLine: true).allMatches(prompt).length,
+          12,
+        );
+      });
+    }
+  });
+
   group('AiPrompts — campos não vazios nas três línguas', () {
     // Sondas nomeadas: cada uma resolve um campo para String.
     final probes = <String, String Function(AiPrompts p, Gender g)>{
       'localizedInstruction': (p, g) => p.localizedInstruction('pt-BR'),
+      'cycleRitualToSpellIntention': (p, g) =>
+          p.cycleRitualToSpellIntention('Nome', 'Corpo', ''),
       'spellGenerationSystemPrompt': (p, g) =>
           p.spellGenerationSystemPrompt(g),
       'magicalProfileSystemPrompt': (p, g) => p.magicalProfileSystemPrompt(g),
@@ -75,14 +95,6 @@ void main() {
           p.cycleReadingSectionInstruction('affirmation'),
       'cycleReadingSectionInstruction (seal)': (p, g) =>
           p.cycleReadingSectionInstruction('seal'),
-      'cycleReadingTeaserSystemPrompt': (p, g) =>
-          p.cycleReadingTeaserSystemPrompt(g),
-      'dreamTeaserSystemPrompt': (p, g) => p.dreamTeaserSystemPrompt(g),
-      'dailyWeatherTeaserSystemPrompt': (p, g) =>
-          p.dailyWeatherTeaserSystemPrompt(g),
-      'magicalProfileTeaserSystemPrompt': (p, g) =>
-          p.magicalProfileTeaserSystemPrompt(g),
-      'counselorTeaserSystemPrompt': (p, g) => p.counselorTeaserSystemPrompt(g),
       'defaultSpellName': (p, g) => p.defaultSpellName,
       'encyIdentifySystemPrompt (crystal)': (p, g) =>
           p.encyIdentifySystemPrompt('crystal'),
@@ -240,37 +252,20 @@ void main() {
       });
     });
 
-    test('a degustação pede só uma amostra, nunca o relatório', () {
-      // Fail-closed: o teaser precisa nascer do tamanho da amostra — se o
-      // prompt deixasse de limitar, a leitura paga vazaria de graça.
+    test('os rituais pedem a anotação que o app lê', () {
+      // O cartão do ritual tira a lua e os ingredientes de `[moon: ...]` e
+      // `[items: ...]`. Se o prompt parar de pedir a anotação, o feitiço
+      // salvo perde os dois em silêncio — nada quebra, só empobrece.
       promptsByLang.forEach((lang, prompts) {
-        for (final gender in Gender.values) {
-          final prompt = prompts.cycleReadingTeaserSystemPrompt(gender);
-          expect(prompt, contains('2'), reason: 'duas frases [$lang]');
-          expect(prompt, contains('JSON'), reason: 'material [$lang]');
+        final instrucao = prompts.cycleReadingSectionInstruction('rituals');
+        expect(instrucao, contains('[moon:'), reason: 'lua [$lang]');
+        expect(instrucao, contains('[items:'), reason: 'ingredientes [$lang]');
+        // Os nomes das fases são invariantes: traduzi-los quebraria o
+        // recorte, que casa com `MoonPhase.name`.
+        for (final fase in MoonPhase.values) {
+          expect(instrucao, contains(fase.name),
+              reason: '${fase.name} [$lang]');
         }
-      });
-    });
-
-    test('toda degustação pede duas frases e proíbe inventar fato', () {
-      // A degustação é a prova do produto pago: ela precisa ser curta (senão
-      // entrega o que é pago) e presa aos fatos recebidos (senão a amostra
-      // vira ficção sobre a vida de quem lê).
-      final teasers = <String, String Function(AiPrompts, Gender)>{
-        'clima do dia': (p, g) => p.dailyWeatherTeaserSystemPrompt(g),
-        'perfil mágico': (p, g) => p.magicalProfileTeaserSystemPrompt(g),
-        'conselheiro': (p, g) => p.counselorTeaserSystemPrompt(g),
-        'sonho': (p, g) => p.dreamTeaserSystemPrompt(g),
-        'leitura do ciclo': (p, g) => p.cycleReadingTeaserSystemPrompt(g),
-      };
-      promptsByLang.forEach((lang, prompts) {
-        teasers.forEach((name, probe) {
-          for (final gender in Gender.values) {
-            final prompt = probe(prompts, gender);
-            expect(prompt, contains('2'),
-                reason: 'duas frases: $name [$lang/${gender.name}]');
-          }
-        });
       });
     });
 

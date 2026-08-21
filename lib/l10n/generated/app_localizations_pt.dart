@@ -602,50 +602,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get changePasswordWrongCurrent => 'Senha atual incorreta';
 
   @override
-  String get onbSlide1Title => 'Seu Grimório Digital';
-
-  @override
-  String get onbSlide1Desc =>
-      'Guarde seus feitiços, rituais e receitas mágicas em um só lugar. Organize por fase lunar, ingredientes e muito mais.';
-
-  @override
-  String get onbSlide2Title => 'Calendário Lunar';
-
-  @override
-  String get onbSlide2Desc =>
-      'Acompanhe as fases da lua e descubra o melhor momento para cada tipo de magia. Receba notificações em luas cheias e novas.';
-
-  @override
-  String get onbSlide3Title => 'Diários Mágicos';
-
-  @override
-  String get onbSlide3Desc =>
-      'Registre sonhos, desejos, gratidão e afirmações. Acompanhe sua evolução espiritual dia após dia.';
-
-  @override
-  String get onbSlide4Title => 'Astrologia Completa';
-
-  @override
-  String get onbSlide4Desc =>
-      'Descubra seu mapa astral, perfil mágico personalizado e receba previsões diárias baseadas nos trânsitos planetários.';
-
-  @override
-  String get onbSlide5Title => 'Pronta para Começar?';
-
-  @override
-  String get onbSlide5Desc =>
-      'Crie sua conta para sincronizar seus dados em todos os dispositivos e ter acesso completo às funcionalidades.';
-
-  @override
-  String get onbSkip => 'Pular';
-
-  @override
-  String get onbHaveAccount => 'Já tenho uma conta';
-
-  @override
-  String get onbNext => 'Próximo';
-
-  @override
   String get profileTitle => 'Meu Perfil';
 
   @override
@@ -3254,50 +3210,6 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get changePasswordWrongCurrent => 'Senha atual incorreta';
-
-  @override
-  String get onbSlide1Title => 'Seu Grimório Digital';
-
-  @override
-  String get onbSlide1Desc =>
-      'Guarde seus feitiços, rituais e receitas mágicas em um só lugar. Organize por fase lunar, ingredientes e muito mais.';
-
-  @override
-  String get onbSlide2Title => 'Calendário Lunar';
-
-  @override
-  String get onbSlide2Desc =>
-      'Acompanhe as fases da lua e descubra o melhor momento para cada tipo de magia. Receba notificações em luas cheias e novas.';
-
-  @override
-  String get onbSlide3Title => 'Diários Mágicos';
-
-  @override
-  String get onbSlide3Desc =>
-      'Registre sonhos, desejos, gratidão e afirmações. Acompanhe sua evolução espiritual dia após dia.';
-
-  @override
-  String get onbSlide4Title => 'Astrologia Completa';
-
-  @override
-  String get onbSlide4Desc =>
-      'Descubra seu mapa astral, perfil mágico personalizado e receba previsões diárias baseadas nos trânsitos planetários.';
-
-  @override
-  String get onbSlide5Title => 'Pronta para Começar?';
-
-  @override
-  String get onbSlide5Desc =>
-      'Crie sua conta para sincronizar seus dados em todos os dispositivos e ter acesso completo às funcionalidades.';
-
-  @override
-  String get onbSkip => 'Pular';
-
-  @override
-  String get onbHaveAccount => 'Já tenho uma conta';
-
-  @override
-  String get onbNext => 'Próximo';
 
   @override
   String get profileTitle => 'Meu Perfil';

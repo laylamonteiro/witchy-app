@@ -55,9 +55,10 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  /// Voltar seguro: vindo do onboarding esta tela pode ser a ÚNICA rota da
-  /// pilha — um pop cego a esvaziaria e deixaria a tela preta. Sem nada
-  /// abaixo, volta-se para a porta de entrada (Welcome).
+  /// Voltar seguro: aberta por rota direta (deep link ou URL na web), esta
+  /// tela pode ser a ÚNICA rota da pilha — um pop cego a esvaziaria e
+  /// deixaria a tela preta. Sem nada abaixo, volta-se para a porta de
+  /// entrada (Welcome).
   void _handleBack() {
     final nav = Navigator.of(context);
     if (nav.canPop()) {
@@ -656,9 +657,6 @@ class _SignupPageState extends State<SignupPage> {
         );
       }
 
-      // Marcar onboarding como visto (nova conta não precisa ver)
-      await authProvider.markOnboardingSeen();
-
       if (mounted) {
         // Mostrar sucesso
         showAuthSnack(
@@ -740,7 +738,6 @@ class _SignupPageState extends State<SignupPage> {
       if (result.success && result.user != null) {
         final authProvider = context.read<AuthProvider>();
         await authProvider.syncAuthenticatedUser(result.user!);
-        await authProvider.markOnboardingSeen();
 
         if (!mounted) return;
         // Navegar para home

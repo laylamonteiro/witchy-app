@@ -22,14 +22,17 @@ enum OfferSlot {
   /// RESERVADO, sem tela por decisão de produto: aqui o que a assinatura
   /// vende é QUANTIDADE, não conteúdo — a pessoa já leu as tiragens do dia.
   /// Sortear uma carta extra só para escondê-la seria provocação, não
-  /// degustação. O gostinho desta tela é o do Conselheiro
-  /// ([counselorTeaser]), sobre a tiragem que ela acabou de fazer.
+  /// degustação. Nessas telas o gostinho é o sumário do Conselheiro, que
+  /// mostra a FORMA da leitura sem gastar geração.
   drawLimitTeaser,
 
   /// Degustação da lição seguinte de uma trilha.
   lessonTeaser,
 
-  /// Degustação do Conselheiro Místico.
+  /// APOSENTADO: a degustação do Conselheiro era gerada por IA e virou
+  /// sumário estático (`PremiumLockedPreview`). O valor continua aqui
+  /// porque é identidade PERSISTIDA — dispensas e exposições antigas estão
+  /// gravadas com este nome, e removê-lo faria a leitura delas falhar.
   counselorTeaser,
 
   /// Convite para comprar a Leitura do Ciclo (gatilho de engajamento).

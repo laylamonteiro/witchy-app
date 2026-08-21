@@ -17,9 +17,9 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/user_entry_model.dart';
 import '../providers/encyclopedia_provider.dart';
 import 'color_detail_page.dart';
@@ -68,11 +68,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
   bool _saving = false;
   String? _error;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
-  }
+  /// Pediu a identificação sem ter Premium: a tela mostra os campos que o
+  /// verbete traria, em vez de bater a porta na entrada.
+  bool _mostrarPrevia = false;
 
   @override
   void dispose() {
@@ -80,18 +78,20 @@ class _AddEntryPageState extends State<AddEntryPage> {
     super.dispose();
   }
 
-  Future<void> _ensureAccess() async {
-    final access = context
-        .read<AuthProvider>()
-        .checkFeatureAccess(AppFeature.encyclopediaPersonalEntries);
-    if (!access.hasFullAccess && mounted) {
-      await showPaywallThenPop(context);
-    }
-  }
-
   Future<void> _pick(ImageSource source) async {
     final l10n = AppLocalizations.of(context);
     setState(() => _error = null);
+
+    // Sem Premium a identificação não acontece: a foto não é escolhida, não
+    // sai do aparelho e nenhuma chamada de visão é feita. O que aparece é a
+    // lista dos campos que o verbete teria, com o texto sob véu.
+    final access = context
+        .read<AuthProvider>()
+        .checkFeatureAccess(AppFeature.encyclopediaPersonalEntries);
+    if (!access.hasFullAccess) {
+      setState(() => _mostrarPrevia = true);
+      return;
+    }
 
     final provider = context.read<EncyclopediaProvider>();
     final usedToday = await provider.userEntriesCreatedToday();
@@ -322,6 +322,25 @@ class _AddEntryPageState extends State<AddEntryPage> {
     }
   }
 
+  /// Os campos que o verbete traria — os mesmos que a página gerada mostra,
+  /// na ordem em que aparecem lá. Fixos, do l10n: quem não tem acesso não
+  /// faz o app gastar identificação nem geração nenhuma.
+  List<String> _camposDoVerbete(AppLocalizations l10n) {
+    return [
+      l10n.encyLockedIdentify,
+      switch (widget.category) {
+        UserEntryCategory.herb => l10n.encyLockedDescriptionHerb,
+        UserEntryCategory.crystal => l10n.encyLockedDescriptionCrystal,
+        UserEntryCategory.color => l10n.encyLockedDescriptionColor,
+      },
+      l10n.encySectionMagicProps,
+      l10n.encySectionMagicUses,
+      l10n.encySectionCorrespondences,
+      if (widget.category == UserEntryCategory.herb) l10n.encySectionSafety,
+      l10n.encyLockedSaved,
+    ];
+  }
+
   /// Intro menciona apenas o elemento da categoria aberta ("Fotografe sua
   /// pedra..." em Cristais), não a lista genérica erva/pedra/cor.
   String _intro(AppLocalizations l10n) {
@@ -402,6 +421,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 ],
               ),
             ),
+            if (_mostrarPrevia && _jpegBytes == null)
+              MagicalCard(
+                child: PremiumLockedPreview(titles: _camposDoVerbete(l10n)),
+              ),
             if (_identifying)
               MagicalCard(
                 child: Row(

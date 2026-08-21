@@ -129,6 +129,9 @@
   "premiumPerYear": "/year",
   "premiumPlanLifetime": "Lifetime",
   "premiumLifetimeOnce": "one-time payment, forever",
+  "premiumLifetimeShort": "forever",
+  "premiumBenefitLifetimeCycle": "Cycle Reading included — week and lunation, no separate purchase",
+  "premiumBenefitLifetimeNoRenew": "One payment: no renewal, no monthly fee, forever",
   "premiumSave33": "Save 33%",
   "premiumTagSelected": "SELECTED",
   "premiumTagPopular": "POPULAR",
@@ -222,19 +225,6 @@
   "changePasswordError": "Error changing password",
   "changePasswordSuccess": "Password changed successfully!",
   "changePasswordWrongCurrent": "Current password is incorrect",
-  "onbSlide1Title": "Your Digital Grimoire",
-  "onbSlide1Desc": "Keep your spells, rituals and magical recipes in one place. Organize by moon phase, ingredients and much more",
-  "onbSlide2Title": "Lunar Calendar",
-  "onbSlide2Desc": "Follow the moon phases and discover the best moment for each kind of magic. Get notified on full and new moons",
-  "onbSlide3Title": "Magical Diaries",
-  "onbSlide3Desc": "Record dreams, desires, gratitude and affirmations. Follow your spiritual growth day by day",
-  "onbSlide4Title": "Complete Astrology",
-  "onbSlide4Desc": "Discover your birth chart, personalized magical profile and daily forecasts based on planetary transits",
-  "onbSlide5Title": "Ready to Begin?",
-  "onbSlide5Desc": "Create your account to sync your data across devices and get full access to all features",
-  "onbSkip": "Skip",
-  "onbHaveAccount": "I already have an account",
-  "onbNext": "Next",
   "profileTitle": "My Profile",
   "profileAnonymous": "Anonymous Witch",
   "profileEditName": "Edit Name",
@@ -827,7 +817,7 @@
   "astroBirthTime": "Exact birth time",
   "astroBirthPlace": "Birth place (city and country)",
   "astroRecalcTitle": "Recalculate Birth Chart?",
-  "astroRecalcConfirm": "This will replace your current birth chart. Are you sure?",
+  "astroRecalcConfirm": "This redoes your birth chart, your Eras and your Magical Profile. Readings already made stay as they are. Continue?",
   "chartInvalidDate": "Invalid date",
   "chartInvalidTime": "Invalid time",
   "chartPlaceNotFound": "Place not found",
@@ -1332,6 +1322,21 @@
   "settingsDiagnosticsSub": "Tests, role switching, and more",
   "settingsManageCodesSub": "Create and invalidate promo codes",
   "premiumPlaceholderText": "The energies of this content are veiled from common eyes. The stars whisper secrets only initiates can hear. The moon keeps mysteries, the crystals vibrate in silence, and the herbs await the moment to reveal their powers. Awaken your mystical potential and discover everything the universe has prepared for you. The full magic awaits those who cross the veil",
+  "counselorLockedTitle1": "How each piece speaks to the others",
+  "counselorLockedTitle2": "The story they tell together",
+  "counselorLockedTitle3": "The answer to your question",
+  "counselorLockedTitle4": "A practical counsel for right now",
+  "dreamLockedTitle1": "An overview of the dream",
+  "dreamLockedTitle2": "The symbols that appeared",
+  "dreamLockedTitle3": "What each one says in YOUR dream",
+  "dreamLockedTitle4": "The dream as a whole",
+  "dreamLockedTitle5": "A word of wisdom and a small rite",
+  "palmLockedTitle1": "Hand shape and temperament",
+  "palmLockedTitle2": "Life Line",
+  "palmLockedTitle3": "Head Line",
+  "palmLockedTitle4": "Heart Line",
+  "palmLockedTitle5": "Mounts, fingers and thumb",
+  "palmLockedTitle6": "The reading as a whole",
   "loginTechStatus": "Technical status",
   "loginTechVersion": "Version",
   "loginTechEnvironment": "Environment",
@@ -1619,30 +1624,16 @@
   "cycleReadingSectionPractice": "🔮 Your practice",
   "cycleReadingSectionRituals": "✨ Rituals for the next cycle",
   "cycleReadingSectionAffirmation": "💫 An affirmation to carry",
-  "cycleReadingSectionSeal": "🌙 Seal of the cycle",
+  "cycleReadingSectionSeal": "🌙 Cycle keywords",
   "cycleReadingIntroTagline": "The oracle reads your grimoire: a unique magical analysis of your lunation, woven from what you recorded.",
   "cycleReadingIntroWhatTitle": "What the reading includes",
-  "cycleReadingIntroWhatBody": "Seven sections all yours: portrait of the moment, the threads that repeat, the sky above you (transits and moon phases), your practice, rituals for the next cycle, a tailored affirmation and the seal of the cycle — all saved forever in My Records.",
   "cycleReadingDisclaimer": "The reading is an invitation to self-knowledge — never a deterministic prediction about health, money or relationships.",
+  "chartRecalcWarning": "Changing your birth data redoes your chart, your Eras and your Magical Profile. Readings already made stay as they are.",
+  "cycleReadingChartTitle": "Your reading goes deeper with your birth data",
+  "cycleReadingChartBody": "With date, time and city, the reading ties the sky of the period to your chart — and the same data builds your Birth Chart and your Eras, all at once.",
+  "cycleReadingChartCta": "Add my birth data",
   "cycleReadingRecordCount": "{count, plural, =0{No records in this lunation yet} one{1 record in this lunation} other{{count} records in this lunation}}",
   "cycleReadingShallowWarning": "Few records in this period: the reading may come out shallow. How about recording a few more days before buying?",
-  "cycleReadingCooldownWeek": "Your next Week Reading opens in {days, plural, one{1 day} other{{days} days}}. Seven days of living make a new reading — before that, it would only reread the same stretch.",
-  "@cycleReadingCooldownWeek": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "cycleReadingCooldownLunation": "Your next Lunation Reading opens in {days, plural, one{1 day} other{{days} days}}. A whole cycle has to be lived before it can be read.",
-  "@cycleReadingCooldownLunation": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "cycleReadingCustomPeriodButton": "Choose another period",
   "cycleReadingCustomPeriodTitle": "Which stretch of your life?",
   "cycleReadingCustomPeriodHint": "Up to 7 days becomes a Week Reading; 8 to 31 days, a Lunation Reading.",
   "cycleReadingHeatLegend": "Marked days are the ones you recorded something — the stronger the mark, the more alive your practice was.",
@@ -1658,26 +1649,11 @@
       }
     }
   },
-  "cycleReadingCustomPeriodClear": "Back to the current period",
-  "cycleReadingCustomPeriodLine": "From {start} to {end} · {days, plural, one{1 day} other{{days} days}}",
-  "@cycleReadingCustomPeriodLine": {
-    "placeholders": {
-      "start": {
-        "type": "String"
-      },
-      "end": {
-        "type": "String"
-      },
-      "days": {
-        "type": "int"
-      }
-    }
-  },
   "cycleReadingRejectTooLong": "A reading period goes up to 31 days. Choose a shorter window.",
   "cycleReadingRejectFuture": "You can only read a period you have already lived. Choose dates up to today.",
   "cycleReadingRejectEmpty": "Choose a start and an end date.",
-  "cycleReadingRejectOverlaps": "You have already read a period that crosses these dates ({start} to {end}). Choose a window that hasn't been read yet.",
-  "@cycleReadingRejectOverlaps": {
+  "cycleReadingOverlapNotice": "You have already read a period that crosses these dates ({start} to {end}) — you can read it again, in other words, if you want.",
+  "@cycleReadingOverlapNotice": {
     "placeholders": {
       "start": {
         "type": "String"
@@ -1699,11 +1675,7 @@
   "cycleReadingIncludePractice": "Use my magical practice",
   "cycleReadingIncludeQuestionsHint": "Runes, pendulum, cards, tarot and the readings kept in your archive.",
   "cycleReadingBuyFor": "Buy reading — {price}",
-  "cycleReadingTeaserTitle": "Peek at the start of your reading",
-  "cycleReadingTeaserIntro": "Two real sentences about your period — drawn from your own records. The rest comes in the full reading.",
-  "cycleReadingTeaserPeek": "See the start",
-  "cycleReadingTeaserCta": "I want the full reading",
-  "cycleReadingTeaserFailed": "Could not peek right now. Try again in a moment.",
+  "cycleReadingWantFull": "Create my full reading",
   "cycleReadingPendingCredit": "Your purchase is secured — only the report is left to generate.",
   "cycleReadingGenerate": "Generate my reading",
   "cycleReadingGenerating": "Weaving your reading… the oracle is rereading your grimoire.",
@@ -1713,8 +1685,21 @@
   "cycleReadingGenerationFailed": "Could not generate right now. Your purchase still stands — try again in a moment, at no extra charge.",
   "cycleReadingUnavailable": "Purchase unavailable at the moment. Try again later.",
   "cycleReadingShareAffirmation": "Share affirmation",
-  "cycleReadingShareSeal": "Share seal of the cycle",
+  "cycleReadingShareSeal": "Share the keywords",
+  "cycleReadingSaveRitual": "Save to my spells",
+  "cycleReadingRitualWeaving": "Weaving the spell…",
+  "cycleReadingRitualSaved": "Saved to your spells",
+  "cycleReadingRitualPurpose": "Ritual suggested by your Cycle Reading",
+  "cycleReadingRitualFrom": "Suggested by your Cycle Reading of {period}",
+  "@cycleReadingRitualFrom": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
   "cycleReadingSavedToArchive": "Saved in My Records — your reading stays in your archive forever.",
+  "cycleReadingDeleteConfirm": "Deleting this reading removes the report from your records. This cannot be undone.",
   "cycleReadingOfferTitle": "{count, plural, one{Your lunation yielded 1 record} other{Your lunation yielded {count} records}}",
   "cycleReadingOfferBody": "Want its reading? The oracle weaves your records and the sky of the period into an analysis that is only yours.",
   "cycleReadingOfferCta": "Discover the Cycle Reading",
@@ -1722,24 +1707,130 @@
   "cycleReadingLunationTitle": "Lunation Reading",
   "cycleReadingWeekPeriodLine": "Last 7 days, from {start} to {end}",
   "cycleReadingWeekRecordCount": "{count, plural, =0{No records this week yet} one{1 record this week} other{{count} records this week}}",
-  "cycleReadingWeekWhatBody": "Four direct sections about your last seven days: portrait of the moment, the threads that repeat, the sky above you and a tailored affirmation — saved forever in My Records. The practice review, the rituals for the next cycle and the seal belong to the Lunation Reading.",
   "dreamTeaserTitle": "What does this dream mean?",
-  "dreamTeaserIntro": "The full interpretation is Premium — but the first thread is yours.",
-  "dreamTeaserPeek": "Peek at the interpretation",
-  "cycleReadingLifetimeIncluded": "The Lunation Reading is included in your Lifetime. It is yours every lunation, at no extra charge.",
   "cycleReadingLifetimeTag": "Included",
   "commonTryAgain": "Try again",
-  "weatherTeaserIntro": "The whole forecast is Premium — but the start of today's sky is yours.",
-  "weatherTeaserPeek": "Peek at today's sky",
-  "profileTeaserIntro": "The whole analysis is Premium — but the first trait of your chart is yours.",
-  "profileTeaserPeek": "Peek at my chart",
-  "counselorTeaserTitle": "What the Counselor saw in this reading",
-  "counselorTeaserIntro": "The full counsel is Premium — but the first thread of this reading is yours.",
-  "counselorTeaserPeek": "Peek at the counsel",
+  "profileTeaserItem1": "Your magical essence and your intuitive gifts",
+  "profileTeaserItem2": "How you speak magic, love and protect yourself",
+  "profileTeaserItem3": "Your path of transformation and your spiritual gateway",
+  "profileTeaserItem4": "Practices and allies — crystals, herbs and colors from your chart",
+  "profileTeaserItem5": "Your greatest strengths and your shadow work",
   "lessonTeaserTitle": "The beginning of this lesson",
   "lessonTeaserIntro": "The next lessons in the trail are Premium — but the beginning of this one is yours.",
   "zodiacTwelveSigns": "The 12 Signs",
   "zodiacPersonality": "Personality",
   "zodiacRulingPlanet": "Ruling Planet: {planet}",
-  "cycleReadingIncludePracticeHint": "Spells you created and the notes from your rites."
+  "cycleReadingIncludePracticeHint": "Spells you created and the notes from your rites.",
+  "grimoireTabCycles": "Cycles",
+  "cyclesErasTitle": "Your Eras",
+  "cyclesErasSubtitle": "Your 120-year timeline",
+  "cyclesOpenTimeline": "See the timeline",
+  "cyclesTabNow": "Now",
+  "cyclesTabPast": "Past",
+  "cyclesTabFuture": "Future",
+  "cyclesCurrentEraLabel": "Your Era now",
+  "cyclesCurrentPhaseLabel": "Your Phase now",
+  "cyclesEraLabel": "Era",
+  "cyclesPhaseLabel": "Phase",
+  "cyclesRuledBy": "Ruled by {ruler}",
+  "cyclesPhaseWithin": "Within {era}",
+  "cyclesPeriodRange": "{start} — {end}",
+  "cyclesEraLength": "A {duration} Era",
+  "cyclesEndedAgo": "Ended {duration} ago",
+  "cyclesStartsIn": "Starts in {duration}",
+  "cyclesYears": "{count, plural, =1{1 year} other{{count} years}}",
+  "cyclesMonths": "{count, plural, =1{1 month} other{{count} months}}",
+  "cyclesDurationJoin": "{first} and {second}",
+  "cyclesLessThanMonth": "less than a month",
+  "cyclesPastEmpty": "Your first Era is still under way",
+  "cyclesFutureEmpty": "You have reached the last Era of the timeline",
+  "cyclesNoChartTitle": "Your birth chart is missing",
+  "cyclesNoChartBody": "Your Eras come from where the Moon stood the moment you were born. Set up your chart and the timeline appears here",
+  "cyclesNoChartCta": "Set up my birth chart",
+  "cyclesUncertainTitle": "Your birth time is not set",
+  "cyclesUncertainBody": "The Moon can travel 15° in a day, and each Era begins on a slice of just over 13°. Without the exact time, the dates below can shift by years",
+  "cyclesUncertainCta": "Add my birth time",
+  "cyclesErrorTitle": "I could not build your timeline",
+  "cyclesErrorBody": "Check your birth details and try again",
+  "cyclesReadingBodyTitle": "What this time brings",
+  "cyclesReadingShadowTitle": "Where it tends to hurt",
+  "cyclesReadingInviteTitle": "What to do with it",
+  "cyclesLockedTitle": "The rest of your timeline",
+  "cyclesLockedBody": "See every Era behind you and every Era ahead, each with its full reading",
+  "featurePreviewCycles": "Your current Era and Phase are open. The past, the future and the full readings are Premium",
+  "cyclesRulerCauda": "The Tail",
+  "cyclesRulerVenus": "Venus",
+  "cyclesRulerSol": "The Sun",
+  "cyclesRulerLua": "The Moon",
+  "cyclesRulerMarte": "Mars",
+  "cyclesRulerSerpente": "The Serpent",
+  "cyclesRulerJupiter": "Jupiter",
+  "cyclesRulerSaturno": "Saturn",
+  "cyclesRulerMercurio": "Mercury",
+  "cyclesReadingCardPitch": "Seven parts woven from what you lived: the portrait of the moment, the threads that repeat, the sky above you and rituals for the cycle ahead",
+  "cyclesReadingCardUnread": "{count, plural, =0{No new entries since your last reading} one{1 entry since your last reading} other{{count} entries since your last reading}}",
+  "@cyclesReadingCardUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cyclesReadingCardWaiting": "{count, plural, =0{Your grimoire is still waiting for its first entry} one{1 entry waiting for a reading} other{{count} entries waiting for a reading}}",
+  "@cyclesReadingCardWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cyclesReadingCardLastRead": "Your last reading was on {date}",
+  "@cyclesReadingCardLastRead": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cyclesReadingCardDepthHint": "From {count} entries on, the reading gains depth",
+  "@cyclesReadingCardDepthHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cycleReadingRecentTitle": "Your readings",
+  "cycleReadingRecentSeeAll": "See all readings",
+  "cycleReadingRecentRange": "{start} to {end}",
+  "@cycleReadingRecentRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "cyclesReadingCardCta": "See what this cycle has to say",
+  "cyclesTabIntro": "Where you stand in time — the week, the lunation and the 120 years of your life",
+  "cyclesMonthTitle": "This month",
+  "cyclesMonthSubtitle": "What the sky does over the coming weeks",
+  "cyclesMonthNewMoon": "New moon in {sign}",
+  "cyclesMonthFullMoon": "Full moon in {sign}",
+  "cyclesMonthSunIngress": "The Sun enters {sign}",
+  "cyclesMonthRetroStart": "{planet} turns retrograde",
+  "cyclesMonthRetroEnd": "{planet} turns direct",
+  "cyclesMonthNewMoonHint": "A cycle begins: good for planting intention",
+  "cyclesMonthFullMoonHint": "The high point: what was hidden comes to light",
+  "cyclesMonthIngressHint": "The season turns: the month changes subject",
+  "cyclesMonthRetroStartHint": "Time to revise, not to launch",
+  "cyclesMonthRetroEndHint": "What was stuck starts moving again",
+  "cyclesMonthEmpty": "A quiet month in the sky — good for keeping what is already under way",
+  "encyLockedIdentify": "What your photo is — common and scientific name",
+  "encyLockedDescriptionHerb": "The plant described from your own photo",
+  "encyLockedDescriptionCrystal": "The stone described from your own photo",
+  "encyLockedDescriptionColor": "The color described from your own photo",
+  "encyLockedSaved": "The finished page, kept in your encyclopedia with your photo"
 }

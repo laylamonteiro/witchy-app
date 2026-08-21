@@ -4,13 +4,12 @@ import '../../../../core/utils/mask.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/debug_log_service.dart';
 import '../providers/auth_provider.dart';
-import 'onboarding_page.dart';
 import 'welcome_page.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
 import '../../../../core/widgets/splash_screen.dart';
 
 /// Widget wrapper que gerencia o fluxo de autenticação
-/// Decide se mostra onboarding, tela de boas-vindas, login ou home
+/// Decide se mostra a tela de boas-vindas ou a home
 class AuthWrapper extends StatelessWidget {
   /// Se deve mostrar splash screen
   final bool showSplash;
@@ -33,15 +32,12 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        // Verificar se usuário já usou o app antes
-        final hasSeenOnboarding = authProvider.hasSeenOnboarding;
-
         // Verificar se tem conta autenticada (email válido)
         final isAuthenticated = authProvider.currentUser.isAuthenticated;
 
         // Log para debug (fire-and-forget)
         debugLog('NAV',
-            'AuthWrapper: isAuthenticated=$isAuthenticated, hasSeenOnboarding=$hasSeenOnboarding, email=${maskEmail(authProvider.currentUser.email)}');
+            'AuthWrapper: isAuthenticated=$isAuthenticated, email=${maskEmail(authProvider.currentUser.email)}');
 
         // Volta do login social com a troca do código ainda em voo: a
         // sessão está a caminho do servidor. Mostrar a tela de login agora
@@ -72,15 +68,10 @@ class AuthWrapper extends StatelessWidget {
               : const HomePage();
         }
 
-        // Se já viu onboarding mas não tem conta, mostrar tela de boas-vindas
-        if (hasSeenOnboarding) {
-          debugLog('NAV', 'AuthWrapper: → WelcomePage (viu onboarding, sem conta)');
-          return const WelcomePage();
-        }
-
-        // Se é primeira vez, mostrar onboarding
-        debugLog('NAV', 'AuthWrapper: → OnboardingPage (primeira vez)');
-        return const OnboardingPage();
+        // Sem conta: a porta de entrada é a tela de boas-vindas, que já
+        // apresenta o app em uma tela só.
+        debugLog('NAV', 'AuthWrapper: → WelcomePage (sem conta)');
+        return const WelcomePage();
       },
     );
   }

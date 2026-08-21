@@ -15,7 +15,16 @@ import '../providers/astrology_provider.dart';
 import 'birth_chart_view_page.dart';
 
 class BirthChartInputPage extends StatefulWidget {
-  const BirthChartInputPage({super.key});
+  /// Ao terminar, VOLTA para quem chamou em vez de abrir o mapa.
+  ///
+  /// É o caminho de quem chegou aqui no meio de outra coisa — a Leitura do
+  /// Ciclo, por exemplo: ela precisa do nascimento para ler o céu do
+  /// período, e mandar a pessoa parar na Astrologia seria perder o que ela
+  /// estava fazendo. Os dados são os MESMOS: preenche uma vez, vale para o
+  /// mapa, para as Eras e para a leitura.
+  final bool returnWhenDone;
+
+  const BirthChartInputPage({super.key, this.returnWhenDone = false});
 
   @override
   State<BirthChartInputPage> createState() => _BirthChartInputPageState();
@@ -222,6 +231,13 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
       if (!mounted) return;
 
       if (chart != null) {
+        // Quem veio de outra tela volta para ela com o mapa pronto — sem
+        // anúncio no meio, porque o resultado que essa pessoa espera está
+        // do outro lado, não aqui.
+        if (widget.returnWhenDone) {
+          Navigator.of(context).pop(chart);
+          return;
+        }
         // Anúncio ANTES do mapa (free): a usuária quer o resultado. O ad
         // fecha e SÓ ENTÃO navega — sem competir com a transição de rota.
         await AdService.instance.showBeforeResult();
@@ -273,6 +289,31 @@ class _BirthChartInputPageState extends State<BirthChartInputPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Recalcular não é só refazer o mapa: as Eras nascem da Lua
+              // natal e o Perfil Mágico é escrito a partir das posições.
+              // Trocar os dados de nascimento mexe nos três, e a pessoa
+              // precisa saber disso ANTES de digitar.
+              if (context.watch<AstrologyProvider>().hasBirthChart)
+                MagicalCard.accent(
+                  accent: context.gc.warning,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.refresh,
+                          size: 18, color: context.gc.warning),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).chartRecalcWarning,
+                          style: TextStyle(
+                            color: context.gc.warning,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               // Introdução
               MagicalCard(
                 child: Column(

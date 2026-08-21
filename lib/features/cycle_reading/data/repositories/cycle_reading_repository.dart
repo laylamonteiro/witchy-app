@@ -61,6 +61,63 @@ class CycleReadingRepository {
     return CycleReadingModel.fromMap(rows.first);
   }
 
+  /// A leitura gerada mais recente POR DATA DE GERAÇÃO.
+  ///
+  /// Diferente de [recentGenerated], que ordena pelo fim do período: aqui a
+  /// pergunta é "quando foi a última vez que ela leu", e não "até onde a
+  /// vida dela já foi lida". É esse instante que separa o que a leitura viu
+  /// do que veio depois — as tabelas de registro guardam `created_at`, então
+  /// é com ele que a conta bate.
+  Future<CycleReadingModel?> lastGenerated(String userId) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND status = ?',
+      whereArgs: [userId, CycleReadingStatus.generated],
+      orderBy: 'created_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CycleReadingModel.fromMap(rows.first);
+  }
+
+  /// Apaga o registro da leitura — local e na nuvem.
+  ///
+  /// Some com a linha, não com o relatório: quem apaga a entrada do acervo
+  /// apaga o TEXTO, e a linha aqui ficaria apontando para um relatório que
+  /// não existe mais, sujando a lista de leituras.
+  Future<void> delete(String id) async {
+    final db = await _db;
+    await db.delete('cycle_readings', where: 'id = ?', whereArgs: [id]);
+    await _syncService.deleteItem(SyncEntity.cycleReadings, id);
+  }
+
+  /// A leitura de uma janela EXATA (mesmo início e mesmo fim), se existir.
+  ///
+  /// Serve para não acumular registros do mesmo período: pedir de novo a
+  /// leitura das mesmas datas reescreve a que já existe, em vez de criar uma
+  /// segunda no banco e uma segunda entrada no acervo.
+  Future<CycleReadingModel?> findForExactPeriod(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND period_start = ? AND period_end = ?',
+      whereArgs: [
+        userId,
+        start.millisecondsSinceEpoch,
+        end.millisecondsSinceEpoch,
+      ],
+      orderBy: 'created_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CycleReadingModel.fromMap(rows.first);
+  }
+
   /// A leitura que gerou uma entrada do acervo — o caminho de volta quando
   /// a pessoa reabre o relatório por "Meus Registros".
   Future<CycleReadingModel?> findByWritingId(String writingId) async {
@@ -69,25 +126,6 @@ class CycleReadingRepository {
       'cycle_readings',
       where: 'writing_id = ?',
       whereArgs: [writingId],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return CycleReadingModel.fromMap(rows.first);
-  }
-
-  /// A última leitura GERADA deste tipo — âncora do cooldown (semanal a
-  /// cada 7 dias, mensal a cada 30). Créditos pendentes ficam de fora: uma
-  /// compra que ainda não virou relatório não conta como "leitura feita".
-  Future<CycleReadingModel?> latestGenerated(
-    String userId,
-    String periodType,
-  ) async {
-    final db = await _db;
-    final rows = await db.query(
-      'cycle_readings',
-      where: 'user_id = ? AND period_type = ? AND status = ?',
-      whereArgs: [userId, periodType, CycleReadingStatus.generated],
-      orderBy: 'created_at DESC',
       limit: 1,
     );
     if (rows.isEmpty) return null;
@@ -124,6 +162,27 @@ class CycleReadingRepository {
     );
     if (rows.isEmpty) return null;
     return CycleReadingModel.fromMap(rows.first);
+  }
+
+  /// As últimas leituras GERADAS, da que cobre o período mais recente para
+  /// a mais antiga.
+  ///
+  /// A ordem é por `period_end`, não por `created_at`: o que importa aqui é
+  /// até onde a vida da pessoa já foi lida, e uma leitura retroativa feita
+  /// hoje cobre um pedaço antigo.
+  Future<List<CycleReadingModel>> recentGenerated(
+    String userId, {
+    int limit = 5,
+  }) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND status = ?',
+      whereArgs: [userId, CycleReadingStatus.generated],
+      orderBy: 'period_end DESC',
+      limit: limit,
+    );
+    return rows.map(CycleReadingModel.fromMap).toList();
   }
 
   Future<List<CycleReadingModel>> getAll(String userId) async {

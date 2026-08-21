@@ -117,32 +117,45 @@ class WelcomePage extends StatelessWidget {
         BreathingBadge(
           glowColor: context.gc.lilac,
           haloSize: 144,
-          child: Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  context.gc.lilac.withValues(alpha: 0.3),
-                  context.gc.pink.withValues(alpha: 0.3),
-                ],
+          // O ícone oficial do app, o mesmo do splash e do cartão de
+          // compartilhamento. A arte já é um círculo com anel lilás e fundo
+          // escuro, então aqui não entra gradiente nem borda — seria anel
+          // sobre anel. O ClipOval só apara a moldura do PNG.
+          child: ClipOval(
+            child: Image.asset(
+              'assets/app_icon.png',
+              width: 120,
+              height: 120,
+              // Se o asset não carregar, volta o emblema desenhado que a
+              // tela usava antes — a boas-vindas nunca fica sem símbolo.
+              errorBuilder: (_, __, ___) => Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      context.gc.lilac.withValues(alpha: 0.3),
+                      context.gc.pink.withValues(alpha: 0.3),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: context.gc.lilac.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  Icons.auto_stories,
+                  size: 56,
+                  color: context.gc.lilac,
+                ),
               ),
-              border: Border.all(
-                color: context.gc.lilac.withValues(alpha: 0.5),
-                width: 2,
-              ),
-            ),
-            child: Icon(
-              Icons.auto_stories,
-              size: 56,
-              color: context.gc.lilac,
             ),
           ),
         ),
-        // Uma faísca orbita o livro — a linguagem de órbita dos emblemas.
+        // Uma faísca orbita o emblema — a linguagem de órbita do app.
         OrbitingSparkle(radius: 78, color: context.gc.starYellow),
       ],
     );

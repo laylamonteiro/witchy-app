@@ -8,7 +8,8 @@ import '../pages/add_entry_page.dart';
 /// Guia da Natureza: pergunta O QUE identificar (erva/pedra) e leva ao
 /// fluxo de foto + IA da enciclopédia. Compartilhado pela ferramenta do
 /// Grimório e pelo atalho do Seu Dia. O gate Premium é da própria
-/// AddEntryPage — aqui não se duplica paywall.
+/// AddEntryPage — aqui não se duplica paywall. Quem não tem acesso chega
+/// à tela da foto e vê os campos que o verbete traria; nada é gerado.
 ///
 /// Cores ficaram de fora de propósito: a seção de Cores é só o catálogo
 /// oficial (roda + páginas completas), sem identificação por foto.

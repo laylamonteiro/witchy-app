@@ -3,12 +3,10 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import '../../../../core/ai/ai_service.dart';
 import '../../../../core/content/content_locale.dart';
 import '../../../../core/offers/offer_engine.dart';
-import '../../../../core/offers/teaser_cache.dart';
-import '../../../../core/offers/teaser_reveal.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../providers/astrology_provider.dart';
@@ -32,56 +30,19 @@ class MagicalProfilePage extends StatefulWidget {
 class _MagicalProfilePageState extends State<MagicalProfilePage> {
   static const _teaserSlot = OfferSlot.magicalProfileTeaser;
 
-  /// Degustação de quem não tem acesso: 2 frases reais sobre o mapa.
-  String? _teaser;
-  bool _isTeasing = false;
   OfferEngine? _engine;
 
   @override
   void initState() {
     super.initState();
-    _prepareTeaser();
+    _prepareOfferEngine();
   }
 
-  /// Recupera a amostra já gerada para este mapa, se houver. A geração só
-  /// acontece no toque — degustação não gasta IA de quem só passou.
-  Future<void> _prepareTeaser() async {
-    final chartId = context.read<AstrologyProvider>().birthChart?.id;
-    if (chartId == null) return;
+  Future<void> _prepareOfferEngine() async {
     final engine = await OfferEngine.load();
-    final cached = await TeaserAiCache.get(_teaserSlot.name, chartId);
     if (!mounted) return;
-    setState(() {
-      _engine = engine;
-      _teaser = cached;
-    });
+    setState(() => _engine = engine);
     engine.recordWallExposure(_teaserSlot);
-  }
-
-  Future<void> _generateProfileTeaser(AstrologyProvider provider) async {
-    final chart = provider.birthChart;
-    final profile = provider.magicalProfile;
-    if (_isTeasing || chart == null || profile == null) return;
-    setState(() => _isTeasing = true);
-    final messenger = ScaffoldMessenger.of(context);
-    final alertColor = context.gc.alert;
-    try {
-      final sample = await AIService.instance.generateMagicalProfileTeaser(
-        birthChart: chart,
-        profile: profile,
-      );
-      await TeaserAiCache.put(_teaserSlot.name, chart.id, sample);
-      if (!mounted) return;
-      setState(() => _teaser = sample);
-    } catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-        content: Text('$e'.replaceAll('Exception: ', '')),
-        backgroundColor: alertColor,
-      ));
-    } finally {
-      if (mounted) setState(() => _isTeasing = false);
-    }
   }
 
   void _onTeaserCta() {
@@ -553,7 +514,7 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     // provider). O que esta pessoa vê é a degustação — e ela aparece mesmo
     // sem nenhum texto salvo, porque nunca vai haver um.
     if (!hasFullAccess) {
-      return _buildProfileTeaserCard(provider);
+      return _buildProfileTeaserCard();
     }
 
     // Se está gerando IA
@@ -757,55 +718,27 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     );
   }
 
-  /// Degustação da análise: duas frases verdadeiras sobre o mapa desta
-  /// pessoa, no lugar do paywall frio.
-  Widget _buildProfileTeaserCard(AstrologyProvider provider) {
+  /// O que a análise completa traria — os títulos à vista, o texto sob véu.
+  ///
+  /// Não gera nada: os títulos são fixos, do l10n, e o conteúdo verdadeiro
+  /// nem chega a ser pedido para quem não tem acesso.
+  Widget _buildProfileTeaserCard() {
     final l10n = AppLocalizations.of(context);
-    final sample = _teaser;
     return MagicalCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildAISectionHeader(),
-          if (sample == null) ...[
-            Text(
-              l10n.profileTeaserIntro,
-              style: TextStyle(
-                color: context.gc.softWhite.withValues(alpha: 0.75),
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Center(
-              child: OutlinedButton.icon(
-                onPressed:
-                    _isTeasing ? null : () => _generateProfileTeaser(provider),
-                icon: _isTeasing
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.gc.lilac,
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome, size: 18),
-                label: Text(l10n.profileTeaserPeek),
-              ),
-            ),
-          ] else
-            TeaserReveal(
-              sample: Text(
-                sample,
-                style: TextStyle(
-                  color: context.gc.softWhite,
-                  height: 1.55,
-                  fontSize: 15,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              onCta: _onTeaserCta,
-            ),
+          PremiumLockedPreview(
+            titles: [
+              l10n.profileTeaserItem1,
+              l10n.profileTeaserItem2,
+              l10n.profileTeaserItem3,
+              l10n.profileTeaserItem4,
+              l10n.profileTeaserItem5,
+            ],
+            onCta: _onTeaserCta,
+          ),
         ],
       ),
     );

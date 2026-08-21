@@ -15,7 +15,10 @@ import '../../data/services/cycle_reading_service.dart';
 /// que tem o que ler.
 ///
 /// Devolve a janela em `[start, end)` (fim exclusivo, como o resto da
-/// feature) ou null se fechar sem escolher.
+/// feature). Como folha, devolve pelo `Navigator.pop`; embutida numa tela
+/// ([embedded] com [onConfirm]), devolve pela chamada de volta — é assim que
+/// a Leitura do Ciclo abre no calendário, com a escolha das datas ocupando a
+/// primeira tela inteira.
 class CyclePeriodPickerSheet extends StatefulWidget {
   /// Registros por dia (`yyyy-MM-dd` -> quantos), de
   /// `CycleReadingComposer.dailyRecordCounts`.
@@ -34,6 +37,17 @@ class CyclePeriodPickerSheet extends StatefulWidget {
   /// Ultimo dia escolhivel — hoje. Nao se le um ciclo nao vivido.
   final DateTime lastDate;
 
+  /// Janela ja marcada ao abrir (o ciclo corrente, em geral): quem so quer
+  /// "esta lunacao" confirma num toque, sem procurar os dias no calendario.
+  final ({DateTime start, DateTime end})? initialRange;
+
+  /// Embutido numa tela (sem a alcinha de folha e sem `pop` no confirmar).
+  final bool embedded;
+
+  /// Chamado no confirmar quando [embedded]; fora disso, o retorno vai pelo
+  /// `Navigator.pop`.
+  final ValueChanged<({DateTime start, DateTime end})>? onConfirm;
+
   const CyclePeriodPickerSheet({
     super.key,
     required this.dailyCounts,
@@ -42,6 +56,9 @@ class CyclePeriodPickerSheet extends StatefulWidget {
     this.weekPrice,
     this.lunationPrice,
     this.lifetimeIncluded = false,
+    this.initialRange,
+    this.embedded = false,
+    this.onConfirm,
   });
 
   @override
@@ -49,11 +66,18 @@ class CyclePeriodPickerSheet extends StatefulWidget {
 }
 
 class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
-  late DateTime _visibleMonth =
-      DateTime(widget.lastDate.year, widget.lastDate.month);
+  // Abre no mes da janela ja marcada; sem ela, no mes corrente.
+  late DateTime _visibleMonth = DateTime(
+    (widget.initialRange?.start ?? widget.lastDate).year,
+    (widget.initialRange?.start ?? widget.lastDate).month,
+  );
 
-  DateTime? _start;
-  DateTime? _end;
+  // A janela inicial chega com o fim EXCLUSIVO (padrao da feature); aqui
+  // dentro o fim e o ultimo dia vivido, entao volta um dia.
+  late DateTime? _start = widget.initialRange?.start;
+  late DateTime? _end = widget.initialRange == null
+      ? null
+      : widget.initialRange!.end.subtract(const Duration(days: 1));
 
   /// Os cortes de intensidade do calor, em 3 faixas.
   ///
@@ -159,24 +183,30 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+    // Embutido, quem rola e a distancia das bordas sao da tela que hospeda:
+    // um scroll dentro de outro no mesmo eixo trava o gesto.
+    return _Envolucro(
+      embedded: widget.embedded,
+      child: Padding(
+        padding: widget.embedded
+            ? EdgeInsets.zero
+            : const EdgeInsets.fromLTRB(16, 8, 16, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: context.gc.surfaceBorder,
-                  borderRadius: BorderRadius.circular(2),
+            if (!widget.embedded)
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: context.gc.surfaceBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
             Text(
               l10n.cycleReadingCustomPeriodTitle,
               textAlign: TextAlign.center,
@@ -214,12 +244,18 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
   void _confirm() {
     final inicio = _start!;
     final fim = _end ?? inicio;
-    Navigator.of(context).pop((
+    final janela = (
       start: DateTime(inicio.year, inicio.month, inicio.day),
       // Fim EXCLUSIVO: o dia escolhido e vivido por inteiro, entao a janela
       // vai ate a meia-noite seguinte.
       end: DateTime(fim.year, fim.month, fim.day).add(const Duration(days: 1)),
-    ));
+    );
+    final aoConfirmar = widget.onConfirm;
+    if (aoConfirmar != null) {
+      aoConfirmar(janela);
+      return;
+    }
+    Navigator.of(context).pop(janela);
   }
 
   Widget _buildMonthHeader(AppLocalizations l10n) {
@@ -426,4 +462,18 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
 
   static bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+/// Como folha, o seletor cuida da area segura e da propria rolagem; embutido
+/// numa tela, quem rola e a tela.
+class _Envolucro extends StatelessWidget {
+  const _Envolucro({required this.embedded, required this.child});
+
+  final bool embedded;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => embedded
+      ? child
+      : SafeArea(child: SingleChildScrollView(child: child));
 }

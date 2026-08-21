@@ -603,50 +603,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get changePasswordWrongCurrent => 'Contraseña actual incorrecta';
 
   @override
-  String get onbSlide1Title => 'Tu Grimorio Digital';
-
-  @override
-  String get onbSlide1Desc =>
-      'Guarda tus hechizos, rituales y recetas mágicas en un solo lugar. Organiza por fase lunar, ingredientes y mucho más.';
-
-  @override
-  String get onbSlide2Title => 'Calendario Lunar';
-
-  @override
-  String get onbSlide2Desc =>
-      'Sigue las fases de la luna y descubre el mejor momento para cada tipo de magia. Recibe notificaciones en lunas llenas y nuevas.';
-
-  @override
-  String get onbSlide3Title => 'Diarios Mágicos';
-
-  @override
-  String get onbSlide3Desc =>
-      'Registra sueños, deseos, gratitud y afirmaciones. Sigue tu evolución espiritual día a día.';
-
-  @override
-  String get onbSlide4Title => 'Astrología Completa';
-
-  @override
-  String get onbSlide4Desc =>
-      'Descubre tu carta astral, perfil mágico personalizado y previsiones diarias basadas en los tránsitos planetarios.';
-
-  @override
-  String get onbSlide5Title => '¿Lista para Empezar?';
-
-  @override
-  String get onbSlide5Desc =>
-      'Crea tu cuenta para sincronizar tus datos en todos los dispositivos y tener acceso completo a las funciones.';
-
-  @override
-  String get onbSkip => 'Saltar';
-
-  @override
-  String get onbHaveAccount => 'Ya tengo una cuenta';
-
-  @override
-  String get onbNext => 'Siguiente';
-
-  @override
   String get profileTitle => 'Mi Perfil';
 
   @override

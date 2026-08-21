@@ -4,7 +4,6 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
-import '../../../../core/offers/counselor_teaser_card.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -20,6 +19,7 @@ import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../../core/services/ad_service.dart';
 import '../../../../core/ai/ai_service.dart';
+import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../your_day/presentation/providers/daily_checkin_provider.dart';
 
 class RuneReadingPage extends StatefulWidget {
@@ -649,12 +649,9 @@ class _RuneReadingPageState extends State<RuneReadingPage>
         children: [
           if (_lastReading != null &&
               !context.watch<AuthProvider>().isPremiumEffective)
-            // Sem acesso: no lugar do botão, a degustação sobre as runas que
-            // já estão na mesa.
-            CounselorTeaserCard(
-              readingId: _lastReading!.id,
-              summary: _readingSummary(_lastReading!),
-            )
+            // Sem acesso: no lugar do botão, o sumário do que o
+            // Conselheiro teceria sobre as runas que já estão na mesa.
+            _previaDoConselheiro(context)
           else if (_aiReading == null)
             ElevatedButton.icon(
               onPressed: _isReadingAI ? null : _askCounselor,
@@ -693,4 +690,22 @@ class _RuneReadingPageState extends State<RuneReadingPage>
       ),
     );
   }
+}
+
+/// O que o Conselheiro Místico teceria sobre a tiragem que já está na mesa.
+///
+/// Sem Premium não sai chamada de IA nenhuma: os títulos são fixos, e o que
+/// eles mostram é a FORMA da leitura — como as peças conversam, a narrativa
+/// que formam, a resposta à pergunta e o conselho final. É mais informação
+/// do que a antiga degustação dava, e não custa geração.
+Widget _previaDoConselheiro(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  return PremiumLockedPreview(
+    titles: [
+      l10n.counselorLockedTitle1,
+      l10n.counselorLockedTitle2,
+      l10n.counselorLockedTitle3,
+      l10n.counselorLockedTitle4,
+    ],
+  );
 }

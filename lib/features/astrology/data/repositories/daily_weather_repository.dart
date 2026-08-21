@@ -295,20 +295,6 @@ class DailyWeatherRepository {
     return cache;
   }
 
-  /// Degustação da previsão para quem não tem acesso: 2 frases REAIS tiradas
-  /// dos mesmos fatos do céu. Chamada curta — a previsão completa continua
-  /// sem existir no aparelho. Cabe a quem chama cachear por dia.
-  Future<String> generateTeaser(DailyMagicalWeather weatherData) {
-    return _aiService.generateDailyWeatherTeaser(
-      moonPhase: weatherData.moonPhase,
-      moonSign: weatherData.moonSign,
-      overallEnergy: weatherData.overallEnergy,
-      energyKeywords: weatherData.energyKeywords,
-      transits: _transitsForAI(weatherData),
-      aspects: _aspectsForAI(weatherData),
-    );
-  }
-
   List<Map<String, String>> _transitsForAI(DailyMagicalWeather weatherData) =>
       weatherData.transits
           .map((t) => {
@@ -320,5 +306,4 @@ class DailyWeatherRepository {
 
   List<Map<String, String>> _aspectsForAI(DailyMagicalWeather weatherData) =>
       weatherData.aspects.map((a) => {'description': a.description}).toList();
-
 }

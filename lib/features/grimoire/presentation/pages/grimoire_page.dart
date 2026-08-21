@@ -16,6 +16,7 @@ import '../../../numerology/presentation/pages/numerology_page.dart';
 import '../../../tarot/presentation/pages/tarot_page.dart';
 import '../../../palmistry/presentation/pages/palmistry_page.dart';
 import '../../../diary/presentation/pages/dream_tools_page.dart';
+import '../../../cycles/presentation/pages/cycles_tab.dart';
 import '../../../encyclopedia/presentation/pages/archetype_quiz_page.dart';
 import '../../../encyclopedia/presentation/widgets/nature_guide_launcher.dart';
 import '../../../learning/presentation/pages/learning_home_page.dart';
@@ -37,10 +38,13 @@ class _GrimoirePageState extends State<GrimoirePage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
 
-  /// Aba central "Ferramentas Mágicas" — a aba inicial e o alvo do reset
-  /// (duplo-toque em "Ferramentas" na bottom nav). "Meu Grimório" saiu daqui
-  /// e virou a primeira seção do livro (Grimório).
-  static const int _defaultTabIndex = 1;
+  /// "Ferramentas Mágicas" abre a seção e é o alvo do reset (duplo-toque em
+  /// "Ferramentas" na bottom nav). "Meu Grimório" saiu daqui e virou a
+  /// primeira seção do livro (Grimório).
+  ///
+  /// A ordem das abas vai do prático ao contemplativo: Ferramentas, Ciclos,
+  /// Astrologia.
+  static const int _defaultTabIndex = 0;
 
   /// Trocado para recriar o TabBarView quando o re-toque na bottom bar pede
   /// "voltar ao início" já estando na aba inicial.
@@ -53,7 +57,7 @@ class _GrimoirePageState extends State<GrimoirePage>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 2,
+      length: 3,
       vsync: this,
       initialIndex: _defaultTabIndex,
     )..addListener(_dismissKeyboard);
@@ -109,8 +113,9 @@ class _GrimoirePageState extends State<GrimoirePage>
           unselectedLabelStyle: const TextStyle(fontSize: 14),
           labelPadding: const EdgeInsets.symmetric(horizontal: 16),
           tabs: [
-            Tab(text: AppLocalizations.of(context).grimoireTabAstrology),
             Tab(text: AppLocalizations.of(context).grimoireTabTools),
+            Tab(text: AppLocalizations.of(context).grimoireTabCycles),
+            Tab(text: AppLocalizations.of(context).grimoireTabAstrology),
           ],
         ),
       ),
@@ -118,8 +123,9 @@ class _GrimoirePageState extends State<GrimoirePage>
         key: ValueKey(_viewEpoch),
         controller: _tabController,
         children: const [
-          AstrologyTab(),
           _ToolsTab(),
+          CyclesTab(),
+          AstrologyTab(),
         ],
       ),
     );

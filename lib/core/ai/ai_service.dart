@@ -9,8 +9,10 @@ import '../i18n/gender.dart';
 import '../services/debug_log_service.dart';
 import '../utils/accents.dart';
 import '../../features/astrology/data/models/birth_chart_model.dart';
+import '../../features/astrology/data/models/aspect_model.dart';
 import '../../features/astrology/data/models/enums.dart';
 import '../../features/astrology/data/models/magical_profile_model.dart';
+import '../../features/astrology/data/models/planet_position_model.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 import 'gemini_credentials.dart';
 import 'groq_credentials.dart';
@@ -227,7 +229,22 @@ class AIService {
     }
   }
 
+  /// Quantas seções `## ` o Perfil Mágico tem — os três prompts pedem as
+  /// mesmas 12. Serve para saber se a geração chegou ao fim.
+  static const int _secoesDoPerfil = 12;
+
   /// Gerar texto personalizado do Perfil Mágico com IA
+  ///
+  /// O perfil é entregue INTEIRO ou não é entregue: um texto que para no meio
+  /// deixa títulos vazios na tela, e a pessoa fica sem as seções finais sem
+  /// saber que elas existiam. Duas defesas, nesta ordem:
+  ///
+  /// 1. Teto de tokens com folga real. O prompt pede ~700 palavras em 12
+  ///    seções; com o resumo do mapa mais rico, a geração passou a encostar
+  ///    no teto antigo de 2048 e vinha aparada no meio.
+  /// 2. Se ainda assim vier curta, refaz UMA vez e fica com a mais completa.
+  ///    Truncar duas vezes seguidas com esse teto é raro; e mesmo o segundo
+  ///    texto curto é melhor que o primeiro, se tiver mais seções.
   Future<String> generateMagicalProfileText({
     required BirthChartModel birthChart,
     required MagicalProfile profile,
@@ -235,18 +252,39 @@ class AIService {
   }) async {
     try {
       final chartSummary = _buildChartSummary(birthChart, profile);
+      final systemPrompt = _buildMagicalProfileSystemPrompt(gender ?? _gender);
 
-      return await _textRequest(
-        systemPrompt: _buildMagicalProfileSystemPrompt(gender ?? _gender),
-        userText: chartSummary,
-        tag: 'perfil mágico',
-        temperature: 0.7,
-        maxTokens: 2048,
-      );
+      Future<String> gerar() => _textRequest(
+            systemPrompt: systemPrompt,
+            userText: chartSummary,
+            tag: 'perfil mágico',
+            temperature: 0.7,
+            maxTokens: 4096,
+          );
+
+      final primeira = await gerar();
+      if (contaSecoes(primeira) >= _secoesDoPerfil) return primeira;
+
+      unawaited(debugLog(
+          'AI',
+          'perfil mágico: veio com ${contaSecoes(primeira)} de '
+          '$_secoesDoPerfil seções — refazendo uma vez'));
+      final segunda = await gerar();
+      return contaSecoes(segunda) > contaSecoes(primeira) ? segunda : primeira;
     } catch (e) {
       rethrow;
     }
   }
+
+  /// Conta os cabeçalhos `## ` de um markdown — independe do idioma.
+  ///
+  /// O espaço depois do `##` é de MESMA LINHA (`[ \t]`, não `\s`): com `\s`
+  /// o casamento atravessa a quebra de linha, e um `##` solto no fim de uma
+  /// resposta cortada contaria como seção — justamente o caso que esta
+  /// contagem existe para detectar.
+  @visibleForTesting
+  static int contaSecoes(String texto) =>
+      RegExp(r'^##[ \t]+\S', multiLine: true).allMatches(texto).length;
 
   /// Gerar texto do Clima Mágico Diário com IA
   Future<String> generateDailyMagicalWeatherText({
@@ -302,11 +340,52 @@ class AIService {
     for (final m in RegExp(r'[.!?…\n]').allMatches(trimmed)) {
       cut = m.end;
     }
-    return cut > 0 ? trimmed.substring(0, cut).trimRight() : trimmed;
+    final cortado = cut > 0 ? trimmed.substring(0, cut).trimRight() : trimmed;
+    return semTituloOrfao(semRealcePendurado(cortado));
+  }
+
+  /// Fecha (removendo) uma marcação de realce que o corte deixou aberta.
+  ///
+  /// `**` sem par não é realce: o Markdown mostra os asteriscos na tela, e a
+  /// pessoa vê "do **Ritual" no meio do texto. Ímpar significa pendurado, e
+  /// o último é o culpado.
+  @visibleForTesting
+  static String semRealcePendurado(String texto) {
+    final marcas = '**'.allMatches(texto).length;
+    if (marcas.isEven) return texto;
+    final ultima = texto.lastIndexOf('**');
+    return (texto.substring(0, ultima) + texto.substring(ultima + 2))
+        .trimRight();
+  }
+
+  /// Remove um cabeçalho de seção que ficou sem corpo no fim do texto.
+  ///
+  /// Quando a geração é cortada logo depois de um título, aparar até a última
+  /// frase deixa o título sozinho — a tela mostra "Seus Aliados Mágicos" e
+  /// nada embaixo, que parece defeito da tela e não do texto.
+  @visibleForTesting
+  static String semTituloOrfao(String texto) {
+    final linhas = texto.split('\n');
+    while (linhas.isNotEmpty) {
+      final ultima = linhas.last.trim();
+      if (ultima.isEmpty || ultima.startsWith('#')) {
+        linhas.removeLast();
+        continue;
+      }
+      break;
+    }
+    return linhas.join('\n').trimRight();
   }
 
   String _buildChartSummary(BirthChartModel chart, MagicalProfile profile) {
     final buffer = StringBuffer();
+
+    // Sem hora de nascimento o mapa é calculado com meio-dia: as casas, o
+    // Ascendente e o Meio do Céu saem FABRICADOS. Mandá-los assim faria a
+    // interpretação afirmar com convicção coisas que ninguém sabe. O prompt
+    // da Leitura do Ciclo já tratava disso; aqui não tratava.
+    final semHora = chart.unknownBirthTime;
+    String casa(PlanetPosition p) => semHora ? '' : ' - Casa ${p.houseNumber}';
 
     // Formata um corpo/ponto do mapa com signo, grau e casa (se presente).
     String? body(Planet pl, String label) {
@@ -314,27 +393,32 @@ class AIService {
       if (match.isEmpty) return null;
       final p = match.first;
       final retro = p.isRetrograde ? ' (R)' : '';
-      return '$label: ${p.positionString} - Casa ${p.houseNumber}$retro';
+      return '$label: ${p.positionString}${casa(p)}$retro';
     }
 
     buffer.writeln('DADOS DO MAPA ASTRAL:');
     buffer.writeln('');
-    buffer.writeln(
-        'SOL: ${chart.sun.positionString} - Casa ${chart.sun.houseNumber}');
-    buffer.writeln(
-        'LUA: ${chart.moon.positionString} - Casa ${chart.moon.houseNumber}');
-    if (chart.ascendant != null) {
+    if (semHora) {
+      buffer.writeln(
+        'ATENÇÃO: a hora de nascimento é DESCONHECIDA. Não há casas, '
+        'Ascendente nem Meio do Céu neste mapa — não cite nenhum dos três, '
+        'e não invente equivalentes. Os signos e aspectos abaixo valem.',
+      );
+      buffer.writeln('');
+    }
+    buffer.writeln('SOL: ${chart.sun.positionString}${casa(chart.sun)}');
+    buffer.writeln('LUA: ${chart.moon.positionString}${casa(chart.moon)}');
+    if (!semHora && chart.ascendant != null) {
       buffer.writeln('ASCENDENTE: ${chart.ascendant!.positionString}');
     }
-    if (chart.midheaven != null) {
+    if (!semHora && chart.midheaven != null) {
       buffer.writeln('MEIO DO CÉU: ${chart.midheaven!.positionString}');
     }
-    buffer.writeln('MERCÚRIO: ${chart.mercury.positionString}'
-        ' - Casa ${chart.mercury.houseNumber}');
-    buffer.writeln('VÊNUS: ${chart.venus.positionString}'
-        ' - Casa ${chart.venus.houseNumber}');
-    buffer.writeln('MARTE: ${chart.mars.positionString}'
-        ' - Casa ${chart.mars.houseNumber}');
+    buffer.writeln(
+        'MERCÚRIO: ${chart.mercury.positionString}${casa(chart.mercury)}');
+    buffer
+        .writeln('VÊNUS: ${chart.venus.positionString}${casa(chart.venus)}');
+    buffer.writeln('MARTE: ${chart.mars.positionString}${casa(chart.mars)}');
     // Planetas sociais, transpessoais e pontos místicos (quando presentes).
     for (final line in [
       body(Planet.jupiter, 'JÚPITER'),
@@ -346,25 +430,84 @@ class AIService {
       body(Planet.southNode, 'NODO SUL'),
       body(Planet.lilith, 'LILITH (LUA NEGRA)'),
       body(Planet.partOfFortune, 'PARTE DA FORTUNA'),
+      body(Planet.vertex, 'VÉRTEX'),
     ]) {
       if (line != null) buffer.writeln(line);
     }
     buffer.writeln('');
+
+    // A DISTRIBUIÇÃO diz muito mais que o dominante: cinco planetas em fogo e
+    // um mapa equilibrado 3/3/3/3 têm o mesmo "dominante" e são pessoas
+    // completamente diferentes.
+    String reparte<T>(Map<T, int> dist, String Function(T) nome) =>
+        (dist.entries.where((e) => e.value > 0).toList()
+              ..sort((a, b) => b.value.compareTo(a.value)))
+            .map((e) => '${nome(e.key)} ${e.value}')
+            .join(', ');
+
     buffer
         .writeln('ELEMENTO DOMINANTE: ${profile.dominantElement.displayName}');
+    buffer.writeln('DISTRIBUIÇÃO POR ELEMENTO: '
+        '${reparte(chart.getElementDistribution(), (e) => e.displayName)}');
     buffer.writeln(
       'MODALIDADE DOMINANTE: ${profile.dominantModality.displayName}',
     );
+    buffer.writeln('DISTRIBUIÇÃO POR MODALIDADE: '
+        '${reparte(chart.getModalityDistribution(), (m) => m.displayName)}');
+
+    // Retrógrados: quantos, e quais. Um mapa com cinco retrógrados pede outra
+    // conversa que um sem nenhum.
+    final retrogrados =
+        chart.planets.where((p) => p.isRetrograde).toList();
+    if (retrogrados.isNotEmpty) {
+      buffer.writeln('RETRÓGRADOS (${retrogrados.length}): '
+          '${retrogrados.map((p) => p.planet.displayName).join(", ")}');
+    }
+
+    // Acúmulo numa casa (3+ corpos) é das coisas mais definidoras de um mapa,
+    // e não era enviado. Só faz sentido com hora conhecida.
+    if (!semHora) {
+      final acumulos = <String>[];
+      for (var h = 1; h <= 12; h++) {
+        final corpos = chart.getPlanetsInHouse(h);
+        if (corpos.length >= 3) {
+          acumulos.add('Casa $h: '
+              '${corpos.map((p) => p.planet.displayName).join(", ")}');
+        }
+      }
+      if (acumulos.isNotEmpty) {
+        buffer.writeln('CONCENTRAÇÃO EM CASA: ${acumulos.join(" | ")}');
+      }
+    }
     buffer.writeln('');
-    buffer.writeln('CASAS IMPORTANTES:');
-    buffer.writeln('Casa 8 (Magia): ${profile.houseOfMagic}');
-    buffer.writeln('Casa 12 (Espiritualidade): ${profile.houseOfSpirit}');
-    buffer.writeln('');
+    if (!semHora) {
+      buffer.writeln('CASAS IMPORTANTES:');
+      buffer.writeln('Casa 8 (Magia): ${profile.houseOfMagic}');
+      buffer.writeln('Casa 12 (Espiritualidade): ${profile.houseOfSpirit}');
+      buffer.writeln('');
+    }
     // Aspectos mais exatos (menor orbe) — material único para a interpretação.
     if (chart.aspects.isNotEmpty) {
-      final sorted = [...chart.aspects]..sort((a, b) => a.orb.compareTo(b.orb));
+      // Ordenar só pelo orbe deixava de fora quadraturas e oposições que
+      // definem o caráter, em favor de sextis apertados entre planetas
+      // lentos — que valem para uma geração inteira, não para esta pessoa.
+      // Aspectos entre planetas PESSOAIS vêm primeiro; depois o orbe.
+      const pessoais = {
+        Planet.sun,
+        Planet.moon,
+        Planet.mercury,
+        Planet.venus,
+        Planet.mars,
+      };
+      int peso(Aspect a) =>
+          (pessoais.contains(a.planet1) ? 0 : 1) +
+          (pessoais.contains(a.planet2) ? 0 : 1);
+      final sorted = [...chart.aspects]..sort((a, b) {
+          final porPessoal = peso(a).compareTo(peso(b));
+          return porPessoal != 0 ? porPessoal : a.orb.compareTo(b.orb);
+        });
       buffer.writeln('ASPECTOS PRINCIPAIS:');
-      for (final a in sorted.take(5)) {
+      for (final a in sorted.take(8)) {
         buffer.writeln('- ${a.description}');
       }
       buffer.writeln('');
@@ -1466,7 +1609,11 @@ class AIService {
           userText: userText,
           tag: 'leitura do ciclo',
           temperature: 0.7,
-          maxTokens: 700,
+          // 700 dava para o parágrafo pedido, mas não para um período cheio:
+          // "sua prática" cita feitiços, ritos e notas um a um, e vinha
+          // cortada no meio da frase. O dobro do necessário custa pouco e
+          // some com a classe inteira de defeito.
+          maxTokens: 1400,
           receiveTimeout: const Duration(seconds: 45),
         );
         return content.trim();
@@ -1489,169 +1636,6 @@ class AIService {
         'AI', 'leitura do ciclo ($sectionKey): 429 persistente '
         '(${lastRateLimit?.message})'));
     throw const AiRateLimitException();
-  }
-
-  /// Degustação da Leitura do Ciclo: 2 frases REAIS sobre o período, do
-  /// mesmo material que a leitura paga usaria.
-  ///
-  /// Chamada curta e barata de propósito — quem não comprou vê o gostinho,
-  /// e o relatório inteiro nem chega a ser gerado. Cabe a quem chama cachear
-  /// a amostra por janela (o custo de IA é real).
-  Future<String> generateCycleReadingTeaser({
-    required String materialJson,
-    Gender? gender,
-  }) async {
-    gender ??= _gender;
-    try {
-      final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
-            '${_prompts.cycleReadingTeaserSystemPrompt(gender)}',
-        userText: materialJson,
-        tag: 'teaser leitura do ciclo',
-        temperature: 0.7,
-        maxTokens: 220,
-        receiveTimeout: const Duration(seconds: 30),
-      );
-      return content.trim();
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 429) {
-        throw const AiRateLimitException();
-      }
-      throw Exception(_prompts.errorConnection(e.message));
-    } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
-    }
-  }
-
-  /// Degustação da interpretação de sonhos (Motor de Ofertas): APENAS 2
-  /// frases — o conteúdo completo nem chega a existir no aparelho, então a
-  /// amostra pode ser exibida sem vazar o produto Premium.
-  Future<String> generateDreamTeaser({
-    required String dreamDescription,
-    String? feelings,
-    Gender? gender,
-  }) async {
-    gender ??= _gender;
-    try {
-      final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
-            '${_prompts.dreamTeaserSystemPrompt(gender)}',
-        userText: _prompts.dreamUserPrompt(dreamDescription, feelings),
-        tag: 'teaser sonho',
-        temperature: 0.6,
-        maxTokens: 200,
-        receiveTimeout: const Duration(seconds: 30),
-      );
-      return content.trim();
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 429) {
-        throw const AiRateLimitException();
-      }
-      throw Exception(_prompts.errorConnection(e.message));
-    } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
-    }
-  }
-
-  /// Degustação da Previsão Mágica do Dia: 2 frases REAIS tiradas dos mesmos
-  /// fatos do céu que a previsão Premium usaria.
-  ///
-  /// Quem não tem acesso nunca gera a previsão inteira — é esta chamada
-  /// curta que roda no lugar dela (fail-closed e barata). Cabe a quem chama
-  /// cachear a amostra por dia.
-  Future<String> generateDailyWeatherTeaser({
-    required String moonPhase,
-    required ZodiacSign moonSign,
-    required EnergyLevel overallEnergy,
-    required List<String> energyKeywords,
-    required List<Map<String, String>> transits,
-    required List<Map<String, String>> aspects,
-    Gender? gender,
-  }) async {
-    gender ??= _gender;
-    try {
-      final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
-            '${_prompts.dailyWeatherTeaserSystemPrompt(gender)}',
-        userText: _buildWeatherSummary(
-          moonPhase: moonPhase,
-          moonSign: moonSign,
-          overallEnergy: overallEnergy,
-          energyKeywords: energyKeywords,
-          transits: transits,
-          aspects: aspects,
-        ),
-        tag: 'teaser clima do dia',
-        temperature: 0.7,
-        maxTokens: 200,
-        receiveTimeout: const Duration(seconds: 30),
-      );
-      return content.trim();
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 429) {
-        throw const AiRateLimitException();
-      }
-      throw Exception(_prompts.errorConnection(e.message));
-    } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
-    }
-  }
-
-  /// Degustação da análise personalizada do Perfil Mágico: 2 frases REAIS do
-  /// mapa, no lugar da análise completa (que nem chega a ser gerada).
-  Future<String> generateMagicalProfileTeaser({
-    required BirthChartModel birthChart,
-    required MagicalProfile profile,
-    Gender? gender,
-  }) async {
-    gender ??= _gender;
-    try {
-      final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
-            '${_prompts.magicalProfileTeaserSystemPrompt(gender)}',
-        userText: _buildChartSummary(birthChart, profile),
-        tag: 'teaser perfil mágico',
-        temperature: 0.7,
-        maxTokens: 200,
-        receiveTimeout: const Duration(seconds: 30),
-      );
-      return content.trim();
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 429) {
-        throw const AiRateLimitException();
-      }
-      throw Exception(_prompts.errorConnection(e.message));
-    } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
-    }
-  }
-
-  /// Degustação do Conselheiro Místico sobre uma tiragem recém-feita: 2
-  /// frases REAIS, no lugar do conselho completo.
-  Future<String> generateCounselorTeaser({
-    required String readingSummary,
-    Gender? gender,
-  }) async {
-    gender ??= _gender;
-    try {
-      final content = await _textRequest(
-        systemPrompt: '${_localizedInstruction()}\n\n'
-            '${_prompts.counselorTeaserSystemPrompt(gender)}',
-        userText: readingSummary,
-        tag: 'teaser conselheiro',
-        temperature: 0.7,
-        maxTokens: 200,
-        receiveTimeout: const Duration(seconds: 30),
-      );
-      return content.trim();
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 429) {
-        throw const AiRateLimitException();
-      }
-      throw Exception(_prompts.errorConnection(e.message));
-    } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
-    }
   }
 
   String _buildMysticAdvisorSystemPrompt(
