@@ -1676,6 +1676,7 @@
     }
   },
   "cycleReadingSavedToArchive": "Saved in My Records — your reading stays in your archive forever.",
+  "cycleReadingDeleteConfirm": "Deleting this reading removes the report from your records. This cannot be undone.",
   "cycleReadingOfferTitle": "{count, plural, one{Your lunation yielded 1 record} other{Your lunation yielded {count} records}}",
   "cycleReadingOfferBody": "Want its reading? The oracle weaves your records and the sky of the period into an analysis that is only yours.",
   "cycleReadingOfferCta": "Discover the Cycle Reading",

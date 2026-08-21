@@ -476,6 +476,12 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         ),
       ),
     );
+    // Pode ter sido apagada lá dentro: a lista relê em vez de continuar
+    // oferecendo uma porta que não abre mais nada.
+    if (mounted) {
+      await _recarregarRecentes();
+      await _load();
+    }
   }
 
   @override

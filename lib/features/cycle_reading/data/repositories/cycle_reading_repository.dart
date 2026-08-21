@@ -61,6 +61,17 @@ class CycleReadingRepository {
     return CycleReadingModel.fromMap(rows.first);
   }
 
+  /// Apaga o registro da leitura — local e na nuvem.
+  ///
+  /// Some com a linha, não com o relatório: quem apaga a entrada do acervo
+  /// apaga o TEXTO, e a linha aqui ficaria apontando para um relatório que
+  /// não existe mais, sujando a lista de leituras.
+  Future<void> delete(String id) async {
+    final db = await _db;
+    await db.delete('cycle_readings', where: 'id = ?', whereArgs: [id]);
+    await _syncService.deleteItem(SyncEntity.cycleReadings, id);
+  }
+
   /// A leitura de uma janela EXATA (mesmo início e mesmo fim), se existir.
   ///
   /// Serve para não acumular registros do mesmo período: pedir de novo a

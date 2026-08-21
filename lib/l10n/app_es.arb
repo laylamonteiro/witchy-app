@@ -1676,6 +1676,7 @@
     }
   },
   "cycleReadingSavedToArchive": "Guardada en Mis Registros — tu lectura queda en tu archivo para siempre.",
+  "cycleReadingDeleteConfirm": "Borrar esta lectura quita el informe de tus registros. No se puede deshacer.",
   "cycleReadingOfferTitle": "{count, plural, one{Tu lunación rindió 1 registro} other{Tu lunación rindió {count} registros}}",
   "cycleReadingOfferBody": "¿Quieres su lectura? El oráculo entreteje tus registros y el cielo del período en un análisis solo tuyo.",
   "cycleReadingOfferCta": "Conocer la Lectura del Ciclo",

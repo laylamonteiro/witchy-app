@@ -11,10 +11,12 @@ import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/paged_reading.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../diary/data/models/free_writing_model.dart';
+import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../grimoire/data/models/spell_model.dart';
 import '../../../grimoire/presentation/pages/spell_detail_page.dart';
 import '../../../grimoire/presentation/providers/spell_provider.dart';
 import '../../data/models/cycle_reading_model.dart';
+import '../../data/repositories/cycle_reading_repository.dart';
 import '../../data/services/cycle_reading_service.dart';
 
 /// O relatório da Leitura do Ciclo: Markdown das 7 seções + os dois
@@ -69,6 +71,13 @@ class CycleReadingReportPage extends StatelessWidget {
         title: ResponsiveAppBarTitle(
           CycleReadingService.periodTitle(periodType),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: l10n.commonDelete,
+            onPressed: () => _confirmarExclusao(context, l10n),
+          ),
+        ],
       ),
       // Com as seções reconhecidas, a leitura vira páginas que deslizam: sete
       // telas curtas em vez de uma rolagem sem fim. Se o Markdown vier sem os
@@ -122,6 +131,51 @@ class CycleReadingReportPage extends StatelessWidget {
               ),
       ),
     );
+  }
+
+  /// Apaga a leitura: o relatório do acervo E o registro que aponta para
+  /// ele.
+  ///
+  /// A leitura é da pessoa e ela pode querer que suma — inclusive porque o
+  /// texto foi tecido dos diários dela. Apagar só a entrada do acervo
+  /// deixaria a linha em `cycle_readings` apontando para um relatório
+  /// inexistente, e a lista "Suas leituras" mostraria uma porta que não
+  /// abre nada.
+  Future<void> _confirmarExclusao(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogo) => AlertDialog(
+        backgroundColor: dialogo.gc.surface,
+        title: Text(l10n.commonDelete),
+        content: Text(l10n.cycleReadingDeleteConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogo, false),
+            child: Text(l10n.commonCancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogo, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: dialogo.gc.alert,
+            ),
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true || !context.mounted) return;
+
+    final registro =
+        await CycleReadingRepository().findByWritingId(writing.id);
+    if (registro != null) {
+      await CycleReadingRepository().delete(registro.id);
+    }
+    if (!context.mounted) return;
+    await context.read<FreeWritingProvider>().delete(writing.id);
+    if (context.mounted) Navigator.pop(context);
   }
 
   static bool _temAfirmacao(String? afirmacao) =>
@@ -463,11 +517,16 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
         widget.nome.isEmpty ? l10n.cycleReadingSectionRituals : widget.nome,
       ),
       purpose: l10n.cycleReadingRitualPurpose,
-      // O que a leitura sugere é sempre construtivo, e a categoria fica em
-      // "outros": inventar uma pelo texto acertaria pouco e a pessoa pode
-      // corrigir num toque na ficha do feitiço.
+      // O que a leitura sugere é sempre construtivo. A categoria é
+      // "Sugeridos", que existe para isto: separar no Grimório o que veio
+      // do app do que a pessoa escreveu. Inventar uma categoria temática
+      // pelo texto acertaria pouco — e ela pode trocar num toque na ficha.
+      //
+      // A fase da lua fica em branco de propósito: o ritual costuma dizer
+      // "na Lua Crescente" no corpo, mas ler isso do texto em três idiomas
+      // erraria mais do que acertaria.
       type: SpellType.attraction,
-      category: SpellCategory.other,
+      category: SpellCategory.suggested,
       steps: _textoPuro(widget.corpo),
       observations: widget.periodo == null
           ? l10n.cycleReadingRitualPurpose

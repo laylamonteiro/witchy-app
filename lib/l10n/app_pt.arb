@@ -2398,6 +2398,7 @@
     }
   },
   "cycleReadingSavedToArchive": "Salva em Meus Registros — sua leitura fica no acervo para sempre.",
+  "cycleReadingDeleteConfirm": "Apagar esta leitura tira o relatório dos seus registros. Não dá para desfazer.",
   "cycleReadingOfferTitle": "{count, plural, one{Sua lunação rendeu 1 registro} other{Sua lunação rendeu {count} registros}}",
   "@cycleReadingOfferTitle": {
     "placeholders": {
