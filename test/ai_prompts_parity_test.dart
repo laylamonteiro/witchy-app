@@ -258,10 +258,11 @@ void main() {
       });
     });
 
-    test('toda degustação pede duas frases e proíbe inventar fato', () {
-      // A degustação é a prova do produto pago: ela precisa ser curta (senão
+    test('toda degustação pede um número CURTO de frases', () {
+      // A degustação é a prova do produto pago: precisa ser curta (senão
       // entrega o que é pago) e presa aos fatos recebidos (senão a amostra
-      // vira ficção sobre a vida de quem lê).
+      // vira ficção sobre a vida de quem lê). Quatro frases dão ideia do
+      // que vem; sem número nenhum, a amostra viraria o produto.
       final teasers = <String, String Function(AiPrompts, Gender)>{
         'clima do dia': (p, g) => p.dailyWeatherTeaserSystemPrompt(g),
         'perfil mágico': (p, g) => p.magicalProfileTeaserSystemPrompt(g),
@@ -272,8 +273,8 @@ void main() {
         teasers.forEach((name, probe) {
           for (final gender in Gender.values) {
             final prompt = probe(prompts, gender);
-            expect(prompt, contains('2'),
-                reason: 'duas frases: $name [$lang/${gender.name}]');
+            expect(prompt, contains('4'),
+                reason: 'quatro frases: $name [$lang/${gender.name}]');
           }
         });
       });

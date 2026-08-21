@@ -101,14 +101,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// Quantas leituras a lista mostra antes de mandar para o acervo.
   static const int _recentesNaTela = 4;
 
-  /// O preço só entra em cena depois que a pessoa pede a leitura completa.
-  ///
-  /// Antes disso a tela mostra o que a leitura É — o período, o que ela tem
-  /// dentro, quantos registros vai usar. Preço na primeira dobra faz a
-  /// decisão começar por "quanto custa" em vez de "o que é isso"; e quem
-  /// nem sabe o que está comprando responde não.
-  bool _ofertaAberta = false;
-
   /// Esta janela sai de graça pelo Vitalício? Exige compra REAL do lifetime
   /// (entitlement sem expiração) — `SubscriptionPlan.lifetime` não serve,
   /// porque também vem de Código Premium e do admin.
@@ -260,7 +252,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       _conflito = veredito.conflict;
       _customRejection = null;
       _periodoEscolhido = true;
-      _ofertaAberta = false;
       _isLoading = true;
     });
     await _load();
@@ -841,11 +832,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     final period = _period;
     final isWeek = _periodType == CycleReadingPeriodType.week;
     final incluida = _lifetimeCoversThisWindow;
-    // O preço só aparece quando é informação e não obstáculo: pedido pela
-    // pessoa, ou quando não há preço nenhum a temer (janela incluída).
-    final preco = incluida
-        ? l10n.cycleReadingLifetimeTag
-        : (_ofertaAberta ? _prices[_productId] : null);
+    final preco =
+        incluida ? l10n.cycleReadingLifetimeTag : _prices[_productId];
     final titulo =
         isWeek ? l10n.cycleReadingWeekTitle : l10n.cycleReadingLunationTitle;
 
@@ -935,30 +923,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
               ),
             ],
             const SizedBox(height: 16),
-            _buildAcaoOuOferta(l10n),
+            _buildActions(l10n),
           ],
         ],
       ),
-    );
-  }
-
-  /// O que fica embaixo do cartão: o pedido, ou a oferta que ele destrancou.
-  ///
-  /// Só o caminho de COMPRA tem duas etapas. Crédito já pago, leitura já
-  /// gerada e janela incluída no Vitalício vão direto ao botão que resolve —
-  /// esconder preço de quem não vai pagar preço nenhum seria só um toque a
-  /// mais no caminho.
-  Widget _buildAcaoOuOferta(AppLocalizations l10n) {
-    final precisaComprar = !_isWorking &&
-        _existing == null &&
-        !_lifetimeCoversThisWindow;
-
-    if (!precisaComprar || _ofertaAberta) return _buildActions(l10n);
-
-    return ElevatedButton.icon(
-      onPressed: () => setState(() => _ofertaAberta = true),
-      icon: const Icon(Icons.auto_awesome, size: 18),
-      label: Text(l10n.cycleReadingWantFull),
     );
   }
 
@@ -1071,10 +1039,14 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             ),
       );
     }
+    // Um toque só: o valor já está no cabeçalho do cartão e no resumo do
+    // calendário, então o botão leva direto para o pagamento. Pedir um
+    // toque para revelar o preço e outro para pagar era um degrau a troco
+    // de nada.
     return ElevatedButton.icon(
       onPressed: _buy,
-      icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-      label: Text(l10n.cycleReadingBuyFor(price)),
+      icon: const Icon(Icons.auto_awesome, size: 18),
+      label: Text(l10n.cycleReadingWantFull),
     );
   }
 }

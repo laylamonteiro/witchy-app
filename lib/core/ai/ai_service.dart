@@ -1654,7 +1654,7 @@ class AIService {
         userText: _prompts.dreamUserPrompt(dreamDescription, feelings),
         tag: 'teaser sonho',
         temperature: 0.6,
-        maxTokens: 200,
+        maxTokens: 400,
         receiveTimeout: const Duration(seconds: 30),
       );
       return content.trim();
@@ -1698,7 +1698,7 @@ class AIService {
         ),
         tag: 'teaser clima do dia',
         temperature: 0.7,
-        maxTokens: 200,
+        maxTokens: 400,
         receiveTimeout: const Duration(seconds: 30),
       );
       return content.trim();
@@ -1727,7 +1727,7 @@ class AIService {
         userText: _buildChartSummary(birthChart, profile),
         tag: 'teaser perfil mágico',
         temperature: 0.7,
-        maxTokens: 200,
+        maxTokens: 400,
         receiveTimeout: const Duration(seconds: 30),
       );
       return content.trim();
@@ -1755,7 +1755,7 @@ class AIService {
         userText: readingSummary,
         tag: 'teaser conselheiro',
         temperature: 0.7,
-        maxTokens: 200,
+        maxTokens: 400,
         receiveTimeout: const Duration(seconds: 30),
       );
       return content.trim();

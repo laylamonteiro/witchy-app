@@ -806,6 +806,76 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
               ),
               onCta: _onTeaserCta,
             ),
+          _buildTeaserSumario(l10n),
+        ],
+      ),
+    );
+  }
+
+  /// O sumário do que a análise completa traz.
+  ///
+  /// A amostra mostra COMO a análise fala; esta lista mostra DO QUE ela
+  /// fala. Sem as duas, a degustação era só um parágrafo bonito seguido de
+  /// um borrão: quem lia não fazia ideia do tamanho do que estava atrás do
+  /// cadeado — e ninguém compra o que não consegue imaginar.
+  Widget _buildTeaserSumario(AppLocalizations l10n) {
+    final itens = [
+      l10n.profileTeaserItem1,
+      l10n.profileTeaserItem2,
+      l10n.profileTeaserItem3,
+      l10n.profileTeaserItem4,
+      l10n.profileTeaserItem5,
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Divider(color: context.gc.surfaceBorder),
+          const SizedBox(height: 10),
+          Text(
+            l10n.profileTeaserWhatTitle,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: context.gc.lilac,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 10),
+          for (final item in itens)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.lock,
+                    size: 15,
+                    color: context.gc.textSecondary.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: TextStyle(
+                        color: context.gc.softWhite.withValues(alpha: 0.9),
+                        fontSize: 14,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.profileTeaserFooter,
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );
