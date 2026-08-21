@@ -67,6 +67,17 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   /// vista). Fica na tela até a pessoa escolher outra.
   String? _customRejection;
 
+  /// A tela abre no CALENDÁRIO e mais nada: escolher o pedaço da vida a ser
+  /// lido é a primeira decisão, e é ela que define o produto e o preço.
+  /// Enquanto isto for falso, a oferta e o resto da tela nem existem.
+  bool _periodoEscolhido = false;
+
+  /// Mapa de calor do último ano (null = ainda carregando).
+  Map<String, int>? _densidade;
+
+  /// Leitura já gerada que cruza a janela escolhida — AVISO, nunca recusa.
+  CycleReadingModel? _conflito;
+
   /// Esta janela sai de graça pelo Vitalício? Exige compra REAL do lifetime
   /// (entitlement sem expiração) — `SubscriptionPlan.lifetime` não serve,
   /// porque também vem de Código Premium e do admin.
@@ -89,24 +100,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   int _recordCount = 0;
   CycleReadingModel? _existing;
 
-  /// Quando a próxima leitura desta janela libera (null = já liberada).
-  /// Uma semanal a cada 7 dias, uma lunação a cada 30: sem isso, a janela
-  /// rolante da semana deixaria comprar "a semana" todo dia, relendo quase
-  /// o mesmo período.
-  DateTime? _nextAllowedAt;
-
-  bool get _isOnCooldown => _nextAllowedAt != null;
-
-  /// Dias que faltam para liberar (arredondando para cima: faltando 6h,
-  /// ainda é "1 dia", nunca "0").
-  int get _daysUntilRelease {
-    final release = _nextAllowedAt;
-    if (release == null) return 0;
-    final remaining = release.difference(DateTime.now());
-    if (remaining.isNegative) return 0;
-    return remaining.inHours ~/ 24 + (remaining.inHours % 24 > 0 ? 1 : 0);
-  }
-
   /// A amostra desta janela (null = ainda não pedida).
   String? _teaser;
   bool _isTeasing = false;
@@ -125,9 +118,30 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    // Sem `_load()` aqui: nada da tela depende de janela antes de haver
+    // janela. O que a primeira tela precisa é do calendário.
     _loadPrices();
-    _restoreCachedTeaser();
+    _carregarDensidade();
+  }
+
+  /// O mapa de calor do último ano — quantos registros em cada dia.
+  ///
+  /// É o que faz a escolha ser informada em vez de às cegas: a pessoa vê
+  /// onde a vida dela deixou marca antes de decidir o que vai ler.
+  Future<void> _carregarDensidade() async {
+    final userId = context.read<AuthProvider>().currentUser.id;
+    final hoje = DateTime.now();
+    final ultimoDia = DateTime(hoje.year, hoje.month, hoje.day);
+    // Um ano para trás cobre qualquer retroativo plausível sem oferecer um
+    // calendário infinito.
+    final primeiroDia = ultimoDia.subtract(const Duration(days: 365));
+    final densidade = await _service.composer.dailyRecordCounts(
+      userId: userId,
+      start: primeiroDia,
+      end: ultimoDia.add(const Duration(days: 1)),
+    );
+    if (!mounted) return;
+    setState(() => _densidade = densidade);
   }
 
   /// Preços das duas janelas — carregados juntos para o seletor já nascer
@@ -155,7 +169,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     final userId = context.read<AuthProvider>().currentUser.id;
     // Lido ANTES dos await: depois deles, tocar no context seria uso após
     // gap assíncrono (a tela pode ter saído).
-    final incluido = _lifetimeCoversThisWindow;
     final period = _period;
     final recordCount = await _service.composer.countPeriodRecords(
       userId: userId,
@@ -167,80 +180,29 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       period.start,
       periodType: _periodType,
     );
-    // O intervalo entre leituras é o RITMO do acesso incluído (Vitalício).
-    // Quem paga por leitura não é limitado: cada leitura é uma compra, e o
-    // app não recusa dinheiro nem autonomia. Sem Vitalício, nem consulta.
-    final nextAllowedAt =
-        incluido ? await _service.nextAllowedAt(userId, _periodType) : null;
     if (!mounted) return;
     setState(() {
       _recordCount = recordCount;
       _existing = existing;
-      _nextAllowedAt = nextAllowedAt;
       _isLoading = false;
     });
   }
 
-  /// Abre o seletor de datas e valida a janela escolhida.
+  /// A janela escolhida no calendário da primeira tela.
   ///
-  /// As DUAS travas valem aqui (decisão da dona): pode-se retroagir para
-  /// ler um pedaço ainda não lido, mas não reler um já lido nem furar o
-  /// intervalo entre compras. O veredito vem do serviço — a tela só traduz
-  /// o motivo para uma frase.
-  Future<void> _pickCustomPeriod() async {
+  /// O tamanho decide o produto (até 7 dias = semana; 8 a 31 = lunação), e é
+  /// só depois disto que a oferta e o resto da tela aparecem. O serviço
+  /// recusa apenas o que a leitura não consegue fazer; cruzar um período já
+  /// lido volta como AVISO, não como porta fechada.
+  Future<void> _escolherPeriodo(({DateTime start, DateTime end}) janela) async {
     if (_isWorking) return;
     final l10n = AppLocalizations.of(context);
     final userId = context.read<AuthProvider>().currentUser.id;
-    // Lido ANTES dos await, como em _load: depois deles o context pode não
-    // valer mais.
-    final temVitalicio = _hasLifetime;
-    final hoje = DateTime.now();
-    final ultimoDia = DateTime(hoje.year, hoje.month, hoje.day);
-
-    // Um ano para trás cobre qualquer retroativo plausível sem oferecer um
-    // calendário infinito.
-    final primeiroDia = ultimoDia.subtract(const Duration(days: 365));
-
-    // O mapa de calor: quantos registros em cada dia do ano. É o que faz a
-    // escolha ser informada em vez de às cegas — a pessoa vê onde a vida
-    // dela deixou marca antes de decidir o que comprar.
-    final densidade = await _service.composer.dailyRecordCounts(
-      userId: userId,
-      start: primeiroDia,
-      end: ultimoDia.add(const Duration(days: 1)),
-    );
-    if (!mounted) return;
-
-    final escolhido =
-        await showModalBottomSheet<({DateTime start, DateTime end})>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.gc.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => CyclePeriodPickerSheet(
-        dailyCounts: densidade,
-        firstDate: primeiroDia,
-        lastDate: ultimoDia,
-        weekPrice: _prices[RevenueCatConfig.cycleReadingWeekProductId],
-        lunationPrice: _prices[RevenueCatConfig.cycleReadingMonthProductId],
-        lifetimeIncluded: temVitalicio,
-      ),
-    );
-    if (escolhido == null || !mounted) return;
-
-    // A folha já devolve `[start, end)` com o fim exclusivo.
-    final start = escolhido.start;
-    final end = escolhido.end;
 
     final veredito = await _service.validateCustomPeriod(
       userId: userId,
-      start: start,
-      end: end,
-      // Sobreposição e cooldown são o ritmo do acesso incluído; quem paga
-      // por leitura escolhe qualquer janela, quantas vezes quiser.
-      includedByLifetime: temVitalicio,
+      start: janela.start,
+      end: janela.end,
     );
     if (!mounted) return;
 
@@ -250,30 +212,38 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     }
 
     setState(() {
-      _customPeriod = (start: start, end: end);
+      _customPeriod = janela;
       _periodType = veredito.periodType;
+      _conflito = veredito.conflict;
       _customRejection = null;
       // Amostra é por janela: janela nova, amostra nova.
       _teaser = null;
+      _periodoEscolhido = true;
       _isLoading = true;
     });
     await _load();
     await _restoreCachedTeaser();
   }
 
-  /// A frase de cada recusa. O cooldown NÃO passa por aqui: ele já tem a
-  /// sua própria faixa na tela (com a contagem de dias), e repetir a mesma
-  /// informação em dois lugares só confunde.
+  /// Volta para o calendário mantendo a janela marcada — trocar de período é
+  /// reabrir a mesma decisão, não recomeçar do zero.
+  void _voltarAoCalendario() {
+    if (_isWorking) return;
+    setState(() {
+      _periodoEscolhido = false;
+      _customRejection = null;
+    });
+  }
+
+  /// A frase de cada recusa.
   String? _rejectionMessage(
     AppLocalizations l10n,
     ({
       String? reason,
       String periodType,
-      DateTime? releaseAt,
       CycleReadingModel? conflict,
     }) veredito,
   ) {
-    final formato = DateFormat.yMd(l10n.localeName);
     switch (veredito.reason) {
       case CycleReadingService.rejectionTooLong:
         return l10n.cycleReadingRejectTooLong;
@@ -281,40 +251,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         return l10n.cycleReadingRejectFuture;
       case CycleReadingService.rejectionEmpty:
         return l10n.cycleReadingRejectEmpty;
-      case CycleReadingService.rejectionOverlaps:
-        final conflito = veredito.conflict!;
-        return l10n.cycleReadingRejectOverlaps(
-          formato.format(conflito.periodStart),
-          // O fim guardado é exclusivo; mostrar o dia anterior é o que a
-          // pessoa reconhece como "até tal dia".
-          formato.format(
-            conflito.periodEnd.subtract(const Duration(days: 1)),
-          ),
-        );
-      case CycleReadingService.rejectionCooldown:
-        // Tratado pela faixa de cooldown; aqui não vira mensagem.
-        return null;
       default:
         return null;
     }
-  }
-
-  Future<void> _selectPeriod(String periodType) async {
-    if (_isWorking) return;
-    // Com uma janela a dedo em cena, tocar num dos dois botões volta para a
-    // janela corrente daquele tipo — mesmo que o tipo não mude.
-    if (periodType == _periodType && _customPeriod == null) return;
-    setState(() {
-      _periodType = periodType;
-      _customPeriod = null;
-      _customRejection = null;
-      _isLoading = true;
-      // A amostra é de UMA janela: trocar de janela zera o que está à vista
-      // (a da outra janela continua guardada no cache).
-      _teaser = null;
-    });
-    await _load();
-    await _restoreCachedTeaser();
   }
 
   /// Chave da amostra: uma por janela (tipo + início do período).
@@ -373,10 +312,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
 
   Future<void> _buy() async {
     if (_isWorking) return;
-    // Trava de segurança: a interface já esconde a compra durante o
-    // intervalo, mas o CTA da degustação também chama aqui — nunca cobrar
-    // por uma janela que ainda não pode ser lida.
-    if (_isOnCooldown) return;
     setState(() => _isWorking = true);
     final messenger = ScaffoldMessenger.of(context);
     final userId = context.read<AuthProvider>().currentUser.id;
@@ -460,7 +395,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       // do crédito é preservado), então o convite aponta sempre para o
       // mesmo dia.
       final release = result.reading.createdAt
-          .add(CycleReadingService.cooldownFor(credit.periodType));
+          .add(CycleReadingService.inviteBackAfter(credit.periodType));
 
       // O convite de volta vale para TODO MUNDO: quem pagou para ler uma
       // vez pode querer ler de novo quando o ciclo recomeçar, e é disso que
@@ -470,13 +405,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             isWeekly: credit.isWeekly,
             releaseAt: release,
           );
-
-      // Já a FAIXA de espera é outra coisa: ela bloqueia, e só o acesso
-      // incluído tem ritmo. Quem paga por leitura nunca é bloqueado.
-      if (_lifetimeCoversThisWindow) {
-        setState(() => _nextAllowedAt =
-            release.isAfter(DateTime.now()) ? release : null);
-      }
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
@@ -524,42 +452,218 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final format = DateFormat('dd/MM/yyyy');
-    final period = _period;
-    final isWeek = _periodType == CycleReadingPeriodType.week;
 
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(l10n.cycleReadingTitle),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('🌙✨', style: TextStyle(fontSize: 32)),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.cycleReadingIntroTagline,
-                    style: Theme.of(context).textTheme.bodyLarge,
+      // Duas etapas, nesta ordem: escolher o pedaço da vida, e só então ver
+      // a oferta que aquele pedaço fez nascer. Misturar as duas — como era
+      // antes, com o seletor de janela e a oferta na mesma tela — pedia duas
+      // decisões ao mesmo tempo e nenhuma ficava clara.
+      body: _periodoEscolhido ? _buildOferta(l10n) : _buildCalendario(l10n),
+    );
+  }
+
+  /// Etapa 1: o calendário, e mais nada.
+  Widget _buildCalendario(AppLocalizations l10n) {
+    final densidade = _densidade;
+    if (densidade == null) {
+      return Center(child: CircularProgressIndicator(color: context.gc.lilac));
+    }
+
+    final hoje = DateTime.now();
+    final ultimoDia = DateTime(hoje.year, hoje.month, hoje.day);
+    final primeiroDia = ultimoDia.subtract(const Duration(days: 365));
+
+    return Column(
+      children: [
+        Expanded(
+          child: CyclePeriodPickerSheet(
+            // A chave leva a janela: mudar de período reconstrói o seletor
+            // com as datas novas já marcadas, em vez de guardar o estado
+            // antigo do calendário.
+            key: ValueKey(_customPeriod),
+            embedded: true,
+            onConfirm: _escolherPeriodo,
+            initialRange: _janelaSugerida(ultimoDia),
+            dailyCounts: densidade,
+            firstDate: primeiroDia,
+            lastDate: ultimoDia,
+            weekPrice: _prices[RevenueCatConfig.cycleReadingWeekProductId],
+            lunationPrice:
+                _prices[RevenueCatConfig.cycleReadingMonthProductId],
+            lifetimeIncluded: _hasLifetime,
+          ),
+        ),
+        if (_customRejection != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Text(
+              _customRejection!,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.gc.alert,
                   ),
-                  const SizedBox(height: 16),
-                  _buildPeriodSelector(l10n),
-                  const SizedBox(height: 12),
-                  if (_isLoading)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: CircularProgressIndicator(
-                          color: context.gc.lilac,
-                        ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// A janela que o calendário já abre marcada.
+  ///
+  /// A do ciclo corrente, cortada em HOJE: a lunação em curso termina no
+  /// futuro, e um período que ainda não foi vivido não pode ser lido — sem o
+  /// corte, a sugestão já nasceria recusada.
+  ({DateTime start, DateTime end}) _janelaSugerida(DateTime ultimoDia) {
+    final escolhida = _customPeriod;
+    if (escolhida != null) return escolhida;
+    final corrente = CycleReadingService.periodFor(_periodType);
+    final amanha = ultimoDia.add(const Duration(days: 1));
+    return (
+      start: corrente.start,
+      end: corrente.end.isAfter(amanha) ? amanha : corrente.end,
+    );
+  }
+
+  /// Etapa 2: a oferta que a janela escolhida fez nascer, e o resto da tela.
+  Widget _buildOferta(AppLocalizations l10n) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildOfferCard(l10n),
+          // A degustação vem ANTES do "o que vem na leitura": o gostinho
+          // real convence mais que a lista de seções.
+          // Quem já tem a janela incluída no Vitalício não degusta o
+          // que já é dele.
+          if (!_isLoading && _existing == null && !_lifetimeCoversThisWindow)
+            _buildTeaserCard(l10n),
+          MagicalCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.cycleReadingIntroWhatTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.lilac,
+                        fontWeight: FontWeight.bold,
                       ),
-                    )
-                  else ...[
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _periodType == CycleReadingPeriodType.week
+                      ? l10n.cycleReadingWeekWhatBody
+                      : l10n.cycleReadingIntroWhatBody,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.cycleReadingDisclaimer,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.gc.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          // Sanfona: recolhida por padrão, para não tomar a tela. Quem quer
+          // ajustar a privacidade abre; quem confia no padrão (tudo ligado)
+          // segue direto para a compra.
+          MagicalCard(
+            child: Theme(
+              data:
+                  Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: EdgeInsets.zero,
+                expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                iconColor: context.gc.lilac,
+                collapsedIconColor: context.gc.lilac,
+                title: Text(
+                  l10n.cycleReadingPrivacyTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.lilac,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                children: [
+                  Text(
+                    l10n.cycleReadingPrivacyBody,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.cycleReadingIncludeDreams),
+                    value: _includeDreams,
+                    onChanged: (v) => setState(() => _includeDreams = v),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.cycleReadingIncludeFreeWriting),
+                    subtitle: Text(l10n.cycleReadingIncludeFreeWritingHint),
+                    value: _includeJournals,
+                    onChanged: (v) => setState(() => _includeJournals = v),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.cycleReadingIncludeQuestions),
+                    subtitle: Text(l10n.cycleReadingIncludeQuestionsHint),
+                    value: _includeDivination,
+                    onChanged: (v) => setState(() => _includeDivination = v),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.cycleReadingIncludePractice),
+                    subtitle: Text(l10n.cycleReadingIncludePracticeHint),
+                    value: _includePractice,
+                    onChanged: (v) => setState(() => _includePractice = v),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// O cartão da oferta: o produto que a janela virou, por quanto, com o que
+  /// ela tem dentro — e o botão. Tudo o que decide a compra num lugar só.
+  Widget _buildOfferCard(AppLocalizations l10n) {
+    final format = DateFormat('dd/MM/yyyy');
+    final period = _period;
+    final isWeek = _periodType == CycleReadingPeriodType.week;
+    final incluida = _lifetimeCoversThisWindow;
+    final preco = incluida
+        ? l10n.cycleReadingLifetimeTag
+        : _prices[_productId];
+    final titulo =
+        isWeek ? l10n.cycleReadingWeekTitle : l10n.cycleReadingLunationTitle;
+
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('🌙✨', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      titulo,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: context.gc.lilac,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
                     Text(
                       isWeek
                           ? l10n.cycleReadingWeekPeriodLine(
@@ -574,139 +678,85 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                             color: context.gc.textSecondary,
                           ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isWeek
-                          ? l10n.cycleReadingWeekRecordCount(_recordCount)
-                          : l10n.cycleReadingRecordCount(_recordCount),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: context.gc.lilac,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    if (_recordCount <
-                        CycleReadingComposer.minRecordsFor(_periodType)) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: context.gc.warning.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          l10n.cycleReadingShallowWarning,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: context.gc.warning),
-                        ),
-                      ),
-                    ],
-                  ],
-                ],
-              ),
-            ),
-            // A degustação vem ANTES do "o que vem na leitura": o gostinho
-            // real convence mais que a lista de seções.
-            // Quem já tem a janela incluída no Vitalício não degusta o
-            // que já é dele.
-            if (!_isLoading &&
-                _existing == null &&
-                !_lifetimeCoversThisWindow &&
-                !_isOnCooldown)
-              _buildTeaserCard(l10n),
-            MagicalCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.cycleReadingIntroWhatTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: context.gc.lilac,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isWeek
-                        ? l10n.cycleReadingWeekWhatBody
-                        : l10n.cycleReadingIntroWhatBody,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.cycleReadingDisclaimer,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.gc.textSecondary,
-                          fontStyle: FontStyle.italic,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            // Sanfona: recolhida por padrão, para não tomar a tela. Quem quer
-            // ajustar a privacidade abre; quem confia no padrão (tudo ligado)
-            // segue direto para a compra.
-            MagicalCard(
-              child: Theme(
-                data: Theme.of(context)
-                    .copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: EdgeInsets.zero,
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  iconColor: context.gc.lilac,
-                  collapsedIconColor: context.gc.lilac,
-                  title: Text(
-                    l10n.cycleReadingPrivacyTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: context.gc.lilac,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  children: [
-                    Text(
-                      l10n.cycleReadingPrivacyBody,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.cycleReadingIncludeDreams),
-                      value: _includeDreams,
-                      onChanged: (v) => setState(() => _includeDreams = v),
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.cycleReadingIncludeFreeWriting),
-                      subtitle: Text(l10n.cycleReadingIncludeFreeWritingHint),
-                      value: _includeJournals,
-                      onChanged: (v) => setState(() => _includeJournals = v),
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.cycleReadingIncludeQuestions),
-                      subtitle: Text(l10n.cycleReadingIncludeQuestionsHint),
-                      value: _includeDivination,
-                      onChanged: (v) => setState(() => _includeDivination = v),
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.cycleReadingIncludePractice),
-                      subtitle: Text(l10n.cycleReadingIncludePracticeHint),
-                      value: _includePractice,
-                      onChanged: (v) => setState(() => _includePractice = v),
-                    ),
                   ],
                 ),
               ),
+              if (preco != null)
+                Text(
+                  preco,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.gc.starYellow,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_isLoading)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: CircularProgressIndicator(color: context.gc.lilac),
+              ),
+            )
+          else ...[
+            Text(
+              isWeek
+                  ? l10n.cycleReadingWeekRecordCount(_recordCount)
+                  : l10n.cycleReadingRecordCount(_recordCount),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.gc.lilac,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _buildActions(l10n),
-            ),
+            if (_recordCount <
+                CycleReadingComposer.minRecordsFor(_periodType)) ...[
+              const SizedBox(height: 8),
+              _aviso(l10n.cycleReadingShallowWarning, context.gc.warning),
+            ],
+            // Cruzar um período já lido não impede nada — mas dizer poupa
+            // uma compra repetida por engano.
+            if (_conflito != null) ...[
+              const SizedBox(height: 8),
+              _aviso(
+                l10n.cycleReadingOverlapNotice(
+                  DateFormat.yMd(l10n.localeName)
+                      .format(_conflito!.periodStart),
+                  DateFormat.yMd(l10n.localeName).format(
+                    _conflito!.periodEnd.subtract(const Duration(days: 1)),
+                  ),
+                ),
+                context.gc.textSecondary,
+              ),
+            ],
+            const SizedBox(height: 16),
+            _buildActions(l10n),
           ],
-        ),
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton.icon(
+              onPressed: _isWorking ? null : _voltarAoCalendario,
+              icon: const Icon(Icons.edit_calendar, size: 18),
+              label: Text(l10n.cycleReadingCustomPeriodButton),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Faixa de aviso — mesma forma para "poucos registros" e "já lido".
+  Widget _aviso(String texto, Color cor) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: cor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        texto,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cor),
       ),
     );
   }
@@ -778,140 +828,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     );
   }
 
-  /// Seletor das duas janelas, cada uma com o próprio preço à vista.
-  Widget _buildPeriodSelector(AppLocalizations l10n) {
-    Widget option(String type, String label, String productId) {
-      final selected = _periodType == type;
-      final included =
-          _hasLifetime && CycleReadingService.lifetimeCovers(type);
-      final price =
-          included ? l10n.cycleReadingLifetimeTag : _prices[productId];
-      return Expanded(
-        child: InkWell(
-          onTap: _isWorking ? null : () => _selectPeriod(type),
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: selected
-                  ? context.gc.lilac.withValues(alpha: 0.18)
-                  : Colors.transparent,
-              border: Border.all(
-                color: selected
-                    ? context.gc.lilac
-                    : context.gc.surfaceBorder,
-                width: selected ? 2 : 1,
-              ),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: selected
-                            ? context.gc.lilac
-                            : context.gc.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  price ?? '—',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.gc.textSecondary,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    final custom = _customPeriod;
-    final formato = DateFormat.yMd(l10n.localeName);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            option(
-              CycleReadingPeriodType.week,
-              l10n.cycleReadingWeekTitle,
-              RevenueCatConfig.cycleReadingWeekProductId,
-            ),
-            const SizedBox(width: 10),
-            option(
-              CycleReadingPeriodType.lunation,
-              l10n.cycleReadingLunationTitle,
-              RevenueCatConfig.cycleReadingMonthProductId,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        // Ler um pedaço retroativo: a lunação passada, aquela semana
-        // específica. O tamanho escolhido decide o produto.
-        if (custom == null)
-          TextButton.icon(
-            onPressed: _isWorking ? null : _pickCustomPeriod,
-            icon: const Icon(Icons.event_repeat, size: 18),
-            label: Text(l10n.cycleReadingCustomPeriodButton),
-          )
-        else ...[
-          Text(
-            l10n.cycleReadingCustomPeriodLine(
-              formato.format(custom.start),
-              // O fim guardado é exclusivo: mostra o último dia vivido.
-              formato.format(custom.end.subtract(const Duration(days: 1))),
-              CycleReadingService.spanInDays(custom.start, custom.end),
-            ),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.gc.lilac,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          TextButton.icon(
-            onPressed: _isWorking ? null : _pickCustomPeriod,
-            icon: const Icon(Icons.edit_calendar, size: 18),
-            label: Text(l10n.cycleReadingCustomPeriodButton),
-          ),
-          TextButton(
-            onPressed: _isWorking
-                ? null
-                : () => _selectPeriod(CycleReadingPeriodType.lunation),
-            child: Text(l10n.cycleReadingCustomPeriodClear),
-          ),
-        ],
-        if (_customRejection != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              _customRejection!,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.alert,
-                  ),
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              l10n.cycleReadingCustomPeriodHint,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.gc.textSecondary,
-                  ),
-            ),
-          ),
-      ],
-    );
-  }
-
   Widget _buildActions(AppLocalizations l10n) {
     if (_isWorking) {
       return Column(
@@ -977,41 +893,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                   ),
             ),
         ],
-      );
-    }
-
-    // Ritmo do acesso INCLUÍDO (Vitalício): uma semanal a cada 7 dias, uma
-    // lunação a cada 30 — `_nextAllowedAt` só é preenchido nesse caso, então
-    // quem paga por leitura nunca vê esta faixa.
-    //
-    // Vem DEPOIS dos casos acima de propósito: crédito já pago (pendente ou
-    // gerado) nunca é bloqueado por isto; o ritmo trava uma leitura NOVA,
-    // não o acesso ao que já é dela.
-    if (_isOnCooldown) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: context.gc.lilac.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.gc.lilac.withValues(alpha: 0.35)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('🌙 ', style: TextStyle(color: context.gc.lilac)),
-            Expanded(
-              child: Text(
-                _periodType == CycleReadingPeriodType.week
-                    ? l10n.cycleReadingCooldownWeek(_daysUntilRelease)
-                    : l10n.cycleReadingCooldownLunation(_daysUntilRelease),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.gc.textSecondary,
-                      height: 1.4,
-                    ),
-              ),
-            ),
-          ],
-        ),
       );
     }
 

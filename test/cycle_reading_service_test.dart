@@ -295,92 +295,16 @@ void main() {
     );
   });
 
-  group('intervalo entre leituras (uma semanal por semana, mensal por mês)',
-      () {
-    Future<void> gerada(String periodType, DateTime createdAt) async {
-      final repo = CycleReadingRepository();
-      await repo.insert(CycleReadingModel(
-        userId: userId,
-        periodType: periodType,
-        periodStart: periodStart,
-        periodEnd: periodEnd,
-        status: CycleReadingStatus.generated,
-        createdAt: createdAt,
-      ));
-    }
-
-    test('sem leitura anterior, está liberada', () async {
-      final next = await CycleReadingService()
-          .nextAllowedAt(userId, CycleReadingPeriodType.week);
-      expect(next, isNull);
-    });
-
-    test('semanal feita ontem ainda está travada', () async {
-      // Truncado ao milissegundo: é essa a precisão que sobrevive à ida e
-      // volta pelo SQLite (created_at é INTEGER em millis), e sem isso a
-      // comparação falharia por microssegundos.
-      final ontem = DateTime.fromMillisecondsSinceEpoch(
-        DateTime.now()
-            .subtract(const Duration(days: 1))
-            .millisecondsSinceEpoch,
-      );
-      await gerada(CycleReadingPeriodType.week, ontem);
-
-      final next = await CycleReadingService()
-          .nextAllowedAt(userId, CycleReadingPeriodType.week);
-      expect(next, isNotNull);
-      expect(next, ontem.add(const Duration(days: 7)));
-    });
-
-    test('semanal feita há 8 dias liberou', () async {
-      await gerada(CycleReadingPeriodType.week,
-          DateTime.now().subtract(const Duration(days: 8)));
-
-      final next = await CycleReadingService()
-          .nextAllowedAt(userId, CycleReadingPeriodType.week);
-      expect(next, isNull);
-    });
-
-    test('o intervalo é por tipo: a semanal não trava a lunação', () async {
-      await gerada(CycleReadingPeriodType.week, DateTime.now());
-
+  group('convite de volta (lembrete, não trava)', () {
+    // Não existe mais espera entre leituras: o ritmo que sobrou é só o do
+    // lembrete que convida a pessoa a voltar quando o ciclo se repete.
+    test('uma semana para a semanal, uma lunação para a mensal', () {
       expect(
-        await CycleReadingService()
-            .nextAllowedAt(userId, CycleReadingPeriodType.lunation),
-        isNull,
-      );
-      expect(
-        await CycleReadingService()
-            .nextAllowedAt(userId, CycleReadingPeriodType.week),
-        isNotNull,
-      );
-    });
-
-    test('crédito pendente não conta como leitura feita', () async {
-      final repo = CycleReadingRepository();
-      await repo.insert(CycleReadingModel(
-        userId: userId,
-        periodType: CycleReadingPeriodType.week,
-        periodStart: periodStart,
-        periodEnd: periodEnd,
-        // pending: comprou e ainda não gerou — não pode travar a próxima.
-        createdAt: DateTime.now(),
-      ));
-
-      expect(
-        await CycleReadingService()
-            .nextAllowedAt(userId, CycleReadingPeriodType.week),
-        isNull,
-      );
-    });
-
-    test('lunação usa 30 dias, semana usa 7', () {
-      expect(
-        CycleReadingService.cooldownFor(CycleReadingPeriodType.week),
+        CycleReadingService.inviteBackAfter(CycleReadingPeriodType.week),
         const Duration(days: 7),
       );
       expect(
-        CycleReadingService.cooldownFor(CycleReadingPeriodType.lunation),
+        CycleReadingService.inviteBackAfter(CycleReadingPeriodType.lunation),
         const Duration(days: 30),
       );
     });
@@ -423,10 +347,10 @@ void main() {
     });
   });
 
-  group('período a dedo: ritmo só para o acesso incluído', () {
-    // Sobreposição e cooldown são o RITMO do Vitalício (onde a leitura não
-    // custa por unidade). Quem paga por leitura escolhe qualquer janela,
-    // quantas vezes quiser — os dois últimos testes do grupo provam isso.
+  group('período a dedo: recusa só o impossível, o resto é aviso', () {
+    // Não há mais ritmo nenhum — nem espera, nem proibição de reler. O que
+    // sobrevive são os limites do que a leitura CONSEGUE fazer, e um aviso
+    // informativo quando a janela cruza um período já lido.
     final hoje = DateTime(2026, 8, 20);
 
     Future<void> geradaNoPeriodo(
@@ -456,10 +380,7 @@ void main() {
       expect(v.periodType, CycleReadingPeriodType.week);
     });
 
-    test('cruzar um período já lido é recusado, mesmo sem cooldown',
-        () async {
-      // createdAt bem antigo: o cooldown já venceu há muito. O que barra
-      // aqui é a sobreposição, e é isso que o teste prova.
+    test('cruzar um período já lido passa, mas volta como aviso', () async {
       await geradaNoPeriodo(
         CycleReadingPeriodType.week,
         DateTime(2026, 5, 1),
@@ -470,11 +391,13 @@ void main() {
         userId: userId,
         start: DateTime(2026, 5, 5),
         end: DateTime(2026, 5, 12),
-        includedByLifetime: true,
         now: hoje,
       );
-      expect(v.reason, CycleReadingService.rejectionOverlaps);
+      // Aceita — e entrega a leitura conflitante para a tela poder dizer
+      // "este pedaço você já leu" sem fechar a porta.
+      expect(v.reason, isNull);
       expect(v.conflict, isNotNull);
+      expect(v.conflict!.periodStart, DateTime(2026, 5, 1));
     });
 
     test('encostar não é cruzar: começar onde a outra terminou passa',
@@ -489,16 +412,15 @@ void main() {
         userId: userId,
         start: DateTime(2026, 5, 8),
         end: DateTime(2026, 5, 15),
-        includedByLifetime: true,
         now: hoje,
       );
       expect(v.reason, isNull);
+      expect(v.conflict, isNull);
     });
 
-    test('período novo ainda respeita o cooldown da compra recente',
-        () async {
-      // Leitura de OUTRO pedaço, feita ontem: sem sobreposição, mas a
-      // trava de intervalo entre compras continua valendo.
+    test('leitura recente de outro pedaço não trava a janela nova', () async {
+      // Comprou ontem, outro pedaço: antes isso travava por 7 dias quem
+      // tinha o acesso incluído. Agora não trava ninguém.
       await geradaNoPeriodo(
         CycleReadingPeriodType.week,
         DateTime(2026, 3, 1),
@@ -509,22 +431,20 @@ void main() {
         userId: userId,
         start: DateTime(2026, 6, 1),
         end: DateTime(2026, 6, 8),
-        includedByLifetime: true,
         now: hoje,
       );
-      expect(v.reason, CycleReadingService.rejectionCooldown);
-      expect(v.releaseAt, isNotNull);
+      expect(v.reason, isNull);
     });
 
-    test('quem paga por leitura pode reler um período já lido', () async {
+    test('reler exatamente a mesma janela é aceito', () async {
       await geradaNoPeriodo(
         CycleReadingPeriodType.week,
         DateTime(2026, 5, 1),
         DateTime(2026, 5, 8),
         createdAt: hoje.subtract(const Duration(days: 1)),
       );
-      // Mesma janela, cooldown fresquíssimo — e ainda assim aceita: sem o
-      // acesso incluído, cada leitura é uma compra.
+      // Mesma janela, leitura de ontem — e ainda assim aceita: quem quer
+      // reler, relê.
       final v = await CycleReadingService().validateCustomPeriod(
         userId: userId,
         start: DateTime(2026, 5, 1),
@@ -639,11 +559,16 @@ void _guardaDoAfrouxamento() {
       expect(TestBuildConfig.unlimitedCycleReadings, isFalse);
     });
 
-    test('com ele desligado, o intervalo entre leituras é o de produção', () {
-      expect(CycleReadingService.cooldownFor(CycleReadingPeriodType.week),
-          const Duration(days: 7));
-      expect(CycleReadingService.cooldownFor(CycleReadingPeriodType.lunation),
-          const Duration(days: 30));
+    test('com ele desligado, o teto de regerações é o de produção', () {
+      final noTeto = CycleReadingModel(
+        userId: 'u',
+        periodType: CycleReadingPeriodType.week,
+        periodStart: DateTime(2026, 8, 1),
+        periodEnd: DateTime(2026, 8, 8),
+        status: CycleReadingStatus.generated,
+        regenerationsUsed: CycleReadingModel.maxRegenerations,
+      );
+      expect(noTeto.canRegenerate, isFalse);
     });
   });
 }
