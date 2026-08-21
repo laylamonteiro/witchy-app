@@ -74,6 +74,15 @@ bool get _scriptCarregado {
   return accounts?.getProperty<JSObject?>('id'.toJS) != null;
 }
 
+/// A Cloudflare publica cada deploy também num endereço próprio
+/// (`47a8ec37.grimorio-de-bolso.pages.dev`), que muda a cada publicação. O
+/// Google não aceita curinga na lista de origens autorizadas, então um
+/// endereço desses NUNCA poderá estar lá: tentar por ele dá uma tela cheia
+/// de "Access blocked: origin_mismatch" no meio do login. Aqui a gente nem
+/// tenta — cai no redirecionamento, que funciona em qualquer origem.
+bool get _enderecoEfemero =>
+    RegExp(r'^[0-9a-f]{8}\.').hasMatch(web.window.location.hostname);
+
 @JS('google.accounts.id.initialize')
 external void _initialize(_IdConfiguration config);
 
