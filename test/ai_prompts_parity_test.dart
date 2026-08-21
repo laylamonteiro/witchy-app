@@ -63,16 +63,20 @@ void main() {
         );
       });
 
-      test('${entry.key}: o prompt pede os três blocos `### `', () {
+      test('${entry.key}: o prompt pede a forma que a tela sabe mostrar', () {
         final prompt = entry.value.magicalProfileSystemPrompt(Gender.fallback);
+        // UM molde de bloco (`### `), que a leitura usa para fatiar as
+        // páginas, e a linha de destaque `> ` que abre cada uma.
         expect(
           RegExp(r'^###[ \t]+\S', multiLine: true).allMatches(prompt).length,
-          3,
+          1,
         );
+        expect(RegExp(r'^>[ \t]+\S', multiLine: true).hasMatch(prompt), isTrue);
         // Nenhum `## ` no prompt: o cabeçalho da seção quem escreve é o app,
         // com a chave. Se a IA escrever o dela, o parser cria um card órfão.
         expect(RegExp(r'^##[ \t]+\S', multiLine: true).hasMatch(prompt), isFalse);
       });
+
     }
   });
 

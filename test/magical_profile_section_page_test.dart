@@ -118,6 +118,33 @@ void main() {
     expect(astro.chamadas, 0);
   });
 
+  testWidgets('a frase de destaque e o negrito chegam à tela', (tester) async {
+    // A forma é o produto aqui: sem o `> ` em evidência e sem o negrito nas
+    // posições, a leitura vira a parede de texto que ela era.
+    const guardada = ProfileSection(
+      key: MagicalProfileSections.intuition,
+      legacyTitle: null,
+      slides: [
+        ProfileSlide(
+          title: 'A Lua que sente antes',
+          body: '> Sua intuição chega pelo corpo, não pela cabeça\n\n'
+              'Sua **Lua em Peixes na Casa 4** avisa por sensação.\n\n'
+              'É por isso que você sabe antes de entender.',
+        ),
+      ],
+    );
+    final astro = _AstroFake(secao: guardada);
+    await tester.pumpWidget(_tela(astro, guardada: guardada));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Sua intuição chega pelo corpo'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Lua em Peixes na Casa 4'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('falhou de verdade: erro com o motivo e um botão de tentar',
       (tester) async {
     final astro = _AstroFake(erro: 'Sem conexão com o oráculo');

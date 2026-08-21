@@ -271,6 +271,12 @@ class _Falhou extends StatelessWidget {
   }
 }
 
+/// Uma página da leitura.
+///
+/// A primeira versão despejava o bloco inteiro como um parágrafo só de
+/// dezesseis linhas — texto sobre o mapa DELA, que ninguém lia até o fim.
+/// Aqui a página tem hierarquia: o subtítulo, a frase de destaque em
+/// evidência, e os parágrafos curtos com as posições do mapa realçadas.
 class _Pagina extends StatelessWidget {
   const _Pagina({required this.slide});
 
@@ -284,36 +290,95 @@ class _Pagina extends StatelessWidget {
         if (slide.title.isNotEmpty) ...[
           Text(
             slide.title,
+            // Duas linhas bastam para um subtítulo de 2 a 5 palavras; mais
+            // que isso empurrava o texto para fora da tela.
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.cinzelDecorative(
-              fontSize: 20,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
               color: context.gc.lilac,
+              height: 1.25,
             ),
           ),
-          const SizedBox(height: 6),
-          Divider(color: context.gc.lilac.withValues(alpha: 0.35)),
           const SizedBox(height: 10),
+          Container(
+            width: 44,
+            height: 2,
+            decoration: BoxDecoration(
+              color: context.gc.lilac.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 18),
         ],
         MarkdownBody(
           data: slide.body,
-          styleSheet: MarkdownStyleSheet(
-            p: TextStyle(
-              color: context.gc.softWhite,
-              height: 1.7,
-              fontSize: 16,
-            ),
-            listBullet: TextStyle(color: context.gc.lilac, fontSize: 16),
-            strong: TextStyle(
-              color: context.gc.lilac,
-              fontWeight: FontWeight.bold,
-            ),
-            em: TextStyle(
-              color: context.gc.softWhite,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          styleSheet: _folhaDeEstilo(context),
         ),
+        // Respiro no fim: o mascote flutua sobre o canto de baixo e comia a
+        // última linha.
+        const SizedBox(height: 72),
       ],
+    );
+  }
+
+  /// A tipografia da leitura.
+  ///
+  /// A frase de destaque (`> `) é o gancho da página: vive num bloco lilás
+  /// com barra à esquerda, em corpo maior, para ser lida antes de tudo. O
+  /// negrito é reservado às posições reais do mapa, e por isso vem colorido
+  /// — é ele que prova que a leitura fala DESTE mapa, e não de qualquer um.
+  MarkdownStyleSheet _folhaDeEstilo(BuildContext context) {
+    final lilas = context.gc.lilac;
+    return MarkdownStyleSheet(
+      p: TextStyle(
+        color: context.gc.softWhite,
+        height: 1.72,
+        fontSize: 16,
+      ),
+      // Respiro entre parágrafos: com blocos colados, dois parágrafos curtos
+      // voltam a parecer um só longo.
+      blockSpacing: 18,
+      strong: TextStyle(
+        color: lilas,
+        fontWeight: FontWeight.w700,
+      ),
+      em: TextStyle(
+        color: context.gc.softWhite,
+        fontStyle: FontStyle.italic,
+      ),
+      blockquote: GoogleFonts.lora(
+        color: context.gc.textPrimary,
+        fontSize: 17.5,
+        height: 1.5,
+        fontStyle: FontStyle.italic,
+        fontWeight: FontWeight.w600,
+      ),
+      blockquotePadding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+      blockquoteDecoration: BoxDecoration(
+        color: lilas.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border(left: BorderSide(color: lilas, width: 3)),
+      ),
+      listBullet: TextStyle(color: lilas, fontSize: 16, height: 1.72),
+      listBulletPadding: const EdgeInsets.only(right: 10),
+      listIndent: 18,
+      h3: GoogleFonts.cinzelDecorative(
+        color: lilas,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+      h4: GoogleFonts.lora(
+        color: lilas,
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+      ),
+      horizontalRuleDecoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: context.gc.surfaceBorder),
+        ),
+      ),
     );
   }
 }
