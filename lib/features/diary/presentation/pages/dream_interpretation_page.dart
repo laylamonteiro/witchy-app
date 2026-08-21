@@ -5,9 +5,9 @@ import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/premium_blur_widget.dart';
 import '../../data/models/dream_model.dart';
 import '../providers/dream_provider.dart';
 import '../widgets/dream_interpretation_text.dart';
@@ -36,22 +36,9 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
   bool _isInterpreting = false;
   bool _saved = false;
 
-  @override
-  void initState() {
-    super.initState();
-    // Funcionalidade 100% Premium: se não houver acesso, sobe o paywall
-    // direto (sem tela intermediária de "Seja Premium") e volta.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureAccess());
-  }
-
-  Future<void> _ensureAccess() async {
-    final access = context.read<AuthProvider>().checkFeatureAccess(
-          AppFeature.aiPersonalizedDreamInterpretation,
-        );
-    if (!access.hasFullAccess && mounted) {
-      await showPaywallThenPop(context);
-    }
-  }
+  /// Pediu a interpretação sem ter Premium: a tela mostra o sumário do que
+  /// ela traria, em vez de gerar (e em vez de ter batido a porta na entrada).
+  bool _mostrarPrevia = false;
 
   @override
   void dispose() {
@@ -71,6 +58,16 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
           backgroundColor: context.gc.alert,
         ),
       );
+      return;
+    }
+
+    // Sem Premium, a interpretação não é gerada: nem uma chamada de IA sai
+    // daqui. O que aparece é o sumário do que ela traria, sob véu.
+    final access = context.read<AuthProvider>().checkFeatureAccess(
+          AppFeature.aiPersonalizedDreamInterpretation,
+        );
+    if (!access.hasFullAccess) {
+      setState(() => _mostrarPrevia = true);
       return;
     }
 
@@ -177,20 +174,15 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final access = authProvider.checkFeatureAccess(
-      AppFeature.aiPersonalizedDreamInterpretation,
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: ResponsiveAppBarTitle(AppLocalizations.of(context).diaryInterpretDream),
       ),
-      // Sem acesso: corpo vazio enquanto o paywall (subido no initState)
-      // aparece por cima e a tela se fecha ao dispensar.
-      body: !access.hasFullAccess
-          ? const SizedBox.shrink()
-          : _buildInterpretFlow(),
+      // O corpo é o mesmo para todo mundo: quem não tem Premium escreve o
+      // sonho, pede a interpretação e vê o SUMÁRIO do que ela traria, com o
+      // texto sob véu. Barrar na porta não vendia nada — a pessoa nunca
+      // chegava a saber o que estava comprando.
+      body: _buildInterpretFlow(),
     );
   }
 
@@ -265,6 +257,19 @@ class _DreamInterpretationPageState extends State<DreamInterpretationPage> {
               ],
             ),
           ),
+          if (_mostrarPrevia && _interpretation == null)
+            MagicalCard(
+              child: PremiumLockedPreview(
+                intro: AppLocalizations.of(context).dreamLockedIntro,
+                titles: [
+                  AppLocalizations.of(context).dreamLockedTitle1,
+                  AppLocalizations.of(context).dreamLockedTitle2,
+                  AppLocalizations.of(context).dreamLockedTitle3,
+                  AppLocalizations.of(context).dreamLockedTitle4,
+                  AppLocalizations.of(context).dreamLockedTitle5,
+                ],
+              ),
+            ),
           if (_interpretation != null) ...[
             MagicalCard(
               child: Column(
