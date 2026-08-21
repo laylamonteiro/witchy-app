@@ -527,6 +527,11 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
       // erraria mais do que acertaria.
       type: SpellType.attraction,
       category: SpellCategory.suggested,
+      // Os ingredientes moram no próprio passo a passo ("uma vela amarela,
+      // uma xícara de chá"): separá-los exigiria adivinhar o que é
+      // ingrediente e o que é gesto, e a ficha do feitiço deixa a Bruxa
+      // listar o que quiser.
+      ingredients: const [],
       steps: _textoPuro(widget.corpo),
       observations: widget.periodo == null
           ? l10n.cycleReadingRitualPurpose
