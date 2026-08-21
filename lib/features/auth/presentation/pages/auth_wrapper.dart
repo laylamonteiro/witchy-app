@@ -65,19 +65,23 @@ class AuthWrapper extends StatelessWidget {
         // Se tem conta logada, ir para home
         if (isAuthenticated) {
           debugLog('NAV', 'AuthWrapper: → HomePage (autenticado)');
-          if (showSplash) return const SplashScreen(child: HomePage());
-          // Na web, a Home passa a viver numa rota EMPURRADA sobre esta.
-          // Não é capricho de navegação: é o que dá ao voltar do navegador
-          // uma entrada do app para gastar, em vez de sair para a página
+          final home = showSplash
+              ? const SplashScreen(child: HomePage())
+              : const HomePage();
+
+          // Na web, a Home vive numa rota EMPURRADA sobre esta. Não é
+          // capricho de navegação: é o que dá ao voltar do navegador uma
+          // entrada do app para gastar, em vez de sair para a página
           // anterior da aba — a do Google, depois de um login social. Ver
           // [WebBackKeeper]. No celular nada disso existe: o voltar já é da
           // pilha do app, e a Home continua desenhada aqui mesmo.
-          if (kIsWeb) {
-            return WebBackKeeper(
-              pagina: (_) => const RequireAuth(child: HomePage()),
-            );
-          }
-          return const HomePage();
+          //
+          // O splash entra DENTRO da rota empurrada. Deixá-lo aqui embaixo,
+          // como na primeira versão, desarmava tudo justo em quem mais
+          // precisa: numa aba nova (ou anônima) o splash aparece, e era
+          // exatamente aí que o voltar continuava saindo do app.
+          if (!kIsWeb) return home;
+          return WebBackKeeper(pagina: (_) => home);
         }
 
         // Sem conta: a porta de entrada é a tela de boas-vindas, que já
@@ -163,7 +167,7 @@ class _GuestOnlyState extends State<GuestOnly> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       debugLog('NAV', 'GuestOnly: sessão viva → /home');
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', keepBackAnchor());
     });
   }
 

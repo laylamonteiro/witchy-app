@@ -6,6 +6,15 @@ import 'package:flutter/material.dart';
 final RouteObserver<PageRoute<dynamic>> appRouteObserver =
     RouteObserver<PageRoute<dynamic>>();
 
+/// Predicado para `pushNamedAndRemoveUntil` depois de um login.
+///
+/// Na web, PRESERVA a entrada de baixo — é ela que repõe o histórico (ver
+/// [WebBackKeeper]); limpar tudo deixava a Home sozinha na pilha e o voltar
+/// seguinte saía do site. No celular limpa tudo, como sempre: lá a entrada
+/// de baixo seria só uma segunda Home viva à toa.
+bool Function(Route<dynamic>) keepBackAnchor() =>
+    kIsWeb ? (route) => route.isFirst : (route) => false;
+
 /// Mantém sempre uma entrada de histórico do app acima da entrada de boot.
 ///
 /// Na web o voltar caminha pelo histórico do NAVEGADOR, não pela pilha do

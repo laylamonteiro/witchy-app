@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
+import '../../../../core/navigation/web_back_keeper.dart';
 import '../../../../core/legal/legal_document_page.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
@@ -666,7 +667,7 @@ class _SignupPageState extends State<SignupPage> {
         );
 
         // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', keepBackAnchor());
       }
     } catch (e) {
       if (mounted) {
@@ -741,7 +742,7 @@ class _SignupPageState extends State<SignupPage> {
 
         if (!mounted) return;
         // Navegar para home
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', keepBackAnchor());
       } else {
         showAuthSnack(
           context,

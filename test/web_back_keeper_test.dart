@@ -56,6 +56,27 @@ void main() {
     expect(find.text('APP'), findsOneWidget);
   });
 
+  testWidgets('a página reposta pode ser o splash — é o caso da aba nova',
+      (tester) async {
+    // Numa aba nova (ou anônima) o splash aparece. Na primeira versão ele
+    // ficava EMBAIXO, fora da rota empurrada, e desarmava a reposição justo
+    // em quem mais precisa: quem acabou de entrar pelo Google.
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorObservers: [appRouteObserver],
+        home: WebBackKeeper(
+          ativo: true,
+          pagina: (_) => const Scaffold(body: Text('SPLASH+APP')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    expect(find.text('SPLASH+APP'), findsOneWidget);
+    expect(navigator.canPop(), isTrue);
+  });
+
   testWidgets('fora da web não mexe em nada', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
