@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import '../../../../core/config/test_build_config.dart';
 
 /// Estado de uma Leitura do Ciclo (persistido em `cycle_readings.status`).
 abstract final class CycleReadingStatus {
@@ -100,7 +101,10 @@ class CycleReadingModel {
   bool get isGenerated => status == CycleReadingStatus.generated;
   bool get isWeekly => periodType == CycleReadingPeriodType.week;
   bool get canRegenerate =>
-      isGenerated && regenerationsUsed < maxRegenerations;
+      isGenerated &&
+      // Build de teste: regera à vontade (ver TestBuildConfig).
+      (TestBuildConfig.unlimitedCycleReadings ||
+          regenerationsUsed < maxRegenerations);
 
   Map<String, dynamic> toMap() {
     return {

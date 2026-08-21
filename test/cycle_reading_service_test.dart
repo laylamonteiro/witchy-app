@@ -8,11 +8,13 @@ import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_rea
 import 'package:grimorio_de_bolso/features/cycle_reading/data/services/cycle_reading_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:grimorio_de_bolso/core/config/test_build_config.dart';
 
 /// O ciclo de vida do crédito da Leitura do Ciclo: a compra SÓ é consumida
 /// quando o relatório foi gerado e salvo; falha mantém o crédito; a
 /// regeneração da mesma janela é limitada a 2×.
 void main() {
+  _guardaDoAfrouxamento();
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const userId = 'user-1';
@@ -625,3 +627,24 @@ void main() {
     expect(days, inInclusiveRange(29, 30));
   });
 }
+
+/// O afrouxamento de build de teste NÃO pode vazar para produção.
+///
+/// `flutter test` não passa `--dart-define`, então aqui a flag tem de estar
+/// desligada — e é assim que uma build de release sem o define também fica.
+/// Se alguém trocar a constante por algo ligado por padrão, este teste cai.
+void _guardaDoAfrouxamento() {
+  group('Afrouxamento de teste', () {
+    test('vem DESLIGADO quando o define não é passado', () {
+      expect(TestBuildConfig.unlimitedCycleReadings, isFalse);
+    });
+
+    test('com ele desligado, o intervalo entre leituras é o de produção', () {
+      expect(CycleReadingService.cooldownFor(CycleReadingPeriodType.week),
+          const Duration(days: 7));
+      expect(CycleReadingService.cooldownFor(CycleReadingPeriodType.lunation),
+          const Duration(days: 30));
+    });
+  });
+}
+

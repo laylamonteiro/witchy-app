@@ -6,6 +6,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/data/repositories/free_writing_repository.dart';
 import '../../../lunar/presentation/providers/lunar_provider.dart';
+import '../../../../core/config/test_build_config.dart';
 import '../models/cycle_reading_model.dart';
 import '../repositories/cycle_reading_repository.dart';
 import 'cycle_reading_composer.dart';
@@ -153,10 +154,13 @@ class CycleReadingService {
   /// sobre a mesma semana. Quem paga por leitura não é limitado — cada
   /// leitura já é uma compra, e limitar seria recusar dinheiro e autonomia.
   /// Ver [validateCustomPeriod] e o parâmetro `includedByLifetime`.
-  static Duration cooldownFor(String periodType) =>
-      periodType == CycleReadingPeriodType.week
-          ? const Duration(days: 7)
-          : const Duration(days: 30);
+  static Duration cooldownFor(String periodType) {
+    // Build de teste: sem espera entre leituras (ver TestBuildConfig).
+    if (TestBuildConfig.unlimitedCycleReadings) return Duration.zero;
+    return periodType == CycleReadingPeriodType.week
+        ? const Duration(days: 7)
+        : const Duration(days: 30);
+  }
 
   /// Quando a próxima leitura deste tipo libera; null = já liberada.
   ///

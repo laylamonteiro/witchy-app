@@ -567,7 +567,8 @@ jobs:
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=REVENUECAT_IOS_KEY="$REVENUECAT_IOS_KEY" \
             --dart-define=ADMIN_EMAIL="$ADMIN_EMAIL" \
-            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" $ADMOB_FLAG $CAPTCHA_FLAG
+            --dart-define=ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            --dart-define=UNLIMITED_CYCLE_READINGS=true $ADMOB_FLAG $CAPTCHA_FLAG
           mkdir -p candidato
           cp build/app/outputs/flutter-apk/app-release.apk \
              "candidato/grimorio-de-bolso-${{ steps.versao.outputs.nome }}.apk"
