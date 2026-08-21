@@ -93,6 +93,74 @@ void main() {
     );
   });
 
+  test('a afirmação sai sem a marcação de realce', () async {
+    // O prompt pede realce nos PARÁGRAFOS e o modelo marca a afirmação
+    // junto. Ela vira imagem para compartilhar e legenda da imagem: ali
+    // `**` não é realce, é sujeira na tela.
+    final credit = await insertCredit();
+    final marcada = CycleReadingService(
+      generateSection: (key, json) async => key == 'affirmation'
+          ? 'Eu **honro minhas conquistas** e sigo.'
+          : key == 'seal'
+              ? 'raiz, agua, coragem'
+              : 'Texto da secao $key.',
+    );
+    final result = await marcada.generateForCredit(
+      credit: credit,
+      userId: userId,
+    );
+
+    expect(result.affirmation, 'Eu honro minhas conquistas e sigo.');
+    expect(result.writing.content, contains('> Eu honro minhas conquistas'));
+    expect(result.writing.content, isNot(contains('**honro')));
+    // E ao reabrir do acervo, o mesmo: leituras antigas trazem o realce
+    // dentro da citação e precisam sair limpas.
+    expect(
+      CycleReadingService.affirmationFromMarkdown(
+        '> Eu **honro minhas conquistas** e sigo.',
+      ),
+      'Eu honro minhas conquistas e sigo.',
+    );
+  });
+
+  test('reler a janela EXATA reescreve o registro em vez de criar outro',
+      () async {
+    final primeira = await service().generateForCredit(
+      credit: await insertCredit(),
+      userId: userId,
+    );
+
+    // Uma leitura NOVA das mesmas datas: herda o id e a entrada do acervo,
+    // como faz a tela ao encontrar `findForExactPeriod`.
+    final anterior = await CycleReadingRepository()
+        .findForExactPeriod(userId, periodStart, periodEnd);
+    expect(anterior, isNotNull);
+
+    final segunda = CycleReadingModel(
+      id: anterior!.id,
+      writingId: anterior.writingId,
+      userId: userId,
+      periodStart: periodStart,
+      periodEnd: periodEnd,
+    );
+    await CycleReadingRepository().insert(segunda);
+    final refeita = await CycleReadingService(
+      generateSection: (key, json) async => key == 'affirmation'
+          ? 'Outra afirmação.'
+          : key == 'seal'
+              ? 'raiz, agua, coragem'
+              : 'Texto NOVO da secao $key.',
+    ).generateForCredit(credit: segunda, userId: userId);
+
+    // Um registro só, e uma entrada só no acervo — com o conteúdo novo.
+    final db = await DatabaseHelper.instance.database;
+    expect((await db.query('cycle_readings')).length, 1);
+    expect((await db.query('free_writings')).length, 1);
+    expect(refeita.writing.id, primeira.writing.id);
+    expect(refeita.writing.content, contains('Texto NOVO'));
+    expect(refeita.reading.regenerationsUsed, 0);
+  });
+
   test('falha na geração NÃO consome o crédito nem salva relatório',
       () async {
     final credit = await insertCredit();

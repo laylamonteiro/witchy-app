@@ -403,7 +403,7 @@ FORMA (o app mostra cada seção como UMA TELA que desliza — texto denso mata 
     'rituals' =>
       'Sugira 2-3 rituais para o PRÓXIMO ciclo, em lista com "-": cada item com nome evocativo e 1-2 frases de como fazer. Cada ritual deve responder a algo ESPECÍFICO que a leitura encontrou — de preferência ao que "pede atenção" — e dizer, em poucas palavras, a que fio ele responde. Escolha o momento lunar adequado a partir das fases fornecidas. Ingredientes simples e seguros.',
     'affirmation' =>
-      'Escreva UMA afirmação sob medida para o período, em primeira pessoa, no máximo 20 palavras. Responda SOMENTE a afirmação, sem aspas nem explicações.',
+      'Escreva UMA afirmação sob medida para o período, em primeira pessoa, no máximo 20 palavras. Responda SOMENTE a afirmação, sem aspas, sem asteriscos e sem explicações.',
     'seal' =>
       'Escolha exatamente 3 palavras-chave que resumem o ciclo. Responda SOMENTE as 3 palavras separadas por vírgula, sem explicações.',
     _ => 'Escreva a seção pedida em 1 parágrafo.',

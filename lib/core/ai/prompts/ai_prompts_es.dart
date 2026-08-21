@@ -440,7 +440,7 @@ FORMA (la aplicación muestra cada sección como UNA PANTALLA que se desliza —
     'rituals' =>
       'Sugiere 2-3 rituales para el PRÓXIMO ciclo, en lista con "-": cada ítem con nombre evocador y 1-2 frases de cómo hacerlo. Cada ritual debe responder a algo ESPECÍFICO que la lectura encontró — preferiblemente a lo que "pide atención" — y decir, en pocas palabras, a qué hilo responde. Elige el momento lunar adecuado a partir de las fases proporcionadas. Ingredientes simples y seguros.',
     'affirmation' =>
-      'Escribe UNA afirmación a la medida del período, en primera persona, máximo 20 palabras. Responde SOLO la afirmación, sin comillas ni explicaciones.',
+      'Escribe UNA afirmación a la medida del período, en primera persona, máximo 20 palabras. Responde SOLO la afirmación, sin comillas, sin asteriscos y sin explicaciones.',
     'seal' =>
       'Elige exactamente 3 palabras clave que resuman el ciclo. Responde SOLO las 3 palabras separadas por comas, sin explicaciones.',
     _ => 'Escribe la sección pedida en 1 párrafo.',

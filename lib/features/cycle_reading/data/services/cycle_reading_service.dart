@@ -333,7 +333,11 @@ class CycleReadingService {
     );
 
     FreeWritingModel writing;
-    if (regenerate && credit.writingId != null) {
+    // Basta o crédito já apontar para uma entrada do acervo: ou é
+    // regeneração, ou é uma leitura NOVA da mesma janela exata, que herdou o
+    // registro anterior. Nos dois casos o certo é reescrever a entrada — sem
+    // isto, o acervo ganharia uma segunda leitura do mesmo período.
+    if (credit.writingId != null) {
       // Regeneração da MESMA janela: substitui o conteúdo, mantém a entrada
       // (id estável no acervo e na nuvem).
       final existing = await _writings.getById(credit.writingId!);
@@ -451,7 +455,10 @@ class CycleReadingService {
     for (final line in markdown.split('\n')) {
       final trimmed = line.trim();
       if (trimmed.startsWith('> ')) {
-        final text = trimmed.substring(2).trim();
+        // Leituras já salvas trazem o realce dentro da citação; aqui a
+        // afirmação sai como frase, para o cartão e para o texto do
+        // compartilhamento.
+        final text = semRealce(trimmed.substring(2)).trim();
         if (text.isNotEmpty) return text;
       }
     }
@@ -480,8 +487,20 @@ class CycleReadingService {
         .split('\n')
         .map((l) => l.trim())
         .firstWhere((l) => l.isNotEmpty, orElse: () => '');
-    return line.replaceAll(RegExp('["“”«»]'), '').trim();
+    return semRealce(line.replaceAll(RegExp('["“”«»]'), '')).trim();
   }
+
+  /// Tira a marcação de realce (`**assim**`) de um texto que vai sair do
+  /// app como texto puro.
+  ///
+  /// A afirmação é o caso: ela é uma frase, não um trecho de Markdown — vira
+  /// imagem para compartilhar e legenda da imagem, e ali `**` não é realce,
+  /// é sujeira na tela. O prompt pede o realce para os PARÁGRAFOS, e o
+  /// modelo, obediente, marca a afirmação também.
+  ///
+  /// Não use isto no corpo do relatório: lá o `**` é lido pelo Markdown (e a
+  /// seção das palavras-chave depende dele para ser recortada).
+  static String semRealce(String texto) => texto.replaceAll('**', '');
 
   /// As 3 palavras-chave do selo, tolerante a vírgulas/linhas/marcadores.
   static List<String> _parseSealKeywords(String raw) {

@@ -439,7 +439,7 @@ SHAPE (the app shows each section as ONE SWIPEABLE SCREEN — dense text kills t
     'rituals' =>
       'Suggest 2-3 rituals for the NEXT cycle, as a "-" list: each item with an evocative name and 1-2 sentences on how to do it. Each ritual must answer something SPECIFIC the reading found — preferably what "asks for attention" — and say, in a few words, which thread it answers. Choose the fitting lunar moment from the phases provided. Simple, safe ingredients.',
     'affirmation' =>
-      'Write ONE affirmation tailored to the period, in first person, at most 20 words. Answer ONLY the affirmation, without quotes or explanations.',
+      'Write ONE affirmation tailored to the period, in first person, at most 20 words. Answer ONLY the affirmation, without quotes, asterisks or explanations.',
     'seal' =>
       'Choose exactly 3 keywords that summarize the cycle. Answer ONLY the 3 words separated by commas, with no explanations.',
     _ => 'Write the requested section in 1 paragraph.',

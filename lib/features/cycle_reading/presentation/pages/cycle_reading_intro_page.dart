@@ -308,6 +308,38 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         includePractice: _includePractice,
       );
 
+  /// O crédito desta janela.
+  ///
+  /// Se já existe uma leitura com as datas EXATAS, ela é reaproveitada: o
+  /// registro e a entrada no acervo continuam os mesmos, e o conteúdo novo
+  /// escreve por cima. Sem isso, ler de novo o mesmo pedaço deixava dois
+  /// registros no banco e duas leituras iguais em Meus Registros.
+  ///
+  /// O contador de regerações volta a zero de propósito: isto é uma leitura
+  /// nova (comprada, ou incluída no Vitalício), não a regeração daquela.
+  Future<CycleReadingModel> _creditoPara(
+    String userId, {
+    required ({DateTime start, DateTime end}) period,
+    String? productId,
+    String origin = CycleReadingOrigin.purchase,
+  }) async {
+    final anterior = await _service.repository.findForExactPeriod(
+      userId,
+      period.start,
+      period.end,
+    );
+    return CycleReadingModel(
+      id: anterior?.id,
+      writingId: anterior?.writingId,
+      userId: userId,
+      periodType: _periodType,
+      periodStart: period.start,
+      periodEnd: period.end,
+      productId: productId,
+      origin: origin,
+    );
+  }
+
   Future<void> _buy() async {
     if (_isWorking) return;
     setState(() => _isWorking = true);
@@ -330,11 +362,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
 
       // Compra confirmada: registra o crédito ANTES de gerar — se a geração
       // falhar, o crédito sobrevive e a pessoa tenta de novo sem pagar.
-      final credit = CycleReadingModel(
-        userId: userId,
-        periodType: _periodType,
-        periodStart: period.start,
-        periodEnd: period.end,
+      final credit = await _creditoPara(
+        userId,
+        period: period,
         productId: _productId,
       );
       await _service.repository.insert(credit);
@@ -357,11 +387,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     final userId = context.read<AuthProvider>().currentUser.id;
     final period = _period;
     try {
-      final credit = CycleReadingModel(
-        userId: userId,
-        periodType: _periodType,
-        periodStart: period.start,
-        periodEnd: period.end,
+      final credit = await _creditoPara(
+        userId,
+        period: period,
         origin: CycleReadingOrigin.lifetime,
       );
       await _service.repository.insert(credit);
@@ -981,23 +1009,14 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       );
     }
 
-    // Vitalício: esta janela está incluída. Gera direto, sem loja.
+    // Vitalício: esta janela está incluída. Gera direto, sem loja e sem
+    // frase explicando o benefício — a etiqueta "Incluída" no cabeçalho já
+    // diz o necessário, e repetir a cada leitura vira ruído.
     if (_lifetimeCoversThisWindow) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.cycleReadingLifetimeIncluded,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.gc.textSecondary),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _claimLifetime,
-            icon: const Icon(Icons.auto_awesome, size: 18),
-            label: Text(l10n.cycleReadingGenerate),
-          ),
-        ],
+      return ElevatedButton.icon(
+        onPressed: _claimLifetime,
+        icon: const Icon(Icons.auto_awesome, size: 18),
+        label: Text(l10n.cycleReadingGenerate),
       );
     }
 

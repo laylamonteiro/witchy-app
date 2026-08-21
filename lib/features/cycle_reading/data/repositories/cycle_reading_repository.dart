@@ -61,6 +61,32 @@ class CycleReadingRepository {
     return CycleReadingModel.fromMap(rows.first);
   }
 
+  /// A leitura de uma janela EXATA (mesmo início e mesmo fim), se existir.
+  ///
+  /// Serve para não acumular registros do mesmo período: pedir de novo a
+  /// leitura das mesmas datas reescreve a que já existe, em vez de criar uma
+  /// segunda no banco e uma segunda entrada no acervo.
+  Future<CycleReadingModel?> findForExactPeriod(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await _db;
+    final rows = await db.query(
+      'cycle_readings',
+      where: 'user_id = ? AND period_start = ? AND period_end = ?',
+      whereArgs: [
+        userId,
+        start.millisecondsSinceEpoch,
+        end.millisecondsSinceEpoch,
+      ],
+      orderBy: 'created_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CycleReadingModel.fromMap(rows.first);
+  }
+
   /// A leitura que gerou uma entrada do acervo — o caminho de volta quando
   /// a pessoa reabre o relatório por "Meus Registros".
   Future<CycleReadingModel?> findByWritingId(String writingId) async {
