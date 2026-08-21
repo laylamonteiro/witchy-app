@@ -605,6 +605,51 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
     );
   }
 
+  /// Cabeçalho da análise personalizada — o mesmo para quem lê e para quem
+  /// está vendo só os títulos.
+  Widget _buildAISectionHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text('🌟', style: TextStyle(fontSize: 24)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _sel(
+                  pt: 'Sua Análise Personalizada',
+                  en: 'Your Personalized Analysis',
+                  es: 'Tu Análisis Personalizado',
+                ),
+                style: GoogleFonts.cinzelDecorative(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: context.gc.lilac,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _sel(
+            pt: 'Gerada especialmente para você com base no seu mapa astral',
+            en: 'Created especially for you based on your birth chart',
+            es: 'Creada especialmente para ti a partir de tu carta natal',
+          ),
+          style: TextStyle(
+            color: context.gc.softWhite.withValues(alpha: 0.6),
+            fontSize: 12,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Divider(color: context.gc.lilac),
+      ],
+    );
+  }
+
   /// O que a análise completa traria — os títulos à vista, o texto sob véu.
   ///
   /// Não gera nada: os títulos são fixos, do l10n, e o conteúdo verdadeiro
@@ -628,5 +673,4 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
       ),
     );
   }
-
 }
