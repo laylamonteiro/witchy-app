@@ -98,10 +98,18 @@ class MagicalProfileSectionPage extends StatefulWidget {
 }
 
 class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
+  /// A tela abre já tecendo, mas a chamada só pode partir DEPOIS do primeiro
+  /// frame (pedir a geração durante o build avisaria os ouvintes no meio do
+  /// build). Sem este sinalizador, esse intervalo de um frame caía no mesmo
+  /// ramo do "não deu certo": a tela nascia dizendo que falhou, antes de ter
+  /// tentado qualquer coisa.
+  bool _partindo = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.section == null && widget.sectionKey != null) {
+      _partindo = true;
       WidgetsBinding.instance.addPostFrameCallback((_) => _tecer());
     }
   }
@@ -109,20 +117,18 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
   Future<void> _tecer() async {
     final chave = widget.sectionKey;
     if (chave == null) return;
-    await context.read<AstrologyProvider>().generateProfileSection(
-          chave,
-          hasFullAccess: context.read<AuthProvider>().isPremiumEffective,
-        );
+    if (mounted) setState(() => _partindo = true);
+    try {
+      await context.read<AstrologyProvider>().generateProfileSection(
+            chave,
+            hasFullAccess: context.read<AuthProvider>().isPremiumEffective,
+          );
+    } finally {
+      if (mounted) setState(() => _partindo = false);
+    }
   }
 
-  Future<void> _tecerDeNovo() async {
-    final chave = widget.sectionKey;
-    if (chave == null) return;
-    await context.read<AstrologyProvider>().regenerateProfileSection(
-          chave,
-          hasFullAccess: context.read<AuthProvider>().isPremiumEffective,
-        );
-  }
+  Future<void> _tecerDeNovo() => _tecer();
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +139,8 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
         final chave = widget.sectionKey;
         final secao =
             chave == null ? widget.section : provider.profileSection(chave);
-        final tecendo = chave != null && provider.generatingSection == chave;
+        final tecendo =
+            _partindo || (chave != null && provider.isWeavingSection(chave));
 
         return Scaffold(
           backgroundColor: context.gc.background,
@@ -155,7 +162,12 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
               (false, final ProfileSection s) => PagedReading(
                   pages: [for (final slide in s.slides) _Pagina(slide: slide)],
                 ),
-              _ => _Falhou(onRetry: _tecer, message: provider.error),
+              _ => _Falhou(
+                  onRetry: _tecer,
+                  message: provider.lastFailureWasRateLimit
+                      ? l10n.aiVisionRateLimit
+                      : provider.error,
+                ),
             },
           ),
         );
@@ -228,6 +240,20 @@ class _Falhou extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: context.gc.textSecondary, height: 1.4),
             ),
+            // O motivo real, quando existe: "não deu" sozinho não deixa
+            // ninguém decidir se espera, se troca de rede ou se reclama.
+            if (message != null && message!.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: context.gc.textSecondary.withValues(alpha: 0.7),
+                  fontSize: 12,
+                  height: 1.35,
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: onRetry,
