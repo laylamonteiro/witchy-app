@@ -225,7 +225,7 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
             ElevatedButton.icon(
               onPressed: _loadWeather,
               icon: const Icon(Icons.refresh),
-              label: const Text('Tentar novamente'),
+              label: Text(AppLocalizations.of(context).commonTryAgain),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.gc.lilac,
                 foregroundColor: context.gc.darkBackground,

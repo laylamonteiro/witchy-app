@@ -84,7 +84,7 @@ class SupabaseAuthRepository implements AuthRepository {
         final user = await _userFromSupabaseUser(response.user!);
         return AuthResult.success(user);
       }
-      return AuthResult.error('Erro ao fazer login');
+      return AuthResult.error(_l10n.authErrLogin);
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
@@ -117,7 +117,7 @@ class SupabaseAuthRepository implements AuthRepository {
         final user = await _userFromSupabaseUser(response.user!);
         return AuthResult.success(user);
       }
-      return AuthResult.error('Erro ao criar conta');
+      return AuthResult.error(_l10n.authErrCreateAccount);
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
@@ -272,7 +272,7 @@ class SupabaseAuthRepository implements AuthRepository {
       final googleUser = await _googleSignIn!.signIn();
       if (googleUser == null) {
         await debugLog('AUTH', 'Google Sign-In cancelado pelo usuário');
-        return AuthResult.error('Login cancelado');
+        return AuthResult.error(_l10n.authErrLoginCancelled);
       }
 
       await debugLog(
@@ -306,13 +306,14 @@ class SupabaseAuthRepository implements AuthRepository {
       }
 
       await debugLog('AUTH', 'Google Sign-In: falhou - user é null');
-      return AuthResult.error('Erro ao autenticar com Google');
+      return AuthResult.error(_l10n.authErrGoogleAuth);
     } on AuthException catch (e) {
       await debugLog('AUTH', 'Google Sign-In AuthException: ${e.message}');
       return _handleAuthException(e);
     } catch (e) {
       await debugLog('AUTH', 'Google Sign-In erro: $e');
-      return AuthResult.error('Erro no login com Google: $e');
+      await debugLog('AUTH', 'Falha no login com o Google: $e');
+      return AuthResult.error(_l10n.authErrGoogleAuth);
     }
   }
 
@@ -373,7 +374,8 @@ class SupabaseAuthRepository implements AuthRepository {
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
-      return AuthResult.error('Erro ao enviar email: $e');
+      await debugLog('AUTH', 'Falha ao enviar e-mail: $e');
+      return AuthResult.error(_l10n.authErrSendEmail);
     }
   }
 
@@ -392,7 +394,8 @@ class SupabaseAuthRepository implements AuthRepository {
       }
       return AuthResult.error(_l10n.authErrNoUser);
     } catch (e) {
-      return AuthResult.error('Erro ao verificar email: $e');
+      await debugLog('AUTH', 'Falha ao verificar e-mail: $e');
+      return AuthResult.error(_l10n.authErrVerifyEmail);
     }
   }
 
@@ -440,9 +443,10 @@ class SupabaseAuthRepository implements AuthRepository {
       if (updatedUser != null) {
         return AuthResult.success(updatedUser);
       }
-      return AuthResult.error('Erro ao atualizar perfil');
+      return AuthResult.error(_l10n.authErrUpdateProfile);
     } catch (e) {
-      return AuthResult.error('Erro ao atualizar perfil: $e');
+      await debugLog('AUTH', 'Falha ao atualizar o perfil: $e');
+      return AuthResult.error(_l10n.authErrUpdateProfile);
     }
   }
 
@@ -457,11 +461,12 @@ class SupabaseAuthRepository implements AuthRepository {
       if (user != null) {
         return AuthResult.success(user);
       }
-      return AuthResult.error('Erro ao atualizar senha');
+      return AuthResult.error(_l10n.authErrUpdatePassword);
     } on AuthException catch (e) {
       return _handleAuthException(e);
     } catch (e) {
-      return AuthResult.error('Erro ao atualizar senha: $e');
+      await debugLog('AUTH', 'Falha ao atualizar a senha: $e');
+      return AuthResult.error(_l10n.authErrUpdatePassword);
     }
   }
 
@@ -670,11 +675,10 @@ class SupabaseAuthRepository implements AuthRepository {
           : _l10n.authErrCaptchaOutdated;
     } else if (normalizedMessage.contains('email not confirmed') ||
         normalizedMessage.contains('email is not confirmed')) {
-      message =
-          'Confirme seu email antes de entrar. Verifique sua caixa de entrada.';
+      message = _l10n.authErrEmailNotConfirmed;
     } else if (message.contains('Invalid login credentials')) {
       code = AuthErrorCode.invalidPassword;
-      message = 'Email ou senha incorretos';
+      message = _l10n.authErrInvalidCredentials;
     } else if (message.contains('User not found')) {
       code = AuthErrorCode.userNotFound;
       message = _l10n.authErrUserNotFound;
@@ -685,11 +689,11 @@ class SupabaseAuthRepository implements AuthRepository {
     } else if (message.contains('Password should be') ||
         message.contains('password')) {
       code = AuthErrorCode.weakPassword;
-      message = 'A senha deve ter pelo menos 6 caracteres';
+      message = _l10n.authErrWeakPassword;
     } else if (message.contains('rate limit') ||
         message.contains('too many')) {
       code = AuthErrorCode.tooManyRequests;
-      message = 'Muitas tentativas. Aguarde alguns minutos.';
+      message = _l10n.authErrTooManyAttempts;
     } else if (message.contains('network') || message.contains('connection')) {
       code = AuthErrorCode.networkError;
       message = _l10n.authErrNetworkCheck;
