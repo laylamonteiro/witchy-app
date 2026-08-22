@@ -779,13 +779,17 @@ void main() {
     });
 
     testWidgets(
-        'assinatura mostra a porta permanente da Leitura do Ciclo',
+        'a assinatura NÃO tem porta para a Leitura do Ciclo',
         (tester) async {
-      // A Leitura do Ciclo é compra avulsa e não entra na assinatura — nem
-      // para quem já é Pro. A tela de planos é onde a pessoa está decidindo
-      // gastar, então a porta precisa existir aqui, sempre. Este teste
-      // existe porque a porta some sem barulho: nada quebra, ela apenas
-      // deixa de ser encontrável, e a venda morre em silêncio.
+      // Invertido por decisão da dona do produto. O plano original já
+      // mandava remover esta porta, e ela ficou registrada como "aguardando
+      // decisão" até agora; a decisão veio: esta tela decide ASSINATURA, e a
+      // leitura avulsa se descobre onde ela é usada, não na tabela de
+      // preços. A porta das Configurações já tinha saído antes.
+      //
+      // O teste continua existindo, e trocou de lado: uma porta que
+      // reaparecesse aqui não quebraria nada — ela só voltaria a misturar
+      // compra avulsa com assinatura, em silêncio.
       final service = PaymentService();
       addTearDown(service.clearTestProducts);
       service.setTestProducts([
@@ -815,7 +819,10 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Leitura do Ciclo'), findsOneWidget);
+      expect(find.text('Leitura do Ciclo'), findsNothing);
+      // A tela em si continua de pé — o que saiu foi a porta, não o resto.
+      expect(find.text('Desbloquear Premium'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets(
