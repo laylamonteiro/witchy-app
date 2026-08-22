@@ -1631,10 +1631,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get numFullName => 'Nome completo';
 
   @override
-  String get numChooseBirthDate => 'Escolher data de nascimento';
+  String get numBirthDateLabel => 'Data de nascimento';
 
   @override
-  String get numBirthPrefix => 'Nascimento';
+  String get numBirthDateHint => 'dd/mm/aaaa';
+
+  @override
+  String get numBirthDateInvalid => 'Data inválida';
 
   @override
   String get numCalculate => 'Calcular meus números';
@@ -4241,10 +4244,13 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get numFullName => 'Nome completo';
 
   @override
-  String get numChooseBirthDate => 'Escolher data de nascimento';
+  String get numBirthDateLabel => 'Data de nascimento';
 
   @override
-  String get numBirthPrefix => 'Nascimento';
+  String get numBirthDateHint => 'dd/mm/aaaa';
+
+  @override
+  String get numBirthDateInvalid => 'Data inválida';
 
   @override
   String get numCalculate => 'Calcular meus números';

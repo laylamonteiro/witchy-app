@@ -16,6 +16,7 @@ import '../../features/astrology/data/models/planet_position_model.dart';
 import '../../features/grimoire/data/models/spell_model.dart';
 import 'gemini_credentials.dart';
 import 'groq_credentials.dart';
+import 'language_guard.dart';
 import 'prompts/ai_prompts.dart';
 
 /// Erro de limite de uso do provedor de IA (HTTP 429). A chave da Groq é
@@ -251,17 +252,40 @@ class AIService {
         '${_prompts.magicalProfileSectionInstruction(sectionKey)}\n\n'
         '${_buildChartSummary(birthChart, profile)}';
 
-    Future<String> gerar() => _textRequest(
-          systemPrompt: systemPrompt,
-          userText: userText,
-          tag: 'perfil mágico ($sectionKey)',
-          temperature: 0.7,
-          // Três parágrafos de 4 a 6 frases mais os subtítulos cabem com
-          // folga em 1400; o dobro do necessário custa pouco e some com a
-          // classe inteira de defeito (seção cortada no meio da frase).
-          maxTokens: 1400,
-          receiveTimeout: const Duration(seconds: 45),
-        );
+    // Uma seção por vez, sob demanda: o 429 (limite por minuto, compartilhado
+    // por todas as usuárias) cai justo na primeira tentativa e some segundos
+    // depois. Sem esta espera curta, a tela dizia "não foi possível" para
+    // algo que funcionava no toque seguinte — foi exatamente o que apareceu
+    // em teste, em todo card aberto.
+    Future<String> gerar() async {
+      DioException? ultimo429;
+      for (var tentativa = 0;
+          tentativa <= _quotaRetryDelays.length;
+          tentativa++) {
+        try {
+          return await _textRequest(
+            systemPrompt: systemPrompt,
+            userText: userText,
+            tag: 'perfil mágico ($sectionKey)',
+            temperature: 0.7,
+            // Três parágrafos de 4 a 6 frases mais os subtítulos cabem com
+            // folga em 1400; o dobro do necessário custa pouco e some com a
+            // classe inteira de defeito (seção cortada no meio da frase).
+            maxTokens: 1400,
+            receiveTimeout: const Duration(seconds: 45),
+          );
+        } on DioException catch (e) {
+          if (e.response?.statusCode != 429) rethrow;
+          ultimo429 = e;
+          if (tentativa < _quotaRetryDelays.length) {
+            await Future.delayed(_quotaRetryDelays[tentativa]);
+          }
+        }
+      }
+      unawaited(debugLog('AI',
+          'perfil mágico ($sectionKey): 429 persistente (${ultimo429?.message})'));
+      throw const AiRateLimitException();
+    }
 
     final primeira = (await gerar()).trim();
     // Sem nenhum `### `, a seção viraria uma página só de texto corrido — a
@@ -655,8 +679,10 @@ class AIService {
         ? (_hasGemini ? AiProvider.gemini : null)
         : AiProvider.groq;
 
+    var respondeu = primary;
+    String texto;
     try {
-      return await _textCall(
+      texto = await _textCall(
         primary,
         systemPrompt: systemPrompt,
         userText: userText,
@@ -666,30 +692,118 @@ class AIService {
         jsonResponse: jsonResponse,
         receiveTimeout: receiveTimeout,
       );
-    } on DioException catch (e) {
-      if (fallback == null) rethrow;
-      unawaited(debugLog(
-          'AI',
-          '$tag: ${primary.name} falhou '
-          '(HTTP ${e.response?.statusCode ?? e.message}) '
-          '— usando ${fallback.name}'));
     } catch (e) {
       if (fallback == null) rethrow;
       unawaited(debugLog(
-          'AI', '$tag: ${primary.name} falhou ($e) — usando ${fallback.name}'));
+          'AI',
+          e is DioException
+              ? '$tag: ${primary.name} falhou '
+                  '(HTTP ${e.response?.statusCode ?? e.message}) '
+                  '— usando ${fallback.name}'
+              : '$tag: ${primary.name} falhou ($e) — usando ${fallback.name}'));
+      respondeu = fallback;
+      texto = await _textCall(
+        fallback,
+        systemPrompt: systemPrompt,
+        userText: userText,
+        tag: tag,
+        temperature: temperature,
+        maxTokens: maxTokens,
+        jsonResponse: jsonResponse,
+        receiveTimeout: receiveTimeout,
+      );
     }
 
-    return _textCall(
-      fallback,
-      systemPrompt: systemPrompt,
+    // Resposta em JSON não passa pela guarda: o valor de cada chave é lido
+    // pela tela, e uma reescrita livre poderia devolver JSON quebrado.
+    if (jsonResponse) return texto;
+
+    return _semIdiomaIntruso(
+      texto,
       userText: userText,
       tag: tag,
-      temperature: temperature,
+      provider: respondeu,
       maxTokens: maxTokens,
-      jsonResponse: jsonResponse,
       receiveTimeout: receiveTimeout,
     );
   }
+
+  /// Devolve o texto no idioma da pessoa — reescrevendo UMA vez quando a
+  /// [LanguageGuard] acha palavra de outra língua.
+  ///
+  /// O modelo escorrega: um "sometimes" no meio do Clima Mágico Diário, um
+  /// pedaço em cirílico no meio da interpretação do sonho. O prompt já pede
+  /// o idioma; quando ainda assim escapa, o texto volta para o modelo com a
+  /// lista do que escapou e é reescrito inteiro.
+  ///
+  /// A reescrita só entra no lugar do original se ficou MELHOR (menos
+  /// intrusas) e não encolheu: um resumo no lugar da leitura seria pior que
+  /// a palavra intrusa. Qualquer falha na segunda chamada devolve o
+  /// original — ninguém fica sem leitura por causa da revisão.
+  Future<String> _semIdiomaIntruso(
+    String texto, {
+    required String userText,
+    required String tag,
+    required AiProvider provider,
+    required int maxTokens,
+    required Duration receiveTimeout,
+  }) async {
+    final intrusos = LanguageGuard.intrusos(
+      texto,
+      idioma: currentLanguageTag,
+      textoDoUsuario: userText,
+    );
+    if (intrusos.isEmpty) return texto;
+
+    final lista = intrusos.join(', ');
+    unawaited(debugLog('AI', '$tag: idioma escapou ($lista) — reescrevendo'));
+    try {
+      final reescrito = (await _textCall(
+        provider,
+        systemPrompt: '${_localizedInstruction()}\n\n'
+            '${_prompts.languageRepairSystemPrompt(currentLanguageTag)}',
+        userText: _prompts.languageRepairUserPrompt(texto, lista),
+        tag: '$tag (idioma)',
+        temperature: 0.2,
+        maxTokens: maxTokens,
+        jsonResponse: false,
+        receiveTimeout: receiveTimeout,
+      ))
+          .trim();
+
+      final sobraram = LanguageGuard.intrusos(
+        reescrito,
+        idioma: currentLanguageTag,
+        textoDoUsuario: userText,
+      );
+      final encolheu = reescrito.length < texto.trim().length * 0.7;
+      // Cabeçalho perdido é tela vazia: o Clima Mágico Diário é validado
+      // por `DailyWeatherContent.looksComplete`, que procura os `##` do
+      // idioma. Uma reescrita com menos títulos que o original é recusada.
+      final perdeuTitulos = _titulos(reescrito) < _titulos(texto);
+      if (sobraram.length < intrusos.length && !encolheu && !perdeuTitulos) {
+        unawaited(debugLog(
+            'AI',
+            '$tag: reescrito no idioma'
+            '${sobraram.isEmpty ? '' : ' (restaram ${sobraram.length})'}'));
+        return reescrito;
+      }
+      final motivo = encolheu
+          ? 'encolheu'
+          : perdeuTitulos
+              ? 'perdeu títulos'
+              : 'não melhorou';
+      unawaited(
+          debugLog('AI', '$tag: reescrita descartada ($motivo) — original'));
+    } catch (e) {
+      unawaited(debugLog('AI', '$tag: reescrita de idioma falhou ($e)'));
+    }
+    return texto;
+  }
+
+  /// Quantos cabeçalhos Markdown (`#`) o texto tem.
+  static int _titulos(String texto) =>
+      RegExp(r'^\s*#{1,6} ', multiLine: true).allMatches(texto).length;
 
   /// Despacha a chamada de texto para o provedor pedido.
   Future<String> _textCall(
@@ -1042,7 +1156,7 @@ class AIService {
   }) async {
     gender ??= _gender;
     try {
-      return await _visionRequest(
+      final leitura = await _visionRequest(
         systemPrompt: '${_localizedInstruction()}\n\n'
             '${_prompts.palmistrySystemPrompt(gender)}',
         userText: _prompts.palmUserMessage,
@@ -1054,6 +1168,15 @@ class AIService {
         // cobre a leitura inteira.
         maxTokens: 3000,
         tag: 'quiromancia',
+      );
+      // A revisão de idioma é de texto: a foto já cumpriu o papel dela.
+      return await _semIdiomaIntruso(
+        leitura,
+        userText: '',
+        tag: 'quiromancia',
+        provider: defaultTextProvider,
+        maxTokens: 3000,
+        receiveTimeout: const Duration(seconds: 60),
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 429) {

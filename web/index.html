@@ -55,6 +55,12 @@
   <title>Grimório de Bolso</title>
   <link rel="manifest" href="manifest.json">
 
+  <!-- Google Identity Services: a entrada com o Google acontece DENTRO desta
+       página, sem redirecionar para accounts.google.com. Sem isso, a página
+       do Google fica no histórico da aba e o voltar acaba lá. `async` para
+       não atrasar o primeiro desenho: quem usa confere se já carregou. -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+
   <style>
     /* O fundo da página aparece em qualquer sobra; com a cor do app, some. */
     html, body {

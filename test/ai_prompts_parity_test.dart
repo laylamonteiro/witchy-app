@@ -63,16 +63,20 @@ void main() {
         );
       });
 
-      test('${entry.key}: o prompt pede os três blocos `### `', () {
+      test('${entry.key}: o prompt pede a forma que a tela sabe mostrar', () {
         final prompt = entry.value.magicalProfileSystemPrompt(Gender.fallback);
+        // UM molde de bloco (`### `), que a leitura usa para fatiar as
+        // páginas, e a linha de destaque `> ` que abre cada uma.
         expect(
           RegExp(r'^###[ \t]+\S', multiLine: true).allMatches(prompt).length,
-          3,
+          1,
         );
+        expect(RegExp(r'^>[ \t]+\S', multiLine: true).hasMatch(prompt), isTrue);
         // Nenhum `## ` no prompt: o cabeçalho da seção quem escreve é o app,
         // com a chave. Se a IA escrever o dela, o parser cria um card órfão.
         expect(RegExp(r'^##[ \t]+\S', multiLine: true).hasMatch(prompt), isFalse);
       });
+
     }
   });
 
@@ -80,6 +84,10 @@ void main() {
     // Sondas nomeadas: cada uma resolve um campo para String.
     final probes = <String, String Function(AiPrompts p, Gender g)>{
       'localizedInstruction': (p, g) => p.localizedInstruction('pt-BR'),
+      'languageRepairSystemPrompt': (p, g) =>
+          p.languageRepairSystemPrompt('pt-BR'),
+      'languageRepairUserPrompt': (p, g) =>
+          p.languageRepairUserPrompt('texto gerado', 'sometimes'),
       'cycleRitualToSpellIntention': (p, g) =>
           p.cycleRitualToSpellIntention('Nome', 'Corpo', ''),
       'spellGenerationSystemPrompt': (p, g) =>
@@ -172,6 +180,16 @@ void main() {
             reason: 'dreamUserPrompt [$lang]');
         expect(prompts.localizedInstruction('es-ES'), contains('es-ES'),
             reason: 'localizedInstruction [$lang]');
+        // A reescrita de idioma manda o texto inteiro de volta: perder o
+        // texto ali seria devolver uma leitura inventada no lugar da dela.
+        expect(
+            prompts.languageRepairUserPrompt(
+                'A Lua em Virgem pede foco.', 'sometimes, автокобранса'),
+            allOf(contains('A Lua em Virgem pede foco.'),
+                contains('sometimes, автокобранса')),
+            reason: 'languageRepairUserPrompt [$lang]');
+        expect(prompts.languageRepairSystemPrompt('es-ES'), contains('es-ES'),
+            reason: 'languageRepairSystemPrompt [$lang]');
       });
     });
   });

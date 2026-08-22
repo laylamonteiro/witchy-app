@@ -2,6 +2,10 @@ import '../../../../core/content/content_locale.dart';
 import '../../../../core/utils/mask.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:google_sign_in/google_sign_in.dart';
@@ -9,8 +13,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import 'auth_repository.dart';
 import '../../../../core/config/captcha_config.dart';
+import '../../../../core/config/google_signin_config.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/debug_log_service.dart';
+import '../services/google_one_tap.dart';
 
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
@@ -165,13 +171,77 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
 
+  /// A entrada com o Google DENTRO da página, sem redirecionar (web).
+  ///
+  /// O redirecionamento de página inteira deixa o Google no histórico da
+  /// aba, e o voltar acaba lá — nada no app impede isso, porque é navegação
+  /// para outra origem. Aqui a credencial é pedida ao Google na própria
+  /// página e trocada por sessão no Supabase: o navegador nunca sai.
+  ///
+  /// Devolve `null` quando não deu — sem chave configurada, script não
+  /// carregado, janelinha não exibida, credencial recusada. Nulo não é
+  /// erro: quem chama segue para o redirecionamento de sempre, que continua
+  /// sendo o caminho garantido.
+  Future<AuthResult?> _entrarSemSairDaAba(String? captchaToken) async {
+    if (!GoogleSignInConfig.isConfigured) return null;
+
+    try {
+      // O nonce vai CRU para o Supabase e PICADO para o Google, que o
+      // devolve dentro do token. É o que amarra o token a esta tentativa:
+      // um token interceptado não serve em outra.
+      final nonceCru = _nonceAleatorio();
+      final nonceHash = sha256.convert(utf8.encode(nonceCru)).toString();
+
+      final idToken = await pedirIdTokenDoGoogle(
+        clientId: GoogleSignInConfig.webClientId,
+        nonceHash: nonceHash,
+        limite: GoogleSignInConfig.limite,
+      );
+      if (idToken == null) {
+        await debugLog('AUTH', 'Google na página: sem credencial — redirecionando');
+        return null;
+      }
+
+      final response = await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        nonce: nonceCru,
+        captchaToken: captchaToken,
+      );
+      final supabaseUser = response.user;
+      if (supabaseUser == null) return null;
+
+      await debugLog('AUTH', 'Google na página: sessão criada sem sair da aba');
+      await _createProfile(
+        supabaseUser,
+        supabaseUser.userMetadata?['name']?.toString(),
+      );
+      return AuthResult.success(await _userFromSupabaseUser(supabaseUser));
+    } catch (e) {
+      // Qualquer tropeço aqui volta ao caminho conhecido em vez de virar
+      // uma tela de erro: o redirecionamento funciona.
+      await debugLog('AUTH', 'Google na página falhou ($e) — redirecionando');
+      return null;
+    }
+  }
+
+  /// Nonce de 32 caracteres a partir de bytes aleatórios seguros.
+  String _nonceAleatorio() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(24, (_) => random.nextInt(256));
+    return base64Url.encode(bytes);
+  }
+
   @override
   Future<AuthResult> signInWithGoogle({String? captchaToken}) async {
     try {
       await debugLog('AUTH', 'Iniciando Google Sign-In...');
 
-      // Para web, usar OAuth redirect
+      // Para web, primeiro tentar SEM sair da aba.
       if (kIsWeb) {
+        final semSair = await _entrarSemSairDaAba(captchaToken);
+        if (semSair != null) return semSair;
+
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
           // Para onde a usuária volta DEPOIS do login — a origem do próprio

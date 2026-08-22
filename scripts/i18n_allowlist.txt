@@ -22,6 +22,11 @@ lib/core/i18n/gender\.dart:
 # trânsitos); não são texto de interface — o idioma da resposta é imposto
 # pelos prompts localizados + instrução de idioma.
 lib/core/ai/ai_service\.dart:
+# Vocabulário-marcador da guarda de idioma das respostas da IA: são DADOS
+# de detecção (palavras que só existem em pt, en ou es), não texto exibido —
+# as três listas vivem juntas de propósito, para poderem ser comparadas.
+lib/core/ai/language_guard\.dart:
+
 # Console de diagnóstico dev-only (não é interface de usuário final).
 lib/core/diagnostic/diagnostic_page\.dart:
 lib/core/diagnostic/debug_logs_page\.dart:

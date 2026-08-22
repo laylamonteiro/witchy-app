@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/paged_reading.dart';
+import '../../../../core/widgets/reading_markdown.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/magical_profile_report.dart';
 import '../providers/astrology_provider.dart';
@@ -98,10 +99,18 @@ class MagicalProfileSectionPage extends StatefulWidget {
 }
 
 class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
+  /// A tela abre já tecendo, mas a chamada só pode partir DEPOIS do primeiro
+  /// frame (pedir a geração durante o build avisaria os ouvintes no meio do
+  /// build). Sem este sinalizador, esse intervalo de um frame caía no mesmo
+  /// ramo do "não deu certo": a tela nascia dizendo que falhou, antes de ter
+  /// tentado qualquer coisa.
+  bool _partindo = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.section == null && widget.sectionKey != null) {
+      _partindo = true;
       WidgetsBinding.instance.addPostFrameCallback((_) => _tecer());
     }
   }
@@ -109,20 +118,18 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
   Future<void> _tecer() async {
     final chave = widget.sectionKey;
     if (chave == null) return;
-    await context.read<AstrologyProvider>().generateProfileSection(
-          chave,
-          hasFullAccess: context.read<AuthProvider>().isPremiumEffective,
-        );
+    if (mounted) setState(() => _partindo = true);
+    try {
+      await context.read<AstrologyProvider>().generateProfileSection(
+            chave,
+            hasFullAccess: context.read<AuthProvider>().isPremiumEffective,
+          );
+    } finally {
+      if (mounted) setState(() => _partindo = false);
+    }
   }
 
-  Future<void> _tecerDeNovo() async {
-    final chave = widget.sectionKey;
-    if (chave == null) return;
-    await context.read<AstrologyProvider>().regenerateProfileSection(
-          chave,
-          hasFullAccess: context.read<AuthProvider>().isPremiumEffective,
-        );
-  }
+  Future<void> _tecerDeNovo() => _tecer();
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +140,8 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
         final chave = widget.sectionKey;
         final secao =
             chave == null ? widget.section : provider.profileSection(chave);
-        final tecendo = chave != null && provider.generatingSection == chave;
+        final tecendo =
+            _partindo || (chave != null && provider.isWeavingSection(chave));
 
         return Scaffold(
           backgroundColor: context.gc.background,
@@ -155,7 +163,12 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
               (false, final ProfileSection s) => PagedReading(
                   pages: [for (final slide in s.slides) _Pagina(slide: slide)],
                 ),
-              _ => _Falhou(onRetry: _tecer, message: provider.error),
+              _ => _Falhou(
+                  onRetry: _tecer,
+                  message: provider.lastFailureWasRateLimit
+                      ? l10n.aiVisionRateLimit
+                      : provider.error,
+                ),
             },
           ),
         );
@@ -228,6 +241,20 @@ class _Falhou extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: context.gc.textSecondary, height: 1.4),
             ),
+            // O motivo real, quando existe: "não deu" sozinho não deixa
+            // ninguém decidir se espera, se troca de rede ou se reclama.
+            if (message != null && message!.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: context.gc.textSecondary.withValues(alpha: 0.7),
+                  fontSize: 12,
+                  height: 1.35,
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: onRetry,
@@ -245,6 +272,12 @@ class _Falhou extends StatelessWidget {
   }
 }
 
+/// Uma página da leitura.
+///
+/// A primeira versão despejava o bloco inteiro como um parágrafo só de
+/// dezesseis linhas — texto sobre o mapa DELA, que ninguém lia até o fim.
+/// Aqui a página tem hierarquia: o subtítulo, a frase de destaque em
+/// evidência, e os parágrafos curtos com as posições do mapa realçadas.
 class _Pagina extends StatelessWidget {
   const _Pagina({required this.slide});
 
@@ -258,36 +291,43 @@ class _Pagina extends StatelessWidget {
         if (slide.title.isNotEmpty) ...[
           Text(
             slide.title,
+            // Duas linhas bastam para um subtítulo de 2 a 5 palavras; mais
+            // que isso empurrava o texto para fora da tela.
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.cinzelDecorative(
-              fontSize: 20,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
               color: context.gc.lilac,
+              height: 1.25,
             ),
           ),
-          const SizedBox(height: 6),
-          Divider(color: context.gc.lilac.withValues(alpha: 0.35)),
           const SizedBox(height: 10),
-        ],
-        MarkdownBody(
-          data: slide.body,
-          styleSheet: MarkdownStyleSheet(
-            p: TextStyle(
-              color: context.gc.softWhite,
-              height: 1.7,
-              fontSize: 16,
-            ),
-            listBullet: TextStyle(color: context.gc.lilac, fontSize: 16),
-            strong: TextStyle(
-              color: context.gc.lilac,
-              fontWeight: FontWeight.bold,
-            ),
-            em: TextStyle(
-              color: context.gc.softWhite,
-              fontStyle: FontStyle.italic,
+          Container(
+            width: 44,
+            height: 2,
+            decoration: BoxDecoration(
+              color: context.gc.lilac.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-        ),
+          const SizedBox(height: 18),
+        ],
+        ReadingMarkdown(slide.body, refine: _folhaDeEstilo),
+        // Respiro no fim: o mascote flutua sobre o canto de baixo e comia a
+        // última linha.
+        const SizedBox(height: 72),
       ],
     );
+  }
+
+  /// Os ajustes desta leitura sobre a base do grimório.
+  ///
+  /// A base já traz o destaque (`> `) como bloco lilás e o negrito colorido —
+  /// é ela que garante que nada caia no padrão claro do pacote. Aqui fica só
+  /// o que é desta tela: o respiro maior entre parágrafos, porque com blocos
+  /// colados dois parágrafos curtos voltam a parecer um só longo.
+  static MarkdownStyleSheet _folhaDeEstilo(MarkdownStyleSheet base) {
+    return base.copyWith(blockSpacing: 18);
   }
 }

@@ -23,6 +23,8 @@ import 'ai_prompts_pt.dart';
 class AiPrompts {
   const AiPrompts({
     required this.localizedInstruction,
+    required this.languageRepairSystemPrompt,
+    required this.languageRepairUserPrompt,
     required this.spellGenerationSystemPrompt,
     required this.cycleRitualToSpellIntention,
     required this.magicalProfileSystemPrompt,
@@ -63,6 +65,15 @@ class AiPrompts {
   /// Reforço de idioma injetado no início de todo prompt de sistema
   /// (recebe a tag do idioma atual, ex.: `pt-BR`).
   final String Function(String languageTag) localizedInstruction;
+
+  /// Persona da REESCRITA de idioma: recebe um texto já gerado que escapou
+  /// para outra língua e devolve o MESMO texto inteiro no idioma do app.
+  /// Usada só quando a `LanguageGuard` acha palavra intrusa na resposta.
+  final String Function(String languageTag) languageRepairSystemPrompt;
+
+  /// A mensagem da reescrita: o texto a corrigir e as palavras que
+  /// escaparam (lista separada por vírgula, como pista do que revisar).
+  final String Function(String texto, String intrusos) languageRepairUserPrompt;
 
   /// Persona geradora de feitiços (retorna JSON estrito).
   final String Function(Gender gender) spellGenerationSystemPrompt;
