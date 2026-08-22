@@ -28,6 +28,51 @@ E o corte do que publicar não é gosto: é **commodity vs. autoral**. O signifi
 
 ---
 
+## Os números reais
+
+Todas as revisões anteriores deste relatório foram escritas sem denominador. Consultei o Postgres de produção e a conta Stripe. **O diagnóstico muda de ordem**
+
+| | |
+|---|---|
+| Contas totais | **116** — a primeira em 14/07/2026 |
+| Criadas nos últimos 30 dias | 88 |
+| Com login nos últimos 30 dias / 7 dias | 42 / 11 |
+| E-mail confirmado | 60 de 116 (52%) |
+| `signup_platform` | **111 android · 0 web · 5 nulo** |
+| `plan` / `role` | 96 free · **20 lifetime/premium** · 1 admin — nenhum mensal, nenhum anual |
+| Assinaturas no Stripe (web) | **zero** |
+| Cobranças no Stripe (web) | **duas**, ambas de R$ 9,90 da "Leitura Ciclo do Mês", ambas da própria conta da dona (uma aprovada, uma recusada) |
+
+### O que isso derruba
+
+**A aposta do web tem zero usuárias.** Não é "o web converte pouco" — é que **nenhuma conta jamais nasceu no web**. Toda a estratégia de PWA como substituto do iOS, todo o cálculo de Web Billing, Pix no checkout web e Apple Sign-In para o público de iPhone está sendo discutida sobre um canal que ainda não produziu uma única pessoa. Não significa que a decisão esteja errada — significa que ela ainda não foi testada, e que otimizar o checkout desse canal antes de alguém chegar nele é resolver o problema errado
+
+**Os 20 "premium" são códigos beta, não pagantes.** Todos com `plan = lifetime`. Não há um único mensal ou anual gravado no servidor
+
+*Ressalva importante:* isso **não** prova que não há assinantes na Play. O `PaymentService().isPro` vem do RevenueCat em tempo de execução e **não** é persistido em `profiles` — uma assinante da Play apareceria como `free` nesta consulta. A receita da Play só é visível no painel do RevenueCat e no Play Console, que eu não alcanço. **É a pergunta número um a responder**
+
+**O `auth.audit_log_entries` está vazio.** A recomendação de "consultar o audit log para saber se algum iPhone entrou" não funciona neste projeto — a tabela não tem uma única linha. Corrijo isso onde escrevi
+
+### O que isso revela, e que é o achado mais grave de toda a auditoria
+
+**A sincronização é Premium** (`data_sync_service.dart:233` — `if (!isPremium) return false;`). Consequência: os dados das 96 contas gratuitas **nunca saem do aparelho**. Só 15 pessoas têm qualquer dado no servidor, e 12 delas são premium
+
+Ou seja: **ela é cega para 83% da própria base por decisão de arquitetura, não por falta de SDK**. Nenhuma consulta SQL vai resolver isso. Só duas coisas resolvem: instalar analytics, ou tornar a persistência básica gratuita
+
+### E o que isso mostra de bom
+
+Entre as 15 pessoas cujos dados chegam ao servidor, o engajamento é real: **média de 6,4 dias de check-in, máximo de 24 dias, e 13 das 15 ativas nos últimos 7 dias**. Só 2 pessoas registraram um único dia
+
+O produto segura quem entra. O funil de cadastro para cá é que está vazando — e a aquisição é o gargalo, não a retenção
+
+### A leitura correta, agora com denominador
+
+Com 116 contas e provavelmente pouquíssimos pagantes, **o problema é aquisição, e o SEO é tudo.** Isso confirma a Onda 3 como a onda que importa e rebaixa quase tudo que é otimização de conversão — não se otimiza o funil de um tráfego que não existe
+
+E rebaixa em particular: Apple Sign-In (US$ 99/ano + rotação semestral para um canal com zero usuárias), troca do motor de cobrança (para zero assinantes web) e teste de preço
+
+---
+
 ## O padrão que se repete: escrito e desligado
 
 As oito auditorias chegaram ao mesmo achado por caminhos diferentes. Não é código que falta escrever — é código escrito, testado, localizado em três idiomas, sem um fio ligando a ponta
@@ -220,7 +265,7 @@ Não é preciso. O plano muda de "provar que funciona uma vez" para "fazer o pro
 
 | Passo | Custo | O que responde |
 |---|---|---|
-| **Perguntar ao banco o que ele já sabe.** `auth.audit_log_entries` já grava `user_agent` e `ip_address` de cada evento de autenticação, no Postgres dela. Um `SELECT ... WHERE payload->>'user_agent' ILIKE '%iPhone%'` responde hoje se algum iPhone já entrou e por qual método | R$ 0 · 30 min | Existe público de iPhone? Ele consegue entrar? |
+| ~~Perguntar ao `auth.audit_log_entries`~~ — **feito: a tabela está vazia neste projeto.** A resposta veio de `signup_platform`: **0 contas web** | feito | Não existe público de iPhone convertido. Zero, não pouco |
 | **Corrigir o `scope` do manifest** (`"scope": "/"`, `start_url: "/"`) | R$ 0 · 10 min | Sem `scope`, o iOS decide sozinho o que é "dentro do app", e o redirect do OAuth é navegação fora da origem — sai do modo standalone |
 | **Instrumentar a tentativa de login**, com evento de INÍCIO e chave de correlação, cobrindo `CaptchaGate`, e-mail/senha e Google | R$ 0 · 3-5h | Distingue "ninguém tentou" de "tentou e sumiu no meio". O audit log só enxerga o que chegou ao servidor — captcha que não renderizou e redirect que não voltou morrem no cliente |
 | **Healthcheck externo por cron**: uma conta de teste fazendo login em produção de hora em hora, com alerta | R$ 0 · 2h | Pega a classe inteira de morte silenciosa: Supabase fora, chave errada num build, CSP, provider desconfigurado — e, no futuro, o segredo semestral da Apple |
@@ -320,7 +365,7 @@ Estimativas para **uma pessoa**. Cada onda tem critério de saída verificável
 | Item | O que fazer |
 |---|---|
 | **Ler a base que já existe** | SQL no Postgres: contas totais, ativas em 30/90 dias, assinantes ativos, retenção por coorte de mês, quebra por `signup_platform`, quantas contas nunca completaram a lição 1. Sem escrever código de app |
-| **Perguntar ao banco sobre o iPhone** | `SELECT ... FROM auth.audit_log_entries WHERE payload->>'user_agent' ILIKE '%iPhone%'` — o Supabase já grava user agent e IP de cada evento de auth. Responde hoje se algum iPhone entrou e por qual método, sem precisar de aparelho |
+| ~~Consultar o `auth.audit_log_entries`~~ | **Já feito, e a tabela está vazia.** A resposta veio por outro caminho: `signup_platform` mostra 0 contas web, ou seja, nenhum iPhone jamais completou cadastro |
 | **Corrigir o `scope` do manifest** | `"scope": "/"` e `start_url: "/"`. Dez minutos, e é o candidato número um a estar quebrando o retorno do OAuth em standalone no iOS |
 | **Mandar o roteiro de 5 minutos para uma amiga com iPhone** | Cobre o que nenhuma fazenda de dispositivos entrega barato: login dentro do ícone instalado e link aberto no navegador do Instagram |
 | **Rotacionar as chaves de IA** | Considerar as atuais comprometidas |
@@ -443,9 +488,74 @@ Login obrigatório, mas sem obstáculo desnecessário
 
 ---
 
+## O que falta para eu implementar sozinha
+
+Esta seção responde à pergunta direta: *o que ainda depende de você?*
+
+### A. Já resolvido — não bloqueia mais
+
+Consultei o Postgres e a Stripe nesta sessão. **O bloqueio "ler a base primeiro", que abria a Onda 0, está fechado.** Contas, plataforma, planos, coortes, engajamento e receita web estão na seção *Os números reais*
+
+### B. Bloqueia de verdade — só você tem acesso
+
+| O que | Onde | Por que só você |
+|---|---|---|
+| **Existe assinante pagante na Play?** | Painel do RevenueCat + Play Console | É *a* pergunta que falta. O `isPro` do RevenueCat não é persistido em `profiles`, então a receita da Play é invisível pelo banco. Sem isso não dá para saber se o problema é aquisição, ativação ou conversão |
+| **O SMTP do Supabase é próprio ou embutido?** | Authentication → SMTP Settings | Configuração de painel, não versionada. Decide se OTP e win-back por e-mail são possíveis hoje ou exigem trabalho antes |
+| **O Turnstile é exigido no servidor?** | Auth → Attack Protection | Se estiver, remover o gate no cliente **quebra** o login em vez de simplificar. Também: `grimoriodebolso.app` está no Hostname Management do Turnstile? |
+| **O Pix aparece no checkout de assinatura da Play?** | Play Console + checkout real com conta BR | 20 minutos. Se sim, "mais formas de pagamento" vira mudança de copy |
+| **DNS do domínio** | Cloudflare (ou onde estiver) | SPF, DKIM, DMARC para SMTP próprio, e `assetlinks.json` para App Links |
+| **Conta de analytics** | PostHog ou Firebase | Alguém precisa criar o projeto e me dar a chave |
+| **Apple Developer Program** | US$ 99/ano | Compra, verificação de identidade (leva dias), Team ID e a chave `.p8` |
+| **AdMob** | Painel | Alterar teto e cooldown de intersticial |
+
+### C. Decisões suas — eu não devo tomar sozinha
+
+Cada uma tem consequência de receita, de dado sensível ou de posicionamento:
+
+| Decisão | Recomendação minha | Por que é sua |
+|---|---|---|
+| **Tornar a persistência básica gratuita** | **Sim** — é o que mais muda | Você é cega para 83% da base por causa disso, e o iPhone em aba perde o diário em 7 dias pelo ITP. Mas remove um item de venda do Premium |
+| **Inverter o paywall** (referência grátis, prática paga) | Sim | Muda o que você vende. Destrava o SEO da Onda 3, que é a onda que importa com 116 contas |
+| **Analytics: PostHog ou Firebase** | PostHog (funil e retenção prontos) | Dado de usuária sob LGPD; a escolha do processador é sua |
+| **Consentimento destacado para dado sensível** (LGPD art. 11) | Fazer | Decisão jurídica, não técnica |
+| **Intersticial de 10/dia → 2-3 + cooldown 15 min** | Fazer | Troca receita de anúncio hoje por conversão amanhã |
+| **Trial de 7 dias no anual** | Fazer, depois da Onda 3 | Mexe em receita |
+| **Tirar "confirmar senha" e o checkbox de termos** | Fazer (aceite implícito com log) | Muda o contrato de aceite |
+| **Apple Sign-In** | **Adiar** — zero contas web hoje | US$ 99/ano + rotação semestral perpétua para um canal sem usuárias |
+| **Trocar o motor de cobrança do web** | **Não agora** — zero assinantes web | Nada a migrar, nada a otimizar |
+| **Publicar quais conteúdos como HTML** | 78 cartas, 24 runas, roda do ano, fases lunares, 1 lição por trilha | É o seu conteúdo e a sua margem |
+| **Preço** | Congelar | Sem tráfego, é chute |
+
+### D. Posso fazer agora, sem você
+
+Sem nenhuma credencial nova, sem decisão pendente, e sem tocar em receita:
+
+**Correções de dano** — Escrita Livre com `AutomaticKeepAliveClientMixin` + autosave · `UnsavedChangesGuard` nos 8 formulários · contraste do tema claro + teste bloqueante iterando `AppThemes.all`
+
+**Higiene de PWA** — `scope`, `id`, `lang`, `screenshots`, `start_url: "/"` no manifest · `apple-mobile-web-app-capable` e `apple-touch-startup-image` no `index.html`
+
+**Correções de justiça no Free** — rito do dia filtrado por plano (hoje 2 de cada 6 dias são impossíveis de fechar) · carência de anúncio na primeira sessão · atalhos padrão que a pessoa consegue terminar
+
+**Coisas que existem e não aparecem** — exibir `bestStreak` · atualizar o XP ao vivo no anel · busca nos 5 Diários com `removeAccents` · busca de feitiços insensível a acento · reordenar os cards do Seu Dia
+
+**Limpeza** — remover os product ids iOS mortos de `revenuecat_config.dart` e o `signInWithFacebook()` que só retorna erro
+
+**Instrumentação** — a tabela `login_attempts` e o serviço que grava `{método, plataforma, display-mode, estágio, resultado, errorCode}` nos três caminhos de login. *A migração roda no Postgres de produção, então peço seu aval antes de aplicar — o código eu escrevo sem depender disso*
+
+### E. O que eu faria primeiro, se você disser "vai"
+
+1. O pacote da letra **D** inteiro, num PR só — nada ali depende de decisão sua
+2. Em paralelo, você responde **uma** pergunta: *há assinante pagante na Play?*
+3. Com a resposta, decidimos entre dobrar em aquisição (SEO da Onda 3) ou consertar conversão
+
+---
+
 ## Resposta curta
 
-O que falta não é conteúdo nem capricho. Falta, nesta ordem: **ler a base que já existe**, **fazer a porta abrir**, **ser achável**, **cobrar pela coisa certa**, **usar o e-mail que já se tem**
+O que falta não é conteúdo nem capricho. E agora que a base foi lida, a ordem encurtou: com **116 contas, nenhuma vinda do web e nenhum assinante pagante visível no servidor**, o gargalo é **aquisição** — e tudo que é otimização de conversão pode esperar
+
+Falta, nesta ordem: **ser achável**, **fazer a porta abrir**, **enxergar as 96 contas gratuitas que hoje são invisíveis**, e só então **cobrar pela coisa certa**
 
 As duas decisões de produto não atrapalham nenhuma delas. A do login obrigatório entrega o e-mail de 100% da base, que é o canal de retorno mais valioso que este app pode ter. A de não fazer iOS obriga o site a virar produto — e é exatamente ali que mora o modo convidado que o app não vai ter
 
