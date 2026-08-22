@@ -202,9 +202,83 @@ Este foi o pedaço da pesquisa que mais errou, e ele erra dos dois lados:
 
 - **A taxa reduzida do Google Play não vale aqui.** O Billing Choice Program (10% de serviço) entrou em 30/06/2026 **apenas para EUA, EEE e Reino Unido**. Brasil e o resto do mundo ficam nas taxas antigas — **15% em assinaturas — até 30/09/2027**. A comparação correta hoje é Play 15% contra ~3,9% no web (Stripe 2,9% + US$ 0,30; RevenueCat grátis até US$ 2.500 MTR): **~11 pontos**, não ~6. Em R$ 119,90/ano, da ordem de R$ 12 por assinante
 - **Mas esses 11 pontos não podem ser capturados dentro do app Android.** Billing alternativo com escolha do usuário também não existe no Brasil até setembro de 2027. Empurrar a usuária Android para o checkout web não é ganho de margem — é risco de suspensão do único canal nativo que existe. **Play Billing é o único caminho sancionado dentro do app Android.** O Web Billing serve iOS, desktop, e-mail e busca
-- **Pix não está disponível no RevenueCat Web Billing.** Ele expõe só cartão, Apple Pay e Google Pay. Rodar sobre a Stripe não significa poder ligar os métodos locais dela. Pix exige checkout Stripe direto — a Stripe adicionou recorrência por Pix Automático em 22/04/2026 — e, portanto, um webhook Stripe → Supabase → concessão de entitlement, porque hoje o RevenueCat é a fonte única de verdade do `isPremiumEffective`. **Isso é projeto próprio, não configuração de painel** — e uma falha nele produz uma assinante que pagou e não tem Premium, invisível num app sem crash reporting
+- **Pix não está disponível no RevenueCat Web Billing.** Ele expõe exatamente cartão, Apple Pay e Google Pay, e **não há como habilitar os métodos locais da Stripe por baixo** — a conta Stripe é da RevenueCat, não dela. Ver a seção *Meios de pagamento* adiante: o caminho certo não é webhook próprio, é trocar o motor de cobrança do web
 
 Num mercado onde o Pix domina e a recorrência por cartão falha muito, a compra avulsa **Leitura do Ciclo** por Pix é provavelmente o produto de maior conversão disponível — e é o único formato em que Pix casa naturalmente
+
+---
+
+## Três decisões pedidas: sem iPhone, login com Apple, mais pagamentos
+
+Esta seção responde a três pedidos feitos depois da revisão 2. Ela também **corrige um erro meu**: escrevi que o RevenueCat é a fonte única de verdade do `isPremiumEffective`. Não é — `auth_provider.dart:89-92` é um OR de três fontes (`PaymentService().isPro || _currentUser.isPremium || plan == lifetime`), e `restorePurchases()` já está ligado à paywall em `subscription_page.dart:728` e `:768`. Isso reduz o tamanho de vários riscos abaixo
+
+### 1. Validar o iPhone sem ter um iPhone
+
+Não é preciso. O plano muda de "provar que funciona uma vez" para "fazer o produto contar todo dia", e sai de graça
+
+**O suspeito número um mudou — e é pior do que eu disse.** Eu apontei o OAuth do Google. Mas `login_page.dart:569-573` mostra que **o fluxo de e-mail e senha também passa pelo `CaptchaGate.resolve`**, e lança se o token vier `null`. Ou seja: as duas portas do app têm a mesma fechadura, e essa fechadura é uma WebView que o próprio código admite falhar em app recém-instalado. Não existe "caminho alternativo" hoje — existe um gargalo único para 100% da base
+
+| Passo | Custo | O que responde |
+|---|---|---|
+| **Perguntar ao banco o que ele já sabe.** `auth.audit_log_entries` já grava `user_agent` e `ip_address` de cada evento de autenticação, no Postgres dela. Um `SELECT ... WHERE payload->>'user_agent' ILIKE '%iPhone%'` responde hoje se algum iPhone já entrou e por qual método | R$ 0 · 30 min | Existe público de iPhone? Ele consegue entrar? |
+| **Corrigir o `scope` do manifest** (`"scope": "/"`, `start_url: "/"`) | R$ 0 · 10 min | Sem `scope`, o iOS decide sozinho o que é "dentro do app", e o redirect do OAuth é navegação fora da origem — sai do modo standalone |
+| **Instrumentar a tentativa de login**, com evento de INÍCIO e chave de correlação, cobrindo `CaptchaGate`, e-mail/senha e Google | R$ 0 · 3-5h | Distingue "ninguém tentou" de "tentou e sumiu no meio". O audit log só enxerga o que chegou ao servidor — captcha que não renderizou e redirect que não voltou morrem no cliente |
+| **Healthcheck externo por cron**: uma conta de teste fazendo login em produção de hora em hora, com alerta | R$ 0 · 2h | Pega a classe inteira de morte silenciosa: Supabase fora, chave errada num build, CSP, provider desconfigurado — e, no futuro, o segredo semestral da Apple |
+| **O roteiro de 5 minutos para uma amiga com iPhone** | R$ 0 | Cobre os dois cenários que nenhuma fazenda de dispositivos entrega barato: login **dentro do ícone instalado** e link aberto no navegador do Instagram |
+
+Fazenda de dispositivos só depois, e só se o dado apontar falha específica: **TestingBot** dá 60 minutos grátis com aparelho real e sessão manual, sem cartão. BrowserStack e Sauce Labs dão ~30 min de trial. Sauce Labs pago (~US$ 199/mês) é caro demais para este caso. Se um dia precisar do Simulador do Xcode: Mac mini M4 na Scaleway a €0,22/h com mínimo de 24h ≈ **€5,28**
+
+Duas ressalvas honestas: um "não entrou" numa fazenda pode ser IP de datacenter disparando desafio de segurança do Google — conserta-se um bug que não existe. E instrumentar só mede quem chega: se nenhuma usuária de iPhone abrir o app, o dado fica mudo e a conclusão "está tudo bem" é falsa
+
+*(Tentei sondar o app ao vivo daqui: o WebKit do Playwright está bloqueado no allowlist do proxy, e `grimoriodebolso.app` responde 403 no CONNECT. Sondagem remota está descartada neste ambiente.)*
+
+### 2. Login com Apple
+
+**É possível sem app iOS**, e o caminho é curto. Um App ID no portal com a capability ligada, um Services ID como `client_id`, Domains e Return URLs apontando para o Supabase, e no código `signInWithOAuth(OAuthProvider.apple)` — **~20 linhas, zero pacotes novos**. O `form_post` da Apple vai para `https://<ref>.supabase.co/auth/v1/callback`, não para a página: o app só recebe um GET com `?code=`, a mesma forma do fallback do Google que já roda
+
+Não usar o pacote `sign_in_with_apple` na web: a própria documentação do Supabase desaconselha, porque ele exige script no `index.html` e endpoint de servidor próprio. E não usar o caminho popup: popup em PWA instalado no iOS frequentemente não abre, e há relatos de `window.opener` virar `null` em WKWebView desde o iOS 17.5
+
+**O que custa de verdade:**
+
+| Item | Valor |
+|---|---|
+| Apple Developer Program | **US$ 99/ano, obrigatório.** A isenção existe mas exclui explicitamente quem vende bens ou serviços digitais |
+| Rotação do segredo | **A cada 6 meses, para sempre.** A Apple rejeita client secret com `exp` acima de 15.777.000 s. Sem rotação, **o login com Apple morre em silêncio para todo mundo** |
+| Implementação | ~meio dia (20 linhas + botão em 2 telas + 8 chaves nos 4 ARBs) |
+| Pré-requisitos | SMTP próprio e vinculação de identidades — ver abaixo |
+
+**Três coisas que precisam estar resolvidas antes do botão existir:**
+
+1. **O `scope` e a prova de que o redirect volta.** A Apple usa o mesmo mecanismo de redirect que pode já estar quebrado para o Google em standalone. Entregar um segundo botão pelo mesmo cano antes de consertar o cano é dobrar a aposta num terreno não verificado
+2. **SMTP próprio com o domínio registrado na Apple.** Com Hide My Email, o app recebe `@privaterelay.appleid.com`, e **o relay só entrega se o domínio remetente estiver registrado em "Sign in with Apple for Email Communication" com SPF batendo**. Fonte não registrada = bounce. E o canal pode morrer em massa sem aviso: em 09/08/2025 um desenvolvedor viu ~20.000 endereços de relay começarem a dar hard bounce da noite para o dia
+3. **Vinculação de identidades por conta, não por e-mail.** O Supabase só vincula automaticamente quando os e-mails batem — e com Hide My Email eles **nunca** batem. O tamanho real do risco é menor do que a pesquisa pintou, porque `restorePurchases()` já existe e resolve quem comprou pela Play; mas para quem comprou pelo **RevenueCat Web Billing não há recibo de dispositivo para restaurar**
+
+**O cenário que nenhuma frente da pesquisa viu, e que é o pior possível neste produto:** a pessoa entra com Apple + Hide My Email, a Apple para de encaminhar, e ela fica sem senha (entrou por social), sem OTP e sem reset. Num app de login obrigatório e diário íntimo, **perder o acesso é perder o conteúdo**. Mitigação: pedir um e-mail de contato a quem entrar com relay, e manter e-mail+senha sempre visível
+
+**Minha recomendação: adiar, não descartar.** Compre o dado antes do compromisso perpétuo, e escreva o critério agora: *se depois de 60 dias de instrumentação a fatia de tentativas de login vinda de iPhone for relevante, a Apple entra.* O que **vale fazer já**, independente da Apple, é o SMTP próprio — ele serve a quatro coisas: sai do limite do SMTP embutido, viabiliza OTP, melhora a entrega de confirmação e reset hoje, e é pré-requisito absoluto do relay
+
+*Antes de tudo isso, um item de 5 minutos:* abrir **Authentication → SMTP Settings** no painel do Supabase e ver se já existe SMTP próprio configurado. Isso é configuração de painel e não aparece no repositório — a pesquisa afirmou que não existe sem poder verificar
+
+### 3. Mais formas de pagamento
+
+**A jogada de melhor retorno pode custar zero, e começa com uma verificação de 20 minutos.** A página oficial do Google Play para o Brasil diz que o Pix serve para "comprar apps e conteúdo digital e **renovar assinaturas automaticamente**". Se isso valer no checkout real do produto de assinatura, o canal que traz a maior parte da receita **já aceita Pix** — e o trabalho vira mudar a copy da paywall e da ficha da loja, sem integrar nada
+
+Verificar antes de anunciar: uma página de ajuda genérica não é contrato de comportamento no checkout, e prometer "aceitamos Pix" sem aceitar gera reembolso e avaliação ruim
+
+**O que está fechado:**
+
+- **Dentro do app Android brasileiro, Play Billing é o único caminho até 30/09/2027.** O Billing Choice liberou EEE/Reino Unido/EUA em 30/06/2026, Austrália em 30/09/2026, Japão e Coreia em 31/12/2026 — o Brasil fica por último
+- **RevenueCat Web Billing expõe exatamente três métodos:** cartão, Apple Pay e Google Pay. Não há Pix, não há boleto, e **não dá para habilitar os métodos locais da Stripe por baixo** — a conta Stripe é da RevenueCat
+- **Stripe com conta brasileira aceita Pix só como pagamento avulso, e o Pix é *invite-only* para contas BR.** Pix Automático **não existe** para conta brasileira. O produto da Stripe que resolveria isso (Managed Payments) não atende empresa no Brasil
+- **Boleto** é o oposto: funciona recorrente na Stripe BR, mas sem Customer Portal, sem Radar, confirmando em até 1 dia útil, liquidando em T+2 e exigindo CPF
+
+**O caminho certo, se quiser mais métodos no web, é trocar o motor — não construir webhook.** O RevenueCat Web tem integrações nativas com **Paddle Billing** (Pix avulso, boleto, PayPal, cartões, carteiras; *merchant of record*, o que resolve imposto nos builds en/es; 5% + US$ 0,50) e com **Stripe Billing usando a conta dela** (com os métodos que ela habilitar). Nos dois casos **o entitlement continua sendo do RevenueCat** — nenhuma segunda fonte de verdade
+
+Construir webhook próprio + tabela de entitlement + OR no cliente é a única opção que cria de fato uma segunda fonte de verdade, e é a que mais quebra em silêncio num app sem crash reporting. Descartar
+
+**Duas correções sobre o Pix que circulam erradas:** ele **tem** estorno forçado e **você não pode contestar** — a Stripe remove os fundos da conta quando o parceiro aceita a devolução. O argumento de margem continua de pé; o de "zero chargeback" cai. E **CPF**: Paddle e boleto exigem CPF no checkout. Um app de diário íntimo que passa a guardar CPF muda de categoria de risco sob a LGPD — o que é um argumento real a favor do *merchant of record*, onde o dado fica com ele
+
+**Ordem sugerida:** verificar o Pix na Play (20 min) → se confirmar, mudar a copy e parar por aqui → se não confirmar, medir quanta gente chega à paywall do web e desiste, e só então escolher **um** motor. Antes de qualquer migração, olhar no painel do RevenueCat quantas assinaturas web existem hoje: com três, é um e-mail; com trezentas, é projeto próprio
 
 ---
 
@@ -246,10 +320,12 @@ Estimativas para **uma pessoa**. Cada onda tem critério de saída verificável
 | Item | O que fazer |
 |---|---|
 | **Ler a base que já existe** | SQL no Postgres: contas totais, ativas em 30/90 dias, assinantes ativos, retenção por coorte de mês, quebra por `signup_platform`, quantas contas nunca completaram a lição 1. Sem escrever código de app |
-| **Testar o login num iPhone real** | PWA na Tela de Início **e** dentro do navegador embutido do Instagram. É binário: se quebrar, a aposta do web vale zero |
+| **Perguntar ao banco sobre o iPhone** | `SELECT ... FROM auth.audit_log_entries WHERE payload->>'user_agent' ILIKE '%iPhone%'` — o Supabase já grava user agent e IP de cada evento de auth. Responde hoje se algum iPhone entrou e por qual método, sem precisar de aparelho |
+| **Corrigir o `scope` do manifest** | `"scope": "/"` e `start_url: "/"`. Dez minutos, e é o candidato número um a estar quebrando o retorno do OAuth em standalone no iOS |
+| **Mandar o roteiro de 5 minutos para uma amiga com iPhone** | Cobre o que nenhuma fazenda de dispositivos entrega barato: login dentro do ícone instalado e link aberto no navegador do Instagram |
 | **Rotacionar as chaves de IA** | Considerar as atuais comprometidas |
 
-**Critério de saída:** você sabe se o problema é aquisição ou conversão, e se a porta do iPhone abre
+**Critério de saída:** você sabe se o problema é aquisição ou conversão, e se algum iPhone já conseguiu entrar
 
 ### Onda 1 — Parar o sangramento · ~1 a 2 semanas
 
@@ -273,6 +349,8 @@ Estimativas para **uma pessoa**. Cada onda tem critério de saída verificável
 | **Ligar os hooks órfãos** — o de bloqueio no boot, o `OfferEngine` emitindo remoto, o pagamento emitindo start/complete/cancel. Dá o funil completo em menos de um dia | baixo |
 | Crash reporting nos 4 pontos que já capturam tudo, com versão, locale, plano e breadcrumb do `DebugLogService` | baixo |
 | Instrumentar o específico da aposta web: modo de exibição (standalone vs aba), plataforma, instalação da PWA | baixo |
+| **Instrumentar a tentativa de login**, com evento de INÍCIO e chave de correlação, cobrindo o `CaptchaGate`, e-mail/senha e Google. O audit log do Supabase só vê o que chegou ao servidor — captcha que não renderizou morre no cliente | médio |
+| **Healthcheck externo por cron**: conta de teste logando em produção de hora em hora, com alerta. Pega a morte silenciosa que a instrumentação não pega, porque ela só mede quem chega | baixo |
 | Remote config pobre: tabela `app_config` no Supabase lida no boot com fallback nas constantes | médio |
 
 **Critério de saída:** dá para ver D7, o funil de paywall por origem, e quanto do público é web
@@ -298,7 +376,9 @@ Login obrigatório, mas sem obstáculo desnecessário
 
 | Item | Esforço |
 |---|---|
-| Tirar o Turnstile da frente do botão do Google (conferir antes se está exigido no painel do Supabase) | baixo |
+| **Tirar o Turnstile do caminho crítico.** Ele barra as DUAS portas: `login_page.dart:569-573` mostra que e-mail e senha também passam pelo `CaptchaGate`. Conferir antes se está exigido no painel do Supabase e se `grimoriodebolso.app` está no Hostname Management do Turnstile | baixo |
+| **Login por OTP de 6 dígitos** (`signInWithOtp` + `verifyOTP`) como caminho que não pode quebrar: um POST e um input, sem popup, sem sair da origem — funciona igual em aba, em standalone e dentro do Instagram. Exige SMTP próprio | médio |
+| **SMTP próprio** com `grimoriodebolso.app` (SPF, DKIM, DMARC). Serve a quatro coisas de uma vez e é pré-requisito de OTP e de qualquer login com Apple | médio |
 | Reduzir o cadastro a duas opções e um campo: "Continuar com Google" e e-mail com código de 6 dígitos. Eliminar senha, confirmar senha e o checkbox | médio |
 | **Termos com aceite implícito** (texto sob o botão, com log de versão e timestamp) **mas caixa própria e destacada para dado sensível** — convicção religiosa é dado sensível pelo art. 5º II da LGPD, e o art. 11 exige consentimento específico | médio |
 | Onboarding de personalização **antes** da parede de conta, **no Android**: "o que te trouxe até aqui" com as 9 trilhas como chips + a carta do dia entregue ali. Na web esse papel cabe à página de conteúdo — seis telas sobre um canvas em branco competem com o tempo de carregamento | médio |
