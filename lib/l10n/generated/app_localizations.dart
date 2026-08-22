@@ -3084,17 +3084,23 @@ abstract class AppLocalizations {
   /// **'Nome completo'**
   String get numFullName;
 
-  /// No description provided for @numChooseBirthDate.
+  /// No description provided for @numBirthDateLabel.
   ///
   /// In pt, this message translates to:
-  /// **'Escolher data de nascimento'**
-  String get numChooseBirthDate;
+  /// **'Data de nascimento'**
+  String get numBirthDateLabel;
 
-  /// No description provided for @numBirthPrefix.
+  /// No description provided for @numBirthDateHint.
   ///
   /// In pt, this message translates to:
-  /// **'Nascimento'**
-  String get numBirthPrefix;
+  /// **'dd/mm/aaaa'**
+  String get numBirthDateHint;
+
+  /// No description provided for @numBirthDateInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data inválida'**
+  String get numBirthDateInvalid;
 
   /// No description provided for @numCalculate.
   ///

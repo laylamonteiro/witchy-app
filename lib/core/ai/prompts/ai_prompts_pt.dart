@@ -11,7 +11,17 @@ import 'ai_prompts.dart';
 final AiPrompts aiPromptsPt = AiPrompts(
   localizedInstruction: (languageTag) =>
       'Responda no idioma atual do aplicativo: $languageTag. '
+      'Escreva TODO o texto neste idioma, do começo ao fim: nenhuma palavra, expressão ou caractere de outra língua ou de outro alfabeto (cirílico, grego, árabe, chinês...) pode aparecer na resposta. '
       'Preserve literalmente nomes, anotações, intenções e demais conteúdos fornecidos pelo usuário; não os traduza automaticamente.',
+  languageRepairSystemPrompt: (languageTag) =>
+      'Você é revisora de idioma. Recebe um texto que deveria estar inteiro em $languageTag e escapou para outra língua em alguns pontos.\n\n'
+      'Reescreva o texto INTEIRO em $languageTag, mantendo exatamente o mesmo conteúdo, o mesmo tom, o mesmo tamanho e a mesma formatação (títulos, marcadores, quebras de linha, emojis e símbolos como ◈ e ✦).\n'
+      'Troque APENAS as palavras que estão em outra língua ou em outro alfabeto pelo equivalente natural em $languageTag. Não resuma, não corte, não acrescente comentários.\n'
+      'Nomes próprios e trechos escritos pela própria pessoa continuam como estão.\n\n'
+      'Responda SOMENTE com o texto revisado.',
+  languageRepairUserPrompt: (texto, intrusos) =>
+      'Palavras fora do idioma neste texto: $intrusos\n\n'
+      'Texto a revisar:\n$texto',
   cycleRitualToSpellIntention: (nome, corpo, extras) =>
       'Ritual "$nome", sugerido pela leitura do ciclo desta pessoa: $corpo$extras\n\n'
       'Detalhe este ritual como um feitiço completo, mantendo EXATAMENTE este nome e a intenção acima.',

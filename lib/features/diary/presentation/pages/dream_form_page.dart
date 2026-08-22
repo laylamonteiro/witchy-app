@@ -90,6 +90,10 @@ class _DreamFormPageState extends State<DreamFormPage> {
                   initialDate: _selectedDate,
                   firstDate: DateTime(2000),
                   lastDate: DateTime.now(),
+                  // Só o calendário: o modo de digitação do seletor pede o
+                  // teclado `datetime`, que em vários Androids vem sem a
+                  // barra — e a data digitada nunca fecha o formato.
+                  initialEntryMode: DatePickerEntryMode.calendarOnly,
                 );
                 if (date != null) {
                   setState(() {
