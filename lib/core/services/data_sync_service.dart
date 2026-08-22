@@ -361,7 +361,7 @@ class DataSyncService {
     var downloaded = 0;
     var conflictsResolved = 0;
     try {
-      final tableName = _getTableName(entity);
+      final tableName = supabaseTableFor(entity);
       final localTable = _getLocalTableName(entity);
 
       final conflicts = <SyncConflict>[];
@@ -524,7 +524,7 @@ class DataSyncService {
       throw ArgumentError('Escolha uma resolução válida');
     }
 
-    final tableName = _getTableName(conflict.entity);
+    final tableName = supabaseTableFor(conflict.entity);
     final localTable = _getLocalTableName(conflict.entity);
 
     await _resolveConflict(conflict, resolution, tableName, localTable);
@@ -559,8 +559,14 @@ class DataSyncService {
     return DateTime.fromMillisecondsSinceEpoch(0);
   }
 
-  /// Obtém o nome da tabela no Supabase
-  String _getTableName(SyncEntity entity) {
+  /// O nome da tabela no Supabase para cada entidade sincronizável.
+  ///
+  /// Pública e estática porque a exclusão de conta deriva desta lista as
+  /// tabelas que precisa varrer. A lista que ela mantinha à mão ficou cinco
+  /// entidades atrás do que o app sincroniza, e dado íntimo sobreviveu à
+  /// exclusão da conta — derivando daqui, entidade nova nasce coberta nos
+  /// dois lugares.
+  static String supabaseTableFor(SyncEntity entity) {
     switch (entity) {
       case SyncEntity.spells:
         return SupabaseTables.spells;
@@ -782,7 +788,7 @@ class DataSyncService {
   String localTableForTest(SyncEntity entity) => _getLocalTableName(entity);
 
   @visibleForTesting
-  String remoteTableForTest(SyncEntity entity) => _getTableName(entity);
+  String remoteTableForTest(SyncEntity entity) => supabaseTableFor(entity);
 
   @visibleForTesting
   Map<String, dynamic> toRemoteForTest(
@@ -1015,7 +1021,7 @@ class DataSyncService {
     if (!await cloudSyncEnabled) return;
 
     try {
-      final tableName = _getTableName(entity);
+      final tableName = supabaseTableFor(entity);
       final localTable = _getLocalTableName(entity);
       if (!_isSyncableItem(localTable, item)) return;
       await _uploadItem(tableName, item);
@@ -1037,7 +1043,7 @@ class DataSyncService {
 
     try {
       await _supabase!
-          .from(_getTableName(entity))
+          .from(supabaseTableFor(entity))
           .delete()
           .eq('user_id', currentUserId!)
           .neq('date', date);
@@ -1055,7 +1061,7 @@ class DataSyncService {
     if (!await cloudSyncEnabled) return;
 
     try {
-      final tableName = _getTableName(entity);
+      final tableName = supabaseTableFor(entity);
       await _supabase!
           .from(tableName)
           .delete()
@@ -1085,7 +1091,7 @@ class DataSyncService {
       final entityErrors = <String, String>{};
       for (final entity in SyncEntity.values) {
         try {
-          final tableName = _getTableName(entity);
+          final tableName = supabaseTableFor(entity);
           final localTable = _getLocalTableName(entity);
           final remoteData = await _getRemoteData(tableName);
           downloadedByTable[localTable] =
@@ -1146,7 +1152,7 @@ class DataSyncService {
 
       for (final entity in SyncEntity.values) {
         try {
-          final tableName = _getTableName(entity);
+          final tableName = supabaseTableFor(entity);
           final localTable = _getLocalTableName(entity);
 
           final db = await _db.database;

@@ -7,7 +7,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, kIsWeb, TargetPlatform, visibleForTesting;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
@@ -16,6 +16,7 @@ import '../../../../core/config/captcha_config.dart';
 import '../../../../core/config/google_signin_config.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/debug_log_service.dart';
+import '../../../../core/services/data_sync_service.dart';
 import '../services/google_one_tap.dart';
 
 AppLocalizations get _l10n =>
@@ -474,8 +475,20 @@ class SupabaseAuthRepository implements AuthRepository {
         return AuthResult.error(_l10n.authErrNoUser);
       }
 
-      // Deletar dados do usuário das tabelas
-      await _deleteUserData(user.id);
+      final naoApagadas = await _deleteUserData(user.id);
+
+      // Sair da conta com dado ainda no servidor esconderia a falha: a
+      // pessoa pediu para sumir, veria a tela de despedida e o grimório
+      // continuaria lá. Sem sessão ela também não conseguiria tentar de
+      // novo — RLS exige auth.uid(). Então a sessão só cai quando o
+      // servidor está limpo.
+      if (naoApagadas.isNotEmpty) {
+        await debugLog(
+          'AUTH',
+          'Exclusao de conta incompleta — sobrou: ${naoApagadas.join(", ")}',
+        );
+        return AuthResult.error(_l10n.authErrDeleteAccountIncomplete);
+      }
 
       // Chamar função Edge para deletar o usuário Auth
       // await _supabase.functions.invoke('delete-user');
@@ -483,37 +496,81 @@ class SupabaseAuthRepository implements AuthRepository {
       await signOut();
       return AuthResult.success(UserModel.defaultUser());
     } catch (e) {
-      return AuthResult.error('Erro ao deletar conta: $e');
+      await debugLog('AUTH', 'Erro ao excluir conta: $e');
+      return AuthResult.error(_l10n.authErrDeleteAccount);
     }
   }
 
-  Future<void> _deleteUserData(String userId) async {
-    // Deletar dados de todas as tabelas do usuário
-    final tables = [
-      SupabaseTables.spells,
-      SupabaseTables.dreams,
-      SupabaseTables.desires,
-      SupabaseTables.gratitudes,
-      SupabaseTables.affirmations,
-      SupabaseTables.dailyRituals,
-      SupabaseTables.ritualLogs,
-      SupabaseTables.sigils,
-      SupabaseTables.birthCharts,
-      SupabaseTables.magicalProfiles,
-      SupabaseTables.runeReadings,
-      SupabaseTables.pendulumConsultations,
-      SupabaseTables.oracleReadings,
-      SupabaseTables.dailyMagicalWeather,
-      SupabaseTables.profiles,
-    ];
+  /// As tabelas que a exclusão de conta precisa varrer, na ordem em que são
+  /// apagadas.
+  ///
+  /// Derivada de [SyncEntity] de propósito: a lista escrita à mão que existia
+  /// aqui cobria 15 tabelas enquanto o app sincronizava 20. Ficavam no
+  /// servidor depois de a pessoa excluir a conta a escrita livre, as leituras
+  /// de ciclo, as tiragens de tarô, os check-ins, o progresso da trilha e as
+  /// anotações da enciclopédia. Derivando do enum, entidade nova nasce
+  /// coberta.
+  ///
+  /// `profiles` vem por último e fora do laço: a chave dela é `id`, não
+  /// `user_id`, e enquanto a linha existe um erro no meio do laço ainda é
+  /// recuperável — sem ela a pessoa perde a sessão e o resto vira lixo
+  /// inalcançável.
+  @visibleForTesting
+  static List<String> tabelasDaExclusaoDeConta() => [
+        for (final entity in SyncEntity.values)
+          DataSyncService.supabaseTableFor(entity),
+        SupabaseTables.profiles,
+      ];
 
-    for (final table in tables) {
+  /// Apaga no servidor tudo que é da pessoa. Devolve as tabelas que falharam.
+  ///
+  /// Nada de engolir erro aqui: o que sobra é dado íntimo mantido depois de
+  /// um pedido explícito de exclusão. Quem chama precisa saber para avisar e
+  /// deixar tentar de novo.
+  Future<List<String>> _deleteUserData(String userId) async {
+    final falhas = <String>[];
+
+    for (final tabela in tabelasDaExclusaoDeConta()) {
+      // `profiles` é a única com chave `id`. A versão anterior filtrava
+      // `user_id` nela também — coluna que não existe —, a chamada falhava,
+      // o catch a ignorava e o perfil sobrevivia à exclusão com e-mail e
+      // data de nascimento dentro.
+      final coluna = tabela == SupabaseTables.profiles ? 'id' : 'user_id';
+
       try {
-        await _supabase.from(table).delete().eq('user_id', userId);
+        await _supabase.from(tabela).delete().eq(coluna, userId);
       } catch (e) {
-        // Ignorar erros - tabela pode não existir
+        await debugLog('AUTH', 'Falha ao apagar $tabela na exclusão: $e');
+        falhas.add(tabela);
+        continue;
+      }
+
+      // Conferir que sumiu mesmo, e não confiar no "deu certo" do DELETE:
+      // um DELETE barrado pelo RLS não é erro para o PostgREST — ele responde
+      // sucesso tendo apagado zero linhas. Foi por aí que `profiles`, que não
+      // tinha política de DELETE nenhuma, sobreviveu a toda exclusão de conta
+      // sem nunca acusar falha. A conferência é uma consulta por tabela, uma
+      // vez na vida da conta: barato perto de jurar que apagou sem ter
+      // apagado.
+      try {
+        final restante = await _supabase
+            .from(tabela)
+            .select(coluna)
+            .eq(coluna, userId)
+            .limit(1);
+        if (restante.isNotEmpty) {
+          await debugLog('AUTH', 'Sobrou linha em $tabela depois do DELETE');
+          falhas.add(tabela);
+        }
+      } catch (e) {
+        // Sem conseguir conferir, o honesto é tratar como falha: dizer
+        // "apagado" sem ter certeza é o defeito que estamos consertando.
+        await debugLog('AUTH', 'Falha ao conferir $tabela: $e');
+        falhas.add(tabela);
       }
     }
+
+    return falhas;
   }
 
   /// Converte usuário do Supabase para UserModel

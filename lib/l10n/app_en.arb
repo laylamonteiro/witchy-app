@@ -970,6 +970,8 @@
   "authErrFacebookUnavailable": "Facebook sign-in is no longer available",
   "authErrAppleUnavailable": "Apple sign-in is not available",
   "authErrNoUser": "No user signed in",
+  "authErrDeleteAccount": "I couldn't finish deleting your account — try again in a moment",
+  "authErrDeleteAccountIncomplete": "Part of your grimoire is still on the server — your account stays active so you can try again",
   "authErrUserNotFound": "User not found",
   "authErrEmailInUse": "This email is already in use",
   "authErrNetworkCheck": "Connection error. Check your internet",

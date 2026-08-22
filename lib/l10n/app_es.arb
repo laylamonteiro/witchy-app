@@ -970,6 +970,8 @@
   "authErrFacebookUnavailable": "El inicio de sesión con Facebook ya no está disponible",
   "authErrAppleUnavailable": "Inicio de sesión con Apple no disponible",
   "authErrNoUser": "Ningún usuario con sesión iniciada",
+  "authErrDeleteAccount": "No pude completar la eliminación de tu cuenta — inténtalo de nuevo en un momento",
+  "authErrDeleteAccountIncomplete": "Parte de tu grimorio sigue en el servidor — tu cuenta permanece activa para que lo intentes de nuevo",
   "authErrUserNotFound": "Usuario no encontrado",
   "authErrEmailInUse": "Este correo ya está en uso",
   "authErrNetworkCheck": "Error de conexión. Verifica tu internet",

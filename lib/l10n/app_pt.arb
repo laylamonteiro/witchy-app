@@ -1369,6 +1369,8 @@
   "authErrFacebookUnavailable": "Login com Facebook não está mais disponível",
   "authErrAppleUnavailable": "Login com Apple não disponível",
   "authErrNoUser": "Nenhum usuário logado",
+  "authErrDeleteAccount": "Não consegui concluir a exclusão da conta — tente de novo em instantes",
+  "authErrDeleteAccountIncomplete": "Parte do seu grimório continua no servidor — sua conta segue ativa para você tentar de novo",
   "authErrUserNotFound": "Usuário não encontrado",
   "authErrEmailInUse": "Este email já está em uso",
   "authErrNetworkCheck": "Erro de conexão. Verifique sua internet",
