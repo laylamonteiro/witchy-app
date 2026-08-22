@@ -80,8 +80,29 @@ jobs:
       - name: 🛠️ Setup Flutter (pinado)
         uses: ./.github/actions/setup-flutter
 
-      - name: 🔍 Check formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: 🔍 Check formatting (informativo — ainda NÃO bloqueia)
+        # O `--set-exit-if-changed` existe para falhar, e o
+        # `continue-on-error` logo abaixo anulava esse efeito: o passo
+        # anunciava verificação, não verificava nada e ainda saía verde. Pior
+        # que não existir, porque ensina a ignorar check verde.
+        #
+        # Agora ele pelo menos DIZ o tamanho do problema — antes nem a lista
+        # saía, porque `--output=none` sem `--show` só emite resumo.
+        #
+        # Para virar gate faltam dois passos, nesta ordem, e o primeiro exige
+        # uma máquina com o Flutter 3.47.0 (o mesmo pin de
+        # .github/actions/setup-flutter): (1) um commit ISOLADO com
+        # `dart format lib test` — isolado porque um diff de centenas de
+        # arquivos misturado com lógica é irrevisável e envenena todo `git
+        # blame` seguinte; (2) apagar o `continue-on-error` daqui.
+        #
+        # Formatar com outra versão do dart_style reescreve o repositório num
+        # terceiro estilo e quebra o gate no primeiro PR — por isso o pin
+        # importa.
+        run: |
+          dart format --output=none --show=changed lib test | tee /tmp/fmt.txt
+          echo "::warning::arquivos fora de formato: $(grep -c '^Changed' /tmp/fmt.txt || true)"
+          dart format --output=none --set-exit-if-changed lib test
         continue-on-error: true
 
       - name: 🧭 Analyze (bloqueante em erros/warnings)
@@ -124,6 +145,14 @@ jobs:
 
       - name: 🔤 ARB key parity
         run: bash scripts/check_arb_sync.sh
+
+      - name: 🧹 Chaves ARB órfãs
+        # A paridade acima compara ARB com ARB e nunca abre um .dart, então
+        # chave que nenhuma tela usa passava batido. Cinquenta apodreciam
+        # assim — e no meio delas estava `appTitle`, que existia traduzida
+        # nos quatro idiomas enquanto a tela mostrava o nome em português
+        # cravado para todo mundo.
+        run: bash scripts/check_arb_orfas.sh
 
       - name: 🔧 Garantir ripgrep (o scanner de i18n depende dele)
         # Sem o rg, o scanner buscava vazio e o gate passava sem verificar

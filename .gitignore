@@ -137,3 +137,12 @@ visual-inspo/
 
 # Diretório de publicação montado por scripts/assemble_site.sh
 public/
+
+# l10n gerado: sai do git.
+#
+# Ficava versionado e derivava do ARB — chegou a 880 chaves atrasado, e quem
+# abria o arquivo lia um app que não existe mais. A geração já é garantida em
+# todo caminho que importa: `generate: true` no pubspec faz o `flutter run` e
+# o `flutter build` regenerarem, e o CI roda `flutter gen-l10n` no passo de
+# setup. Versionar sem cobrar era o pior dos dois mundos.
+lib/l10n/generated/

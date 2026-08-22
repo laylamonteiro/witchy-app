@@ -5,12 +5,19 @@ publish_to: 'none'
 version: 2.0.25+126
 
 environment:
-  # A trava dizia 3.0.0 e estava desatualizada havia tempo: o app já usa
-  # `Color.withValues` (Flutter 3.27 / Dart 3.6) e o CI compila com o
-  # Flutter 3.47. Sobe para 3.3.0, que é o mínimo para `extension type` —
-  # exigido pela única ponte com JavaScript que ainda existe: o
-  # `dart:js_util` antigo foi REMOVIDO no Dart 3.9.
-  sdk: '>=3.3.0 <4.0.0'
+  # São DOIS pisos, e vale o maior — o comentário anterior reconhecia o piso
+  # do `Color.withValues` (Dart 3.6) e mesmo assim travava em 3.3.0, o piso
+  # do `extension type`. Com Dart 3.3-3.5 o `pub get` resolvia limpo e o
+  # build morria depois, em 117 arquivos de lib/, com um erro que não cita
+  # versão nenhuma.
+  #
+  # `extension type` é exigido pela única ponte com JavaScript que ainda
+  # existe (google_one_tap_web.dart); o `dart:js_util` antigo foi REMOVIDO no
+  # Dart 3.9. O CI compila com o Flutter 3.47 (.github/actions/setup-flutter).
+  sdk: '>=3.6.0 <4.0.0'
+  # `withValues` é API do framework, não da linguagem: sem esta trava, o piso
+  # de Flutter ficava implícito.
+  flutter: '>=3.27.0'
 
 dependencies:
   flutter:

@@ -176,16 +176,16 @@ lib/
 
 ## Tecnologias
 
-**Flutter 3.x · Dart 3** com `provider` para estado
+**Flutter 3.27+ · Dart 3.6+** com `provider` para estado
 
 | Área | Pacotes |
 |---|---|
 | Persistência | `sqflite`, `shared_preferences`, `path_provider` |
-| Backend | `supabase_flutter` (auth + sync), `firebase_auth` + `google_sign_in` (login social) |
+| Backend | `supabase_flutter` (auth + sync), `google_sign_in` (login social) |
 | Assinaturas | `purchases_flutter` / `purchases_ui_flutter` (RevenueCat) |
 | Anúncios | `google_mobile_ads` (AdMob) |
 | IA | `dio` (Groq e Gemini via REST) |
-| Astrologia | `sweph` (Swiss Ephemeris), `geocoding`, `geolocator` |
+| Astrologia | `sweph` (Swiss Ephemeris), `geocoding` |
 | Lua | `lunar` |
 | Mídia | `image_picker`, `image_cropper`, `flutter_image_compress`, `gal` |
 | Interface | `google_fonts`, `flutter_svg`, `flutter_markdown`, `flutter_drawing_board` |
@@ -195,7 +195,7 @@ lib/
 
 ## Como executar
 
-**Pré-requisitos:** Flutter SDK 3.24+, Android Studio ou Xcode, e um aparelho ou emulador
+**Pré-requisitos:** Flutter SDK 3.27+ (o CI compila com o 3.47.0), Android Studio ou Xcode, e um aparelho ou emulador
 
 ```bash
 git clone https://github.com/laylamonteiro/witchy-app.git
@@ -255,7 +255,8 @@ bash scripts/check_hardcoded_pt.sh   # nenhum texto PT fora da camada de i18n
 
 O app é multilíngue (pt, pt_BR, en, es). **Nenhum texto visível ao usuário pode ser escrito direto no código.** Ao criar ou alterar qualquer elemento de interface:
 
-1. **Adicione a chave nos 4 arquivos ARB** em `lib/l10n/`: `app_pt.arb` (template), `app_pt_BR.arb`, `app_en.arb` e `app_es.arb` — os quatro devem ter sempre o mesmo conjunto de chaves
+1. **Adicione a chave nos 4 arquivos ARB** em `lib/l10n/`: `app_pt.arb` (template), `app_pt_BR.arb`, `app_en.arb` e `app_es.arb` — os quatro devem ter sempre o mesmo conjunto de chaves.
+   O `app_pt.arb` é **template, não idioma**: nenhum valor dele chega à tela (o locale `pt` puro nunca é selecionado — só `pt_BR`, `en` e `es`). É o primeiro arquivo que todo mundo abre, e corrigir um texto só ali não muda nada no app. Traduza em `app_pt_BR.arb`
 2. **Use no código** via `AppLocalizations.of(context).suaChave` (import: `package:grimorio_de_bolso/l10n/generated/app_localizations.dart`); os getters são gerados pelo `flutter run` / `flutter gen-l10n`
 3. **Placeholders**: valores dinâmicos usam `{nome}` no ARB e exigem um bloco `@suaChave` com `placeholders` no template; plurais usam a sintaxe ICU (`{count, plural, one{...} other{...}}`)
 4. **Nunca use `const`** em um widget que contenha um valor de `AppLocalizations` — é valor de runtime e quebra o build

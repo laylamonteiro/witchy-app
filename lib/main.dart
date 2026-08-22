@@ -447,7 +447,12 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       child: Consumer2<LanguageProvider, ThemeProvider>(
         builder: (context, languageProvider, themeProvider, child) => MaterialApp(
           navigatorKey: _rootNavigatorKey,
-          title: 'Grimório de Bolso',
+          // `onGenerateTitle` e não `title`: o nome do app é TRADUZIDO
+          // ("Pocket Grimoire", "Grimorio de Bolsillo") e a chave `appTitle`
+          // existia nos quatro ARBs sem nenhum chamador. Cravado, o nome
+          // chegava em português para todo mundo — na aba do navegador e no
+          // alternador de tarefas do Android, que é onde ele aparece.
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           locale: languageProvider.locale,
           localizationsDelegates: const [
             AppLocalizations.delegate,

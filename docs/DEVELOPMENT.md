@@ -311,6 +311,8 @@ lib/
    📦 Pacotes disponíveis: 3
       📦 $rc_monthly:
          - Product ID: grimorio_pro_monthly (ou com.grimoriodebolso.pro.monthly)
+> **Preço:** os valores abaixo são de quando este documento foi escrito e NÃO são a fonte da verdade. O preço vigente vem sempre da RevenueCat em tempo de execução; os valores de RESERVA (usados só quando a loja não responde) ficam em `lib/features/auth/presentation/widgets/premium_blur_widget.dart`. Documento que repete preço apodrece no próximo reajuste.
+
          - Preço: R$ 9,90
       📦 $rc_annual:
          - Product ID: grimorio_pro_yearly (ou com.grimoriodebolso.pro.yearly)
