@@ -6,6 +6,7 @@ import '../../../../core/services/debug_log_service.dart';
 import '../providers/auth_provider.dart';
 import 'welcome_page.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
+import '../../../../core/widgets/guarda_de_voltar_web.dart';
 import '../../../../core/widgets/splash_screen.dart';
 
 /// Widget wrapper que gerencia o fluxo de autenticação
@@ -46,18 +47,10 @@ class AuthWrapper extends StatelessWidget {
         // AuthProvider libera quando a sessão chega ou após 15s.
         if (!isAuthenticated && authProvider.oauthReturnPending) {
           debugLog('NAV', 'AuthWrapper: aguardando sessão do retorno OAuth');
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(AppLocalizations.of(context).authFinishingLogin),
-                ],
-              ),
-            ),
-          );
+          // O guarda é o que faltava aqui: são até 15 segundos logo depois
+          // de voltar do Google, e é JUSTAMENTE quando o Google é a entrada
+          // anterior do histórico. Um voltar nesta janela saía do app.
+          return const GuardaDeVoltarWeb(child: _EsperandoASessao());
         }
 
         // Se tem conta logada, ir para home
@@ -73,6 +66,30 @@ class AuthWrapper extends StatelessWidget {
         debugLog('NAV', 'AuthWrapper: → WelcomePage (sem conta)');
         return const WelcomePage();
       },
+    );
+  }
+}
+
+/// A espera pela sessão que vem do retorno OAuth.
+///
+/// Separada em widget só para poder ser `const` sob o guarda de voltar: o
+/// [AuthWrapper] reconstrói a cada aviso do provider, e esta tela não muda.
+class _EsperandoASessao extends StatelessWidget {
+  const _EsperandoASessao();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(AppLocalizations.of(context).authFinishingLogin),
+          ],
+        ),
+      ),
     );
   }
 }

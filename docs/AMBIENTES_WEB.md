@@ -8,7 +8,7 @@ O app web é o mesmo bundle Flutter em três endereços diferentes:
 | Staging | `https://staging.grimorio-de-bolso.pages.dev` | `branch-validate.yml`, push em `main` |
 | Prévia | `https://<alias>.grimorio-de-bolso.pages.dev` | `branch-validate.yml`, push em branch |
 
-Três serviços externos decidem se aceitam a página **pelo domínio de onde
+Quatro serviços externos decidem se aceitam a página **pelo domínio de onde
 ela é servida**. Se um endereço novo não estiver na allowlist deles, a
 funcionalidade falha só ali — com o app inteiro compilado e correto.
 
@@ -97,6 +97,46 @@ cartão de teste, mesmo que os secrets sejam trocados por engano.
 > As chaves de Android/iOS **não** têm par sandbox/produção — a própria loja
 > decide o ambiente (license tester → sandbox). Só a web precisa das duas.
 
+## 4. Google Cloud — Authorized JavaScript origins (entrada sem sair da aba)
+
+Sintoma: **"Access blocked: origin_mismatch"** numa tela do Google no meio do
+login — ou, quando o app se protege antes de tentar, nenhum sintoma: a
+entrada acontece pelo **redirecionamento** de sempre, e o único rastro é o
+voltar do navegador passando a sair do app.
+
+Google Cloud → **APIs & Services → Credentials** → o client OAuth **Web** →
+*Authorized JavaScript origins*:
+
+```
+https://grimoriodebolso.app
+https://staging.grimorio-de-bolso.pages.dev
+```
+
+> **O Google não aceita curinga aqui.** Nada de `https://*.pages.dev` — cada
+> endereço entra na mão. É a diferença desta lista para as três de cima, e é
+> o motivo de as **prévias por branch ficarem de fora**: o endereço nasce
+> com a branch, autorizá-lo exigiria mexer no painel e recompilar, e a
+> recompilação publica noutro endereço. Prévia cai no redirecionamento, que
+> funciona em qualquer origem.
+
+> ⏳ A propagação leva de **5 minutos a algumas horas**. Não precisa
+> rebuildar — é configuração de servidor, como as outras três.
+
+**Esta lista existe DUAS vezes**, e as duas precisam concordar:
+
+| Onde | O que acontece se faltar |
+|---|---|
+| Painel do Google Cloud | Tela de bloqueio no meio do login |
+| `GoogleSignInConfig.origensAutorizadas` (no código) | Cai no redirecionamento — inofensivo |
+
+A assimetria é de propósito: **na dúvida, deixe de fora do código.** O pior
+que acontece é a pessoa entrar pelo caminho antigo. Mexer no código exige
+build novo (`--dart-define`), o painel não.
+
+E o `GOOGLE_WEB_CLIENT_ID` é secret de GitHub: sem ele no build, o caminho
+novo não existe em lugar nenhum. O `release.yml` **aborta** se ele faltar,
+justamente porque a ausência não tem sintoma próprio.
+
 ## Regra prática
 
 Prefira sempre **staging** para testar: é um endereço fixo, autorizado uma
@@ -107,8 +147,11 @@ deploy individual.
 ## O que exige rebuild e o que não
 
 - Mudar **allowlist** (hostname do Turnstile, Redirect URLs do Supabase,
-  domínios do RevenueCat): efeito **imediato**, é configuração de servidor.
-  Basta recarregar a página.
+  domínios do RevenueCat, origens do Google Cloud): efeito **imediato**, é
+  configuração de servidor. Basta recarregar a página — no caso do Google,
+  depois da propagação.
+- Mudar a lista de origens **no código** (`GoogleSignInConfig`): exige build
+  novo, como qualquer código.
 - Mudar a **chave** (`TURNSTILE_SITE_KEY`, `SUPABASE_ANON_KEY`,
   `REVENUECAT_WEB_KEY`): exige **novo build**, porque elas entram no bundle
   por `--dart-define` no momento da compilação.

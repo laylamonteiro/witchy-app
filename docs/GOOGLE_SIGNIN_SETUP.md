@@ -152,7 +152,29 @@ Painel do Supabase → seu projeto → **Authentication → Providers → Google
 | **Authorized Client IDs** | O **Web client ID**: `625869809120-vekqjnltlccc7llalu6adgl1js8tngob.apps.googleusercontent.com` — **corrija** o valor `com.grimoriodebolso.app` que está aí hoje |
 | **Client ID (OAuth)** | O mesmo Web client ID acima |
 | **Client Secret (OAuth)** | O secret **do Web client**, copiado do Google Cloud (formato `GOCSPX-…`). ⚠️ O valor `WqKf%M6-QuU+pDU` que você tinha **não** parece um secret Google — troque pelo correto |
-| **Skip nonce checks** | Ative se a opção existir (o fluxo nativo Android nem sempre envia nonce) |
+| **Skip nonce checks** | **Deixe DESLIGADO.** Ver o aviso abaixo — esta instrução estava invertida |
+
+> ### ⚠️ "Skip nonce checks" — esta página mandava o contrário
+>
+> A versão anterior deste documento dizia para **ativar** a opção. Estava
+> errado, e o erro é do tipo que não aparece: com ela ligada, o Supabase
+> **para de comparar o nonce** — e o nonce é justamente o que amarra um ID
+> token à tentativa de login que o pediu. Sem a comparação, um token
+> interceptado pode ser usado em outra sessão.
+>
+> A instrução nasceu do fluxo **nativo do Android**, que nem sempre manda
+> nonce. Mas a opção **não é por provedor nem por plataforma: vale para o
+> projeto inteiro** — inclusive para a entrada web dentro da página, que
+> manda o nonce corretamente (o cru para o Supabase, o `sha256` para o
+> Google; ver `_entrarSemSairDaAba`).
+>
+> **O que fazer:** abra o painel e confira. Se estiver ligada, desligue e
+> teste os dois caminhos — a entrada web e a nativa do Android. Se a nativa
+> passar a recusar, o certo é fazê-la mandar nonce, não voltar a desligar a
+> conferência do projeto todo.
+>
+> *(Conferir e mudar isso exige o painel do Supabase — não dá para fazer
+> pelo repositório.)*
 
 **Por que o Web client ID?** O app pede o token com
 `serverClientId = 625869809120-vekqjnltlccc7llalu6adgl1js8tngob…`
@@ -189,7 +211,7 @@ em *OAuth 2.0 Client IDs* clique no client **Web** (`…-vekqjnltlccc7llalu6adgl
 | Sintoma | Verifique |
 |---|---|
 | `ApiException: 10` persiste | O SHA-1 do APK realmente está no Google Cloud (Android client, package exato `com.grimoriodebolso.app`); propagação pode levar horas |
-| Login abre mas Supabase recusa | *Authorized Client IDs* = Web client ID; "Skip nonce checks" ligado |
+| Login abre mas Supabase recusa | *Authorized Client IDs* = Web client ID. **Não** ligue "Skip nonce checks" para resolver isto — ver o aviso da Etapa 3 |
 | `ApiException: 12500`/consent | Adicionar seu email em *Test users* na OAuth consent screen |
 | Funciona no APK direto mas não na Play Store | A Play Store **re-assina** o app (Play App Signing); registre também o SHA-1 de **Play Console → Test and release → App integrity** |
 

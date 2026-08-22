@@ -13,6 +13,7 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/utils/um_de_cada_vez.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
 import '../../../../core/widgets/mascot/salem_tour.dart';
@@ -34,6 +35,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// Momento do último toque em "voltar" na raiz de uma aba — usado para o
   /// padrão de sair do app apenas com dois toques seguidos.
   DateTime? _lastBackPress;
+
+  /// Um voltar por vez.
+  ///
+  /// [_handleSystemBack] é assíncrono e espera em dois `maybePop`. Enquanto
+  /// ele espera, NADA impedia uma segunda entrada: o `PopScope` chama o
+  /// mesmo método a cada pop RECUSADO, e um pop recusado por uma rota de
+  /// cima (ou um segundo toque rápido) chega enquanto o primeiro ainda está
+  /// em voo. Duas execuções em paralelo desempilham duas telas de uma vez;
+  /// em cadeia, recursam até a pilha estourar — foi assim que o
+  /// WebBackKeeper morreu.
+  final _voltar = UmDeCadaVez();
 
   /// Tamanho e ponto de partida do Salem: centro superior da tela. Vale para
   /// toda entrada em cena — abertura, "refresh" de sessão e volta do
@@ -195,10 +207,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// 2) páginas de detalhe empilhadas dentro da aba ativa; 3) raiz de outra
   /// aba volta para o Seu Dia; 4) só no Seu Dia, um segundo toque em 2s sai
   /// de fato do app.
-  Future<void> _handleSystemBack() async {
+  ///
+  /// Esta camada só faz uma coisa: garantir que a decisão aconteça UMA vez
+  /// por vez. Ver [_voltar].
+  Future<void> _handleSystemBack() => _voltar.executar(_resolverOVoltar);
+
+  Future<void> _resolverOVoltar() async {
     // 1. Rotas empilhadas no Navigator raiz (tela cheia sobre a home).
-    // O guard canPop evita recursão: na raiz, maybePop dispararia o
-    // próprio PopScope desta página de novo.
+    //
+    // O `canPop` NÃO é uma proteção contra recursão em geral — era isso que
+    // o comentário antigo dizia, e é falso. O que ele faz é evitar UM caso:
+    // com a home sozinha na pilha raiz, `maybePop` consultaria o `PopScope`
+    // desta própria página (`canPop: false`), que chamaria este método de
+    // novo, para sempre. Qualquer outro `PopScope` no Navigator raiz que
+    // devolva o voltar para cá volta a fechar o ciclo — quem impede isso é
+    // [_voltar], não esta linha.
     final rootNavigator = Navigator.of(context);
     if (rootNavigator.canPop()) {
       await rootNavigator.maybePop();

@@ -536,6 +536,30 @@ jobs:
             echo "::error::REVENUECAT_WEB_KEY é uma chave sandbox (rcb_sb_). A produção precisa da chave real (rcb_)."
             exit 1
           fi
+
+          # Trava: sem GOOGLE_WEB_CLIENT_ID a entrada com o Google DENTRO da
+          # página não existe, e o app volta ao redirecionamento — que deixa
+          # accounts.google.com no histórico da aba e faz o voltar sair do
+          # app. Era o defeito que originou a feature.
+          #
+          # O que torna isso pior do que uma falha comum: o build passa, o
+          # site publica, tudo parece certo, e o único sintoma é um botão de
+          # voltar se comportando mal. Ninguém liga uma coisa à outra. Por
+          # isso a produção PARA aqui em vez de avisar.
+          if [ -z "$GOOGLE_WEB_CLIENT_ID" ]; then
+            echo "::error::GOOGLE_WEB_CLIENT_ID vazio. Cadastre o secret (Google Cloud → Credentials → o client OAuth *Web*) — sem ele a produção publica com o login antigo, e o voltar volta a sair do app."
+            exit 1
+          fi
+          # Forma, não só presença: o valor certo é o Web client ID, não o
+          # id do client Android nem o secret. Um valor de outro formato
+          # falharia só no navegador da usuária, com origin_mismatch.
+          case "$GOOGLE_WEB_CLIENT_ID" in
+            *.apps.googleusercontent.com) ;;
+            *)
+              echo "::error::GOOGLE_WEB_CLIENT_ID não parece um client ID do Google (esperado terminar em .apps.googleusercontent.com)."
+              exit 1
+              ;;
+          esac
           flutter build web --release --no-wasm-dry-run \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \

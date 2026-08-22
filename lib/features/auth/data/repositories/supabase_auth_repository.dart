@@ -179,30 +179,49 @@ class SupabaseAuthRepository implements AuthRepository {
   /// para outra origem. Aqui a credencial é pedida ao Google na própria
   /// página e trocada por sessão no Supabase: o navegador nunca sai.
   ///
-  /// Devolve `null` quando não deu — sem chave configurada, script não
-  /// carregado, janelinha não exibida, credencial recusada. Nulo não é
-  /// erro: quem chama segue para o redirecionamento de sempre, que continua
-  /// sendo o caminho garantido.
+  /// Devolve `null` quando o GOOGLE não deu credencial — sem chave no build,
+  /// script não carregado, origem fora da lista, janelinha não exibida ou
+  /// dispensada. Nulo não é erro: quem chama segue para o redirecionamento
+  /// de sempre, que continua sendo o caminho garantido.
+  ///
+  /// Devolve um resultado de ERRO quando o Google deu a credencial e o
+  /// SUPABASE a recusou. São coisas diferentes e o desfecho tem de ser
+  /// diferente: nesse ponto a pessoa já escolheu a conta, e mandá-la ao
+  /// redirecionamento a faz escolher de novo enquanto esconde uma falha de
+  /// configuração que não se conserta sozinha.
   Future<AuthResult?> _entrarSemSairDaAba(String? captchaToken) async {
     if (!GoogleSignInConfig.isConfigured) return null;
 
-    try {
-      // O nonce vai CRU para o Supabase e PICADO para o Google, que o
-      // devolve dentro do token. É o que amarra o token a esta tentativa:
-      // um token interceptado não serve em outra.
-      final nonceCru = _nonceAleatorio();
-      final nonceHash = sha256.convert(utf8.encode(nonceCru)).toString();
+    // O nonce vai CRU para o Supabase e PICADO para o Google, que o devolve
+    // dentro do token. É o que amarra o token a esta tentativa: um token
+    // interceptado não serve em outra.
+    final nonceCru = _nonceAleatorio();
+    final nonceHash = sha256.convert(utf8.encode(nonceCru)).toString();
 
-      final idToken = await pedirIdTokenDoGoogle(
+    // PRIMEIRA METADE — falar com o Google. Aqui não dar certo é normal, e
+    // silêncio é a resposta certa: cookies de terceiros bloqueados, script
+    // não carregado, origem fora da lista, a pessoa fechando a janelinha.
+    // Nenhum desses é erro DELA, e o redirecionamento resolve todos.
+    String? idToken;
+    try {
+      idToken = await pedirIdTokenDoGoogle(
         clientId: GoogleSignInConfig.webClientId,
         nonceHash: nonceHash,
         limite: GoogleSignInConfig.limite,
       );
-      if (idToken == null) {
-        await debugLog('AUTH', 'Google na página: sem credencial — redirecionando');
-        return null;
-      }
+    } catch (e) {
+      await debugLog('AUTH', 'Google na página tropeçou ($e) — redirecionando');
+      return null;
+    }
+    if (idToken == null) {
+      await debugLog('AUTH', 'Google na página: sem credencial — redirecionando');
+      return null;
+    }
 
+    // SEGUNDA METADE — o Google já disse sim. Daqui para a frente a pessoa
+    // JÁ escolheu a conta, e cair no redirecionamento a faz escolher de
+    // novo, do zero, sem explicação.
+    try {
       final response = await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
@@ -210,7 +229,12 @@ class SupabaseAuthRepository implements AuthRepository {
         captchaToken: captchaToken,
       );
       final supabaseUser = response.user;
-      if (supabaseUser == null) return null;
+      if (supabaseUser == null) {
+        // Sem erro e sem usuário: não há o que dizer à pessoa, e o
+        // redirecionamento ainda pode salvar a entrada.
+        await debugLog('AUTH', 'Google na página: sessão vazia — redirecionando');
+        return null;
+      }
 
       await debugLog('AUTH', 'Google na página: sessão criada sem sair da aba');
       await _createProfile(
@@ -218,9 +242,20 @@ class SupabaseAuthRepository implements AuthRepository {
         supabaseUser.userMetadata?['name']?.toString(),
       );
       return AuthResult.success(await _userFromSupabaseUser(supabaseUser));
+    } on AuthException catch (e) {
+      // O SERVIDOR RECUSOU um token que o Google acabou de emitir. Isso não
+      // é intermitência: é configuração — o Web client ID fora de
+      // *Authorized Client IDs*, o nonce recusado, o provedor desligado.
+      //
+      // Engolir aqui era o pior desfecho possível: a pessoa escolhia a conta
+      // duas vezes, entrava pelo redirecionamento na segunda, e o defeito
+      // ficava invisível para sempre — inclusive para quem mantém o app,
+      // porque nada nunca falhava por completo.
+      await debugLog('AUTH', 'Google na página: Supabase recusou o token — ${e.message}');
+      return _handleAuthException(e);
     } catch (e) {
-      // Qualquer tropeço aqui volta ao caminho conhecido em vez de virar
-      // uma tela de erro: o redirecionamento funciona.
+      // Rede caindo no meio da troca: o redirecionamento é a segunda
+      // chance, e ela é melhor do que uma tela de erro.
       await debugLog('AUTH', 'Google na página falhou ($e) — redirecionando');
       return null;
     }
