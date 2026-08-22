@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:grimorio_de_bolso/core/theme/app_theme.dart';
+import 'package:grimorio_de_bolso/core/theme/grimoire_colors.dart';
 import 'package:grimorio_de_bolso/features/astrology/data/models/magical_profile_report.dart';
 import 'package:grimorio_de_bolso/features/astrology/presentation/pages/magical_profile_section_page.dart';
 import 'package:grimorio_de_bolso/features/astrology/presentation/providers/astrology_provider.dart';
@@ -143,6 +144,23 @@ void main() {
     );
     expect(find.textContaining('Lua em Peixes na Casa 4'), findsOneWidget);
     expect(tester.takeException(), isNull);
+
+    // E chega vestida: o destaque num cartão lilás, nunca no azul-claro que
+    // o flutter_markdown usa quando a tela não estiliza o `> `.
+    final fundos = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((d) => d.decoration)
+        .whereType<BoxDecoration>()
+        .map((d) => d.color)
+        .toList();
+    final lilas = GrimoireColors.vinhoOrquidea.lilac;
+    expect(fundos, isNot(contains(Colors.blue.shade100)));
+    expect(
+      fundos.any(
+        (c) => c != null && c.r == lilas.r && c.g == lilas.g && c.b == lilas.b,
+      ),
+      isTrue,
+    );
   });
 
   testWidgets('falhou de verdade: erro com o motivo e um botão de tentar',

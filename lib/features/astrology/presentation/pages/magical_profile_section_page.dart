@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/paged_reading.dart';
+import '../../../../core/widgets/reading_markdown.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/magical_profile_report.dart';
 import '../providers/astrology_provider.dart';
@@ -312,10 +313,7 @@ class _Pagina extends StatelessWidget {
           ),
           const SizedBox(height: 18),
         ],
-        MarkdownBody(
-          data: slide.body,
-          styleSheet: _folhaDeEstilo(context),
-        ),
+        ReadingMarkdown(slide.body, refine: _folhaDeEstilo),
         // Respiro no fim: o mascote flutua sobre o canto de baixo e comia a
         // última linha.
         const SizedBox(height: 72),
@@ -323,62 +321,13 @@ class _Pagina extends StatelessWidget {
     );
   }
 
-  /// A tipografia da leitura.
+  /// Os ajustes desta leitura sobre a base do grimório.
   ///
-  /// A frase de destaque (`> `) é o gancho da página: vive num bloco lilás
-  /// com barra à esquerda, em corpo maior, para ser lida antes de tudo. O
-  /// negrito é reservado às posições reais do mapa, e por isso vem colorido
-  /// — é ele que prova que a leitura fala DESTE mapa, e não de qualquer um.
-  MarkdownStyleSheet _folhaDeEstilo(BuildContext context) {
-    final lilas = context.gc.lilac;
-    return MarkdownStyleSheet(
-      p: TextStyle(
-        color: context.gc.softWhite,
-        height: 1.72,
-        fontSize: 16,
-      ),
-      // Respiro entre parágrafos: com blocos colados, dois parágrafos curtos
-      // voltam a parecer um só longo.
-      blockSpacing: 18,
-      strong: TextStyle(
-        color: lilas,
-        fontWeight: FontWeight.w700,
-      ),
-      em: TextStyle(
-        color: context.gc.softWhite,
-        fontStyle: FontStyle.italic,
-      ),
-      blockquote: GoogleFonts.lora(
-        color: context.gc.textPrimary,
-        fontSize: 17.5,
-        height: 1.5,
-        fontStyle: FontStyle.italic,
-        fontWeight: FontWeight.w600,
-      ),
-      blockquotePadding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-      blockquoteDecoration: BoxDecoration(
-        color: lilas.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border(left: BorderSide(color: lilas, width: 3)),
-      ),
-      listBullet: TextStyle(color: lilas, fontSize: 16, height: 1.72),
-      listBulletPadding: const EdgeInsets.only(right: 10),
-      listIndent: 18,
-      h3: GoogleFonts.cinzelDecorative(
-        color: lilas,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
-      h4: GoogleFonts.lora(
-        color: lilas,
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-      ),
-      horizontalRuleDecoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: context.gc.surfaceBorder),
-        ),
-      ),
-    );
+  /// A base já traz o destaque (`> `) como bloco lilás e o negrito colorido —
+  /// é ela que garante que nada caia no padrão claro do pacote. Aqui fica só
+  /// o que é desta tela: o respiro maior entre parágrafos, porque com blocos
+  /// colados dois parágrafos curtos voltam a parecer um só longo.
+  static MarkdownStyleSheet _folhaDeEstilo(MarkdownStyleSheet base) {
+    return base.copyWith(blockSpacing: 18);
   }
 }
