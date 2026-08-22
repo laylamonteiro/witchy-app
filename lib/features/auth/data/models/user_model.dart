@@ -176,6 +176,14 @@ class UserModel {
   /// Limite de consultas ao Conselheiro Místico (P&R) por dia para free
   static const int freeAdvisorConsultationsLimit = 1;
 
+  /// Limite de identificações do Guia da Natureza por dia.
+  ///
+  /// Valor inalterado (5) — só mudou de lugar. Morava no meio da tela que o
+  /// usa, longe de todos os outros limites: quem fosse conferir o que o app
+  /// limita não o encontrava, e quem mexesse nos limites daqui não sabia que
+  /// ele existia.
+  static const int dailyNatureIdentifyLimit = 5;
+
   /// Verifica se pode criar mais feitiços
   bool get canCreateSpell => isPremium || spellsCount < freeSpellsLimit;
 

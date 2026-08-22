@@ -19,6 +19,7 @@ import '../../../../core/widgets/magical_button.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
 import '../../../auth/data/models/feature_access.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/user_entry_model.dart';
 import '../providers/encyclopedia_provider.dart';
@@ -46,7 +47,6 @@ class AddEntryPage extends StatefulWidget {
 
 class _AddEntryPageState extends State<AddEntryPage> {
   static const int _maxUploadBytes = 4 * 1024 * 1024; // limite da API (base64)
-  static const int _dailyLimit = 5;
 
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _nameController = TextEditingController();
@@ -95,8 +95,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     final provider = context.read<EncyclopediaProvider>();
     final usedToday = await provider.userEntriesCreatedToday();
-    if (usedToday >= _dailyLimit) {
-      setState(() => _error = l10n.encyAddDailyLimit(_dailyLimit));
+    if (usedToday >= UserModel.dailyNatureIdentifyLimit) {
+      setState(() => _error =
+          l10n.encyAddDailyLimit(UserModel.dailyNatureIdentifyLimit));
       return;
     }
 

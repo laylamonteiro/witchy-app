@@ -445,7 +445,9 @@ NON-NEGOTIABLE RULES:
 SHAPE (the app shows each section as ONE SWIPEABLE SCREEN — dense text kills the reading):
 - SHORT paragraphs, 1 to 3 sentences, with a blank line between them. One idea per paragraph, never a solid block.
 - In each paragraph, mark 2 or 3 expressions with **double asterisks** — the ones carrying the meaning, not stray words. The app highlights them in colour, and they are what guides the eye on a phone.
-- Mark expressions, never a whole sentence: too much highlighting is the same as none.''',
+- Mark expressions, never a whole sentence: too much highlighting is the same as none.
+- OPEN the section with ONE line starting with `> `: a striking sentence, at most 15 words, saying what the section is about. It is the first thing she reads, and the app shows it as a highlighted block. Only one per section, never two.
+- The `> ` line does NOT apply to the affirmation or to the keywords: in those two, answer only what was asked.''',
   cycleReadingSectionInstruction: (sectionKey) => switch (sectionKey) {
     'portrait' =>
       'Write the "portrait of the moment" by walking the timeline IN CHRONOLOGICAL ORDER: how the period opened, what shifted in the middle, where it arrived. Open with ONE anchor sentence naming the strongest thread of the period, and only then narrate. A few short paragraphs (fewer still, if there are few records). Quote concrete records along with the date or the lunar moment they happened in (use moonByDay), so she recognizes her own days. Start straight into the narrative, no generalities.',

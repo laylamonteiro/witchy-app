@@ -28,7 +28,15 @@ class AstrologyProvider with ChangeNotifier {
   MagicalProfile? _magicalProfile;
   bool _isLoading = false;
   final Set<String> _tecendo = <String>{};
-  bool _ultimaFalhaFoiLimite = false;
+
+  /// Por que cada seção da Análise Personalizada não veio.
+  ///
+  /// Por SEÇÃO, e não uma falha só para todas. A trava de geração já era por
+  /// seção — abrir um card enquanto outro termina é o normal de quem está
+  /// explorando —, mas o erro continuava global: a seção que falhasse marcava
+  /// falha em TODAS as outras abertas, inclusive nas que estavam indo bem.
+  final Map<String, _FalhaDaSecao> _falhas = <String, _FalhaDaSecao>{};
+
   String? _error;
   String _currentUserId = 'local_user';
 
@@ -44,10 +52,15 @@ class AstrologyProvider with ChangeNotifier {
   bool isWeavingSection(String key) => _tecendo.contains(key);
   bool get isGeneratingAI => _tecendo.isNotEmpty;
 
-  /// A última seção falhou por limite de requisições do provedor de IA?
+  /// O motivo pelo qual ESTA seção não veio — null se ela não falhou.
+  String? erroDaSecao(String key) => _falhas[key]?.mensagem;
+
+  /// ESTA seção falhou por limite de requisições do provedor de IA?
+  ///
   /// A tela troca isso por uma frase que orienta ("aguarde e tente de novo"),
   /// em vez do nome de uma classe de exceção.
-  bool get lastFailureWasRateLimit => _ultimaFalhaFoiLimite;
+  bool falhaDeLimiteNaSecao(String key) =>
+      _falhas[key]?.foiLimiteDoProvedor ?? false;
 
   /// As seções já tecidas, na ordem em que foram guardadas.
   ///
@@ -347,8 +360,9 @@ class AstrologyProvider with ChangeNotifier {
     if (_tecendo.contains(sectionKey)) return;
 
     _tecendo.add(sectionKey);
-    _error = null;
-    _ultimaFalhaFoiLimite = false;
+    // A falha ANTERIOR desta seção sai agora: quem manda tecer de novo não
+    // pode ver o erro da tentativa passada enquanto a nova roda.
+    _falhas.remove(sectionKey);
     notifyListeners();
 
     try {
@@ -361,6 +375,7 @@ class AstrologyProvider with ChangeNotifier {
         // Sem motivo a exibir: a tela mostra a falha genérica, que é o que
         // dá para dizer com honestidade quando a resposta volta vazia.
         debugPrint('Perfil mágico: seção $sectionKey voltou vazia');
+        _falhas[sectionKey] = const _FalhaDaSecao();
         return;
       }
 
@@ -391,18 +406,33 @@ class AstrologyProvider with ChangeNotifier {
       );
       await _repository.saveMagicalProfile(_magicalProfile!);
     } on AiRateLimitException {
-      _ultimaFalhaFoiLimite = true;
-      _error = null;
+      _falhas[sectionKey] = const _FalhaDaSecao(foiLimiteDoProvedor: true);
     } catch (e) {
       // As exceções que a camada de IA lança já vêm com texto pronto para a
       // tela — e agora sem o detalhe do Dio dentro, que trazia a URL do
       // provedor. O que sobra aqui é tirar o prefixo `Exception: `, que é
       // ruído do Dart, e deixar o texto original no log.
       debugPrint('Perfil mágico: seção $sectionKey falhou: $e');
-      _error = '$e'.replaceAll('Exception: ', '');
+      _falhas[sectionKey] = _FalhaDaSecao(
+        mensagem: '$e'.replaceAll('Exception: ', ''),
+      );
     } finally {
       _tecendo.remove(sectionKey);
       notifyListeners();
     }
   }
+}
+
+/// Por que uma seção da Análise Personalizada não veio.
+///
+/// Sem mensagem, a tela mostra a falha genérica — é o que dá para dizer com
+/// honestidade quando a resposta volta vazia.
+class _FalhaDaSecao {
+  const _FalhaDaSecao({
+    this.mensagem,
+    this.foiLimiteDoProvedor = false,
+  });
+
+  final String? mensagem;
+  final bool foiLimiteDoProvedor;
 }

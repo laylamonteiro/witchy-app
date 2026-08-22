@@ -163,11 +163,16 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
               (false, final ProfileSection s) => PagedReading(
                   pages: [for (final slide in s.slides) _Pagina(slide: slide)],
                 ),
+              // A falha é lida POR SEÇÃO: com um erro só para todas, uma
+              // seção que falhasse marcava falha nas outras que estivessem
+              // abertas, inclusive nas que estavam indo bem.
               _ => _Falhou(
                   onRetry: _tecer,
-                  message: provider.lastFailureWasRateLimit
-                      ? l10n.aiVisionRateLimit
-                      : provider.error,
+                  message: chave == null
+                      ? null
+                      : provider.falhaDeLimiteNaSecao(chave)
+                          ? l10n.aiVisionRateLimit
+                          : provider.erroDaSecao(chave),
                 ),
             },
           ),
