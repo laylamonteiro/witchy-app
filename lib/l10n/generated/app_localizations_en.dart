@@ -1622,10 +1622,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get numFullName => 'Full name';
 
   @override
-  String get numChooseBirthDate => 'Choose birth date';
+  String get numBirthDateLabel => 'Birth date';
 
   @override
-  String get numBirthPrefix => 'Birth';
+  String get numBirthDateHint => 'dd/mm/yyyy';
+
+  @override
+  String get numBirthDateInvalid => 'Invalid date';
 
   @override
   String get numCalculate => 'Calculate my numbers';

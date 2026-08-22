@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/ai/ai_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/widgets/date_input_field.dart';
 import '../../../../core/widgets/magical_card.dart';
 import '../../../auth/data/models/feature_access.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -88,18 +89,6 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _birthDate ?? DateTime(1990),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && mounted) {
-      setState(() => _birthDate = picked);
-    }
   }
 
   void _calculate() {
@@ -227,28 +216,21 @@ class _NumerologyProfilePageState extends State<NumerologyProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  InkWell(
-                    onTap: _pickDate,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              size: 18, color: context.gc.lilac),
-                          const SizedBox(width: 8),
-                          Text(
-                            _birthDate == null
-                                ? AppLocalizations.of(context).numChooseBirthDate
-                                : '${AppLocalizations.of(context).numBirthPrefix}: '
-                                    '${_birthDate!.day.toString().padLeft(2, '0')}/'
-                                    '${_birthDate!.month.toString().padLeft(2, '0')}/'
-                                    '${_birthDate!.year}',
-                            style: TextStyle(color: context.gc.textPrimary),
-                          ),
-                        ],
-                      ),
-                    ),
+                  // Data DIGITADA (o calendário fica no ícone ao lado):
+                  // o modo de digitação do seletor do Material pede o
+                  // teclado `datetime`, que em vários Androids não tem a
+                  // barra — e a data de nascimento ficava impossível de
+                  // escrever.
+                  DateInputField(
+                    value: _birthDate,
+                    onChanged: (data) => setState(() => _birthDate = data),
+                    label: AppLocalizations.of(context).numBirthDateLabel,
+                    hint: AppLocalizations.of(context).numBirthDateHint,
+                    invalidMessage:
+                        AppLocalizations.of(context).numBirthDateInvalid,
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                    calendarStart: DateTime(1990),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
