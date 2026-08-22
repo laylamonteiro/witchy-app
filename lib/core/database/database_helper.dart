@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import '../../features/grimoire/data/models/spell_model.dart';
+import '../services/data_sync_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -1246,33 +1247,31 @@ class DatabaseHelper {
     }
   }
 
+  /// As tabelas que a adoção de dados anônimos precisa varrer.
+  ///
+  /// Derivada de [SyncEntity], e não escrita à mão: a lista que existia aqui
+  /// já tinha perdido `tarot_readings` — uma tiragem feita antes do login
+  /// continuava presa a 'local_user', sumia da tela ao entrar na conta e
+  /// nunca subia para a nuvem. Mesma família do que aconteceu com a exclusão
+  /// de conta. Derivando do enum, entidade nova nasce adotada.
+  ///
+  /// `spells` sai da lista porque é tratada à parte: os feitiços
+  /// pré-carregados do app não pertencem a ninguém e não podem ser adotados.
+  @visibleForTesting
+  static Set<String> tabelasDaAdocaoAnonima() => <String>{
+        for (final entity in SyncEntity.values)
+          DataSyncService.localTableFor(entity),
+        // Não sincroniza, mas também nasce anônima e precisa ser adotada.
+        'guided_ritual_logs',
+      }..remove('spells');
+
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
   /// Registros já pertencentes a UUIDs reais nunca são alterados.
   Future<void> claimLegacyData(String userId) async {
     if (userId == 'local_user' || userId == 'current_user') return;
 
     final db = await database;
-    const tables = [
-      'dreams',
-      'desires',
-      'gratitudes',
-      'affirmations',
-      'free_writings',
-      'daily_rituals',
-      'ritual_logs',
-      'sigils',
-      'birth_charts',
-      'magical_profiles',
-      'rune_readings',
-      'pendulum_consultations',
-      'oracle_readings',
-      'daily_magical_weather',
-      'daily_checkins',
-      'learning_progress',
-      'guided_ritual_logs',
-      'user_encyclopedia_entries',
-      'cycle_readings',
-    ];
+    final tables = tabelasDaAdocaoAnonima();
 
     await db.transaction((txn) async {
       await txn.update(

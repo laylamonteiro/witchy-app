@@ -8,7 +8,6 @@ import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
-import 'premium_access.dart';
 
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
@@ -222,24 +221,28 @@ class DataSyncService {
   /// ID do usuário atual
   String? get currentUserId => _supabase?.auth.currentUser?.id;
 
+  /// A preferência de sincronização, sem paywall.
+  ///
+  /// Sincronizar deixou de ser exclusivo do Premium. O motivo é o iOS: no
+  /// navegador, o armazenamento gravável por script é apagado depois de 7
+  /// dias sem a pessoa abrir o site — e o banco do app é sqlite no
+  /// IndexedDB. Sem cópia na nuvem, uma semana ociosa apagava o grimório
+  /// inteiro, inclusive a Leitura do Ciclo, que é vendida justamente a quem
+  /// NÃO é Premium. Não é a pessoa limpando dados: é o sistema apagando.
+  ///
+  /// O `isPremium` saiu da assinatura de propósito, e não virou parâmetro
+  /// ignorado: assim o compilador aponta todo lugar que ainda decidia sync
+  /// por plano.
   @visibleForTesting
-  static bool resolveCloudSyncPreference(
-    SharedPreferences prefs, {
-    required bool isPremium,
-  }) {
-    // Sincronização é recurso exclusivo Premium: para Free o valor efetivo
-    // é sempre desligado, mesmo que exista preferência antiga gravada
-    // (ex.: assinatura que expirou com o toggle ligado).
-    if (!isPremium) return false;
-
+  static bool resolveCloudSyncPreference(SharedPreferences prefs) {
     final configured = prefs.getBool(cloudSyncPreferenceKey);
     final userConfigured = prefs.getBool(cloudSyncUserConfiguredKey) ?? false;
     final hasLegacyPreference = prefs.containsKey('privacy_sync') ||
         prefs.containsKey('privacy_backup');
 
-    // Versões anteriores chegaram a persistir `false` automaticamente para
-    // usuários Free. Ao se tornarem Premium, esse valor não representa uma
-    // escolha do usuário e deve assumir o default Premium ligado.
+    // Versões anteriores persistiam `false` automaticamente para quem era
+    // Free. Esse valor nunca foi escolha de ninguém — era o paywall — então
+    // não pode virar "desligado" agora que o recurso é de todo mundo.
     if (configured == false && !userConfigured && !hasLegacyPreference) {
       return true;
     }
@@ -249,14 +252,9 @@ class DataSyncService {
         (prefs.getBool('privacy_backup') ?? true);
   }
 
-  static Future<bool> ensureCloudSyncPreference(
-    SharedPreferences prefs, {
-    required bool isPremium,
-  }) async {
-    final enabled = resolveCloudSyncPreference(prefs, isPremium: isPremium);
-    // O "desligado" forçado do Free não é persistido: se a assinatura
-    // voltar, a escolha feita enquanto Premium volta a valer.
-    if (isPremium && prefs.getBool(cloudSyncPreferenceKey) != enabled) {
+  static Future<bool> ensureCloudSyncPreference(SharedPreferences prefs) async {
+    final enabled = resolveCloudSyncPreference(prefs);
+    if (prefs.getBool(cloudSyncPreferenceKey) != enabled) {
       await prefs.setBool(cloudSyncPreferenceKey, enabled);
     }
     return enabled;
@@ -264,10 +262,7 @@ class DataSyncService {
 
   Future<bool> get cloudSyncEnabled async {
     final prefs = await SharedPreferences.getInstance();
-    return ensureCloudSyncPreference(
-      prefs,
-      isPremium: PremiumAccess.instance.isPremium,
-    );
+    return ensureCloudSyncPreference(prefs);
   }
 
   /// Última sincronização concluída para a conta atual.
@@ -291,9 +286,6 @@ class DataSyncService {
   Future<SyncResult> syncAll({
     ConflictResolution? resolution,
   }) async {
-    if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error(_l10n.syncPremiumOnly);
-    }
     if (!isReady) {
       return SyncResult.error(_l10n.syncNotAuthenticated);
     }
@@ -362,7 +354,7 @@ class DataSyncService {
     var conflictsResolved = 0;
     try {
       final tableName = supabaseTableFor(entity);
-      final localTable = _getLocalTableName(entity);
+      final localTable = localTableFor(entity);
 
       final conflicts = <SyncConflict>[];
 
@@ -390,7 +382,7 @@ class DataSyncService {
           final localUpdatedAt = _parseDateTime(local['updated_at']);
           final remoteUpdatedAt = _parseDateTime(remote['updated_at']);
 
-          if (_hasChanges(local, remote)) {
+          if (temMudancas(tableName, local, remote)) {
             // Há diferenças - resolver conflito
             final conflict = SyncConflict(
               id: id.toString(),
@@ -467,16 +459,71 @@ class DataSyncService {
     }
   }
 
-  /// Verifica se há diferenças entre local e remoto
-  bool _hasChanges(Map<String, dynamic> local, Map<String, dynamic> remote) {
-    final ignoreKeys = {'synced', 'updated_at', 'created_at'};
+  /// Verifica se há diferenças entre local e remoto.
+  ///
+  /// A comparação precisa da TABELA por causa dos campos de blob JSON. Neles,
+  /// o lado local é o texto que o SQLite guardou e o lado remoto veio de um
+  /// `jsonb` do Postgres, decodificado e reserializado por `_toLocal`. Duas
+  /// serializações do MESMO conteúdo diferem em ordem de chave e espaçamento,
+  /// então a comparação de texto dizia "mudou" para toda linha suja das sete
+  /// tabelas com blob — mapa astral, perfil mágico, runas, oráculo, tarô,
+  /// clima do dia e enciclopédia.
+  ///
+  /// O efeito não era cosmético: todo upload virava "conflito", e o
+  /// `mostRecent` resolve empate de milissegundo a favor do servidor. Ou
+  /// seja, edição local perdida em silêncio. Com a sincronização aberta para
+  /// todo mundo, o alcance disso multiplica — por isso vem junto.
+  @visibleForTesting
+  static bool temMudancas(
+    String table,
+    Map<String, dynamic> local,
+    Map<String, dynamic> remote,
+  ) {
+    const ignoreKeys = {'synced', 'updated_at', 'created_at'};
+    final camposJson = _jsonFields[table] ?? const <String>{};
 
     for (final key in local.keys) {
       if (ignoreKeys.contains(key)) continue;
+
+      if (camposJson.contains(key)) {
+        if (_jsonCanonico(local[key]) != _jsonCanonico(remote[key])) {
+          return true;
+        }
+        continue;
+      }
+
       if (local[key] != remote[key]) return true;
     }
 
     return false;
+  }
+
+  /// Uma forma estável do valor, para comparar CONTEÚDO e não serialização.
+  ///
+  /// Aceita tanto o texto do SQLite quanto o Map/List já decodificado. O que
+  /// não for JSON válido volta como veio: aí comparar como texto é o certo.
+  static String _jsonCanonico(dynamic valor) {
+    dynamic conteudo = valor;
+    if (valor is String) {
+      try {
+        conteudo = jsonDecode(valor);
+      } catch (_) {
+        return valor;
+      }
+    }
+    return jsonEncode(_comChavesOrdenadas(conteudo));
+  }
+
+  static dynamic _comChavesOrdenadas(dynamic valor) {
+    if (valor is Map) {
+      final chaves = valor.keys.map((k) => k.toString()).toList()..sort();
+      return {for (final k in chaves) k: _comChavesOrdenadas(valor[k])};
+    }
+    if (valor is List) {
+      // Ordem de lista é conteúdo: [a, b] não é [b, a]. Só normaliza dentro.
+      return valor.map(_comChavesOrdenadas).toList();
+    }
+    return valor;
   }
 
   /// Resolve um conflito baseado na estratégia
@@ -525,7 +572,7 @@ class DataSyncService {
     }
 
     final tableName = supabaseTableFor(conflict.entity);
-    final localTable = _getLocalTableName(conflict.entity);
+    final localTable = localTableFor(conflict.entity);
 
     await _resolveConflict(conflict, resolution, tableName, localTable);
 
@@ -611,8 +658,12 @@ class DataSyncService {
     }
   }
 
-  /// Obtém o nome da tabela local
-  String _getLocalTableName(SyncEntity entity) {
+  /// O nome da tabela local (SQLite) para cada entidade sincronizável.
+  ///
+  /// Pública e estática pelo mesmo motivo de [supabaseTableFor]: a adoção de
+  /// dados anônimos no login mantinha a própria lista escrita à mão e já
+  /// tinha perdido uma entidade.
+  static String localTableFor(SyncEntity entity) {
     switch (entity) {
       case SyncEntity.spells:
         return 'spells';
@@ -785,7 +836,7 @@ class DataSyncService {
   /// Os nomes de tabela por entidade, para o teste que garante que nenhuma
   /// entidade fique sem par (uma tabela fora do sync some na reinstalação).
   @visibleForTesting
-  String localTableForTest(SyncEntity entity) => _getLocalTableName(entity);
+  String localTableForTest(SyncEntity entity) => localTableFor(entity);
 
   @visibleForTesting
   String remoteTableForTest(SyncEntity entity) => supabaseTableFor(entity);
@@ -1011,18 +1062,18 @@ class DataSyncService {
     }
   }
 
-  /// Sincroniza um item específico após criação/atualização
-  /// NOTA: Só funciona para usuários Premium
+  /// Sincroniza um item específico após criação/atualização.
+  ///
+  /// Vale para qualquer conta: sincronizar não é mais exclusivo do Premium.
+  /// O que ainda é exigido é CONTA — sem `auth.uid()` não há dono da linha
+  /// no servidor.
   Future<void> syncItem(SyncEntity entity, Map<String, dynamic> item) async {
-    // Verifica se é premium antes de sincronizar (fonte única: RevenueCat OU
-    // premium local via Código Premium/admin)
-    if (!PremiumAccess.instance.isPremium) return;
     if (!isReady) return;
     if (!await cloudSyncEnabled) return;
 
     try {
       final tableName = supabaseTableFor(entity);
-      final localTable = _getLocalTableName(entity);
+      final localTable = localTableFor(entity);
       if (!_isSyncableItem(localTable, item)) return;
       await _uploadItem(tableName, item);
       await _markAsSynced(localTable, item['id']);
@@ -1037,7 +1088,6 @@ class DataSyncService {
   /// [fullDownload] baixaria de volta todo o histórico que a poda local
   /// acabou de apagar, porque ele traz todas as linhas do usuário.
   Future<void> pruneOtherDays(SyncEntity entity, String date) async {
-    if (!PremiumAccess.instance.isPremium) return;
     if (!isReady) return;
     if (!await cloudSyncEnabled) return;
 
@@ -1052,11 +1102,11 @@ class DataSyncService {
     }
   }
 
-  /// Deleta um item do Supabase
-  /// NOTA: Só funciona para usuários Premium
+  /// Deleta um item do Supabase.
+  ///
+  /// Sem paywall, e é essencial que seja assim: se o apagar local não
+  /// chegasse à nuvem, o próximo download traria o registro de volta.
   Future<void> deleteItem(SyncEntity entity, dynamic id) async {
-    // Verifica se é premium antes de deletar do cloud
-    if (!PremiumAccess.instance.isPremium) return;
     if (!isReady) return;
     if (!await cloudSyncEnabled) return;
 
@@ -1074,9 +1124,6 @@ class DataSyncService {
 
   /// Limpa dados locais e baixa tudo do servidor
   Future<SyncResult> fullDownload() async {
-    if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error(_l10n.syncPremiumOnly);
-    }
     if (!isReady) {
       return SyncResult.error(_l10n.syncNotAuthenticated);
     }
@@ -1092,7 +1139,7 @@ class DataSyncService {
       for (final entity in SyncEntity.values) {
         try {
           final tableName = supabaseTableFor(entity);
-          final localTable = _getLocalTableName(entity);
+          final localTable = localTableFor(entity);
           final remoteData = await _getRemoteData(tableName);
           downloadedByTable[localTable] =
               remoteData.map((item) => _toLocal(tableName, item)).toList();
@@ -1134,9 +1181,6 @@ class DataSyncService {
 
   /// Envia todos os dados locais para o servidor
   Future<SyncResult> fullUpload() async {
-    if (!PremiumAccess.instance.isPremium) {
-      return SyncResult.error(_l10n.syncPremiumOnly);
-    }
     if (!isReady) {
       return SyncResult.error(_l10n.syncNotAuthenticated);
     }
@@ -1153,7 +1197,7 @@ class DataSyncService {
       for (final entity in SyncEntity.values) {
         try {
           final tableName = supabaseTableFor(entity);
-          final localTable = _getLocalTableName(entity);
+          final localTable = localTableFor(entity);
 
           final db = await _db.database;
           final localData = await db.query(

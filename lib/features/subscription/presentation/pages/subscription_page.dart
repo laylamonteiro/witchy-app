@@ -274,7 +274,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           _buildFeatureItem(Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
           _buildFeatureItem(
               Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
-          _buildFeatureItem(Icons.sync, _l10n.premiumBenefitCloudSync),
           _buildFeatureItem(Icons.support_agent, _l10n.subsBenefitSupport),
         ],
       ),
@@ -369,7 +368,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   Icons.wb_sunny, _l10n.subsBenefitDailyWeather),
               _buildFeatureItem(
                   Icons.calendar_today, _l10n.subsBenefitLunarCalendar),
-              _buildFeatureItem(Icons.sync, _l10n.premiumBenefitCloudSync),
             ],
           ),
         ),

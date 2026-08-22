@@ -23,7 +23,6 @@ import 'core/providers/sync_provider.dart';
 import 'core/providers/language_provider.dart';
 import 'core/services/ad_service.dart';
 import 'core/services/payment_service.dart';
-import 'core/services/premium_access.dart';
 import 'core/services/debug_log_service.dart';
 import 'core/services/data_sync_service.dart';
 import 'core/navigation/app_deep_link.dart';
@@ -325,14 +324,11 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
 
   Future<void> _triggerBackgroundSync() async {
     final syncService = DataSyncService();
-    // Sincronização é exclusiva para usuários Premium (fonte única:
-    // RevenueCat OU premium local via Código Premium/admin) E precisa estar
-    // habilitada nas configurações de Privacidade.
+    // Sem trava de plano: sincronizar é de todo mundo. O que ainda decide é
+    // a preferência da pessoa e haver conta (`isReady`).
     final syncEnabled = await syncService.cloudSyncEnabled;
-    if (syncEnabled &&
-        syncService.isReady &&
-        PremiumAccess.instance.isPremium) {
-      await debugLog('SYNC', 'Auto-sync (Premium) iniciado em background');
+    if (syncEnabled && syncService.isReady) {
+      await debugLog('SYNC', 'Auto-sync iniciado em background');
       final result = await syncService.syncAll();
       if (result.success) {
         await debugLog('SYNC', 'Auto-sync concluído com sucesso');

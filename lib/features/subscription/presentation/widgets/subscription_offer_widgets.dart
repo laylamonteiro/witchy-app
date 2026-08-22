@@ -299,10 +299,11 @@ class PremiumBenefitsSection extends StatelessWidget {
         'assets/premium/icon_runes.png',
         l10n.premiumBenefitUnlimitedReadings,
       ),
-      _Benefit.asset(
-        'assets/premium/icon_cloud.png',
-        l10n.premiumBenefitCloudSync,
-      ),
+      // A sincronização SAIU da lista, sem substituto: ela deixou de ser
+      // exclusiva do Premium. São quatro benefícios agora — Conselheiro,
+      // Enciclopédia, Clima do Dia e leituras sem limite —, mais os dois
+      // extras do Vitalício. Nada de inventar uma linha nova para preencher
+      // o buraco: o substituto é o redesenho do convite.
       if (selectedPlan == SubscriptionType.lifetime) ...[
         _Benefit.icon(Icons.auto_awesome, l10n.premiumBenefitLifetimeCycle),
         _Benefit.icon(Icons.all_inclusive, l10n.premiumBenefitLifetimeNoRenew),

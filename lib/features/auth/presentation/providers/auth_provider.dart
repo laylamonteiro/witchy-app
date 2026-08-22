@@ -669,10 +669,15 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Dispara uma sincronização completa (upload+download) logo após o login,
-  /// se o usuário for Premium e a sincronização estiver habilitada.
+  /// se a sincronização estiver habilitada.
+  ///
+  /// A trava de Premium saiu daqui junto com o paywall do sync — e esta era a
+  /// porta mais importante das duas: é ela que faz a DESCIDA. Sem ela o dado
+  /// subiria e não voltaria, e quem perdesse o banco local (o iOS apaga o
+  /// armazenamento da web em 7 dias de ociosidade) reabriria o app num
+  /// grimório vazio, com tudo intacto no servidor.
   Future<void> _autoSyncAfterLogin() async {
     try {
-      if (!PremiumAccess.instance.isPremium) return;
       final sync = DataSyncService();
       final syncEnabled = await sync.cloudSyncEnabled;
       if (!syncEnabled || !sync.isReady) return;
@@ -825,9 +830,14 @@ class AuthProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
 
-    // Verificar se o usuário tem sincronização na nuvem
-    // Usuários com cloud sync = autenticados (email != null) E premium
-    final hasCloudSync = _currentUser.email != null && _currentUser.isPremium;
+    // Tem cópia na nuvem quem tem CONTA. O `&& isPremium` saiu junto com o
+    // paywall do sync: mantê-lo apagaria o banco local de quem é Free no
+    // logout, alegando "sem cloud sync" — o que passou a ser falso.
+    //
+    // Só a conta é conferida, e não a preferência de sync: quem desligou a
+    // sincronização tem no aparelho a ÚNICA cópia do grimório, e apagá-la no
+    // logout seria perda definitiva. Nos dois casos a resposta é manter.
+    final hasCloudSync = _currentUser.email != null;
     final isAnonymous = _currentUser.id == 'local_user';
 
     await debugLog('AUTH',
