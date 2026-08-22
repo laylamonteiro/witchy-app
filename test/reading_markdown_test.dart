@@ -54,15 +54,22 @@ Future<MarkdownStyleSheet> _folha(
   late MarkdownStyleSheet folha;
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.build(cores),
-      home: Builder(
-        builder: (context) {
-          folha = readingMarkdownStyle(context);
-          return const SizedBox.shrink();
-        },
+      // `theme:` do MaterialApp atravessa um AnimatedTheme: no primeiro
+      // quadro depois da troca, as cores ainda são as do tema ANTERIOR — e a
+      // folha saía com o lilás de um tema sobre o fundo de outro. Um `Theme`
+      // explícito vale já neste quadro.
+      home: Theme(
+        data: AppTheme.build(cores),
+        child: Builder(
+          builder: (context) {
+            folha = readingMarkdownStyle(context);
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     ),
   );
+  await tester.pumpAndSettle();
   return folha;
 }
 
