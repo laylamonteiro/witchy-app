@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +11,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/paged_reading.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/reading_markdown.dart';
 import '../../../diary/data/models/free_writing_model.dart';
 import '../../../diary/presentation/providers/free_writing_provider.dart';
 import '../../../grimoire/data/models/spell_model.dart';
@@ -445,12 +445,12 @@ class CycleReadingReportPage extends StatelessWidget {
   }
 
   static Widget _markdown(BuildContext context, String data) {
-    return MarkdownBody(
+    return ReadingMarkdown(
       // Sem o `# Título` de topo: a AppBar já o mostra, e repeti-lo dava o
       // título duplicado. O `_período_` (itálico) segue como subtítulo. Só
       // exibição — o conteúdo salvo no acervo é intacto.
-      data: data,
-      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+      data,
+      refine: (base) => base.copyWith(
         h2: Theme.of(context).textTheme.titleLarge?.copyWith(
               color: context.gc.lilac,
               fontWeight: FontWeight.bold,
@@ -469,6 +469,8 @@ class CycleReadingReportPage extends StatelessWidget {
           color: context.gc.lilac,
           fontWeight: FontWeight.normal,
         ),
+        // O destaque desta leitura é um cartão fechado, com borda inteira —
+        // a barra à esquerda da base é para as leituras que deslizam.
         blockquotePadding: const EdgeInsets.all(16),
         blockquoteDecoration: BoxDecoration(
           color: context.gc.lilac.withValues(alpha: 0.10),

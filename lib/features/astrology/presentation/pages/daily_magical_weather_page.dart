@@ -10,6 +10,7 @@ import '../../../../core/offers/offer_engine.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/magical_card.dart';
+import '../../../../core/widgets/reading_markdown.dart';
 import '../../data/data_sources/daily_weather_content.dart';
 import '../../data/models/transit_model.dart';
 import '../../data/models/enums.dart';
@@ -536,9 +537,9 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
                 const SizedBox(height: 16),
                 _buildForecastCta(),
               ] else ...[
-                MarkdownBody(
-                  data: _weatherCache!.aiGeneratedText,
-                  styleSheet: _getMarkdownStyleSheet(),
+                ReadingMarkdown(
+                  _weatherCache!.aiGeneratedText,
+                  refine: _folhaDeEstilo,
                 ),
               ],
             ],
@@ -615,30 +616,18 @@ class _DailyMagicalWeatherPageState extends State<DailyMagicalWeatherPage> {
     );
   }
 
-  MarkdownStyleSheet _getMarkdownStyleSheet() {
-    return MarkdownStyleSheet(
-      h2: GoogleFonts.cinzelDecorative(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: context.gc.lilac,
-      ),
-      p: TextStyle(
-        color: context.gc.softWhite,
-        height: 1.6,
-        fontSize: 15,
-      ),
-      listBullet: TextStyle(
-        color: context.gc.lilac,
-        fontSize: 15,
-      ),
-      strong: TextStyle(
-        color: context.gc.lilac,
-        fontWeight: FontWeight.bold,
-      ),
-      em: TextStyle(
-        color: context.gc.softWhite.withValues(alpha: 0.9),
-        fontStyle: FontStyle.italic,
-      ),
+  /// Os ajustes desta previsão sobre a base do grimório.
+  ///
+  /// A previsão é lida de relance, entre uma coisa e outra: corpo um pouco
+  /// menor e mais junto que o das leituras longas. O resto — inclusive a
+  /// frase que a IA resolva destacar com `> ` — vem vestido da base.
+  static MarkdownStyleSheet _folhaDeEstilo(MarkdownStyleSheet base) {
+    // `copyWith` TROCA o estilo inteiro — partir do estilo da base é o que
+    // mantém a cor do texto vinda do tema. Um `TextStyle` novo aqui deixaria
+    // a cor nula e o corpo voltaria ao padrão do pacote.
+    return base.copyWith(
+      p: base.p?.copyWith(height: 1.6, fontSize: 15),
+      listBullet: base.listBullet?.copyWith(fontSize: 15, height: 1.6),
     );
   }
 
