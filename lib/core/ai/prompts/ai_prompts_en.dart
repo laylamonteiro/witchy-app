@@ -483,6 +483,7 @@ The bracketed line is read by the app: write nothing else on that line.''',
   errorServiceUnavailable: 'Service temporarily unavailable (503)',
   errorConnection: 'No connection to the service right now — try again in a moment',
   errorProcessing: "I couldn't read the response — try again in a moment",
+  errorNeedsAccount: 'Sign in so Salem can answer',
   errorImageTooLarge: 'Image too large. Please try again.',
   errorPalmUnavailable:
       'Palm reading temporarily unavailable. Please try again later.',

@@ -447,6 +447,7 @@ A linha entre colchetes é lida pelo aplicativo: não escreva nada além dela ne
   errorServiceUnavailable: 'Serviço temporariamente indisponível',
   errorConnection: 'Sem conexão com o serviço agora — tente de novo em instantes',
   errorProcessing: 'Não consegui ler a resposta — tente de novo em instantes',
+  errorNeedsAccount: 'Entre na sua conta para o Salem poder responder',
   errorImageTooLarge: 'Imagem muito grande. Tente novamente.',
   errorPalmUnavailable:
       'Leitura de mãos temporariamente indisponível. Tente mais tarde.',

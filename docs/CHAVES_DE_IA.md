@@ -1,9 +1,9 @@
 # As chaves de IA e o navegador
 
-> **Estado:** a exposição descrita aqui **continua aberta**. Este documento é
-> o material preparado, não um conserto aplicado — publicar uma Edge Function
-> exige o painel ou a CLI do Supabase, e a decisão de produto da Etapa 3 é
-> sua.
+> **Estado:** a exposição **continua aberta**, mas por um passo só: falta
+> publicar a função e ligar o interruptor. O lado do app está pronto (Etapa
+> 3) e a decisão de produto foi tomada — **exige conta**. Publicar uma Edge
+> Function exige o painel ou a CLI do Supabase, que não é minha para usar.
 
 ## O que está exposto, e como conferir
 
@@ -96,26 +96,35 @@ curl -i -X POST "$SUPABASE_URL/functions/v1/ia" \
 Esperado: `200` com o JSON da Groq. Sem o `Authorization`: `401`. Com
 `"modelo":"outro"`: `400`.
 
-## Etapa 3 — a decisão que trava o resto (é sua)
+## Etapa 3 — o app já aponta para lá, atrás de um interruptor
 
-**O app não foi religado à função, e isso é deliberado.** Religar força uma
-escolha de produto que não é minha:
+**Decidido pela dona do produto: exige conta.** Quem usa o app sem criar
+conta perde a IA na web. Foi a escolha consciente contra a alternativa
+(aceitar anônimo), que protegeria a chave do provedor mas deixaria a função
+gastável por qualquer um que tenha a `anon key` — que também é pública.
 
-| Caminho | O que muda para quem usa |
-|---|---|
-| **Exigir conta** (o que a função faz hoje) | Quem usa sem login perde a IA na web. A chave fica protegida de verdade: sem sessão, ninguém gasta a cota. |
-| **Aceitar anônimo** | Ninguém perde nada. A chave do provedor deixa de vazar, mas a função vira gastável por qualquer um que tenha a `anon key` — que também é pública. Precisa de limite por IP e por período, que a função ainda não tem. |
+O app **já está religado**: os quatro pontos que montavam a URL do provedor
+e o cabeçalho da chave (`_groqText`, `_geminiText` e os dois ramos de
+`_visionCall`) passam agora por um único `_postarNoProvedor`, e o corpo e a
+leitura da resposta não mudaram. Sem sessão, a tela recebe
+`errorNeedsAccount` — uma frase que diz o que fazer, e não um 401 cru
+travestido de "erro de conexão".
 
-Some-se a isto que o `ai_service.dart` é o subsistema mais usado do app e
-**não há Flutter nesta máquina** para provar uma única chamada. Religar às
-cegas o caminho por onde passa toda a IA seria trocar um risco conhecido por
-um desconhecido.
+**O interruptor nasce desligado, e é de propósito:** a função precisa estar
+no ar ANTES. Enquanto `IA_PELO_SERVIDOR` não for passado, o app segue no
+caminho direto de sempre, exatamente como antes deste trabalho.
 
-Quando a decisão estiver tomada, a mudança no Dart é pequena e localizada:
-os quatro `_dio.post` acima passam a apontar para
-`$SUPABASE_URL/functions/v1/ia`, com `{provedor, modelo, corpo}` no lugar da
-URL do provedor e do cabeçalho da chave. O corpo e a leitura da resposta não
-mudam.
+A ordem, então, é:
+
+1. `supabase functions deploy ia` (Etapa 2) e a conferência por `curl`.
+2. Acrescentar `--dart-define=IA_PELO_SERVIDOR=true` ao build web em
+   `release.yml` e em `branch-validate.yml`.
+3. Confirmar no staging que a IA responde logada e recusa deslogada.
+4. Só então a Etapa 4.
+
+`test/ia_pelo_servidor_test.dart` tranca o estado inicial: um build que
+ligasse o caminho novo por engano, sem função no ar, não teria sintoma
+nenhum até alguém tentar usar a IA.
 
 ## Etapa 4 — o gate que impede a volta
 
@@ -131,5 +140,6 @@ if grep -rqE 'gsk_[A-Za-z0-9]{20,}|AIza[A-Za-z0-9_-]{30,}' public/; then
 fi
 ```
 
-Enquanto a Etapa 3 não acontecer, esse gate **falharia todo build** — por
-isso ele está aqui como texto, e não no workflow.
+Enquanto o interruptor da Etapa 3 estiver desligado, esse gate **falharia
+todo build** — por isso ele está aqui como texto, e não no workflow. Ligue-o
+no mesmo commit em que ligar o `IA_PELO_SERVIDOR`.

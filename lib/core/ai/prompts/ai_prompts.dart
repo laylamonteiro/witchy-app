@@ -57,6 +57,7 @@ class AiPrompts {
     required this.errorServiceUnavailable,
     required this.errorConnection,
     required this.errorProcessing,
+    required this.errorNeedsAccount,
     required this.errorImageTooLarge,
     required this.errorPalmUnavailable,
     required this.errorUnknown,
@@ -193,6 +194,13 @@ class AiPrompts {
   /// os dados. O motivo agora vai para o log.
   final String errorConnection;
   final String errorProcessing;
+
+  /// Quando a IA passa pelo intermediário do servidor e não há sessão.
+  ///
+  /// Não é erro de conexão nem de leitura: é a única falha da camada de IA
+  /// que a pessoa resolve sozinha, e por isso ela precisa dizer o que fazer
+  /// em vez de pedir para tentar de novo.
+  final String errorNeedsAccount;
   final String errorImageTooLarge;
   final String errorPalmUnavailable;
   final String errorUnknown;

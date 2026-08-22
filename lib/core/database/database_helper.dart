@@ -29,6 +29,34 @@ class DatabaseHelper {
       path = join(dbPath, filePath);
     }
 
+    // SEM `PRAGMA foreign_keys = ON`, e é decisão, não esquecimento.
+    //
+    // O SQLite ignora declaração de chave estrangeira a menos que o pragma
+    // esteja ligado — por CONEXÃO, não por banco. As duas que existem aqui
+    // (ritual_logs → daily_rituals e magical_profiles → birth_charts, ambas
+    // com ON DELETE CASCADE) não conferem nada e não cascateiam nada. Elas
+    // ficam porque documentam o parentesco e porque no POSTGRES, onde o
+    // sync grava, são conferidas de verdade (supabase/restore_database.sql).
+    //
+    // Ligar o pragma num banco que já existe teria três efeitos, e o
+    // primeiro é o que decidiu:
+    //
+    // 1. `saveBirthChart` grava com `ConflictAlgorithm.replace`, e no SQLite
+    //    REPLACE numa linha existente é DELETE + INSERT. Com o pragma ligado
+    //    esse DELETE dispara o CASCADE — ou seja, regravar o mapa sob o
+    //    mesmo id APAGARIA a Análise Personalizada, as dez seções que
+    //    custaram dez chamadas de IA. Hoje é inofensivo justamente porque a
+    //    chave é decorativa.
+    // 2. Download de sync que hoje aterrissa como órfão (um registro de
+    //    ritual cujo ritual não veio junto) passaria a ser RECUSADO.
+    // 3. Bancos já instalados guardam órfãos. O pragma não valida o que já
+    //    está lá, mas todo UPDATE naquelas linhas passaria a falhar.
+    //
+    // Para ligar um dia, nesta ordem: trocar o REPLACE de `birth_charts` por
+    // update-ou-insert explícito; migração varrendo os órfãos existentes;
+    // `PRAGMA defer_foreign_keys = ON` dentro da transação do fullDownload;
+    // e só então o pragma em `onConfigure` (dentro de onCreate/onUpgrade ele
+    // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
       version: 22,

@@ -156,6 +156,10 @@ void main() {
       // do provedor de IA — foi para o log e saiu da tela.
       'errorConnection': (p, g) => p.errorConnection,
       'errorProcessing': (p, g) => p.errorProcessing,
+      // A única falha da camada de IA que a pessoa resolve sozinha: sem
+      // sessão, o intermediário do servidor recusa. Tem de dizer o que
+      // fazer, e nas três línguas.
+      'errorNeedsAccount': (p, g) => p.errorNeedsAccount,
       'errorImageTooLarge': (p, g) => p.errorImageTooLarge,
       'errorPalmUnavailable': (p, g) => p.errorPalmUnavailable,
       'errorUnknown': (p, g) => p.errorUnknown,

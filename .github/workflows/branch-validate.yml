@@ -63,17 +63,21 @@ jobs:
         # rodar: ele só detecta problemas de Gradle/NDK/manifest, e analyze +
         # testes já cobrem o Dart. O resultado sai como output do job.
         #
-        # O nome dizia "código nativo" e olhava só para `android/` — o que
-        # escondia o buraco em vez de mostrá-lo: **o iOS não é compilado por
-        # job nenhum desta esteira**. Pôr `ios/` neste padrão não resolveria
-        # (ele liga o build ANDROID, que nada tem a ver), então o nome passa
-        # a dizer a verdade e o buraco fica à vista. Fechá-lo exige um runner
-        # macOS, que é decisão de custo — e, junto com ela, vêm as duas
-        # pendências que hoje não têm quem acuse: o iOS não tem
-        # configuração de Google Sign-In nativo (sem GIDClientID, sem
-        # GoogleService-Info.plist) e o identificador do AdMob no
-        # Info.plist ainda é o de TESTE do Google, então anúncio no iOS não
-        # rende nada.
+        # O nome dizia "código nativo" e olhava só para `android/`. Agora
+        # diz a verdade: o iOS NÃO é compilado por job nenhum desta esteira,
+        # e não vai ser.
+        #
+        # DECISÃO DA DONA DO PRODUTO: não haverá app iOS nativo. Com isso
+        # caem, de uma vez, o runner macOS no CI, o GoogleService-Info.plist,
+        # o GIDClientID e o identificador de TESTE do AdMob em
+        # ios/Runner/Info.plist — a auditoria listava os quatro, e os quatro
+        # só existiriam para um app que não vai à App Store.
+        #
+        # ATENÇÃO ao que NÃO cai junto: o app WEB aberto no iPhone continua
+        # existindo, é Safari, e é lá que vale a regra dos 7 dias da Apple
+        # que apaga o armazenamento gravável por script. Foi por causa dela
+        # que a sincronização foi aberta para o plano gratuito. Quando a
+        # auditoria fala de "iOS" no achado crítico, é deste que ela fala.
         id: native
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then

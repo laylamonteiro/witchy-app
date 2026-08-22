@@ -484,6 +484,7 @@ La línea entre corchetes la lee la aplicación: no escribas nada más en esa l�
   errorServiceUnavailable: 'Servicio temporalmente no disponible (503)',
   errorConnection: 'Sin conexión con el servicio ahora — inténtalo de nuevo en un momento',
   errorProcessing: 'No pude leer la respuesta — inténtalo de nuevo en un momento',
+  errorNeedsAccount: 'Inicia sesión para que Salem pueda responder',
   errorImageTooLarge: 'Imagen demasiado grande. Inténtalo de nuevo.',
   errorPalmUnavailable:
       'Lectura de manos temporalmente no disponible. Inténtalo más tarde.',
