@@ -311,9 +311,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             key: const ValueKey('open_premium_paywall_button'),
             onPressed: _showPaywall,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(
-                  0xFF9C27B0), // Cor consistente com outros botões Premium
-              foregroundColor: context.gc.textPrimary,
+              // Era `Color(0xFF9C27B0)` cravado, com o comentário "cor
+              // consistente com outros botões Premium" — e não era: os
+              // outros usam o acento do tema, então este roxo era o único
+              // que ficava igual nos seis temas enquanto tudo em volta
+              // mudava.
+              backgroundColor: context.gc.lilac,
+              foregroundColor: context.gc.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

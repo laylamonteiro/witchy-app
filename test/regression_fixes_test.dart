@@ -362,6 +362,15 @@ void main() {
       expect(find.byType(PremiumOfferPanel), findsOneWidget);
       expect(find.byType(SubscriptionHero), findsOneWidget);
       expect(find.text('Conselheiro Místico ilimitado'), findsOneWidget);
+      // Cada benefício virou PEÇA: o nome continua, e embaixo dele entra o
+      // vislumbre do que a feature entrega — o MESMO texto da página de
+      // descoberta, para as duas telas parecerem a mesma ideia vista de
+      // dois ângulos. Uma lista de nomes é correta e esquecível.
+      expect(
+        find.text(
+            'Perguntar de novo, e de outro jeito, até a resposta fazer sentido'),
+        findsOneWidget,
+      );
       // A sincronização saiu da lista: virou recurso de todo mundo, e
       // vender o que não é exclusivo quebra a confiança do painel. Uma
       // imagem a menos porque o benefício levou junto o ícone dele.
