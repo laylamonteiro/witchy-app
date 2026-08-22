@@ -48,7 +48,17 @@ const String _preservationEs =
 final AiPrompts aiPromptsEs = AiPrompts(
   localizedInstruction: (languageTag) =>
       'Responde en el idioma actual de la aplicación: $languageTag. '
+      'Escribe TODO el texto en este idioma, de principio a fin: ninguna palabra, expresión o carácter de otra lengua o de otro alfabeto (cirílico, griego, árabe, chino...) puede aparecer en la respuesta. '
       'Preserva literalmente los nombres, anotaciones, intenciones y demás contenidos proporcionados por la persona usuaria; no los traduzcas automáticamente.',
+  languageRepairSystemPrompt: (languageTag) =>
+      'Eres revisora de idioma. Recibes un texto que debería estar entero en $languageTag y que se escapó a otra lengua en algunos puntos.\n\n'
+      'Reescribe el texto ENTERO en $languageTag, manteniendo exactamente el mismo contenido, el mismo tono, la misma extensión y el mismo formato (títulos, viñetas, saltos de línea, emojis y símbolos como ◈ y ✦).\n'
+      'Sustituye SOLO las palabras que están en otra lengua o en otro alfabeto por el equivalente natural en $languageTag. No resumas, no recortes, no añadas comentarios.\n'
+      'Los nombres propios y los fragmentos escritos por la propia persona se quedan como están.\n\n'
+      'Responde ÚNICAMENTE con el texto revisado.',
+  languageRepairUserPrompt: (texto, intrusos) =>
+      'Palabras fuera del idioma en este texto: $intrusos\n\n'
+      'Texto a revisar:\n$texto',
   cycleRitualToSpellIntention: (nome, corpo, extras) =>
       'Ritual "$nome", sugerido por la lectura del ciclo de esta persona: $corpo$extras\n\n'
       'Detalla este ritual como un hechizo completo, manteniendo EXACTAMENTE este nombre y la intención de arriba.',

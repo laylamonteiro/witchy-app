@@ -84,6 +84,10 @@ void main() {
     // Sondas nomeadas: cada uma resolve um campo para String.
     final probes = <String, String Function(AiPrompts p, Gender g)>{
       'localizedInstruction': (p, g) => p.localizedInstruction('pt-BR'),
+      'languageRepairSystemPrompt': (p, g) =>
+          p.languageRepairSystemPrompt('pt-BR'),
+      'languageRepairUserPrompt': (p, g) =>
+          p.languageRepairUserPrompt('texto gerado', 'sometimes'),
       'cycleRitualToSpellIntention': (p, g) =>
           p.cycleRitualToSpellIntention('Nome', 'Corpo', ''),
       'spellGenerationSystemPrompt': (p, g) =>
@@ -176,6 +180,16 @@ void main() {
             reason: 'dreamUserPrompt [$lang]');
         expect(prompts.localizedInstruction('es-ES'), contains('es-ES'),
             reason: 'localizedInstruction [$lang]');
+        // A reescrita de idioma manda o texto inteiro de volta: perder o
+        // texto ali seria devolver uma leitura inventada no lugar da dela.
+        expect(
+            prompts.languageRepairUserPrompt(
+                'A Lua em Virgem pede foco.', 'sometimes, автокобранса'),
+            allOf(contains('A Lua em Virgem pede foco.'),
+                contains('sometimes, автокобранса')),
+            reason: 'languageRepairUserPrompt [$lang]');
+        expect(prompts.languageRepairSystemPrompt('es-ES'), contains('es-ES'),
+            reason: 'languageRepairSystemPrompt [$lang]');
       });
     });
   });
