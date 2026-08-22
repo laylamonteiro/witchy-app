@@ -127,7 +127,7 @@
   "premiumPerMonth": "/month",
   "premiumPerYear": "/year",
   "premiumPlanLifetime": "Lifetime",
-  "premiumLifetimeOnce": "one-time payment, forever",
+  "premiumLifetimeOnce": "One-time payment, forever",
   "premiumLifetimeShort": "forever",
   "premiumBenefitLifetimeCycle": "Cycle Reading included — week and lunation, no separate purchase",
   "premiumBenefitLifetimeNoRenew": "One payment: no renewal, no monthly fee, forever",
@@ -1850,5 +1850,5 @@
   "profileSectionWeaving": "The Mystic Counselor is reading this part of your chart. It takes a few seconds",
   "profileSectionFailed": "We could not weave this part right now",
   "profileSectionRegenerate": "Weave again",
-  "premiumSaveYearly": "Save 50%"
+  "premiumSaveYearlyPercent": "Save {percent}%"
 }

@@ -480,8 +480,8 @@ La línea entre corchetes la lee la aplicación: no escribas nada más en esa l�
   errorAuthentication: 'Error de autenticación (401)',
   errorRateLimit: 'Límite de uso excedido (429)',
   errorServiceUnavailable: 'Servicio temporalmente no disponible (503)',
-  errorConnection: (message) => 'Error de conexión: $message',
-  errorProcessing: (error) => 'Error al procesar la respuesta: $error',
+  errorConnection: 'Sin conexión con el servicio ahora — inténtalo de nuevo en un momento',
+  errorProcessing: 'No pude leer la respuesta — inténtalo de nuevo en un momento',
   errorImageTooLarge: 'Imagen demasiado grande. Inténtalo de nuevo.',
   errorPalmUnavailable:
       'Lectura de manos temporalmente no disponible. Inténtalo más tarde.',

@@ -126,7 +126,7 @@
   "premiumPerMonth": "/mês",
   "premiumPerYear": "/ano",
   "premiumPlanLifetime": "Vitalício",
-  "premiumLifetimeOnce": "pagamento único, para sempre",
+  "premiumLifetimeOnce": "Pagamento único, para sempre",
   "premiumLifetimeShort": "para sempre",
   "premiumBenefitLifetimeCycle": "Leitura do Ciclo incluída — semana e lunação, sem compra avulsa",
   "premiumBenefitLifetimeNoRenew": "Pagamento único: sem renovação, sem mensalidade, para sempre",
@@ -2693,5 +2693,10 @@
   "profileSectionWeaving": "O Conselheiro Místico está lendo esta parte do seu mapa. Leva alguns segundos",
   "profileSectionFailed": "Não foi possível tecer esta parte agora",
   "profileSectionRegenerate": "Tecer de novo",
-  "premiumSaveYearly": "Economize 50%"
+  "premiumSaveYearlyPercent": "Economize {percent}%",
+  "@premiumSaveYearlyPercent": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  }
 }

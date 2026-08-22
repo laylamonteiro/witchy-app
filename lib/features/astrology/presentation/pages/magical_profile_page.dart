@@ -337,8 +337,9 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
         children: [
           Row(
             children: [
-              const Text('', style: TextStyle(fontSize: 28)),
-              const SizedBox(width: 8),
+              // Sem o `Text('')` de 28pt que sobrou aqui: o emoji do signo foi
+              // removido e o espaço reservado para ele ficou, empurrando o
+              // título e abrindo um vão no lugar que era para ter sido limpo.
               Expanded(
                 child: Text(
                   _sel(

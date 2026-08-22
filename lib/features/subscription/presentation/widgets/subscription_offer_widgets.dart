@@ -418,6 +418,14 @@ class PremiumOfferPanel extends StatelessWidget {
   final VoidCallback onPurchase;
   final Widget? unavailableNotice;
 
+  /// Quanto o anual economiza, em porcento — null esconde o selo.
+  ///
+  /// Vem calculado dos preços que a LOJA devolveu. Era texto fixo no ARB
+  /// ("Economize 50%"): uma conta com dois números que a tela não tinha na
+  /// mão, e que mentia se a loja mudasse o preço ou a pessoa estivesse fora
+  /// do Brasil.
+  final int? economiaAnual;
+
   const PremiumOfferPanel({
     super.key,
     required this.selectedPlan,
@@ -432,6 +440,7 @@ class PremiumOfferPanel extends StatelessWidget {
     this.yearlyEnabled = true,
     this.lifetimeEnabled = false,
     this.unavailableNotice,
+    this.economiaAnual,
   });
 
   @override
@@ -481,6 +490,7 @@ class PremiumOfferPanel extends StatelessWidget {
                 monthlyEnabled: monthlyEnabled,
                 yearlyEnabled: yearlyEnabled,
                 lifetimeEnabled: lifetimeEnabled,
+                economiaAnual: economiaAnual,
               ),
               const SizedBox(height: 12),
               SubscriptionPurchaseButton(
@@ -489,7 +499,7 @@ class PremiumOfferPanel extends StatelessWidget {
                 onPressed: onPurchase,
               ),
               const SizedBox(height: 8),
-              const SubscriptionGuarantees(),
+              SubscriptionGuarantees(selectedPlan: selectedPlan),
             ],
           ),
         );
@@ -508,6 +518,9 @@ class SubscriptionPlanSelector extends StatelessWidget {
   final bool yearlyEnabled;
   final bool lifetimeEnabled;
 
+  /// Quanto o anual economiza, em porcento — null esconde o selo.
+  final int? economiaAnual;
+
   const SubscriptionPlanSelector({
     super.key,
     required this.selectedPlan,
@@ -518,6 +531,7 @@ class SubscriptionPlanSelector extends StatelessWidget {
     this.monthlyEnabled = true,
     this.yearlyEnabled = true,
     this.lifetimeEnabled = false,
+    this.economiaAnual,
   });
 
   @override
@@ -543,7 +557,11 @@ class SubscriptionPlanSelector extends StatelessWidget {
       title: l10n.premiumPlanYearly,
       price: yearlyPrice,
       period: l10n.premiumPerYear,
-      savings: l10n.premiumSaveYearly,
+      // Sem número, sem selo: esconder é melhor do que mostrar uma conta
+      // que pode estar errada numa tela de venda.
+      savings: economiaAnual == null
+          ? null
+          : l10n.premiumSaveYearlyPercent(economiaAnual!),
       popular: true,
       emphasized: true,
       selected: selectedPlan == SubscriptionType.yearly,
@@ -858,7 +876,15 @@ class SubscriptionPurchaseButton extends StatelessWidget {
 }
 
 class SubscriptionGuarantees extends StatelessWidget {
-  const SubscriptionGuarantees({super.key});
+  const SubscriptionGuarantees({super.key, required this.selectedPlan});
+
+  /// O rodapé precisa acompanhar o plano escolhido.
+  ///
+  /// A lista de benefícios já respondia ao plano; este rodapé não: era `const`
+  /// e dizia sempre "cancele a qualquer momento". Com o Vitalício em foco, a
+  /// mesma dobra da tela prometia "sem renovação, para sempre" e, duas linhas
+  /// abaixo, oferecia cancelar uma assinatura que não existe.
+  final SubscriptionType selectedPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -871,7 +897,9 @@ class SubscriptionGuarantees extends StatelessWidget {
     return Column(
       children: [
         Text(
-          l10n.premiumCancelAnytime,
+          selectedPlan == SubscriptionType.lifetime
+              ? l10n.premiumLifetimeOnce
+              : l10n.premiumCancelAnytime,
           style: GoogleFonts.lora(
             color: context.gc.textSecondary,
             fontSize: 12,

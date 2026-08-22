@@ -187,8 +187,12 @@ class AiPrompts {
   final String errorAuthentication;
   final String errorRateLimit;
   final String errorServiceUnavailable;
-  final String Function(String? message) errorConnection;
-  final String Function(Object error) errorProcessing;
+  /// Sem payload de propósito: o detalhe técnico da DioException carrega a
+  /// URL do provedor de IA, e ele chegava à tela dentro de "Erro na conexão:
+  /// ...". Além de não dizer nada a quem lê, publicava para onde o app manda
+  /// os dados. O motivo agora vai para o log.
+  final String errorConnection;
+  final String errorProcessing;
   final String errorImageTooLarge;
   final String errorPalmUnavailable;
   final String errorUnknown;

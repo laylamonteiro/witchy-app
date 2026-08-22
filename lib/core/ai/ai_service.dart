@@ -26,6 +26,26 @@ class AiRateLimitException implements Exception {
   const AiRateLimitException();
 }
 
+/// A falha de rede como a pessoa precisa ver — com o detalhe técnico indo
+/// para o log, e não para a tela.
+///
+/// A mensagem da DioException carrega a URL do provedor de IA dentro. Ela
+/// chegava à tela inteira, dentro de "Erro na conexão: ...": não dizia nada a
+/// quem lia e publicava para onde o app manda os dados. O teste que deveria
+/// pegar isso usava um dublê que devolvia uma frase amigável — o provider
+/// real devolvia o dump.
+String _falhaDeConexao(DioException e) {
+  debugPrint('IA: falha de conexão (${e.type}): ${e.message}');
+  return aiPrompts.errorConnection;
+}
+
+/// Idem para a resposta que não dá para ler: o texto cru da exceção fica no
+/// log, a tela recebe uma frase e um caminho de volta.
+String _falhaDeLeitura(Object e) {
+  debugPrint('IA: resposta ilegível: $e');
+  return aiPrompts.errorProcessing;
+}
+
 /// Provedores de IA disponíveis. Qual atende cada ponto do app é decidido
 /// pela configuração no topo do [AIService] — não por código espalhado.
 enum AiProvider { groq, gemini }
@@ -169,9 +189,9 @@ class AIService {
       } else if (e.response?.statusCode == 503) {
         throw Exception(_prompts.errorServiceUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -649,9 +669,9 @@ class AIService {
       } else if (e.response?.statusCode == 503) {
         throw Exception(_prompts.errorServiceUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1187,9 +1207,9 @@ class AIService {
         // Modelo de visão indisponível (ex.: descontinuado pelo provedor).
         throw Exception(_prompts.errorPalmUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1392,9 +1412,9 @@ class AIService {
       } else if (e.response?.statusCode == 404) {
         throw Exception(_prompts.errorPalmUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1436,9 +1456,9 @@ class AIService {
       if (e.response?.statusCode == 429) {
         throw const AiRateLimitException();
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1556,9 +1576,9 @@ class AIService {
       if (e.response?.statusCode == 429) {
         throw Exception(_prompts.errorRateLimit);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1618,9 +1638,9 @@ class AIService {
       if (e.response?.statusCode == 429) {
         throw Exception(_prompts.errorRateLimit);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1645,9 +1665,9 @@ class AIService {
       if (e.response?.statusCode == 429) {
         throw Exception(_prompts.errorRateLimit);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1680,9 +1700,9 @@ class AIService {
       } else if (e.response?.statusCode == 503) {
         throw Exception(_prompts.errorServiceUnavailable);
       }
-      throw Exception(_prompts.errorConnection(e.message));
+      throw Exception(_falhaDeConexao(e));
     } catch (e) {
-      throw Exception(_prompts.errorProcessing(e));
+      throw Exception(_falhaDeLeitura(e));
     }
   }
 
@@ -1729,7 +1749,7 @@ class AIService {
         return content.trim();
       } on DioException catch (e) {
         if (e.response?.statusCode != 429) {
-          throw Exception(_prompts.errorConnection(e.message));
+          throw Exception(_falhaDeConexao(e));
         }
         lastRateLimit = e;
         if (attempt < _quotaRetryDelays.length) {

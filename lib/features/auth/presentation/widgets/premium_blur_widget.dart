@@ -448,15 +448,24 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
                                   SubscriptionType.yearly,
                                   'R\$ 119,90',
                                 ),
+                                // O Vitalício ganhou valor de reserva como
+                                // os outros dois. Antes era string vazia: a
+                                // loja calada deixava o card sem preço
+                                // nenhum, e o R$ 249,90 não existia em lugar
+                                // nenhum do repositório.
                                 lifetimePrice: lifetimeAvailable
                                     ? _priceFor(
                                         SubscriptionType.lifetime,
-                                        '',
+                                        'R\$ 249,90',
                                       )
                                     : null,
                                 monthlyEnabled: monthlyAvailable,
                                 yearlyEnabled: yearlyAvailable,
                                 lifetimeEnabled: lifetimeAvailable,
+                                // Calculado dos preços reais da loja; null
+                                // esconde o selo em vez de mentir.
+                                economiaAnual:
+                                    _paymentService.economiaAnualEmPorcento,
                                 purchaseLoading: _isPurchasing ||
                                     _paymentService.status ==
                                         PurchaseStatus.loading,

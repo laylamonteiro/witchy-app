@@ -35,6 +35,26 @@ class EraReadingPage extends StatelessWidget {
 
   bool get _ehFase => fase != null;
 
+  /// Qual feature governa ESTA leitura.
+  ///
+  /// A Era e a Fase que estão acontecendo agora são a isca: abertas para todo
+  /// mundo. Passado e futuro são Premium.
+  ///
+  /// Decidido a partir da janela, e não recebido de quem abre a tela: a lista
+  /// de eras e os cartões de "Agora" chegam aqui por caminhos diferentes, e um
+  /// parâmetro esquecido num deles voltaria a trancar a isca em silêncio.
+  @visibleForTesting
+  static AppFeature featureDaLeitura({
+    required Era era,
+    required Fase? fase,
+    required DateTime agora,
+  }) {
+    // Em UTC, como a linha do tempo guarda.
+    final quando = agora.toUtc();
+    final ehAgora = fase != null ? fase.contem(quando) : era.contem(quando);
+    return ehAgora ? AppFeature.lifeErasNow : AppFeature.lifeErasFull;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -47,9 +67,15 @@ class EraReadingPage extends StatelessWidget {
     final inicio = f?.inicio ?? era.inicio;
     final fim = f?.fim ?? era.fim;
 
-    final acesso = context
-        .watch<AuthProvider>()
-        .checkFeatureAccess(AppFeature.lifeErasFull);
+    // A tela pedia `lifeErasFull` para QUALQUER leitura, inclusive a atual.
+    // O resultado era o pior arranjo possível: os dois cartões de "Agora" não
+    // tinham cadeado e pareciam abertos, a pessoa tocava na isca e batia numa
+    // tela travada — enquanto as listas de passado e futuro, essas sim,
+    // mostravam cadeado. A única coisa que ela podia ver de graça era a que
+    // parecia proibida.
+    final acesso = context.watch<AuthProvider>().checkFeatureAccess(
+          featureDaLeitura(era: era, fase: fase, agora: DateTime.now()),
+        );
 
     return Scaffold(
       appBar: AppBar(title: ResponsiveAppBarTitle(titulo)),

@@ -8,6 +8,15 @@ import '../../data/models/magical_profile_model.dart';
 import '../../data/repositories/astrology_repository.dart';
 import '../../data/services/chart_calculator.dart';
 import '../../data/services/magical_interpreter.dart';
+import '../../../../core/content/content_locale.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+
+/// O texto de falha que chega à tela sai daqui, e não de string cravada: as
+/// cinco mensagens deste provider eram português com o dump da exceção
+/// dentro. Chegavam assim em inglês e espanhol, e o scanner de hardcoded não
+/// as via porque nenhuma tinha acento.
+AppLocalizations get _l10n =>
+    lookupAppLocalizations(ContentLocale.instance.locale);
 
 class AstrologyProvider with ChangeNotifier {
   final AstrologyRepository _repository = AstrologyRepository();
@@ -93,7 +102,8 @@ class AstrologyProvider with ChangeNotifier {
         _magicalProfile = await _repository.getMagicalProfile(effectiveUserId);
       }
     } catch (e) {
-      _error = 'Erro ao carregar mapa natal: $e';
+      debugPrint('Mapa natal: falha ao carregar: $e');
+      _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -170,7 +180,8 @@ class AstrologyProvider with ChangeNotifier {
       // chamadas de IA que quase ninguém lia inteiras.
       return chart;
     } catch (e) {
-      _error = 'Erro ao calcular mapa natal: $e';
+      debugPrint('Mapa natal: falha ao calcular: $e');
+      _error = _l10n.errorsGeneric;
       return null;
     } finally {
       _isLoading = false;
@@ -199,7 +210,8 @@ class AstrologyProvider with ChangeNotifier {
 
       return;
     } catch (e) {
-      _error = 'Erro ao atualizar mapa natal: $e';
+      debugPrint('Mapa natal: falha ao atualizar: $e');
+      _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -219,7 +231,8 @@ class AstrologyProvider with ChangeNotifier {
       _birthChart = null;
       _magicalProfile = null;
     } catch (e) {
-      _error = 'Erro ao deletar mapa natal: $e';
+      debugPrint('Mapa natal: falha ao apagar: $e');
+      _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -239,7 +252,8 @@ class AstrologyProvider with ChangeNotifier {
       await _repository.saveMagicalProfile(profile);
       _magicalProfile = profile;
     } catch (e) {
-      _error = 'Erro ao regenerar perfil: $e';
+      debugPrint('Perfil mágico: falha ao regerar: $e');
+      _error = _l10n.errorsGeneric;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -330,6 +344,11 @@ class AstrologyProvider with ChangeNotifier {
       _ultimaFalhaFoiLimite = true;
       _error = null;
     } catch (e) {
+      // As exceções que a camada de IA lança já vêm com texto pronto para a
+      // tela — e agora sem o detalhe do Dio dentro, que trazia a URL do
+      // provedor. O que sobra aqui é tirar o prefixo `Exception: `, que é
+      // ruído do Dart, e deixar o texto original no log.
+      debugPrint('Perfil mágico: seção $sectionKey falhou: $e');
       _error = '$e'.replaceAll('Exception: ', '');
     } finally {
       _tecendo.remove(sectionKey);

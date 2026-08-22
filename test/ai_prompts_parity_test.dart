@@ -152,8 +152,10 @@ void main() {
       'errorAuthentication': (p, g) => p.errorAuthentication,
       'errorRateLimit': (p, g) => p.errorRateLimit,
       'errorServiceUnavailable': (p, g) => p.errorServiceUnavailable,
-      'errorConnection': (p, g) => p.errorConnection('timeout'),
-      'errorProcessing': (p, g) => p.errorProcessing('falha'),
+      // Sem payload: o detalhe técnico da DioException — que trazia a URL
+      // do provedor de IA — foi para o log e saiu da tela.
+      'errorConnection': (p, g) => p.errorConnection,
+      'errorProcessing': (p, g) => p.errorProcessing,
       'errorImageTooLarge': (p, g) => p.errorImageTooLarge,
       'errorPalmUnavailable': (p, g) => p.errorPalmUnavailable,
       'errorUnknown': (p, g) => p.errorUnknown,

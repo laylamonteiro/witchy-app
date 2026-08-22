@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/services/debug_log_service.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/living_emblem.dart';
 import '../../../../core/widgets/magical_card.dart';
@@ -404,7 +405,27 @@ class _CartaoDaLeituraDoCicloState extends State<_CartaoDaLeituraDoCiclo> {
     });
   }
 
+  /// Lê o estado do cartão. Nunca deixa o botão morto.
+  ///
+  /// Eram três idas ao banco sem `try`, disparadas de um `Future` que ninguém
+  /// aguarda: qualquer exceção virava erro assíncrono não capturado, o
+  /// `setState` nunca rodava, `_carregando` ficava `true` para sempre — e
+  /// `onPressed: _carregando ? null : _abrir` deixava o CTA desabilitado,
+  /// com a barra de progresso em zero. A pessoa não tinha o que fazer na
+  /// tela e nem sabia por quê.
   Future<void> _carregar() async {
+    try {
+      await _lerEstado();
+    } catch (e) {
+      await debugLog('CYCLE_READING', 'Falha ao ler o cartão de Ciclos: $e');
+      if (!mounted) return;
+      // Sem os números, mas com o botão vivo: a tela da Leitura do Ciclo
+      // sabe se virar sozinha, e é lá que a pessoa quer chegar.
+      setState(() => _carregando = false);
+    }
+  }
+
+  Future<void> _lerEstado() async {
     final userId = context.read<AuthProvider>().currentUser.id;
     final hoje = DateTime.now();
     final amanha = DateTime(hoje.year, hoje.month, hoje.day)

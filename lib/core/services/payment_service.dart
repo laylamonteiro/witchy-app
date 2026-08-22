@@ -901,6 +901,50 @@ class PaymentService extends ChangeNotifier {
     );
   }
 
+  /// Quanto o plano anual economiza em relação a doze mensais, em porcento.
+  ///
+  /// Null quando NÃO dá para calcular — e aí o selo simplesmente não aparece.
+  /// Era texto fixo num ARB ("Economize 50%"), o que é uma conta com dois
+  /// números que o app não tinha na mão: se a loja devolver outro preço, se a
+  /// pessoa estiver fora do Brasil, ou se o catálogo não carregou, o selo
+  /// mentia. Um número inventado numa tela de venda custa mais confiança do
+  /// que a ausência do selo.
+  int? get economiaAnualEmPorcento {
+    final mensal = getProduct(SubscriptionType.monthly);
+    final anual = getProduct(SubscriptionType.yearly);
+    if (mensal == null || anual == null) return null;
+
+    return economiaEntre(
+      mensal: mensal.price,
+      anual: anual.price,
+      moedaMensal: mensal.currencyCode,
+      moedaAnual: anual.currencyCode,
+    );
+  }
+
+  /// A conta do selo, isolada para teste.
+  ///
+  /// Devolve null em tudo que não dá para afirmar: moedas diferentes (o
+  /// catálogo às vezes vem meio resolvido), preço zerado, ou anual que não
+  /// economiza nada. Melhor sem selo do que com número errado.
+  @visibleForTesting
+  static int? economiaEntre({
+    required double mensal,
+    required double anual,
+    required String moedaMensal,
+    required String moedaAnual,
+  }) {
+    if (moedaMensal != moedaAnual) return null;
+    if (mensal <= 0 || anual <= 0) return null;
+
+    final dozeMeses = mensal * 12;
+    if (anual >= dozeMeses) return null;
+
+    final porcento = ((1 - anual / dozeMeses) * 100).round();
+    // Abaixo de 1% não há o que comemorar, e 100% seria de graça.
+    return (porcento < 1 || porcento >= 100) ? null : porcento;
+  }
+
   /// Deduz o tipo de assinatura de um pacote.
   ///
   /// Nas lojas (App Store/Play) o RevenueCat entrega os pacotes já com

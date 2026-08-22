@@ -443,8 +443,8 @@ A linha entre colchetes é lida pelo aplicativo: não escreva nada além dela ne
   errorAuthentication: 'Erro de autenticação',
   errorRateLimit: 'Limite de uso excedido',
   errorServiceUnavailable: 'Serviço temporariamente indisponível',
-  errorConnection: (message) => 'Erro na conexão: $message',
-  errorProcessing: (error) => 'Erro ao processar resposta: $error',
+  errorConnection: 'Sem conexão com o serviço agora — tente de novo em instantes',
+  errorProcessing: 'Não consegui ler a resposta — tente de novo em instantes',
   errorImageTooLarge: 'Imagem muito grande. Tente novamente.',
   errorPalmUnavailable:
       'Leitura de mãos temporariamente indisponível. Tente mais tarde.',
