@@ -300,7 +300,7 @@ jobs:
   #                               Google. Sem ele o login social segue pelo
   #                               redirecionamento de página inteira.
   #   (SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY, GROQ_API_KEY,
-  #    GEMINI_API_KEY e PROKERALA_* já são usados pelo workflow de release)
+  #    GEMINI_API_KEY já são usados pelo workflow de release)
   #
   # ADMIN_EMAIL/ADMIN_PASSWORD NÃO entram aqui de propósito: o bundle web é
   # público e qualquer visitante conseguiria lê-los no main.dart.js.
@@ -341,8 +341,6 @@ jobs:
         with:
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
-          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
 
       - name: 🛠️ Setup Flutter (pinado)
         uses: ./.github/actions/setup-flutter
@@ -596,8 +594,6 @@ jobs:
         with:
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
-          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: 🛠️ Setup Flutter (pinado)

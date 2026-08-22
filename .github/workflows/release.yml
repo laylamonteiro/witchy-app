@@ -353,8 +353,6 @@ jobs:
         with:
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
-          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
           google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: 🛠️ Setup Flutter (pinado)
@@ -540,8 +538,6 @@ jobs:
         with:
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-          prokerala-client-id: ${{ secrets.PROKERALA_CLIENT_ID }}
-          prokerala-client-secret: ${{ secrets.PROKERALA_CLIENT_SECRET }}
 
       - name: 🛠️ Setup Flutter (pinado)
         uses: ./.github/actions/setup-flutter

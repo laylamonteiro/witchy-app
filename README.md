@@ -211,8 +211,13 @@ Os arquivos de credencial são **gitignorados** e precisam existir localmente:
 ```
 lib/core/ai/groq_credentials.dart
 lib/core/ai/gemini_credentials.dart
-lib/features/astrology/data/services/prokerala_credentials.dart
 ```
+
+> A Prokerala **saiu**: o mapa astral é calculado no aparelho (Swiss
+> Ephemeris, `sweph_service.dart`) e nenhum `.dart` do repositório
+> referencia `ProkeralaCredentials`. A CI ainda escrevia o `clientSecret`
+> num arquivo que ninguém importava — segredo no disco do runner sem
+> nenhum uso. Se um dia voltar, volta com quem a chame.
 
 Cada um expõe uma classe com as chaves (ex.: `class GroqCredentials { static const apiKey = '...'; }`). No CI eles são gerados vazios — analyze e testes não chamam APIs reais
 
