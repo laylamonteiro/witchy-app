@@ -147,19 +147,27 @@ void main() {
 
     // E chega vestida: o destaque num cartão lilás, nunca no azul-claro que
     // o flutter_markdown usa quando a tela não estiliza o `> `.
-    final fundos = tester
+    final caixas = tester
         .widgetList<DecoratedBox>(find.byType(DecoratedBox))
         .map((d) => d.decoration)
         .whereType<BoxDecoration>()
-        .map((d) => d.color)
         .toList();
     final lilas = GrimoireColors.vinhoOrquidea.lilac;
-    expect(fundos, isNot(contains(Colors.blue.shade100)));
+
+    expect(caixas.map((d) => d.color), isNot(contains(Colors.blue.shade100)));
+    // O cartão do destaque: lilás e com a barra à esquerda — não confundir
+    // com o tracinho lilás que separa o subtítulo.
     expect(
-      fundos.any(
-        (c) => c != null && c.r == lilas.r && c.g == lilas.g && c.b == lilas.b,
+      caixas.any(
+        (d) =>
+            d.border != null &&
+            d.color != null &&
+            d.color!.r == lilas.r &&
+            d.color!.g == lilas.g &&
+            d.color!.b == lilas.b,
       ),
       isTrue,
+      reason: 'a frase de destaque deveria sair no cartão lilás',
     );
   });
 

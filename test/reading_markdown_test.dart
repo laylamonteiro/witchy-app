@@ -92,7 +92,7 @@ void main() {
     });
 
     testWidgets('o destaque fica legível em todos os temas', (tester) async {
-      for (final preset in AppThemePreset.all) {
+      for (final preset in AppThemes.all) {
         final cores = preset.colors;
         final folha = await _folha(tester, cores);
         final cartao = folha.blockquoteDecoration;
