@@ -295,7 +295,15 @@ class AIService {
             receiveTimeout: const Duration(seconds: 45),
           );
         } on DioException catch (e) {
-          if (e.response?.statusCode != 429) rethrow;
+          if (e.response?.statusCode != 429) {
+            // Este `rethrow` era o ÚNICO furo do arquivo. Sem resposta do
+            // servidor (rede caída, timeout) `e.response` é nulo, então
+            // `null != 429` e a DioException saía crua até a tela do card —
+            // com a URL do provedor de IA dentro dela. Os outros onze
+            // pontos de chamada já passavam por `_falhaDeConexao`; este não,
+            // e era justamente o caminho da falta de rede.
+            throw Exception(_falhaDeConexao(e));
+          }
           ultimo429 = e;
           if (tentativa < _quotaRetryDelays.length) {
             await Future.delayed(_quotaRetryDelays[tentativa]);

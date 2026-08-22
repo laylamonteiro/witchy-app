@@ -121,7 +121,42 @@ jobs:
         # --no-fatal-infos: falha só em erros e warnings (problemas reais
         # introduzidos), não na dívida de lint info pré-existente
         # (withOpacity depreciado, prefer_const etc.).
-        run: flutter analyze --no-fatal-infos
+        #
+        # A saída é guardada porque o passo seguinte precisa dela: entre as
+        # centenas de infos que este `--no-fatal-infos` perdoa existe uma
+        # regra que NÃO é cosmética, e ela estava escondida no meio do
+        # resto. `set -o pipefail` para o `tee` não engolir a falha.
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos 2>&1 | tee /tmp/analyze.txt
+
+      - name: 🔒 Contexto usado depois do await (catraca, não pode crescer)
+        # `use_build_context_synchronously` é info, então
+        # `--no-fatal-infos` a perdoa junto com o `withOpacity` depreciado —
+        # e ela não é cosmética: usar um BuildContext depois de um `await`
+        # dá exceção em tempo de execução quando a tela saiu no meio, que é
+        # exatamente o caso que ninguém testa (rede lenta, pessoa voltando).
+        #
+        # CATRACA, e não trava: escalar a regra para warning derrubaria o
+        # build hoje, com dezenas de ocorrências antigas e ninguém para
+        # consertá-las no mesmo passo. Aqui o número só pode CAIR. Quem
+        # introduzir uma nova é barrado; quem consertar uma antiga vê o
+        # aviso pedindo para baixar o teto.
+        #
+        # O teto veio da auditoria (26) e nunca foi conferido com o Dart
+        # rodando — a primeira execução deste passo diz o número real. Se
+        # ele vier menor, baixe o TETO aqui no mesmo commit.
+        run: |
+          TETO=26
+          atual=$(grep -c 'use_build_context_synchronously' /tmp/analyze.txt || true)
+          echo "use_build_context_synchronously: $atual (teto $TETO)"
+          if [ "$atual" -gt "$TETO" ]; then
+            echo "::error::$atual usos de contexto depois do await — o teto é $TETO. Uma ocorrência nova entrou: guarde o contexto antes do await, ou confira \`mounted\` depois dele."
+            exit 1
+          fi
+          if [ "$atual" -lt "$TETO" ]; then
+            echo "::warning::$atual usos (teto $TETO): baixe TETO para $atual em .github/workflows/branch-validate.yml, senão a catraca afrouxa sozinha."
+          fi
 
       - name: 🧪 Testes de i18n/conteúdo (bloqueante)
         # Paridade pt/en/es da camada de conteúdo + localização de feitiços:

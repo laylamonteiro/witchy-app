@@ -142,6 +142,14 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
             chave == null ? widget.section : provider.profileSection(chave);
         final tecendo =
             _partindo || (chave != null && provider.isWeavingSection(chave));
+        // O motivo desta seção, quando existe. O provider limpa a falha
+        // anterior ao começar a tecer, então isto só é não-nulo enquanto a
+        // falha for a da ÚLTIMA tentativa.
+        final motivoDaFalha = chave == null
+            ? null
+            : provider.falhaDeLimiteNaSecao(chave)
+                ? l10n.aiVisionRateLimit
+                : provider.erroDaSecao(chave);
 
         return Scaffold(
           backgroundColor: context.gc.background,
@@ -160,20 +168,32 @@ class _MagicalProfileSectionPageState extends State<MagicalProfileSectionPage> {
           body: SafeArea(
             child: switch ((tecendo, secao)) {
               (true, _) => _Tecendo(title: widget.title),
-              (false, final ProfileSection s) => PagedReading(
-                  pages: [for (final slide in s.slides) _Pagina(slide: slide)],
+              // Com texto na mão E uma falha registrada, quem falhou foi o
+              // "tecer de novo". Trocar a leitura pela tela de erro tiraria
+              // da pessoa o texto que ela JÁ tinha; não dizer nada era o
+              // que acontecia antes — a tela voltava ao texto antigo em
+              // silêncio, porque este ramo vence o de falha. As duas coisas
+              // juntas: o texto fica, e a falha aparece por cima dele.
+              (false, final ProfileSection s) => Column(
+                  children: [
+                    if (motivoDaFalha != null)
+                      _RefazerFalhou(
+                        mensagem: motivoDaFalha,
+                        onRetry: _tecerDeNovo,
+                      ),
+                    Expanded(
+                      child: PagedReading(
+                        pages: [
+                          for (final slide in s.slides) _Pagina(slide: slide),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               // A falha é lida POR SEÇÃO: com um erro só para todas, uma
               // seção que falhasse marcava falha nas outras que estivessem
               // abertas, inclusive nas que estavam indo bem.
-              _ => _Falhou(
-                  onRetry: _tecer,
-                  message: chave == null
-                      ? null
-                      : provider.falhaDeLimiteNaSecao(chave)
-                          ? l10n.aiVisionRateLimit
-                          : provider.erroDaSecao(chave),
-                ),
+              _ => _Falhou(onRetry: _tecer, message: motivoDaFalha),
             },
           ),
         );
@@ -219,6 +239,53 @@ class _Tecendo extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A faixa de "não deu para refazer", por cima do texto que já existia.
+///
+/// Só aparece depois de um "tecer de novo" que falhou. É estreita de
+/// propósito: o conteúdo continua sendo o texto, e a faixa é o recado de que
+/// ele é o ANTIGO — sem isso, a tela voltava ao texto de antes como se nada
+/// tivesse acontecido, e a pessoa ficava achando que a IA reescreveu igual.
+class _RefazerFalhou extends StatelessWidget {
+  const _RefazerFalhou({required this.mensagem, required this.onRetry});
+
+  final String mensagem;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      color: context.gc.alert.withValues(alpha: 0.12),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, size: 18, color: context.gc.alert),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              mensagem.trim().isEmpty ? l10n.profileSectionFailed : mensagem,
+              style: TextStyle(
+                color: context.gc.textPrimary,
+                fontSize: 12.5,
+                height: 1.35,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onRetry,
+            child: Text(
+              l10n.commonTryAgain,
+              style: TextStyle(color: context.gc.lilac, fontSize: 12.5),
+            ),
+          ),
+        ],
       ),
     );
   }
