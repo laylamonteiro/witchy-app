@@ -333,12 +333,12 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
   }
 
   Future<void> _initializeProducts() async {
-    if (_paymentService.isInitialized) {
-      _selectAvailablePlan();
-      return;
-    }
+    // Sem a saída antecipada por `isInitialized`: ela pulava exatamente o
+    // caso ruim. Um boot com rede ruim marca inicializado e deixa o catálogo
+    // vazio — e a tela mostrava "planos indisponíveis" com o botão de compra
+    // morto pela sessão inteira, porque ninguém tentava de novo.
     setState(() => _isInitializing = true);
-    await _paymentService.initialize();
+    await _paymentService.garantirCatalogo();
     if (!mounted) return;
     setState(() {
       _isInitializing = false;
@@ -502,16 +502,20 @@ class _PremiumUpgradeSheetState extends State<PremiumUpgradeSheet> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).premiumActivated),
-            backgroundColor: Colors.green,
+            backgroundColor: context.gc.success,
           ),
         );
-      } else if (result.errorMessage != 'Compra cancelada') {
+      } else if (!result.foiCancelada) {
+        // Pelo campo, não pelo texto: comparar com o literal 'Compra
+        // cancelada' passava a acusar erro num cancelamento normal assim que
+        // a mensagem fosse traduzida.
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              result.errorMessage ?? AppLocalizations.of(context).premiumPurchaseFailed,
+              result.errorMessage ??
+                  AppLocalizations.of(context).premiumPurchaseFailed,
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: context.gc.alert,
           ),
         );
       }

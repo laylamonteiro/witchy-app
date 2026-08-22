@@ -720,9 +720,10 @@ class AuthProvider extends ChangeNotifier {
 
     // Para assinaturas monthly/yearly, verificar com PaymentService
     final paymentService = PaymentService();
-    if (!paymentService.isInitialized) {
-      await paymentService.initialize();
-    }
+    // Sem a conferência de `isInitialized`: ela virava true até nos caminhos
+    // de erro do boot, e então travava a segunda tentativa. O `initialize`
+    // hoje se guarda sozinho — sai na primeira linha quando o SDK está de pé.
+    await paymentService.initialize();
 
     // Se PaymentService diz que não é Pro, fazer downgrade
     if (!paymentService.isPro && _currentUser.role == UserRole.premium) {
@@ -746,9 +747,8 @@ class AuthProvider extends ChangeNotifier {
 
     final paymentService = PaymentService();
 
-    if (!paymentService.isInitialized) {
-      await paymentService.initialize();
-    }
+    // Idem: `initialize` é idempotente e retoma o que ficou pela metade.
+    await paymentService.initialize();
 
     if (paymentService.isPro) {
       // Usuário tem assinatura ativa

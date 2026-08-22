@@ -1264,6 +1264,9 @@
   "paymentErrConfiguration": "Erro de configuração do RevenueCat\n\nVerifique as API keys e a configuração no dashboard",
   "paymentErrCredentials": "Credenciais inválidas\n\nVerifique se as API keys do RevenueCat estão corretas",
   "paymentErrGeneric": "Erro ao processar compra (código: {code})\n\nVerifique os logs do console para mais detalhes",
+  "paymentErrNothingToRestore": "Nenhuma compra encontrada para restaurar",
+  "paymentErrRestore": "Não consegui restaurar suas compras agora — tente de novo em instantes",
+  "paymentErrUnexpected": "Algo deu errado na compra — confira em Restaurar Compras antes de tentar de novo",
   "@paymentErrGeneric": {
     "placeholders": {
       "code": {
@@ -2394,6 +2397,8 @@
   },
   "cycleReadingWantFull": "Gerar minha leitura completa",
   "cycleReadingPendingCredit": "Sua compra está garantida — falta só gerar o relatório.",
+  "cycleReadingPurchaseRecoverable": "A compra foi aprovada, mas não consegui guardar o crédito — ele volta sozinho quando você abrir esta tela de novo",
+  "cycleReadingPurchaseRecovered": "Recuperei a leitura que você já tinha pago — ela está aqui",
   "cycleReadingGenerate": "Gerar minha leitura",
   "cycleReadingGenerating": "Tecendo sua leitura… o oráculo está relendo o seu grimório.",
   "cycleReadingOpenReport": "Abrir minha leitura",

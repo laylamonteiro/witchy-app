@@ -150,11 +150,20 @@ Future<SharedPreferences> _initializeApp() async {
     await debugLog('SYNC', 'DataSyncService inicializado');
   }
 
-  // Initialize RevenueCat (only for mobile platforms)
-  if (!kIsWeb) {
-    await PaymentService().initialize();
-    await debugLog('SYSTEM', 'PaymentService inicializado');
-  }
+  // Initialize RevenueCat — TAMBÉM na web.
+  //
+  // Pular a web deixava o `Purchases.configure` sem rodar no navegador. Aí o
+  // `logIn`, que é o único ponto onde a compra é associada à conta do
+  // Supabase, estourava e o erro morria num debugPrint: quem comprava pelo
+  // navegador ficava num usuário anônimo do RevenueCat, sem ligação nenhuma
+  // com a própria conta. Era o único defeito de pagamento que atingia todo
+  // mundo que compra pela web.
+  //
+  // Quem decide se há pagamento é a presença da chave — na web, a `rcb_` do
+  // RevenueCat Billing. Sem chave, o `initialize` sai na primeira linha e
+  // nada quebra.
+  await PaymentService().initialize();
+  await debugLog('SYSTEM', 'PaymentService inicializado');
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();

@@ -43,11 +43,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Future<void> _initializePaymentService() async {
-    if (!_paymentService.isInitialized) {
-      setState(() => _isLoading = true);
-      await _paymentService.initialize();
-      setState(() => _isLoading = false);
-    }
+    // Sempre passa por `garantirCatalogo`: a conferência de `isInitialized`
+    // que existia aqui saía cedo justamente no caso ruim — boot com rede
+    // ruim marca inicializado, o catálogo fica vazio e a tela dizia "planos
+    // indisponíveis" até a pessoa fechar e reabrir o app.
+    setState(() => _isLoading = true);
+    await _paymentService.garantirCatalogo();
+    if (!mounted) return;
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -777,7 +780,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               ? _l10n.subsRestored
               : result.errorMessage ?? _l10n.subsNoPurchases,
         ),
-        backgroundColor: result.success ? Colors.green : Colors.orange,
+        backgroundColor:
+            result.success ? context.gc.success : context.gc.alert,
       ),
     );
   }
