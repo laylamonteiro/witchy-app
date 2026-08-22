@@ -511,6 +511,79 @@ Login obrigatório, mas sem obstáculo desnecessário
 
 ---
 
+## Impacto em quem já usa o app
+
+A base é de **116 contas: 96 gratuitas, 20 com código beta vitalício e 4 pagantes da Play.** Cinco das doze decisões tocam essas pessoas. Duas podem causar dano se implementadas de forma ingênua
+
+### 🔴 Decisão 2 — pode rebaixar os 20 códigos beta
+
+Hoje as 20 contas de código beta têm `role='premium', plan='lifetime'` em `profiles`. **O RevenueCat nunca ouviu falar delas.** Um webhook que simplesmente grave "o que o RevenueCat disser" marca as 20 como gratuitas — 20 pessoas perdem um acesso vitalício que foi dado a elas
+
+E o espelho disso: os 4 pagantes hoje são `role='free'` no banco. Se o app passar a confiar no servidor **antes** de existir o backfill, eles perdem o Premium até o webhook disparar
+
+**Como evitar, e isso é requisito de projeto, não detalhe:**
+
+1. O entitlement precisa ter **origem** — uma tabela `entitlements(user_id, source, entitlement_id, granted_at, expires_at, external_ref)` com `source` em `beta | play | web`
+2. O webhook só escreve linhas cuja origem é a loja. **Nunca toca em `source='beta'`**
+3. Rodar o **backfill primeiro** (importar o estado atual dos 4 assinantes do RevenueCat), e só depois virar a chave que faz o app ler do servidor
+4. O `isPremiumEffective` continua sendo um OR — servidor **ou** RevenueCat em runtime — para que uma falha do webhook não derrube ninguém
+
+### 🔴 Decisão 1 — o bug de ressurreição escala de 15 para 116 pessoas
+
+Confirmei: **não existe tombstone em lugar nenhum** (`deleted_at`, soft delete ou equivalente: zero ocorrências em `data_sync_service.dart`, `database_helper.dart` e nos SQL do Supabase)
+
+A etapa 4 do `_syncEntity` reinsere localmente qualquer linha remota que não tenha correspondente local. Ou seja: **apagar um sonho no aparelho o traz de volta no próximo sync**, porque a linha continua no servidor e o app a lê como "dado que falta aqui"
+
+Isso **já acontece hoje** para as 15 pessoas que sincronizam. Abrir a sincronização leva o mesmo defeito para 116
+
+**Portanto: o tombstone entra no MESMO PR da sincronização livre, não depois.** `deleted_at` local e remoto, delete virando soft delete com `synced = 0`, a etapa 3 propagando a lápide e a etapa 4 ignorando remotos com `deleted_at` preenchido
+
+Dois cuidados menores no mesmo PR:
+
+- **A primeira sincronização das 96 contas sobe meses de dado de uma vez.** O volume é pequeno em absoluto, mas é lento no aparelho da pessoa — precisa de progresso visível, não de tela travada
+- **Respeitar quem desligou de propósito.** O `resolveCloudSyncPreference` já distingue "desligado automaticamente porque era Free" de "desligado pela pessoa" (`cloudSyncUserConfiguredKey`). Ao remover o `isPremium`, essa distinção tem que sobreviver
+
+✅ **Boa notícia: o RLS não precisa mudar.** Conferi as políticas de `dreams`, `spells`, `daily_checkins`, `gratitudes` e `free_writings` — todas as 20 são baseadas só em `user_id`, nenhuma depende de `role` ou de premium
+
+### 🟡 Decisão 6 — as 116 pessoas nunca consentiram com analytics
+
+O toggle `privacy_analytics` existe na tela e **não controla nada**. Introduzir um processador terceiro sem honrar esse toggle é pior do que não ter o toggle
+
+Mínimo: respeitar a preferência desde o primeiro deploy, atualizar a política de privacidade antes de enviar o primeiro evento, e não mandar nada identificável — o público deste app escreve sobre crença e sofrimento nos diários
+
+### 🟡 Decisão 9 — o consentimento de dado sensível não existe para quem já entrou
+
+As 116 contas foram criadas sob o checkbox de termos atual. A caixa destacada de dado sensível (art. 11) não foi apresentada a nenhuma delas, e o aceite antigo não tem versão nem timestamp gravados
+
+Duas saídas: pedir uma vez na próxima abertura, ou tratar a base existente sob os termos anteriores. **Pedir uma vez é mais limpo** e custa uma tela
+
+### 🟡 Decisão 10 — trocar o remetente de e-mail afeta a base inteira
+
+Sair do SMTP embutido significa que os e-mails passam a vir de um domínio sem reputação nenhuma. Redefinição de senha pode cair em spam durante o aquecimento — e, com login obrigatório, e-mail em spam tranca a pessoa **fora** do app
+
+Publicar SPF, DKIM e DMARC **antes** do primeiro envio, e aquecer gradualmente
+
+### ⚪ Sem impacto em quem já usa
+
+| Decisão | Por quê |
+|---|---|
+| 3 · Carência no fim de plano | Só é mais generoso do que hoje |
+| 4 e 5 · Cartas, runas e páginas estáticas | Acontecem fora do app |
+| 7 · Trial de 7 dias | Vale só para compras novas. Os 4 pagantes mantêm o preço e não seriam elegíveis de qualquer forma |
+| 8 · Anúncio contido | Só melhora para as 96 gratuitas |
+| 11 e 12 · Motor de cobrança e preço | Nada muda |
+
+### Três achados de segurança que apareceram na conferência
+
+Não vieram das decisões, mas o linter do Supabase apontou e vale entrar no plano:
+
+- **`redeem_beta_code` é `SECURITY DEFINER` e executável pelo papel `anon`**, via `/rest/v1/rpc/redeem_beta_code`. A chave anônima vive dentro do bundle do app por natureza. Vale revogar o `EXECUTE` do `anon`, exigir sessão e pôr limite de tentativas — códigos beta concedem vitalício
+- **`handle_new_user()` também é executável por `anon`** como `SECURITY DEFINER`
+- **Proteção contra senha vazada está desligada** no Supabase Auth (checagem contra HaveIBeenPwned). É um toggle no painel
+- Cinco funções sem `search_path` fixo (`reset_daily_counters`, `create_user_policy`, `handle_new_user`, `reset_monthly_counters`, `redeem_beta_code`)
+
+---
+
 ## O que ainda depende de você
 
 Depois das 12 decisões e da leitura da base, restou **muito pouco**
