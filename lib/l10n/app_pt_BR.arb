@@ -1812,5 +1812,69 @@
   "profileLegacyRewriteBody": "Ela veio numa geração só, em texto corrido. Tecer de novo abre os dez cards — e você abre cada um quando quiser",
   "profileLegacyRewriteCta": "Tecer no formato novo",
   "profileLegacyRewriteConfirm": "O texto que está aí sai para dar lugar aos dez cards. Nenhum é tecido agora — cada um nasce quando você abrir",
-  "premiumSaveYearlyPercent": "Economize {percent}%"
+  "premiumSaveYearlyPercent": "Economize {percent}%",
+  "conviteRotuloIa": "Consultas místicas",
+  "conviteRotuloRunas": "Leituras de Runas",
+  "conviteRotuloPendulo": "Consultas ao Pêndulo",
+  "conviteRotuloOraculo": "Oráculo e Tarô",
+  "conviteRotuloAfirmacoes": "Afirmações",
+  "conviteUltimaHoje": "{rotulo} · resta 1 hoje",
+  "@conviteUltimaHoje": {
+    "placeholders": {
+      "rotulo": {
+        "type": "String",
+        "example": "Runas"
+      }
+    }
+  },
+  "conviteUltimaEsteMes": "{rotulo} · resta 1 este mês",
+  "@conviteUltimaEsteMes": {
+    "placeholders": {
+      "rotulo": {
+        "type": "String",
+        "example": "Entradas de Diário"
+      }
+    }
+  },
+  "conviteUltimaNoTotal": "{rotulo} · resta 1",
+  "@conviteUltimaNoTotal": {
+    "placeholders": {
+      "rotulo": {
+        "type": "String",
+        "example": "Feitiços"
+      }
+    }
+  },
+  "conviteTituloNoLimite": "Do outro lado",
+  "conviteAlemFeiticos": "Seu grimório para de crescer em dez feitiços. No Premium ele não tem fundo — e é ele que guarda o que você descobriu sozinha",
+  "conviteAlemDiario": "O mês acabou antes do que você tinha para escrever. No Premium o diário não conta páginas",
+  "conviteAlemConselheiro": "O Conselheiro responde uma vez por dia por aqui. No Premium você pergunta até entender",
+  "conviteAlemIa": "Analisar o sonho, pedir um feitiço e ler o clima do dia dividem a mesma consulta. No Premium não dividem nada",
+  "conviteAlemRunas": "Uma tirada de runas por dia responde à primeira pergunta. Quase nunca é a que importa",
+  "conviteAlemPendulo": "O pêndulo parou por hoje. No Premium ele responde quantas vezes você precisar",
+  "conviteAlemOraculo": "Oráculo e Tarô dividem a mesma leitura do dia — uma tirada consome a outra. No Premium são duas portas separadas, e nenhuma fecha",
+  "conviteAlemAfirmacoes": "Três afirmações por dia é onde o hábito costuma travar. No Premium você escreve quantas o dia pedir",
+  "conviteTituloLonge": "O que ainda não se abriu",
+  "conviteVerOQueAbre": "Ver o que o Premium abre",
+  "conviteVislumbrePerfilTitulo": "Análise Personalizada",
+  "conviteVislumbrePerfilLinha": "Dez seções tecidas a partir do seu mapa — do que te move ao que você repete sem perceber",
+  "conviteVislumbreErasTitulo": "Suas Eras",
+  "conviteVislumbreErasLinha": "Cento e vinte anos de linha do tempo, era por era. Você vê a de agora; o resto continua atrás do véu",
+  "conviteVislumbreClimaTitulo": "Clima Mágico do dia",
+  "conviteVislumbreClimaLinha": "O céu de hoje lido contra o SEU mapa, e não contra o signo de todo mundo",
+  "conviteVislumbreEnciclopediaTitulo": "Enciclopédia inteira",
+  "conviteVislumbreEnciclopediaLinha": "Cristais, ervas, cores, metais, deusas — cada verbete até o fim, com correspondências e usos",
+  "conviteVislumbreLeiturasTitulo": "Leituras sem conta",
+  "conviteVislumbreLeiturasLinha": "Runas, Oráculo, Tarô e Pêndulo deixam de dividir uma tirada por dia",
+  "conviteVislumbreConselheiroTitulo": "Conselheiro Místico",
+  "conviteVislumbreConselheiroLinha": "Perguntar de novo, e de outro jeito, até a resposta fazer sentido",
+  "conviteDentroClimaA": "O que o céu de hoje pede de você",
+  "conviteDentroClimaB": "Onde a sua energia vai render",
+  "conviteDentroClimaC": "O que é melhor deixar para amanhã",
+  "conviteDentroConselheiroA": "A pergunta que você ainda não sabia formular",
+  "conviteDentroConselheiroB": "O que o seu mapa responde sobre isso",
+  "conviteDentroConselheiroC": "O próximo passo, em uma frase",
+  "conviteFechamentoTitulo": "Quando você quiser abrir",
+  "conviteFechamentoLinha": "Os planos estão do outro lado deste botão. Nada aqui expira, nada some à meia-noite, e o preço não muda por você ter esperado",
+  "conviteDescobertaTitulo": "O que você ainda não viu"
 }

@@ -1812,5 +1812,69 @@
   "profileLegacyRewriteBody": "It came in a single generation, as running text. Weaving it again opens the ten cards — and you open each one when you want to",
   "profileLegacyRewriteCta": "Weave in the new format",
   "profileLegacyRewriteConfirm": "The text that is there goes to make room for the ten cards. None is woven now — each one is born when you open it",
-  "premiumSaveYearlyPercent": "Save {percent}%"
+  "premiumSaveYearlyPercent": "Save {percent}%",
+  "conviteRotuloIa": "Mystic consultations",
+  "conviteRotuloRunas": "Rune readings",
+  "conviteRotuloPendulo": "Pendulum consultations",
+  "conviteRotuloOraculo": "Oracle and Tarot",
+  "conviteRotuloAfirmacoes": "Affirmations",
+  "conviteUltimaHoje": "{rotulo} · 1 left today",
+  "@conviteUltimaHoje": {
+    "placeholders": {
+      "rotulo": {
+        "type": "String",
+        "example": "Runas"
+      }
+    }
+  },
+  "conviteUltimaEsteMes": "{rotulo} · 1 left this month",
+  "@conviteUltimaEsteMes": {
+    "placeholders": {
+      "rotulo": {
+        "type": "String",
+        "example": "Entradas de Diário"
+      }
+    }
+  },
+  "conviteUltimaNoTotal": "{rotulo} · 1 left",
+  "@conviteUltimaNoTotal": {
+    "placeholders": {
+      "rotulo": {
+        "type": "String",
+        "example": "Feitiços"
+      }
+    }
+  },
+  "conviteTituloNoLimite": "On the other side",
+  "conviteAlemFeiticos": "Your grimoire stops growing at ten spells. With Premium it has no bottom — and it is what keeps what you found on your own",
+  "conviteAlemDiario": "The month ran out before what you had to write. With Premium the journal does not count pages",
+  "conviteAlemConselheiro": "The Counselor answers once a day here. With Premium you ask until it makes sense",
+  "conviteAlemIa": "Reading a dream, asking for a spell and checking the day's weather share one consultation. With Premium they share nothing",
+  "conviteAlemRunas": "One rune draw a day answers the first question. It is rarely the one that matters",
+  "conviteAlemPendulo": "The pendulum has stopped for today. With Premium it answers as often as you need",
+  "conviteAlemOraculo": "Oracle and Tarot share the same daily reading — one draw consumes the other. With Premium they are two separate doors, and neither closes",
+  "conviteAlemAfirmacoes": "Three affirmations a day is where the habit usually stalls. With Premium you write as many as the day asks for",
+  "conviteTituloLonge": "What has not opened yet",
+  "conviteVerOQueAbre": "See what Premium opens",
+  "conviteVislumbrePerfilTitulo": "Personalized Analysis",
+  "conviteVislumbrePerfilLinha": "Ten sections woven from your chart — from what moves you to what you repeat without noticing",
+  "conviteVislumbreErasTitulo": "Your Eras",
+  "conviteVislumbreErasLinha": "A hundred and twenty years of timeline, era by era. You see the current one; the rest stays behind the veil",
+  "conviteVislumbreClimaTitulo": "Daily Magical Weather",
+  "conviteVislumbreClimaLinha": "Today's sky read against YOUR chart, not against everyone's sign",
+  "conviteVislumbreEnciclopediaTitulo": "The whole Encyclopedia",
+  "conviteVislumbreEnciclopediaLinha": "Crystals, herbs, colors, metals, goddesses — every entry to the end, with correspondences and uses",
+  "conviteVislumbreLeiturasTitulo": "Readings without counting",
+  "conviteVislumbreLeiturasLinha": "Runes, Oracle, Tarot and Pendulum stop sharing one draw a day",
+  "conviteVislumbreConselheiroTitulo": "Mystic Counselor",
+  "conviteVislumbreConselheiroLinha": "Asking again, and differently, until the answer makes sense",
+  "conviteDentroClimaA": "What today's sky asks of you",
+  "conviteDentroClimaB": "Where your energy will go furthest",
+  "conviteDentroClimaC": "What is better left for tomorrow",
+  "conviteDentroConselheiroA": "The question you did not know how to ask yet",
+  "conviteDentroConselheiroB": "What your chart answers about it",
+  "conviteDentroConselheiroC": "The next step, in one sentence",
+  "conviteFechamentoTitulo": "Whenever you want to open it",
+  "conviteFechamentoLinha": "The plans are on the other side of this button. Nothing here expires, nothing vanishes at midnight, and the price does not change because you waited",
+  "conviteDescobertaTitulo": "What you have not seen yet"
 }
