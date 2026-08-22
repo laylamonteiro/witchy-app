@@ -920,7 +920,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SubscriptionHero), findsOneWidget);
-      expect(find.byType(Image), findsNWidgets(8));
+      // Sete, e não oito: o benefício de sincronização saiu da lista (virou
+      // recurso de todo mundo) e levou o ícone dele junto.
+      expect(find.byType(Image), findsNWidgets(7));
       expect(find.text('Mensal'), findsOneWidget);
       expect(find.text('Anual'), findsOneWidget);
       expect(find.text('Começar Agora'), findsOneWidget);
