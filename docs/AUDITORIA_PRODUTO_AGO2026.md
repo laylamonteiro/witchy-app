@@ -1,29 +1,49 @@
 # Auditoria de produto — agosto de 2026
 
-Diagnóstico do Grimório de Bolso contra a régua de app profissional da categoria, cobrindo público-alvo, design, UX/UI, retenção e conversão para Premium
+Diagnóstico do Grimório de Bolso contra a régua de app profissional da categoria: público-alvo, design, UX/UI, retenção e conversão para Premium
 
-**Base:** versão 2.0.25+126 · 503 arquivos Dart · ~148k linhas · 22 módulos · Android em produção
-**Método:** 8 auditorias independentes de código (798 leituras de arquivo), verificação factual das alegações de maior consequência, e calibração contra benchmarks públicos da categoria
+**Base:** versão 2.0.25+126 · 503 arquivos Dart · ~148k linhas · Android na Google Play + app web em grimoriodebolso.app
+**Método:** 8 auditorias independentes de código (798 leituras de arquivo) + 5 frentes de pesquisa de mercado, com verificação factual hostil de ambas
+
+## Duas restrições de produto
+
+Estas foram decididas pela dona do app e a análise inteira trabalha dentro delas, não contra:
+
+1. **O login é obrigatório.** Não haverá modo convidado. A confirmação de e-mail não barra o uso — quem se cadastra já entra e usa (confirmado: não existe nenhum gate de confirmação no código)
+2. **Não haverá iOS nativo.** A aposta é que o app web/PWA cobre o público de iPhone
+
+Elas não invalidaram o diagnóstico. Elas o **reordenaram** — e uma delas revelou a peça que faltava para o plano fechar
 
 ---
 
 ## A tese
 
-O app não perde para os concorrentes profissionais em conteúdo, em arquitetura nem em capricho — perde em três coisas que não estão dentro dele: **ele não se mede, não fala com quem sumiu, e não deixa a pessoa entrar**
+Sob essas restrições, o produto não é "um app com um site". É um **site de conteúdo com um app acoplado**
 
-Isso é uma boa notícia disfarçada de má. O caro já foi feito: 88 lições em 9 trilhas, 46 rituais guiados, 78 cartas, 24 runas, 15 seções de enciclopédia, tudo em três idiomas com paridade travada por CI. O que falta é a camada de negócio em volta — e ela custa semanas, não anos
+Essa inversão resolve a tensão que o login obrigatório parecia criar. **O site estático, sem login e indexável, é o modo convidado que o app está proibido de ter.** A parede de conta continua dura dentro do app — a restrição fica intacta — e o valor demonstrável, compartilhável e rastreável pelo Google passa a morar fora dele, onde não precisa de conta, não precisa de instalação, não sofre a poda de storage do Safari, não depende de push e funciona idêntico no iPhone
 
-O padrão que se repete nas oito auditorias é o mesmo: **quase tudo que falta já está meio construído no repositório e desligado**
+Login obrigatório deixa de ser pedágio quando a superfície gratuita não mora atrás dele
 
-| O que existe pronto | O que falta para valer |
+E o corte do que publicar não é gosto: é **commodity vs. autoral**. O significado das 78 cartas e das 24 runas está em dez mil sites — publicar o seu não perde nada e ganha a única fonte de descoberta que existe. As 88 lições não existem em lugar nenhum: publicá-las seria entregar o produto
+
+---
+
+## O padrão que se repete: escrito e desligado
+
+As oito auditorias chegaram ao mesmo achado por caminhos diferentes. Não é código que falta escrever — é código escrito, testado, localizado em três idiomas, sem um fio ligando a ponta
+
+| Existe e está pronto | Sem o fio ligado |
 |---|---|
-| `OfferEngine` grava exposição, clique, dispensa e conversão por oferta | Os contadores morrem no `SharedPreferences` — `eventCount` não tem um único chamador |
-| `BlockedAccessEvent.toAnalyticsParameters()` monta o evento de bloqueio com feature, motivo, limite e janela | `setBlockedAccessAnalyticsHook` nunca é chamado de lugar nenhum |
-| `claimLegacyData` migra 19 tabelas de `local_user` para a conta real, com teste | Não existe botão para entrar como convidada |
-| Degustação da lição, escrita, localizada em 3 idiomas e instrumentada (`OfferSlot.lessonTeaser`) | Interceptada antes de renderizar — nenhuma usuária jamais viu |
-| `bestStreak` é calculado e exposto no provider | Nunca é exibido em nenhuma tela |
-| `JourneyProgress` existe como modelo | Não é persistido; as 7 jornadas não dão XP nem badge |
-| Chave iOS do RevenueCat e product ids iOS já cadastrados | Não há Podfile, nem time de assinatura, nem job de build |
+| `OfferEngine` grava exposição, clique, dispensa e conversão por oferta | Morre no `SharedPreferences`; `eventCount` não tem um único chamador |
+| `BlockedAccessEvent.toAnalyticsParameters()` monta o evento de bloqueio completo | `setBlockedAccessAnalyticsHook` nunca é chamado de lugar nenhum |
+| Degustação da lição: escrita, localizada em 3 idiomas, instrumentada | Interceptada antes de renderizar — nenhuma usuária jamais viu |
+| `bestStreak` calculado a partir de 11 tabelas de evidência | Nunca exibido em nenhuma tela |
+| `JourneyProgress` existe como modelo | Não é persistido: as 7 jornadas não dão XP, badge nem celebração |
+| Notificação com deep link, agendamento e canais, tudo testado | `notification_service.dart:37` — `if (kIsWeb) return false;` e o mesmo nas linhas 351, 359 e 364 |
+| `daily_checkins` já sobe para o Supabase com data por usuária | Nenhuma edge function lê isso — win-back nunca foi tentado |
+| Dois anos de dados reais no Postgres, com `signup_platform` já migrado | Ninguém rodou um `SELECT` |
+
+Esse último item é o mais caro de todos, e é o mais barato de corrigir
 
 ---
 
@@ -34,235 +54,319 @@ O padrão que se repete nas oito auditorias é o mesmo: **quase tudo que falta j
 | Conteúdo editorial e IA | 6/10 | O maior ativo do produto, e o mais subvendido |
 | Design e identidade visual | 6/10 | Identidade forte, sistema incompleto — só cor virou token |
 | UX e arquitetura da informação | 5/10 | Navegação bem resolvida, mas o vocabulário colide e há perda de dado |
-| Monetização e conversão | 5/10 | Encanamento sólido, estratégia de venda ausente |
-| Ativação | 4/10 | Muro de cadastro antes de qualquer valor |
-| Retenção | 4/10 | Sequência bem feita, sem nada que a proteja ou que traga de volta |
+| Monetização e conversão | 5/10 | Encanamento sólido, e o paywall está cobrando pela coisa errada |
+| Ativação | 4/10 | Com login obrigatório, a porta única tem um captcha que admite falhar |
+| Retenção | 4/10 | Sequência bem feita; o canal de volta existe (e-mail) e nunca foi usado |
 | Infraestrutura de produto | 4/10 | CI/CD acima da média, observabilidade zero |
-| Plataforma e distribuição | 4/10 | Esteira de release profissional para um canal só |
+| Plataforma e distribuição | 3/10 | Sem App Store, a descoberta é tudo — e o domínio tem 642 palavras |
+
+Plataforma caiu de 4 para 3 na revisão. Não porque o iOS foi cortado, mas porque a decisão de cortá-lo **transfere todo o peso da descoberta para o canal web**, e é lá que o buraco é maior
 
 ---
 
-## Os seis gargalos, em ordem
+## Os seis gargalos, em ordem de dependência
 
-Um gargalo bloqueia tudo que vem depois dele. Esta ordem não é de gravidade — é de dependência
+### 1. O produto é cego — mas a base já sabe responder
 
-### 1. O produto é cego
+Nenhum SDK de analytics, crash reporting ou remote config. Os handlers globais capturam tudo e gravam só localmente; como `runZonedGuarded` impede o processo de morrer, nem o Play Vitals enxerga. São 285 blocos `catch` no `lib/`, 23 terminando em `debugPrint` e 10 vazios
 
-Não existe nenhum SDK de analytics, crash reporting ou remote config no `pubspec.yaml`. Não há `firebase_analytics`, `posthog_flutter`, `sentry_flutter`, `firebase_crashlytics` nem equivalente
+A prova do custo: o onboarding inteiro — 474 linhas, 5 slides, 13 chaves de texto — foi apagado no commit `d4fa073` em 21/08/2026 **sem um único número** que dissesse se ele ajudava
 
-Consequências concretas:
+**O que estava faltando na primeira versão desta auditoria:** existe um app em produção há dois anos, com base real, e ninguém olhou o que essa base já diz. Não é preciso SDK nenhum para responder *quantas contas, quantas ativas em 30 dias, quantas pagando, retenção por coorte, quanto é web e quanto é Android* — isso é SQL no Postgres que já existe. A tabela `profiles` tem `created_at`, e `supabase/signup_platform_migration.sql` já foi escrita exatamente para essa pergunta
 
-- Não se sabe D1, D7 nem D30. Não se sabe quantas pessoas abandonam na tela de boas-vindas, quantas terminam o cadastro, quantas voltam no dia 2
-- Não se sabe qual feature bate no muro, quantas pessoas veem o paywall por dia, qual origem converte
-- Os handlers globais de erro (`main.dart:61-96`) capturam tudo e gravam **só localmente**. Como `runZonedGuarded` impede o processo de morrer, nem o Play Console Vitals enxerga: uma exceção que deixa o mapa astral em branco para todas as usuárias de um país nunca aparece em lugar nenhum
-- 285 blocos `catch` no `lib/`, 23 terminando em `debugPrint` e 10 vazios
+Isso muda a ordem de metade das recomendações. Com 2.000 contas e 40 assinantes, o problema é aquisição e o SEO é tudo. Com 40.000 contas e 300 assinantes, o problema é conversão e o paywall é tudo. **São planos diferentes, e a resposta cabe numa tarde**
 
-A prova de que isso já custou caro: o onboarding inteiro (474 linhas, 5 slides, 13 chaves de texto) foi removido no commit `d4fa073` em 21/08/2026 **sem um único número** que dissesse se ele ajudava ou atrapalhava
+### 2. Ninguém acha o app
 
-Enquanto o app for cego, toda correção desta lista é aplicada às cegas e ninguém saberá se funcionou
+Sem App Store, a descoberta tem que vir de busca e de social. Hoje ela não vem de lugar nenhum
 
-### 2. Ninguém entra sem pagar o pedágio
+O Flutter removeu o renderer HTML na versão 3.29 — não existe mais a saída de "buildar com `--web-renderer html` para o Google indexar". CanvasKit desenha tudo dentro de um `<canvas>`, e o Googlebot não extrai texto de canvas WebGL. O próprio repositório já reconhece isso, num comentário em `site/sitemap.xml`: *"a raiz é o app: uma tela só, desenhada em canvas, sem conteúdo indexável"*
 
-`welcome_page.dart` tem exatamente dois botões: "Criar conta" e "Já tenho conta". Não existe terceira porta
+O resultado medido:
 
-A pessoa baixou um app de bruxaria por curiosidade e a primeira tela pede e-mail, senha, confirmação de senha, aceite de termos e um captcha Turnstile em WebView — cujo próprio comentário no código admite falhar no primeiro carregamento em app recém-instalado. Tudo isso para ver uma fase da lua que qualquer site mostra de graça
+| | |
+|---|---|
+| Palavras indexáveis em todo o domínio | **642**, numa página só (`/sobre/`) |
+| URLs no sitemap | 3 — duas delas jurídicas (privacidade, termos) |
+| Lições, cartas, runas, rituais, verbetes indexáveis | **zero** |
 
-O app se declara local-first e tem uma porta 100% online: sem rede ou sem Supabase configurado, o login lança "sistema não configurado". O `LocalAuthRepository` implementa o contrato inteiro e **nunca é instanciado**
+E o teste que fecha o diagnóstico: **buscar o nome exato do produto não retorna o domínio dele.** Retorna um item do Genshin Impact, um jogo de tabuleiro e — pior — um concorrente direto chamado **Grimorio** (Blank Tech), que está na App Store *e* na Google Play, funciona offline, e suporta sete idiomas incluindo português, com posicionamento quase idêntico: enciclopédia esotérica, 78 arcanos, runas, numerologia, mapa astral, I Ching e diário de sonhos
 
-Detalhe correlato: o botão do Google no login não exige aceite de termos, enquanto o cadastro exige — a mesma conta nasce com ou sem aceite dependendo de por onde entrou
+Isso desmonta uma defesa que parecia sólida. O trilinguismo protege contra Co-Star, CHANI e The Pattern — que operam só em inglês, confirmado — mas **não protege contra o concorrente posicionalmente idêntico, que já fala português e já está na loja onde você decidiu não estar**. A defesa contra esse é a profundidade pedagógica e a curadoria autoral, não o idioma
 
-### 3. As chaves de IA estão publicadas
+### 3. A porta de entrada é única, e pode estar trancada
 
-`.github/actions/credenciais-app` escreve `groq_credentials.dart` e `gemini_credentials.dart` com os secrets, e o `release.yml:503` usa essa action **dentro do job `build-web`**. Como o Dart compila para JavaScript, a chave da Groq e a do Gemini viram literais dentro do `main.dart.js` servido publicamente em `grimoriodebolso.app`
+Com login obrigatório, 100% do público atravessa um único ponto. Esse ponto tem seis obstáculos e um componente que admite falhar
 
-Qualquer pessoa abre o DevTools, busca por `gsk_` ou `x-goog-api-key`, e leva as duas chaves em menos de um minuto. No Android o custo é maior (unzip do AAB + `strings` no snapshot AOT), o resultado é o mesmo. Não existe `supabase/functions/` — não há proxy
+**O inventário:** nome, e-mail, senha, **confirmar senha**, checkbox de termos que desabilita o botão, e captcha Turnstile. Três desses são removíveis sem perda funcional
 
-Somado a isso: todos os limites de uso vivem no aparelho e são contornáveis (mudar o fuso ou reinstalar zera os contadores), e as credenciais de admin entram por `--dart-define`, que também vira literal no binário e concede premium vitalício local a quem extrair a string
+**O problema grave:** o captcha está posicionado *antes* do caminho de menor atrito. Em `login_page.dart`, `CaptchaGate.resolve` está na linha 616 e `signInWithGoogle` na 630 — o Turnstile roda antes do botão do Google. E o comentário do próprio captcha diz:
 
-O workflow já tem uma guarda contra `ADMIN_*` vazar no `main.dart.js` (`branch-validate.yml:381-389`). A mesma preocupação não foi aplicada às chaves que custam dinheiro
+> "O Turnstile roda numa WebView; quando ela está 'fria' (app recém instalado, dados limpos, rede lenta) o primeiro carregamento **costuma falhar**. Antes, esse erro fechava a folha devolvendo null (…) quebrando a PRIMEIRA tentativa de quem acabou de instalar"
 
-### 4. A venda é feita no escuro, uma vez só, com a lista errada
+Já existe mitigação — 3 tentativas de recriar o widget — o que significa que isso quebrou em produção antes. O cenário "WebView fria em app recém-instalado" é o cenário de **100% dos novos usuários**
 
-Três falhas somadas:
+**E o risco específico do iPhone:** login com Google dentro de PWA standalone no iOS é reconhecidamente frágil. O código já tenta o caminho seguro (Google Identity Services na própria página via `signInWithIdToken`, `supabase_auth_repository.dart:206-265`) mas cai para `signInWithOAuth` com redirect completo quando o GIS falha — e o GIS falha rotineiramente no Safari por bloqueio de cookie de terceiros. No standalone, o redirect abre navegador embutido, o verificador PKCE fica noutro contexto de storage, e a troca de código falha
 
-**Não existe trial.** Nenhuma leitura de `introductoryPrice`, `PeriodType.trial` ou `subscriptionOptions` nas 961 linhas do `payment_service.dart`. O app pede R$ 119,90/ano de alguém que nunca usou o produto pago. Todo o esforço de degustação (teasers, blur, títulos sob véu) existe para simular o que um trial entregaria de graça e melhor
+Com login obrigatório e zero crash reporting, **se isso estiver quebrado a porta de 100% do público iOS está trancada e ninguém descobriria.** É meia hora de teste num iPhone real
 
-**Um paywall genérico atende ~20 contextos.** `showPremiumUpgradePaywall(BuildContext context)` não recebe origem, e 16 call sites constroem `const PremiumUpgradeSheet()` direto. Quem acabou de desenhar um sigilo e quer salvá-lo recebe a mesma tela de quem esgotou a tiragem de tarot e a mesma de quem tentou abrir a lição 2 de uma trilha. A headline nunca responde a pergunta que a pessoa tem na cabeça naquele segundo
+*Ressalva de implementação:* o Turnstile pode estar exigido do lado do servidor, no painel do Supabase. Se estiver, remover o gate no cliente não simplifica o login — quebra ele. Verificar o painel antes
 
-**A lista de benefícios esconde os dois maiores ativos.** Os 5 bullets vendem "leituras ilimitadas" e "enciclopédia completa" — as duas coisas mais fáceis de imitar — e não citam as 88 lições nem os 46 rituais guiados, que são o que ninguém copia em um mês. Pior: "Enciclopédia com conteúdos completos" é impreciso, porque o Free já lê quase tudo; a promessa não se cumpre no valor esperado
+### 4. As chaves de IA estão publicadas
 
-### 5. Não há canal de volta
+A action que escreve `groq_credentials.dart` e `gemini_credentials.dart` roda **dentro do job de build web** (`release.yml:503`). Como o Dart compila para JavaScript, as duas chaves viram literais dentro do `main.dart.js` servido publicamente. DevTools, buscar por `gsk_`, menos de um minuto. Não existe `supabase/functions/` — não há proxy
 
-Toda notificação é local, agendada no aparelho, no último dia em que a pessoa abriu o app. Não há `firebase_messaging`. Não há edge function. Logo: **não existe win-back** — não dá para falar com quem sumiu há sete dias
+Os limites de uso vivem todos no aparelho e são contornáveis: mudar o fuso ou reinstalar zera os contadores
 
-E o lembrete diário é uma única frase estática, agendada com `matchDateTimeComponents: DateTimeComponents.time`: quem fica seis meses no app recebe "🐈‍⬛ O Salem te chama" **180 vezes**. A única alavanca de retorno que existe se autodestrói por repetição
+**E há um buraco que cresce com o sucesso:** em `user_model.dart`, `canUseAi => isPremium || ...` — o plano pago é ilimitado. Um assinante intenso a R$ 19,90 (líquidos de ~R$ 16,90 depois da Play) consumindo centenas de chamadas ao Groq e ao Gemini fica negativo sozinho. Um teto generoso e invisível resolve numa tarde
 
-A sequência — que é bem construída, com dia em horário local, tolerância de um dia e reconstrução a partir de 11 tabelas de evidência — não tem aviso de risco, não tem congelamento e não tem luto. A pessoa passa 30 dias construindo um número, esquece um dia, e no dia seguinte o selo mostra "1 dia seguido" sem nenhuma explicação. Enquanto isso, a mesma sequência ≥7 é usada para **vender** a Leitura do Ciclo
+**O achado que a aposta do web torna urgente:** `ad_service.dart:54-55` é `!kIsWeb && (Android || iOS)`. A usuária gratuita da **web não gera receita de anúncio nenhuma**. Cada pessoa de iPhone que chega pelo PWA — exatamente o público que a estratégia inteira quer atrair — é 100% custo de Groq e Gemini com zero receita. **Se a aposta do web funcionar, ela piora a economia unitária do Free antes de melhorar a da assinatura**
 
-### 6. iOS não existe como produto
+### 5. A venda é no escuro, e o paywall está invertido
 
-Não há `ios/Podfile` nem `Podfile.lock` (e o Podfile não está no `.gitignore`). O `project.pbxproj` não tem uma linha de `DEVELOPMENT_TEAM` nem `PROVISIONING_PROFILE`, e usa a identidade legada `"iPhone Developer"`. Não há job de iOS em nenhum workflow. O bundle id iOS (`com.grimoriodebolso.grimorioDeBolso`) diverge do Android (`com.grimoriodebolso.app`)
+**Não existe trial.** Nenhuma leitura de `introductoryPrice` ou `subscriptionOptions` nas 961 linhas do serviço de pagamento
 
-E há um bloqueio garantido esperando: `signInWithApple()` retorna erro com o comentário "Apple Sign-In não está habilitado neste app", e o pacote `sign_in_with_apple` não está no `pubspec.yaml`. Com o botão do Google presente e o Apple ausente, a Guideline 4.8 rejeita a submissão na primeira revisão
+**Um paywall genérico atende ~20 contextos.** `showPremiumUpgradePaywall(BuildContext)` não recebe origem, e 16 call sites constroem `const PremiumUpgradeSheet()` direto
+
+**A lista de benefícios esconde os dois maiores ativos** — vende "leituras ilimitadas" e "enciclopédia completa" e não cita as 88 lições nem os 46 rituais guiados
+
+**E o achado mais consequente desta revisão: o paywall está cobrando pela coisa errada.** Os detalhes de cristais, ervas, cores e metais são Premium (`feature_access.dart`) — informação commodity que qualquer pessoa acha grátis em três segundos. Enquanto isso, o que é insubstituível — o diário, o registro, a prática acumulada, o grimório que é *seu* — é o que sustentaria a assinatura
+
+Isso quebra três coisas ao mesmo tempo: faz o preço parecer ganancioso, torna o plano de SEO impossível sem canibalizar, e desalinha a história que o app conta. **Inverter — referência de graça, prática e registro pagos — conserta as três numa decisão só.** É a única mudança que alinha conteúdo, aquisição e monetização de uma vez
+
+*Nota de implementação:* a regra de lição gratuita **não está** no `FeatureAccess`, apesar do comentário em `trails_data.dart:33` dizer que está. Ela está duplicada inline em `trail_page.dart:59` e `lesson_page.dart:86`. Mexer nessa política exige dois pontos de edição, ou a tela da trilha e a tela da lição divergem
+
+### 6. Não há canal de volta — e o e-mail está ali, ignorado
+
+Toda notificação é local, agendada no aparelho, no último dia em que a pessoa abriu o app. Não há push remoto. No web, a notificação está desligada **por decisão de código**, não por limitação de plataforma (`notification_service.dart:37`)
+
+O lembrete diário é uma frase única e estática, agendada com `matchDateTimeComponents: DateTimeComponents.time`: quem fica seis meses recebe "🐈‍⬛ O Salem te chama" **180 vezes**
+
+**Mas o login obrigatório entrega um ativo que a primeira versão desta auditoria subestimou: o app tem o e-mail de 100% da base.** E o valor disso não é a cadência lunar. São três coisas:
+
+- É o **único caminho legal** de vender o plano anual pelo checkout web a uma usuária Android sem violar a política anti-steering da Play
+- É o **antídoto ao ITP do Safari**, que apaga IndexedDB, localStorage e o registro do service worker após 7 dias sem interação — um link mágico devolve a pessoa ao grimório depois que o Safari apagou tudo
+- É a **apólice de seguro contra suspensão de loja**, que é o risco existencial real de um app de bruxaria na Play brasileira
+
+Sobre a sequência, uma correção da primeira versão: **existe uma graça**. `currentStreak()` verifica hoje e, se não há check-in, recua para ontem antes de zerar — o comentário no código diz "quem ainda não abriu o app hoje não perde a sequência antes do dia acabar". O que não existe é congelamento, reparo ou aviso; um dia efetivamente perdido zera em silêncio. E `bestStreak` é calculado e nunca mostrado
+
+---
+
+## A aposta do web: o que precisa ser verdade
+
+A decisão está tomada. O que segue é o que precisa dar certo para ela render, e o que é ilusão
+
+### O que a decisão custa (e o que não custa)
+
+**Não custa margem.** A Apple nunca cobrou nada e nunca vai cobrar, porque não há app na App Store. Todo o noticiário de Epic v. Apple é irrelevante aqui — e, de passagem, ele foi mal relatado em toda parte: o 9º Circuito **afirmou** a condenação em dezembro de 2025 e manteve a injunção; a Apple protocolou certiorari em maio de 2026, ainda pendente, sem decisão antes de 2027
+
+**Custa descoberta.** Não é economia de 30% — é abrir mão da vitrine que traz gente até o produto. Esse é o preço real, e é por isso que o gargalo 2 é o gargalo 2
+
+### O que é ilusão: Web Push no iPhone
+
+Em 2026, a Push API no iOS continua exclusiva de web apps adicionados à Tela de Início. Não há brecha: ela simplesmente não existe numa aba do Safari. O Declarative Web Push (Safari 18.4/18.5) simplificou o envio — dispensa service worker — mas não removeu o requisito de instalação
+
+O funil é multiplicativo e cada portão é estreito: chegar ao site → descobrir "Adicionar à Tela de Início" sem prompt do sistema (o iOS não tem `beforeinstallprompt`) → aceitar a permissão. Sobre uma base que já é ~18% dos aparelhos brasileiros
+
+*(A estimativa de "10-15× menor que push nativo" que circula entre fornecedores é heurística de vendor, não medição. Trate como ordem de grandeza. A direção se sustenta e já basta para a decisão.)*
+
+**Recomendação: não construir Web Push em 2026.** É o pior retorno por esforço de toda a pesquisa, e exige backend de envio que hoje não existe. O canal de retorno é e-mail, que já existe para 100% da base e funciona idêntico nas três plataformas. Se um dia construir, construir para Android primeiro — lá existe `beforeinstallprompt` e o opt-in é de ~67%
+
+### O que é binário e barato: o login funcionar
+
+Se o login com Google quebra em PWA standalone no iOS ou dentro do navegador embutido do Instagram, **a aposta inteira vale zero** — e sem crash reporting ninguém descobre. Testar num iPhone real, hoje, custa meia hora
+
+Se quebrar, o caminho é código OTP de 6 dígitos por e-mail como opção principal nesses contextos, com detecção de navegador embutido e instrução de abrir no Safari
+
+### O que é autoinfligido: o iPhone que volta para um app vazio
+
+O ITP do Safari apaga todo o storage de script após 7 dias sem interação, em aba normal. O app guarda os dados locais em `sqflite`/`sqlite3.wasm`. Uma usuária gratuita de iPhone escreve um diário de sonhos, some por uma semana, e **volta para um app vazio**
+
+O diagnóstico correto não é "insista na instalação". É que **a persistência no servidor é premium**. Vender sincronização quando a plataforma apaga os dados em sete dias é vender proteção contra um dano que o próprio produto permitiu. O login já é obrigatório, a conta já existe, e o custo marginal de guardar texto no Postgres é irrisório
+
+### Higiene de PWA que falta (barata, e uma delas é urgente)
+
+| Item | Estado | Por quê |
+|---|---|---|
+| `scope` no manifest | **ausente** | **Urgente:** sem ele, uma navegação para fora — exatamente o que o redirect do OAuth faz — pode jogar a pessoa para fora do web app |
+| `screenshots` | ausente | Destrava o diálogo de instalação rico do Chrome Android, com cara de loja |
+| `id`, `lang` | ausentes | Identidade estável da PWA |
+| `start_url` | `"."` | Trocar por `"/"` |
+| `apple-mobile-web-app-capable` | ausente no `index.html` | Só há o `mobile-web-app-capable` moderno (linha 45) |
+| `apple-touch-startup-image` | ausente | Splash em branco no iOS |
+| `description` | **já existe** | Correção da primeira leitura: está no manifest e no `<meta>` |
+
+### O capítulo do dinheiro, corrigido
+
+Este foi o pedaço da pesquisa que mais errou, e ele erra dos dois lados:
+
+- **A taxa reduzida do Google Play não vale aqui.** O Billing Choice Program (10% de serviço) entrou em 30/06/2026 **apenas para EUA, EEE e Reino Unido**. Brasil e o resto do mundo ficam nas taxas antigas — **15% em assinaturas — até 30/09/2027**. A comparação correta hoje é Play 15% contra ~3,9% no web (Stripe 2,9% + US$ 0,30; RevenueCat grátis até US$ 2.500 MTR): **~11 pontos**, não ~6. Em R$ 119,90/ano, da ordem de R$ 12 por assinante
+- **Mas esses 11 pontos não podem ser capturados dentro do app Android.** Billing alternativo com escolha do usuário também não existe no Brasil até setembro de 2027. Empurrar a usuária Android para o checkout web não é ganho de margem — é risco de suspensão do único canal nativo que existe. **Play Billing é o único caminho sancionado dentro do app Android.** O Web Billing serve iOS, desktop, e-mail e busca
+- **Pix não está disponível no RevenueCat Web Billing.** Ele expõe só cartão, Apple Pay e Google Pay. Rodar sobre a Stripe não significa poder ligar os métodos locais dela. Pix exige checkout Stripe direto — a Stripe adicionou recorrência por Pix Automático em 22/04/2026 — e, portanto, um webhook Stripe → Supabase → concessão de entitlement, porque hoje o RevenueCat é a fonte única de verdade do `isPremiumEffective`. **Isso é projeto próprio, não configuração de painel** — e uma falha nele produz uma assinante que pagou e não tem Premium, invisível num app sem crash reporting
+
+Num mercado onde o Pix domina e a recorrência por cartão falha muito, a compra avulsa **Leitura do Ciclo** por Pix é provavelmente o produto de maior conversão disponível — e é o único formato em que Pix casa naturalmente
 
 ---
 
 ## Calibração de mercado
 
-Os números abaixo são benchmarks públicos, não fatos do código:
+Benchmarks públicos, não medições deste app:
 
-- A App Store concentrou cerca de **70,5% do gasto do consumidor** entre as duas lojas em 2025, a partir de ~21% dos downloads; **73% da receita de assinatura** veio do iOS. ARPU iOS ~US$ 138 contra ~US$ 72 no Android ([Sensor Tower](https://sensortower.com/blog/2025-state-of-mobile-consumers-usd150-billion-spent-on-mobile-highlights), [Business of Apps](https://www.businessofapps.com/data/app-revenues/))
-- **Paywall duro converte ~5x mais que freemium**: mediana de 10,7% contra 2,1% de trial-to-paid em D35. Trials longos (17–32 dias) convertem ~42,5% contra ~25,5% dos trials de menos de 4 dias. **82% dos trials começam no primeiro dia após a instalação** — o que torna a ativação e o trial a mesma conversa ([RevenueCat, State of Subscription Apps](https://www.revenuecat.com/state-of-subscription-apps))
-- Na categoria: CHANI é o app de astrologia de maior faturamento nos EUA, a US$ 12/mês ou US$ 108/ano; The Pattern cobra US$ 14,99/mês; Co-Star construiu a retenção em push diário agressivo na tela de bloqueio ([Statista](https://www.statista.com/statistics/1451664/top-horoscope-apps-us-market-revenue/), [Unstar](https://unstar.app/blog/co-star-sanctuary-pattern-nebula-stellium-astrology-apps-ranked-2026))
+- **App Store concentra ~70,5% do gasto** entre as duas lojas e **73% da receita de assinatura**, a partir de ~21% dos downloads. ARPU iOS ~US$ 138 contra ~US$ 72 no Android
+- **Paywall duro converte ~5× mais que freemium** (10,7% vs 2,1% de trial-to-paid em D35). **89,4% dos trials começam no dia do install.** Trials de 17-32 dias convertem ~42,5% contra ~25,5% dos de menos de 4 dias; 7 dias convertem ~40%
+- **"Barato converte mais" é falso.** Apps de preço alto têm conversão D35 de 9,8% contra 4,3% dos de preço baixo, e RLTV por pagante 3,3× maior
+- **IA atrai e não segura:** apps com IA geram 41% mais receita por pagante mas têm churn 30% mais rápido — retenção anual de 21,1% contra 30,7%. **O Conselheiro Místico é argumento de conversão, não de retenção**
+- **O Brasil é o melhor lugar para construir e o pior para extrair:** receita mediana por install de US$ 0,06-0,09 na América Latina contra US$ 0,39 na América do Norte
+- **A categoria acabou de mudar de dono:** a Midjourney comprou o Co-Star (anunciado em 24/07/2026, ~4,3M MAU) e planeja um gerador de imagens astrológico. A categoria vai ser inundada de conteúdo gerado — o que torna **autoria humana visível** um diferencial defensável, não um detalhe
 
-Três leituras disso para este produto:
+Sobre os concorrentes: **CHANI** é o de maior faturamento nos EUA (US$ 11,99/mês, US$ 107,99/ano) e retém por conteúdo perecível novo toda semana, escrito e narrado por humanas. **The Pattern** retém por lock-in social (compatibilidade com amigos). **Labyrinthos** é o único concorrente de aprendizado real — e prova que o formato funciona: aulas, quizzes com repetição de erro, avatar que sobe de nível, flashcards. No Brasil, os fortes são de astrologia e de consulta, não de ensino: **Astrolink** (cujo pacote Android é literalmente `com.astrolink.webapp`) e **Personare**, a partir de R$ 9,90
 
-1. O preço de reserva no código é **R$ 19,90/mês e R$ 119,90/ano** (`premium_blur_widget.dart:445-449`) — o README ainda anuncia R$ 9,90 e R$ 79,90, e está desatualizado. Mesmo assim o valor está **abaixo** do padrão internacional da categoria. Isso é defensável no Brasil e é dinheiro deixado na mesa em en/es — e o conteúdo já está traduzido
-2. O concorrente de referência vence com **uma coisa perecível todo dia, entregue por push**. É exatamente a mecânica que aqui está desligada
-3. Como 82% dos trials nascem no dia da instalação, **abrir a porta (gargalo 2) e criar o trial (gargalo 4) são a mesma tarefa**, não duas
+**Sobre preço:** R$ 19,90/mês está no topo da faixa local; o anual de R$ 119,90 (~R$ 10/mês) está bem calibrado. Congelar a discussão de preço internacional até haver leitura da base e tráfego real em es — precificar para mercados onde não há distribuição é resolver o problema errado
 
 ---
 
 ## O que já está bom, e não deve ser mexido
 
-Vale dizer com clareza, porque a lista de buracos acima não é o retrato inteiro:
-
-- **Paridade trilíngue travada por CI.** `content_parity_test.dart`, `trails_parity_test.dart`, `ai_prompts_parity_test.dart`, `guided_rituals_parity_test.dart` e o scanner de português hardcoded rodam bloqueantes. Quase nenhum app indie faz isso
-- **Esteira de release acima da média.** Guarda de semver, versionCode determinístico conferido contra todas as tags, gate no SHA da tag, conferência de assinatura, consulta prévia à API da Play para validar a faixa, aprovação humana no environment `production`, trava simétrica sandbox × produção da chave do RevenueCat
-- **Fonte única de verdade de acesso.** `AppFeature` + `FeatureAccess` + `PremiumAccess` evitam a bagunça de checagens espalhadas que mata apps deste tamanho. Os gates são fail-closed de verdade: o conteúdo pago não chega à árvore de widgets atrás do blur
-- **Ética de cobrança correta na Leitura do Ciclo.** Crédito gravado antes da geração, falha de IA não consome a compra, aviso de "poucos registros" antes de pagar, opt-out por fonte de dado
-- **Motor de ofertas com guardrails reais.** Uma oferta por dia no app inteiro, cooldown de 7 dias, silêncio de 30 dias após duas dispensas
-- **Movimento reduzido do sistema respeitado em 16 pontos.** Raríssimo na categoria
-- **Arte própria de verdade:** 194 ilustrações, mascote animado com sprites, baralho RWS completo, ícone adaptativo e splash Android 12+ customizados
-- **`LanguageGuard`** — solução original e testada para um defeito real de produção, detectando quando a IA escapa do idioma
-- **`sync_coverage_test.dart`** — teste institucional exemplar: trava a classe de bug "tabela nova ficou de fora do sync" em vez de testar um caso pontual
-
-Nada disso precisa ser refeito. A recomendação é usar essa base, não substituí-la
+- **Paridade trilíngue travada por CI.** Testes de paridade de conteúdo, trilhas, prompts e rituais bloqueantes, com scanner de português hardcoded
+- **Esteira de release de nível profissional.** Guarda de semver, versionCode determinístico conferido contra todas as tags, gate no SHA da tag, conferência de assinatura, consulta prévia à API da Play, aprovação humana em `production`, trava simétrica sandbox × produção da chave do RevenueCat
+- **Fonte única de verdade de acesso** com gates fail-closed de verdade — o conteúdo pago não chega à árvore de widgets atrás do blur
+- **Ética de cobrança correta na Leitura do Ciclo.** Crédito gravado antes da geração, falha de IA não consome a compra, aviso de "poucos registros" antes de pagar
+- **Motor de ofertas com guardrails reais** — e a graça do dia corrente na sequência
+- **Movimento reduzido do sistema respeitado em 16 pontos.** 194 ilustrações próprias, mascote animado por sprites
+- **`LanguageGuard` e `sync_coverage_test`** — duas soluções originais que travam classes inteiras de bug em vez de casos pontuais
 
 ---
 
 ## Roadmap por ondas
 
-Estimativas para **uma pessoa** desenvolvendo. Cada onda só faz sentido depois da anterior
+Estimativas para **uma pessoa**. Cada onda tem critério de saída verificável
 
-### Onda 0 — Parar o sangramento · ~1 semana
+### Onda 0 — Uma tarde, antes de decidir qualquer coisa
 
-Coisas que já estão causando dano hoje e não dependem de nenhuma decisão de produto
+| Item | O que fazer |
+|---|---|
+| **Ler a base que já existe** | SQL no Postgres: contas totais, ativas em 30/90 dias, assinantes ativos, retenção por coorte de mês, quebra por `signup_platform`, quantas contas nunca completaram a lição 1. Sem escrever código de app |
+| **Testar o login num iPhone real** | PWA na Tela de Início **e** dentro do navegador embutido do Instagram. É binário: se quebrar, a aposta do web vale zero |
+| **Rotacionar as chaves de IA** | Considerar as atuais comprometidas |
 
-| Item | O que fazer | Esforço |
-|---|---|---|
-| Rotacionar as chaves de IA | Considerar as atuais comprometidas. Hoje | baixo |
-| Proxy de IA | Edge Function `ai-proxy` no Supabase autenticada por JWT, chaves como secrets, teto por `user_id` numa tabela `ai_usage`. Trocar as 4 chamadas diretas de `ai_service.dart` (linhas 854, 890, 1062, 1116) e apagar os arquivos de credencial do build | médio |
-| Escrita Livre perde texto | `AutomaticKeepAliveClientMixin` em `_FreeWritingTabState` + `_save()` no `dispose()` + autosave por timer. Hoje trocar de sub-aba nos Diários apaga o que foi escrito, sem aviso — numa aba vendida como "salvamento automático" | baixo |
-| Guarda de trabalho não salvo | `UnsavedChangesGuard` compartilhado aplicado a 8 formulários sem `PopScope` (sonho, desejo, gratidão, afirmação, feitiço, registro, verbete, mapa astral). O gesto de voltar do Android é acidental o tempo todo | baixo |
-| Contraste do tema claro | `lavandaNevoa` reprova AA em quase toda a paleta de acento: `starYellow` sobre `surface` dá 2,25:1 e tem 145 usos (XP, conquistas, runas, jornadas). Refazer a partir de um fundo quase branco + `test/theme_contrast_test.dart` bloqueante iterando `AppThemes.all` | médio |
-| Rollout gradual | `status: inProgress` + `userFraction: 0.2` no `release.yml` para produção, com workflow de promoção. Hoje uma versão quebrada quebra para 100% da base de uma vez | baixo |
+**Critério de saída:** você sabe se o problema é aquisição ou conversão, e se a porta do iPhone abre
 
-**Critério de saída:** nenhuma chave de API sai no bundle, nenhum formulário perde dado, o tema claro passa no teste de contraste
+### Onda 1 — Parar o sangramento · ~1 a 2 semanas
 
-### Onda 1 — Abrir os olhos · ~2 semanas
+| Item | Esforço |
+|---|---|
+| Proxy de IA em Edge Function autenticada por JWT, com teto por `user_id`; apagar os arquivos de credencial do build | médio |
+| Teto generoso e invisível de IA **no plano Premium** (hoje é ilimitado e fica negativo com o sucesso) | baixo |
+| Escrita Livre: `AutomaticKeepAliveClientMixin` + `_save()` no `dispose()` + autosave — hoje trocar de sub-aba apaga o texto | baixo |
+| `UnsavedChangesGuard` nos 8 formulários sem `PopScope` | baixo |
+| Contraste do tema claro: `starYellow` sobre surface dá 2,25:1 com 145 usos. Refazer + teste bloqueante iterando `AppThemes.all` | médio |
+| `scope` no manifest (urgente pelo OAuth), mais `id`, `lang`, `screenshots`, `start_url: "/"`, `apple-mobile-web-app-capable`, `apple-touch-startup-image` | baixo |
+| Rollout gradual (`userFraction: 0.2`) na produção | baixo |
 
-Sem esta onda, todas as outras são apostas
+**Critério de saída:** nenhuma chave no bundle, nenhum formulário perde dado, o tema claro passa no teste
 
-| Item | O que fazer | Esforço |
-|---|---|---|
-| Analytics | PostHog ou Firebase Analytics. Dicionário de no máximo 25 eventos definido **antes** de começar. Respeitar o toggle `privacy_analytics`, que hoje existe na tela e não controla nada | médio |
-| Ligar os hooks órfãos | `FeatureAccessService.instance.setBlockedAccessAnalyticsHook(...)` no boot; `OfferEngine._bumpEvent` emitindo evento remoto; `PaymentService` emitindo `purchase_started/completed/cancelled`. **Isso dá o funil completo em menos de um dia** — a instrumentação já está escrita | baixo |
-| Crash reporting | `sentry_flutter` plugado nos 4 pontos que já capturam tudo (`main.dart:61`, `:74`, `:82`, e o `debugLog('ERROR')`), com versão, locale, plano e as últimas 30 linhas do `DebugLogService` como breadcrumb | baixo |
-| Remote config pobre | Tabela `app_config` no Supabase (chave, valor jsonb, min_version) lida no boot com cache e fallback nas constantes. Move os limites Free para fora do binário e habilita A/B sem release | médio |
-| Métrica de ativação declarada | Proposta: *entregou 1 leitura E completou 1 rito nas primeiras 48h* | baixo |
+### Onda 2 — Abrir os olhos · ~2 semanas
 
-**Critério de saída:** dá para responder, olhando um painel, qual é o D7 e quantas pessoas veem o paywall por dia
+| Item | Esforço |
+|---|---|
+| Analytics (PostHog ou Firebase), com dicionário de no máximo 25 eventos definido **antes**. Respeitar o toggle `privacy_analytics`, que existe na tela e não controla nada | médio |
+| **Ligar os hooks órfãos** — o de bloqueio no boot, o `OfferEngine` emitindo remoto, o pagamento emitindo start/complete/cancel. Dá o funil completo em menos de um dia | baixo |
+| Crash reporting nos 4 pontos que já capturam tudo, com versão, locale, plano e breadcrumb do `DebugLogService` | baixo |
+| Instrumentar o específico da aposta web: modo de exibição (standalone vs aba), plataforma, instalação da PWA | baixo |
+| Remote config pobre: tabela `app_config` no Supabase lida no boot com fallback nas constantes | médio |
 
-### Onda 2 — Abrir a porta · ~2 a 3 semanas
+**Critério de saída:** dá para ver D7, o funil de paywall por origem, e quanto do público é web
 
-| Item | O que fazer | Esforço |
-|---|---|---|
-| Modo convidado | Terceiro botão na `welcome_page` gravando `entered_as_guest`, `UserModel.defaultUser()`, ajuste no `RequireAuth`. A conversão depois já está pronta e testada via `claimLegacyData`. **Atenção:** `signOut` apaga o banco quando o usuário é anônimo (`auth_provider.dart:851-861`) — precisa distinguir "sair da conta" de "convidada que nunca teve conta" | médio |
-| Primeiro contato em 3 telas | (1) "que caminho te chama?" com as 9 trilhas como chips; (2) **a carta do dia do tarot já sorteada e revelada ali mesmo** — o código existe, é grátis e é isento de anúncio; (3) "quer guardar isso no seu grimório?" → cadastro. Entrega em vez de prometer | médio |
-| Priming de notificação | Parar de pedir a permissão a frio em cima do tour. Pedir no último passo do tour, com o Salem falando. No Android 13+ duas negações fecham a porta para sempre | baixo |
-| Free consegue fechar o dia | Hoje em 2 de cada 6 dias o rito exploratório cai numa feature Premium e o 3/3 fica matematicamente inalcançável. Filtrar `DailyRites.featuredToday()` pelo plano | baixo |
-| Atalhos e mascote pararem de apontar para o muro | Os 6 atalhos padrão priorizam Premium por decisão explícita; as 8 falas diárias do Salem apontam **todas** para o Clima Mágico, que nunca preenche no Free. Diversificar por estado e por dia | baixo |
-| Carência de anúncio na 1ª sessão | Nada de intersticial nas primeiras 48h ou nos 3 primeiros resultados | baixo |
+### Onda 3 — Ser achável · ~3 a 4 semanas
 
-**Critério de saída:** dá para instalar, tirar uma carta e completar um rito sem criar conta
+A onda que a decisão de não fazer iOS torna obrigatória
 
-### Onda 3 — Fechar a venda · ~3 a 4 semanas
+| Item | Esforço |
+|---|---|
+| **Inverter o paywall primeiro.** Liberar detalhes da enciclopédia e significado de cartas e runas; manter e reforçar o pago em prática, registro, IA, rituais e mapa astral. Sem isso, o item seguinte canibaliza | médio |
+| **Publicar HTML estático indexável ao lado do canvas:** 78 cartas, 24 runas, 8 datas da roda do ano, fases lunares, e **exatamente 1 lição por trilha** (9 páginas, como amostra da voz). Nos 3 idiomas, com hreflang e JSON-LD. ~130 URLs ≈ 390 páginas. **Nunca as outras 79 lições, nunca os 46 rituais, nunca o mapa astral** | médio |
+| Validar 3 páginas piloto no Search Console antes de gerar as 390 — e testar o **roteamento**: as rotas estáticas não podem ser engolidas pelo fallback SPA do Flutter | baixo |
+| Landing estática em HTML puro na raiz, com o app atrás do botão "entrar". Hoje o visitante frio paga o download inteiro do runtime antes de entender o que é o produto | médio |
+| **Link em todo compartilhamento:** domínio no rodapé da arte 1080×1350 + URL curta rastreável no texto, apontando para a página estática do verbete exato — a carta que saiu, não a home | baixo |
+| Autoria humana visível na abertura das trilhas: quem escreveu, com que fontes, o que é IA e o que não é | baixo |
 
-| Item | O que fazer | Esforço |
-|---|---|---|
-| Trial de 7 dias no anual | Oferta base no Google Play, ligada ao offering `default` do RevenueCat, lida via `storeProduct.introductoryPrice` para trocar o rótulo e o botão. Somado à Onda 2, ataca os 82% de trials que nascem no dia da instalação | médio |
-| Paywall contextual | `PremiumUpgradeSheet({this.origin})` com enum de origem. Trocar só duas coisas: a headline e a ordem dos benefícios. Substituir os 16 `showModalBottomSheet` diretos | médio |
-| Benefícios certos | Reescrever os 5 bullets para: 88 lições em 9 trilhas · 46 rituais guiados · seus sonhos interpretados · Conselheiro e leituras sem limite · tudo sincronizado. Unificar com a lista de 9 itens da `SubscriptionPage`, que hoje promete coisas diferentes — inclusive "Suporte prioritário", sem contrapartida no código | baixo |
-| Destravar a degustação da lição | Remover a interceptação em `trail_page.dart:76-84` e `continue_trail_card.dart:82-90`. Está pronta, localizada e instrumentada, e nunca foi vista | baixo |
-| Degustação dos rituais | 2 dos 46 gratuitos permanentes + página de degustação (nome, materiais, duração, passo 1 completo) no lugar do `showPaywallThenPop`. Hoje a home conta os dias até o sabbat e cospe a pessoa numa tela de venda | médio |
-| Fim de assinatura | Ler `billingIssueDetectedAt` e `willRenew` no `_onCustomerInfoUpdated`; banner com CTA para o Customer Center antes de qualquer downgrade | médio |
-| Inverter os guardrails | O muro de limite diário aparece sem teto, todo dia, com snackbar vermelho; a oferta gentil é silenciada por 30 dias. Passar o muro pelo `OfferEngine` com slot próprio | baixo |
+**Critério de saída:** buscar o nome do produto retorna o domínio, e o compartilhamento tem endereço
 
-**Critério de saída:** o funil exposição → clique → compra existe por origem, e o trial roda
+### Onda 4 — Fazer a porta abrir · ~2 a 3 semanas
 
-### Onda 4 — Fazer voltar · ~3 a 4 semanas
+Login obrigatório, mas sem obstáculo desnecessário
 
-| Item | O que fazer | Esforço |
-|---|---|---|
-| Notificação viva | Trocar a frase única por um pool de 20–30 corpos escolhidos por estado no agendamento (que já roda a cada cold start): sequência em risco, rito do dia pelo nome, lua cheia amanhã. Sem servidor nenhum | médio |
-| Sequência protegida | Aviso às 20h quando `currentStreak > 2` e não há check-in; uma "vela de proteção" por mês; `bestStreak` exibido — ele já é calculado e nunca aparece | médio |
-| XP ao vivo | `refreshPracticeXp()` chamado dentro de `completeRite` e dos repositórios, com o delta animado subindo no anel. Hoje a pessoa ganha 28 XP e o anel não se mexe um pixel | baixo |
-| Jornadas com recompensa | Persistir `journey_progress`, somar `step.xpReward` ao XP unificado, disparar celebração e notificação. Hoje completar "Manifestador" entrega zero | alto |
-| "Naquele dia" | Card no Seu Dia com o que a pessoa escreveu há 1, 3, 6 e 12 meses. Uma consulta SQL por dia, zero conteúdo novo, e é a mecânica mais forte de app de diário | baixo |
-| Win-back por e-mail | `daily_checkins` **já sobe para o Supabase**. Edge function agendada consultando `MAX(date)` por `user_id`, disparando em D3/D7/D14 com o gancho concreto da pessoa ("sua sequência parou em 12 dias"). Não precisa de FCM | médio |
-| Busca nos Diários | Nenhuma das 5 listas tem busca, ordenação ou filtro, e as tags de sonho são criadas e nunca usadas. Depois de 3 meses — exatamente a pessoa candidata a Premium — o próprio acervo fica inencontrável | médio |
+| Item | Esforço |
+|---|---|
+| Tirar o Turnstile da frente do botão do Google (conferir antes se está exigido no painel do Supabase) | baixo |
+| Reduzir o cadastro a duas opções e um campo: "Continuar com Google" e e-mail com código de 6 dígitos. Eliminar senha, confirmar senha e o checkbox | médio |
+| **Termos com aceite implícito** (texto sob o botão, com log de versão e timestamp) **mas caixa própria e destacada para dado sensível** — convicção religiosa é dado sensível pelo art. 5º II da LGPD, e o art. 11 exige consentimento específico | médio |
+| Onboarding de personalização **antes** da parede de conta, **no Android**: "o que te trouxe até aqui" com as 9 trilhas como chips + a carta do dia entregue ali. Na web esse papel cabe à página de conteúdo — seis telas sobre um canvas em branco competem com o tempo de carregamento | médio |
+| Trocar o `pushNamedAndRemoveUntil('/home')` pós-cadastro por uma tela de chegada com UMA ação | médio |
+| Detectar navegador embutido (Instagram/TikTok) e priorizar OTP ali | médio |
+| Não pedir permissão de notificação durante o onboarding; adiar para depois da primeira lição ou do segundo dia | baixo |
+| Persistência no servidor **grátis** para conta gratuita — sincronização multi-dispositivo pode continuar Premium; guardar o que a pessoa escreveu, não | médio |
+| Free consegue fechar o dia (hoje 2 de cada 6 ritos são Premium) e os 6 atalhos param de apontar para o muro | baixo |
 
-**Critério de saída:** D7 e D30 medidos na Onda 1 subiram
+**Critério de saída:** a taxa de conclusão do cadastro medida na Onda 2 subiu
 
-### Onda 5 — Sair de um canal só · ~4 a 6 semanas
+### Onda 5 — Fechar a venda e chamar de volta · ~4 semanas
 
-| Item | O que fazer | Esforço |
-|---|---|---|
-| iOS | Alinhar o bundle id **antes** de criar o app no App Store Connect (depois é irreversível) · `Podfile` commitado · `DEVELOPMENT_TEAM` e assinatura · produtos com os mesmos identificadores da Play · job `macos-latest` no `release.yml` · TestFlight | alto |
-| Sign in with Apple | Pré-requisito, não polimento. Mesma tarefa do iOS | médio |
-| Link no compartilhamento | Os três `shareText` não têm URL nenhuma — cada compartilhamento é um beco sem saída. Três chaves de ARB e uma página `/baixar` que decide o destino | baixo |
-| App Links | `autoVerify="true"` + `assetlinks.json` (o repo já tem `get_release_sha1.sh`). Hoje quem tem o app instalado e clica num link do domínio cai no app web, numa segunda sessão sem seus dados | médio |
-| Landing page de verdade | Mover o app Flutter para `/app/` e colocar uma landing estática na raiz com badge da Play. Todo o plano do `reels.md` termina em "link na bio", e o link na bio não oferece o botão da loja | médio |
-| Pedido de avaliação | `in_app_review` disparado em pico de alegria comprovada — ao encadernar uma trilha, ao completar 7 dias de sequência. Hoje o único caminho até a avaliação é a irritação | baixo |
-| Cartões compartilháveis certos | O app tem 78 cartas com arte, mapa astral desenhado, 24 runas, sigilo à mão — e nenhum deles gera imagem. Só três superfícies compartilham, e nenhuma é o que as pessoas postam | médio |
+| Item | Esforço |
+|---|---|
+| **Infra de e-mail antes do conteúdo:** subdomínio dedicado de marketing separado do transacional, SPF/DKIM/DMARC nos dois. Com login obrigatório, e-mail em spam tranca a pessoa **fora** do app | médio |
+| Motor de e-mail de ciclo de vida: D0 boas-vindas, D3/D7/D14 win-back com o gancho concreto da pessoa, carta de lua nova e cheia. `daily_checkins` já está no Supabase | médio |
+| **Oferta do anual pelo checkout web enviada por e-mail à base Android** — o único caminho legal de capturar os ~11 pontos | baixo |
+| Trial de 7 dias no anual, com paywall na primeira sessão logo **depois** do primeiro momento de valor | médio |
+| Paywall contextual por origem; benefícios reescritos para 88 lições e 46 rituais | médio |
+| Destravar a degustação da lição (2 pontos de edição: `trail_page.dart:59` e `lesson_page.dart:86`) | baixo |
+| Notificação viva: pool de 20-30 corpos por estado, **com texto discreto por padrão** | médio |
+| Sequência: aviso de risco, "véu de proteção" mensal automático, `bestStreak` exibido | médio |
+| Ler `billingIssueDetectedAt`; banner antes de qualquer downgrade | médio |
+| Reduzir intersticiais de 10/dia para 2-3 com cooldown de 15 min, e bloqueio total durante ritual, tiragem e resposta do Conselheiro | baixo |
+| Blindar o Conselheiro: recusa de saúde/jurídico/financeiro, protocolo de crise com CVV 188, **botão de denúncia em toda saída de IA** — a política de conteúdo gerado por IA da Play **exige** canal de denúncia in-app | médio |
 
-**Critério de saída:** o app está no TestFlight e todo compartilhamento leva alguém de volta
+**Critério de saída:** o funil de compra existe por origem, e o e-mail é um canal medido
 
 ---
 
-## O que não fazer agora
+## O que não fazer
 
 | Tentação | Por que não |
 |---|---|
-| Adicionar mais uma ferramenta mística | O app já tem 22 módulos e 98 telas. O problema não é falta de feature, é que metade do que existe não é encontrada, medida nem vendida |
-| Migrar todo o conteúdo para um CMS | A entrega remota resolve-se com uma tabela `content_overrides` e fallback no `const` compilado. Migrar 88 lições e 78 cartas para um CMS é meses e não muda nenhuma métrica |
-| Passar de 6 para 10 temas | Já não há teste de tema nenhum e um dos 6 reprova contraste. Multiplicar paletas antes de ter a malha de regressão só multiplica o QA |
-| Construir comunidade ou feed social | Moderação em app de nicho espiritual é um problema de operação em tempo integral, e o produto ainda não segura a pessoa sozinha |
-| Refatorar a arquitetura | Clean Architecture + feature-first está bem executada, com 2.616 usos de `context.gc.*` contra 3 resíduos. Não é aqui que está o gargalo |
-| Cortar mais o Free para forçar conversão | Sem o funil da Onda 1, isso é apostar às cegas. E o Free já tem 2 de 6 dias em que não consegue fechar o dia |
+| **Web Push no iPhone** | Pior retorno da pesquisa inteira. Funil multiplicativo sobre ~18% dos aparelhos, exige backend que não existe. O canal é e-mail |
+| **Publicar as 88 lições** | É entregar a assinatura. São ~1.000 palavras autorais por lição e ninguém busca "a Rede wiccana" em volume — busca "significado da carta A Torre" |
+| **Empurrar a usuária Android para o checkout web** | Risco de política, não ganho de margem: billing alternativo não existe no Brasil até set/2027. Uma suspensão derruba o único canal nativo |
+| **WhatsApp como canal de retorno** | Parte relevante desse público pratica em segredo, dentro de casa evangélica ou católica. Prévia na tela bloqueada expõe a pessoa. Denúncias de intolerância religiosa subiram 66,8% em 2024. **Discrição é feature neste nicho** |
+| **Temporadas com contagem regressiva, FOMO e selo que se perde** | É o caminho mais rápido para virar o que o app diz não ser. Perecibilidade sim, urgência não: a lua cheia acontece e passa — isso é fato do mundo, não pressão de produto |
+| **Testar paywall duro agora** | O número vem de apps que não exigem cadastro antes. Login obrigatório + paywall duro é pedir duas coisas antes de dar uma |
+| **Precificar en/es** | Otimizar preço para mercados com distribuição zero. Congelar até haver tráfego real |
+| **Adicionar o 23º módulo** | 22 módulos e 148k linhas para uma pessoa. Depois da leitura da base: quais 5 concentram 80% das sessões, e o que se congela |
+| **Refatorar a arquitetura** | 2.616 usos de `context.gc.*` contra 3 resíduos. Não é aqui que está o gargalo |
 
 ---
 
-## Métricas que deveriam existir e não existem
+## Métricas que deveriam existir
 
-| Métrica | Como instrumentar | Referência da categoria |
+| Métrica | Como | Referência |
 |---|---|---|
-| D1 / D7 / D30 | Evento de sessão + coorte de instalação | D30 de 8–12% é bom em lifestyle |
-| Time-to-value | `install_ts` → primeiro resultado entregue | Abaixo de 3 min |
-| Taxa de conclusão do cadastro | `welcome_visto` → `cadastro_concluido` | Cadastro frio perde 40–70% |
-| Ativação | 1 leitura + 1 rito nas primeiras 48h | Definir a linha de base antes de otimizar |
-| Funil de paywall por origem | `setBlockedAccessAnalyticsHook` + `OfferEngine` (**já escritos**) | — |
-| Trial-to-paid D35 | RevenueCat | 10,7% mediana em paywall duro, 2,1% em freemium |
-| Sequência: quebra e recuperação | `daily_checkins` (**já sincronizado**) | — |
-| Abertura de notificação por tipo | Payload de deep link (**já existe e é testado**) | Queda acentuada após a 1ª semana com copy fixa |
-| Custo de IA por usuária ativa | Tabela `ai_usage` na edge function da Onda 0 | Precisa caber na margem de R$ 19,90/mês |
-| Churn involuntário | `billingIssueDetectedAt` do RevenueCat | 20–40% do churn total costuma ser involuntário |
+| Contas, ativas, pagantes, coorte | **SQL hoje**, na base que já existe | — |
+| Web vs Android | `signup_platform`, já migrado | — |
+| Conclusão do cadastro | `welcome_visto` → `criou_conta`, por método | — |
+| Login funcionando em iOS standalone | Teste manual + crash reporting | binário |
+| Funil de paywall por origem | Hooks que **já estão escritos** | — |
+| Trial-to-paid D35 | RevenueCat | 10,7% em paywall duro |
+| D1 / D7 / D30 | Coorte de instalação | D30 de 8-12% é bom |
+| Custo de IA por usuária ativa | Tabela `ai_usage` no proxy da Onda 1 | Free na web tem **zero** receita de anúncio |
+| Instalações da PWA e modo de exibição | `display-mode: standalone` | mede a aposta |
+| Abertura e clique de e-mail | ESP | é o canal de retorno |
 
 ---
 
 ## Resposta curta
 
-O que falta para competir com apps profissionais não é conteúdo nem capricho — os dois já estão no nível. Falta, em ordem: **enxergar** (analytics e crash), **deixar entrar** (convidado e primeiro valor antes do cadastro), **fechar a conta com a IA** (proxy e teto por usuária), **vender direito** (trial e paywall contextual), **chamar de volta** (notificação viva e win-back) e **sair do Android**
+O que falta não é conteúdo nem capricho. Falta, nesta ordem: **ler a base que já existe**, **fazer a porta abrir**, **ser achável**, **cobrar pela coisa certa**, **usar o e-mail que já se tem**
 
-O caminho mais curto entre hoje e "app profissional" passa por ligar o que já está construído e desligado, não por construir mais
+As duas decisões de produto não atrapalham nenhuma delas. A do login obrigatório entrega o e-mail de 100% da base, que é o canal de retorno mais valioso que este app pode ter. A de não fazer iOS obriga o site a virar produto — e é exatamente ali que mora o modo convidado que o app não vai ter
+
+O caminho mais curto entre hoje e "app profissional" continua passando por ligar o que já está construído e desligado
