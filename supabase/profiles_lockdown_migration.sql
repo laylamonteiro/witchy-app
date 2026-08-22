@@ -226,7 +226,24 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.redeem_beta_code(TEXT, TEXT) TO anon, authenticated;
+-- ANON NÃO EXECUTA. Esta função é SECURITY DEFINER e concede Premium
+-- VITALÍCIO — e `anon` significa "qualquer pessoa com a chave anônima", que
+-- vive dentro do bundle por natureza e é pública por desenho. Com o grant
+-- para `anon`, qualquer um chama /rest/v1/rpc/redeem_beta_code sem conta e
+-- sem rastro, quantas vezes quiser, chutando código.
+--
+-- Não é escalada direta (precisa acertar um código), é força bruta — e a
+-- função não tem limite de tentativas. Sem sessão também não há a quem
+-- atribuir a tentativa.
+--
+-- Exigir sessão fecha os dois de uma vez, e casa com a decisão de produto
+-- de que o app exige conta: quem resgata um código já está logada.
+REVOKE EXECUTE ON FUNCTION public.redeem_beta_code(TEXT, TEXT) FROM anon, PUBLIC;
+GRANT EXECUTE ON FUNCTION public.redeem_beta_code(TEXT, TEXT) TO authenticated;
+
+-- ATENÇÃO ao rodar: se alguma tela oferecer o resgate ANTES do login, ela
+-- passa a receber 403. Confira o fluxo antes — hoje o resgate vive na
+-- página de Assinatura, que já exige conta.
 
 -- (b) Criação automática da linha no signup. Roda como dona do banco (é
 --     trigger em auth.users), então o REVOKE acima não a atinge — mas ela
