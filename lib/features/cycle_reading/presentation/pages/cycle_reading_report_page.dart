@@ -21,12 +21,36 @@ import '../../data/models/cycle_reading_model.dart';
 import '../../data/repositories/cycle_reading_repository.dart';
 import '../../data/services/cycle_reading_service.dart';
 
+/// Um título de seção como ele pode aparecer no relatório GRAVADO.
+///
+/// A leitura é markdown, e o título foi escrito no idioma em que ela foi
+/// gerada — enquanto a tela lê no idioma de agora. Comparar só com o título
+/// atual fazia a seção desaparecer das leituras antigas de quem troca o
+/// idioma do app: o texto continuava lá, os cartõezinhos de ritual não.
+///
+/// A chave estável seria o certo, mas ela não existe no que já está gravado.
+/// Cobrir os três idiomas resolve o acervo sem reescrever nada.
+Set<String> _tituloEmTodosOsIdiomas(
+  String Function(AppLocalizations) escolher,
+) =>
+    {
+      for (final locale in AppLocalizations.supportedLocales)
+        escolher(lookupAppLocalizations(locale)),
+    };
+
+final _titulosDeRituais =
+    _tituloEmTodosOsIdiomas((l) => l.cycleReadingSectionRituals);
+
+final _titulosDaAfirmacao =
+    _tituloEmTodosOsIdiomas((l) => l.cycleReadingSectionAffirmation);
+
 /// O relatório da Leitura do Ciclo: Markdown das 7 seções + os dois
 /// cartões compartilháveis (afirmação sob medida e selo do ciclo).
 ///
 /// A entrada já vive no acervo (`free_writings`, source `cycle_reading`):
 /// esta página é a moldura de leitura — reabrir depois cai em Meus
 /// Registros ou de novo aqui.
+
 class CycleReadingReportPage extends StatelessWidget {
   final FreeWritingModel writing;
 
@@ -63,9 +87,9 @@ class CycleReadingReportPage extends StatelessWidget {
     final corpo = _forDisplay(writing.content);
     final secoes = _sections(corpo);
     final ondeVaiAAfirmacao =
-        _indiceDaAfirmacao(secoes, l10n, resolvedAffirmation);
+        _indiceDaAfirmacao(secoes, resolvedAffirmation);
     final ondeVaoOsRituais = secoes.indexWhere(
-      (secao) => secao.contains(l10n.cycleReadingSectionRituals),
+      (secao) => _titulosDeRituais.any(secao.contains),
     );
 
     return Scaffold(
@@ -191,12 +215,10 @@ class CycleReadingReportPage extends StatelessWidget {
   /// o botão pode ficar fora de lugar, mas nunca some.
   static int _indiceDaAfirmacao(
     List<String> secoes,
-    AppLocalizations l10n,
     String? afirmacao,
   ) {
-    final titulo = l10n.cycleReadingSectionAffirmation;
     for (var i = 0; i < secoes.length; i++) {
-      if (secoes[i].contains(titulo)) return i;
+      if (_titulosDaAfirmacao.any(secoes[i].contains)) return i;
     }
     if (_temAfirmacao(afirmacao)) {
       for (var i = 0; i < secoes.length; i++) {
