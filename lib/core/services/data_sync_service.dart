@@ -8,6 +8,7 @@ import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
+import 'debug_log_service.dart';
 
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
@@ -1089,7 +1090,17 @@ class DataSyncService {
       await _uploadItem(tableName, item);
       await _markAsSynced(localTable, item['id']);
     } catch (e) {
-      debugPrint('Erro ao sincronizar item: $e');
+      // Este é o caminho por onde a Análise Personalizada sobe (o
+      // saveMagicalProfile chama syncItem). Uma falha aqui NÃO tem sintoma:
+      // a linha fica sem o carimbo de sincronizada e é retentada na varredura
+      // seguinte, então a pessoa não vê nada — e quem mantém o app também
+      // não, porque `debugPrint` só existe enquanto o depurador está
+      // ligado. Em produção não sobrava rastro nenhum.
+      //
+      // `debugLog` grava no diário que a tela de Diagnóstico lê. É pouco,
+      // mas é o único lugar onde dá para olhar quando alguém reclama. O
+      // nome da tabela entra; o conteúdo da linha, não.
+      unawaited(debugLog('SYNC', 'falha ao subir item de $entity: $e'));
     }
   }
 
