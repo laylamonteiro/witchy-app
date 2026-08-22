@@ -5,14 +5,33 @@ Diagnóstico do Grimório de Bolso contra a régua de app profissional da catego
 **Base:** versão 2.0.25+126 · 503 arquivos Dart · ~148k linhas · Android na Google Play + app web em grimoriodebolso.app
 **Método:** 8 auditorias independentes de código (798 leituras de arquivo) + 5 frentes de pesquisa de mercado, com verificação factual hostil de ambas
 
-## Duas restrições de produto
+## Restrições e decisões tomadas
 
-Estas foram decididas pela dona do app e a análise inteira trabalha dentro delas, não contra:
+Tudo abaixo já foi decidido pela dona do app. Esta seção é o contrato do plano de implementação — **nada aqui está em aberto**
 
-1. **O login é obrigatório.** Não haverá modo convidado. A confirmação de e-mail não barra o uso — quem se cadastra já entra e usa (confirmado: não existe nenhum gate de confirmação no código)
-2. **Não haverá iOS nativo.** A aposta é que o app web/PWA cobre o público de iPhone
+### Restrições
 
-Elas não invalidaram o diagnóstico. Elas o **reordenaram** — e uma delas revelou a peça que faltava para o plano fechar
+1. **O login é obrigatório.** Não haverá modo convidado. A confirmação de e-mail não barra o uso — quem se cadastra já entra e usa (confirmado: não existe gate de confirmação no código)
+2. **Não haverá iOS nativo.** A aposta é o app web/PWA
+
+### Decisões
+
+| # | Decisão | Consequência de implementação |
+|---|---|---|
+| 1 | **A sincronização passa a ser gratuita para todos os perfis** | Remover o `if (!isPremium) return false;` de `data_sync_service.dart:233` e a dependência de `isPremium` em `resolveCloudSyncPreference`. **É o item de maior efeito de toda a lista:** devolve visibilidade sobre 83% da base e conserta o iPhone em aba, que hoje perde o diário em 7 dias pelo ITP do Safari |
+| 2 | **Persistir o estado da assinatura no servidor**, mudando a categoria ao adquirir, cancelar e expirar | Hoje `payment_service.dart` **não tem uma única referência a `profiles`**: os 4 pagantes da Play (2 anuais, 2 mensais) existem só dentro do RevenueCat, e no banco os quatro são `role='free'`. Desenho: webhook do RevenueCat → Supabase Edge Function → `profiles`/`entitlements`, com o app lendo do servidor e o RevenueCat como confirmação em runtime |
+| 3 | **Fim de plano com aviso e carência, não rebaixamento seco** | Ler `billingIssueDetectedAt` e `willRenew`. Falha de cobrança → banner com CTA para o Customer Center **antes** de tirar acesso. Cancelamento → mantém Premium até o fim do período pago. Expiração → rebaixa com aviso |
+| 4 | **Liberar cartas e runas; a enciclopédia detalhada continua Premium** | ⚠️ **Precisão apurada no código: não há nada a liberar.** `AppFeature.runesBasic` tem **zero call sites** e o texto das 78 cartas não é barrado em lugar nenhum — os significados já são gratuitos. O trabalho é só publicar. Já `lunarCalendarDetails` **é** aplicado em 5 pontos, então a lua só entra na camada básica |
+| 5 | **Publicar como HTML estático: 78 cartas + 24 runas + fases lunares (básico) + 8 sabbats**, nos 3 idiomas | ~110 páginas × 3 ≈ **330 URLs**, com hreflang e JSON-LD. Validar 3 páginas piloto no Search Console **e o roteamento** antes de gerar o resto — as rotas estáticas não podem ser engolidas pelo fallback SPA do Flutter |
+| 6 | **Analytics: PostHog + tabelas próprias no Supabase** | PostHog para funil e coorte, e para enxergar quem desiste **antes** de criar conta — que o banco nunca vê. Tabelas próprias para o que é do domínio (ritos, lições, tiragens), que já chegarão de graça com a sincronização aberta. Respeitar o toggle `privacy_analytics`, que hoje existe na tela e não controla nada |
+| 7 | **Trial de 7 dias no plano anual** | Oferta base no Google Play ligada ao offering `default` do RevenueCat, lida via `storeProduct.introductoryPrice` para trocar o rótulo do card e o texto do botão, com fallback para o texto atual |
+| 8 | **Anúncios: teto de 2-3/dia, cooldown de 15 min, e bloqueio total** durante ritual guiado, tiragem, leitura e resposta do Conselheiro | Configuração em `ad_service.dart` (hoje `_dailyCap = 10` e cooldown de 3 min) mais uma guarda de contexto nos pontos de valor |
+| 9 | **Cadastro simplificado + consentimento separado** | Tirar "confirmar senha" (vira olho de mostrar senha) e o checkbox de termos (vira aceite implícito sob o botão, com log de versão e timestamp). Entra **uma caixa própria e destacada** só para o dado sensível de crença — art. 5º II e art. 11 da LGPD. Saldo: menos atrito no total, e o único obstáculo que sobra é o que protege |
+| 10 | **Apple Sign-In: adiar, com critério escrito** | Fazer **agora** o SMTP próprio com `grimoriodebolso.app` (SPF, DKIM, DMARC) — vale por si e é pré-requisito. Reavaliar em 60 dias: *se a fatia de tentativas de login vinda de iPhone for relevante, a Apple entra* |
+| 11 | **Não trocar o motor de cobrança agora** | Zero assinantes web: nada a migrar, nada a otimizar. Reabrir quando o SEO trouxer tráfego |
+| 12 | **Congelar preço** | Sem tráfego, mudar preço é chute |
+
+As restrições não invalidaram o diagnóstico. Elas o **reordenaram** — e uma delas revelou a peça que faltava para o plano fechar
 
 ---
 
@@ -49,7 +68,7 @@ Todas as revisões anteriores deste relatório foram escritas sem denominador. C
 
 **Os 20 "premium" são códigos beta, não pagantes.** Todos com `plan = lifetime`. Não há um único mensal ou anual gravado no servidor
 
-*Ressalva importante:* isso **não** prova que não há assinantes na Play. O `PaymentService().isPro` vem do RevenueCat em tempo de execução e **não** é persistido em `profiles` — uma assinante da Play apareceria como `free` nesta consulta. A receita da Play só é visível no painel do RevenueCat e no Play Console, que eu não alcanço. **É a pergunta número um a responder**
+**Respondido pela dona: há 4 pagantes na Play — 2 anuais e 2 mensais.** Eles não aparecem na consulta porque `PaymentService().isPro` vem do RevenueCat em tempo de execução e **não é persistido em `profiles`**: no banco, os quatro são `role='free'`. É exatamente o buraco que a decisão nº 2 fecha
 
 **O `auth.audit_log_entries` está vazio.** A recomendação de "consultar o audit log para saber se algum iPhone entrou" não funciona neste projeto — a tabela não tem uma única linha. Corrijo isso onde escrevi
 
@@ -57,7 +76,9 @@ Todas as revisões anteriores deste relatório foram escritas sem denominador. C
 
 **A sincronização é Premium** (`data_sync_service.dart:233` — `if (!isPremium) return false;`). Consequência: os dados das 96 contas gratuitas **nunca saem do aparelho**. Só 15 pessoas têm qualquer dado no servidor, e 12 delas são premium
 
-Ou seja: **ela é cega para 83% da própria base por decisão de arquitetura, não por falta de SDK**. Nenhuma consulta SQL vai resolver isso. Só duas coisas resolvem: instalar analytics, ou tornar a persistência básica gratuita
+Ou seja: **ela é cega para 83% da própria base por decisão de arquitetura, não por falta de SDK**. Nenhuma consulta SQL resolve isso
+
+**Está decidido e resolvido pelas decisões 1 e 6:** a sincronização passa a ser gratuita para todos, e entra PostHog ao lado das tabelas próprias. As duas juntas fecham o buraco pelos dois lados — o dado de domínio passa a chegar ao servidor, e o funil de quem desiste **antes** de criar conta passa a ser visível
 
 ### E o que isso mostra de bom
 
@@ -67,9 +88,11 @@ O produto segura quem entra. O funil de cadastro para cá é que está vazando �
 
 ### A leitura correta, agora com denominador
 
-Com 116 contas e provavelmente pouquíssimos pagantes, **o problema é aquisição, e o SEO é tudo.** Isso confirma a Onda 3 como a onda que importa e rebaixa quase tudo que é otimização de conversão — não se otimiza o funil de um tráfego que não existe
+**116 contas · 4 pagantes · 0 vindos do web.** Isso é uma taxa de conversão de ~3,4% sobre a base total — que não é ruim para a categoria. O problema não é o funil de compra: **é que só 116 pessoas passaram por ele.**
 
-E rebaixa em particular: Apple Sign-In (US$ 99/ano + rotação semestral para um canal com zero usuárias), troca do motor de cobrança (para zero assinantes web) e teste de preço
+O gargalo é **aquisição**, e o SEO é tudo. Isso confirma a onda de descoberta como a que importa, e rebaixa quase tudo que é otimização de conversão — não se otimiza o funil de um tráfego que não existe
+
+Foi essa leitura que sustentou três das decisões: **adiar Apple Sign-In** (US$ 99/ano + rotação semestral para um canal com zero usuárias), **não trocar o motor de cobrança** (zero assinantes web) e **congelar preço**
 
 ---
 
@@ -488,68 +511,66 @@ Login obrigatório, mas sem obstáculo desnecessário
 
 ---
 
-## O que falta para eu implementar sozinha
+## O que ainda depende de você
 
-Esta seção responde à pergunta direta: *o que ainda depende de você?*
+Depois das 12 decisões e da leitura da base, restou **muito pouco**
 
-### A. Já resolvido — não bloqueia mais
+### Já resolvido
 
-Consultei o Postgres e a Stripe nesta sessão. **O bloqueio "ler a base primeiro", que abria a Onda 0, está fechado.** Contas, plataforma, planos, coortes, engajamento e receita web estão na seção *Os números reais*
+| Era bloqueio | Estado |
+|---|---|
+| Ler a base (contas, plataforma, planos, coortes) | ✅ consultado nesta sessão |
+| Existe assinante pagante na Play? | ✅ **4 — 2 anuais, 2 mensais** |
+| Todas as decisões de produto e monetização | ✅ as 12 estão fechadas acima |
 
-### B. Bloqueia de verdade — só você tem acesso
+### Ainda depende de você — acesso a painel
 
-| O que | Onde | Por que só você |
+Nenhuma exige decisão: são coisas que só você consegue abrir ou comprar
+
+| O que | Onde | Bloqueia |
 |---|---|---|
-| **Existe assinante pagante na Play?** | Painel do RevenueCat + Play Console | É *a* pergunta que falta. O `isPro` do RevenueCat não é persistido em `profiles`, então a receita da Play é invisível pelo banco. Sem isso não dá para saber se o problema é aquisição, ativação ou conversão |
-| **O SMTP do Supabase é próprio ou embutido?** | Authentication → SMTP Settings | Configuração de painel, não versionada. Decide se OTP e win-back por e-mail são possíveis hoje ou exigem trabalho antes |
-| **O Turnstile é exigido no servidor?** | Auth → Attack Protection | Se estiver, remover o gate no cliente **quebra** o login em vez de simplificar. Também: `grimoriodebolso.app` está no Hostname Management do Turnstile? |
-| **O Pix aparece no checkout de assinatura da Play?** | Play Console + checkout real com conta BR | 20 minutos. Se sim, "mais formas de pagamento" vira mudança de copy |
-| **DNS do domínio** | Cloudflare (ou onde estiver) | SPF, DKIM, DMARC para SMTP próprio, e `assetlinks.json` para App Links |
-| **Conta de analytics** | PostHog ou Firebase | Alguém precisa criar o projeto e me dar a chave |
-| **Apple Developer Program** | US$ 99/ano | Compra, verificação de identidade (leva dias), Team ID e a chave `.p8` |
-| **AdMob** | Painel | Alterar teto e cooldown de intersticial |
+| **Webhook do RevenueCat** | Painel do RevenueCat → Integrations | A decisão 2. Preciso da URL da Edge Function cadastrada lá e do segredo de autenticação |
+| **Chave do PostHog** | Criar o projeto | A decisão 6 |
+| **SMTP próprio + DNS** | Supabase → SMTP Settings, e SPF/DKIM/DMARC no DNS | A decisão 10, e o e-mail de win-back inteiro |
+| **O Turnstile é exigido no servidor?** | Supabase → Auth → Attack Protection | Mexer no captcha. Se estiver ligado lá, remover o gate no cliente **quebra** o login |
+| **Oferta base de 7 dias** | Google Play Console → produto `grimorio_pro_yearly` | A decisão 7. O código lê `introductoryPrice`, mas a oferta nasce no Console |
+| **Teto de anúncio** | AdMob | A decisão 8 (parte é código, parte é painel) |
+| **Aval para migração em produção** | — | Tabelas novas (`login_attempts`, `entitlements`) e a coluna de estado de assinatura rodam no Postgres de produção |
 
-### C. Decisões suas — eu não devo tomar sozinha
+### Ainda não sabido — e não bloqueia
 
-Cada uma tem consequência de receita, de dado sensível ou de posicionamento:
+- **O Pix aparece no checkout de assinatura da Play?** 20 minutos com uma conta BR. Se sim, "mais formas de pagamento" vira mudança de copy e a decisão 11 fica ainda mais confortável
+- **Alguém de iPhone já abriu o app web?** Não há como saber hoje (zero contas web, sem analytics). O PostHog da decisão 6 responde isso em dias
+- **A busca do Google indexa as páginas estáticas?** Só o piloto de 3 páginas responde
 
-| Decisão | Recomendação minha | Por que é sua |
-|---|---|---|
-| **Tornar a persistência básica gratuita** | **Sim** — é o que mais muda | Você é cega para 83% da base por causa disso, e o iPhone em aba perde o diário em 7 dias pelo ITP. Mas remove um item de venda do Premium |
-| **Inverter o paywall** (referência grátis, prática paga) | Sim | Muda o que você vende. Destrava o SEO da Onda 3, que é a onda que importa com 116 contas |
-| **Analytics: PostHog ou Firebase** | PostHog (funil e retenção prontos) | Dado de usuária sob LGPD; a escolha do processador é sua |
-| **Consentimento destacado para dado sensível** (LGPD art. 11) | Fazer | Decisão jurídica, não técnica |
-| **Intersticial de 10/dia → 2-3 + cooldown 15 min** | Fazer | Troca receita de anúncio hoje por conversão amanhã |
-| **Trial de 7 dias no anual** | Fazer, depois da Onda 3 | Mexe em receita |
-| **Tirar "confirmar senha" e o checkbox de termos** | Fazer (aceite implícito com log) | Muda o contrato de aceite |
-| **Apple Sign-In** | **Adiar** — zero contas web hoje | US$ 99/ano + rotação semestral perpétua para um canal sem usuárias |
-| **Trocar o motor de cobrança do web** | **Não agora** — zero assinantes web | Nada a migrar, nada a otimizar |
-| **Publicar quais conteúdos como HTML** | 78 cartas, 24 runas, roda do ano, fases lunares, 1 lição por trilha | É o seu conteúdo e a sua margem |
-| **Preço** | Congelar | Sem tráfego, é chute |
+### O que eu implemento sem mais nada
 
-### D. Posso fazer agora, sem você
+Sem credencial nova, sem decisão pendente:
 
-Sem nenhuma credencial nova, sem decisão pendente, e sem tocar em receita:
+**As decisões que são só código** — sincronização livre (1) · fim de plano com carência (3, a parte do cliente) · anúncios (8, a parte do código) · cadastro simplificado com caixa de dado sensível (9)
 
-**Correções de dano** — Escrita Livre com `AutomaticKeepAliveClientMixin` + autosave · `UnsavedChangesGuard` nos 8 formulários · contraste do tema claro + teste bloqueante iterando `AppThemes.all`
+**Correções de dano** — Escrita Livre com `AutomaticKeepAliveClientMixin` + autosave · `UnsavedChangesGuard` nos 8 formulários sem `PopScope` · contraste do tema claro com teste bloqueante iterando `AppThemes.all`
 
 **Higiene de PWA** — `scope`, `id`, `lang`, `screenshots`, `start_url: "/"` no manifest · `apple-mobile-web-app-capable` e `apple-touch-startup-image` no `index.html`
 
-**Correções de justiça no Free** — rito do dia filtrado por plano (hoje 2 de cada 6 dias são impossíveis de fechar) · carência de anúncio na primeira sessão · atalhos padrão que a pessoa consegue terminar
+**Justiça no Free** — rito do dia filtrado por plano (hoje 2 de cada 6 dias são impossíveis de fechar) · carência de anúncio na primeira sessão · atalhos padrão que a pessoa consegue terminar · o balão do Salem deixando de apontar sempre para o mesmo paywall
 
-**Coisas que existem e não aparecem** — exibir `bestStreak` · atualizar o XP ao vivo no anel · busca nos 5 Diários com `removeAccents` · busca de feitiços insensível a acento · reordenar os cards do Seu Dia
+**Coisas que existem e não aparecem** — exibir `bestStreak` · XP ao vivo no anel · busca nos 5 Diários · busca de feitiços insensível a acento · reordenar os cards do Seu Dia · destravar a degustação da lição (`trail_page.dart:59` e `lesson_page.dart:86`)
 
 **Limpeza** — remover os product ids iOS mortos de `revenuecat_config.dart` e o `signInWithFacebook()` que só retorna erro
 
-**Instrumentação** — a tabela `login_attempts` e o serviço que grava `{método, plataforma, display-mode, estágio, resultado, errorCode}` nos três caminhos de login. *A migração roda no Postgres de produção, então peço seu aval antes de aplicar — o código eu escrevo sem depender disso*
+**Gerador estático** — as ~330 páginas da decisão 5, a partir dos mesmos `*_data_{pt,en,es}.dart` que alimentam o app, com o piloto de 3 páginas primeiro
 
-### E. O que eu faria primeiro, se você disser "vai"
+### A sequência que eu proporia ao chat de implementação
 
-1. O pacote da letra **D** inteiro, num PR só — nada ali depende de decisão sua
-2. Em paralelo, você responde **uma** pergunta: *há assinante pagante na Play?*
-3. Com a resposta, decidimos entre dobrar em aquisição (SEO da Onda 3) ou consertar conversão
+1. **PR 1 — o que não depende de nada:** correções de dano, higiene de PWA, justiça no Free, coisas invisíveis, limpeza
+2. **PR 2 — sincronização livre + persistência de assinatura:** decisões 1, 2 e 3 juntas, porque a segunda depende da primeira estar aberta. Precisa do webhook e do aval de migração
+3. **PR 3 — instrumentação:** PostHog + tabelas próprias + `login_attempts` + healthcheck de login. Precisa da chave
+4. **PR 4 — descoberta:** gerador estático, piloto de 3 páginas, landing na raiz, link no compartilhamento
+5. **PR 5 — conversão:** trial de 7 dias, paywall contextual, benefícios reescritos, cadastro simplificado. Precisa da oferta base no Console
 
----
+O PR 1 pode começar hoje. O 2 e o 3 destravam com dois acessos de painel. O 4 é a onda que mais importa para o gargalo real
+
 
 ## Resposta curta
 
