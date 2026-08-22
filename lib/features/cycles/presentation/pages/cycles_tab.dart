@@ -348,6 +348,26 @@ class _DeuErrado extends StatelessWidget {
             style:
                 tema.textTheme.bodySmall?.copyWith(color: context.gc.textSecondary),
           ),
+          const SizedBox(height: 16),
+          // O cartão era mudo: título, corpo e mais nada. Sem botão, a única
+          // saída era fechar a aba e torcer — e o `sync` do provider sairia
+          // cedo de qualquer jeito, porque depois da falha a assinatura
+          // continua a mesma. Por isso o botão chama `recarregar`, que ignora
+          // o carimbo.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => context.read<LifeErasProvider>().recarregar(
+                    userId: context.read<AuthProvider>().currentUser.id,
+                    chart: context.read<AstrologyProvider>().birthChart,
+                  ),
+              icon: Icon(Icons.refresh, size: 18, color: context.gc.lilac),
+              label: Text(
+                l10n.commonTryAgain,
+                style: TextStyle(color: context.gc.lilac),
+              ),
+            ),
+          ),
         ],
       ),
     );

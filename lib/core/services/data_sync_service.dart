@@ -12,7 +12,18 @@ import '../database/database_helper.dart';
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
 
-/// Tipos de entidades sincronizáveis
+/// Tipos de entidades sincronizáveis.
+///
+/// A ORDEM aqui é contrato, não estética. As três varreduras (`syncAll`,
+/// `fullUpload`, `fullDownload`) iteram `SyncEntity.values` na ordem de
+/// declaração, e o Postgres tem chave estrangeira de verdade:
+/// `magical_profiles.birth_chart_id` referencia `birth_charts`. Subir o
+/// perfil antes do mapa JÁ falha hoje em produção — o que segura é
+/// `birthCharts` estar declarado antes de `magicalProfiles`.
+///
+/// Ou seja: alfabetizar este enum, a mudança mais inocente do mundo,
+/// quebraria o upload de quem acabou de montar o mapa. Quem trava a regra é
+/// test/sync_coverage_test.dart.
 enum SyncEntity {
   spells,
   dreams,

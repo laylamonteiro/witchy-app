@@ -65,4 +65,17 @@ class LifeErasProvider extends ChangeNotifier {
     _carregando = false;
     notifyListeners();
   }
+
+  /// Refaz o trabalho ignorando o carimbo.
+  ///
+  /// É o que o botão de tentar de novo precisa: depois de uma falha, `_state`
+  /// é não-nulo e a assinatura é idêntica, então o `sync` sairia na primeira
+  /// linha sem tentar nada — o botão não faria absolutamente nada.
+  Future<void> recarregar({
+    required String userId,
+    required BirthChartModel? chart,
+  }) {
+    _assinatura = null;
+    return sync(userId: userId, chart: chart);
+  }
 }

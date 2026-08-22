@@ -16,6 +16,7 @@ import '../../data/models/user_model.dart';
 import '../../data/models/feature_access.dart';
 import '../../data/repositories/beta_code_repository.dart';
 import '../../data/repositories/supabase_auth_repository.dart';
+import '../../../cycles/data/repositories/life_eras_repository.dart';
 
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
@@ -871,6 +872,19 @@ class AuthProvider extends ChangeNotifier {
         await debugLog('AUTH', 'Database cleared successfully');
       } catch (e) {
         await debugLog('AUTH', 'Error clearing database: $e');
+      }
+
+      // O cache das Eras mora no SharedPreferences, fora do banco: o
+      // clearAllTables não o alcança. `LifeErasRepository.clear()` existia,
+      // tinha teste e NENHUM chamador — então o instante do nascimento e a
+      // longitude da Lua, de onde a linha do tempo é derivada, sobreviviam à
+      // saída da conta no aparelho. Precisa acontecer aqui, antes de
+      // `_currentUser` virar o usuário padrão lá embaixo: a chave do cache é
+      // o id, e depois daquela linha ele já não existe.
+      try {
+        await LifeErasRepository().clear(_currentUser.id);
+      } catch (e) {
+        await debugLog('AUTH', 'Falha ao limpar o cache das Eras: $e');
       }
     } else {
       await debugLog('AUTH', 'Keeping database - user has cloud sync enabled');

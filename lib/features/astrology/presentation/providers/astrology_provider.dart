@@ -52,6 +52,30 @@ class AstrologyProvider with ChangeNotifier {
   bool isWeavingSection(String key) => _tecendo.contains(key);
   bool get isGeneratingAI => _tecendo.isNotEmpty;
 
+  /// Uma gravação de perfil por vez.
+  ///
+  /// O acúmulo em memória já é atômico (o texto é lido DEPOIS da chamada de
+  /// IA), mas cada gravação sobe um upsert próprio. Duas seções terminando
+  /// juntas punham dois POST no ar sem alvo de conflito e sem guarda por
+  /// `updated_at`: o servidor ficava com o que chegasse por último — que
+  /// pode ser o mais VELHO. E o local ficava certo e marcado como
+  /// sincronizado, então nada corrigia depois; a seção perdida só reaparecia
+  /// quando alguém sujasse a linha de novo.
+  ///
+  /// A fila ordena as gravações DENTRO deste processo. Dois aparelhos ao
+  /// mesmo tempo continuam se atropelando — isso é guarda no servidor, e
+  /// está descrito em supabase/perfil_magico_upsert.sql.
+  Future<void> _filaDePerfil = Future<void>.value();
+
+  Future<void> _gravarPerfil(MagicalProfile perfil) {
+    final proxima =
+        _filaDePerfil.then((_) => _repository.saveMagicalProfile(perfil));
+    // A fila não pode morrer numa falha: a próxima seção ainda precisa
+    // gravar. O erro continua indo para quem chamou.
+    _filaDePerfil = proxima.catchError((_) {});
+    return proxima;
+  }
+
   /// O motivo pelo qual ESTA seção não veio — null se ela não falhou.
   String? erroDaSecao(String key) => _falhas[key]?.mensagem;
 
@@ -182,7 +206,7 @@ class AstrologyProvider with ChangeNotifier {
 
       // Gerar perfil mágico
       final profile = _interpreter.interpretChart(chart);
-      await _repository.saveMagicalProfile(profile);
+      await _gravarPerfil(profile);
 
       // O mapa anterior vira lixo apontando para nada.
       //
@@ -238,7 +262,7 @@ class AstrologyProvider with ChangeNotifier {
 
     try {
       final limpo = perfil.copyWith(limparTextoDeIa: true);
-      await _repository.saveMagicalProfile(limpo);
+      await _gravarPerfil(limpo);
       _magicalProfile = limpo;
       _secoes = const [];
       _secoesDe = null;
@@ -263,7 +287,7 @@ class AstrologyProvider with ChangeNotifier {
 
       // Regenerar perfil mágico
       final profile = _interpreter.interpretChart(chart);
-      await _repository.saveMagicalProfile(profile);
+      await _gravarPerfil(profile);
 
       _birthChart = chart;
       _magicalProfile = profile;
@@ -312,7 +336,7 @@ class AstrologyProvider with ChangeNotifier {
 
     try {
       final profile = _interpreter.interpretChart(_birthChart!);
-      await _repository.saveMagicalProfile(profile);
+      await _gravarPerfil(profile);
       _magicalProfile = profile;
     } catch (e) {
       debugPrint('Perfil mágico: falha ao regerar: $e');
@@ -404,7 +428,7 @@ class AstrologyProvider with ChangeNotifier {
         aiGeneratedText: texto,
         chartHash: hashAtual,
       );
-      await _repository.saveMagicalProfile(_magicalProfile!);
+      await _gravarPerfil(_magicalProfile!);
     } on AiRateLimitException {
       _falhas[sectionKey] = const _FalhaDaSecao(foiLimiteDoProvedor: true);
     } catch (e) {
