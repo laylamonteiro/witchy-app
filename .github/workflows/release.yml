@@ -457,6 +457,42 @@ jobs:
           fi
           echo "✅ $ARQUIVO assinado com o keystore esperado."
 
+          # O keystore ser o certo NÃO basta para o login com o Google. O
+          # Google não olha o keystore: olha se ESTA impressão digital está
+          # registrada no cliente OAuth Android do projeto — e o que o app
+          # carrega dentro é o android/app/google-services.json.
+          #
+          # As duas constantes do repositório se contradizem hoje: o
+          # SHA1_ESPERADO acima é 54:84:… e o único certificate_hash do
+          # google-services.json efetivo é 8b:d7:… Sem esta conferência, um
+          # APK desta pipeline instalado direto abre a tela do Google e
+          # volta com "ApiException: 10", sem nada acusando — nem teste, nem
+          # build. Foi assim que o defeito chegou até aqui.
+          #
+          # (Existe um SEGUNDO google-services.json em android/, divergente
+          # deste e NÃO lido pelo Gradle. Só android/app/ vale.)
+          registrados=$(jq -r '
+            [ .client[]?.oauth_client[]?.android_info?.certificate_hash // empty ] | .[]
+          ' android/app/google-services.json 2>/dev/null | tr -d ' :' | tr 'a-f' 'A-F')
+
+          if printf '%s\n' "$registrados" | grep -qx "$sha1"; then
+            echo "✅ SHA-1 registrado no google-services.json: o login com o Google reconhece este binário."
+          elif [ "$FORMATO" = "apk" ]; then
+            # O APK é o binário que se instala direto — é ele que o próprio
+            # checklist de docs/GOOGLE_SIGNIN_SETUP.md manda instalar para
+            # testar o login. Se a digital dele não está registrada, o login
+            # está quebrado NESTE artefato, com certeza.
+            echo "::error::SHA-1 $sha1 não está em android/app/google-services.json (registradas: $(printf '%s ' $registrados))."
+            echo "::error::O login com o Google vai falhar (ApiException: 10) em quem instalar este APK. Conserto: Google Cloud → Credentials → o client OAuth *Android* do pacote com.grimoriodebolso.app → adicione esta SHA-1; baixe o google-services.json de novo e substitua android/app/google-services.json."
+            exit 1
+          else
+            # No AAB isto pode ser normal: a Play re-assina com a chave dela
+            # (Play App Signing), e a digital que precisa estar registrada é
+            # a de Play Console → Test and release → App integrity — que o
+            # repositório não tem como conhecer. Por isso aqui é aviso.
+            echo "::warning::SHA-1 $sha1 (chave de upload) não está em android/app/google-services.json (registradas: $(printf '%s ' $registrados)). Para a Play isso pode ser esperado — confirme que a SHA-1 de *App integrity* está registrada no client OAuth Android."
+          fi
+
       - name: 📦 Empacotar artefato
         # Os símbolos saem só do AAB: os dois builds os produzem, e com
         # nomes iguais eles colidiriam ao juntar os artifacts na publicação.

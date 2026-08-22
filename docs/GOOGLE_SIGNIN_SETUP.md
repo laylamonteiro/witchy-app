@@ -198,8 +198,43 @@ em *OAuth 2.0 Client IDs* clique no client **Web** (`…-vekqjnltlccc7llalu6adgl
 ## ✅ Checklist de verificação
 
 1. Merge desta branch → rodar o workflow de release.
-2. No job **📱 Build APK**, passo **"🔎 Print APK signing SHA-1"**, o valor bate
-   com `8B:D7:BB:97:…` (ou é o SHA-1 que você registrou na Etapa 2).
+2. No job **📱 Build APK**, passo de assinatura, o valor bate com o
+   `SHA1_ESPERADO` do `release.yml`.
+
+> ### ⚠️ Hoje as duas constantes do repositório se contradizem
+>
+> - `release.yml` exige que o binário esteja assinado com
+>   `54:84:54:75:7F:A8:37:1C:21:F4:B9:71:E7:B7:F8:05:25:85:FB:60` — é a chave
+>   de **upload** desta pipeline.
+> - O `android/app/google-services.json` (o único que o Gradle lê) registra
+>   um `certificate_hash` só: `8B:D7:BB:97:B9:5C:8D:5E:54:9D:55:84:A0:1F:E2:7A:EC:85:DA:98`.
+>
+> Ou seja, a digital que assina o APK **não está** no cliente OAuth. Quem
+> instalar o APK desta pipeline direto no aparelho recebe `ApiException: 10`
+> no login com o Google. Pela Play pode funcionar — lá quem assina é a chave
+> de *App Signing*, e `8B:D7:…` pode muito bem ser ela.
+>
+> **O conserto** é registrar `54:84:…` no client OAuth **Android** (Etapa 2),
+> baixar o `google-services.json` de novo e substituir o de `android/app/`.
+> Registrar a de *App integrity* junto não custa nada e cobre os dois casos —
+> um client OAuth aceita várias impressões digitais.
+>
+> O `release.yml` agora **falha** o build de APK quando a digital não está
+> registrada, e **avisa** no AAB (onde a Play re-assina e o repositório não
+> tem como conhecer a chave dela).
+
+> ### 📄 Existem DOIS `google-services.json`, e eles divergem
+>
+> | Arquivo | Lido pelo Gradle? | Clients OAuth Android |
+> |---|---|---|
+> | `android/app/google-services.json` | **Sim** | 1 (`8B:D7:…`) |
+> | `android/google-services.json` | Não | 2 (`C8:3B:65:…` e `8B:D7:…`) |
+>
+> Só o de `android/app/` chega ao aplicativo. O outro não é lido por
+> ninguém, e existe apenas para confundir quem for editar — inclusive
+> escondendo que o efetivo tem **menos** clients que o ignorado. Qual dos
+> dois reflete o painel hoje só o painel responde; depois de conferir,
+> apague o que sobrar.
 3. Supabase → Google provider: **Authorized Client IDs** = Web client ID.
 4. Instalar o **novo** APK (o desta pipeline, já assinado em release).
 5. Abrir o app → **Entrar com Google** → escolher a conta.

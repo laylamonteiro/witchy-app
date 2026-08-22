@@ -58,10 +58,22 @@ jobs:
           # HEAD^ disponível para detectar mudanças em android/pubspec.
           fetch-depth: 2
 
-      - name: 🔎 Mudou código nativo? (android/ ou pubspec)
+      - name: 🔎 Mudou o ANDROID? (android/ ou pubspec)
         # Decide se o build de fumaça Android (job à parte, ~8 min) precisa
         # rodar: ele só detecta problemas de Gradle/NDK/manifest, e analyze +
         # testes já cobrem o Dart. O resultado sai como output do job.
+        #
+        # O nome dizia "código nativo" e olhava só para `android/` — o que
+        # escondia o buraco em vez de mostrá-lo: **o iOS não é compilado por
+        # job nenhum desta esteira**. Pôr `ios/` neste padrão não resolveria
+        # (ele liga o build ANDROID, que nada tem a ver), então o nome passa
+        # a dizer a verdade e o buraco fica à vista. Fechá-lo exige um runner
+        # macOS, que é decisão de custo — e, junto com ela, vêm as duas
+        # pendências que hoje não têm quem acuse: o iOS não tem
+        # configuração de Google Sign-In nativo (sem GIDClientID, sem
+        # GoogleService-Info.plist) e o identificador do AdMob no
+        # Info.plist ainda é o de TESTE do Google, então anúncio no iOS não
+        # rende nada.
         id: native
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
