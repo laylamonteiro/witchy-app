@@ -1625,7 +1625,7 @@
   "cycleReadingIntroTagline": "The oracle reads your grimoire: a unique magical analysis of your lunation, woven from what you recorded.",
   "cycleReadingIntroWhatTitle": "What the reading includes",
   "cycleReadingDisclaimer": "The reading is an invitation to self-knowledge — never a deterministic prediction about health, money or relationships.",
-  "chartRecalcWarning": "Changing your birth data redoes your chart, your Eras and your Magical Profile. Readings already made stay as they are.",
+  "chartRecalcWarning": "Changing your birth data rebuilds your chart, your Eras and your Magical Profile. The Personalized Analysis you already wove goes with it and has to be woven again — readings you already made stay as they are",
   "cycleReadingChartTitle": "Your reading goes deeper with your birth data",
   "cycleReadingChartBody": "With date, time and city, the reading ties the sky of the period to your chart — and the same data builds your Birth Chart and your Eras, all at once.",
   "cycleReadingChartCta": "Add my birth data",
@@ -1850,5 +1850,9 @@
   "profileSectionWeaving": "The Mystic Counselor is reading this part of your chart. It takes a few seconds",
   "profileSectionFailed": "We could not weave this part right now",
   "profileSectionRegenerate": "Weave again",
+  "profileLegacyRewriteTitle": "This analysis is in the old format",
+  "profileLegacyRewriteBody": "It came in a single generation, as running text. Weaving it again opens the ten cards — and you open each one when you want to",
+  "profileLegacyRewriteCta": "Weave in the new format",
+  "profileLegacyRewriteConfirm": "The text that is there goes to make room for the ten cards. None is woven now — each one is born when you open it",
   "premiumSaveYearlyPercent": "Save {percent}%"
 }

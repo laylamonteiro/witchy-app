@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -159,15 +159,22 @@ class _AddEntryPageState extends State<AddEntryPage> {
             .completeRite(DailyRites.natureIdentify));
       }
     } catch (e) {
+      debugPrint('Guia da Natureza: falha ao identificar: $e');
       if (!mounted) return;
       setState(() {
         _identifying = false;
         _identified = false;
         // Teto de requisições do provedor (compartilhado pelo app inteiro):
         // sem isto, o 429 viraria um "não identificado" enganoso.
-        if (e is AiRateLimitException) {
-          _error = AppLocalizations.of(context).aiVisionRateLimit;
-        }
+        //
+        // E TODA falha aparece, não só a de limite. Engolir o resto deixava
+        // a pessoa achando que a foto dela é que estava ruim — e, quando
+        // reclamasse, não haveria o que olhar. Este era o fluxo que ficou
+        // parecido com a Quiromancia na aparência e diferente no
+        // comportamento.
+        _error = e is AiRateLimitException
+            ? AppLocalizations.of(context).aiVisionRateLimit
+            : AppLocalizations.of(context).errorsGeneric;
       });
     }
   }

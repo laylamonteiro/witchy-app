@@ -296,12 +296,17 @@ class PremiumBlurText extends StatelessWidget {
   }
 }
 
-/// Sobe o paywall ([PremiumUpgradeSheet]) direto sobre a tela anterior e,
-/// quando a pessoa dispensa, fecha a tela atual — evitando telas
-/// intermediárias de "Seja Premium" nas funcionalidades 100% Premium.
+/// Sobe o paywall ([PremiumUpgradeSheet]) sobre a tela anterior e, quando a
+/// pessoa dispensa, fecha a tela atual.
 ///
-/// Uso: numa página exclusiva Premium, chame no primeiro frame quando o
-/// acesso for negado. O corpo pode ficar vazio enquanto o paywall sobe.
+/// SEM CHAMADORES, de propósito. Este é o padrão de "porta fechada": a pessoa
+/// toca em algo, a tela abre e só serve para empurrá-la de volta. Ele foi
+/// abolido da Quiromancia, do Guia da Natureza e, por último, dos Rituais
+/// Guiados — o conteúdo fica visível e o bloqueio aparece como cadeado no
+/// lugar certo, junto do que é pago.
+///
+/// Fica aqui como registro do que NÃO fazer. Antes de chamá-lo em qualquer
+/// tela nova, veja [PremiumContentSection]: é ela que resolve o caso.
 Future<void> showPaywallThenPop(BuildContext context) async {
   await showModalBottomSheet<void>(
     context: context,

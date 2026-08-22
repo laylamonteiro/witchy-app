@@ -509,14 +509,106 @@ class _MagicalProfilePageState extends State<MagicalProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MagicalCard(child: _buildAISectionHeader()),
-        if (antigas != null)
+        if (antigas != null) ...[
           for (final secao in antigas)
-            _buildSectionCard(l10n, chave: null, secao: secao)
-        else
+            _buildSectionCard(l10n, chave: null, secao: secao),
+          _buildSaidaDoFormatoAntigo(l10n),
+        ] else
           for (final chave in MagicalProfileSections.ordered)
             _buildSectionCard(l10n, chave: chave),
       ],
     );
+  }
+
+  /// A saída para quem está preso no formato antigo.
+  ///
+  /// O perfil antigo veio numa geração só, em texto corrido, e o código o
+  /// desviava para a leitura corrida — nunca alcançava a grade de dez cards e
+  /// não tinha botão nenhum de regerar. Em produção era a esmagadora maioria
+  /// dos perfis.
+  ///
+  /// A saída é oferecida, e não automática: tecer as dez seções custa dez
+  /// chamadas de IA, então quem decide é a pessoa. E nenhuma é tecida agora —
+  /// os cards nascem vazios e cada um é tecido ao ser aberto.
+  Widget _buildSaidaDoFormatoAntigo(AppLocalizations l10n) {
+    return MagicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileLegacyRewriteTitle,
+            style: TextStyle(
+              color: context.gc.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.profileLegacyRewriteBody,
+            style: TextStyle(
+              color: context.gc.textSecondary,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _confirmarSaidaDoFormatoAntigo,
+              icon: Icon(Icons.auto_awesome, size: 18, color: context.gc.lilac),
+              label: Text(
+                l10n.profileLegacyRewriteCta,
+                style: TextStyle(color: context.gc.lilac),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmarSaidaDoFormatoAntigo() async {
+    final l10n = AppLocalizations.of(context);
+    final provider = context.read<AstrologyProvider>();
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.gc.surface,
+        title: Text(
+          l10n.profileLegacyRewriteCta,
+          style: TextStyle(color: dialogContext.gc.textPrimary),
+        ),
+        content: Text(
+          l10n.profileLegacyRewriteConfirm,
+          style: TextStyle(
+            color: dialogContext.gc.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              l10n.commonCancel,
+              style: TextStyle(color: dialogContext.gc.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              l10n.commonConfirm,
+              style: TextStyle(color: dialogContext.gc.lilac),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmou != true) return;
+    await provider.descartarAnalisePersonalizada();
   }
 
   /// Um card por tema. Com [chave], ele abre a leitura e tece a seção se

@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/feature_access.dart';
 import 'package:grimorio_de_bolso/features/auth/data/models/user_model.dart';
 import 'package:grimorio_de_bolso/features/cycles/domain/life_eras_calculator.dart';
-import 'package:grimorio_de_bolso/features/cycles/domain/life_timeline.dart';
 import 'package:grimorio_de_bolso/features/cycles/presentation/pages/era_reading_page.dart';
 
 /// A Era e a Fase de agora são a isca de Suas Eras: sem elas abertas, ninguém

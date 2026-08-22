@@ -137,6 +137,23 @@ class AstrologyRepository {
     await _syncService.syncItem(SyncEntity.magicalProfiles, data);
   }
 
+  /// Apaga o Perfil Mágico de um mapa.
+  ///
+  /// A chave é o id do MAPA (`magical_profiles.id = birth_chart_id`). Existe
+  /// porque o `ON DELETE CASCADE` do banco local é decorativo: falta o
+  /// `PRAGMA foreign_keys = ON`, e no SQLite as chaves estrangeiras vêm
+  /// desligadas por padrão. Apagar o mapa não apaga o perfil ligado a ele.
+  Future<void> deleteMagicalProfile(String birthChartId) async {
+    final db = await _dbHelper.database;
+
+    await db.delete(
+      'magical_profiles',
+      where: 'id = ?',
+      whereArgs: [birthChartId],
+    );
+    await _syncService.deleteItem(SyncEntity.magicalProfiles, birthChartId);
+  }
+
   // Buscar Perfil Mágico
   Future<MagicalProfile?> getMagicalProfile(String userId) async {
     final db = await _dbHelper.database;

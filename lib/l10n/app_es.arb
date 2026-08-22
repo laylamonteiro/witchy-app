@@ -1625,7 +1625,7 @@
   "cycleReadingIntroTagline": "El oráculo lee tu grimorio: un análisis mágico único de tu lunación, tejido a partir de lo que registraste.",
   "cycleReadingIntroWhatTitle": "Qué incluye la lectura",
   "cycleReadingDisclaimer": "La lectura es una invitación al autoconocimiento — nunca una predicción determinista de salud, dinero o relaciones.",
-  "chartRecalcWarning": "Cambiar tus datos de nacimiento rehace tu carta, tus Eras y tu Perfil Mágico. Las lecturas ya hechas se mantienen como están.",
+  "chartRecalcWarning": "Cambiar los datos de nacimiento rehace tu carta, tus Eras y tu Perfil Mágico. El Análisis Personalizado que ya tejiste se va con ellos y hay que tejerlo de nuevo — las lecturas ya hechas siguen como están",
   "cycleReadingChartTitle": "Tu lectura gana profundidad con tu nacimiento",
   "cycleReadingChartBody": "Con fecha, hora y ciudad, la lectura ata el cielo del período a tu carta — y los mismos datos arman tu Carta Natal y tus Eras, de una sola vez.",
   "cycleReadingChartCta": "Añadir mi nacimiento",
@@ -1850,5 +1850,9 @@
   "profileSectionWeaving": "El Consejero Místico está leyendo esta parte de tu carta. Tarda unos segundos",
   "profileSectionFailed": "No fue posible tejer esta parte ahora",
   "profileSectionRegenerate": "Tejer de nuevo",
+  "profileLegacyRewriteTitle": "Este análisis es del formato antiguo",
+  "profileLegacyRewriteBody": "Vino en una sola generación, como texto corrido. Tejerlo de nuevo abre las diez cartas — y abres cada una cuando quieras",
+  "profileLegacyRewriteCta": "Tejer en el formato nuevo",
+  "profileLegacyRewriteConfirm": "El texto que está ahí se va para dar lugar a las diez cartas. Ninguna se teje ahora — cada una nace cuando la abres",
   "premiumSaveYearlyPercent": "Ahorra {percent}%"
 }

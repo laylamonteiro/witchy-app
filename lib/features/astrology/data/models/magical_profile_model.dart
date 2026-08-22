@@ -116,6 +116,14 @@ class MagicalProfile {
     String? aiGeneratedText,
     String? chartHash,
     Gender? gender,
+
+    /// Apaga o texto tecido pela IA.
+    ///
+    /// `copyWith` não consegue gravar null: `aiGeneratedText: null` quer dizer
+    /// "não mexer". Sem esta chave não havia como dar saída aos perfis do
+    /// formato antigo — eles ficavam presos na leitura corrida para sempre,
+    /// sem nunca alcançar a grade de dez cards e sem botão de regerar.
+    bool limparTextoDeIa = false,
   }) {
     return MagicalProfile(
       userId: userId ?? this.userId,
@@ -136,7 +144,8 @@ class MagicalProfile {
       favorableTools: favorableTools ?? this.favorableTools,
       shadowWork: shadowWork ?? this.shadowWork,
       generatedAt: generatedAt ?? this.generatedAt,
-      aiGeneratedText: aiGeneratedText ?? this.aiGeneratedText,
+      aiGeneratedText:
+          limparTextoDeIa ? null : (aiGeneratedText ?? this.aiGeneratedText),
       chartHash: chartHash ?? this.chartHash,
       gender: gender ?? this.gender,
     );

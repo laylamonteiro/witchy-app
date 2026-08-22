@@ -161,12 +161,34 @@ class AstrologyProvider with ChangeNotifier {
         unknownBirthTime: unknownBirthTime,
       );
 
+      // O mapa que existia antes desta correção, para poder limpá-lo depois.
+      final anterior = _birthChart;
+
       // Salvar no banco
       await _repository.saveBirthChart(chart);
 
       // Gerar perfil mágico
       final profile = _interpreter.interpretChart(chart);
       await _repository.saveMagicalProfile(profile);
+
+      // O mapa anterior vira lixo apontando para nada.
+      //
+      // O perfil é carimbado pelo id do MAPA. Corrigir a data ou a hora de
+      // nascimento faz nascer um mapa com id novo, e o perfil antigo ficava
+      // pendurado no id velho: as dez seções que a pessoa mandou tecer
+      // simplesmente não estavam mais lá, e nada oferecia trazê-las de volta
+      // nem apagava o registro órfão. Some depois de o novo estar gravado —
+      // uma falha no meio não pode deixar a pessoa sem mapa nenhum.
+      if (anterior != null && anterior.id != chart.id) {
+        try {
+          await _repository.deleteMagicalProfile(anterior.id);
+          await _repository.deleteBirthChart(anterior.id);
+        } catch (e) {
+          // Lixo que sobrou não justifica falhar o recálculo, que é o que a
+          // pessoa pediu. Fica registrado para quem for olhar.
+          debugPrint('Mapa natal: falha ao limpar o mapa anterior: $e');
+        }
+      }
 
       // Atualizar estado
       _birthChart = chart;
@@ -186,6 +208,34 @@ class AstrologyProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Descarta a Análise Personalizada já gravada, para ela ser tecida de novo
+  /// no formato de dez cards.
+  ///
+  /// Só o texto de IA sai — o mapa e o Perfil Mágico continuam inteiros.
+  ///
+  /// A pedido da pessoa, NUNCA sozinho: quinze dos dezesseis perfis em
+  /// produção estão no formato antigo, e migrar em silêncio gastaria dez
+  /// chamadas de IA por perfil sem ninguém pedir. Quem decide é ela.
+  Future<bool> descartarAnalisePersonalizada() async {
+    final perfil = _magicalProfile;
+    if (perfil == null || perfil.aiGeneratedText == null) return false;
+
+    try {
+      final limpo = perfil.copyWith(limparTextoDeIa: true);
+      await _repository.saveMagicalProfile(limpo);
+      _magicalProfile = limpo;
+      _secoes = const [];
+      _secoesDe = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Perfil mágico: falha ao descartar a análise antiga: $e');
+      _error = _l10n.errorsGeneric;
+      notifyListeners();
+      return false;
     }
   }
 
