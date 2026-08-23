@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,26 +65,40 @@ class DebugLogService {
     // Também printar no console
     debugPrint('[$tag] $message');
 
-    // A gravação é ADIADA e agrupada: cada linha reescrevia as 200 do
-    // buffer inteiro no armazenamento, e na web isso acontece na mesma
-    // thread da interface — um punhado de linhas seguidas (um boot, uma
-    // sincronização) travava a tela. Erro é a exceção: grava na hora,
-    // porque é justamente o que precisa sobreviver a um app que morre.
-    if (tag == 'ERROR') {
-      _gravacaoAdiada?.cancel();
-      await _saveLogs();
-      return;
-    }
-    _agendarGravacao();
+    await _gravarAgrupado();
   }
 
-  Timer? _gravacaoAdiada;
+  /// Gravação em voo? E chegou linha nova enquanto ela acontecia?
+  bool _gravando = false;
+  bool _sujo = false;
 
-  void _agendarGravacao() {
-    if (_gravacaoAdiada?.isActive ?? false) return;
-    _gravacaoAdiada = Timer(const Duration(seconds: 2), () {
-      unawaited(_saveLogs());
-    });
+  /// Agrupa as gravações SEM temporizador.
+  ///
+  /// Cada linha reescrevia as 200 do buffer inteiro no armazenamento, e na
+  /// web isso é na mesma thread da interface: um punhado de linhas seguidas
+  /// (um boot, uma sincronização) travava a tela. Aqui a primeira linha da
+  /// rajada abre UMA gravação; as que chegam durante ela só marcam sujo, e
+  /// ao terminar uma última gravação recolhe todas — duas idas ao
+  /// armazenamento no lugar de vinte.
+  ///
+  /// Sem `Timer` de propósito: um temporizador pendente é gravação que pode
+  /// nunca acontecer (o app fecha antes) e, nos testes de widget, é o
+  /// "A Timer is still pending even after the widget tree was disposed"
+  /// que derrubou dois deles.
+  Future<void> _gravarAgrupado() async {
+    if (_gravando) {
+      _sujo = true;
+      return;
+    }
+    _gravando = true;
+    try {
+      do {
+        _sujo = false;
+        await _saveLogs();
+      } while (_sujo);
+    } finally {
+      _gravando = false;
+    }
   }
 
   /// Salva logs no SharedPreferences
