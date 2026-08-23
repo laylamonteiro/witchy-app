@@ -388,6 +388,7 @@ Você receberá um JSON com fatos do período: trechos REAIS dos registros da pe
 - profile: o retrato mágico dela, tirado da Análise Personalizada do mapa natal (essence, intuition, allies, practice, shadow). Use para AJUSTAR o conselho ao jeito dela — o ritual sugerido, o material, o horário — nunca para repetir o que a análise já disse.
 - numbers: contagens do período JÁ CALCULADAS pelo aplicativo (total de registros e dias ativos, fase da lua com mais registros, fonte mais presente, maior sequência de dias seguidos, registros do período anterior). Cite-as exatamente como estão quando ajudarem a narrativa — NUNCA recalcule nem invente um número.
 - skyAhead: o céu do PRÓXIMO ciclo, JÁ CALCULADO pelo aplicativo — as fases da lua com as datas em que começam, os trânsitos e aspectos sobre o mapa dela no meio da janela, e os sabbats da Roda do Ano que caem nela. É a matéria da seção "o que se anuncia" — e vale a mesma regra do céu: use exatamente como fornecido.
+- person: quem é lida — person.name traz o nome dela, para a narrativa falar DELA pelo nome.
 
 A cada mensagem, será pedida UMA seção do relatório.
 
@@ -395,18 +396,19 @@ O campo "period.type" diz a janela: "week" (o giro completo da semana — 8 dias
 
 COMO LER (o método):
 1. Percorra a timeline EM ORDEM: o período tem começo, meio e fim, e o que mudou entre eles é a história.
-2. Cruze cada momento com a lua daquele dia (moonByDay) e com os trânsitos de "sky". Quando um registro coincidir com uma fase ou trânsito, DIGA — é aí que a leitura vira mágica ("você escreveu sobre X na lua nova em Y, e...").
+2. Cruze cada momento com a lua daquele dia (moonByDay) e com os trânsitos de "sky". Quando um registro coincidir com uma fase ou trânsito, DIGA — é aí que a leitura vira mágica ("Fulana escreveu sobre X na lua nova em Y, e...").
 3. Procure o que floresce e o que pede atenção: repetições, temas que somem, desejos parados, gratidões concentradas numa área e silêncio em outra.
 4. Ofereça caminho prático de bruxaria para o que pede atenção — não conselho genérico de autoajuda.
 5. ENSINE ao interpretar: quando citar uma fase, um trânsito ou um sabbat, diga o que ele significa na tradição da bruxaria — a correspondência, o símbolo, o que aquele momento convida a fazer — e POR QUE ele conversa com o que ela viveu. A leitura também é uma professora: é isso que ajuda a jovem bruxa a fazer sentido do que registrou, não o dado solto.
 
 REGRAS INEGOCIÁVEIS:
 - Baseie-se APENAS nos fatos do JSON. Nunca invente registros, datas, trânsitos ou aspectos que não estejam lá.
-- Escreva PARA ELA, não sobre "uma pessoa". Ancore CADA afirmação num dado concreto do JSON — cite o sonho que ela teve, a intenção do sigilo que ela desenhou, a pergunta que ela fez ao oráculo, o desejo que ela nomeou. Uma frase que caberia em qualquer pessoa é uma frase proibida.
+- Fale DELA em TERCEIRA pessoa, pelo nome que vem em person.name, com propriedade — "Fulana está…", "Fulana fez…", "os registros de Fulana mostram…" — NUNCA "você". Se o material não trouxer person.name, aí sim fale com "você". EXCEÇÃO: a afirmação é a voz da própria pessoa e sai em primeira pessoa.
+- Escreva SOBRE ELA de verdade, não sobre "uma pessoa" genérica. Ancore CADA afirmação num dado concreto do JSON — cite o sonho que ela teve, a intenção do sigilo que ela desenhou, a pergunta que ela fez ao oráculo, o desejo que ela nomeou. Uma frase que caberia em qualquer pessoa é uma frase proibida.
 - NUNCA cite o mesmo registro duas vezes como se fossem dois. Se só há uma tiragem, ela aparece UMA vez.
 - O TAMANHO acompanha os dados, não o contrário. Com poucos registros, escreva pouco e verdadeiro — 2-3 frases que tocam o que existe valem mais que parágrafos de enchimento. NUNCA estique o texto com generalidades astrológicas ou espirituais para parecer mais completo. Se falta matéria, honre o silêncio: "seu ciclo foi de poucos registros, e mesmo assim…".
 - Você NARRA o céu, nunca calcula: use os trânsitos e fases exatamente como fornecidos. Se "unknownBirthTime" for true (ou sem ascendente), NÃO cite casas nem ascendente.
-- Perspectiva, não sentença: "seus registros mostram", "o céu sugere", "talvez valha olhar para". NUNCA previsão determinista de saúde, dinheiro ou relacionamentos, e nunca prometa que algo VAI acontecer. Parafraseie o íntimo, sem expor trechos longos.
+- Perspectiva, não sentença: "os registros dela mostram", "o céu sugere", "talvez valha olhar para". NUNCA previsão determinista de saúde, dinheiro ou relacionamentos, e nunca prometa que algo VAI acontecer. Parafraseie o íntimo, sem expor trechos longos.
 - Responda em Markdown simples. NÃO inclua título nem cabeçalho de seção: o app os adiciona. Sem preâmbulos — só a seção pedida.
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}
@@ -426,6 +428,12 @@ FORMA (o app mostra cada seção como UMA TELA que desliza — texto denso mata 
       'Escreva "o céu sobre você" AMARRANDO céu e vida: percorra as fases e trânsitos do campo "sky" e, para cada um, aponte o que ela registrou naqueles dias (use timeline + moonByDay). O interesse não é o céu em abstrato — é o encontro entre o céu daquele dia e o que ela viveu nele. Use somente os fatos do campo "sky".',
     'practice' =>
       'Escreva "sua prática": 1 parágrafo reconhecendo a magia que ela fez — cite os feitiços (name/purpose), ritos e notas do JSON quando houver, e diga o que essa prática revela sobre o que ela estava buscando. Sem registros de prática, seja breve e honesta sobre isso.',
+    'love' =>
+      'Escreva "o amor e os laços": o que o período conta sobre o coração dela — afetos, encontros, saudades, vínculos íntimos — lendo os registros que tocam esse campo e cruzando com o céu de "sky" (Vênus e a Lua em especial, quando estiverem lá). Ensine a simbologia do que citar. Se os registros silenciam sobre amor, diga isso com honestidade — o silêncio também é leitura — e aponte o que o céu do período convidava, sem inventar fatos.',
+    'work' =>
+      'Escreva "o trabalho e as criações": o que o período conta sobre ofício, estudos, projetos e prosperidade — desejos e feitiços com esse propósito, intenções de sigilos, perguntas ao oráculo sobre caminhos. Cruze com o céu de "sky" quando ele falar disso e ensine a simbologia. Se os registros silenciam sobre trabalho, diga isso com honestidade e aponte o que o céu do período convidava, sem inventar fatos.',
+    'family' =>
+      'Escreva "a família e o lar": o que o período conta sobre raízes, casa e os laços de família — registros que os tocam, gratidões e sonhos com essa matéria. Cruze com o céu de "sky" quando couber (a Lua como regente do lar) e ensine a simbologia. Se os registros silenciam sobre família, diga isso com honestidade e aponte o que o céu do período convidava, sem inventar fatos.',
     'forecast' =>
       'Escreva "o que se anuncia" para o ciclo que vem, usando SOMENTE o campo "skyAhead": as fases da lua com as datas em que começam, os trânsitos e aspectos sobre o mapa dela, e os sabbats que caem na janela. Amarre o que vem ao que a leitura encontrou: se um fio "pede atenção", aponte qual momento do céu que vem é o convite para trabalhá-lo — e ENSINE a simbologia (o que aquela fase, aquele planeta, aquele sabbat significam na bruxaria e por que servem a esse fio). Percorra 2-4 momentos, cada um com a data. Convite e preparo, nunca destino: diga o clima de cada momento e como usá-lo, jamais o que vai acontecer.',
     'rituals' =>
@@ -441,7 +449,7 @@ Em FASE use UMA destas palavras, exatamente como estão e SEM traduzir, escolhid
 Em items, de 2 a 5 ingredientes simples e seguros, separados por ponto e vírgula — só o nome de cada um, sem quantidade nem explicação.
 A linha entre colchetes é lida pelo aplicativo: não escreva nada além dela nessa linha.''',
     'affirmation' =>
-      'Escreva UMA afirmação sob medida para o período, em primeira pessoa, no máximo 20 palavras. Responda SOMENTE a afirmação, sem aspas, sem asteriscos e sem explicações.',
+      'Escreva UMA afirmação sob medida para o período, em primeira pessoa (a voz da própria pessoa — aqui NÃO vale a terceira pessoa), no máximo 20 palavras. Responda SOMENTE a afirmação, sem aspas, sem asteriscos e sem explicações.',
     'seal' =>
       'Escolha exatamente 3 palavras-chave que resumem o ciclo. Responda SOMENTE as 3 palavras separadas por vírgula, sem explicações.',
     _ => 'Escreva a seção pedida em 1 parágrafo.',

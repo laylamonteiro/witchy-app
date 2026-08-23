@@ -498,14 +498,17 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       {bool regenerate = false}) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final userId = context.read<AuthProvider>().currentUser.id;
+    final user = context.read<AuthProvider>().currentUser;
     setState(() => _isWorking = true);
     try {
       final result = await _service.generateForCredit(
         credit: credit,
-        userId: userId,
+        userId: user.id,
         options: _options,
         regenerate: regenerate,
+        // Com o nome no material, a narrativa fala DELA em terceira pessoa
+        // (decisão da dona, 23/08); sem nome no perfil, segue com "você".
+        userName: user.displayName,
       );
       if (!mounted) return;
       setState(() => _existing = result.reading);
@@ -990,6 +993,9 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         CycleReadingSections.sky => l10n.cycleReadingSectionSky,
         CycleReadingSections.practice => l10n.cycleReadingSectionPractice,
         CycleReadingSections.forecast => l10n.cycleReadingSectionForecast,
+        CycleReadingSections.love => l10n.cycleReadingSectionLove,
+        CycleReadingSections.work => l10n.cycleReadingSectionWork,
+        CycleReadingSections.family => l10n.cycleReadingSectionFamily,
         CycleReadingSections.rituals => l10n.cycleReadingSectionRituals,
         CycleReadingSections.affirmation => l10n.cycleReadingSectionAffirmation,
         _ => l10n.cycleReadingSectionSeal,

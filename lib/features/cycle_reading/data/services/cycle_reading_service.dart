@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:intl/intl.dart';
 
 import '../../../../core/ai/ai_service.dart';
@@ -44,24 +45,44 @@ abstract final class CycleReadingSections {
   /// nunca destino (a instrução da seção repete a regra).
   static const forecast = 'forecast';
 
-  /// A Leitura da Lunação: o produto completo, as 8 seções.
+  /// As três áreas da vida (decisão da dona, 23/08): o amor e os laços, o
+  /// trabalho e as criações, a família e o lar. Cada uma lê o que o
+  /// período conta daquela área — e diz com honestidade quando os
+  /// registros silenciam sobre ela.
+  static const love = 'love';
+  static const work = 'work';
+  static const family = 'family';
+
+  /// A Leitura da Lunação: o produto completo, as 11 seções de IA.
   static const ordered = [
     portrait,
     threads,
     sky,
     practice,
+    love,
+    work,
+    family,
     forecast,
     rituals,
     affirmation,
     seal,
   ];
 
-  /// A Leitura da Semana: mais direta (5 seções). A previsão entra AQUI
-  /// TAMBÉM (decisão da dona, 23/08: "é pra isso que o usuário vai pagar").
-  /// O que fica de fora é o que só a lunação inteira sustenta — o balanço
-  /// da prática, os rituais e o selo — e é essa diferença visível que
+  /// A Leitura da Semana: mais direta (8 seções). A previsão e as três
+  /// áreas da vida entram AQUI TAMBÉM (decisões da dona, 23/08). O que
+  /// fica de fora é o que só a lunação inteira sustenta — o balanço da
+  /// prática, os rituais e o selo — e é essa diferença visível que
   /// justifica a diferença de preço.
-  static const weekly = [portrait, threads, sky, forecast, affirmation];
+  static const weekly = [
+    portrait,
+    threads,
+    sky,
+    love,
+    work,
+    family,
+    forecast,
+    affirmation,
+  ];
 
   /// As seções de um [CycleReadingPeriodType].
   static List<String> forPeriod(String periodType) =>
@@ -301,6 +322,7 @@ class CycleReadingService {
     required String userId,
     CycleReadingSourceOptions options = const CycleReadingSourceOptions(),
     bool regenerate = false,
+    String? userName,
   }) async {
     if (regenerate && !credit.canRegenerate) {
       throw StateError('cycle reading: regeneration limit reached');
@@ -312,6 +334,7 @@ class CycleReadingService {
       end: credit.periodEnd,
       periodType: credit.periodType,
       options: options,
+      userName: userName,
     );
     final generate = _generateSection ?? _defaultGenerate;
 
@@ -479,6 +502,15 @@ class CycleReadingService {
         l10n.cycleReadingSectionSky, sections[CycleReadingSections.sky] ?? '');
     section(l10n.cycleReadingSectionPractice,
         sections[CycleReadingSections.practice] ?? '');
+    // As três áreas da vida (decisão da dona, 23/08), entre o balanço e a
+    // previsão: primeiro o que o período conta de cada área, depois o que
+    // o céu que vem anuncia.
+    section(l10n.cycleReadingSectionLove,
+        sections[CycleReadingSections.love] ?? '');
+    section(l10n.cycleReadingSectionWork,
+        sections[CycleReadingSections.work] ?? '');
+    section(l10n.cycleReadingSectionFamily,
+        sections[CycleReadingSections.family] ?? '');
     // A previsão vem ANTES dos rituais de propósito: primeiro o que o céu
     // que vem anuncia, depois a prática que responde a ele.
     section(l10n.cycleReadingSectionForecast,
@@ -594,14 +626,31 @@ class CycleReadingService {
         .toList();
   }
 
-  /// A afirmação vem "crua" do modelo: remove aspas e fica com a primeira
-  /// linha não vazia.
+  /// Palavra imediatamente repetida ("me me permito") — gagueira de
+  /// geração, vista numa afirmação real (23/08). Em texto formal de PT/EN/ES
+  /// a repetição imediata da MESMA palavra nunca é intencional; colapsa
+  /// para uma só, preservando a grafia da primeira.
+  static final RegExp _palavraDuplicada = RegExp(
+    r'\b(\p{L}+)(?:\s+\1)+\b',
+    unicode: true,
+    caseSensitive: false,
+  );
+
+  @visibleForTesting
+  static String semPalavraDuplicada(String texto) =>
+      texto.replaceAllMapped(_palavraDuplicada, (m) => m.group(1)!);
+
+  /// A afirmação vem "crua" do modelo: remove aspas, fica com a primeira
+  /// linha não vazia e colapsa palavra duplicada — ela vira imagem de
+  /// compartilhar, e "me me permito" ali é defeito à vista de todo mundo.
   static String _cleanAffirmation(String raw) {
     final line = raw
         .split('\n')
         .map((l) => l.trim())
         .firstWhere((l) => l.isNotEmpty, orElse: () => '');
-    return semRealce(line.replaceAll(RegExp('["“”«»]'), '')).trim();
+    return semPalavraDuplicada(
+      semRealce(line.replaceAll(RegExp('["“”«»]'), '')).trim(),
+    );
   }
 
   /// Tira a marcação de realce (`**assim**`) de um texto que vai sair do

@@ -96,13 +96,15 @@ class CycleReadingMaterial {
   /// custa tokens, nunca contexto.
   ///
   /// O bloco "numbers" entra em TODAS: é minúsculo e traz os números já
-  /// calculados que a IA deve citar em vez de recalcular.
+  /// calculados que a IA deve citar em vez de recalcular. O "person" (o
+  /// nome, para a narrativa em terceira pessoa) idem.
   static const Map<String, Set<String>> _sectionFields = {
     // "o céu sobre você": a própria instrução manda usar sky + timeline +
     // moonByDay. Os trechos longos de cada fonte não entram: a nota curta
     // de cada momento na timeline já diz o que ela registrou naquele dia.
     'sky': {
       'period',
+      'person',
       'sky',
       'moonByDay',
       'timeline',
@@ -115,6 +117,7 @@ class CycleReadingMaterial {
     // tiragens não são matéria desta seção.
     'practice': {
       'period',
+      'person',
       'practice',
       'profile',
       'timeline',
@@ -130,6 +133,7 @@ class CycleReadingMaterial {
     // timeline e as contagens) basta, e é o que ele de fato usa.
     'seal': {
       'period',
+      'person',
       'timeline',
       'moonByDay',
       'sky',
@@ -483,12 +487,17 @@ class CycleReadingComposer {
   }
 
   /// Monta o material completo do período.
+  ///
+  /// [userName] é o nome do perfil: com ele no material, a narrativa fala
+  /// DA pessoa em terceira pessoa, pelo nome (decisão da dona, 23/08) —
+  /// sem ele, a leitura segue falando com "você".
   Future<CycleReadingMaterial> compose({
     required String userId,
     required DateTime start,
     required DateTime end,
     String periodType = CycleReadingPeriodType.lunation,
     CycleReadingSourceOptions options = const CycleReadingSourceOptions(),
+    String? userName,
   }) async {
     final db = await _db;
     final json = <String, dynamic>{
@@ -497,6 +506,8 @@ class CycleReadingComposer {
         'end': _dayKey(end),
         'type': periodType,
       },
+      if (userName != null && userName.trim().isNotEmpty)
+        'person': {'name': userName.trim()},
     };
     var recordCount = 0;
 

@@ -767,12 +767,21 @@ class _CartaoDeRitualState extends State<_CartaoDeRitual> {
     }
   }
 
-  void _abrirFeitico() {
+  Future<void> _abrirFeitico() async {
     final feitico = _feitico;
     if (feitico == null) return;
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => SpellDetailPage(spell: feitico)),
     );
+    if (!mounted) return;
+    // A ficha tem o excluir: se o feitiço saiu do Grimório lá dentro, este
+    // cartão não pode continuar dizendo "salvo" — o botão de salvar volta
+    // (visto no preview, 23/08). A conferência é a mesma do montar.
+    final aindaSalvo = _jaSalvo(AppLocalizations.of(context));
+    setState(() {
+      _feitico = aindaSalvo;
+      _salvo = aindaSalvo != null;
+    });
   }
 
   @override

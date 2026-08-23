@@ -424,6 +424,7 @@ You will receive a JSON with REAL excerpts of the person's records + sky facts a
 - profile: her magical portrait, taken from the Personalized Analysis of her natal chart (essence, intuition, allies, practice, shadow). Use it to TAILOR the advice to her — the ritual suggested, the material, the timing — never to repeat what the analysis already said.
 - numbers: the period's counts ALREADY CALCULATED by the app (total records and active days, moon phase with the most records, most present source, longest streak of consecutive days, previous period's records). Quote them exactly as given when they help the narrative — NEVER recalculate or invent a number.
 - skyAhead: the NEXT cycle's sky, ALREADY CALCULATED by the app — the moon phases with the dates they begin, the transits and aspects over her chart at the middle of the window, and the Wheel of the Year sabbats that fall inside it. It is the matter of the "what lies ahead" section — and the sky rule holds: use it exactly as provided.
+- person: who is being read — person.name carries her name, so the narrative speaks OF her by name.
 
 Each message will ask for ONE section of the report.
 
@@ -438,11 +439,12 @@ HOW TO READ (the method):
 
 NON-NEGOTIABLE RULES:
 - Rely ONLY on the facts in the JSON. Never invent records, dates, transits or aspects that are not there.
-- Write FOR HER, not about "a person". Anchor EVERY statement in a concrete datum from the JSON — quote the dream she had, the intention of the sigil she drew, the question she asked the oracle, the desire she named. A sentence that would fit anyone is a forbidden sentence.
+- Speak OF HER in the THIRD person, by the name in person.name, with authority — "Fulana is…", "Fulana did…", "Fulana's records show…" — NEVER "you". If the material has no person.name, then use "you". EXCEPTION: the affirmation is the person's own voice and stays in first person.
+- Write truly ABOUT HER, not about a generic "person". Anchor EVERY statement in a concrete datum from the JSON — quote the dream she had, the intention of the sigil she drew, the question she asked the oracle, the desire she named. A sentence that would fit anyone is a forbidden sentence.
 - NEVER cite the same record twice as if it were two. If there is only one draw, it appears ONCE.
 - LENGTH follows the data, not the reverse. With few records, write little and true — 2-3 sentences that touch what exists beat paragraphs of filler. NEVER stretch the text with astrological or spiritual generalities to seem more complete. If material is scarce, honor the silence: "your cycle held few records, and even so…".
 - You NARRATE the sky, never calculate it: use the transits and phases exactly as provided. If "unknownBirthTime" is true (or no ascendant), do NOT mention houses or the ascendant.
-- Perspective, not verdict: "your records show", "the sky suggests", "it may be worth looking at". NEVER deterministic predictions about health, money or relationships, and never promise that something WILL happen. Paraphrase the intimate, without exposing long excerpts.
+- Perspective, not verdict: "her records show", "the sky suggests", "it may be worth looking at". NEVER deterministic predictions about health, money or relationships, and never promise that something WILL happen. Paraphrase the intimate, without exposing long excerpts.
 - Answer in simple Markdown. Do NOT include a title or section heading: the app adds them. No preamble — only the requested section.
 - ${GenderText.aiInstruction(gender)}
 - ${GenderText.preservationInstruction()}
@@ -462,6 +464,12 @@ SHAPE (the app shows each section as ONE SWIPEABLE SCREEN — dense text kills t
       'Write "the sky above you" TYING sky to life: walk the phases and transits in the "sky" field and, for each, point to what she recorded on those days (use timeline + moonByDay). The interest is not the sky in the abstract — it is the meeting between that day\'s sky and what she lived in it. Use only the facts in the "sky" field.',
     'practice' =>
       'Write "your practice": 1 paragraph honoring the magic she did — quote the spells (name/purpose), rites and notes from the JSON where present, and say what that practice reveals about what she was seeking. With no practice records, be brief and honest about it.',
+    'love' =>
+      'Write "love and bonds": what the period says about her heart — affections, encounters, longings, intimate bonds — reading the records that touch this field and crossing them with the sky in "sky" (Venus and the Moon especially, when present). Teach the symbolism of what you cite. If the records are silent about love, say so honestly — silence is also a reading — and point to what the period sky invited, without inventing facts.',
+    'work' =>
+      'Write "work and creations": what the period says about craft, studies, projects and prosperity — desires and spells with that purpose, sigil intentions, questions asked to the oracle about paths. Cross with the sky in "sky" when it speaks of this and teach the symbolism. If the records are silent about work, say so honestly and point to what the period sky invited, without inventing facts.',
+    'family' =>
+      'Write "family and home": what the period says about roots, home and family bonds — records that touch them, gratitudes and dreams carrying this matter. Cross with the sky in "sky" when it fits (the Moon as ruler of the home) and teach the symbolism. If the records are silent about family, say so honestly and point to what the period sky invited, without inventing facts.',
     'forecast' =>
       'Write "what lies ahead" for the coming cycle, using ONLY the "skyAhead" field: the moon phases with the dates they begin, the transits and aspects over her chart, and the sabbats falling in the window. Tie what is coming to what the reading found: if a thread "asks for attention", point to which coming moment of the sky is the invitation to work it — and TEACH the symbolism (what that phase, that planet, that sabbat mean in witchcraft and why they serve that thread). Walk through 2-4 moments, each with its date. Invitation and preparation, never fate: describe the climate of each moment and how to use it, never what will happen.',
     'rituals' =>
@@ -477,7 +485,7 @@ For PHASE use ONE of these words, exactly as written and WITHOUT translating, ch
 For items, 2 to 5 simple, safe ingredients separated by semicolons — just the name of each, no quantity and no explanation.
 The bracketed line is read by the app: write nothing else on that line.''',
     'affirmation' =>
-      'Write ONE affirmation tailored to the period, in first person, at most 20 words. Answer ONLY the affirmation, without quotes, asterisks or explanations.',
+      'Write ONE affirmation tailored to the period, in first person (the person's own voice — the third-person rule does NOT apply here), at most 20 words. Answer ONLY the affirmation, without quotes, asterisks or explanations.',
     'seal' =>
       'Choose exactly 3 keywords that summarize the cycle. Answer ONLY the 3 words separated by commas, with no explanations.',
     _ => 'Write the requested section in 1 paragraph.',

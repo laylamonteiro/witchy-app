@@ -88,7 +88,7 @@ void main() {
     // outras seções ficam contadas na linha "+ N".
     expect(find.text(rotulo(l10n.cycleReadingSectionPortrait)), findsNothing);
     expect(find.text(rotulo(l10n.cycleReadingSectionSeal)), findsNothing);
-    expect(find.text(l10n.cyclePaywallMoreSections(5)), findsOneWidget);
+    expect(find.text(l10n.cyclePaywallMoreSections(8)), findsOneWidget);
     expect(find.text(l10n.cycleReadingPaywallWeekUpsell), findsNothing,
         reason: 'quem já leva a lunação não precisa de convite para ela');
     // O preço aparece aqui — e é a primeira vez no fluxo inteiro.
@@ -114,8 +114,8 @@ void main() {
     // semana nem como bullet nem escondido.
     expect(find.text(rotulo(l10n.cycleReadingSectionPortrait)), findsNothing);
     expect(find.text(rotulo(l10n.cycleReadingSectionRituals)), findsNothing);
-    // 5 seções, 3 em bullet: as outras 2 ficam contadas...
-    expect(find.text(l10n.cyclePaywallMoreSections(2)), findsOneWidget);
+    // 8 seções, 3 em bullet: as outras 5 ficam contadas...
+    expect(find.text(l10n.cyclePaywallMoreSections(5)), findsOneWidget);
     // ...e o que só a lunação sustenta vira o upsell honesto.
     expect(find.text(l10n.cycleReadingPaywallWeekUpsell), findsOneWidget);
   });

@@ -80,12 +80,13 @@ void main() {
         await CycleReadingRepository().findForPeriod(userId, periodStart);
     expect(stored!.isGenerated, isTrue);
 
-    // …e o relatório contém as 8 seções de IA (com a previsão "o que se
-    // anuncia") + a seção determinística "O ciclo em números" (montada por
-    // código) + os compartilháveis.
+    // …e o relatório contém as 11 seções de IA (previsão + as três áreas
+    // da vida: amor, trabalho e família — decisão da dona, 23/08) + a seção
+    // determinística "O ciclo em números" (montada por código) + os
+    // compartilháveis.
     final markdown = result.writing.content;
     final headings = RegExp(r'^## ', multiLine: true).allMatches(markdown);
-    expect(headings.length, 9);
+    expect(headings.length, 12);
     // A previsão fica entre a prática e os rituais: primeiro o que o céu
     // que vem anuncia, depois a prática que responde a ele.
     final previsao = markdown.indexOf('Texto da secao forecast.');
@@ -130,6 +131,27 @@ void main() {
         '> Eu **honro minhas conquistas** e sigo.',
       ),
       'Eu honro minhas conquistas e sigo.',
+    );
+  });
+
+  test('palavra imediatamente duplicada colapsa na afirmação', () {
+    // "me me permito" — gagueira de geração vista numa afirmação real
+    // (23/08). Repetição imediata da MESMA palavra nunca é intencional.
+    expect(
+      CycleReadingService.semPalavraDuplicada(
+        'Eu confio no meu saber, libero o controle e me me permito encantar.',
+      ),
+      'Eu confio no meu saber, libero o controle e me permito encantar.',
+    );
+    // Palavras DIFERENTES em sequência ficam como estão.
+    expect(
+      CycleReadingService.semPalavraDuplicada('dia a dia, passo a passo'),
+      'dia a dia, passo a passo',
+    );
+    // Colapsa mesmo variando a caixa, preservando a primeira grafia.
+    expect(
+      CycleReadingService.semPalavraDuplicada('Que que floresça'),
+      'Que floresça',
     );
   });
 
@@ -345,7 +367,7 @@ Texto do retrato.
     expect((await db.query('free_writings')).length, 1);
   });
 
-  test('leitura da SEMANA sai com 5 seções, sem prática/rituais/selo',
+  test('leitura da SEMANA sai com 8 seções, sem prática/rituais/selo',
       () async {
     final week = CycleReadingService.currentWeek();
     final credit = CycleReadingModel(
@@ -376,9 +398,10 @@ Texto do retrato.
     expect(asked, isNot(contains(CycleReadingSections.seal)));
 
     final markdown = result.writing.content;
-    // 5 seções de IA (com a previsão) + a seção determinística dos números,
-    // que existe nas duas janelas (é calculada pelo app, sem chamada de IA).
-    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 6);
+    // 8 seções de IA (previsão + amor/trabalho/família) + a seção
+    // determinística dos números, que existe nas duas janelas (é calculada
+    // pelo app, sem chamada de IA).
+    expect(RegExp(r'^## ', multiLine: true).allMatches(markdown).length, 9);
     // A afirmação (o cartão compartilhável) continua nas duas janelas.
     expect(result.affirmation, 'Eu confio no meu ciclo.');
     expect(result.sealKeywords, isEmpty);
