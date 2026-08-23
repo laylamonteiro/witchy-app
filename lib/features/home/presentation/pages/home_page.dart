@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../cycle_reading/presentation/pages/cycle_reading_intro_page.dart';
@@ -14,8 +13,9 @@ import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import '../../../../core/navigation/saida_do_app.dart';
+import '../../../../core/navigation/observador_de_rotas_raiz.dart';
 import '../../../../core/utils/saida_por_dois_toques.dart';
+import '../caminhada_do_voltar.dart';
 import '../../../../core/utils/um_de_cada_vez.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
@@ -48,11 +48,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         kIsWeb ? const Duration(milliseconds: 800) : Duration.zero,
   );
 
-  /// Quanto tempo o aviso "toque de novo para sair" fica na tela. Acompanha
-  /// a janela da regra: um aviso que some antes de a janela fechar deixaria
-  /// a saída armada com a tela já limpa.
-  static final Duration _avisoDeSaida =
-      kIsWeb ? const Duration(seconds: 3) : const Duration(seconds: 2);
+  /// A caminhada do voltar, fora do widget para poder ser testada — ver
+  /// [CaminhadaDoVoltar]. As bordas (navegadores, aba, aviso) são estas
+  /// aqui; a decisão é dela.
+  late final CaminhadaDoVoltar _caminhada = CaminhadaDoVoltar(
+    raiz: () => mounted ? Navigator.maybeOf(context) : null,
+    abaAtiva: () => _navigatorKeys[_selectedIndex].currentState,
+    abaAtual: () => _selectedIndex,
+    irParaAba: (indice) => setState(() => _selectedIndex = indice),
+    mostrarAviso: _avisarQueOProximoSai,
+    regra: _saida,
+    vivo: () => mounted,
+  );
 
   /// Um voltar por vez.
   ///
@@ -117,6 +124,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     DeepLinkService.instance.pending.addListener(_onDeepLink);
+    // Uma tela cheia que abre ou fecha na raiz caduca o aviso de saída: o
+    // framework a desempilha sem passar por aqui, e um aviso dado antes
+    // dela sairia do app sem nada na tela. Ver [mudancasDaPilhaRaiz].
+    mudancasDaPilhaRaiz.addListener(_esquecerASaida);
     // Link pendente de um toque em notificação que ABRIU o app.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onDeepLink();
@@ -174,6 +185,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     DeepLinkService.instance.pending.removeListener(_onDeepLink);
+    mudancasDaPilhaRaiz.removeListener(_esquecerASaida);
     WidgetsBinding.instance.removeObserver(this);
     for (final notifier in _resetNotifiers) {
       notifier.dispose();
@@ -206,6 +218,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _onTabTapped(int index) {
+    // Trocar de aba pela barra também caduca o aviso de saída: quem
+    // navegou mudou de ideia, e o voltar seguinte tem de recomeçar a
+    // caminhada em vez de encontrar uma saída armada.
+    _esquecerASaida();
     if (index == _selectedIndex) {
       // Re-toque na aba já selecionada: volta para a raiz da seção
       // (desempilha as páginas de detalhe e reseta a TabBar interna).
@@ -228,78 +244,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   ///
   /// Esta camada só faz uma coisa: garantir que a decisão aconteça UMA vez
   /// por vez. Ver [_voltar].
-  Future<void> _handleSystemBack() => _voltar.executar(_resolverOVoltar);
+  Future<void> _handleSystemBack() => _voltar.executar(_caminhada.resolver);
 
-  Future<void> _resolverOVoltar() async {
-    // 1. Rotas empilhadas no Navigator raiz (tela cheia sobre a home).
-    //
-    // O `canPop` NÃO é uma proteção contra recursão em geral — era isso que
-    // o comentário antigo dizia, e é falso. O que ele faz é evitar UM caso:
-    // com a home sozinha na pilha raiz, `maybePop` consultaria o `PopScope`
-    // desta própria página (`canPop: false`), que chamaria este método de
-    // novo, para sempre. Qualquer outro `PopScope` no Navigator raiz que
-    // devolva o voltar para cá volta a fechar o ciclo — quem impede isso é
-    // [_voltar], não esta linha.
-    final rootNavigator = Navigator.of(context);
-    if (rootNavigator.canPop()) {
-      _saida.esquecer();
-      await rootNavigator.maybePop();
-      return;
-    }
+  void _esquecerASaida() => _saida.esquecer();
 
-    // 2. Páginas de detalhe dentro da aba ativa. maybePop (e não pop)
-    // respeita o PopScope interno das páginas — ex.: o stepper da lição
-    // volta passo a passo antes de sair, e a Escrita Livre salva ao sair.
-    final tabNavigator = _navigatorKeys[_selectedIndex].currentState;
-    if (tabNavigator != null && await tabNavigator.maybePop()) {
-      _saida.esquecer();
-      return;
-    }
-    if (!mounted) return;
-
-    // 3. Raiz de outra aba: voltar leva à tela principal (Seu Dia) — nunca
-    // fecha o app a partir daqui.
-    if (_selectedIndex != 0) {
-      _saida.esquecer();
-      setState(() => _selectedIndex = 0);
-      return;
-    }
-
-    // 4. Seu Dia: sair só com um segundo voltar DELIBERADO — na web TAMBÉM
-    // (decisão da dona, 23/08: o voltar desce até o Seu Dia e então sai,
-    // como no app).
-    //
-    // Na web, sair NÃO passa pelo `SystemNavigator.pop()`: ele cai no
-    // `exit()` do motor, que desliga o ouvinte de `popstate` e apaga a
-    // entrada-guarda antes de tentar sair — e quando o app é a primeira
-    // entrada da aba a saída não acontece, deixando o voltar morto e a aba
-    // à mercê do próximo gesto. Era a causa do "fecha a aba antes de
-    // chegar em Seu Dia". Ver `saida_do_app.dart`.
-    //
-    // E onde não há para onde voltar (aba que nasceu no app), a saída nem
-    // é oferecida: nenhuma página fecha uma aba que não abriu, e prometer
-    // isso no aviso seria mentir. O voltar simplesmente fica no Seu Dia.
-    if (kIsWeb && !podeSairDaAba()) return;
-
-    final decisao = _saida.registrar(DateTime.now());
-    if (decisao == DecisaoDeSaida.sair) {
-      if (kIsWeb) {
-        sairDaAba();
-      } else {
-        SystemNavigator.pop();
-      }
-      return;
-    }
-    // Rajada (`ignorar`): nada acontece — nem sair, nem repetir o aviso,
-    // que já está na tela.
-    if (decisao == DecisaoDeSaida.avisar) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).commonBackAgainToExit),
-          duration: _avisoDeSaida,
-        ),
-      );
-    }
+  /// "Toque de novo para sair" — com a duração da PRÓPRIA janela da regra:
+  /// um aviso que some antes de a janela fechar deixaria a saída armada
+  /// com a tela já limpa, que é o jeito de sair sem querer.
+  void _avisarQueOProximoSai() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).commonBackAgainToExit),
+        duration: _saida.janela,
+      ),
+    );
   }
 
   Widget _buildTabNavigator(int index) {

@@ -43,6 +43,7 @@ import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import 'features/astrology/presentation/providers/astrology_provider.dart';
 import 'core/navigation/janela_de_login.dart';
+import 'core/navigation/observador_de_rotas_raiz.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -483,6 +484,9 @@ class _GrimorioDeBolsoAppState extends State<GrimorioDeBolsoApp>
       child: Consumer2<LanguageProvider, ThemeProvider>(
         builder: (context, languageProvider, themeProvider, child) => MaterialApp(
           navigatorKey: _rootNavigatorKey,
+          // Avisa a Home quando uma tela cheia abre ou fecha na raiz — ela
+          // não enxerga isso sozinha (ver [mudancasDaPilhaRaiz]).
+          navigatorObservers: [ObservadorDeRotasRaiz()],
           // `onGenerateTitle` e não `title`: o nome do app é TRADUZIDO
           // ("Pocket Grimoire", "Grimorio de Bolsillo") e a chave `appTitle`
           // existia nos quatro ARBs sem nenhum chamador. Cravado, o nome
