@@ -704,10 +704,11 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                 ),
           ),
           const SizedBox(height: 12),
-          // Centralizado como os demais botões de ação desta tela: dentro de
-          // uma coluna alinhada à esquerda, um botão que encolhe até o texto
-          // fica encostado na borda e parece desalinhado dos outros.
-          Center(
+          // Ponta a ponta, como os CTAs únicos do resto do app (é o padrão
+          // dominante: ~3 em cada 4). A coluna aqui é alinhada à esquerda,
+          // então a largura vem do SizedBox.
+          SizedBox(
+            width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: _completarNascimento,
               icon: const Icon(Icons.auto_awesome, size: 18),
@@ -1139,7 +1140,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // Crédito pendente: a compra já aconteceu — gerar sem nova cobrança.
     if (existing != null && existing.isPending) {
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             l10n.cycleReadingPendingCredit,
@@ -1161,7 +1162,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
       final remaining =
           CycleReadingModel.maxRegenerations - existing.regenerationsUsed;
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ElevatedButton.icon(
             onPressed: () => _abrirRelatorio(existing),
@@ -1191,7 +1192,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // frase explicando o benefício — a etiqueta "Incluída" no cabeçalho já
     // diz o necessário, e repetir a cada leitura vira ruído.
     if (_lifetimeCoversThisWindow) {
-      return Center(
+      return SizedBox(
+        width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: _claimLifetime,
           icon: const Icon(Icons.auto_awesome, size: 18),
@@ -1219,7 +1221,8 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // por seção o que a leitura entrega ANTES de cobrar. O toque a mais é
     // proposital — quem chega ao valor já sabe o que ele compra.
     final period = _period;
-    return Center(
+    return SizedBox(
+      width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: () => mostrarPaywallDaLeitura(
           context,
