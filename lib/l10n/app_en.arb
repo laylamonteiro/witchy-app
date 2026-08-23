@@ -927,7 +927,6 @@
   "authErrLoginCancelled": "Sign-in cancelled",
   "authPopupDoneTitle": "Login complete",
   "authPopupDoneBody": "Your Grimoire opened in the original tab — you can close this window now.",
-  "authPopupContinueHere": "Continue in this tab",
   "authErrGoogleAuth": "I couldn't sign you in with Google — try again in a moment",
   "authErrVerifyEmail": "I couldn't verify the email — try again in a moment",
   "authErrUpdateProfile": "I couldn't update the profile — try again in a moment",

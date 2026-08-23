@@ -135,10 +135,13 @@ class _EsperandoASessao extends StatelessWidget {
 
 /// A janela de login que fez o trabalho e não conseguiu se fechar (o COOP
 /// do Google corta o direito de fechar-se): diz que o Grimório já abriu na
-/// aba original e convida a fechar esta. O "continuar nesta aba" é a saída
-/// de emergência — recomeça o documento limpo (sem o Google no histórico
-/// desta rota de recomeço... o histórico da ABA continua com o Google, mas
-/// quem escolheu ficar sabe onde está).
+/// aba original e convida a fechar esta.
+///
+/// SEM botão de "continuar nesta aba", de propósito (decisão de 23/08,
+/// depois de vê-lo em uso): esta aba foi aberta por script e carrega as
+/// páginas do Google no histórico — usar o app aqui devolve o defeito do
+/// voltar E o Chrome ainda FECHA a aba ao voltar além do início. O app
+/// vive na aba original; esta se encerra.
 class _JanelaDeLoginConcluida extends StatelessWidget {
   const _JanelaDeLoginConcluida();
 
@@ -169,14 +172,6 @@ class _JanelaDeLoginConcluida extends StatelessWidget {
                 l10n.authPopupDoneBody,
                 textAlign: TextAlign.center,
                 style: tema.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () {
-                  AuthProvider.bootNaJanelaDeLogin = false;
-                  recomecarNaRaiz();
-                },
-                child: Text(l10n.authPopupContinueHere),
               ),
             ],
           ),
