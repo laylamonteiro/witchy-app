@@ -4,8 +4,9 @@ import '../../../../core/theme/app_theme.dart' show ResponsiveAppBarTitle;
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/paged_reading.dart';
 import '../../../../core/widgets/premium_locked_preview.dart';
+import '../../../auth/presentation/widgets/premium_blur_widget.dart'
+    show showPremiumUpgradePaywall;
 import '../../../../l10n/generated/app_localizations.dart';
-import 'subscription_page.dart' show openSubscriptionPage;
 
 /// "O que você ainda não viu" — o destino do toque no convite.
 ///
@@ -166,10 +167,11 @@ class _Peca extends StatelessWidget {
           titles: dentro,
           linesPerSection: linhasPorSecao,
           ctaLabel: AppLocalizations.of(context).premiumUnlock,
-          // O convite daqui vai para os planos, não para outro paywall
-          // modal: esta tela JÁ é o convite, e empilhar dois seria voltar a
-          // barrar a pessoa na porta.
-          onCta: () => openSubscriptionPage(context),
+          // Decisão da dona (23/08): daqui o toque vai DIRETO ao paywall —
+          // quem tocou já viu o que quer, e um desvio pela página de
+          // Assinatura era um passo a mais antes do preço. A página de
+          // Assinatura fica para as Configurações (gestão de conta).
+          onCta: () => showPremiumUpgradePaywall(context),
         ),
       ],
     );
@@ -208,7 +210,7 @@ class _Fechamento extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () => openSubscriptionPage(context),
+            onPressed: () => showPremiumUpgradePaywall(context),
             icon: const Icon(Icons.star),
             label: Text(l10n.premiumUnlock),
             style: ElevatedButton.styleFrom(
