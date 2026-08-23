@@ -3,3 +3,5 @@
 Object? abrirJanelaDeLogin(String url) => null;
 
 bool fecharSeJanelaDeLogin() => false;
+
+String? lerDoLocalStorage(String chave) => null;

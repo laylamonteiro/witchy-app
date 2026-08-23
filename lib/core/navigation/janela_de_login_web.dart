@@ -23,3 +23,13 @@ bool fecharSeJanelaDeLogin() {
   web.window.close();
   return web.window.closed;
 }
+
+/// Lê um valor do `localStorage` CRU da origem.
+///
+/// Existe porque o supabase_flutter, NA WEB, persiste a sessão direto no
+/// localStorage por js-interop — não pelo SharedPreferences, que na web
+/// prefixa tudo com `flutter.`. A espera da aba principal lia o namespace
+/// errado e nunca via a sessão que a janela gravou (o login travado no
+/// preview, 23/08).
+String? lerDoLocalStorage(String chave) =>
+    web.window.localStorage.getItem(chave);

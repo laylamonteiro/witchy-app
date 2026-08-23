@@ -362,10 +362,25 @@ class SupabaseAuthRepository implements AuthRepository {
   /// documento que voltar do OAuth sabe que é a janela de login (o COOP
   /// também apaga o `opener`) e mostra o "pode fechar esta aba" em vez de
   /// virar um segundo app com o Google no histórico.
+  /// A sessão como está PERSISTIDA agora, onde quer que o supabase_flutter
+  /// a guarde: na web ele grava DIRETO no localStorage (js-interop) — o
+  /// SharedPreferences prefixa tudo com `flutter.` e nunca a veria (era o
+  /// login travado do preview, 23/08). A leitura via prefs fica como plano
+  /// B para versões do pacote que persistam por ali.
+  Future<String?> _sessaoPersistida(
+    SharedPreferences prefs,
+    String chave,
+  ) async {
+    final direta = lerDoLocalStorage(chave);
+    if (direta != null && direta.isNotEmpty) return direta;
+    await prefs.reload();
+    return prefs.getString(chave);
+  }
+
   Future<String?> _aguardarSessaoDaJanela() async {
     final prefs = await SharedPreferences.getInstance();
     final chave = _chaveDaSessao;
-    final antes = prefs.getString(chave);
+    final antes = await _sessaoPersistida(prefs, chave);
     final limite = DateTime.now().add(const Duration(minutes: 3));
 
     await prefs.setString(
@@ -375,8 +390,7 @@ class SupabaseAuthRepository implements AuthRepository {
     try {
       while (DateTime.now().isBefore(limite)) {
         await Future.delayed(const Duration(milliseconds: 800));
-        await prefs.reload();
-        final agora = prefs.getString(chave);
+        final agora = await _sessaoPersistida(prefs, chave);
         if (agora != null && agora.isNotEmpty && agora != antes) {
           return agora;
         }
