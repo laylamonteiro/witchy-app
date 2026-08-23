@@ -136,6 +136,27 @@
       applyHeight();
     })();
   </script>
+
+  <script>
+    // VOLTAR DEPOIS DO LOGIN SOCIAL: quando a entrada com o Google cai no
+    // redirecionamento, o histórico da aba guarda o documento de ANTES do
+    // login — o app congelado na tela de entrada. O voltar restaura esse
+    // documento do bfcache exatamente como ele estava: a pessoa vê a tela
+    // de login e conclui que foi deslogada. Não foi — o avançar "devolve"
+    // a conta, mas ninguém aperta avançar. E nenhum guarda DENTRO do app
+    // (PopScope, GuestOnly) alcança isso, porque o documento restaurado é
+    // outra instância do app, com o estado de antes do login.
+    //
+    // A saída é recarregar sempre que a página voltar do bfcache: o boot
+    // relê a sessão do localStorage — que é compartilhado entre os
+    // documentos e continua viva — e escolhe a tela pelo estado REAL.
+    // Com sessão, Home; sem, entrada. Restauro de bfcache só acontece ao
+    // navegar ENTRE documentos (login social, link externo), então isto
+    // não toca a navegação normal dentro do app, que é de documento único.
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) { window.location.reload(); }
+    });
+  </script>
 </head>
 <body>
   <!--
