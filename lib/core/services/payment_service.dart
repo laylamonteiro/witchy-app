@@ -241,7 +241,7 @@ class PaymentService extends ChangeNotifier {
   /// Ciclo: eles são consumíveis e não devem estar ligados a entitlement
   /// nenhum no painel — o crédito vive na tabela `cycle_readings`. Um
   /// consumível ligado por engano concede o Pro SEM data de expiração, e uma
-  /// leitura de R$ 4,90 vira Premium vitalício.
+  /// leitura de R$ 4,99 vira Premium vitalício — a de R$ 249,90, de graça.
   ///
   /// Estática e exposta porque é a regra que o teste tranca: se
   /// `cycleReadingProductIds` esvaziar, a guarda para de guardar em silêncio.
