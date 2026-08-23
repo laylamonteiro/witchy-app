@@ -1632,8 +1632,8 @@
   "cycleReadingCustomPeriodHint": "Up to 8 days becomes a Week Reading; 9 to 31 days, a Lunation Reading.",
   "cycleReadingHeatLegend": "Marked days are the ones you recorded something — the stronger the mark, the more alive your practice was.",
   "cycleReadingCustomPeriodConfirm": "Use this period",
-  "cyclePresetLunation": "This lunation",
-  "cyclePresetWeek": "This week",
+  "cyclePresetLunation": "Lunation",
+  "cyclePresetWeek": "Week",
   "cyclePresetOther": "Another period",
   "cycleReadingSelectionSummary": "{days, plural, one{1 day} other{{days} days}} · {records, plural, =0{no records} one{1 record} other{{records} records}}",
   "@cycleReadingSelectionSummary": {
