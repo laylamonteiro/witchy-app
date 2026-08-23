@@ -485,7 +485,7 @@ For PHASE use ONE of these words, exactly as written and WITHOUT translating, ch
 For items, 2 to 5 simple, safe ingredients separated by semicolons — just the name of each, no quantity and no explanation.
 The bracketed line is read by the app: write nothing else on that line.''',
     'affirmation' =>
-      'Write ONE affirmation tailored to the period, in first person (the person's own voice — the third-person rule does NOT apply here), at most 20 words. Answer ONLY the affirmation, without quotes, asterisks or explanations.',
+      'Write ONE affirmation tailored to the period, in first person (the voice of the person herself — the third-person rule does NOT apply here), at most 20 words. Answer ONLY the affirmation, without quotes, asterisks or explanations.',
     'seal' =>
       'Choose exactly 3 keywords that summarize the cycle. Answer ONLY the 3 words separated by commas, with no explanations.',
     _ => 'Write the requested section in 1 paragraph.',
