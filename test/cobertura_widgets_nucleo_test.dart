@@ -53,14 +53,21 @@ void main() {
 
     testWidgets('sem onTap, os pontos saem da árvore de semântica',
         (tester) async {
-      // Decorativos: um leitor de tela não tem o que fazer com eles.
+      // Decorativos: um leitor de tela não tem o que fazer com eles. O
+      // escopo é o próprio PageDots — a rota do MaterialApp tem widgets de
+      // semântica dela acima de tudo.
       await tester.pumpWidget(app(const PageDots(count: 3, index: 0)));
+      final exclusao = find.descendant(
+        of: find.byType(PageDots),
+        matching: find.byType(ExcludeSemantics),
+      );
+      expect(exclusao, findsOneWidget);
       expect(
-        find.ancestor(
-          of: find.byType(AnimatedContainer).first,
-          matching: find.byType(ExcludeSemantics),
+        find.descendant(
+          of: exclusao,
+          matching: find.byType(AnimatedContainer),
         ),
-        findsWidgets,
+        findsNWidgets(3),
       );
     });
   });
@@ -159,13 +166,24 @@ void main() {
 
       final veu = find.text(kPremiumPlaceholderText, skipOffstage: false);
       expect(veu, findsOneWidget);
+
+      // O escopo é o próprio widget: a exclusão de semântica e o embaçado
+      // têm que ser DELE, não de algo que a rota pôs por cima.
+      final exclusaoDoVeu = find.descendant(
+        of: find.byType(PremiumLockedPreview),
+        matching: find.byType(ExcludeSemantics),
+      );
+      expect(exclusaoDoVeu, findsOneWidget);
       expect(
-        find.ancestor(of: veu, matching: find.byType(ExcludeSemantics)),
-        findsWidgets,
+        find.descendant(of: exclusaoDoVeu, matching: veu),
+        findsOneWidget,
       );
       expect(
-        find.ancestor(of: veu, matching: find.byType(ImageFiltered)),
-        findsWidgets,
+        find.descendant(
+          of: exclusaoDoVeu,
+          matching: find.byType(ImageFiltered),
+        ),
+        findsOneWidget,
       );
     });
   });
@@ -221,6 +239,14 @@ void main() {
 
     testWidgets('CascadeIn respeita a dobra e o desligar de animações',
         (tester) async {
+      // O escopo é o próprio CascadeIn: a rota do MaterialApp tem
+      // FadeTransitions dela acima de TUDO, então procurar por ancestral
+      // acha animação mesmo onde não existe nenhuma nossa.
+      Finder entradaDo(int posicao) => find.descendant(
+            of: find.byType(CascadeIn).at(posicao),
+            matching: find.byType(FadeTransition),
+          );
+
       await tester.pumpWidget(app(Column(
         children: const [
           CascadeIn(index: 0, child: Text('animado')),
@@ -228,20 +254,9 @@ void main() {
         ],
       )));
 
-      expect(
-        find.ancestor(
-          of: find.text('animado'),
-          matching: find.byType(FadeTransition),
-        ),
-        findsWidgets,
-      );
-      expect(
-        find.ancestor(
-          of: find.text('abaixo da dobra'),
-          matching: find.byType(FadeTransition),
-        ),
-        findsNothing,
-      );
+      expect(entradaDo(0), findsOneWidget);
+      expect(entradaDo(1), findsNothing,
+          reason: 'abaixo da dobra ninguém vê a animação');
       await tester.pumpAndSettle();
 
       // Com as animações desligadas no sistema, ninguém anima.
@@ -251,13 +266,7 @@ void main() {
           children: const [CascadeIn(index: 0, child: Text('parado'))],
         ),
       )));
-      expect(
-        find.ancestor(
-          of: find.text('parado'),
-          matching: find.byType(FadeTransition),
-        ),
-        findsNothing,
-      );
+      expect(entradaDo(0), findsNothing);
     });
 
     testWidgets('CascadeScope: item que monta muito depois entra parado',
@@ -287,8 +296,10 @@ void main() {
 
       expect(find.text('tardio'), findsOneWidget);
       expect(
-        find.ancestor(
-          of: find.text('tardio'),
+        // Dentro do CascadeIn tardio (o segundo): nenhuma entrada animada.
+        // O escopo importa — as FadeTransitions da rota estão sempre acima.
+        find.descendant(
+          of: find.byType(CascadeIn).at(1),
           matching: find.byType(FadeTransition),
         ),
         findsNothing,
