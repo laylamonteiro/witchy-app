@@ -564,6 +564,9 @@ class SupabaseAuthRepository implements AuthRepository {
   static List<String> tabelasDaExclusaoDeConta() => [
         for (final entity in SyncEntity.values)
           DataSyncService.supabaseTableFor(entity),
+        // As lápides do sync não são entidade, mas carregam rastro (quais
+        // ids existiram) e pertencem à pessoa: somem junto.
+        'sync_tombstones',
         SupabaseTables.profiles,
       ];
 

@@ -24,6 +24,10 @@ class ServidorDeMentira implements ServidorDeSync {
   /// Fora do ar: toda chamada falha, como um aparelho sem rede.
   bool foraDoAr = false;
 
+  /// Simula o painel sem a migração `sync_tombstones_migration.sql`: as
+  /// operações de lápide falham, o resto do servidor funciona.
+  bool semTabelaDeLapides = false;
+
   List<Map<String, dynamic>> _tabela(String nome) =>
       tabelas.putIfAbsent(nome, () => []);
 
@@ -88,6 +92,62 @@ class ServidorDeMentira implements ServidorDeSync {
     _tabela(tabela)
         .removeWhere((l) => l['user_id'] == userId && l['date'] != date);
   }
+
+  void _exigirTabelaDeLapides() {
+    _exigirRede();
+    if (semTabelaDeLapides) {
+      throw Exception('relation "public.sync_tombstones" does not exist');
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> lapidesDoUsuario(String userId) async {
+    _exigirTabelaDeLapides();
+    return _tabela('sync_tombstones')
+        .where((l) => l['user_id'] == userId)
+        .map(Map<String, dynamic>.from)
+        .toList();
+  }
+
+  @override
+  Future<void> gravarLapide(Map<String, dynamic> lapide) async {
+    _exigirTabelaDeLapides();
+    final lista = _tabela('sync_tombstones');
+    lista.removeWhere((l) =>
+        l['user_id'] == lapide['user_id'] &&
+        l['entity'] == lapide['entity'] &&
+        l['item_id'] == lapide['item_id']);
+    lista.add(Map<String, dynamic>.from(lapide));
+  }
+
+  @override
+  Future<void> apagarLapide(
+    String userId,
+    String entity,
+    String itemId,
+  ) async {
+    _exigirTabelaDeLapides();
+    _tabela('sync_tombstones').removeWhere((l) =>
+        l['user_id'] == userId &&
+        l['entity'] == entity &&
+        l['item_id'] == itemId);
+  }
+
+  @override
+  Future<void> apagarLinhaAteQuando(
+    String tabela,
+    String userId,
+    dynamic id,
+    String updatedAtIso,
+  ) async {
+    _exigirRede();
+    final limite = DateTime.parse(updatedAtIso);
+    _tabela(tabela).removeWhere((l) {
+      if (l['user_id'] != userId || l['id'] != id) return false;
+      final updatedAt = DateTime.tryParse(l['updated_at']?.toString() ?? '');
+      return updatedAt == null || !updatedAt.isAfter(limite);
+    });
+  }
 }
 
 void main() {
@@ -109,18 +169,48 @@ void main() {
     service.configurarParaTeste(servidor, uid);
     final db = await DatabaseHelper.instance.database;
     await db.delete('dreams');
+    await db.delete('sync_tombstones');
   });
 
-  Map<String, dynamic> sonho(String id) => {
+  // Um instante base fixo, para as relações antes/depois ficarem explícitas.
+  const base = 1700000000000;
+
+  String iso(int ms) =>
+      DateTime.fromMillisecondsSinceEpoch(ms).toUtc().toIso8601String();
+
+  Map<String, dynamic> sonho(String id, {int updatedAt = base}) => {
         'id': id,
         'user_id': uid,
         'title': 'Cobra no jardim',
         'content': 'Uma cobra dourada atravessava o canteiro.',
-        'date': 1700000000000,
-        'created_at': 1700000000000,
-        'updated_at': 1700000000000,
+        'date': base,
+        'created_at': base,
+        'updated_at': updatedAt,
         'synced': 0,
       };
+
+  /// A mesma linha como o servidor a guarda (datas em ISO, sem `synced`).
+  Map<String, dynamic> sonhoRemoto(String id, {int updatedAt = base}) => {
+        'id': id,
+        'user_id': uid,
+        'title': 'Cobra no jardim',
+        'content': 'Uma cobra dourada atravessava o canteiro.',
+        'date': iso(base),
+        'created_at': iso(base),
+        'updated_at': iso(updatedAt),
+      };
+
+  Map<String, dynamic> lapideRemota(String id, {required int deletedAt}) => {
+        'user_id': uid,
+        'entity': 'dreams',
+        'item_id': id,
+        'deleted_at': iso(deletedAt),
+      };
+
+  Future<List<Map<String, dynamic>>> lapidesLocais() async {
+    final db = await DatabaseHelper.instance.database;
+    return db.query('sync_tombstones');
+  }
 
   group('a lápide da exclusão', () {
     test('item apagado com a rede fora do ar não ressuscita no sync seguinte',
@@ -157,6 +247,170 @@ void main() {
         isEmpty,
         reason: 'a cópia do servidor precisa ser purgada quando a rede volta',
       );
+    });
+
+    test('apagar com a rede no ar purga a linha e registra a lápide remota',
+        () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('dreams', sonho('sonho-2'));
+      await service.syncAll();
+
+      await db.delete('dreams', where: 'id = ?', whereArgs: ['sonho-2']);
+      await service.deleteItem(SyncEntity.dreams, 'sonho-2');
+
+      expect(servidor.linhasDe('dreams'), isEmpty);
+      expect(
+        servidor.linhasDe('sync_tombstones'),
+        hasLength(1),
+        reason: 'sem a lápide remota, os outros aparelhos nunca sabem',
+      );
+      final locais = await lapidesLocais();
+      expect(locais, hasLength(1));
+      expect(locais.first['synced'], 1,
+          reason: 'exclusão avisada não precisa ser retentada');
+    });
+
+    test('a exclusão feita noutro aparelho alcança este', () async {
+      final db = await DatabaseHelper.instance.database;
+      // A linha vive aqui, já sincronizada; o outro aparelho apagou: no
+      // servidor restou só a lápide.
+      await db.insert('dreams', {...sonho('sonho-3'), 'synced': 1});
+      servidor.tabelas['sync_tombstones'] = [
+        lapideRemota('sonho-3', deletedAt: base + 1000),
+      ];
+
+      final resultado = await service.syncAll();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+
+      final restante =
+          await db.query('dreams', where: 'id = ?', whereArgs: ['sonho-3']);
+      expect(restante, isEmpty,
+          reason: 'a exclusão precisa viajar entre os aparelhos da pessoa');
+    });
+
+    test('a edição mais nova que a exclusão vence a lápide', () async {
+      final db = await DatabaseHelper.instance.database;
+      // Apagado no outro aparelho, mas EDITADO aqui depois disso. Apagar a
+      // edição em silêncio é a perda que a regra mostRecent existe para
+      // impedir.
+      await db.insert('dreams', sonho('sonho-4', updatedAt: base + 2000));
+      servidor.tabelas['sync_tombstones'] = [
+        lapideRemota('sonho-4', deletedAt: base + 1000),
+      ];
+
+      final resultado = await service.syncAll();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+
+      final local =
+          await db.query('dreams', where: 'id = ?', whereArgs: ['sonho-4']);
+      expect(local, hasLength(1), reason: 'a edição vence a exclusão antiga');
+      expect(servidor.linhasDe('dreams'), hasLength(1),
+          reason: 'a linha vencedora volta a subir');
+      expect(servidor.linhasDe('sync_tombstones'), isEmpty,
+          reason: 'a lápide vencida cai, senão a briga recomeça a cada sync');
+      expect(await lapidesLocais(), isEmpty);
+    });
+
+    test('a cópia remota recriada depois da exclusão volta a descer',
+        () async {
+      final db = await DatabaseHelper.instance.database;
+      // Apagado aqui fora do ar; enquanto isso o outro aparelho recriou o
+      // item (updated_at mais novo que a exclusão). A recriação vence.
+      servidor.foraDoAr = true;
+      await service.deleteItem(SyncEntity.dreams, 'sonho-5');
+      servidor.foraDoAr = false;
+
+      final agora = DateTime.now().millisecondsSinceEpoch;
+      servidor.tabelas['dreams'] = [
+        sonhoRemoto('sonho-5', updatedAt: agora + 60000),
+      ];
+
+      final resultado = await service.syncAll();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+
+      final local =
+          await db.query('dreams', where: 'id = ?', whereArgs: ['sonho-5']);
+      expect(local, hasLength(1),
+          reason: 'a recriação mais nova desce mesmo com lápide local');
+      expect(await lapidesLocais(), isEmpty);
+    });
+
+    test('recriar sob o mesmo id derruba a lápide', () async {
+      final db = await DatabaseHelper.instance.database;
+      // O caso do Perfil Mágico, cujo id é o do mapa: apagar e gerar de
+      // novo reusa o id. A lápide da exclusão não pode purgar a recriação.
+      servidor.foraDoAr = true;
+      await service.deleteItem(SyncEntity.dreams, 'sonho-6');
+      servidor.foraDoAr = false;
+
+      final agora = DateTime.now().millisecondsSinceEpoch;
+      await db.insert('dreams', sonho('sonho-6', updatedAt: agora + 60000));
+
+      var resultado = await service.syncAll();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+      expect(servidor.linhasDe('dreams'), hasLength(1));
+      expect(await lapidesLocais(), isEmpty,
+          reason: 'subir a linha é afirmar que ela existe');
+
+      // E a varredura seguinte não pode desfazer: a lápide remota que
+      // sobrou é mais velha que a linha e cai.
+      resultado = await service.syncAll();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+      final local =
+          await db.query('dreams', where: 'id = ?', whereArgs: ['sonho-6']);
+      expect(local, hasLength(1));
+      expect(servidor.linhasDe('dreams'), hasLength(1));
+      expect(servidor.linhasDe('sync_tombstones'), isEmpty);
+    });
+
+    test('sem a migração no painel, a purga ainda impede a ressurreição',
+        () async {
+      // Até sync_tombstones_migration.sql rodar, as operações de lápide
+      // falham no servidor. A purga da linha não depende delas.
+      servidor.semTabelaDeLapides = true;
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('dreams', sonho('sonho-7'));
+      await service.syncAll();
+
+      servidor.foraDoAr = true;
+      await db.delete('dreams', where: 'id = ?', whereArgs: ['sonho-7']);
+      await service.deleteItem(SyncEntity.dreams, 'sonho-7');
+      servidor.foraDoAr = false;
+
+      final resultado = await service.syncAll();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+
+      expect(
+        await db.query('dreams', where: 'id = ?', whereArgs: ['sonho-7']),
+        isEmpty,
+      );
+      expect(servidor.linhasDe('dreams'), isEmpty);
+      final locais = await lapidesLocais();
+      expect(locais, hasLength(1));
+      expect(locais.first['synced'], 0,
+          reason: 'a lápide fica pendente até a migração existir, para os '
+              'outros aparelhos saberem um dia');
+    });
+
+    test('fullDownload não traz de volta o que foi apagado', () async {
+      final db = await DatabaseHelper.instance.database;
+      await db.insert('dreams', sonho('sonho-8'));
+      await service.syncAll();
+
+      servidor.foraDoAr = true;
+      await db.delete('dreams', where: 'id = ?', whereArgs: ['sonho-8']);
+      await service.deleteItem(SyncEntity.dreams, 'sonho-8');
+      servidor.foraDoAr = false;
+
+      final resultado = await service.fullDownload();
+      expect(resultado.success, isTrue, reason: resultado.detailedError);
+
+      expect(
+        await db.query('dreams', where: 'id = ?', whereArgs: ['sonho-8']),
+        isEmpty,
+        reason: 'o "baixar tudo" era o caminho mais largo da ressurreição',
+      );
+      expect(servidor.linhasDe('dreams'), isEmpty);
     });
   });
 }

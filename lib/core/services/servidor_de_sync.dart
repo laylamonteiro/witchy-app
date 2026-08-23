@@ -29,6 +29,26 @@ abstract class ServidorDeSync {
 
   /// Apaga as linhas da pessoa que não são do dia informado.
   Future<void> apagarOutrosDias(String tabela, String userId, String date);
+
+  /// As lápides da pessoa no servidor: as exclusões que outros aparelhos
+  /// registraram e esta instalação ainda precisa aplicar.
+  Future<List<Map<String, dynamic>>> lapidesDoUsuario(String userId);
+
+  /// Registra uma lápide no servidor (insere ou atualiza).
+  Future<void> gravarLapide(Map<String, dynamic> lapide);
+
+  /// Remove uma lápide do servidor — a exclusão perdeu para uma edição ou
+  /// recriação mais nova do item.
+  Future<void> apagarLapide(String userId, String entity, String itemId);
+
+  /// Apaga a linha da pessoa com este id, mas SÓ se ela não é mais nova que
+  /// o instante dado: uma linha regravada depois da exclusão sobrevive.
+  Future<void> apagarLinhaAteQuando(
+    String tabela,
+    String userId,
+    dynamic id,
+    String updatedAtIso,
+  );
 }
 
 /// A implementação de produção, sobre o cliente Supabase.
@@ -86,5 +106,49 @@ class ServidorSupabase implements ServidorDeSync {
         .delete()
         .eq('user_id', userId)
         .neq('date', date);
+  }
+
+  /// A tabela remota das lápides (supabase/sync_tombstones_migration.sql).
+  static const _tabelaDeLapides = 'sync_tombstones';
+
+  @override
+  Future<List<Map<String, dynamic>>> lapidesDoUsuario(String userId) async {
+    final response = await _client
+        .from(_tabelaDeLapides)
+        .select()
+        .eq('user_id', userId);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  @override
+  Future<void> gravarLapide(Map<String, dynamic> lapide) async {
+    await _client
+        .from(_tabelaDeLapides)
+        .upsert(lapide, onConflict: 'user_id,entity,item_id');
+  }
+
+  @override
+  Future<void> apagarLapide(String userId, String entity, String itemId) async {
+    await _client
+        .from(_tabelaDeLapides)
+        .delete()
+        .eq('user_id', userId)
+        .eq('entity', entity)
+        .eq('item_id', itemId);
+  }
+
+  @override
+  Future<void> apagarLinhaAteQuando(
+    String tabela,
+    String userId,
+    dynamic id,
+    String updatedAtIso,
+  ) async {
+    await _client
+        .from(tabela)
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId)
+        .lte('updated_at', updatedAtIso);
   }
 }

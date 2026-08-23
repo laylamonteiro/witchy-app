@@ -331,6 +331,12 @@ class DataSyncService {
       int totalConflictsResolved = 0;
       final entityErrors = <String, String>{};
 
+      // As exclusões viajam ANTES das entidades: aplicar o que os outros
+      // aparelhos apagaram e purgar no servidor o que foi apagado aqui.
+      // Na ordem inversa, o download ressuscitaria o item primeiro.
+      await _aplicarLapidesRemotas();
+      await _subirLapidesLocais();
+
       for (final entity in SyncEntity.values) {
         final result = await _syncEntity(entity, useResolution);
         totalUploaded += result.uploaded;
@@ -440,9 +446,30 @@ class DataSyncService {
         }
       }
 
-      // 4. Baixar dados que só existem no servidor
+      // 4. Baixar dados que só existem no servidor — exceto os que têm
+      // lápide: "só existe no servidor" também descreve o item que acabou
+      // de ser apagado aqui, e baixá-lo de volta é ressuscitá-lo.
+      final lapides = await _lapidesLocais(entity.name);
       final localIds = localData.map((e) => e['id']).toSet();
       for (final remote in remoteData) {
+        final lapide = lapides[remote['id'].toString()];
+        if (lapide != null) {
+          final remoteUpdatedAt =
+              _parseDateTime(remote['updated_at']).millisecondsSinceEpoch;
+          if (remoteUpdatedAt <= lapide) continue;
+          // A cópia remota é mais nova que a exclusão (recriada ou editada
+          // noutro aparelho): ela vence e a lápide cai dos dois lados.
+          await _apagarLapideLocal(entity.name, remote['id'].toString());
+          try {
+            await _servidor!.apagarLapide(
+              currentUserId!,
+              entity.name,
+              remote['id'].toString(),
+            );
+          } catch (e) {
+            unawaited(debugLog('SYNC', 'falha ao derrubar lapide: $e'));
+          }
+        }
         if (!localIds.contains(remote['id'])) {
           // Nas tabelas de um-dia-só, o mesmo DIA pode existir localmente
           // com outro uuid (instalação/aparelho diferente) — checar só o
@@ -796,6 +823,21 @@ class DataSyncService {
       return;
     }
     await _servidor!.upsert(table, remoteItem);
+
+    // Subir uma linha é afirmar que ela existe: qualquer lápide local dela
+    // é de uma exclusão anterior à recriação e cai aqui — senão a própria
+    // varredura desta instalação purgaria no servidor o que acabou de subir.
+    final entityName = _entityNameForRemoteTable(table);
+    if (entityName != null) {
+      await _apagarLapideLocal(entityName, remoteItem['id'].toString());
+    }
+  }
+
+  static String? _entityNameForRemoteTable(String table) {
+    for (final entity in SyncEntity.values) {
+      if (supabaseTableFor(entity) == table) return entity.name;
+    }
+    return null;
   }
 
   static Set<String> _splitRites(String? raw) => raw == null || raw.isEmpty
@@ -1134,19 +1176,240 @@ class DataSyncService {
     }
   }
 
+  /// A tabela local das lápides (DatabaseHelper, v23).
+  static const _tabelaDeLapides = 'sync_tombstones';
+
   /// Deleta um item do Supabase.
   ///
   /// Sem paywall, e é essencial que seja assim: se o apagar local não
   /// chegasse à nuvem, o próximo download traria o registro de volta.
+  ///
+  /// A lápide vem ANTES de qualquer guarda: sem rede, sem conta ou com o
+  /// sync desligado, o aviso à nuvem não acontece agora — e a lápide é o que
+  /// lembra a exclusão até ele acontecer. Era exatamente por faltar essa
+  /// memória que o item apagado num túnel ressuscitava quando a rede
+  /// voltava.
   Future<void> deleteItem(SyncEntity entity, dynamic id) async {
+    final int deletedAt;
+    try {
+      deletedAt = await _gravarLapideLocal(entity, id);
+    } catch (e) {
+      // deleteItem sempre foi chamado sem await pelos repositórios e não
+      // pode virar erro solto. Sem banco utilizável não há o que lembrar —
+      // e também não houve exclusão local para ressuscitar.
+      unawaited(debugLog('SYNC', 'falha ao gravar lapide de ${entity.name}: $e'));
+      return;
+    }
+
     if (!isReady) return;
     if (!await cloudSyncEnabled) return;
 
     try {
-      final tableName = supabaseTableFor(entity);
-      await _servidor!.apagarLinha(tableName, currentUserId!, id);
+      final completa =
+          await _purgarNoServidor(entity.name, id.toString(), deletedAt);
+      if (completa) {
+        await _marcarLapideSincronizada(entity.name, id.toString());
+      }
     } catch (e) {
-      debugPrint('Erro ao deletar item do Supabase: $e');
+      // A linha remota segue viva por ora; a lápide fica com synced=0 e a
+      // próxima varredura tenta de novo. O rastro vai para o diário de
+      // diagnóstico — debugPrint não existe em produção.
+      unawaited(debugLog('SYNC', 'falha ao purgar ${entity.name}/$id: $e'));
+    }
+  }
+
+  /// Grava a lápide local de um item apagado e devolve o instante (ms).
+  Future<int> _gravarLapideLocal(SyncEntity entity, dynamic id) async {
+    final db = await _db.database;
+    final deletedAt = DateTime.now().millisecondsSinceEpoch;
+    await db.insert(
+      _tabelaDeLapides,
+      {
+        'entity': entity.name,
+        'item_id': id.toString(),
+        'user_id': currentUserId ?? 'local_user',
+        'deleted_at': deletedAt,
+        'synced': 0,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    return deletedAt;
+  }
+
+  /// Leva uma exclusão ao servidor: registra a lápide e purga a linha —
+  /// mas nunca uma linha mais nova que a lápide, porque recriação e edição
+  /// vencem a exclusão (a mesma regra `mostRecent` dos conflitos).
+  ///
+  /// Devolve `false` quando a lápide remota não pôde ser registrada (a
+  /// migração `sync_tombstones_migration.sql` ainda não rodou no painel):
+  /// a purga da linha acontece do mesmo jeito — é ela que impede a
+  /// ressurreição — e a lápide local fica pendente para tentar de novo.
+  Future<bool> _purgarNoServidor(
+    String entityName,
+    String itemId,
+    int deletedAtMs,
+  ) async {
+    final entity = SyncEntity.values.byName(entityName);
+    final deletedAtIso = DateTime.fromMillisecondsSinceEpoch(deletedAtMs)
+        .toUtc()
+        .toIso8601String();
+
+    var lapideRegistrada = true;
+    try {
+      await _servidor!.gravarLapide({
+        'user_id': currentUserId,
+        'entity': entityName,
+        'item_id': itemId,
+        'deleted_at': deletedAtIso,
+      });
+    } catch (_) {
+      lapideRegistrada = false;
+    }
+
+    await _servidor!.apagarLinhaAteQuando(
+      supabaseTableFor(entity),
+      currentUserId!,
+      itemId,
+      deletedAtIso,
+    );
+    return lapideRegistrada;
+  }
+
+  Future<void> _marcarLapideSincronizada(String entityName, String itemId) async {
+    final db = await _db.database;
+    await db.update(
+      _tabelaDeLapides,
+      {'synced': 1},
+      where: 'entity = ? AND item_id = ? AND user_id = ?',
+      whereArgs: [entityName, itemId, currentUserId],
+    );
+  }
+
+  Future<void> _apagarLapideLocal(String entityName, String itemId) async {
+    final db = await _db.database;
+    await db.delete(
+      _tabelaDeLapides,
+      where: 'entity = ? AND item_id = ? AND user_id = ?',
+      whereArgs: [entityName, itemId, currentUserId],
+    );
+  }
+
+  /// As lápides locais de uma entidade: id apagado → instante (ms).
+  Future<Map<String, int>> _lapidesLocais(String entityName) async {
+    final db = await _db.database;
+    final rows = await db.query(
+      _tabelaDeLapides,
+      where: 'entity = ? AND user_id = ?',
+      whereArgs: [entityName, currentUserId],
+    );
+    return {
+      for (final row in rows)
+        row['item_id'] as String: (row['deleted_at'] as int?) ?? 0,
+    };
+  }
+
+  /// Aplica as lápides que outros aparelhos deixaram no servidor: apaga
+  /// aqui o que foi apagado lá — a menos que a cópia local seja mais nova
+  /// que a exclusão, caso em que a edição vence e a lápide cai.
+  Future<void> _aplicarLapidesRemotas() async {
+    final uid = currentUserId!;
+    List<Map<String, dynamic>> remotas;
+    try {
+      remotas = await _servidor!.lapidesDoUsuario(uid);
+    } catch (e) {
+      // Sem a tabela remota (migração do painel pendente) não há exclusão
+      // de outros aparelhos para aplicar; as lápides locais seguem valendo.
+      unawaited(debugLog('SYNC', 'sem lapides remotas: $e'));
+      return;
+    }
+
+    final db = await _db.database;
+    for (final remota in remotas) {
+      final entityName = remota['entity'] as String?;
+      final itemId = remota['item_id']?.toString();
+      if (entityName == null || itemId == null) continue;
+
+      final SyncEntity entity;
+      try {
+        entity = SyncEntity.values.byName(entityName);
+      } catch (_) {
+        // Entidade que esta versão do app ainda não conhece.
+        continue;
+      }
+      final deletedAt =
+          _parseDateTime(remota['deleted_at']).millisecondsSinceEpoch;
+      final localTable = localTableFor(entity);
+
+      final rows = await db.query(
+        localTable,
+        where: 'id = ?',
+        whereArgs: [itemId],
+        limit: 1,
+      );
+      if (rows.isNotEmpty) {
+        final updatedAt =
+            _parseDateTime(rows.first['updated_at']).millisecondsSinceEpoch;
+        if (updatedAt > deletedAt) {
+          // A linha local foi editada/recriada DEPOIS da exclusão: ela
+          // vence, volta a subir e a lápide cai dos dois lados.
+          await db.update(
+            localTable,
+            {'synced': 0},
+            where: 'id = ?',
+            whereArgs: [itemId],
+          );
+          await _apagarLapideLocal(entityName, itemId);
+          try {
+            await _servidor!.apagarLapide(uid, entityName, itemId);
+          } catch (e) {
+            unawaited(debugLog('SYNC', 'falha ao derrubar lapide: $e'));
+          }
+          continue;
+        }
+        await db.delete(localTable, where: 'id = ?', whereArgs: [itemId]);
+      }
+
+      // Guardar a lápide localmente (já sincronizada): é ela que barra o
+      // download de trazer o item de volta nesta varredura e nas próximas.
+      await db.insert(
+        _tabelaDeLapides,
+        {
+          'entity': entityName,
+          'item_id': itemId,
+          'user_id': uid,
+          'deleted_at': deletedAt,
+          'synced': 1,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  /// Sobe as lápides locais pendentes: purga no servidor as linhas dos
+  /// itens apagados aqui. É a retentativa do aviso que o [deleteItem] não
+  /// conseguiu dar na hora.
+  Future<void> _subirLapidesLocais() async {
+    final db = await _db.database;
+    final pendentes = await db.query(
+      _tabelaDeLapides,
+      where: 'synced = 0 AND user_id = ?',
+      whereArgs: [currentUserId],
+    );
+
+    for (final lapide in pendentes) {
+      final entityName = lapide['entity'] as String;
+      final itemId = lapide['item_id'] as String;
+      try {
+        final completa = await _purgarNoServidor(
+          entityName,
+          itemId,
+          (lapide['deleted_at'] as int?) ?? 0,
+        );
+        if (completa) await _marcarLapideSincronizada(entityName, itemId);
+      } catch (e) {
+        unawaited(
+            debugLog('SYNC', 'falha ao purgar $entityName/$itemId: $e'));
+      }
     }
   }
 
@@ -1162,6 +1425,12 @@ class DataSyncService {
     _setStatus(SyncStatus.syncing);
 
     try {
+      // Exclusões primeiro, como no syncAll: purgar no servidor o que foi
+      // apagado aqui e ainda não subiu — senão o "baixar tudo" traz de
+      // volta exatamente o que a pessoa acabou de apagar.
+      await _aplicarLapidesRemotas();
+      await _subirLapidesLocais();
+
       final downloadedByTable = <String, List<Map<String, dynamic>>>{};
       final entityErrors = <String, String>{};
       for (final entity in SyncEntity.values) {
@@ -1169,8 +1438,18 @@ class DataSyncService {
           final tableName = supabaseTableFor(entity);
           final localTable = localTableFor(entity);
           final remoteData = await _getRemoteData(tableName);
-          downloadedByTable[localTable] =
-              remoteData.map((item) => _toLocal(tableName, item)).toList();
+          // O mesmo filtro do download incremental: linha com lápide mais
+          // nova que ela não aterrissa.
+          final lapides = await _lapidesLocais(entity.name);
+          downloadedByTable[localTable] = remoteData
+              .map((item) => _toLocal(tableName, item))
+              .where((item) {
+            final lapide = lapides[item['id'].toString()];
+            if (lapide == null) return true;
+            return _parseDateTime(item['updated_at'])
+                    .millisecondsSinceEpoch >
+                lapide;
+          }).toList();
         } catch (e) {
           entityErrors[entity.name] = e.toString();
         }
@@ -1221,6 +1500,12 @@ class DataSyncService {
     try {
       int totalUploaded = 0;
       final entityErrors = <String, String>{};
+
+      // O "enviar tudo" também envia as exclusões pendentes — sem isso, a
+      // linha que morreu aqui sobreviveria no servidor e voltaria no
+      // próximo download. As lápides remotas NÃO são aplicadas: este é o
+      // caminho em que o estado deste aparelho é a verdade a enviar.
+      await _subirLapidesLocais();
 
       for (final entity in SyncEntity.values) {
         try {

@@ -47,6 +47,13 @@ void main() {
       }
     });
 
+    test('inclui as lápides do sync', () {
+      // `sync_tombstones` não é entidade, mas registra QUAIS ids existiram
+      // e quando foram apagados — rastro da pessoa, some junto com ela.
+      expect(SupabaseAuthRepository.tabelasDaExclusaoDeConta(),
+          contains('sync_tombstones'));
+    });
+
     test('apaga o perfil, e por último', () {
       final tabelas = SupabaseAuthRepository.tabelasDaExclusaoDeConta();
 
@@ -62,8 +69,8 @@ void main() {
 
       expect(tabelas.toSet().length, tabelas.length,
           reason: 'tabela repetida vira DELETE duplicado');
-      expect(tabelas.length, SyncEntity.values.length + 1,
-          reason: 'as 20 entidades mais profiles');
+      expect(tabelas.length, SyncEntity.values.length + 2,
+          reason: 'as 20 entidades, as lápides do sync e profiles');
       expect(tabelas.every((t) => t.isNotEmpty), isTrue);
     });
   });

@@ -59,7 +59,7 @@ class DatabaseHelper {
     // é no-op — o sqflite envolve os dois numa transação).
     return await openDatabase(
       path,
-      version: 22,
+      version: 23,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -403,6 +403,9 @@ class DatabaseHelper {
     await db.execute(_createTarotReadingsSql);
     await db.execute(
         'CREATE INDEX idx_tarot_readings_user_id ON tarot_readings(user_id)');
+
+    // Lápides da sincronização (ver _createSyncTombstonesSql)
+    await db.execute(_createSyncTombstonesSql);
 
     // Criar índices para user_id em todas as tabelas
     await db.execute('CREATE INDEX idx_spells_user_id ON spells(user_id)');
@@ -1163,6 +1166,13 @@ class DatabaseHelper {
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_tarot_readings_user_id ON tarot_readings(user_id)');
     }
+
+    // v23: lápides da sincronização. Sem elas, o item apagado num aparelho
+    // ressuscita no download do sync seguinte — o apagar local sumia com a
+    // linha e, se o aviso à nuvem falhasse, a cópia do servidor voltava.
+    if (oldVersion < 23) {
+      await db.execute(_createSyncTombstonesSql);
+    }
   }
 
   /// SQL da tabela de tiragens de Tarô — compartilhado entre onCreate e a
@@ -1183,6 +1193,26 @@ class DatabaseHelper {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         synced INTEGER NOT NULL DEFAULT 0
+      )
+    ''';
+
+  /// SQL das lápides da sincronização — compartilhado entre onCreate e a
+  /// migração v23 para nunca divergirem.
+  ///
+  /// Uma lápide registra "este item foi apagado, e quando". É ela que impede
+  /// o download da sincronização de ressuscitar o que a pessoa apagou:
+  /// `entity` é o nome do [SyncEntity] (o mesmo dos dois lados, local e
+  /// Supabase), `deleted_at` decide quem vence quando o item foi editado ou
+  /// recriado depois da exclusão, e `synced` marca se a exclusão já chegou
+  /// ao servidor.
+  static const _createSyncTombstonesSql = '''
+      CREATE TABLE IF NOT EXISTS sync_tombstones (
+        entity TEXT NOT NULL,
+        item_id TEXT NOT NULL,
+        user_id TEXT NOT NULL DEFAULT 'local_user',
+        deleted_at INTEGER NOT NULL,
+        synced INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (entity, item_id, user_id)
       )
     ''';
 
@@ -1291,6 +1321,10 @@ class DatabaseHelper {
           DataSyncService.localTableFor(entity),
         // Não sincroniza, mas também nasce anônima e precisa ser adotada.
         'guided_ritual_logs',
+        // As lápides também: o que foi apagado antes de entrar na conta
+        // precisa ser purgado da nuvem depois do login, senão o download
+        // seguinte ressuscita o item sob a conta nova.
+        'sync_tombstones',
       }..remove('spells');
 
   /// Associa dados anônimos/legados à primeira conta autenticada que os abrir.
