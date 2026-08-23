@@ -249,24 +249,100 @@ class NotificationService {
     );
   }
 
+  /// Janela do lembrete diário: 14 avisos avulsos, um por dia, cada um com
+  /// a SUA mensagem — a rotação que impede o lembrete de virar papel de
+  /// parede. O reagendamento (a cada abertura do app) recomeça a janela;
+  /// quem fica 14 dias sem abrir para de receber o diário — e é para essa
+  /// ausência que existem os convites de volta ([scheduleWinBack]).
+  static const int dailyReminderWindowDays = 14;
+
+  /// Qual mensagem do pool cabe a um DIA do calendário. Determinístico de
+  /// propósito: reabrir o app no meio da janela não embaralha os textos, e
+  /// dias seguidos nunca repetem a mesma mensagem.
+  @visibleForTesting
+  static int dailyMessageIndex(DateTime day, int poolLength) =>
+      (DateTime.utc(day.year, day.month, day.day).millisecondsSinceEpoch ~/
+              Duration.millisecondsPerDay) %
+      poolLength;
+
+  /// O pool de mensagens do lembrete diário do Salem. Estático e recebendo
+  /// o l10n para os testes travarem o contrato (10 mensagens, todas
+  /// distintas) sem montar o serviço.
+  @visibleForTesting
+  static List<({String title, String body})> dailyMessagePool(
+    AppLocalizations l10n,
+  ) =>
+      [
+        (title: l10n.notifDailyTitle, body: l10n.notifDailyBody),
+        (title: l10n.notifDailyTitle2, body: l10n.notifDailyBody2),
+        (title: l10n.notifDailyTitle3, body: l10n.notifDailyBody3),
+        (title: l10n.notifDailyTitle4, body: l10n.notifDailyBody4),
+        (title: l10n.notifDailyTitle5, body: l10n.notifDailyBody5),
+        (title: l10n.notifDailyTitle6, body: l10n.notifDailyBody6),
+        (title: l10n.notifDailyTitle7, body: l10n.notifDailyBody7),
+        (title: l10n.notifDailyTitle8, body: l10n.notifDailyBody8),
+        (title: l10n.notifDailyTitle9, body: l10n.notifDailyBody9),
+        (title: l10n.notifDailyTitle10, body: l10n.notifDailyBody10),
+      ];
+
   /// Lembrete diário do Salem, no horário escolhido pela Bruxa.
   ///
   /// É a única notificação que não depende de evento astronômico: existe para
-  /// sustentar o hábito (e a sequência de dias) nos dias comuns.
+  /// sustentar o hábito (e a sequência de dias) nos dias comuns. Deixou de
+  /// ser UM aviso recorrente com texto fixo — todo dia a mesma frase vira
+  /// ruído que o dedo aprende a dispensar — e virou a janela de 14 avisos
+  /// avulsos, cada dia com a mensagem que o [dailyMessageIndex] lhe dá.
   Future<void> scheduleDailyReminder({required int hour, int minute = 0}) async {
+    final pool = dailyMessagePool(_l10n);
     final now = DateTime.now();
-    var next = DateTime(now.year, now.month, now.day, hour, minute);
-    if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
+    var first = DateTime(now.year, now.month, now.day, hour, minute);
+    if (!first.isAfter(now)) first = first.add(const Duration(days: 1));
 
-    await _notifications.zonedSchedule(
-      dailyReminderNotificationId,
-      _l10n.notifDailyTitle,
-      _l10n.notifDailyBody,
-      tz.TZDateTime.from(next.toUtc(), tz.UTC),
-      _moonDetails(),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      // Mesmo horário todo dia.
-      matchDateTimeComponents: DateTimeComponents.time,
+    for (var i = 0; i < dailyReminderWindowDays; i++) {
+      final day = DateTime(
+        first.year,
+        first.month,
+        first.day + i,
+        hour,
+        minute,
+      );
+      final mensagem = pool[dailyMessageIndex(day, pool.length)];
+      await _schedule(
+        id: dailyReminderNotificationId + i,
+        title: mensagem.title,
+        body: mensagem.body,
+        localDate: day,
+        details: _moonDetails(),
+        payload: AppDeepLink.yourDay.payload,
+      );
+    }
+  }
+
+  /// Ids fixos dos convites de volta (um slot por prazo).
+  static const int winBackD3NotificationId = 810001;
+  static const int winBackD7NotificationId = 810002;
+
+  /// A rede da ausência: dois convites de volta, 3 e 7 dias à frente,
+  /// reagendados a CADA abertura do app. Quem abre antes nunca os vê — o
+  /// reagendamento empurra o prazo para a frente — e quem se afastou recebe
+  /// o Salem batendo na janela. Retenção sem servidor: é o mesmo truque do
+  /// prazo móvel, todo local.
+  Future<void> scheduleWinBack({required int hour}) async {
+    final now = DateTime.now();
+    await _schedule(
+      id: winBackD3NotificationId,
+      title: _l10n.notifWinBack3Title,
+      body: _l10n.notifWinBack3Body,
+      localDate: DateTime(now.year, now.month, now.day + 3, hour),
+      details: _moonDetails(),
+      payload: AppDeepLink.yourDay.payload,
+    );
+    await _schedule(
+      id: winBackD7NotificationId,
+      title: _l10n.notifWinBack7Title,
+      body: _l10n.notifWinBack7Body,
+      localDate: DateTime(now.year, now.month, now.day + 7, hour),
+      details: _moonDetails(),
       payload: AppDeepLink.yourDay.payload,
     );
   }
@@ -403,6 +479,10 @@ class NotificationService {
       }
       if (dailyReminder) {
         await scheduleDailyReminder(hour: dailyReminderHour);
+        // Os convites de volta andam com o lembrete diário: é a mesma
+        // escolha ("o Salem pode me chamar?") vista de dois ângulos —
+        // desligar o diário desliga também a rede da ausência.
+        await scheduleWinBack(hour: dailyReminderHour);
       }
       final pending = await _notifications.pendingNotificationRequests();
       return NotificationScheduleResult(
