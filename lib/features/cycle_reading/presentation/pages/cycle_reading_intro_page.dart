@@ -591,15 +591,16 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // A tela abre COMPLETA (decisão da dona, 23/08): o cartão da
-            // leitura — com os avisos e o "O que vem na leitura" dentro —
-            // já na janela sugerida, e logo abaixo o que é enviado para a
-            // análise. O calendário deixa de ser a única coisa à vista e
-            // vira o "ler outro período", mais adiante.
+            // A tela abre COMPLETA (decisão da dona, 23/08): o calendário
+            // continua no TOPO — agora baixo, com os atalhos de período em
+            // cima — e, já na abertura, aparecem o cartão da leitura (com
+            // "O que vem na leitura" dentro) e o que é enviado para a
+            // análise: a pessoa sabe exatamente o que compra e o que os
+            // dados alimentam antes de qualquer toque.
+            _buildCalendario(l10n),
             Container(key: _ancoraDaOferta),
             _buildOfferCard(l10n),
             _buildPrivacidade(l10n),
-            _buildCalendario(l10n),
             _buildConviteDoMapa(l10n),
             _buildLeiturasRecentes(l10n),
           ],

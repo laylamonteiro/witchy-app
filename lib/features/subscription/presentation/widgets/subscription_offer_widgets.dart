@@ -29,7 +29,7 @@ class SubscriptionHero extends StatelessWidget {
           child: compact
               ? const Column(
                   children: [
-                    _CatHeroArt(height: 92),
+                    CatHeroArt(height: 92),
                     _HeroCopy(centered: true, compact: true),
                   ],
                 )
@@ -38,7 +38,7 @@ class SubscriptionHero extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 4,
-                      child: _CatHeroArt(height: 120),
+                      child: CatHeroArt(height: 120),
                     ),
                     SizedBox(width: 6),
                     Expanded(flex: 7, child: _HeroCopy()),
@@ -50,10 +50,13 @@ class SubscriptionHero extends StatelessWidget {
   }
 }
 
-class _CatHeroArt extends StatelessWidget {
+/// A arte do herói — o Salem no halo lilás. Pública porque é a ASSINATURA
+/// visual dos paywalls: o da Leitura do Ciclo usa a mesma arte, em altura
+/// menor, para as duas folhas lerem como o mesmo app.
+class CatHeroArt extends StatelessWidget {
   final double height;
 
-  const _CatHeroArt({required this.height});
+  const CatHeroArt({super.key, required this.height});
 
   @override
   Widget build(BuildContext context) {
@@ -344,6 +347,7 @@ class OfferBenefit {
     this.vislumbre,
     this.assetPath,
     this.iconData,
+    this.emoji,
     this.highlighted = false,
   });
 
@@ -363,6 +367,12 @@ class OfferBenefit {
         vislumbre: vislumbre,
       );
 
+  /// Selo por EMOJI: as seções da Leitura do Ciclo têm o próprio emoji no
+  /// título, e ele dentro do selo circular faz o papel das artes pintadas
+  /// dos benefícios Premium — colorido, com o rótulo limpo ao lado.
+  factory OfferBenefit.emoji(String emoji, String label) =>
+      OfferBenefit._(emoji: emoji, label: label);
+
   final String label;
 
   /// A linha do que a feature entrega. Nula nas peças que são fato, não
@@ -371,6 +381,7 @@ class OfferBenefit {
 
   final String? assetPath;
   final IconData? iconData;
+  final String? emoji;
   final bool highlighted;
 }
 
@@ -425,11 +436,19 @@ class OfferBenefitRow extends StatelessWidget {
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.high,
                   )
-                : Icon(
-                    benefit.iconData,
-                    size: compacto ? 15 : 22,
-                    color: context.gc.lilac,
-                  ),
+                : benefit.emoji != null
+                    ? Center(
+                        child: Text(
+                          benefit.emoji!,
+                          style:
+                              TextStyle(fontSize: compacto ? 13 : 19),
+                        ),
+                      )
+                    : Icon(
+                        benefit.iconData,
+                        size: compacto ? 15 : 22,
+                        color: context.gc.lilac,
+                      ),
           ),
           const SizedBox(width: 10),
           Expanded(

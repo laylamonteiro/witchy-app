@@ -18,6 +18,10 @@ void main() {
 
   final l10n = lookupAppLocalizations(const Locale('pt', 'BR'));
 
+  // Na folha, o emoji do título vai para DENTRO do selo circular e o rótulo
+  // fica limpo ao lado — os testes procuram o rótulo, como a pessoa o lê.
+  String rotulo(String titulo) => PaywallDaLeitura.separarEmoji(titulo).rotulo;
+
   const abrir = ValueKey('abrir_paywall');
 
   Widget tela({
@@ -50,9 +54,8 @@ void main() {
         ),
       );
 
-  /// Abre a folha com quadros contados na mão. Sem `pumpAndSettle` em tela
-  /// nenhuma daqui: o BreathingBadge respira em laço infinito e a cascata do
-  /// StaggeredEntrance também anima — settle esperaria para sempre.
+  /// Abre a folha com quadros contados na mão — o padrão da suíte para
+  /// telas com animação de entrada (a cascata do StaggeredEntrance).
   Future<void> abrirFolha(WidgetTester tester, Widget host) async {
     // Superfície alta de propósito: a folha limita a própria altura a 92%
     // da tela, e numa superfície de 600px o CTA nasceria fora da dobra.
@@ -86,7 +89,7 @@ void main() {
       l10n.cycleReadingSectionAffirmation,
       l10n.cycleReadingSectionSeal,
     ]) {
-      expect(find.text(titulo), findsOneWidget,
+      expect(find.text(rotulo(titulo)), findsOneWidget,
           reason: 'cada seção do produto completo vira um bullet');
     }
     expect(find.text(l10n.cycleReadingPaywallWeekUpsell), findsNothing,
@@ -110,12 +113,12 @@ void main() {
       l10n.cycleReadingSectionForecast,
       l10n.cycleReadingSectionAffirmation,
     ]) {
-      expect(find.text(titulo), findsOneWidget);
+      expect(find.text(rotulo(titulo)), findsOneWidget);
     }
     // O que só a lunação sustenta fica FORA da folha da semana...
-    expect(find.text(l10n.cycleReadingSectionPractice), findsNothing);
-    expect(find.text(l10n.cycleReadingSectionRituals), findsNothing);
-    expect(find.text(l10n.cycleReadingSectionSeal), findsNothing);
+    expect(find.text(rotulo(l10n.cycleReadingSectionPractice)), findsNothing);
+    expect(find.text(rotulo(l10n.cycleReadingSectionRituals)), findsNothing);
+    expect(find.text(rotulo(l10n.cycleReadingSectionSeal)), findsNothing);
     // ...e vira o upsell honesto, dito com todas as letras.
     expect(find.text(l10n.cycleReadingPaywallWeekUpsell), findsOneWidget);
   });

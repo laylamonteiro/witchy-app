@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/grimoire_colors.dart';
 import '../../../../core/widgets/staggered_entrance.dart';
-import '../../../auth/presentation/widgets/breathing_badge.dart';
 import '../../../subscription/presentation/widgets/subscription_offer_widgets.dart';
 import '../../data/models/cycle_reading_model.dart';
 import '../../data/services/cycle_reading_service.dart';
@@ -110,18 +109,18 @@ class PaywallDaLeitura extends StatelessWidget {
         _ => l10n.cycleReadingSectionSeal,
       };
 
-  /// O ícone do selo circular de cada seção — mesmo papel das artes dos
-  /// benefícios do paywall Premium.
-  IconData _iconeDaSecao(String chave) => switch (chave) {
-        CycleReadingSections.portrait => Icons.auto_stories,
-        CycleReadingSections.threads => Icons.timeline,
-        CycleReadingSections.sky => Icons.nights_stay,
-        CycleReadingSections.practice => Icons.self_improvement,
-        CycleReadingSections.forecast => Icons.auto_awesome,
-        CycleReadingSections.rituals => Icons.auto_fix_high,
-        CycleReadingSections.affirmation => Icons.format_quote,
-        _ => Icons.stars,
-      };
+  /// Divide o título da seção em (emoji, rótulo): o emoji vai para DENTRO
+  /// do selo circular — o papel das artes pintadas dos benefícios Premium —
+  /// e o rótulo fica limpo ao lado, sem o emoji duplicado.
+  @visibleForTesting
+  static ({String emoji, String rotulo}) separarEmoji(String titulo) {
+    final corte = titulo.indexOf(' ');
+    if (corte <= 0) return (emoji: '✦', rotulo: titulo);
+    return (
+      emoji: titulo.substring(0, corte),
+      rotulo: titulo.substring(corte + 1),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -224,10 +223,9 @@ class PaywallDaLeitura extends StatelessWidget {
               for (final chave in secoes)
                 OfferBenefitRow(
                   compacto: true,
-                  benefit: OfferBenefit.icon(
-                    _iconeDaSecao(chave),
-                    _tituloDaSecao(l10n, chave),
-                    highlighted: false,
+                  benefit: OfferBenefit.emoji(
+                    separarEmoji(_tituloDaSecao(l10n, chave)).emoji,
+                    separarEmoji(_tituloDaSecao(l10n, chave)).rotulo,
                   ),
                 ),
             ],
@@ -338,26 +336,10 @@ class PaywallDaLeitura extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          BreathingBadge(
-            glowColor: context.gc.lilac,
-            haloSize: 52,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: context.gc.lilac.withValues(alpha: 0.16),
-                border: Border.all(
-                  color: context.gc.lilac.withValues(alpha: 0.45),
-                ),
-              ),
-              child: Icon(
-                Icons.nightlight_round,
-                size: 20,
-                color: context.gc.lilac,
-              ),
-            ),
-          ),
+          // A MESMA arte do paywall Premium — o Salem no halo lilás — em
+          // altura menor: é a assinatura que faz as duas folhas lerem como
+          // o mesmo app.
+          const SizedBox(width: 72, child: CatHeroArt(height: 72)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

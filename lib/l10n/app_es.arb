@@ -1623,6 +1623,9 @@
   "cycleReadingCustomPeriodHint": "Hasta 8 días es Lectura de la Semana; de 9 a 31 días, Lectura de la Lunación.",
   "cycleReadingHeatLegend": "Los días marcados son aquellos en que registraste algo: cuanto más fuerte, más viva estuvo tu práctica.",
   "cycleReadingCustomPeriodConfirm": "Usar este periodo",
+  "cyclePreset30Days": "30 días",
+  "cyclePreset7Days": "7 días",
+  "cyclePresetOther": "Otro período",
   "cycleReadingSelectionSummary": "{days, plural, one{1 día} other{{days} días}} · {records, plural, =0{ningún registro} one{1 registro} other{{records} registros}}",
   "@cycleReadingSelectionSummary": {
     "placeholders": {
