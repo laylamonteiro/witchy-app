@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:grimorio_de_bolso/core/utils/saida_por_dois_toques.dart';
 import 'package:grimorio_de_bolso/core/utils/um_de_cada_vez.dart';
 import 'package:grimorio_de_bolso/core/widgets/guarda_de_voltar_web.dart';
 
@@ -144,6 +145,81 @@ void main() {
 
       expect(find.text('DE ONDE VEIO'), findsOneWidget);
       expect(find.text('ESPERANDO'), findsNothing);
+    });
+  });
+
+  /// Sair é destrutivo: na web a ABA se fecha. O gesto de voltar do Android
+  /// repete fácil, e a caminhada inteira (desempilhar → Seu Dia → aviso →
+  /// sair) cabia numa rajada de meio segundo — a aba fechava antes de a
+  /// Bruxa ver o Seu Dia (relato de 23/08).
+  group('sair só com um voltar deliberado', () {
+    final t0 = DateTime(2026, 8, 23, 18, 0, 0);
+
+    test('o primeiro voltar na raiz avisa, não sai', () {
+      final saida = SaidaPorDoisToques();
+      expect(saida.registrar(t0), DecisaoDeSaida.avisar);
+      expect(saida.avisando, isTrue);
+    });
+
+    test('rajada NUNCA sai, por mais que dure', () {
+      final saida = SaidaPorDoisToques();
+      expect(saida.registrar(t0), DecisaoDeSaida.avisar);
+      // Deslizadas a cada 150ms, por três segundos seguidos.
+      for (var ms = 150; ms <= 3000; ms += 150) {
+        expect(
+          saida.registrar(t0.add(Duration(milliseconds: ms))),
+          DecisaoDeSaida.ignorar,
+          reason: 'a rajada em ${ms}ms não pode fechar a aba',
+        );
+      }
+    });
+
+    test('o segundo voltar deliberado sai', () {
+      final saida = SaidaPorDoisToques();
+      saida.registrar(t0);
+      expect(
+        saida.registrar(t0.add(const Duration(milliseconds: 900))),
+        DecisaoDeSaida.sair,
+      );
+    });
+
+    test('depois da janela, o aviso caduca e tudo recomeça', () {
+      final saida = SaidaPorDoisToques();
+      saida.registrar(t0);
+      expect(
+        saida.registrar(t0.add(const Duration(seconds: 5))),
+        DecisaoDeSaida.avisar,
+      );
+    });
+
+    test('uma rajada longa deixa a saída a UM toque deliberado de distância',
+        () {
+      // O que a pessoa vive: desliza várias vezes, o app para no Seu Dia com
+      // o aviso, ela pensa e toca uma vez — aí sim sai.
+      final saida = SaidaPorDoisToques();
+      saida.registrar(t0);
+      var agora = t0;
+      for (var i = 0; i < 6; i++) {
+        agora = agora.add(const Duration(milliseconds: 200));
+        expect(saida.registrar(agora), DecisaoDeSaida.ignorar);
+      }
+      expect(
+        saida.registrar(agora.add(const Duration(milliseconds: 1200))),
+        DecisaoDeSaida.sair,
+      );
+    });
+
+    test('caminhar (desempilhar, trocar de aba) esquece o aviso', () {
+      // Sem isto, um aviso dado no Seu Dia continuaria valendo depois de a
+      // pessoa navegar, e o voltar seguinte sairia de dentro de outra tela.
+      final saida = SaidaPorDoisToques();
+      saida.registrar(t0);
+      saida.esquecer();
+      expect(saida.avisando, isFalse);
+      expect(
+        saida.registrar(t0.add(const Duration(milliseconds: 900))),
+        DecisaoDeSaida.avisar,
+      );
     });
   });
 }

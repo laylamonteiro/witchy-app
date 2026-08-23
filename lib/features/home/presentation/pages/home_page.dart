@@ -12,6 +12,7 @@ import '../../../../core/navigation/app_deep_link.dart';
 import '../../../../core/navigation/section_reset_notifier.dart';
 import '../../../../core/providers/mascot_provider.dart';
 import '../../../../core/theme/grimoire_colors.dart';
+import '../../../../core/utils/saida_por_dois_toques.dart';
 import '../../../../core/utils/um_de_cada_vez.dart';
 import '../../../../core/widgets/mascot/cat_chat_bubble.dart';
 import '../../../../core/widgets/mascot/draggable_cat_mascot.dart';
@@ -31,9 +32,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// inteira, voltando para cá).
   int _selectedIndex = 0;
 
-  /// Momento do último toque em "voltar" na raiz de uma aba — usado para o
-  /// padrão de sair do app apenas com dois toques seguidos.
-  DateTime? _lastBackPress;
+  /// A regra do "voltar de novo para sair", com defesa contra rajada: sair
+  /// é destrutivo (na web a ABA se fecha), então tem de ser decisão, nunca
+  /// embalo do dedo. Ver [SaidaPorDoisToques].
+  final _saida = SaidaPorDoisToques();
+
+  /// Quanto tempo o aviso "toque de novo para sair" fica na tela. Vive
+  /// junto da janela da regra: um aviso que some antes de a janela fechar
+  /// deixaria a saída armada com a tela já limpa.
+  static const Duration _avisoDeSaida = Duration(seconds: 3);
 
   /// Um voltar por vez.
   ///
@@ -223,6 +230,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // [_voltar], não esta linha.
     final rootNavigator = Navigator.of(context);
     if (rootNavigator.canPop()) {
+      _saida.esquecer();
       await rootNavigator.maybePop();
       return;
     }
@@ -232,6 +240,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // volta passo a passo antes de sair, e a Escrita Livre salva ao sair.
     final tabNavigator = _navigatorKeys[_selectedIndex].currentState;
     if (tabNavigator != null && await tabNavigator.maybePop()) {
+      _saida.esquecer();
       return;
     }
     if (!mounted) return;
@@ -239,29 +248,33 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // 3. Raiz de outra aba: voltar leva à tela principal (Seu Dia) — nunca
     // fecha o app a partir daqui.
     if (_selectedIndex != 0) {
+      _saida.esquecer();
       setState(() => _selectedIndex = 0);
       return;
     }
 
-    // 4. Seu Dia: sair só com toque duplo — na web TAMBÉM (decisão da
-    // dona, 23/08: o voltar desce até o Seu Dia e então sai, como no app).
-    // Engolir o voltar aqui para sempre fazia sentido quando o histórico
-    // podia ter o Google logo abaixo; com o login em janela própria ele
-    // nunca entra, e sair devolve a pessoa para onde a aba estava antes do
-    // app. No web o SystemNavigator.pop entrega o voltar ao navegador.
-    final now = DateTime.now();
-    if (_lastBackPress == null ||
-        now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
-      _lastBackPress = now;
+    // 4. Seu Dia: sair só com um segundo voltar DELIBERADO — na web TAMBÉM
+    // (decisão da dona, 23/08: o voltar desce até o Seu Dia e então sai,
+    // como no app). Engolir o voltar aqui para sempre fazia sentido quando
+    // o histórico podia ter o Google logo abaixo; com o login em janela
+    // própria ele nunca entra. Na web o SystemNavigator.pop entrega o
+    // voltar ao navegador — e ali isso FECHA A ABA, o que torna a defesa
+    // contra rajada obrigatória: ver [SaidaPorDoisToques].
+    final decisao = _saida.registrar(DateTime.now());
+    if (decisao == DecisaoDeSaida.sair) {
+      SystemNavigator.pop();
+      return;
+    }
+    // Rajada (`ignorar`): nada acontece — nem sair, nem repetir o aviso,
+    // que já está na tela.
+    if (decisao == DecisaoDeSaida.avisar) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).commonBackAgainToExit),
-          duration: const Duration(seconds: 2),
+          duration: _avisoDeSaida,
         ),
       );
-      return;
     }
-    SystemNavigator.pop();
   }
 
   Widget _buildTabNavigator(int index) {
