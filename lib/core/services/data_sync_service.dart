@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../database/database_helper.dart';
 import 'debug_log_service.dart';
+import 'servidor_de_sync.dart';
 
 AppLocalizations get _l10n =>
     lookupAppLocalizations(ContentLocale.instance.locale);
@@ -189,6 +190,8 @@ class DataSyncService {
   DataSyncService._internal();
 
   SupabaseClient? _supabase;
+  ServidorDeSync? _servidor;
+  String? _usuarioDeTeste;
   final _db = DatabaseHelper.instance;
   static const cloudSyncPreferenceKey = 'privacy_cloud_sync';
   static const cloudSyncUserConfiguredKey =
@@ -224,14 +227,27 @@ class DataSyncService {
   void initialize() {
     if (SupabaseConfig.isConfigured) {
       _supabase = Supabase.instance.client;
+      _servidor = ServidorSupabase(_supabase!);
     }
   }
 
+  /// Troca a borda de rede e a identidade por dublês.
+  ///
+  /// Só a borda: syncAll, deleteItem e fullDownload continuam sendo os de
+  /// produção, rodando contra o sqlite de verdade — o risco mora neles, e
+  /// método que carrega risco não ganha dublê.
+  @visibleForTesting
+  void configurarParaTeste(ServidorDeSync servidor, String userId) {
+    _servidor = servidor;
+    _usuarioDeTeste = userId;
+  }
+
   /// Verifica se está pronto para sincronizar
-  bool get isReady => _supabase != null && _supabase!.auth.currentUser != null;
+  bool get isReady => _servidor != null && currentUserId != null;
 
   /// ID do usuário atual
-  String? get currentUserId => _supabase?.auth.currentUser?.id;
+  String? get currentUserId =>
+      _usuarioDeTeste ?? _supabase?.auth.currentUser?.id;
 
   /// A preferência de sincronização, sem paywall.
   ///
@@ -762,14 +778,13 @@ class DataSyncService {
         // descer — sem a união, ele apagava na nuvem os ritos já feitos
         // (e o "Ritos de Hoje" esquecia a tiragem salva).
         try {
-          final existing = await _supabase!
-              .from(table)
-              .select('rites')
-              .eq('user_id', remoteItem['user_id'])
-              .eq('date', remoteItem['date'])
-              .maybeSingle();
+          final existentes = await _servidor!.ritesDoDia(
+            table,
+            remoteItem['user_id'] as String,
+            remoteItem['date'] as String,
+          );
           final merged = {
-            ..._splitRites(existing?['rites'] as String?),
+            ..._splitRites(existentes),
             ..._splitRites(remoteItem['rites'] as String?),
           };
           remoteItem['rites'] = merged.join(',');
@@ -777,12 +792,10 @@ class DataSyncService {
           // Sem linha remota ou leitura indisponível: segue com o local.
         }
       }
-      await _supabase!
-          .from(table)
-          .upsert(remoteItem, onConflict: 'user_id,date');
+      await _servidor!.upsert(table, remoteItem, onConflict: 'user_id,date');
       return;
     }
-    await _supabase!.from(table).upsert(remoteItem);
+    await _servidor!.upsert(table, remoteItem);
   }
 
   static Set<String> _splitRites(String? raw) => raw == null || raw.isEmpty
@@ -984,11 +997,8 @@ class DataSyncService {
   }
 
   /// Busca dados do Supabase
-  Future<List<Map<String, dynamic>>> _getRemoteData(String table) async {
-    final response =
-        await _supabase!.from(table).select().eq('user_id', currentUserId!);
-
-    return List<Map<String, dynamic>>.from(response);
+  Future<List<Map<String, dynamic>>> _getRemoteData(String table) {
+    return _servidor!.linhasDoUsuario(table, currentUserId!);
   }
 
   /// Verifica se item existe localmente
@@ -1114,11 +1124,11 @@ class DataSyncService {
     if (!await cloudSyncEnabled) return;
 
     try {
-      await _supabase!
-          .from(supabaseTableFor(entity))
-          .delete()
-          .eq('user_id', currentUserId!)
-          .neq('date', date);
+      await _servidor!.apagarOutrosDias(
+        supabaseTableFor(entity),
+        currentUserId!,
+        date,
+      );
     } catch (e) {
       debugPrint('Erro ao podar dias antigos no Supabase: $e');
     }
@@ -1134,11 +1144,7 @@ class DataSyncService {
 
     try {
       final tableName = supabaseTableFor(entity);
-      await _supabase!
-          .from(tableName)
-          .delete()
-          .eq('id', id)
-          .eq('user_id', currentUserId!);
+      await _servidor!.apagarLinha(tableName, currentUserId!, id);
     } catch (e) {
       debugPrint('Erro ao deletar item do Supabase: $e');
     }
