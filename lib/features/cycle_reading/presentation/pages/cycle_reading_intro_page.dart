@@ -985,6 +985,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         CycleReadingSections.threads => l10n.cycleReadingSectionThreads,
         CycleReadingSections.sky => l10n.cycleReadingSectionSky,
         CycleReadingSections.practice => l10n.cycleReadingSectionPractice,
+        CycleReadingSections.forecast => l10n.cycleReadingSectionForecast,
         CycleReadingSections.rituals => l10n.cycleReadingSectionRituals,
         CycleReadingSections.affirmation => l10n.cycleReadingSectionAffirmation,
         _ => l10n.cycleReadingSectionSeal,

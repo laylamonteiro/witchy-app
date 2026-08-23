@@ -77,11 +77,17 @@ void main() {
         await CycleReadingRepository().findForPeriod(userId, periodStart);
     expect(stored!.isGenerated, isTrue);
 
-    // …e o relatório contém as 7 seções de IA + a seção determinística
-    // "O ciclo em números" (montada por código) + os compartilháveis.
+    // …e o relatório contém as 8 seções de IA (com a previsão "o que se
+    // anuncia") + a seção determinística "O ciclo em números" (montada por
+    // código) + os compartilháveis.
     final markdown = result.writing.content;
     final headings = RegExp(r'^## ', multiLine: true).allMatches(markdown);
-    expect(headings.length, 8);
+    expect(headings.length, 9);
+    // A previsão fica entre a prática e os rituais: primeiro o que o céu
+    // que vem anuncia, depois a prática que responde a ele.
+    final previsao = markdown.indexOf('Texto da secao forecast.');
+    expect(previsao, greaterThan(markdown.indexOf('Texto da secao practice.')));
+    expect(previsao, lessThan(markdown.indexOf('Texto da secao rituals.')));
     expect(markdown, contains('> Eu confio no meu ciclo.'));
     expect(markdown, contains('**raiz**'));
     expect(
@@ -306,7 +312,7 @@ void main() {
     expect((await db.query('free_writings')).length, 1);
   });
 
-  test('leitura da SEMANA sai com 4 seções, sem prática/rituais/selo',
+  test('leitura da SEMANA sai com 4 seções, sem prática/previsão/rituais/selo',
       () async {
     final week = CycleReadingService.currentWeek();
     final credit = CycleReadingModel(
@@ -330,6 +336,7 @@ void main() {
 
     expect(asked, CycleReadingSections.weekly);
     expect(asked, isNot(contains(CycleReadingSections.practice)));
+    expect(asked, isNot(contains(CycleReadingSections.forecast)));
     expect(asked, isNot(contains(CycleReadingSections.rituals)));
     expect(asked, isNot(contains(CycleReadingSections.seal)));
 

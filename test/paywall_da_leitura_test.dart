@@ -8,7 +8,7 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 /// intro e mora num paywall próprio — a folha explica seção por seção o que
 /// a leitura entrega e só então mostra o valor e o botão de pagar.
 ///
-/// Estes testes provam as três promessas da folha: a lunação lista as 7
+/// Estes testes provam as três promessas da folha: a lunação lista as 8
 /// seções (sem upsell — quem já vai levar o produto completo não precisa de
 /// convite), a semana lista as 4 e convida honestamente para a lunação, e o
 /// CTA fecha a folha antes de avisar quem paga.
@@ -61,12 +61,12 @@ void main() {
     await tester.pumpWidget(host);
     await tester.tap(find.byKey(abrir));
     await tester.pump();
-    // Entrada da folha + cascata dos bullets (7 × 70ms + 420ms de entrada).
+    // Entrada da folha + cascata dos bullets (8 × 70ms + 420ms de entrada).
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 600));
   }
 
-  testWidgets('a folha da lunação tece as 7 seções e não faz upsell',
+  testWidgets('a folha da lunação tece as 8 seções e não faz upsell',
       (tester) async {
     await abrirFolha(
       tester,
@@ -80,6 +80,7 @@ void main() {
       l10n.cycleReadingSectionThreads,
       l10n.cycleReadingSectionSky,
       l10n.cycleReadingSectionPractice,
+      l10n.cycleReadingSectionForecast,
       l10n.cycleReadingSectionRituals,
       l10n.cycleReadingSectionAffirmation,
       l10n.cycleReadingSectionSeal,
@@ -111,6 +112,7 @@ void main() {
     }
     // O que só a lunação sustenta fica FORA da folha da semana...
     expect(find.text(l10n.cycleReadingSectionPractice), findsNothing);
+    expect(find.text(l10n.cycleReadingSectionForecast), findsNothing);
     expect(find.text(l10n.cycleReadingSectionRituals), findsNothing);
     expect(find.text(l10n.cycleReadingSectionSeal), findsNothing);
     // ...e vira o upsell honesto, dito com todas as letras.

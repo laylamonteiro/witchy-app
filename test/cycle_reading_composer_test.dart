@@ -288,6 +288,35 @@ void main() {
     expect(sky['moonPhases'], isNotEmpty);
   });
 
+  test('o céu do próximo ciclo vem calculado: janela, fases e sabbat',
+      () async {
+    // A matéria da seção "o que se anuncia" — calculada no APARELHO, nunca
+    // pela IA. Sem mapa natal semeado, ela segue com a lua e os sabbats
+    // (best-effort, como o resto do céu).
+    final material = await CycleReadingComposer().compose(
+      userId: userId,
+      start: periodStart,
+      end: periodEnd,
+    );
+
+    final ahead = material.json['skyAhead'] as Map;
+    // Janela de MESMA duração, começando onde a lida termina:
+    // 01/08→30/08 lida ⇒ 30/08→28/09 anunciada.
+    expect(ahead['window'], {'from': '2026-08-30', 'to': '2026-09-28'});
+    expect(ahead['moonPhases'], isNotEmpty);
+    // O equinócio de setembro (Ostara no hemisfério sul, como toda a Roda
+    // do app) cai dentro da janela — e entra com nome próprio e data.
+    final sabbats = (ahead['sabbats'] as List).cast<Map>();
+    expect(
+      sabbats.map((s) => s['sabbat']),
+      contains('Ostara'),
+    );
+    expect(
+      sabbats.firstWhere((s) => s['sabbat'] == 'Ostara')['on'],
+      '2026-09-22',
+    );
+  });
+
   test('tiragem de tarô entra na leitura (conta e aparece no oracle)',
       () async {
     await seed('tarot_readings', {

@@ -125,6 +125,8 @@ void main() {
           p.cycleReadingSectionInstruction('sky'),
       'cycleReadingSectionInstruction (practice)': (p, g) =>
           p.cycleReadingSectionInstruction('practice'),
+      'cycleReadingSectionInstruction (forecast)': (p, g) =>
+          p.cycleReadingSectionInstruction('forecast'),
       'cycleReadingSectionInstruction (rituals)': (p, g) =>
           p.cycleReadingSectionInstruction('rituals'),
       'cycleReadingSectionInstruction (affirmation)': (p, g) =>
@@ -327,6 +329,7 @@ void main() {
         'threads',
         'sky',
         'practice',
+        'forecast',
         'rituals',
         'affirmation',
         'seal',

@@ -12,6 +12,8 @@ import '../../../diary/data/models/free_writing_model.dart';
 import '../../../grimoire/data/models/spell_model.dart'
     show MoonPhase, MoonPhaseExtension;
 import '../../../lunar/presentation/providers/lunar_provider.dart';
+import '../../../wheel_of_year/data/models/sabbat_model.dart'
+    show SabbatType, SabbatTypeExtension;
 import '../../../your_day/data/daily_checkin_repository.dart';
 import '../models/cycle_reading_model.dart';
 
@@ -879,6 +881,11 @@ class CycleReadingComposer {
     // ===== O céu do período (calculado no aparelho; a IA só narra) =====
     json['sky'] = await _skyFacts(userId, start, end);
 
+    // ===== O céu do PRÓXIMO ciclo (idem) — a matéria da previsão =====
+    // Janela de mesma duração, começando onde a lida termina.
+    json['skyAhead'] =
+        await _skyAheadFacts(userId, end, end.add(end.difference(start)));
+
     // ===== Quem ela é, segundo a própria Análise Personalizada =====
     final perfil = await _profileFacts(userId);
     if (perfil.isNotEmpty) json['profile'] = perfil;
@@ -1092,6 +1099,80 @@ class CycleReadingComposer {
       debugPrint('CycleReadingComposer: céu indisponível ($e)');
     }
     return sky;
+  }
+
+  /// O céu do PRÓXIMO ciclo — a matéria da seção "o que se anuncia".
+  ///
+  /// Mesma regra do [_skyFacts]: tudo calculado NO APARELHO — fases e
+  /// trânsitos das efemérides, sabbats da Roda do Ano — e a IA só narra e
+  /// interpreta. Best-effort como o resto do céu: sem mapa natal (ou sem
+  /// efemérides), a previsão segue só com a lua e os sabbats.
+  Future<Map<String, dynamic>> _skyAheadFacts(
+    String userId,
+    DateTime from,
+    DateTime to,
+  ) async {
+    final ahead = <String, dynamic>{
+      'window': {'from': _dayKey(from), 'to': _dayKey(to)},
+    };
+
+    // As viradas de fase da janela que vem, com a data de cada uma.
+    final phases = <Map<String, String>>[];
+    var cursor = DateTime(from.year, from.month, from.day, 12);
+    MoonPhase? previous;
+    while (cursor.isBefore(to)) {
+      final phase = LunarProvider.phaseOn(cursor);
+      if (phase != previous) {
+        phases.add({'phase': phase.displayName, 'from': _dayKey(cursor)});
+        previous = phase;
+      }
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    ahead['moonPhases'] = phases;
+
+    // Sabbats da Roda do Ano que caem na janela (datas do hemisfério sul,
+    // como toda a Roda no app): o gancho de ensinamento mais direto que a
+    // previsão tem. Os dois anos porque a janela pode cruzar a virada.
+    final inicioDia = DateTime(from.year, from.month, from.day);
+    final sabbats = <Map<String, String>>[
+      for (final year in {from.year, to.year})
+        for (final type in SabbatType.values)
+          if (!type.getDateForYear(year).isBefore(inicioDia) &&
+              type.getDateForYear(year).isBefore(to))
+            {'sabbat': type.name, 'on': _dayKey(type.getDateForYear(year))},
+    ]..sort((a, b) => a['on']!.compareTo(b['on']!));
+    if (sabbats.isNotEmpty) ahead['sabbats'] = sabbats;
+
+    try {
+      final chart = await _astrology.getBirthChart(userId);
+      if (chart == null) return ahead;
+
+      // O MEIO da janela como referência: um retrato do céu que vem, não
+      // uma efeméride dia a dia — o JSON dobraria sem mudar a narrativa.
+      // O natal não se repete aqui: já vai em sky.natal.
+      final reference = from.add(to.difference(from) ~/ 2);
+      final transits = await _transits.calculateTransits(reference);
+      ahead['transits'] = [
+        for (final transit in transits)
+          if (transit.planet != Planet.moon)
+            '${transit.planet.displayName} in ${transit.sign.displayName}'
+            '${transit.isRetrograde ? ' (retrograde)' : ''}',
+      ];
+
+      final aspects = await _transits.calculateTransitAspects(transits, chart);
+      ahead['aspects'] = [
+        for (final aspect in aspects
+            .where((a) => a.transitPlanet != Planet.moon)
+            .take(8))
+          '${aspect.transitPlanet.displayName} '
+          '${aspect.aspectType.displayName} '
+          '${aspect.natalPlanet.displayName} natal '
+          '(orb ${aspect.orb.toStringAsFixed(1)} deg)',
+      ];
+    } catch (e) {
+      debugPrint('CycleReadingComposer: céu à frente indisponível ($e)');
+    }
+    return ahead;
   }
 
   static bool _isNotBlank(Object? value) =>

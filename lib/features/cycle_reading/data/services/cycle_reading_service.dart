@@ -37,21 +37,29 @@ abstract final class CycleReadingSections {
   /// "numbers" do material, só para citá-los sem recalcular.
   static const numbers = 'numbers';
 
-  /// A Leitura da Lunação: o produto completo, as 7 seções.
+  /// "O que se anuncia": a previsão do próximo ciclo. A IA a escreve, mas
+  /// SÓ do campo skyAhead do material — fases, trânsitos, aspectos e
+  /// sabbats da janela seguinte, todos calculados no aparelho — amarrados
+  /// aos fios do período e à simbologia da bruxaria. Convite e preparo,
+  /// nunca destino (a instrução da seção repete a regra).
+  static const forecast = 'forecast';
+
+  /// A Leitura da Lunação: o produto completo, as 8 seções.
   static const ordered = [
     portrait,
     threads,
     sky,
     practice,
+    forecast,
     rituals,
     affirmation,
     seal,
   ];
 
   /// A Leitura da Semana: mais direta (4 seções). O que fica de fora é o que
-  /// só a lunação inteira sustenta — o balanço da prática, os rituais do
-  /// próximo ciclo e o selo — e é essa diferença visível que justifica a
-  /// diferença de preço.
+  /// só a lunação inteira sustenta — o balanço da prática, a previsão do
+  /// próximo ciclo, os rituais para ele e o selo — e é essa diferença
+  /// visível que justifica a diferença de preço.
   static const weekly = [portrait, threads, sky, affirmation];
 
   /// As seções de um [CycleReadingPeriodType].
@@ -454,6 +462,10 @@ class CycleReadingService {
         l10n.cycleReadingSectionSky, sections[CycleReadingSections.sky] ?? '');
     section(l10n.cycleReadingSectionPractice,
         sections[CycleReadingSections.practice] ?? '');
+    // A previsão vem ANTES dos rituais de propósito: primeiro o que o céu
+    // que vem anuncia, depois a prática que responde a ele.
+    section(l10n.cycleReadingSectionForecast,
+        sections[CycleReadingSections.forecast] ?? '');
     section(l10n.cycleReadingSectionRituals,
         sections[CycleReadingSections.rituals] ?? '');
     section(l10n.cycleReadingSectionAffirmation,

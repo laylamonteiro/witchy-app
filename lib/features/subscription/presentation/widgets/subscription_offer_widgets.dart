@@ -489,6 +489,7 @@ class PremiumOfferPanel extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 380;
+        final l10n = AppLocalizations.of(context);
 
         return Container(
           key: const ValueKey('premium_offer_panel'),
@@ -533,6 +534,26 @@ class PremiumOfferPanel extends StatelessWidget {
                 lifetimeEnabled: lifetimeEnabled,
                 economiaAnual: economiaAnual,
               ),
+              // A Leitura da Lunação como nota do PAINEL, não do card (a dona
+              // vetou o texto dentro do card, que é pequeno demais para uma
+              // frase). Só com o Vitalício em foco: a Leitura do Ciclo é
+              // produto avulso, fora do Premium, e a única verdade vendável
+              // aqui é que o lifetime a inclui (regra em
+              // `CycleReadingOrigin.lifetime`) — nos outros planos a mesma
+              // linha faria a tela mentir.
+              if (selectedPlan == SubscriptionType.lifetime) ...[
+                const SizedBox(height: 10),
+                Text(
+                  l10n.paywallLifetimeCycleReading,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: context.gc.gold,
+                    fontSize: 12,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               SubscriptionPurchaseButton(
                 loading: purchaseLoading,
@@ -834,30 +855,6 @@ class _SubscriptionPlanCard extends StatelessWidget {
                         fontSize: compacto ? 10 : 12,
                         fontWeight: FontWeight.w700,
                       ),
-                    ),
-                  ),
-                ],
-                // A Leitura da Lunação SÓ no rodapé do Vitalício: a Leitura
-                // do Ciclo é produto avulso, fora do Premium, e a única
-                // verdade vendável aqui é que o lifetime a inclui (regra em
-                // `CycleReadingOrigin.lifetime`). Nos outros planos a mesma
-                // linha faria a tela mentir.
-                if (type == SubscriptionType.lifetime) ...[
-                  const SizedBox(height: 6),
-                  Icon(
-                    Icons.nightlight_round,
-                    size: 14,
-                    color: context.gc.gold,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    l10n.paywallLifetimeCycleReading,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: context.gc.gold,
-                      fontSize: compacto ? 11 : 12.5,
-                      height: 1.3,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
