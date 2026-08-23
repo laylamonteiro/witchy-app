@@ -305,7 +305,10 @@ class AppThemePreset {
 class AppThemes {
   AppThemes._();
 
-  static const String defaultId = 'vinhoOrquidea';
+  // Decisão da dona (23/08): o Clássico (Índigo + Lilás) volta a ser a cara
+  // padrão do app. Quem já escolheu um tema não é afetado — o default só
+  // vale para instalação sem escolha salva.
+  static const String defaultId = 'classico';
 
   static const List<AppThemePreset> all = [
     AppThemePreset(

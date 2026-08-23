@@ -1875,7 +1875,8 @@
   "conviteDentroConselheiroB": "Lo que tu carta responde sobre eso",
   "conviteDentroConselheiroC": "El próximo paso, en una frase",
   "conviteFechamentoTitulo": "Cuando quieras abrirlo",
-  "conviteFechamentoLinha": "Los planes están del otro lado de este botón. Nada aquí caduca, nada desaparece a medianoche, y el precio no cambia porque hayas esperado",
+  "conviteFechamentoLinha": "Los planes están del otro lado de este botón. Nada aquí caduca, y nada desaparece a medianoche",
+  "paywallLifetimeCycleReading": "Incluye la Lectura de la Lunación — la lectura más profunda de la app, tejida de lo que viviste, en cada lunación",
   "conviteDescobertaTitulo": "Lo que aún no has visto",
   "conviteSeloPremium": "Premium"
 }

@@ -1875,7 +1875,8 @@
   "conviteDentroConselheiroB": "O que o seu mapa responde sobre isso",
   "conviteDentroConselheiroC": "O próximo passo, em uma frase",
   "conviteFechamentoTitulo": "Quando você quiser abrir",
-  "conviteFechamentoLinha": "Os planos estão do outro lado deste botão. Nada aqui expira, nada some à meia-noite, e o preço não muda por você ter esperado",
+  "conviteFechamentoLinha": "Os planos estão do outro lado deste botão. Nada aqui expira, e nada some à meia-noite",
+  "paywallLifetimeCycleReading": "Inclui a Leitura da Lunação — a leitura mais profunda do app, tecida do que você viveu, a cada lunação",
   "conviteDescobertaTitulo": "O que você ainda não viu",
   "conviteSeloPremium": "Premium"
 }
