@@ -167,20 +167,20 @@ void main() {
       final veu = find.text(kPremiumPlaceholderText, skipOffstage: false);
       expect(veu, findsOneWidget);
 
-      // O escopo é o próprio widget: a exclusão de semântica e o embaçado
-      // têm que ser DELE, não de algo que a rota pôs por cima.
-      final exclusaoDoVeu = find.descendant(
+      // O escopo é o próprio widget — e sem contar ExcludeSemantics: o
+      // botão do Material traz os dele. O contrato é que o PLACEHOLDER
+      // esteja sob exclusão de semântica e sob o embaçado.
+      final exclusoesDoPreview = find.descendant(
         of: find.byType(PremiumLockedPreview),
         matching: find.byType(ExcludeSemantics),
       );
-      expect(exclusaoDoVeu, findsOneWidget);
       expect(
-        find.descendant(of: exclusaoDoVeu, matching: veu),
+        find.descendant(of: exclusoesDoPreview, matching: veu),
         findsOneWidget,
       );
       expect(
         find.descendant(
-          of: exclusaoDoVeu,
+          of: exclusoesDoPreview,
           matching: find.byType(ImageFiltered),
         ),
         findsOneWidget,
