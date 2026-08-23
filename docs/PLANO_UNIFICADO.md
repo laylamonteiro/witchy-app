@@ -230,10 +230,19 @@ equipe e ~20 testadoras, quase um terço da base não é usuária.
   dele é painel: rodar `sync_tombstones_migration.sql` (seção 7).
 - Teste de concorrência do acúmulo por seção.
 
-**Segurança**
-- `handle_new_user` com EXECUTE para `anon` — não verificado
-- três funções sem `SET search_path`: `create_user_policy`,
-  `reset_daily_counters`, `reset_monthly_counters`
+**Segurança** — **verificado no banco ativo em 23/08** (advisor + catálogo,
+via acesso de leitura); o conserto está pronto em
+`supabase/fechar_funcoes_migration.sql` (painel):
+- `handle_new_user` com EXECUTE para `anon` — **confirmado**. É função de
+  gatilho; revogar não afeta o cadastro (o privilégio é checado ao criar o
+  trigger, não a cada signup).
+- Funções sem `SET search_path` — **confirmado, e são cinco**, não três:
+  as três previstas mais `handle_new_user` e `redeem_beta_code`.
+- **Achado novo:** `reset_daily_counters` e `reset_monthly_counters` têm
+  EXECUTE para `anon`/`authenticated` — qualquer conta logada zera os
+  próprios limites por RPC. Ninguém legítimo as chama (app não usa, pg_cron
+  sem jobs — o que também significa que **nenhum reset roda no servidor
+  hoje**; se os contadores de `profiles` importarem um dia, falta agendar).
 
 **Cobertura**
 - `PagedReading`, `PageDots`, `PremiumLockedPreview`, `StaggeredEntrance`:
@@ -254,7 +263,7 @@ Nada aqui foi contornado. O material está pronto; a execução é sua.
 
 | O quê | Onde | Material pronto |
 |---|---|---|
-| Rodar os `.sql` | Supabase → SQL Editor | `marcar_contas_de_teste.sql`, `profiles_lockdown_migration.sql`, **`sync_tombstones_migration.sql`** (novo: até rodar, a exclusão não propaga ENTRE aparelhos — no próprio aparelho a ressurreição já está barrada — e as lápides locais ficam pendentes, retentadas a cada varredura) |
+| Rodar os `.sql` | Supabase → SQL Editor | `marcar_contas_de_teste.sql`, `profiles_lockdown_migration.sql`, **`sync_tombstones_migration.sql`** (novo: até rodar, a exclusão não propaga ENTRE aparelhos — no próprio aparelho a ressurreição já está barrada — e as lápides locais ficam pendentes, retentadas a cada varredura), **`fechar_funcoes_migration.sql`** (novo: search_path nas cinco funções + revogar os resets zeráveis por RPC; verificado contra o banco ativo em 23/08) |
 | **Ligar "Prevent use of leaked passwords"** | Supabase → Authentication → Attack Protection | está **desligado** no painel (visto em 23/08); é um clique, na mesma tela do captcha |
 | Impressão digital do Google | Google Cloud + `google-services.json` | `release.yml:67` espera `54:84:54:75:7F:…`; o arquivo tem só `8BD7BB97…`. Nenhum dos dois é a chave de release |
 | Publicar a Edge Function da IA | Supabase → Functions | `supabase/functions/ia/index.ts`, nunca executado |
