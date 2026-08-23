@@ -16,10 +16,12 @@ import '../../data/services/cycle_reading_service.dart';
 /// leitura tece — seção por seção do produto escolhido — e só então mostra
 /// o valor e o botão de pagar. Quem chega ao preço já sabe o que ele compra.
 ///
-/// A FORMA é a do paywall oficial em meia escala, com as peças PRÓPRIAS dos
-/// avulsos (decisão da dona, 23/08: componente específico, copiado do
-/// oficial, em vez de ficar adequando o existente) — [AvulsoHero],
-/// [AvulsoBeneficioRow], [AvulsoBotaoComprar]. E SEM o rodapé de mensagens
+/// A FORMA é a do paywall oficial, com as peças PRÓPRIAS dos avulsos
+/// (decisão da dona, 23/08: componente específico, copiado do oficial, em
+/// vez de ficar adequando o existente) — [AvulsoHero], [AvulsoBeneficioRow],
+/// [AvulsoBotaoComprar] — no MESMO corpo tipográfico do oficial: a "metade"
+/// do avulso é a QUANTIDADE de conteúdo (3 bullets e um preço), nunca letra
+/// e foto menores (decisão da dona, 23/08). E SEM o rodapé de mensagens
 /// ("cancele quando quiser", selos): isso é conversa de assinatura, e aqui
 /// se compra uma leitura, uma vez.
 ///
@@ -81,18 +83,17 @@ class PaywallDaLeitura extends StatelessWidget {
 
   bool get _isWeek => periodType == CycleReadingPeriodType.week;
 
-  /// Só os DESTAQUES viram bullet (decisão da dona, 23/08: no máximo 3-4).
-  /// A lista completa mora na tela anterior, no "O que vem na leitura"; a
-  /// folha fecha a venda com o essencial — e a linha "+ N seções" diz que
-  /// há mais sem listar.
+  /// Só os DESTAQUES viram bullet — exatamente 3, SEM o Retrato do momento
+  /// (decisão da dona, 23/08). A lista completa mora na tela anterior, no
+  /// "O que vem na leitura"; a folha fecha a venda com o essencial — e a
+  /// linha "+ N seções" diz que há mais sem listar.
   List<String> get _destaques => _isWeek
       ? const [
-          CycleReadingSections.portrait,
+          CycleReadingSections.threads,
           CycleReadingSections.sky,
           CycleReadingSections.forecast,
         ]
       : const [
-          CycleReadingSections.portrait,
           CycleReadingSections.sky,
           CycleReadingSections.forecast,
           CycleReadingSections.rituals,
@@ -213,7 +214,9 @@ class PaywallDaLeitura extends StatelessWidget {
         CycleReadingSections.forPeriod(periodType).length - secoes.length;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      // O mesmo respiro do painel da assinatura: a folha do avulso tem
+      // MENOS conteúdo, nunca conteúdo menor (decisão da dona, 23/08).
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: context.gc.surface,
         borderRadius: BorderRadius.circular(24),
@@ -228,9 +231,9 @@ class PaywallDaLeitura extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // O herói dos avulsos — o desenho do herói Premium (Salem, halo,
-          // tipografia) em peça própria, com os textos da Leitura nos
-          // mesmos quatro lugares.
+          // O herói dos avulsos — o desenho e as medidas do herói Premium
+          // (Salem, halo, tipografia), com os textos da Leitura nos mesmos
+          // quatro lugares.
           AvulsoHero(
             access: _isWeek
                 ? l10n.cycleReadingWeekTitle
@@ -239,11 +242,11 @@ class PaywallDaLeitura extends StatelessWidget {
             magic: l10n.cycleHeroMagic,
             tagline: _linhaDoPeriodo(l10n),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           const AvulsoDivider(),
-          const SizedBox(height: 8),
-          // Só os destaques, nas peças próprias dos avulsos — a anatomia
-          // dos benefícios Premium, no selo menor.
+          const SizedBox(height: 12),
+          // Só os destaques, nas peças próprias dos avulsos — a anatomia e
+          // o tamanho dos benefícios Premium.
           StaggeredEntrance(
             children: [
               for (var i = 0; i < secoes.length; i++) ...[
@@ -252,11 +255,11 @@ class PaywallDaLeitura extends StatelessWidget {
                   rotulo: separarEmoji(_tituloDaSecao(l10n, secoes[i])).rotulo,
                   vislumbre: _vislumbreDaSecao(l10n, secoes[i]),
                 ),
-                if (i != secoes.length - 1) const SizedBox(height: 6),
+                if (i != secoes.length - 1) const SizedBox(height: 10),
               ],
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           // As seções que não viraram bullet continuam contadas: a folha
           // vende o produto inteiro, só não o lista inteiro.
           Text(
@@ -264,7 +267,7 @@ class PaywallDaLeitura extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: context.gc.textSecondary,
-              fontSize: 11.5,
+              fontSize: 12,
             ),
           ),
           if (_isWeek) ...[
@@ -276,18 +279,18 @@ class PaywallDaLeitura extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: context.gc.textSecondary,
-                fontSize: 11.5,
+                fontSize: 12,
                 height: 1.35,
               ),
             ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           // O preço no MESMO cartão dos planos do paywall Premium: caixa com
           // borda, valor em Lora e o rótulo do que ele é. O aviso de leitura
           // rasa NÃO mora aqui (decisão da dona, 23/08) — ele já está na
           // tela de onde esta folha nasceu, e repetir vira alarme.
           _cartaoDoPreco(context, l10n),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           // O botão dos avulsos — o gradiente e a forma do botão Premium,
           // com o verbo do produto. Fecha ANTES de avisar: o fluxo de
           // compra é assíncrono e não pode depender do context desta folha.
@@ -306,10 +309,12 @@ class PaywallDaLeitura extends StatelessWidget {
     );
   }
 
-  /// O preço no formato dos cards de plano do paywall Premium.
+  /// O preço no formato — e no CORPO — dos cards de plano do paywall
+  /// Premium (lá o valor sai em Lora 21-23; encolher aqui fazia o preço do
+  /// avulso parecer letra miúda).
   Widget _cartaoDoPreco(BuildContext context, AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       decoration: BoxDecoration(
         color: Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!,
         borderRadius: BorderRadius.circular(14),
@@ -328,7 +333,7 @@ class PaywallDaLeitura extends StatelessWidget {
             price,
             style: GoogleFonts.lora(
               color: context.gc.textPrimary,
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -336,7 +341,7 @@ class PaywallDaLeitura extends StatelessWidget {
             l10n.cycleReadingOneTime,
             style: GoogleFonts.lora(
               color: context.gc.textSecondary,
-              fontSize: 11,
+              fontSize: 12,
             ),
           ),
         ],

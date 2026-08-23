@@ -5,22 +5,23 @@ import '../../../../core/theme/grimoire_colors.dart';
 import 'subscription_offer_widgets.dart' show CatHeroArt;
 
 /// As peças do paywall de produto AVULSO — CÓPIAS das peças do paywall de
-/// assinatura, já na meia escala (decisão da dona, 23/08: o avulso tem
-/// metade do tamanho da assinatura, e componente PRÓPRIO, não o oficial
-/// adaptado).
+/// assinatura, com componente PRÓPRIO (decisão da dona, 23/08: não ficar
+/// adequando o oficial).
+///
+/// As MEDIDAS são as do oficial, sem encolher nada: letra, foto e botão no
+/// mesmo tamanho do paywall de assinatura (decisão da dona, 23/08 — a
+/// "metade" do avulso é a QUANTIDADE de conteúdo: 3 bullets e um preço, não
+/// tipografia menor; e o botão de meia altura cortava o próprio texto).
 ///
 /// Cópia de propósito, não parametrização: os modos compactos opt-in que
 /// viviam nos componentes oficiais espalhavam `if` de escala por eles, e
-/// toda mudança num paywall arriscava o outro. Aqui cada família tem as
-/// próprias peças, com as medidas fixas da meia escala. A ÚNICA coisa
-/// compartilhada é a arte do Salem ([CatHeroArt]): ela é a assinatura
-/// visual do app, não uma medida — as duas folhas precisam ler como o
-/// mesmo app.
+/// toda mudança num paywall arriscava o outro. A ÚNICA coisa compartilhada
+/// é a arte do Salem ([CatHeroArt]): ela é a assinatura visual do app.
 
-/// O herói do avulso: o mesmo desenho do herói da assinatura (Salem no halo,
-/// Lora + Cinzel, degradê lilás na linha de força), com o Salem em 64 e a
-/// tipografia pela metade. Os quatro textos são obrigatórios: um avulso
-/// sempre fala do produto dele, nunca da copy do Premium.
+/// O herói do avulso: o MESMO desenho e as MESMAS medidas do herói da
+/// assinatura (Salem em 120 no halo, Lora + Cinzel, degradê lilás na linha
+/// de força). Os quatro textos são obrigatórios: um avulso sempre fala do
+/// produto dele, nunca da copy do Premium.
 class AvulsoHero extends StatelessWidget {
   const AvulsoHero({
     super.key,
@@ -42,86 +43,118 @@ class AvulsoHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(8, 6, 10, 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [context.gc.background, context.gc.surface],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(width: 72, child: CatHeroArt(height: 64)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  access,
-                  style: GoogleFonts.lora(
-                    color: context.gc.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: [
-                      Color.lerp(
-                        context.gc.lilac,
-                        context.gc.textPrimary,
-                        0.55,
-                      )!,
-                      context.gc.lilac,
-                    ],
-                  ).createShader(bounds),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      power,
-                      style: GoogleFonts.cinzelDecorative(
-                        color: context.gc.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    magic,
-                    style: GoogleFonts.cinzelDecorative(
-                      color: context.gc.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  tagline,
-                  style: GoogleFonts.lora(
-                    color: context.gc.textSecondary,
-                    fontSize: 10.5,
-                    height: 1.34,
-                  ),
-                ),
-              ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 300;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [context.gc.background, context.gc.surface],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-        ],
-      ),
+          child: compact
+              ? Column(
+                  children: [
+                    const CatHeroArt(height: 92),
+                    _copy(context, centered: true, compact: true),
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Expanded(
+                      flex: 4,
+                      child: CatHeroArt(height: 120),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(flex: 7, child: _copy(context)),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _copy(
+    BuildContext context, {
+    bool centered = false,
+    bool compact = false,
+  }) {
+    final alignment =
+        centered ? CrossAxisAlignment.center : CrossAxisAlignment.start;
+    final textAlign = centered ? TextAlign.center : TextAlign.left;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: alignment,
+      children: [
+        // Em FittedBox porque o nome do produto é mais longo que o "ACESSE"
+        // do Premium: encolher um pouco preserva a linha única sem perder o
+        // corpo da tipografia oficial.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            access,
+            textAlign: textAlign,
+            style: GoogleFonts.lora(
+              color: context.gc.textPrimary,
+              fontSize: compact ? 18 : 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(height: 3),
+        ShaderMask(
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [
+              Color.lerp(context.gc.lilac, context.gc.textPrimary, 0.55)!,
+              context.gc.lilac,
+            ],
+          ).createShader(bounds),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              power,
+              textAlign: textAlign,
+              style: GoogleFonts.cinzelDecorative(
+                color: context.gc.textPrimary,
+                fontSize: compact ? 20 : 23,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ),
+        ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            magic,
+            textAlign: textAlign,
+            style: GoogleFonts.cinzelDecorative(
+              color: context.gc.textPrimary,
+              fontSize: compact ? 19 : 22,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          tagline,
+          textAlign: textAlign,
+          style: GoogleFonts.lora(
+            color: context.gc.textSecondary,
+            fontSize: compact ? 11 : 12,
+            height: 1.34,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -159,7 +192,7 @@ class AvulsoDivider extends StatelessWidget {
 
 /// Uma peça da oferta avulsa: selo circular com o EMOJI da seção no papel
 /// das artes pintadas do Premium, o rótulo limpo ao lado e o vislumbre do
-/// que ela entrega — a anatomia das peças da assinatura, no selo de 30.
+/// que ela entrega — a anatomia e as MEDIDAS das peças da assinatura.
 class AvulsoBeneficioRow extends StatelessWidget {
   const AvulsoBeneficioRow({
     super.key,
@@ -175,14 +208,14 @@ class AvulsoBeneficioRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 30,
-            height: 30,
-            padding: const EdgeInsets.all(4),
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -191,12 +224,12 @@ class AvulsoBeneficioRow extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: context.gc.lilac.withValues(alpha: 0.20),
-                  blurRadius: 8,
+                  blurRadius: 12,
                 ),
               ],
             ),
             child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 13)),
+              child: Text(emoji, style: const TextStyle(fontSize: 19)),
             ),
           ),
           const SizedBox(width: 10),
@@ -209,7 +242,7 @@ class AvulsoBeneficioRow extends StatelessWidget {
                   rotulo,
                   style: GoogleFonts.lora(
                     color: context.gc.textPrimary,
-                    fontSize: 13,
+                    fontSize: 14.5,
                     height: 1.22,
                     fontWeight: FontWeight.w700,
                   ),
@@ -220,7 +253,7 @@ class AvulsoBeneficioRow extends StatelessWidget {
                     vislumbre!,
                     style: TextStyle(
                       color: context.gc.textSecondary,
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       height: 1.4,
                     ),
                   ),
@@ -234,8 +267,9 @@ class AvulsoBeneficioRow extends StatelessWidget {
   }
 }
 
-/// O botão de pagar do avulso — o mesmo gradiente e a mesma forma do botão
-/// da assinatura, na meia altura (40) e com o verbo do produto.
+/// O botão de pagar do avulso — o gradiente, a forma e a ALTURA (50) do
+/// botão da assinatura, com o verbo do produto. A meia altura anterior
+/// cortava o próprio texto (visto no preview, 23/08).
 class AvulsoBotaoComprar extends StatelessWidget {
   const AvulsoBotaoComprar({
     super.key,
@@ -250,7 +284,7 @@ class AvulsoBotaoComprar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 40,
+      height: 50,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
@@ -283,7 +317,7 @@ class AvulsoBotaoComprar extends StatelessWidget {
           child: Text(
             label,
             style: GoogleFonts.lora(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),

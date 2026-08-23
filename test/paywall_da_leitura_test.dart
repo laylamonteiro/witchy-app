@@ -8,11 +8,11 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 /// intro e mora num paywall próprio — a folha explica seção por seção o que
 /// a leitura entrega e só então mostra o valor e o botão de pagar.
 ///
-/// Estes testes provam as três promessas da folha: a lunação traz só os 4
-/// DESTAQUES em bullet (máximo 3-4, decisão da dona, 23/08 — a lista
-/// completa mora na tela anterior) e não faz upsell, a semana traz 3 e
-/// convida honestamente para a lunação, e o CTA fecha a folha antes de
-/// avisar quem paga.
+/// Estes testes provam as três promessas da folha: cada janela traz só 3
+/// DESTAQUES em bullet, SEM o Retrato do momento (decisão da dona, 23/08 —
+/// a lista completa mora na tela anterior), a lunação não faz upsell e a
+/// semana convida honestamente para a lunação, e o CTA fecha a folha antes
+/// de avisar quem paga.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -68,7 +68,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
   }
 
-  testWidgets('a folha da lunação traz os 4 destaques e não faz upsell',
+  testWidgets('a folha da lunação traz 3 destaques, sem retrato nem upsell',
       (tester) async {
     await abrirFolha(
       tester,
@@ -77,7 +77,6 @@ void main() {
 
     expect(find.text(l10n.cycleReadingLunationTitle), findsOneWidget);
     for (final titulo in [
-      l10n.cycleReadingSectionPortrait,
       l10n.cycleReadingSectionSky,
       l10n.cycleReadingSectionForecast,
       l10n.cycleReadingSectionRituals,
@@ -85,10 +84,11 @@ void main() {
       expect(find.text(rotulo(titulo)), findsOneWidget,
           reason: 'cada destaque vira um bullet');
     }
-    // As outras 4 seções não viram bullet — ficam contadas na linha "+ N".
-    expect(find.text(rotulo(l10n.cycleReadingSectionThreads)), findsNothing);
+    // O Retrato do momento saiu dos bullets (decisão da dona, 23/08), e as
+    // outras seções ficam contadas na linha "+ N".
+    expect(find.text(rotulo(l10n.cycleReadingSectionPortrait)), findsNothing);
     expect(find.text(rotulo(l10n.cycleReadingSectionSeal)), findsNothing);
-    expect(find.text(l10n.cyclePaywallMoreSections(4)), findsOneWidget);
+    expect(find.text(l10n.cyclePaywallMoreSections(5)), findsOneWidget);
     expect(find.text(l10n.cycleReadingPaywallWeekUpsell), findsNothing,
         reason: 'quem já leva a lunação não precisa de convite para ela');
     // O preço aparece aqui — e é a primeira vez no fluxo inteiro.
@@ -104,13 +104,15 @@ void main() {
 
     expect(find.text(l10n.cycleReadingWeekTitle), findsOneWidget);
     for (final titulo in [
-      l10n.cycleReadingSectionPortrait,
+      l10n.cycleReadingSectionThreads,
       l10n.cycleReadingSectionSky,
       l10n.cycleReadingSectionForecast,
     ]) {
       expect(find.text(rotulo(titulo)), findsOneWidget);
     }
-    // Rituais é da lunação; na semana nem como bullet nem escondido.
+    // Sem retrato (decisão da dona, 23/08); rituais é da lunação — na
+    // semana nem como bullet nem escondido.
+    expect(find.text(rotulo(l10n.cycleReadingSectionPortrait)), findsNothing);
     expect(find.text(rotulo(l10n.cycleReadingSectionRituals)), findsNothing);
     // 5 seções, 3 em bullet: as outras 2 ficam contadas...
     expect(find.text(l10n.cyclePaywallMoreSections(2)), findsOneWidget);
