@@ -61,7 +61,7 @@ void main() {
     expect(confirmarHabilitado(tester), isFalse);
   });
 
-  testWidgets('um dia só não basta — e a tela diz o que falta', (tester) async {
+  testWidgets('um dia só não basta para confirmar', (tester) async {
     await tester.binding.setSurfaceSize(const Size(800, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -70,7 +70,6 @@ void main() {
 
     expect(confirmarHabilitado(tester), isFalse,
         reason: 'a janela ainda está pela metade');
-    expect(find.text(l10n.cycleReadingPickEndDay), findsOneWidget);
   });
 
   testWidgets('com o dia final escolhido o confirmar acende', (tester) async {
@@ -82,7 +81,6 @@ void main() {
     await tocarDia(tester, 12);
 
     expect(confirmarHabilitado(tester), isTrue);
-    expect(find.text(l10n.cycleReadingPickEndDay), findsNothing);
   });
 
   testWidgets('o atalho de 7 dias já deixa a janela pronta', (tester) async {

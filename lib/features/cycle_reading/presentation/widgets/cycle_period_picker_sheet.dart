@@ -518,17 +518,10 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
             ),
       );
     }
-    // Janela pela metade (um toque só): diz o que falta em vez de deixar a
-    // pessoa encarando um botão apagado sem motivo aparente.
-    if (_end == null || _selectedDays <= 1) {
-      return Text(
-        l10n.cycleReadingPickEndDay,
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.gc.textSecondary,
-            ),
-      );
-    }
+    // Janela pela metade (um toque só): o resumo some e o confirmar fica
+    // apagado. Sem frase explicando — a pessoa toca o segundo dia e
+    // descobre sozinha; instrução para um gesto óbvio é ruído.
+    if (_end == null || _selectedDays <= 1) return const SizedBox.shrink();
 
     final semana = _periodType == CycleReadingPeriodType.week;
     final produto =
