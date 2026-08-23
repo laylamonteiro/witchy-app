@@ -75,8 +75,13 @@ class AuthWrapper extends StatelessWidget {
         // Se tem conta logada, ir para home
         if (isAuthenticated) {
           debugLog('NAV', 'AuthWrapper: → HomePage (autenticado)');
+          // O guarda cobre os 2,5s do splash: ele vive na rota raiz SEM
+          // PopScope nenhum (o da Home só nasce depois do pushReplacement),
+          // e um voltar nessa janela fazia o motor sair do documento — na
+          // web, direto para a página anterior do histórico, que depois de
+          // um login social é a do Google.
           return showSplash
-              ? const SplashScreen(child: HomePage())
+              ? const GuardaDeVoltarWeb(child: SplashScreen(child: HomePage()))
               : const HomePage();
         }
 

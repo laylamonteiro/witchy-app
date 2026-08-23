@@ -56,6 +56,12 @@ class _CyclesBody extends StatefulWidget {
 }
 
 class _CyclesBodyState extends State<_CyclesBody> {
+  /// A releitura do mapa é uma só por vida desta tela: `loadBirthChart`
+  /// notifica ao terminar, o que dispara `didChangeDependencies` de novo —
+  /// sem o carimbo, quem não tem mapa entraria num pingue-pongue infinito
+  /// de releitura → aviso → releitura.
+  bool _releuOMapa = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -69,7 +75,19 @@ class _CyclesBodyState extends State<_CyclesBody> {
   }
 
   void _sincronizar() {
-    final chart = context.read<AstrologyProvider>().birthChart;
+    final astro = context.read<AstrologyProvider>();
+    // Sem mapa em memória não significa sem mapa: o do login social chega
+    // pelo sync DEPOIS de o provider ter carregado (e encontrado nada) — e
+    // aí a aba dizia "falta o seu mapa astral" para quem tem mapa até
+    // alguém abrir a Astrologia. A releitura é do banco local, barata, e o
+    // provider avisa quando termina, refazendo este sync com o mapa certo.
+    // Quem NÃO preencheu continua vendo o convite: a releitura devolve
+    // nada e o estado fica LifeErasIncomplete, como deve.
+    if (!astro.hasBirthChart && !astro.isLoading && !_releuOMapa) {
+      _releuOMapa = true;
+      astro.loadBirthChart();
+    }
+    final chart = astro.birthChart;
     final userId = context.read<AuthProvider>().currentUser.id;
     // Repetições com o mesmo mapa saem cedo dentro do provider.
     context.read<LifeErasProvider>().sync(userId: userId, chart: chart);
