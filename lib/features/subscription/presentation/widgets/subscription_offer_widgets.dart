@@ -370,8 +370,12 @@ class OfferBenefit {
   /// Selo por EMOJI: as seções da Leitura do Ciclo têm o próprio emoji no
   /// título, e ele dentro do selo circular faz o papel das artes pintadas
   /// dos benefícios Premium — colorido, com o rótulo limpo ao lado.
-  factory OfferBenefit.emoji(String emoji, String label) =>
-      OfferBenefit._(emoji: emoji, label: label);
+  factory OfferBenefit.emoji(
+    String emoji,
+    String label, {
+    String? vislumbre,
+  }) =>
+      OfferBenefit._(emoji: emoji, label: label, vislumbre: vislumbre);
 
   final String label;
 

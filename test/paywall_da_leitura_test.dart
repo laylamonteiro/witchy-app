@@ -43,8 +43,6 @@ void main() {
                   periodStart: DateTime(2026, 8, 1),
                   periodEnd: DateTime(2026, 8, 29),
                   price: r'R$ 14,90',
-                  recordCount: 12,
-                  minRecords: 5,
                   onComprar: onComprar ?? () {},
                 ),
                 child: const Icon(Icons.open_in_new),

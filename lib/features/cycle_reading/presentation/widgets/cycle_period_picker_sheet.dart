@@ -180,19 +180,27 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
     return day;
   }
 
-  /// O mês visível inteiro (aparado em hoje, se o mês ainda corre).
-  ({DateTime start, DateTime end}) get _janelaDoMes => (
-        start: _clampDay(DateTime(_visibleMonth.year, _visibleMonth.month, 1)),
-        end: _clampDay(
-          DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0),
-        ),
+  /// As janelas dos atalhos são as JANELAS DO PRODUTO, não contagens de
+  /// dias (decisão da dona, 23/08: "30 dias" mentia — mês tem 28, 30 ou 31
+  /// — e misturava número com nome). A lunação corrente e a semana corrente
+  /// são exatamente o que a leitura vende, então o atalho fala a língua do
+  /// produto e o tamanho sai certo sozinho.
+  ///
+  /// As duas chegam com fim EXCLUSIVO do serviço; aqui dentro o fim é o
+  /// último dia vivido, então volta um dia.
+  ({DateTime start, DateTime end}) _doServico(
+    ({DateTime start, DateTime end}) janela,
+  ) =>
+      (
+        start: _clampDay(janela.start),
+        end: _clampDay(janela.end.subtract(const Duration(days: 1))),
       );
 
-  /// Os 7 primeiros dias do mês visível (a "primeira semana").
-  ({DateTime start, DateTime end}) get _janelaDaSemana => (
-        start: _clampDay(DateTime(_visibleMonth.year, _visibleMonth.month, 1)),
-        end: _clampDay(DateTime(_visibleMonth.year, _visibleMonth.month, 7)),
-      );
+  ({DateTime start, DateTime end}) get _janelaDaLunacao =>
+      _doServico(CycleReadingService.currentLunation());
+
+  ({DateTime start, DateTime end}) get _janelaDaSemana =>
+      _doServico(CycleReadingService.currentWeek());
 
   bool _selecionou(({DateTime start, DateTime end}) janela) =>
       _start != null &&
@@ -204,6 +212,9 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
     setState(() {
       _start = janela.start;
       _end = janela.end;
+      // O calendário vai junto: escolher a lunação e continuar olhando outro
+      // mês deixaria a seleção fora da vista.
+      _visibleMonth = DateTime(janela.start.year, janela.start.month);
     });
   }
 
@@ -241,13 +252,13 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
     return Row(
       children: [
         atalho(
-          l10n.cyclePreset30Days,
-          _selecionou(_janelaDoMes),
-          () => _aplicarJanela(_janelaDoMes),
+          l10n.cyclePresetLunation,
+          _selecionou(_janelaDaLunacao),
+          () => _aplicarJanela(_janelaDaLunacao),
         ),
         const SizedBox(width: 6),
         atalho(
-          l10n.cyclePreset7Days,
+          l10n.cyclePresetWeek,
           _selecionou(_janelaDaSemana),
           () => _aplicarJanela(_janelaDaSemana),
         ),

@@ -7,15 +7,18 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 /// dia a dia, e a regra do confirmar — janela FECHADA e com mais de um dia
 /// (decisão da dona, 23/08: um toque só deixa a seleção pela metade, e uma
 /// leitura de 24 horas não tem ciclo para contar).
+///
+/// As datas saem do relógio de verdade, e não de um agosto cravado: os
+/// atalhos apontam para as janelas CORRENTES do produto (esta lunação, esta
+/// semana), então um teste com mês fixo passaria hoje e quebraria amanhã.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   final l10n = lookupAppLocalizations(const Locale('pt', 'BR'));
 
-  // Agosto/2026 inteiro disponível, sem registro nenhum (o calor não importa
-  // para estas regras).
-  final primeiroDia = DateTime(2026, 8, 1);
-  final ultimoDia = DateTime(2026, 8, 31);
+  final agora = DateTime.now();
+  final hoje = DateTime(agora.year, agora.month, agora.day);
+  final umAnoAtras = hoje.subtract(const Duration(days: 365));
 
   Widget tela({({DateTime start, DateTime end})? inicial}) => MaterialApp(
         locale: const Locale('pt', 'BR'),
@@ -26,8 +29,8 @@ void main() {
             child: CyclePeriodPickerSheet(
               embedded: true,
               dailyCounts: const {},
-              firstDate: primeiroDia,
-              lastDate: ultimoDia,
+              firstDate: umAnoAtras,
+              lastDate: hoje,
               initialRange: inicial,
               onConfirm: (_) {},
             ),
@@ -46,62 +49,67 @@ void main() {
     return botao.onPressed != null;
   }
 
-  /// Toca num dia do mês visível. `find.text` acha a célula do dia porque o
-  /// número aparece uma vez só na grade.
+  /// Toca num dia do mês visível. Dias 1 e 2 existem em todo mês e nunca
+  /// caem no futuro, então servem para qualquer data de execução.
   Future<void> tocarDia(WidgetTester tester, int dia) async {
     await tester.tap(find.text('$dia'));
     await tester.pump();
   }
 
-  testWidgets('sem seleção o confirmar fica apagado', (tester) async {
+  Future<void> montar(WidgetTester tester, Widget host) async {
     await tester.binding.setSurfaceSize(const Size(800, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(host);
+  }
 
-    await tester.pumpWidget(tela());
+  testWidgets('sem seleção o confirmar fica apagado', (tester) async {
+    await montar(tester, tela());
     expect(confirmarHabilitado(tester), isFalse);
   });
 
   testWidgets('um dia só não basta para confirmar', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(tela());
-    await tocarDia(tester, 5);
+    await montar(tester, tela());
+    await tocarDia(tester, 1);
 
     expect(confirmarHabilitado(tester), isFalse,
         reason: 'a janela ainda está pela metade');
   });
 
   testWidgets('com o dia final escolhido o confirmar acende', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(tela());
-    await tocarDia(tester, 5);
-    await tocarDia(tester, 12);
+    await montar(tester, tela());
+    await tocarDia(tester, 1);
+    await tocarDia(tester, 2);
 
     expect(confirmarHabilitado(tester), isTrue);
   });
 
-  testWidgets('o atalho de 7 dias já deixa a janela pronta', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(tela());
-    await tester.tap(find.text(l10n.cyclePreset7Days));
+  testWidgets('o atalho da semana já deixa a janela pronta', (tester) async {
+    await montar(tester, tela());
+    await tester.tap(find.text(l10n.cyclePresetWeek));
     await tester.pump();
 
     expect(confirmarHabilitado(tester), isTrue,
-        reason: 'o atalho fecha a janela sozinho: 1 a 7 de agosto');
+        reason: 'o atalho traz a semana corrente inteira, já fechada');
+  });
+
+  testWidgets('o atalho da lunação também nasce pronto', (tester) async {
+    await montar(tester, tela());
+    await tester.tap(find.text(l10n.cyclePresetLunation));
+    await tester.pump();
+
+    expect(confirmarHabilitado(tester), isTrue);
   });
 
   testWidgets('"Outro período" limpa a seleção e volta a apagar o confirmar',
       (tester) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      tela(inicial: (start: DateTime(2026, 8, 3), end: DateTime(2026, 8, 10))),
+    await montar(
+      tester,
+      tela(
+        inicial: (
+          start: hoje.subtract(const Duration(days: 10)),
+          end: hoje.subtract(const Duration(days: 2)),
+        ),
+      ),
     );
     expect(confirmarHabilitado(tester), isTrue);
 

@@ -40,8 +40,6 @@ Future<void> mostrarPaywallDaLeitura(
   required DateTime periodStart,
   required DateTime periodEnd,
   required String price,
-  required int recordCount,
-  required int minRecords,
   required VoidCallback onComprar,
 }) {
   return showModalBottomSheet<void>(
@@ -54,8 +52,6 @@ Future<void> mostrarPaywallDaLeitura(
       periodStart: periodStart,
       periodEnd: periodEnd,
       price: price,
-      recordCount: recordCount,
-      minRecords: minRecords,
       onComprar: onComprar,
     ),
   );
@@ -74,11 +70,6 @@ class PaywallDaLeitura extends StatelessWidget {
   /// ele aparece.
   final String price;
 
-  /// Quantos registros a janela tem e o mínimo para uma leitura funda —
-  /// o aviso de material raso continua valendo ANTES da cobrança.
-  final int recordCount;
-  final int minRecords;
-
   /// Chamado depois que a folha se fecha, quando a pessoa toca em pagar.
   final VoidCallback onComprar;
 
@@ -88,8 +79,6 @@ class PaywallDaLeitura extends StatelessWidget {
     required this.periodStart,
     required this.periodEnd,
     required this.price,
-    required this.recordCount,
-    required this.minRecords,
     required this.onComprar,
   });
 
@@ -107,6 +96,21 @@ class PaywallDaLeitura extends StatelessWidget {
         CycleReadingSections.rituals => l10n.cycleReadingSectionRituals,
         CycleReadingSections.affirmation => l10n.cycleReadingSectionAffirmation,
         _ => l10n.cycleReadingSectionSeal,
+      };
+
+  /// O que cada seção entrega, em uma linha — a MESMA anatomia das peças do
+  /// paywall Premium, onde todo benefício tem título e vislumbre. Sem esta
+  /// linha as seções liam como índice de livro, não como o que se compra.
+  String _vislumbreDaSecao(AppLocalizations l10n, String chave) =>
+      switch (chave) {
+        CycleReadingSections.portrait => l10n.cycleSectionHintPortrait,
+        CycleReadingSections.threads => l10n.cycleSectionHintThreads,
+        CycleReadingSections.sky => l10n.cycleSectionHintSky,
+        CycleReadingSections.practice => l10n.cycleSectionHintPractice,
+        CycleReadingSections.forecast => l10n.cycleSectionHintForecast,
+        CycleReadingSections.rituals => l10n.cycleSectionHintRituals,
+        CycleReadingSections.affirmation => l10n.cycleSectionHintAffirmation,
+        _ => l10n.cycleSectionHintSeal,
       };
 
   /// Divide o título da seção em (emoji, rótulo): o emoji vai para DENTRO
@@ -226,6 +230,7 @@ class PaywallDaLeitura extends StatelessWidget {
                   benefit: OfferBenefit.emoji(
                     separarEmoji(_tituloDaSecao(l10n, chave)).emoji,
                     separarEmoji(_tituloDaSecao(l10n, chave)).rotulo,
+                    vislumbre: _vislumbreDaSecao(l10n, chave),
                   ),
                 ),
             ],
@@ -244,46 +249,12 @@ class PaywallDaLeitura extends StatelessWidget {
               ),
             ),
           ],
-          if (recordCount < minRecords) ...[
-            const SizedBox(height: 8),
-            // O aviso de material raso continua vindo ANTES da cobrança
-            // (regra inegociável da feature).
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: context.gc.warning.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                l10n.cycleReadingShallowWarning,
-                style: TextStyle(color: context.gc.warning, fontSize: 11.5),
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            _isWeek
-                ? l10n.cycleReadingWeekRecordCount(recordCount)
-                : l10n.cycleReadingRecordCount(recordCount),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: context.gc.textSecondary,
-              fontSize: 11.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-          // O preço na MESMA tipografia dos cards de plano do paywall
-          // Premium — e é a primeira aparição dele no fluxo inteiro.
-          Text(
-            price,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.lora(
-              color: context.gc.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          const SizedBox(height: 10),
+          // O preço no MESMO cartão dos planos do paywall Premium: caixa com
+          // borda, valor em Lora e o rótulo do que ele é. O aviso de leitura
+          // rasa NÃO mora aqui (decisão da dona, 23/08) — ele já está na
+          // tela de onde esta folha nasceu, e repetir vira alarme.
+          _cartaoDoPreco(context, l10n),
           const SizedBox(height: 10),
           // O MESMO botão do paywall Premium, com o verbo do produto. Fecha
           // ANTES de avisar: o fluxo de compra é assíncrono e não pode
@@ -297,8 +268,58 @@ class PaywallDaLeitura extends StatelessWidget {
               onComprar();
             },
           ),
+          const SizedBox(height: 6),
+          // O lugar do "cancele quando quiser" do paywall Premium: aqui não
+          // há assinatura para cancelar, e o que tranquiliza é a leitura
+          // ficar guardada.
+          Text(
+            l10n.cycleReadingSavedToArchive,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.lora(
+              color: context.gc.textSecondary,
+              fontSize: 11.5,
+            ),
+          ),
           const SizedBox(height: 8),
           const GuaranteeBadges(),
+        ],
+      ),
+    );
+  }
+
+  /// O preço no formato dos cards de plano do paywall Premium.
+  Widget _cartaoDoPreco(BuildContext context, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      decoration: BoxDecoration(
+        color: Color.lerp(context.gc.surface, context.gc.lilac, 0.16)!,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.gc.lilac, width: 2.5),
+        boxShadow: [
+          BoxShadow(
+            color: context.gc.lilac.withValues(alpha: 0.17),
+            blurRadius: 16,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            price,
+            style: GoogleFonts.lora(
+              color: context.gc.textPrimary,
+              fontSize: 23,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            l10n.cycleReadingOneTime,
+            style: GoogleFonts.lora(
+              color: context.gc.textSecondary,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );

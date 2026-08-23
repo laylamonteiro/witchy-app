@@ -598,10 +598,13 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             // análise: a pessoa sabe exatamente o que compra e o que os
             // dados alimentam antes de qualquer toque.
             _buildCalendario(l10n),
+            // O convite do nascimento vem ANTES da oferta: sem mapa, "o céu
+            // sobre você" e "o que se anuncia" saem pobres — pedir depois da
+            // decisão de compra é pedir tarde.
+            _buildConviteDoMapa(l10n),
             Container(key: _ancoraDaOferta),
             _buildOfferCard(l10n),
             _buildPrivacidade(l10n),
-            _buildConviteDoMapa(l10n),
             _buildLeiturasRecentes(l10n),
           ],
         ),
@@ -1230,8 +1233,6 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
           periodStart: period.start,
           periodEnd: period.end,
           price: price,
-          recordCount: _recordCount,
-          minRecords: CycleReadingComposer.minRecordsFor(_periodType),
           onComprar: _buy,
         ),
         icon: const Icon(Icons.auto_awesome, size: 18),
