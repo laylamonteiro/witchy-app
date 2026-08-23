@@ -508,7 +508,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
         regenerate: regenerate,
         // Com o nome no material, a narrativa fala DELA em terceira pessoa
         // (decisão da dona, 23/08); sem nome no perfil, segue com "você".
-        userName: user.displayName,
+        userName: user.displayName?.split(' ').first,
       );
       if (!mounted) return;
       setState(() => _existing = result.reading);
