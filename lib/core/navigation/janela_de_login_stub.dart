@@ -2,6 +2,4 @@
 /// sempre) e a pergunta "sou a janela de login?" é sempre não.
 Object? abrirJanelaDeLogin(String url) => null;
 
-bool janelaDeLoginFechada(Object? janela) => true;
-
 bool fecharSeJanelaDeLogin() => false;

@@ -42,6 +42,7 @@ import 'features/encyclopedia/presentation/providers/encyclopedia_provider.dart'
 import 'features/lunar/presentation/providers/lunar_provider.dart';
 import 'features/wheel_of_year/presentation/providers/wheel_of_year_provider.dart';
 import 'features/astrology/presentation/providers/astrology_provider.dart';
+import 'core/navigation/janela_de_login.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -135,6 +136,21 @@ Future<SharedPreferences> _initializeApp() async {
   AuthProvider.bootCameFromOAuthReturn = kIsWeb &&
       (Uri.base.queryParameters.containsKey('code') ||
           Uri.base.fragment.contains('access_token'));
+
+  // E se este boot é a JANELA DE LOGIN voltando do Google: a marca fica no
+  // armazenamento da origem porque o COOP do Google apaga o `opener` — sem
+  // ela, a janela viraria um segundo app, com as páginas do Google no
+  // histórico dela (o defeito do voltar, de volta pela porta dos fundos).
+  // O AuthWrapper mostra então o "pode fechar esta aba".
+  if (AuthProvider.bootCameFromOAuthReturn) {
+    final prefs = await SharedPreferences.getInstance();
+    final marca =
+        int.tryParse(prefs.getString(chaveJanelaDeLoginEmAndamento) ?? '');
+    AuthProvider.bootNaJanelaDeLogin = marca != null &&
+        DateTime.now()
+                .difference(DateTime.fromMillisecondsSinceEpoch(marca)) <
+            validadeDaMarcaDeJanela;
+  }
 
   // Initialize Supabase
   if (SupabaseConfig.isConfigured) {

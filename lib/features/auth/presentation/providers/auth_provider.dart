@@ -50,6 +50,12 @@ class AuthProvider extends ChangeNotifier {
   /// (?code= na URL) — ANTES do Supabase.initialize, que limpa a URL.
   static bool bootCameFromOAuthReturn = false;
 
+  /// Marcado no main() quando o boot é a JANELA DE LOGIN voltando do
+  /// Google (a marca no armazenamento diz; o COOP do Google apaga o
+  /// `opener`). O AuthWrapper mostra o "pode fechar esta aba" em vez de
+  /// transformar a janela num segundo app.
+  static bool bootNaJanelaDeLogin = false;
+
   /// Enquanto true, a troca do código OAuth pode estar em voo: o AuthWrapper
   /// mostra "entrando..." em vez da tela de login. Sem isso, quem terminava
   /// o login no Google caía de volta na tela de login por 1-3 segundos — ou

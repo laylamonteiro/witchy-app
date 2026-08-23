@@ -323,9 +323,8 @@ class SupabaseAuthRepository implements AuthRepository {
     }
     await debugLog('AUTH', 'Login do Google em janela própria — aguardando a sessão');
 
-    final sessaoCrua = await _aguardarSessaoDaJanela(janela);
+    final sessaoCrua = await _aguardarSessaoDaJanela();
     if (sessaoCrua == null) {
-      await debugLog('AUTH', 'Janela de login fechou sem sessão');
       return AuthResult.error(_l10n.authErrLoginCancelled);
     }
 
@@ -351,32 +350,43 @@ class SupabaseAuthRepository implements AuthRepository {
 
   /// Observa o armazenamento até a janela de login gravar a sessão.
   ///
-  /// Devolve a sessão CRUA (o JSON persistido) ou null na desistência: a
-  /// janela fechada sem nada gravado (com uma folga de alguns segundos —
-  /// a gravação acontece instantes antes de a janela se fechar) ou o
-  /// tempo esgotado.
-  Future<String?> _aguardarSessaoDaJanela(Object janela) async {
+  /// SÓ o armazenamento, nunca a alça da janela: o COOP das páginas do
+  /// Google corta o vínculo na primeira navegação e `closed` passa a dizer
+  /// fechada com a janela aberta — o atalho "fechou = desistiu" derrubava
+  /// o login com "Sign-in cancelled" enquanto a pessoa ainda escolhia a
+  /// conta (visto no preview, 23/08). O preço é que uma desistência real
+  /// só aparece no fim do prazo; melhor uma espera honesta que um
+  /// cancelamento inventado.
+  ///
+  /// Enquanto espera, a marca de janela fica de pé: é por ela que o
+  /// documento que voltar do OAuth sabe que é a janela de login (o COOP
+  /// também apaga o `opener`) e mostra o "pode fechar esta aba" em vez de
+  /// virar um segundo app com o Google no histórico.
+  Future<String?> _aguardarSessaoDaJanela() async {
     final prefs = await SharedPreferences.getInstance();
     final chave = _chaveDaSessao;
     final antes = prefs.getString(chave);
     final limite = DateTime.now().add(const Duration(minutes: 3));
-    DateTime? fechadaEm;
 
-    while (DateTime.now().isBefore(limite)) {
-      await Future.delayed(const Duration(seconds: 1));
-      await prefs.reload();
-      final agora = prefs.getString(chave);
-      if (agora != null && agora.isNotEmpty && agora != antes) return agora;
-
-      if (janelaDeLoginFechada(janela)) {
-        fechadaEm ??= DateTime.now();
-        if (DateTime.now().difference(fechadaEm) >
-            const Duration(seconds: 5)) {
-          return null;
+    await prefs.setString(
+      chaveJanelaDeLoginEmAndamento,
+      '${DateTime.now().millisecondsSinceEpoch}',
+    );
+    try {
+      while (DateTime.now().isBefore(limite)) {
+        await Future.delayed(const Duration(milliseconds: 800));
+        await prefs.reload();
+        final agora = prefs.getString(chave);
+        if (agora != null && agora.isNotEmpty && agora != antes) {
+          return agora;
         }
       }
+      await debugLog(
+          'AUTH', 'Janela de login: sessão não apareceu no prazo (3min)');
+      return null;
+    } finally {
+      await prefs.remove(chaveJanelaDeLoginEmAndamento);
     }
-    return null;
   }
 
   @override
