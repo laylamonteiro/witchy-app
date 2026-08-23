@@ -284,3 +284,50 @@ ligar isso algum dia, se um dia valer a pena.
 - Os números de negócio do relatório de produto vêm de uma base com quase
   um terço de contas que não são usuárias. Enquanto o `.sql` da seção 7 não
   rodar, toda taxa calculada sobre eles está torta para cima.
+
+---
+
+## 10. Armadilhas deste ambiente
+
+Cada uma destas custou tempo para ser descoberta. Estão aqui para não serem
+descobertas de novo.
+
+- **Não há Flutter instalado, e não dá para instalar.** O host do SDK
+  (`storage.googleapis.com`) é recusado pela política de rede da sessão;
+  `pub.dev` e os espelhos também. Clonar o SDK do GitHub não resolve — o
+  primeiro `flutter` baixa o Dart SDK do host bloqueado. **O validador é a
+  CI**: empurre para a branch e leia o resultado. Nada de chamar de testado
+  o que só foi lido.
+- **O passo de formatação da CI é `continue-on-error`.** O verde dele não
+  quer dizer nada. São 327 de 576 arquivos fora do `dart format`.
+- **A catraca de `use_build_context_synchronously` está exatamente no
+  teto** (`TETO=26`, em `branch-validate.yml`). Qualquer `context` novo
+  depois de um `await` derruba a CI. É de propósito: o número só desce.
+- **`AppLocalizationsPtBr extends AppLocalizationsPt`** — é herança, não
+  sobrescrita. Chave que existe só em `app_pt.arb` aparece em pt-BR sem
+  erro nenhum, e o `check_arb_sync.sh` é quem pega.
+- **`@visibleForTesting` não vale em parâmetro.** Quebra o `analyze`. Para
+  abrir um caminho só para teste, documente em prosa (foi o que
+  `guarda_de_voltar_web.dart` fez com o campo `naWeb`).
+- **`Navigator.maybePop()` devolve `true` quando o `PopScope` recusa.**
+  Teste de guarda que asseverar `isFalse` passa a impressão errada — teste
+  qual tela ficou na frente.
+- **`ConflictAlgorithm.replace` é DELETE + INSERT** no SQLite, e
+  `PRAGMA foreign_keys` nasce desligado e vale por conexão. As duas coisas
+  juntas são o motivo de as FKs seguirem desligadas (seção 7).
+- **Listar runs da CI pela API traz o corpo de todos os commits** e estoura
+  o limite de resposta. Filtre por branch e status, ou vá direto no id da
+  run.
+
+---
+
+## 11. Perguntas em aberto para a dona do produto
+
+1. **Os seis conflitos da seção 3.** Metade do relatório de produto está
+   parada atrás deles.
+2. **"Congelar preço" (decisão 12) significa congelar o valor, não congelar
+   a correção da exibição** — confirmar. Ver 3.1.
+3. **Os e-mails pessoais em `marcar_contas_de_teste.sql` e os números de
+   negócio em `AUDITORIA_PRODUTO_AGO2026.md` devem seguir versionados?** O
+   `.sql` não funciona sem os e-mails, mas dá para editar a lista antes de
+   rodar e reverter o arquivo depois.
