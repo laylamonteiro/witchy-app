@@ -286,26 +286,26 @@ class PremiumBenefitsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final benefits = <_Benefit>[
+    final benefits = <OfferBenefit>[
       // O vislumbre de cada peça é o MESMO texto da página de descoberta,
       // de propósito: as duas telas precisam parecer a mesma ideia vista de
       // dois ângulos, e não dois times escrevendo sobre o mesmo produto.
-      _Benefit.asset(
+      OfferBenefit.asset(
         'assets/premium/icon_orb.png',
         l10n.premiumBenefitAdvisor,
         vislumbre: l10n.conviteVislumbreConselheiroLinha,
       ),
-      _Benefit.asset(
+      OfferBenefit.asset(
         'assets/premium/icon_book.png',
         l10n.premiumBenefitEncyclopedia,
         vislumbre: l10n.conviteVislumbreEnciclopediaLinha,
       ),
-      _Benefit.asset(
+      OfferBenefit.asset(
         'assets/premium/icon_moon.png',
         l10n.premiumBenefitDailyClimate,
         vislumbre: l10n.conviteVislumbreClimaLinha,
       ),
-      _Benefit.asset(
+      OfferBenefit.asset(
         'assets/premium/icon_runes.png',
         l10n.premiumBenefitUnlimitedReadings,
         vislumbre: l10n.conviteVislumbreLeiturasLinha,
@@ -316,8 +316,8 @@ class PremiumBenefitsSection extends StatelessWidget {
       // extras do Vitalício. Nada de inventar uma linha nova para preencher
       // o buraco: o substituto é o redesenho do convite.
       if (selectedPlan == SubscriptionType.lifetime) ...[
-        _Benefit.icon(Icons.auto_awesome, l10n.premiumBenefitLifetimeCycle),
-        _Benefit.icon(Icons.all_inclusive, l10n.premiumBenefitLifetimeNoRenew),
+        OfferBenefit.icon(Icons.auto_awesome, l10n.premiumBenefitLifetimeCycle),
+        OfferBenefit.icon(Icons.all_inclusive, l10n.premiumBenefitLifetimeNoRenew),
       ],
     ];
     // A cascata que o app já usa nas outras telas dá o senso de "grandioso"
@@ -327,7 +327,7 @@ class PremiumBenefitsSection extends StatelessWidget {
     return StaggeredEntrance(
       children: [
         for (var index = 0; index < benefits.length; index++) ...[
-          _PremiumBenefitRow(benefit: benefits[index]),
+          OfferBenefitRow(benefit: benefits[index]),
           if (index != benefits.length - 1) const SizedBox(height: 14),
         ],
       ],
@@ -338,8 +338,8 @@ class PremiumBenefitsSection extends StatelessWidget {
 /// Uma PEÇA da oferta: a arte, o nome e — quando há — o vislumbre do que ela
 /// entrega. As exclusivas do Vitalício não têm arte própria nem vislumbre:
 /// são fato do plano, ganham ícone do sistema e realce lilás.
-class _Benefit {
-  const _Benefit._({
+class OfferBenefit {
+  const OfferBenefit._({
     required this.label,
     this.vislumbre,
     this.assetPath,
@@ -347,11 +347,21 @@ class _Benefit {
     this.highlighted = false,
   });
 
-  factory _Benefit.asset(String assetPath, String label, {String? vislumbre}) =>
-      _Benefit._(assetPath: assetPath, label: label, vislumbre: vislumbre);
+  factory OfferBenefit.asset(String assetPath, String label, {String? vislumbre}) =>
+      OfferBenefit._(assetPath: assetPath, label: label, vislumbre: vislumbre);
 
-  factory _Benefit.icon(IconData iconData, String label) =>
-      _Benefit._(iconData: iconData, label: label, highlighted: true);
+  factory OfferBenefit.icon(
+    IconData iconData,
+    String label, {
+    bool highlighted = true,
+    String? vislumbre,
+  }) =>
+      OfferBenefit._(
+        iconData: iconData,
+        label: label,
+        highlighted: highlighted,
+        vislumbre: vislumbre,
+      );
 
   final String label;
 
@@ -364,10 +374,10 @@ class _Benefit {
   final bool highlighted;
 }
 
-class _PremiumBenefitRow extends StatelessWidget {
-  final _Benefit benefit;
+class OfferBenefitRow extends StatelessWidget {
+  final OfferBenefit benefit;
 
-  const _PremiumBenefitRow({required this.benefit});
+  const OfferBenefitRow({super.key, required this.benefit});
 
   @override
   Widget build(BuildContext context) {
@@ -872,11 +882,17 @@ class SubscriptionPurchaseButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onPressed;
 
+  /// Texto do botão. Nulo usa o padrão do paywall Premium ("Começar Agora").
+  /// Existe para o paywall da Leitura do Ciclo usar ESTE botão — o mesmo
+  /// gradiente, a mesma forma — com o verbo do produto dele.
+  final String? label;
+
   const SubscriptionPurchaseButton({
     super.key,
     required this.loading,
     required this.enabled,
     required this.onPressed,
+    this.label,
   });
 
   @override
@@ -928,7 +944,7 @@ class SubscriptionPurchaseButton extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    AppLocalizations.of(context).premiumStartNow,
+                    label ?? AppLocalizations.of(context).premiumStartNow,
                     style: GoogleFonts.lora(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -972,15 +988,32 @@ class SubscriptionGuarantees extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 16,
-          runSpacing: 8,
-          children: [
-            for (final guarantee in guarantees)
-              _GuaranteeItem(assetPath: guarantee.$1, label: guarantee.$2),
-          ],
-        ),
+        const GuaranteeBadges(),
+      ],
+    );
+  }
+}
+
+/// Os dois selos de confiança do paywall (pagamento seguro, dados
+/// protegidos) — públicos para o paywall da Leitura do Ciclo mostrar
+/// exatamente os mesmos.
+class GuaranteeBadges extends StatelessWidget {
+  const GuaranteeBadges({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final guarantees = [
+      ('assets/premium/icon_shield.png', l10n.premiumSecurePayment),
+      ('assets/premium/icon_lock.png', l10n.premiumDataProtected),
+    ];
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 16,
+      runSpacing: 8,
+      children: [
+        for (final guarantee in guarantees)
+          _GuaranteeItem(assetPath: guarantee.$1, label: guarantee.$2),
       ],
     );
   }
