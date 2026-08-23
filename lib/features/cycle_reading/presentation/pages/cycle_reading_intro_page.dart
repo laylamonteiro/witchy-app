@@ -1025,14 +1025,18 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
                           ),
                     ),
                     Text(
+                      // Fim estampado = último dia LIDO: o `end` cru é
+                      // exclusivo e apontaria um dia fora da leitura.
                       isWeek
                           ? l10n.cycleReadingWeekPeriodLine(
                               format.format(period.start),
-                              format.format(period.end),
+                              format.format(
+                                  CycleReadingService.lastDayOf(period.end)),
                             )
                           : l10n.cycleReadingPeriodLine(
                               format.format(period.start),
-                              format.format(period.end),
+                              format.format(
+                                  CycleReadingService.lastDayOf(period.end)),
                             ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.gc.textSecondary,

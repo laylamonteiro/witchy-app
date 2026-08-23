@@ -144,7 +144,7 @@ class _CyclePeriodPickerSheetState extends State<CyclePeriodPickerSheet> {
 
   /// O produto que a selecao vira — e o TAMANHO que decide, e mostrar isso
   /// antes da compra e o que evita a surpresa no caixa.
-  String get _periodType => _selectedDays <= 7
+  String get _periodType => _selectedDays <= 8
       ? CycleReadingPeriodType.week
       : CycleReadingPeriodType.lunation;
 

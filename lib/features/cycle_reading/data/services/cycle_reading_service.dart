@@ -123,14 +123,16 @@ class CycleReadingService {
     );
   }
 
-  /// A semana corrente: os últimos 7 dias, hoje incluído. O fim é a meia-
-  /// noite de amanhã para o dia de hoje entrar inteiro (as consultas usam
-  /// `>= start AND < end`).
+  /// A semana corrente: o giro completo, de um dia da semana ao MESMO dia
+  /// na semana seguinte — segunda a segunda, hoje incluído. São 8 dias
+  /// vividos (decisão da dona, 23/08: o ciclo semanal fecha no dia em que
+  /// começou, não na véspera). O fim é a meia-noite de amanhã para o dia
+  /// de hoje entrar inteiro (as consultas usam `>= start AND < end`).
   static ({DateTime start, DateTime end}) currentWeek({DateTime? now}) {
     final reference = now ?? DateTime.now();
     final today = DateTime(reference.year, reference.month, reference.day);
     return (
-      start: today.subtract(const Duration(days: 6)),
+      start: today.subtract(const Duration(days: 7)),
       end: today.add(const Duration(days: 1)),
     );
   }
@@ -155,6 +157,16 @@ class CycleReadingService {
   static int spanInDays(DateTime start, DateTime end) =>
       end.difference(start).inDays;
 
+  /// O último dia VIVIDO de uma janela com fim exclusivo — o que as telas
+  /// mostram. O `end` cru é a meia-noite do dia SEGUINTE ao último lido:
+  /// estampá-lo dizia à pessoa que a leitura cobre um dia que não cobre.
+  static DateTime lastDayOf(DateTime end) {
+    final midnight = DateTime(end.year, end.month, end.day);
+    return midnight == end
+        ? midnight.subtract(const Duration(days: 1))
+        : midnight;
+  }
+
   /// Quando convidar de volta depois de uma leitura: uma semana ou uma
   /// lunação depois dela.
   ///
@@ -163,13 +175,14 @@ class CycleReadingService {
   /// nasce do tamanho do ciclo lido.
   static Duration inviteBackAfter(String periodType) =>
       periodType == CycleReadingPeriodType.week
-          ? const Duration(days: 7)
+          ? const Duration(days: 8)
           : const Duration(days: 30);
 
-  /// Classifica um período escolhido a dedo: até 7 dias é produto SEMANAL;
-  /// de 8 a 31, MENSAL (lunação). Quem chama já validou o teto de 31.
+  /// Classifica um período escolhido a dedo: até 8 dias (o giro de segunda
+  /// a segunda) é produto SEMANAL; de 9 a 31, MENSAL (lunação). Quem chama
+  /// já validou o teto de 31.
   static String periodTypeForSpan(DateTime start, DateTime end) =>
-      spanInDays(start, end) <= 7
+      spanInDays(start, end) <= 8
           ? CycleReadingPeriodType.week
           : CycleReadingPeriodType.lunation;
 
@@ -406,7 +419,7 @@ class CycleReadingService {
   }) {
     final format = DateFormat('dd/MM');
     return '${periodTitle(periodType)} — '
-        '${format.format(start)}–${format.format(end)}';
+        '${format.format(start)}–${format.format(lastDayOf(end))}';
   }
 
   /// Nome do produto conforme a janela ("Leitura da Semana"/"da Lunação").
@@ -424,14 +437,17 @@ class CycleReadingService {
   }) {
     final l10n = _l10n;
     final format = DateFormat('dd/MM/yyyy');
+    // O fim estampado é o último dia LIDO (ver [lastDayOf]) — o `end` cru é
+    // exclusivo e apontaria um dia fora da leitura.
+    final fim = format.format(lastDayOf(credit.periodEnd));
     final periodLine = credit.isWeekly
         ? l10n.cycleReadingWeekPeriodLine(
             format.format(credit.periodStart),
-            format.format(credit.periodEnd),
+            fim,
           )
         : l10n.cycleReadingPeriodLine(
             format.format(credit.periodStart),
-            format.format(credit.periodEnd),
+            fim,
           );
     final buffer = StringBuffer()
       ..writeln('# ${periodTitle(credit.periodType)}')

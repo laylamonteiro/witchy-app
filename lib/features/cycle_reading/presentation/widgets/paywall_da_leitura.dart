@@ -167,14 +167,16 @@ class PaywallDaLeitura extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
+                // Fim estampado = último dia LIDO (o `end` cru é exclusivo),
+                // igual ao cartão da intro e à linha do relatório.
                 _isWeek
                     ? l10n.cycleReadingWeekPeriodLine(
                         format.format(periodStart),
-                        format.format(periodEnd),
+                        format.format(CycleReadingService.lastDayOf(periodEnd)),
                       )
                     : l10n.cycleReadingPeriodLine(
                         format.format(periodStart),
-                        format.format(periodEnd),
+                        format.format(CycleReadingService.lastDayOf(periodEnd)),
                       ),
                 textAlign: TextAlign.center,
                 style: tema.textTheme.bodySmall?.copyWith(

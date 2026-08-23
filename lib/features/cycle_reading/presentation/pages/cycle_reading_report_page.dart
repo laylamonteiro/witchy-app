@@ -558,8 +558,11 @@ class CycleReadingReportPage extends StatelessWidget {
     List<String> keywords,
   ) {
     final format = DateFormat('dd/MM');
+    // Último dia VIVIDO no cartão, como nas demais telas — o fim cru é
+    // exclusivo e apontaria um dia fora da leitura.
     final periodLine = periodStart != null && periodEnd != null
-        ? '${format.format(periodStart!)}–${format.format(periodEnd!)}'
+        ? '${format.format(periodStart!)}–'
+            '${format.format(CycleReadingService.lastDayOf(periodEnd!))}'
         : null;
     showShareCardSheet(
       context,

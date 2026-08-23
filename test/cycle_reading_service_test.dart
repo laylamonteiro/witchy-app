@@ -379,7 +379,7 @@ void main() {
     test('uma semana para a semanal, uma lunação para a mensal', () {
       expect(
         CycleReadingService.inviteBackAfter(CycleReadingPeriodType.week),
-        const Duration(days: 7),
+        const Duration(days: 8),
       );
       expect(
         CycleReadingService.inviteBackAfter(CycleReadingPeriodType.lunation),
@@ -389,10 +389,10 @@ void main() {
   });
 
   group('período escolhido a dedo vira semana ou lunação pelo tamanho', () {
-    test('até 7 dias é leitura da semana', () {
+    test('até 8 dias (o giro de segunda a segunda) é leitura da semana', () {
       expect(
         CycleReadingService.periodTypeForSpan(
-            DateTime(2026, 8, 1), DateTime(2026, 8, 8)),
+            DateTime(2026, 8, 1), DateTime(2026, 8, 9)),
         CycleReadingPeriodType.week,
       );
       expect(
@@ -402,10 +402,10 @@ void main() {
       );
     });
 
-    test('de 8 a 31 dias é leitura da lunação', () {
+    test('de 9 a 31 dias é leitura da lunação', () {
       expect(
         CycleReadingService.periodTypeForSpan(
-            DateTime(2026, 8, 1), DateTime(2026, 8, 9)),
+            DateTime(2026, 8, 1), DateTime(2026, 8, 10)),
         CycleReadingPeriodType.lunation,
       );
       expect(
@@ -564,12 +564,37 @@ void main() {
     });
   });
 
-  test('semana corrente cobre 7 dias e inclui hoje', () {
+  test('semana corrente é o giro completo: 8 dias, hoje incluído', () {
+    // Decisão da dona (23/08): o ciclo semanal fecha no MESMO dia da semana
+    // em que começou (segunda a segunda) — 8 dias vividos, não 7.
     final now = DateTime(2026, 8, 19, 15);
     final week = CycleReadingService.currentWeek(now: now);
-    expect(week.start, DateTime(2026, 8, 13));
+    expect(week.start, DateTime(2026, 8, 12));
     expect(week.end, DateTime(2026, 8, 20));
-    expect(week.end.difference(week.start).inDays, 7);
+    expect(week.end.difference(week.start).inDays, 8);
+    // Mesmo dia da semana nas duas pontas vividas (12 e 19: quartas).
+    expect(week.start.weekday, DateTime(2026, 8, 19).weekday);
+  });
+
+  test('as telas estampam o último dia VIVIDO, nunca o fim exclusivo', () {
+    // O `end` guardado é a meia-noite do dia seguinte ao último lido;
+    // estampá-lo cru dizia que a leitura cobre um dia que não cobre.
+    expect(
+      CycleReadingService.lastDayOf(DateTime(2026, 8, 30)),
+      DateTime(2026, 8, 29),
+    );
+    // Fim fora da meia-noite: o próprio dia já foi vivido em parte.
+    expect(
+      CycleReadingService.lastDayOf(DateTime(2026, 8, 30, 12)),
+      DateTime(2026, 8, 30),
+    );
+    expect(
+      CycleReadingService.reportTitle(
+        DateTime(2026, 8, 1),
+        DateTime(2026, 8, 30),
+      ),
+      contains('01/08–29/08'),
+    );
   });
 
   group('o Vitalício cobre as duas janelas', () {
