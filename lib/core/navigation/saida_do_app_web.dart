@@ -6,7 +6,18 @@ import 'package:web/web.dart' as web;
 /// (`SingleEntryBrowserHistory`) —, então uma aba que nasceu no app tem
 /// comprimento 2. Mais que isso significa que há para onde voltar, e só
 /// nesse caso o "voltar de novo para sair" tem o que cumprir.
-bool podeSairDaAba() => _entradasDaAba() > _entradasDoMotor;
+///
+/// Conservador: só permite sair se há CLARAMENTE história antes — isto é,
+/// muito mais que apenas a origem e a guarda. Isto evita edge cases onde
+/// a contagem está imprecisa.
+bool podeSairDaAba() {
+  final length = _entradasDaAba();
+  // Conservador: exigir muito mais que a mínima para sair. Com 3 entradas
+  // é ambíguo (pode ser que o motor não empurrou a guarda, ou o navegador
+  // tem comportamento inesperado). Exigir >= 4 garante que há página real
+  // anterior e evita saídas prematuras em edge cases.
+  return length > 3;
+}
 
 /// As duas entradas que o motor mantém (origem + guarda).
 const int _entradasDoMotor = 2;
