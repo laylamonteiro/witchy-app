@@ -37,6 +37,27 @@ class AstrologyProvider with ChangeNotifier {
   /// falha em TODAS as outras abertas, inclusive nas que estavam indo bem.
   final Map<String, _FalhaDaSecao> _falhas = <String, _FalhaDaSecao>{};
 
+  /// Dublê do tecelão de seção, nulo em produção.
+  ///
+  /// O teste de concorrência do acúmulo precisa mandar duas seções terminarem
+  /// em ordens controladas. O risco que ele vigia mora na
+  /// leitura-depois-da-chamada e na fila de gravação — que rodam de verdade —
+  /// e não na chamada de rede da IA, que é só a borda. Mesmo racional do
+  /// ServidorDeSync no DataSyncService.
+  @visibleForTesting
+  Future<String> Function({
+    required BirthChartModel birthChart,
+    required MagicalProfile profile,
+    required String sectionKey,
+  })? tecelaoDeTeste;
+
+  /// Entrega mapa e perfil prontos ao teste, sem passar pelo cálculo do mapa.
+  @visibleForTesting
+  void adotarMapaParaTeste(BirthChartModel chart, MagicalProfile profile) {
+    _birthChart = chart;
+    _magicalProfile = profile;
+  }
+
   String? _error;
   String _currentUserId = 'local_user';
 
@@ -390,7 +411,9 @@ class AstrologyProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final corpo = await _aiService.generateMagicalProfileSection(
+      final tecelao =
+          tecelaoDeTeste ?? _aiService.generateMagicalProfileSection;
+      final corpo = await tecelao(
         birthChart: _birthChart!,
         profile: _magicalProfile!,
         sectionKey: sectionKey,

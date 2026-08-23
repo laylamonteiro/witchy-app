@@ -228,7 +228,11 @@ equipe e ~20 testadoras, quase um terço da base não é usuária.
 **Custa dado se ficar aberto**
 - ~~Tombstone / exclusão suave~~ — **feito** (ver seção 5). O que restou
   dele é painel: rodar `sync_tombstones_migration.sql` (seção 7).
-- Teste de concorrência do acúmulo por seção.
+- ~~Teste de concorrência do acúmulo por seção~~ — **feito**
+  (`test/acumulo_por_secao_test.dart`): duas seções em ordens controladas,
+  quem chega depois soma em vez de substituir, no texto e no gravado; a
+  borda da IA virou dublê injetável (`tecelaoDeTeste`), o acúmulo e a fila
+  de gravação rodam de verdade.
 
 **Segurança** — **verificado no banco ativo em 23/08** (advisor + catálogo,
 via acesso de leitura); o conserto está pronto em
@@ -245,8 +249,11 @@ via acesso de leitura); o conserto está pronto em
   hoje**; se os contadores de `profiles` importarem um dia, falta agendar).
 
 **Cobertura**
-- `PagedReading`, `PageDots`, `PremiumLockedPreview`, `StaggeredEntrance`:
-  zero testes
+- ~~`PagedReading`, `PageDots`, `PremiumLockedPreview`,
+  `StaggeredEntrance`: zero testes~~ — **feito**
+  (`test/cobertura_widgets_nucleo_test.dart`): semântica dos pontinhos,
+  paginação que nunca esconde conteúdo, fail-closed do véu, cascata sem
+  timer pendente e sem reanimar a rolagem
 
 **Formatação**
 - `dart format` em 327 de 576 arquivos. Precisa de Flutter; o passo da CI é
