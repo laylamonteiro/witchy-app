@@ -8,9 +8,9 @@ import 'package:grimorio_de_bolso/l10n/generated/app_localizations.dart';
 /// intro e mora num paywall próprio — a folha explica seção por seção o que
 /// a leitura entrega e só então mostra o valor e o botão de pagar.
 ///
-/// Estes testes provam as três promessas da folha: a lunação lista as 8
-/// seções (sem upsell — quem já vai levar o produto completo não precisa de
-/// convite), a semana lista as 5 (a previsão entra nas duas janelas) e
+/// Estes testes provam as três promessas da folha: a lunação traz só os 4
+/// DESTAQUES em bullet (máximo 3-4, decisão da dona, 23/08 — a lista
+/// completa mora na tela anterior) e não faz upsell, a semana traz 3 e
 /// convida honestamente para a lunação, e o CTA fecha a folha antes de
 /// avisar quem paga.
 void main() {
@@ -68,7 +68,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
   }
 
-  testWidgets('a folha da lunação tece as 8 seções e não faz upsell',
+  testWidgets('a folha da lunação traz os 4 destaques e não faz upsell',
       (tester) async {
     await abrirFolha(
       tester,
@@ -78,17 +78,17 @@ void main() {
     expect(find.text(l10n.cycleReadingLunationTitle), findsOneWidget);
     for (final titulo in [
       l10n.cycleReadingSectionPortrait,
-      l10n.cycleReadingSectionThreads,
       l10n.cycleReadingSectionSky,
-      l10n.cycleReadingSectionPractice,
       l10n.cycleReadingSectionForecast,
       l10n.cycleReadingSectionRituals,
-      l10n.cycleReadingSectionAffirmation,
-      l10n.cycleReadingSectionSeal,
     ]) {
       expect(find.text(rotulo(titulo)), findsOneWidget,
-          reason: 'cada seção do produto completo vira um bullet');
+          reason: 'cada destaque vira um bullet');
     }
+    // As outras 4 seções não viram bullet — ficam contadas na linha "+ N".
+    expect(find.text(rotulo(l10n.cycleReadingSectionThreads)), findsNothing);
+    expect(find.text(rotulo(l10n.cycleReadingSectionSeal)), findsNothing);
+    expect(find.text(l10n.cyclePaywallMoreSections(4)), findsOneWidget);
     expect(find.text(l10n.cycleReadingPaywallWeekUpsell), findsNothing,
         reason: 'quem já leva a lunação não precisa de convite para ela');
     // O preço aparece aqui — e é a primeira vez no fluxo inteiro.

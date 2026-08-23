@@ -66,16 +66,15 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
 
   late String _periodType = widget.initialPeriodType;
 
-  /// Janela escolhida a dedo (null = a janela corrente do tipo).
+  /// A janela em foco — nasce preenchida e o calendário a redesenha.
   ///
-  /// Existe para ler um pedaço RETROATIVO: a lunação passada, aquela semana
-  /// específica. Quando está preenchida, ela manda — e o [_periodType]
-  /// passa a sair do TAMANHO dela (até 8 dias = semana; 9 a 31 = lunação),
-  /// porque é o tamanho que define o produto, não o rótulo escolhido antes.
-  ({DateTime start, DateTime end})? _customPeriod;
-
-  ({DateTime start, DateTime end}) get _period =>
-      _customPeriod ?? CycleReadingService.periodFor(_periodType);
+  /// Abre já na janela do atalho do tipo pedido, que é a MESMA conta dos
+  /// atalhos do seletor — assim o chip correspondente acende na abertura
+  /// (decisão da dona, 23/08: a página abre com "Lunação" selecionado) — ou
+  /// na que o chamador mandou pronta. O [_periodType] sai do TAMANHO dela
+  /// (até 8 dias = semana; 9 a 31 = lunação), porque é o tamanho que define
+  /// o produto, não o rótulo escolhido antes.
+  late ({DateTime start, DateTime end}) _period;
 
   /// Por que a janela escolhida foi recusada (null = nenhuma recusa à
   /// vista). Fica na tela até a pessoa escolher outra.
@@ -155,12 +154,11 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     // nasce escolhida — cartão da leitura com avisos e sumário, e a
     // privacidade logo abaixo — e o calendário vira o "ler outro período",
     // mais adiante na página, em vez de ser a única coisa à vista.
-    final janela = widget.initialPeriod;
-    if (janela != null) {
-      _customPeriod = janela;
-      _periodType =
-          CycleReadingService.periodTypeForSpan(janela.start, janela.end);
-    }
+    final janela =
+        widget.initialPeriod ?? _janelaDoAtalho(widget.initialPeriodType);
+    _period = janela;
+    _periodType =
+        CycleReadingService.periodTypeForSpan(janela.start, janela.end);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _load();
     });
@@ -261,7 +259,7 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     }
 
     setState(() {
-      _customPeriod = janela;
+      _period = janela;
       _periodType = veredito.periodType;
       _conflito = veredito.conflict;
       _customRejection = null;
@@ -636,10 +634,10 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
             // A chave leva a janela: mudar de período reconstrói o seletor
             // com as datas novas já marcadas, em vez de guardar o estado
             // antigo do calendário.
-            key: ValueKey(_customPeriod),
+            key: ValueKey(_period),
             embedded: true,
             onConfirm: _escolherPeriodo,
-            initialRange: _janelaSugerida(ultimoDia),
+            initialRange: _period,
             dailyCounts: densidade,
             firstDate: primeiroDia,
             lastDate: ultimoDia,
@@ -838,19 +836,23 @@ class _CycleReadingIntroPageState extends State<CycleReadingIntroPage> {
     );
   }
 
-  /// A janela que o calendário já abre marcada.
+  /// A janela que o atalho do tipo pedido marcaria no seletor: o mês
+  /// corrente até hoje ("Lunação") ou o giro de 8 dias ("Semana"), sempre
+  /// com o fim EXCLUSIVO da feature.
   ///
-  /// A do ciclo corrente, cortada em HOJE: a lunação em curso termina no
-  /// futuro, e um período que ainda não foi vivido não pode ser lido — sem o
-  /// corte, a sugestão já nasceria recusada.
-  ({DateTime start, DateTime end}) _janelaSugerida(DateTime ultimoDia) {
-    final escolhida = _customPeriod;
-    if (escolhida != null) return escolhida;
-    final corrente = CycleReadingService.periodFor(_periodType);
-    final amanha = ultimoDia.add(const Duration(days: 1));
+  /// É de propósito a MESMA conta dos atalhos do seletor — não a lunação
+  /// astronômica, que começa em qualquer dia e não acende chip nenhum:
+  /// abrindo com esta janela, o chip correspondente já nasce selecionado
+  /// (decisão da dona, 23/08).
+  static ({DateTime start, DateTime end}) _janelaDoAtalho(String tipo) {
+    if (tipo == CycleReadingPeriodType.week) {
+      return CycleReadingService.currentWeek();
+    }
+    final agora = DateTime.now();
     return (
-      start: corrente.start,
-      end: corrente.end.isAfter(amanha) ? amanha : corrente.end,
+      start: DateTime(agora.year, agora.month, 1),
+      // Hoje vivido por inteiro; o construtor normaliza a virada de mês.
+      end: DateTime(agora.year, agora.month, agora.day + 1),
     );
   }
 
